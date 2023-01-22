@@ -176,6 +176,8 @@
     <string name="browser_menu_stop">Διακοπή</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Πρόσθετα</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Πληροφορίες λογαριασμού</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Δεν βρέθηκαν πρόσθετα</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -294,6 +296,11 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Κλείσιμο</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Συνέχεια</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Όχι τώρα</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Άνοιγμα νέας καρτέλας %1$s</string>
@@ -350,7 +357,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Μείωση μπάνερ cookie</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Το Firefox προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie σε μπάνερ cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το Firefox μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Το Firefox προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie σε μπάνερ cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το Firefox μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ανενεργή για αυτόν τον ιστότοπο</string>
@@ -364,13 +371,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %2$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %2$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Όχι τώρα</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Θα βλέπετε λιγότερα αιτήματα cookie</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Μείωση μπάνερ cookie</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Προσπαθεί αυτόματα να συνδεθεί σε ιστοτόπους με το πρωτόκολλο κρυπτογράφησης HTTPS για αυξημένη ασφάλεια.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Ενεργή</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Ενεργή</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Ανενεργή</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Μάθετε περισσότερα</string>
@@ -472,8 +486,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Πρόσφατες επισκέψεις</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Άρθρα που σας βάζουν σε σκέψεις</string>
@@ -997,7 +1009,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Εξαιρέσεις</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Ενεργό</string>
+    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Ενεργό</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ανενεργό</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1951,8 +1963,6 @@
     <string name="pocket_stories_categories_header">Άρθρα ανά θέμα</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Ανακαλύψτε περισσότερα</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Με την υποστήριξη του Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Με την υποστήριξη του %1$s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

@@ -169,6 +169,8 @@
     <string name="browser_menu_stop">Тоқтату</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Қосымшалар</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Тіркелгі ақпараты</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Осында қосымшалар жоқ</string>
     <!-- Browser menu button that sends a user to help articles -->

@@ -13,7 +13,7 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Çaktivizo shfletim privat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">Bëni kërkim ose jepni adresë</string>
+    <string name="search_hint">Bëni kërkim, ose jepni adresë</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Kërkoni në historik</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -58,18 +58,18 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s e spastron historikun tuaj të kërkimeve dhe shfletimit prej skedash private, kur i mbyllni ato ose dilni nga aplikacioni. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet, e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s e spastron historikun tuaj të kërkimeve dhe shfletimit prej skedash private, kur i mbyllni ato, ose dilni nga aplikacioni. Edhe pse kjo s’ju bën anonim përballë sajteve apo furnizuesit të shërbimit tuaj internet, e bën më të lehtë mbajtjen private të asaj çka bëni në internet, nga cilido tjetër që përdor këtë pajisje.</string>
     <string name="private_browsing_common_myths">
        Mite të rëndomtë mbi shfletimin privat
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Shtoni një shkurtore për të hapur skeda private që prej skenës Kreu juaj.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Shtoni një shkurtore për të hapur skeda private që prej skenës Kreu juaj.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Skedën pasuese private hape me një prekje.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Shtoni shkurtore</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Shtoni shkurtore</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Shtoje te skena e Kreut</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -93,7 +93,7 @@
     <string name="tcp_cfr_learn_more">Mësoni mbi Mbrojtje Tërësore Nga Cookie-t</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Lypset hyrje në kamera. Kaloni te rregullimet e Android-it, prekni Leje, dhe prekni Lejoje.</string>
+    <string name="camera_permissions_needed_message">Lypset hyrje në kamera. Kaloni te rregullimet e Android-it, prekni mbi Leje dhe prekni Lejoje.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Shko te rregullimet</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -169,6 +169,8 @@
     <string name="browser_menu_stop">Ndale</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Shtesa</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Hollësi llogarie</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">S’ka shtesa këtu</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -178,7 +180,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Rregullime</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_library">Librari</string>
+    <string name="browser_menu_library">Bibliotekë</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Sajt për desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -258,7 +260,7 @@
     <string name="search_settings_menu_item">Rregullime mbi kërkimin</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Kërkimi këtë herë:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Kërkimi këtë herë:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Këtë herë kërko te:</string>
@@ -284,6 +286,18 @@
     <string name="sync_cfr_message">Skedat tuaja po njëkohësohen! Vazhdojeni punën ku e latë në pajisjen tuaj tjetër.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Mbylle</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Njoftimet ju ndihmojnë të arrini më tepër gjëra me %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Njëkohësoni skedat tuaja nëpër pajisje, administroni shkarkime, merrni ndihmëza mbi shfrytëzimin në maksimum të mbrojtjes së privatësisë në %s, etj.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Vazhdo</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Jo tani</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -341,8 +355,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Redukto banderola për cookie-t</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox-i provon automatikisht të hedhë tej kërkesa për “cookie” nga banderola cookie-shbanners. Nëse s’ka mundësi hedhjeje tej, Firefox-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox-i provon automatikisht të hedhë tej kërkesa për “cookie” nga banderola cookie-shbanners. Nëse s’ka mundësi hedhjeje tej, Firefox-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s provon vetvetiu të hedhë oshtë kërkesa depozitimi cookie -sh nga banderola cookie-sh.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Çaktivizuar për këtë sajt</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -355,14 +371,49 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s do të spastrojë cookie-t për këtë sajt dhe do të rifreskojë faqen. Spastrimi i krejt cookie-ve mund të sjellë nxjerrjen tuaj nga llogaria, ose zbrazje shportash blerjesh.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s-i mund të provojë të hedhë tej automatikisht kërkesa për “cookie”. Nëse s’ka mundësi hedhjeje tej, %2$s-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s-i mund të provojë të hedhë tej automatikisht kërkesa për “cookie”. Nëse s’ka mundësi hedhjeje tej, %2$s-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s mund të provojë vetvetiu të hedhë poshtë kërkesa depozitimi cookie-sh.</string>
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Lamtumirë banderola cookie-sh!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur. Përndryshe, prano krejt cookies, që të hiqen qafe banderolat e cookie-ve.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Jo Tani</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Hidh tej banderola</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Do të shihni më pak kërkesa depozitimi cookie-sh</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Shihni më pak flluska cookie-sh</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Përgjigju vetvetiu flluskave për cookie, për shfletim pa bezdisje. %1$s do të hedhë poshtë krejt kërkesat, në qoftë e mundur, ose do t’i pranojë të tëra, në mos qoftë e mundur.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Përgjigju vetvetiu flluskave për cookie, për shfletim pa bezdisje. %1$s do të hedhë poshtë krejt kërkesat, në qoftë e mundur.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Hidh tej Flluska</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduktim Banderolash Për Cookie-t</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nga një sajt, nëse është e mundur, apo të pranohen cookies kur s’është e mundur?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nëse është e mundur?</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Lejoje</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Përpiqet automatikisht të lidhet me sajtet duke përdorur protokollin HTTPS të fshehtëzimit, për më tepër siguri.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">On</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Off</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Në krejt skedat</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Në skeda private</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Mësoni më tepër</string>
     <!-- Option for the https only setting -->
@@ -376,7 +427,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Por, është gjithashtu e mundshme që të jetë dora e ndonjë agresori. Nëse vazhdoni te sajti, s’duhet të jepni ndonjë të dhënë rezervat. Nëse vazhdoni, mënyra Vetëm-HTTPS do të çaktivizohet përkohësisht për sajtin.</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">Përdorshmëri</string>
+    <string name="preferences_accessibility">Përdorim nga persona me aftësi të kufizuara</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">Shërbyes vetjak Llogarish Firefox</string>
     <!-- Preference to override the Sync token server -->
@@ -440,6 +491,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Njoftime</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">E lejuar</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">E palejuar</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Koleksion vetjak shtesash</string>
@@ -462,8 +518,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Vizituar së fundi</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Histori që të vënë në mendim</string>
@@ -718,6 +772,13 @@
     <string name="close_tabs_after_one_week_summary">Mbylle pas një jave</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Mbylle pas një muaji</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Hape në faqen hyrëse</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Hape në skedën e fundit</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Hape në faqen hyrëse pas katër orësh</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -983,9 +1044,15 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Përjashtime</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">On</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Standarde</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Strikte</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Vetjake</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Lejo audio dhe video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1018,7 +1085,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu koleksionesh</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Koleksiononi gjërat që kanë rëndësi për ju.\nGruponi tok kërkime të ngjashme, sajte, dhe skeda, për përdorim më të shpejtë më pas.</string>
+    <string name="no_collections_description2">Koleksiononi gjërat që kanë rëndësi për ju.\nGruponi tok kërkime të ngjashme, sajte dhe skeda, për përdorim më të shpejtë më pas.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Përzgjidhni Skeda</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1172,7 +1239,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL-ja u kopjua</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Ky është një shembull teksti. Gjendet këtu për të treguar se si do të duket teksti kur zmadhoni ose zvogëloni madhësinë përmes këtij rregullimi.</string>
+    <string name="accessibility_text_size_sample_text_1">Ky është një shembull teksti. Gjendet këtu për të treguar se si do të duket teksti, kur zmadhoni ose zvogëloni madhësinë përmes këtij rregullimi.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Bëjeni tekstin në sajte më të madh ose më të vogël</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1559,7 +1626,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Siguroni kredenciale hyrjesh dhe fjalëkalime tuajt</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Ujdisni një rregullsi, PIN ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kredencialet e hyrjes dhe fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <string name="logins_warning_dialog_message">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kredencialet e hyrjes dhe fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Më vonë</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1649,7 +1716,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Siguroni kartat tuaja të kreditit</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Ujdisni një rregullsi, PIN ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <string name="credit_cards_warning_dialog_message">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Ujdiseni tani</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1724,7 +1791,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Varg kërkimi për t’u përdorur</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Zëvendësoni kërkesën me “%s”. Shembull:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Zëvendësoni kërkesën me “%s”. Shembull:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Hollësi motori vetjak kërkimesh</string>
@@ -1820,7 +1887,7 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_3">Adresa Web duhet të përmbajë &quot;https://&quot; ose &quot;http://&quot;</string>
+    <string name="add_login_hostname_invalid_text_3">Adresa Web duhet të përmbajë “https://” ose “http://”</string>
 
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Lypset strehëemër i vlefshëm</string>
@@ -1925,8 +1992,6 @@
     <string name="pocket_stories_categories_header">Histori sipas subjektit</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Zbuloni më tepër</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Bazuar në Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Mundësuar nga %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

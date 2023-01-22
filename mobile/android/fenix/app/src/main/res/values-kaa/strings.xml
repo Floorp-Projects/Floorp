@@ -1,8 +1,272 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Jeke %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Jeke)</string>
+
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Atı</string>
 
+
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Toplamdı tańlań</string>
+
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Alıp taslaw</string>
+
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Sazlamalardı ashıw</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Sazlamalarǵa ótiw</string>
+
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
+
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Hámmesin kórsetiw</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Alıp taslaw</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Alıp taslaw</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Alıp taslaw</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Jańalaw</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Toqtatıw</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Járdem</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Sazlamalar</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Kitapxana</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Ornatıw</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Bólisiw</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Qosıw</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Ózgeris kiritiw</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Tekseriw</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Baslaw</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Kiriw</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Jabıw</string>
+
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Dawam etiw</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Házir emes</string>
+
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Izlew</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Sazlamalar</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Izlew</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Qosımsha</string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Qosıwlı</string>
+
+
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">Óshirilgen</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Bas bet</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Til</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">YAQSHI</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Biykarlaw</string>
+
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Shıǵıw</string>
+
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Joqarı</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Tómen</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Júklengenler</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Tariyx</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Sazlamalar</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Jabıw</string>
+
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Biykarlaw</string>
+
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Dizim</string>
+
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Bas bet</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Alıp taslaw</string>
+
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">YAQSHI</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Biykarlaw</string>
+
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Jeke</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Jabıw</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Qayta ataw</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Alıp taslaw</string>
+
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Óshiriw</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Búgin</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Keshe</string>
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Alıp taslaw</string>
+
+
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Biykarlaw</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ÓZGERIS KIRITIW</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Ózgeris kiritiw</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Bólisiw</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Óshiriw</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Saqlaw</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">ATI</string>
+
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">BIYKARLAW</string>
+
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">YAQSHI</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Biykarlaw</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">YAQSHI</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Biykarlaw</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofon</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Qosıwlı</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Óshirilgen</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Qosıwlı</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Óshirilgen</string>
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Qosıwlı</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Óshirilgen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Jabıw</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Saqlaw</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">YAQSHI</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Biykarlaw</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Bólisiw</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Bólisiw</string>
+     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">BIYKARLAW</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">YAQSHI</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Óshiriw</string>
+
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Júklengenler</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Biykarlaw</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Óshiriw</string>
+
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Biykarlaw</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Óshiriw</string>
+
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Kiriw</string>
+
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Biykarlaw</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Biykarlaw</string>
+
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">Biykarlaw</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Biykarlaw</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Óshiriw</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Biykarlaw</string>
+
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Biykarlaw</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">YAQSHI</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Biykarlaw</string>
+
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Sazlamalarǵa ótiw</string>
 
     </resources>

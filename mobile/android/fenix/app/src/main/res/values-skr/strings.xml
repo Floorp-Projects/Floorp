@@ -170,6 +170,8 @@
     <string name="browser_menu_stop">روکو</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ایڈ ــ آن</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">کھاتہ معلومات</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">اِتھاں کوئی ایڈ ــ آن کائنی</string>
     <!-- Browser menu button that sends a user to help articles -->
