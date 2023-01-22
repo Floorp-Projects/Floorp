@@ -9452,12 +9452,14 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       break;
     }
     case StyleGeometryBox::ViewBox: {
-      nsIContent* content = aFrame->GetContent();
-      SVGElement* element = static_cast<SVGElement*>(content);
-      SVGViewportElement* svgElement = element->GetCtx();
-      MOZ_ASSERT(svgElement);
+      SVGViewportElement* viewportElement =
+          SVGElement::FromNode(aFrame->GetContent())->GetCtx();
+      if (!viewportElement) {
+        // We should not render without a viewport so return an empty rect.
+        break;
+      }
 
-      if (svgElement && svgElement->HasViewBox()) {
+      if (viewportElement->HasViewBox()) {
         // If a `viewBox` attribute is specified for the SVG viewport creating
         // element:
         // 1. The reference box is positioned at the origin of the coordinate
@@ -9465,7 +9467,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
         // 2. The dimension of the reference box is set to the width and height
         //    values of the `viewBox` attribute.
         const SVGViewBox& value =
-            svgElement->GetAnimatedViewBox()->GetAnimValue();
+            viewportElement->GetAnimatedViewBox()->GetAnimValue();
         r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
                    nsPresContext::CSSPixelsToAppUnits(value.y),
                    nsPresContext::CSSPixelsToAppUnits(value.width),
@@ -9473,7 +9475,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       } else {
         // No viewBox is specified, uses the nearest SVG viewport as reference
         // box.
-        svgFloatSize viewportSize = svgElement->GetViewportSize();
+        svgFloatSize viewportSize = viewportElement->GetViewportSize();
         r = nsRect(0, 0, nsPresContext::CSSPixelsToAppUnits(viewportSize.width),
                    nsPresContext::CSSPixelsToAppUnits(viewportSize.height));
       }
