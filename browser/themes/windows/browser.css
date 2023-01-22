@@ -12,27 +12,17 @@
   --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
 
-  --panel-separator-color: ThreeDLightShadow;
-
   --chrome-content-separator-color: ThreeDShadow;
 }
 
 @media (-moz-windows-default-theme) {
   :root {
     --toolbar-non-lwt-bgcolor: -moz-dialog;
-
-    --panel-separator-color: hsla(210,4%,10%,.14);
   }
 }
 
 :root:-moz-lwtheme {
   --chrome-content-separator-color: rgba(0,0,0,.3);
-
-  --panel-separator-color: hsla(210,4%,10%,.14);
-}
-
-:root[lwt-popup-brighttext] {
-  --panel-separator-color: rgba(249,249,250,.1);
 }
 
 #menubar-items {

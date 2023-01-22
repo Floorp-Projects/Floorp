@@ -11,8 +11,6 @@
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
 
-  --panel-separator-color: hsla(210,4%,10%,.14);
-
   --arrowpanel-field-background: rgba(249,249,250,.3);
 
   --chrome-content-separator-color: #e1e1e2;
@@ -23,7 +21,6 @@
 }
 
 :root[lwt-popup-brighttext] {
-  --panel-separator-color: rgba(249,249,250,.1);
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
