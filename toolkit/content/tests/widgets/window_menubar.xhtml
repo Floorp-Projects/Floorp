@@ -10,12 +10,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="popup_shared.js"></script>
 
-<!--
-  Need to investigate these tests a bit more. Some of the accessibility events
-  are firing multiple times or in different orders in different circumstances.
-  Note that this was also the case before bug 279703.
--->
-
 <hbox style="margin-left: 275px; margin-top: 275px;">
 <menubar id="menubar">
   <menu id="filemenu" label="File" accesskey="F">
@@ -76,6 +70,9 @@
     </menupopup>
   </menu>
 </menubar>
+<hbox>
+  <description id="outside">Outside menubar</description>
+</hbox>
 </hbox>
 
 <script class="testbody" type="application/javascript">
@@ -898,6 +895,41 @@ var popupTests = [
   }
 },
 
+// bug 1811466
+{
+  testname: "Menubar activation / deactivation on mouse over",
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "DOMMenuItemInactive filemenu", "DOMMenuBarInactive menubar" ],
+  test() {
+    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
+    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+  },
+},
+
+// bug 1811466
+{
+  testname: "Menubar hover in and out after key activation (part 1)",
+  events: [
+    "DOMMenuBarActive menubar",
+    "DOMMenuItemActive filemenu",
+    /* Shouldn't deactivate the menubar nor filemenu! */
+  ],
+  test() {
+    synthesizeKey("KEY_Alt");
+    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
+    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+  },
+},
+{
+  testname: "Deactivate the menubar by mouse",
+  events: [
+    "DOMMenuItemInactive filemenu",
+    "DOMMenuBarInactive menubar",
+  ],
+  test() {
+    synthesizeMouse(document.getElementById("outside"), 8, 8, {});
+  },
+},
+
 // bug 625151
 {
   testname: "Alt key state before deactivating the window shouldn't prevent " +
@@ -920,7 +952,7 @@ var popupTests = [
       thisWindow.focus();
     }, {once: true});
   }
-}
+},
 
 ];
 
