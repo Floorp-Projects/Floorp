@@ -205,19 +205,5 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 }
 
 
-// Use the system's language settings.
-if (isFirstRun) {
-    let systemLocale;
-    try {
-        systemLocale = Cc["@mozilla.org/intl/ospreferences;1"].getService(
-            Ci.mozIOSPreferences
-        ).systemLocale;
-    } catch (e) { console.error(e) }
-    if (systemLocale) {
-        Services.prefs.setStringPref("intl.locale.requested", systemLocale);
-    }
-}
-
-
 // Load Tab Sleep feature
 ChromeUtils.import("resource:///modules/TabSleep.jsm");

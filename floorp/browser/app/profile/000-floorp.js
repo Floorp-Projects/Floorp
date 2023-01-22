@@ -92,6 +92,9 @@ pref("floorp.tabsleep.enabled", false);
 // システムアドオンのアップデート確認先
 pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/systemAddon/xml/%DISPLAY_VERSION%/%OS%/update.xml");
 
+// 言語設定をシステムに合わせる
+pref("intl.locale.requested", "");
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
