@@ -75,9 +75,9 @@ void XULButtonElement::PopupClosed(bool aDeselectMenu) {
       new nsUnsetAttrRunnable(this, nsGkAtoms::open));
 
   if (aDeselectMenu) {
-    if (RefPtr<XULMenuParentElement> menu = GetMenuParent()) {
-      if (menu->GetActiveMenuChild() == this) {
-        menu->SetActiveMenuChild(nullptr);
+    if (RefPtr<XULMenuParentElement> parent = GetMenuParent()) {
+      if (parent->GetActiveMenuChild() == this) {
+        parent->SetActiveMenuChild(nullptr);
       }
     }
   }
@@ -434,6 +434,32 @@ void XULButtonElement::PostHandleEventForMenus(
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
   } else if (event->mMessage == eMouseOut) {
     KillMenuOpenTimer();
+    if (RefPtr<XULMenuParentElement> parent = GetMenuParent()) {
+      if (parent->GetActiveMenuChild() == this) {
+        // Deactivate the menu on mouse out in some cases...
+        const bool shouldDeactivate = [&] {
+          if (IsMenuPopupOpen()) {
+            // If we're open we never deselect. PopupClosed will do as needed.
+            return false;
+          }
+          if (!parent->IsMenuBar()) {
+            // Don't de-select when not in the menubar.
+            // NOTE(emilio): Behavior from before bug 1811466 is equivalent to
+            // returning true here, consider flipping this.
+            return false;
+          }
+          // De-select when exiting a menubar item, if the menubar wasn't
+          // activated by keyboard.
+          nsMenuBarFrame* menubar = do_QueryFrame(parent->GetPrimaryFrame());
+          const bool openedByKey = menubar && menubar->IsActiveByKeyboard();
+          return !openedByKey;
+        }();
+
+        if (shouldDeactivate) {
+          parent->SetActiveMenuChild(nullptr);
+        }
+      }
+    }
   } else if (event->mMessage == eMouseMove && (IsOnMenu() || IsOnMenuBar())) {
     // Use a tolerance to address situations where a user might perform a
     // "wiggly" click that is accompanied by near-simultaneous mousemove events.
