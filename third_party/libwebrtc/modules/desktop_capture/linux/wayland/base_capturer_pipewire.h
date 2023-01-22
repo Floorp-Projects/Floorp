@@ -11,6 +11,7 @@
 #ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_BASE_CAPTURER_PIPEWIRE_H_
 #define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_BASE_CAPTURER_PIPEWIRE_H_
 
+#include "modules/desktop_capture/delegated_source_list_controller.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/linux/wayland/portal_request_response.h"
@@ -23,9 +24,10 @@
 namespace webrtc {
 
 class BaseCapturerPipeWire : public DesktopCapturer,
+                             public DelegatedSourceListController,
                              public ScreenCastPortal::PortalNotifier {
  public:
-  explicit BaseCapturerPipeWire(const DesktopCaptureOptions& options);
+  BaseCapturerPipeWire(const DesktopCaptureOptions& options, CaptureType type);
   BaseCapturerPipeWire(
       const DesktopCaptureOptions& options,
       std::unique_ptr<xdg_portal::ScreenCapturePortalInterface> portal);
@@ -39,6 +41,12 @@ class BaseCapturerPipeWire : public DesktopCapturer,
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
+  DelegatedSourceListController* GetDelegatedSourceListController() override;
+
+  // DelegatedSourceListController
+  void Observe(Observer* observer) override;
+  void EnsureVisible() override;
+  void EnsureHidden() override;
 
   // ScreenCastPortal::PortalNotifier interface.
   void OnScreenCastRequestResult(xdg_portal::RequestResponse result,
@@ -56,6 +64,9 @@ class BaseCapturerPipeWire : public DesktopCapturer,
   Callback* callback_ = nullptr;
   bool capturer_failed_ = false;
   bool is_screencast_portal_ = false;
+  bool is_portal_open_ = false;
+
+  Observer* delegated_source_list_observer_ = nullptr;
 
   // SourceId that is selected using SelectSource() and that we previously
   // returned in GetSourceList(). This should be a SourceId that has a restore

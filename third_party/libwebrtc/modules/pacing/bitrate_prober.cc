@@ -34,7 +34,7 @@ constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
 
 BitrateProberConfig::BitrateProberConfig(
     const FieldTrialsView* key_value_config)
-    : min_probe_delta("min_probe_delta", TimeDelta::Millis(1)),
+    : min_probe_delta("min_probe_delta", TimeDelta::Millis(2)),
       max_probe_delay("max_probe_delay", TimeDelta::Millis(10)) {
   ParseFieldTrial({&min_probe_delta, &max_probe_delay},
                   key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior"));
@@ -107,6 +107,7 @@ void BitrateProber::CreateProbeCluster(
                    << cluster.pace_info.send_bitrate_bps << ":"
                    << cluster.pace_info.probe_cluster_min_bytes << ":"
                    << cluster.pace_info.probe_cluster_min_probes << ")";
+
   // If we are already probing, continue to do so. Otherwise set it to
   // kInactive and wait for OnIncomingPacket to start the probing.
   if (probing_state_ != ProbingState::kActive)
@@ -145,16 +146,13 @@ absl::optional<PacedPacketInfo> BitrateProber::CurrentCluster(Timestamp now) {
   return info;
 }
 
-// Probe size is recommended based on the probe bitrate required. We choose
-// a minimum of twice `kMinProbeDeltaMs` interval to allow scheduling to be
-// feasible.
 DataSize BitrateProber::RecommendedMinProbeSize() const {
   if (clusters_.empty()) {
     return DataSize::Zero();
   }
   DataRate send_rate =
       DataRate::BitsPerSec(clusters_.front().pace_info.send_bitrate_bps);
-  return 2 * send_rate * config_.min_probe_delta;
+  return send_rate * config_.min_probe_delta;
 }
 
 void BitrateProber::ProbeSent(Timestamp now, DataSize size) {
@@ -197,6 +195,7 @@ Timestamp BitrateProber::CalculateNextProbeTime(
   DataSize sent_bytes = DataSize::Bytes(cluster.sent_bytes);
   DataRate send_bitrate =
       DataRate::BitsPerSec(cluster.pace_info.send_bitrate_bps);
+
   TimeDelta delta = sent_bytes / send_bitrate;
   return cluster.started_at + delta;
 }

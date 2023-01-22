@@ -33,9 +33,7 @@ extern "C" {
 #include "modules/video_coding/codecs/h264/h264_color_space.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
 
 namespace webrtc {
 
@@ -245,10 +243,7 @@ H264DecoderImpl::H264DecoderImpl()
     : ffmpeg_buffer_pool_(true),
       decoded_image_callback_(nullptr),
       has_reported_init_(false),
-      has_reported_error_(false),
-      preferred_output_format_(field_trial::IsEnabled("WebRTC-NV12Decode")
-                                   ? VideoFrameBuffer::Type::kNV12
-                                   : VideoFrameBuffer::Type::kI420) {}
+      has_reported_error_(false) {}
 
 H264DecoderImpl::~H264DecoderImpl() {
   Release();
@@ -313,8 +308,7 @@ bool H264DecoderImpl::Configure(const Settings& settings) {
   av_frame_.reset(av_frame_alloc());
 
   if (absl::optional<int> buffer_pool_size = settings.buffer_pool_size()) {
-    if (!ffmpeg_buffer_pool_.Resize(*buffer_pool_size) ||
-        !output_buffer_pool_.Resize(*buffer_pool_size)) {
+    if (!ffmpeg_buffer_pool_.Resize(*buffer_pool_size)) {
       return false;
     }
   }
@@ -574,26 +568,6 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
                         << " is not supported!";
       ReportError();
       return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-
-  // Preference for NV12 output format is ignored if actual format isn't
-  // trivially convertible to it.
-  if (preferred_output_format_ == VideoFrameBuffer::Type::kNV12 &&
-      video_frame_buffer_type == VideoFrameBuffer::Type::kI420) {
-    auto nv12_buffer = output_buffer_pool_.CreateNV12Buffer(
-        cropped_buffer->width(), cropped_buffer->height());
-    const PlanarYuv8Buffer* cropped_planar_yuv_buffer =
-        cropped_buffer->GetI420();
-    libyuv::I420ToNV12(cropped_planar_yuv_buffer->DataY(),
-                       cropped_planar_yuv_buffer->StrideY(),
-                       cropped_planar_yuv_buffer->DataU(),
-                       cropped_planar_yuv_buffer->StrideU(),
-                       cropped_planar_yuv_buffer->DataV(),
-                       cropped_planar_yuv_buffer->StrideV(),
-                       nv12_buffer->MutableDataY(), nv12_buffer->StrideY(),
-                       nv12_buffer->MutableDataUV(), nv12_buffer->StrideUV(),
-                       planar_yuv_buffer->width(), planar_yuv_buffer->height());
-    cropped_buffer = nv12_buffer;
   }
 
   // Pass on color space from input frame if explicitly specified.

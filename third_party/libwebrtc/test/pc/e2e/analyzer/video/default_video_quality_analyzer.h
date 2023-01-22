@@ -78,7 +78,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
                       int32_t error_code) override;
   void OnDecoderError(absl::string_view peer_name,
                       uint16_t frame_id,
-                      int32_t error_code) override;
+                      int32_t error_code,
+                      const DecoderStats& stats) override;
 
   void RegisterParticipantInCall(absl::string_view peer_name) override;
   void UnregisterParticipantInCall(absl::string_view peer_name) override;
@@ -114,6 +115,11 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Returns next frame id to use. Frame ID can't be `VideoFrame::kNotSetId`,
   // because this value is reserved by `VideoFrame` as "ID not set".
   uint16_t GetNextFrameId() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  void AddExistingFramesInFlightForStreamToComparator(size_t stream_index,
+                                                      StreamState& stream_state,
+                                                      size_t peer_index)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Report results for all metrics for all streams.
   void ReportResults();

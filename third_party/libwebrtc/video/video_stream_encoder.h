@@ -22,6 +22,7 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/units/data_rate.h"
+#include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocator.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
@@ -253,6 +254,12 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       RTC_RUN_ON(&encoder_queue_);
 
   void RequestEncoderSwitch() RTC_RUN_ON(&encoder_queue_);
+
+  // Augments an EncodedImage received from an encoder with parsable
+  // information.
+  EncodedImage AugmentEncodedImage(
+      const EncodedImage& encoded_image,
+      const CodecSpecificInfo* codec_specific_info);
 
   const FieldTrialsView& field_trials_;
   TaskQueueBase* const worker_queue_;

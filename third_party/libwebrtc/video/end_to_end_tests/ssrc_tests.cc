@@ -55,7 +55,7 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
     explicit PacketInputObserver(PacketReceiver* receiver)
         : receiver_(receiver) {}
 
-    bool Wait() { return delivered_packet_.Wait(kDefaultTimeout.ms()); }
+    bool Wait() { return delivered_packet_.Wait(kDefaultTimeout); }
 
    private:
     DeliveryStatus DeliverPacket(MediaType media_type,

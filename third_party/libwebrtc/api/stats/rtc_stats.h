@@ -158,7 +158,7 @@ class RTC_EXPORT RTCStats {
   const char this_class::kType[] = type_str;                                   \
                                                                                \
   std::unique_ptr<webrtc::RTCStats> this_class::copy() const {                 \
-    return std::unique_ptr<webrtc::RTCStats>(new this_class(*this));           \
+    return std::make_unique<this_class>(*this);                                \
   }                                                                            \
                                                                                \
   const char* this_class::type() const { return this_class::kType; }           \
@@ -189,7 +189,7 @@ class RTC_EXPORT RTCStats {
   const char this_class::kType[] = type_str;                                \
                                                                             \
   std::unique_ptr<webrtc::RTCStats> this_class::copy() const {              \
-    return std::unique_ptr<webrtc::RTCStats>(new this_class(*this));        \
+    return std::make_unique<this_class>(*this);                             \
   }                                                                         \
                                                                             \
   const char* this_class::type() const { return this_class::kType; }        \

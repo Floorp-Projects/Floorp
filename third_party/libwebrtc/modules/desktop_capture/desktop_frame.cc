@@ -45,13 +45,9 @@ void DesktopFrame::CopyPixelsFrom(const uint8_t* src_buffer,
   RTC_CHECK(DesktopRect::MakeSize(size()).ContainsRect(dest_rect));
 
   uint8_t* dest = GetFrameDataAtPos(dest_rect.top_left());
-  // TODO(crbug.com/1330019): Temporary workaround for a known libyuv crash when
-  // the height or width is 0. Remove this once this change has been merged.
-  if (dest_rect.width() && dest_rect.height()) {
-    libyuv::CopyPlane(src_buffer, src_stride, dest, stride(),
-                      DesktopFrame::kBytesPerPixel * dest_rect.width(),
-                      dest_rect.height());
-  }
+  libyuv::CopyPlane(src_buffer, src_stride, dest, stride(),
+                    DesktopFrame::kBytesPerPixel * dest_rect.width(),
+                    dest_rect.height());
 }
 
 void DesktopFrame::CopyPixelsFrom(const DesktopFrame& src_frame,

@@ -1514,7 +1514,9 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     vpx_svc_ref_frame_config_t enc_layer_conf = {{0}};
     libvpx_->codec_control(encoder_, VP9E_GET_SVC_REF_FRAME_CONFIG,
                            &enc_layer_conf);
-    int ref_buf_flags = 0;
+    char ref_buf_flags[] = "00000000";
+    // There should be one character per buffer + 1 termination '\0'.
+    static_assert(sizeof(ref_buf_flags) == kNumVp9Buffers + 1);
 
     if (enc_layer_conf.reference_last[layer_id.spatial_layer_id]) {
       const size_t fb_idx =
@@ -1523,7 +1525,7 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
                     ref_buf_[fb_idx]) == ref_buf_list.end()) {
         ref_buf_list.push_back(ref_buf_[fb_idx]);
-        ref_buf_flags |= 1 << fb_idx;
+        ref_buf_flags[fb_idx] = '1';
       }
     }
 
@@ -1534,7 +1536,7 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
                     ref_buf_[fb_idx]) == ref_buf_list.end()) {
         ref_buf_list.push_back(ref_buf_[fb_idx]);
-        ref_buf_flags |= 1 << fb_idx;
+        ref_buf_flags[fb_idx] = '1';
       }
     }
 
@@ -1545,21 +1547,14 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
       if (std::find(ref_buf_list.begin(), ref_buf_list.end(),
                     ref_buf_[fb_idx]) == ref_buf_list.end()) {
         ref_buf_list.push_back(ref_buf_[fb_idx]);
-        ref_buf_flags |= 1 << fb_idx;
+        ref_buf_flags[fb_idx] = '1';
       }
     }
 
     RTC_LOG(LS_VERBOSE) << "Frame " << pic_num << " sl "
                         << layer_id.spatial_layer_id << " tl "
                         << layer_id.temporal_layer_id << " refered buffers "
-                        << (ref_buf_flags & (1 << 0) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 1) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 2) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 3) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 4) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 5) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 6) ? 1 : 0)
-                        << (ref_buf_flags & (1 << 7) ? 1 : 0);
+                        << ref_buf_flags;
 
   } else if (!is_key_frame) {
     RTC_DCHECK_EQ(num_spatial_layers_, 1);

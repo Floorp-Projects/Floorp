@@ -54,6 +54,7 @@
 #include "video/call_stats2.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
+#include "video/task_queue_frame_decode_scheduler.h"
 
 namespace webrtc {
 
@@ -228,7 +229,6 @@ VideoReceiveStream2::VideoReceiveStream2(
           TimeDelta::Millis(config_.rtp.nack.rtp_history_ms),
           false)),
       maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
-      decode_sync_(decode_sync),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
           "DecodingQueue",
           TaskQueueFactory::Priority::HIGH)) {
@@ -252,9 +252,13 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   timing_->set_render_delay(TimeDelta::Millis(config_.render_delay_ms));
 
-  buffer_ = VideoStreamBufferController::CreateFromFieldTrial(
+  std::unique_ptr<FrameDecodeScheduler> scheduler =
+      decode_sync ? decode_sync->CreateSynchronizedFrameScheduler()
+                  : std::make_unique<TaskQueueFrameDecodeScheduler>(
+                        clock, call_->worker_thread());
+  buffer_ = std::make_unique<VideoStreamBufferController>(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_, this,
-      max_wait_for_keyframe_, max_wait_for_frame_, decode_sync_,
+      max_wait_for_keyframe_, max_wait_for_frame_, std::move(scheduler),
       call_->trials());
 
   if (rtx_ssrc()) {
@@ -387,7 +391,6 @@ void VideoReceiveStream2::Start() {
   call_stats_->RegisterStatsObserver(this);
 
   // Start decoding on task queue.
-  video_receiver_.DecoderThreadStarting();
   stats_proxy_.DecoderThreadStarting();
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
@@ -434,20 +437,19 @@ void VideoReceiveStream2::Stop() {
     rtc::Event done;
     decode_queue_.PostTask([this, &done] {
       RTC_DCHECK_RUN_ON(&decode_queue_);
+      // Set `decoder_stopped_` before deregistering all decoders. This means
+      // that any pending encoded frame will return early without trying to
+      // access the decoder database.
       decoder_stopped_ = true;
+      for (const Decoder& decoder : config_.decoders) {
+        video_receiver_.RegisterExternalDecoder(nullptr, decoder.payload_type);
+      }
       done.Set();
     });
     done.Wait(rtc::Event::kForever);
 
     decoder_running_ = false;
-    video_receiver_.DecoderThreadStopped();
     stats_proxy_.DecoderThreadStopped();
-    // Deregister external decoders so they are no longer running during
-    // destruction. This effectively stops the VCM since the decoder thread is
-    // stopped, the VCM is deregistered and no asynchronous decoder threads are
-    // running.
-    for (const Decoder& decoder : config_.decoders)
-      video_receiver_.RegisterExternalDecoder(nullptr, decoder.payload_type);
 
     UpdateHistograms();
   }
@@ -605,8 +607,7 @@ void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
         std::move(video_decoder), FileWrapper::OpenWriteOnly(ssb.str()));
   }
 
-  video_decoders_.push_back(std::move(video_decoder));
-  video_receiver_.RegisterExternalDecoder(video_decoders_.back().get(),
+  video_receiver_.RegisterExternalDecoder(std::move(video_decoder),
                                           decoder.payload_type);
 }
 

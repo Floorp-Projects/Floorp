@@ -36,10 +36,7 @@ class SimulatedThread : public rtc::Thread,
   TaskQueueBase* GetAsTaskQueue() override { return this; }
 
   // Thread interface
-  void Send(const rtc::Location& posted_from,
-            rtc::MessageHandler* phandler,
-            uint32_t id,
-            rtc::MessageData* pdata) override;
+  void BlockingCall(rtc::FunctionView<void()> functor) override;
   void Post(const rtc::Location& posted_from,
             rtc::MessageHandler* phandler,
             uint32_t id,

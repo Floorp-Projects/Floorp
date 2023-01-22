@@ -24,7 +24,6 @@
 #include "pc/legacy_stats_collector_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
 
@@ -125,9 +124,8 @@ void RtpSenderBase::SetFrameEncryptor(
   frame_encryptor_ = std::move(frame_encryptor);
   // Special Case: Set the frame encryptor to any value on any existing channel.
   if (media_channel_ && ssrc_ && !stopped_) {
-    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
-      media_channel_->SetFrameEncryptor(ssrc_, frame_encryptor_);
-    });
+    worker_thread_->BlockingCall(
+        [&] { media_channel_->SetFrameEncryptor(ssrc_, frame_encryptor_); });
   }
 }
 
@@ -142,7 +140,7 @@ void RtpSenderBase::SetEncoderSelector(
 void RtpSenderBase::SetEncoderSelectorOnChannel() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (media_channel_ && ssrc_ && !stopped_) {
-    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    worker_thread_->BlockingCall([&] {
       media_channel_->SetEncoderSelector(ssrc_, encoder_selector_.get());
     });
   }
@@ -162,9 +160,23 @@ RtpParameters RtpSenderBase::GetParametersInternal() const {
   if (!media_channel_ || !ssrc_) {
     return init_parameters_;
   }
-  return worker_thread_->Invoke<RtpParameters>(RTC_FROM_HERE, [&] {
+  return worker_thread_->BlockingCall([&] {
     RtpParameters result = media_channel_->GetRtpSendParameters(ssrc_);
     RemoveEncodingLayers(disabled_rids_, &result.encodings);
+    return result;
+  });
+}
+
+RtpParameters RtpSenderBase::GetParametersInternalWithAllLayers() const {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  if (stopped_) {
+    return RtpParameters();
+  }
+  if (!media_channel_ || !ssrc_) {
+    return init_parameters_;
+  }
+  return worker_thread_->BlockingCall([&] {
+    RtpParameters result = media_channel_->GetRtpSendParameters(ssrc_);
     return result;
   });
 }
@@ -194,7 +206,7 @@ RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters) {
     }
     return result;
   }
-  return worker_thread_->Invoke<RTCError>(RTC_FROM_HERE, [&] {
+  return worker_thread_->BlockingCall([&] {
     RtpParameters rtp_parameters = parameters;
     if (!disabled_rids_.empty()) {
       // Need to add the inactive layers.
@@ -203,6 +215,30 @@ RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters) {
       rtp_parameters = RestoreEncodingLayers(parameters, disabled_rids_,
                                              old_parameters.encodings);
     }
+    return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters);
+  });
+}
+
+RTCError RtpSenderBase::SetParametersInternalWithAllLayers(
+    const RtpParameters& parameters) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK(!stopped_);
+
+  if (UnimplementedRtpParameterHasValue(parameters)) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::UNSUPPORTED_PARAMETER,
+        "Attempted to set an unimplemented parameter of RtpParameters.");
+  }
+  if (!media_channel_ || !ssrc_) {
+    auto result = cricket::CheckRtpParametersInvalidModificationAndValues(
+        init_parameters_, parameters);
+    if (result.ok()) {
+      init_parameters_ = parameters;
+    }
+    return result;
+  }
+  return worker_thread_->BlockingCall([&] {
+    RtpParameters rtp_parameters = parameters;
     return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters);
   });
 }
@@ -307,7 +343,7 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
   }
   if (!init_parameters_.encodings.empty() ||
       init_parameters_.degradation_preference.has_value()) {
-    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    worker_thread_->BlockingCall([&] {
       RTC_DCHECK(media_channel_);
       // Get the current parameters, which are constructed from the SDP.
       // The number of layers in the SDP is currently authoritative to support
@@ -377,7 +413,7 @@ RTCError RtpSenderBase::DisableEncodingLayers(
   }
 
   // Check that all the specified layers exist and disable them in the channel.
-  RtpParameters parameters = GetParametersInternal();
+  RtpParameters parameters = GetParametersInternalWithAllLayers();
   for (const std::string& rid : rids) {
     if (absl::c_none_of(parameters.encodings,
                         [&rid](const RtpEncodingParameters& encoding) {
@@ -402,7 +438,7 @@ RTCError RtpSenderBase::DisableEncodingLayers(
         [&encoding](const std::string& rid) { return encoding.rid == rid; });
   }
 
-  RTCError result = SetParametersInternal(parameters);
+  RTCError result = SetParametersInternalWithAllLayers(parameters);
   if (result.ok()) {
     disabled_rids_.insert(disabled_rids_.end(), rids.begin(), rids.end());
     // Invalidate any transaction upon success.
@@ -416,7 +452,7 @@ void RtpSenderBase::SetEncoderToPacketizerFrameTransformer(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   frame_transformer_ = std::move(frame_transformer);
   if (media_channel_ && ssrc_ && !stopped_) {
-    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    worker_thread_->BlockingCall([&] {
       media_channel_->SetEncoderToPacketizerFrameTransformer(
           ssrc_, frame_transformer_);
     });
@@ -488,8 +524,8 @@ bool AudioRtpSender::CanInsertDtmf() {
     RTC_LOG(LS_ERROR) << "CanInsertDtmf: Sender does not have SSRC.";
     return false;
   }
-  return worker_thread_->Invoke<bool>(
-      RTC_FROM_HERE, [&] { return voice_media_channel()->CanInsertDtmf(); });
+  return worker_thread_->BlockingCall(
+      [&] { return voice_media_channel()->CanInsertDtmf(); });
 }
 
 bool AudioRtpSender::InsertDtmf(int code, int duration) {
@@ -501,9 +537,8 @@ bool AudioRtpSender::InsertDtmf(int code, int duration) {
     RTC_LOG(LS_ERROR) << "InsertDtmf: Sender does not have SSRC.";
     return false;
   }
-  bool success = worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
-    return voice_media_channel()->InsertDtmf(ssrc_, code, duration);
-  });
+  bool success = worker_thread_->BlockingCall(
+      [&] { return voice_media_channel()->InsertDtmf(ssrc_, code, duration); });
   if (!success) {
     RTC_LOG(LS_ERROR) << "Failed to insert DTMF to channel.";
   }
@@ -572,7 +607,7 @@ void AudioRtpSender::SetSend() {
   // `track_->enabled()` hops to the signaling thread, so call it before we hop
   // to the worker thread or else it will deadlock.
   bool track_enabled = track_->enabled();
-  bool success = worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
+  bool success = worker_thread_->BlockingCall([&] {
     return voice_media_channel()->SetAudioSend(ssrc_, track_enabled, &options,
                                                sink_adapter_.get());
   });
@@ -590,7 +625,7 @@ void AudioRtpSender::ClearSend() {
     return;
   }
   cricket::AudioOptions options;
-  bool success = worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
+  bool success = worker_thread_->BlockingCall([&] {
     return voice_media_channel()->SetAudioSend(ssrc_, false, &options, nullptr);
   });
   if (!success) {
@@ -666,7 +701,7 @@ void VideoRtpSender::SetSend() {
       options.is_screencast = true;
       break;
   }
-  bool success = worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
+  bool success = worker_thread_->BlockingCall([&] {
     return video_media_channel()->SetVideoSend(ssrc_, &options,
                                                video_track().get());
   });
@@ -684,9 +719,8 @@ void VideoRtpSender::ClearSend() {
   // Allow SetVideoSend to fail since `enable` is false and `source` is null.
   // This the normal case when the underlying media channel has already been
   // deleted.
-  worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
-    return video_media_channel()->SetVideoSend(ssrc_, nullptr, nullptr);
-  });
+  worker_thread_->BlockingCall(
+      [&] { video_media_channel()->SetVideoSend(ssrc_, nullptr, nullptr); });
 }
 
 }  // namespace webrtc

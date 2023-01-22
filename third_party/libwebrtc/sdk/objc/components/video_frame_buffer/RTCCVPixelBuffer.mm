@@ -153,6 +153,21 @@
 
   return YES;
 }
+- (id<RTC_OBJC_TYPE(RTCVideoFrameBuffer)>)cropAndScaleWith:(int)offsetX
+                                                   offsetY:(int)offsetY
+                                                 cropWidth:(int)cropWidth
+                                                cropHeight:(int)cropHeight
+                                                scaleWidth:(int)scaleWidth
+                                               scaleHeight:(int)scaleHeight {
+  return [[RTC_OBJC_TYPE(RTCCVPixelBuffer) alloc]
+      initWithPixelBuffer:_pixelBuffer
+             adaptedWidth:scaleWidth
+            adaptedHeight:scaleHeight
+                cropWidth:cropWidth * _cropWidth / _width
+               cropHeight:cropHeight * _cropHeight / _height
+                    cropX:_cropX + offsetX * _cropWidth / _width
+                    cropY:_cropY + offsetY * _cropHeight / _height];
+}
 
 - (id<RTC_OBJC_TYPE(RTCI420Buffer)>)toI420 {
   const OSType pixelFormat = CVPixelBufferGetPixelFormatType(_pixelBuffer);

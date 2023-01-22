@@ -400,6 +400,12 @@ ModuleRtpRtcpImpl::FetchFecPackets() {
   return {};
 }
 
+void ModuleRtpRtcpImpl::OnAbortedRetransmissions(
+    rtc::ArrayView<const uint16_t> sequence_numbers) {
+  RTC_DCHECK_NOTREACHED()
+      << "Stream flushing not supported with legacy rtp modules.";
+}
+
 void ModuleRtpRtcpImpl::OnPacketsAcknowledged(
     rtc::ArrayView<const uint16_t> sequence_numbers) {
   RTC_DCHECK(rtp_sender_);

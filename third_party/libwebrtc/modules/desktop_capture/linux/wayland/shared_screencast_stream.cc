@@ -98,6 +98,9 @@ class SharedScreenCastStreamPrivate {
   DesktopVector CaptureCursorPosition();
 
  private:
+  // Stops the streams and cleans up any in-use elements.
+  void StopAndCleanupStream();
+
   uint32_t pw_stream_node_id_ = 0;
 
   DesktopSize stream_size_ = {};
@@ -176,11 +179,12 @@ void SharedScreenCastStreamPrivate::OnCoreError(void* data,
                                                 int seq,
                                                 int res,
                                                 const char* message) {
-  SharedScreenCastStreamPrivate* that =
+  SharedScreenCastStreamPrivate* stream =
       static_cast<SharedScreenCastStreamPrivate*>(data);
-  RTC_DCHECK(that);
+  RTC_DCHECK(stream);
 
   RTC_LOG(LS_ERROR) << "PipeWire remote error: " << message;
+  pw_thread_loop_signal(stream->pw_main_loop_, false);
 }
 
 void SharedScreenCastStreamPrivate::OnCoreInfo(void* data,
@@ -362,25 +366,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
 SharedScreenCastStreamPrivate::SharedScreenCastStreamPrivate() {}
 
 SharedScreenCastStreamPrivate::~SharedScreenCastStreamPrivate() {
-  if (pw_main_loop_) {
-    pw_thread_loop_stop(pw_main_loop_);
-  }
-
-  if (pw_stream_) {
-    pw_stream_destroy(pw_stream_);
-  }
-
-  if (pw_core_) {
-    pw_core_disconnect(pw_core_);
-  }
-
-  if (pw_context_) {
-    pw_context_destroy(pw_context_);
-  }
-
-  if (pw_main_loop_) {
-    pw_thread_loop_destroy(pw_main_loop_);
-  }
+  StopAndCleanupStream();
 }
 
 RTC_NO_SANITIZE("cfi-icall")
@@ -549,15 +535,54 @@ void SharedScreenCastStreamPrivate::UpdateScreenCastStreamResolution(
 }
 
 void SharedScreenCastStreamPrivate::StopScreenCastStream() {
+  StopAndCleanupStream();
+}
+
+void SharedScreenCastStreamPrivate::StopAndCleanupStream() {
+  // We get buffers on the PipeWire thread, but this is called from the capturer
+  // thread, so we need to wait on and stop the pipewire thread before we
+  // disconnect the stream so that we can guarantee we aren't in the middle of
+  // processing a new frame.
+
+  // Even if we *do* somehow have the other objects without a pipewire thread,
+  // destroying them without a thread causes a crash.
+  if (!pw_main_loop_)
+    return;
+
+  // While we can stop the thread now, we cannot destroy it until we've cleaned
+  // up the other members.
+  pw_thread_loop_wait(pw_main_loop_);
+  pw_thread_loop_stop(pw_main_loop_);
+
   if (pw_stream_) {
     pw_stream_disconnect(pw_stream_);
+    pw_stream_destroy(pw_stream_);
+    pw_stream_ = nullptr;
+
+    {
+      webrtc::MutexLock lock(&queue_lock_);
+      queue_.Reset();
+    }
   }
+
+  if (pw_core_) {
+    pw_core_disconnect(pw_core_);
+    pw_core_ = nullptr;
+  }
+
+  if (pw_context_) {
+    pw_context_destroy(pw_context_);
+    pw_context_ = nullptr;
+  }
+
+  pw_thread_loop_destroy(pw_main_loop_);
+  pw_main_loop_ = nullptr;
 }
 
 std::unique_ptr<DesktopFrame> SharedScreenCastStreamPrivate::CaptureFrame() {
   webrtc::MutexLock lock(&queue_lock_);
 
-  if (!queue_.current_frame()) {
+  if (!pw_stream_ || !queue_.current_frame()) {
     return std::unique_ptr<DesktopFrame>{};
   }
 
@@ -825,7 +850,8 @@ SharedScreenCastStream::~SharedScreenCastStream() {}
 rtc::scoped_refptr<SharedScreenCastStream>
 SharedScreenCastStream::CreateDefault() {
   // Explicit new, to access non-public constructor.
-  return rtc::scoped_refptr(new SharedScreenCastStream());
+  return rtc::scoped_refptr<SharedScreenCastStream>(
+      new SharedScreenCastStream());
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {

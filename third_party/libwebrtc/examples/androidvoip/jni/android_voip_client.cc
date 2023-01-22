@@ -135,7 +135,7 @@ void AndroidVoipClient::Init(
   // Due to consistent thread requirement on
   // modules/audio_device/android/audio_device_template.h,
   // code is invoked in the context of voip_thread_.
-  voip_thread_->Invoke<void>(RTC_FROM_HERE, [this, &config] {
+  voip_thread_->BlockingCall([this, &config] {
     RTC_DCHECK_RUN_ON(voip_thread_.get());
 
     supported_codecs_ = config.encoder_factory->GetSupportedEncoders();
@@ -145,7 +145,7 @@ void AndroidVoipClient::Init(
 }
 
 AndroidVoipClient::~AndroidVoipClient() {
-  voip_thread_->Invoke<void>(RTC_FROM_HERE, [this] {
+  voip_thread_->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(voip_thread_.get());
 
     JavaVM* jvm = nullptr;

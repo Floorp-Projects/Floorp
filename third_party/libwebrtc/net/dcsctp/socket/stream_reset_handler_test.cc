@@ -586,36 +586,20 @@ TEST_F(StreamResetHandlerTest, SendIncomingResetJustReturnsNothingPerformed) {
   EXPECT_THAT(responses[0].result(), ResponseResult::kSuccessNothingToDo);
 }
 
-TEST_F(StreamResetHandlerTest, SendSameRequestTwiceReturnsNothingToDo) {
-  reasm_->Add(kPeerInitialTsn, gen_.Ordered({1, 2, 3, 4}, "BE"));
-  reasm_->Add(AddTo(kPeerInitialTsn, 1), gen_.Ordered({1, 2, 3, 4}, "BE"));
+TEST_F(StreamResetHandlerTest, SendSameRequestTwiceIsIdempotent) {
+  // Simulate that receiving the same chunk twice (due to network issues,
+  // or retransmissions, causing a RECONFIG to be re-received) is idempotent.
+  for (int i = 0; i < 2; ++i) {
+    Parameters::Builder builder;
+    builder.Add(OutgoingSSNResetRequestParameter(
+        kPeerInitialReqSn, ReconfigRequestSN(3), AddTo(kPeerInitialTsn, 1),
+        {StreamID(1)}));
 
-  data_tracker_->Observe(kPeerInitialTsn);
-  data_tracker_->Observe(AddTo(kPeerInitialTsn, 1));
-  EXPECT_THAT(reasm_->FlushMessages(),
-              UnorderedElementsAre(
-                  SctpMessageIs(StreamID(1), PPID(53), kShortPayload),
-                  SctpMessageIs(StreamID(1), PPID(53), kShortPayload)));
-
-  Parameters::Builder builder1;
-  builder1.Add(OutgoingSSNResetRequestParameter(
-      kPeerInitialReqSn, ReconfigRequestSN(3), AddTo(kPeerInitialTsn, 1),
-      {StreamID(1)}));
-
-  std::vector<ReconfigurationResponseParameter> responses1 =
-      HandleAndCatchResponse(ReConfigChunk(builder1.Build()));
-  EXPECT_THAT(responses1, SizeIs(1));
-  EXPECT_EQ(responses1[0].result(), ResponseResult::kSuccessPerformed);
-
-  Parameters::Builder builder2;
-  builder2.Add(OutgoingSSNResetRequestParameter(
-      kPeerInitialReqSn, ReconfigRequestSN(3), AddTo(kPeerInitialTsn, 1),
-      {StreamID(1)}));
-
-  std::vector<ReconfigurationResponseParameter> responses2 =
-      HandleAndCatchResponse(ReConfigChunk(builder2.Build()));
-  EXPECT_THAT(responses2, SizeIs(1));
-  EXPECT_EQ(responses2[0].result(), ResponseResult::kSuccessNothingToDo);
+    std::vector<ReconfigurationResponseParameter> responses1 =
+        HandleAndCatchResponse(ReConfigChunk(builder.Build()));
+    EXPECT_THAT(responses1, SizeIs(1));
+    EXPECT_EQ(responses1[0].result(), ResponseResult::kInProgress);
+  }
 }
 
 TEST_F(StreamResetHandlerTest,

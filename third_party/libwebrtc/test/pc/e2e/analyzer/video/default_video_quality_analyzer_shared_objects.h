@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <utility>
@@ -21,6 +22,7 @@
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/timestamp.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
@@ -62,6 +64,9 @@ struct FrameCounters {
   // Count of frames that were dropped in any point between capturing and
   // rendering.
   int64_t dropped = 0;
+  // Count of frames for which decoder returned error when they were sent for
+  // decoding.
+  int64_t failed_to_decode = 0;
 };
 
 // Contains information about the codec that was used for encoding or decoding
@@ -77,7 +82,14 @@ struct StreamCodecInfo {
   Timestamp switched_on_at = Timestamp::PlusInfinity();
   // Timestamp when this codec was used last time.
   Timestamp switched_from_at = Timestamp::PlusInfinity();
+
+  std::string ToString() const;
 };
+
+std::ostream& operator<<(std::ostream& os, const StreamCodecInfo& state);
+rtc::StringBuilder& operator<<(rtc::StringBuilder& sb,
+                               const StreamCodecInfo& state);
+bool operator==(const StreamCodecInfo& a, const StreamCodecInfo& b);
 
 // Represents phases where video frame can be dropped and such drop will be
 // detected by analyzer.
@@ -85,10 +97,15 @@ enum class FrameDropPhase : int {
   kBeforeEncoder,
   kByEncoder,
   kTransport,
+  kByDecoder,
   kAfterDecoder,
   // kLastValue must be the last value in this enumeration.
   kLastValue
 };
+
+std::string ToString(FrameDropPhase phase);
+std::ostream& operator<<(std::ostream& os, FrameDropPhase phase);
+rtc::StringBuilder& operator<<(rtc::StringBuilder& sb, FrameDropPhase phase);
 
 struct StreamStats {
   explicit StreamStats(Timestamp stream_started_time);

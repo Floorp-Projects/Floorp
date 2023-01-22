@@ -44,6 +44,7 @@ struct ReceiverFrameStats {
   absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
 
   bool dropped = false;
+  bool decoder_failed = false;
 };
 
 // Represents a frame which was sent by sender and is currently on the way to
@@ -100,7 +101,8 @@ class FrameInFlight {
 
   void OnFrameDecoded(size_t peer,
                       webrtc::Timestamp time,
-                      StreamCodecInfo used_decoder);
+                      const StreamCodecInfo& used_decoder);
+  void OnDecoderError(size_t peer, const StreamCodecInfo& used_decoder);
 
   bool HasDecodeEndTime(size_t peer) const;
 

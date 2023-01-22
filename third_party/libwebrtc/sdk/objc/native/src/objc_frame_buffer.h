@@ -33,6 +33,12 @@ class ObjCFrameBuffer : public VideoFrameBuffer {
   int height() const override;
 
   rtc::scoped_refptr<I420BufferInterface> ToI420() override;
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                    int offset_y,
+                                                    int crop_width,
+                                                    int crop_height,
+                                                    int scaled_width,
+                                                    int scaled_height) override;
 
   id<RTC_OBJC_TYPE(RTCVideoFrameBuffer)> wrapped_frame_buffer() const;
 

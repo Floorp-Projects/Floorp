@@ -140,6 +140,13 @@ class DtlsTransport : public DtlsTransportInternal {
                             const uint8_t* digest,
                             size_t digest_len) override;
 
+  // SetRemoteParameters must be called after SetLocalCertificate.
+  webrtc::RTCError SetRemoteParameters(
+      absl::string_view digest_alg,
+      const uint8_t* digest,
+      size_t digest_len,
+      absl::optional<rtc::SSLRole> role) override;
+
   // Called to send a packet (via DTLS, if turned on).
   int SendPacket(const char* data,
                  size_t size,

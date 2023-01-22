@@ -371,10 +371,6 @@ class PeerConnection : public PeerConnectionInternal,
   void AddRemoteCandidate(const std::string& mid,
                           const cricket::Candidate& candidate) override;
 
-  // Report the UMA metric SdpFormatReceived for the given remote description.
-  void ReportSdpFormatReceived(
-      const SessionDescriptionInterface& remote_description) override;
-
   // Report the UMA metric BundleUsage for the given remote description.
   void ReportSdpBundleUsage(
       const SessionDescriptionInterface& remote_description) override;

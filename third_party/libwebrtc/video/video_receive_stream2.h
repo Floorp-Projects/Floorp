@@ -205,11 +205,6 @@ class VideoReceiveStream2
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
 
   struct DecodeFrameResult {
-    DecodeFrameResult(const DecodeFrameResult&) = delete;
-    DecodeFrameResult& operator=(const DecodeFrameResult&) = delete;
-    DecodeFrameResult(DecodeFrameResult&&) = default;
-    DecodeFrameResult& operator=(DecodeFrameResult&&) = default;
-
     // True if the decoder returned code WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME,
     // or if the decoder failed and a keyframe is required. When true, a
     // keyframe request should be sent even if a keyframe request was sent
@@ -281,10 +276,6 @@ class VideoReceiveStream2
   std::unique_ptr<VideoStreamDecoder> video_stream_decoder_;
   RtpStreamsSynchronizer rtp_stream_sync_;
 
-  // TODO(nisse, philipel): Creation and ownership of video encoders should be
-  // moved to the new VideoStreamDecoder.
-  std::vector<std::unique_ptr<VideoDecoder>> video_decoders_;
-
   std::unique_ptr<VideoStreamBufferController> buffer_;
 
   std::unique_ptr<RtpStreamReceiverInterface> media_receiver_
@@ -347,8 +338,6 @@ class VideoReceiveStream2
   // determines the maximum number of decoders that are created up front before
   // any video frame has been received.
   FieldTrialParameter<int> maximum_pre_stream_decoders_;
-
-  DecodeSynchronizer* decode_sync_;
 
   // Defined last so they are destroyed before all other members.
   rtc::TaskQueue decode_queue_;

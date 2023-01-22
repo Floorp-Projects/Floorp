@@ -25,6 +25,19 @@ rtc_source_set("scalability_mode") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
+rtc_source_set("scalability_mode_helper") {
+  visibility = [ "*" ]
+  sources = [
+    "scalability_mode_helper.cc",
+    "scalability_mode_helper.h",
+  ]
+  deps = [ "../../modules/video_coding/svc:scalability_mode_util" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("video_codecs_api") {
   visibility = [ "*" ]
   sources = [

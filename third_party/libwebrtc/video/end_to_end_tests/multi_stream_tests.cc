@@ -45,7 +45,7 @@ TEST(MultiStreamEndToEndTest, SendsAndReceivesMultipleStreams) {
 
     uint32_t Ssrc() { return ssrc_; }
 
-    bool Wait() { return done_.Wait(30 * 1000); }
+    bool Wait() { return done_.Wait(TimeDelta::Seconds(30)); }
 
    private:
     const MultiStreamTester::CodecSettings& settings_;

@@ -8,11 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
+#include "modules/video_coding/timing/frame_delay_variation_kalman_filter.h"
 
-#include "api/units/data_size.h"
-#include "api/units/frequency.h"
-#include "api/units/time_delta.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -21,9 +18,9 @@ namespace {
 // This test verifies that the initial filter state (link bandwidth, link
 // propagation delay) is such that a frame of size zero would take no time to
 // propagate.
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      InitializedFilterWithZeroSizeFrameTakesNoTimeToPropagate) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // A zero-sized frame...
   double frame_size_variation_bytes = 0.0;
@@ -41,9 +38,9 @@ TEST(FrameDelayDeltaKalmanFilterTest,
 
 // TODO(brandtr): Look into if there is a factor 1000 missing here? It seems
 // unreasonable to have an initial link bandwidth of 512 _mega_bits per second?
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      InitializedFilterWithSmallSizeFrameTakesFixedTimeToPropagate) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // A 1000-byte frame...
   double frame_size_variation_bytes = 1000.0;
@@ -58,15 +55,15 @@ TEST(FrameDelayDeltaKalmanFilterTest,
       expected_frame_delay_variation_estimate_ms);
 }
 
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      NegativeNoiseVarianceDoesNotUpdateFilter) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // Negative variance...
   double var_noise = -0.1;
-  filter.PredictAndUpdate(/*frame_delay_variation=*/TimeDelta::Millis(3),
+  filter.PredictAndUpdate(/*frame_delay_variation_ms=*/3,
                           /*frame_size_variation_bytes=*/200.0,
-                          /*max_frame_size=*/DataSize::Bytes(2000), var_noise);
+                          /*max_frame_size_bytes=*/2000, var_noise);
 
   // ...does _not_ update the filter.
   EXPECT_EQ(filter.GetFrameDelayVariationEstimateTotal(
@@ -75,9 +72,9 @@ TEST(FrameDelayDeltaKalmanFilterTest,
 
   // Positive variance...
   var_noise = 0.1;
-  filter.PredictAndUpdate(/*frame_delay_variation=*/TimeDelta::Millis(3),
+  filter.PredictAndUpdate(/*frame_delay_variation_ms=*/3,
                           /*frame_size_variation_bytes=*/200.0,
-                          /*max_frame_size=*/DataSize::Bytes(2000), var_noise);
+                          /*max_frame_size_bytes=*/2000, var_noise);
 
   // ...does update the filter.
   EXPECT_GT(filter.GetFrameDelayVariationEstimateTotal(
@@ -85,16 +82,16 @@ TEST(FrameDelayDeltaKalmanFilterTest,
             0.0);
 }
 
-TEST(FrameDelayDeltaKalmanFilterTest,
+TEST(FrameDelayVariationKalmanFilterTest,
      VerifyConvergenceWithAlternatingDeviations) {
-  FrameDelayDeltaKalmanFilter filter;
+  FrameDelayVariationKalmanFilter filter;
 
   // One frame every 33 ms.
   int framerate_fps = 30;
   // Let's assume approximately 10% delay variation.
-  TimeDelta frame_delay_variation = TimeDelta::Millis(3);
+  double frame_delay_variation_ms = 3;
   // With a bitrate of 512 kbps, each frame will be around 2000 bytes.
-  DataSize max_frame_size = DataSize::Bytes(2000);
+  double max_frame_size_bytes = 2000;
   // And again, let's assume 10% size deviation.
   double frame_size_variation_bytes = 200;
   double var_noise = 0.1;
@@ -103,15 +100,15 @@ TEST(FrameDelayDeltaKalmanFilterTest,
   for (int i = 0; i < test_duration_s * framerate_fps; ++i) {
     // For simplicity, assume alternating variations.
     double sign = (i % 2 == 0) ? 1.0 : -1.0;
-    filter.PredictAndUpdate(sign * frame_delay_variation,
-                            sign * frame_size_variation_bytes, max_frame_size,
-                            var_noise);
+    filter.PredictAndUpdate(sign * frame_delay_variation_ms,
+                            sign * frame_size_variation_bytes,
+                            max_frame_size_bytes, var_noise);
   }
 
   // Verify that the filter has converged within a margin of 0.1 ms.
   EXPECT_NEAR(
       filter.GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes),
-      frame_delay_variation.ms(), 0.1);
+      frame_delay_variation_ms, 0.1);
 }
 
 }  // namespace

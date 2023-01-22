@@ -450,8 +450,7 @@ TEST(AudioProcessingImplTest,
   webrtc::AudioProcessing::Config apm_config;
   // Enable AGC1.
   apm_config.gain_controller1.enabled = true;
-  apm_config.gain_controller1.mode =
-      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+  apm_config.gain_controller1.analog_gain_controller.enabled = true;
   apm_config.gain_controller2.enabled = false;
   apm_config.pre_amplifier.enabled = false;
   apm->ApplyConfig(apm_config);
@@ -465,34 +464,43 @@ TEST(AudioProcessingImplTest,
 
   MockEchoControl* echo_control_mock = echo_control_factory_ptr->GetNext();
 
-  const int initial_analog_gain = apm->recommended_stream_analog_level();
+  constexpr int kInitialStreamAnalogLevel = 123;
+  apm->set_stream_analog_level(kInitialStreamAnalogLevel);
+
+  // When the first fame is processed, no echo path gain change must be
+  // detected.
   EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
-  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_, false))
+  EXPECT_CALL(*echo_control_mock,
+              ProcessCapture(NotNull(), testing::_, /*echo_path_change=*/false))
       .Times(1);
   apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
 
-  // Force an analog gain change if it did not happen.
-  if (initial_analog_gain == apm->recommended_stream_analog_level()) {
-    apm->set_stream_analog_level(initial_analog_gain + 1);
+  // Simulate the application of the recommended analog level.
+  int recommended_analog_level = apm->recommended_stream_analog_level();
+  if (recommended_analog_level == kInitialStreamAnalogLevel) {
+    // Force an analog gain change if it did not happen.
+    recommended_analog_level++;
   }
+  apm->set_stream_analog_level(recommended_analog_level);
 
+  // After the first fame and with a stream analog level change, the echo path
+  // gain change must be detected.
   EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
-  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_, true))
+  EXPECT_CALL(*echo_control_mock,
+              ProcessCapture(NotNull(), testing::_, /*echo_path_change=*/true))
       .Times(1);
   apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
 }
 
+// Tests that a stream is successfully processed when AGC2 adaptive digital is
+// used and when the field trial
+// `WebRTC-Audio-TransientSuppressorVadMode/Enabled-Default/` is set.
 TEST(AudioProcessingImplTest,
-     EchoControllerObservesNoDigitalAgc2EchoPathGainChange) {
-  // Tests that the echo controller doesn't observe an echo path gain change
-  // when the AGC2 digital submodule changes the digital gain without analog
-  // gain changes.
-  auto echo_control_factory = std::make_unique<MockEchoControlFactory>();
-  const auto* echo_control_factory_ptr = echo_control_factory.get();
-  rtc::scoped_refptr<AudioProcessing> apm =
-      AudioProcessingBuilderForTesting()
-          .SetEchoControlFactory(std::move(echo_control_factory))
-          .Create();
+     ProcessWithAgc2AndTransientSuppressorVadModeDefault) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-TransientSuppressorVadMode/Enabled-Default/");
+  rtc::scoped_refptr<AudioProcessing> apm = AudioProcessingBuilder().Create();
+  ASSERT_EQ(apm->Initialize(), AudioProcessing::kNoError);
   webrtc::AudioProcessing::Config apm_config;
   // Disable AGC1 analog.
   apm_config.gain_controller1.enabled = false;
@@ -500,33 +508,27 @@ TEST(AudioProcessingImplTest,
   apm_config.gain_controller2.enabled = true;
   apm_config.gain_controller2.adaptive_digital.enabled = true;
   apm->ApplyConfig(apm_config);
-
-  constexpr int16_t kAudioLevel = 1000;
-  constexpr size_t kSampleRateHz = 48000;
-  constexpr size_t kNumChannels = 2;
-  std::array<int16_t, kNumChannels * kSampleRateHz / 100> frame;
-  StreamConfig stream_config(kSampleRateHz, kNumChannels);
-  frame.fill(kAudioLevel);
-
-  MockEchoControl* echo_control_mock = echo_control_factory_ptr->GetNext();
-
-  EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
-  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_,
-                                                 /*echo_path_change=*/false))
-      .Times(1);
-  apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
-
-  EXPECT_CALL(*echo_control_mock, AnalyzeCapture(testing::_)).Times(1);
-  EXPECT_CALL(*echo_control_mock, ProcessCapture(NotNull(), testing::_,
-                                                 /*echo_path_change=*/false))
-      .Times(1);
-  apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
+  constexpr int kSampleRateHz = 48000;
+  constexpr int kNumChannels = 1;
+  std::array<float, kSampleRateHz / 100> buffer;
+  float* channel_pointers[] = {buffer.data()};
+  StreamConfig stream_config(/*sample_rate_hz=*/kSampleRateHz,
+                             /*num_channels=*/kNumChannels);
+  Random random_generator(2341U);
+  constexpr int kFramesToProcess = 10;
+  for (int i = 0; i < kFramesToProcess; ++i) {
+    RandomizeSampleVector(&random_generator, buffer);
+    ASSERT_EQ(apm->ProcessStream(channel_pointers, stream_config, stream_config,
+                                 channel_pointers),
+              kNoErr);
+  }
 }
 
-TEST(AudioProcessingImplTest, ProcessWithAgc2InjectedSpeechProbability) {
-  // Tests that a stream is successfully processed for the field trial
-  // `WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/` using
-  // injected speech probability in AGC2 digital.
+// Tests that a stream is successfully processed when AGC2 adaptive digital is
+// used and when the field trial
+// `WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/` is set.
+TEST(AudioProcessingImplTest,
+     ProcessWithAgc2AndTransientSuppressorVadModeRnnVad) {
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/");
   rtc::scoped_refptr<AudioProcessing> apm = AudioProcessingBuilder().Create();

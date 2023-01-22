@@ -867,7 +867,7 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
     }
 
     void PerformTest() override {
-      ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeout.ms()))
+      ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeout))
           << "Timed out before receiving an initial high bitrate.";
       frame_generator_->ChangeResolution(kDefaultWidth * 2, kDefaultHeight * 2);
       SendTask(task_queue_, [&]() {

@@ -203,10 +203,6 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
               (),
               (const, override));
   MOCK_METHOD(void,
-              ReportSdpFormatReceived,
-              (const SessionDescriptionInterface&),
-              (override));
-  MOCK_METHOD(void,
               ReportSdpBundleUsage,
               (const SessionDescriptionInterface&),
               (override));

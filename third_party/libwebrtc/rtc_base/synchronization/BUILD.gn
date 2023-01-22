@@ -86,7 +86,6 @@ if (rtc_include_tests) {
         ":yield",
         ":yield_policy",
         "..:checks",
-        "..:location",
         "..:macromagic",
         "..:platform_thread",
         "..:rtc_base",

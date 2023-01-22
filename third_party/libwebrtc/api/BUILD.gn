@@ -209,7 +209,6 @@ rtc_library("libjingle_peerconnection_api") {
     "peer_connection_interface.h",
     "rtp_receiver_interface.cc",
     "rtp_receiver_interface.h",
-    "rtp_sender_interface.cc",
     "rtp_sender_interface.h",
     "rtp_transceiver_interface.cc",
     "rtp_transceiver_interface.h",

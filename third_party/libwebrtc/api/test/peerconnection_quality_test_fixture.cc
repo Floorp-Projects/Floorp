@@ -175,6 +175,15 @@ absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
   return GetOutputDumpFileName(stream_label, receiver) + ".frame_ids.txt";
 }
 
+std::string PeerConnectionE2EQualityTestFixture::VideoDumpOptions::ToString()
+    const {
+  rtc::StringBuilder out;
+  out << "{ output_directory_=" << output_directory_
+      << ", sampling_modulo_=" << sampling_modulo_
+      << ", export_frame_ids_=" << export_frame_ids_ << " }";
+  return out.Release();
+}
+
 PeerConnectionE2EQualityTestFixture::VideoConfig::VideoConfig(
     const VideoResolution& resolution)
     : width(resolution.width()),

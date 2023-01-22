@@ -14,7 +14,9 @@
 #include <atomic>
 #include <memory>
 
+#include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "audio_session_observer.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "rtc_base/buffer.h"
@@ -46,8 +48,7 @@ namespace ios_adm {
 // same thread.
 class AudioDeviceIOS : public AudioDeviceGeneric,
                        public AudioSessionObserver,
-                       public VoiceProcessingAudioUnitObserver,
-                       public rtc::MessageHandler {
+                       public VoiceProcessingAudioUnitObserver {
  public:
   explicit AudioDeviceIOS(bool bypass_voice_processing);
   ~AudioDeviceIOS() override;
@@ -159,9 +160,6 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
                             UInt32 num_frames,
                             AudioBufferList* io_data) override;
 
-  // Handles messages from posts.
-  void OnMessage(rtc::Message* msg) override;
-
   bool IsInterrupted();
 
  private:
@@ -212,10 +210,6 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
 
   // Determines whether voice processing should be enabled or disabled.
   const bool bypass_voice_processing_;
-
-  // Ensures that methods are called from the same thread as this object is
-  // created on.
-  SequenceChecker thread_checker_;
 
   // Native I/O audio thread checker.
   SequenceChecker io_thread_checker_;
@@ -273,7 +267,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   std::atomic<int> playing_;
 
   // Set to true after successful call to Init(), false otherwise.
-  bool initialized_ RTC_GUARDED_BY(thread_checker_);
+  bool initialized_ RTC_GUARDED_BY(thread_);
 
   // Set to true after successful call to InitRecording() or InitPlayout(),
   // false otherwise.
@@ -284,23 +278,27 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
 
   // Audio interruption observer instance.
   RTCNativeAudioSessionDelegateAdapter* audio_session_observer_
-      RTC_GUARDED_BY(thread_checker_);
+      RTC_GUARDED_BY(thread_);
 
   // Set to true if we've activated the audio session.
-  bool has_configured_session_ RTC_GUARDED_BY(thread_checker_);
+  bool has_configured_session_ RTC_GUARDED_BY(thread_);
 
   // Counts number of detected audio glitches on the playout side.
-  int64_t num_detected_playout_glitches_ RTC_GUARDED_BY(thread_checker_);
+  int64_t num_detected_playout_glitches_ RTC_GUARDED_BY(thread_);
   int64_t last_playout_time_ RTC_GUARDED_BY(io_thread_checker_);
 
   // Counts number of playout callbacks per call.
-  // The value isupdated on the native I/O thread and later read on the
-  // creating thread (see thread_checker_) but at this stage no audio is
-  // active. Hence, it is a "thread safe" design and no lock is needed.
+  // The value is updated on the native I/O thread and later read on the
+  // creating `thread_` but at this stage no audio is active.
+  // Hence, it is a "thread safe" design and no lock is needed.
   int64_t num_playout_callbacks_;
 
   // Contains the time for when the last output volume change was detected.
-  int64_t last_output_volume_change_time_ RTC_GUARDED_BY(thread_checker_);
+  int64_t last_output_volume_change_time_ RTC_GUARDED_BY(thread_);
+
+  // Avoids running pending task after `this` is Terminated.
+  rtc::scoped_refptr<PendingTaskSafetyFlag> safety_ =
+      PendingTaskSafetyFlag::Create();
 };
 }  // namespace ios_adm
 }  // namespace webrtc

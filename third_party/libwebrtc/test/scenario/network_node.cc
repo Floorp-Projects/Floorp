@@ -28,8 +28,6 @@ SimulatedNetwork::Config CreateSimulationConfig(
   sim_config.queue_delay_ms = config.delay.ms();
   sim_config.delay_standard_deviation_ms = config.delay_std_dev.ms();
   sim_config.packet_overhead = config.packet_overhead.bytes<int>();
-  sim_config.codel_active_queue_management =
-      config.codel_active_queue_management;
   sim_config.queue_length_packets =
       config.packet_queue_length_limit.value_or(0);
   return sim_config;

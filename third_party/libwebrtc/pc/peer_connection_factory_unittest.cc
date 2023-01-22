@@ -206,16 +206,33 @@ class PeerConnectionFactoryTest : public ::testing::Test {
                 webrtc::ScalabilityMode::kL2T1h,
                 webrtc::ScalabilityMode::kL2T1_KEY,
                 webrtc::ScalabilityMode::kL2T2,
+                webrtc::ScalabilityMode::kL2T2h,
                 webrtc::ScalabilityMode::kL2T2_KEY,
                 webrtc::ScalabilityMode::kL2T2_KEY_SHIFT,
                 webrtc::ScalabilityMode::kL2T3,
+                webrtc::ScalabilityMode::kL2T3h,
                 webrtc::ScalabilityMode::kL2T3_KEY,
                 webrtc::ScalabilityMode::kL3T1,
+                webrtc::ScalabilityMode::kL3T1h,
+                webrtc::ScalabilityMode::kL3T1_KEY,
+                webrtc::ScalabilityMode::kL3T2,
+                webrtc::ScalabilityMode::kL3T2h,
+                webrtc::ScalabilityMode::kL3T2_KEY,
                 webrtc::ScalabilityMode::kL3T3,
+                webrtc::ScalabilityMode::kL3T3h,
                 webrtc::ScalabilityMode::kL3T3_KEY,
                 webrtc::ScalabilityMode::kS2T1,
+                webrtc::ScalabilityMode::kS2T1h,
+                webrtc::ScalabilityMode::kS2T2,
+                webrtc::ScalabilityMode::kS2T2h,
                 webrtc::ScalabilityMode::kS2T3,
-                webrtc::ScalabilityMode::kS3T3)
+                webrtc::ScalabilityMode::kS2T3h,
+                webrtc::ScalabilityMode::kS3T1,
+                webrtc::ScalabilityMode::kS3T1h,
+                webrtc::ScalabilityMode::kS3T2,
+                webrtc::ScalabilityMode::kS3T2h,
+                webrtc::ScalabilityMode::kS3T3,
+                webrtc::ScalabilityMode::kS3T3h)
             // clang-format on
             )
             << "Codec: " << codec.name;
@@ -569,7 +586,7 @@ TEST_F(PeerConnectionFactoryTest, LocalRendering) {
 }
 
 TEST(PeerConnectionFactoryDependenciesTest, UsesNetworkManager) {
-  constexpr int64_t kWaitTimeoutMs = 10000;
+  constexpr webrtc::TimeDelta kWaitTimeout = webrtc::TimeDelta::Seconds(10);
   auto mock_network_manager = std::make_unique<NiceMock<MockNetworkManager>>();
 
   rtc::Event called;
@@ -590,11 +607,11 @@ TEST(PeerConnectionFactoryDependenciesTest, UsesNetworkManager) {
       config, webrtc::PeerConnectionDependencies(&observer));
   ASSERT_TRUE(pc.ok());
 
-  called.Wait(kWaitTimeoutMs);
+  called.Wait(kWaitTimeout);
 }
 
 TEST(PeerConnectionFactoryDependenciesTest, UsesPacketSocketFactory) {
-  constexpr int64_t kWaitTimeoutMs = 10000;
+  constexpr webrtc::TimeDelta kWaitTimeout = webrtc::TimeDelta::Seconds(10);
   auto mock_socket_factory =
       std::make_unique<NiceMock<rtc::MockPacketSocketFactory>>();
 
@@ -625,5 +642,5 @@ TEST(PeerConnectionFactoryDependenciesTest, UsesPacketSocketFactory) {
       config, webrtc::PeerConnectionDependencies(&observer));
   ASSERT_TRUE(pc.ok());
 
-  called.Wait(kWaitTimeoutMs);
+  called.Wait(kWaitTimeout);
 }

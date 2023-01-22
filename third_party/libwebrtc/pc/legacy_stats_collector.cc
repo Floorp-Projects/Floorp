@@ -46,7 +46,6 @@
 #include "pc/transport_stats.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/socket_address.h"
@@ -861,9 +860,9 @@ std::map<std::string, std::string> LegacyStatsCollector::ExtractSessionInfo() {
 
   SessionStats stats;
   auto transceivers = pc_->GetTransceiversInternal();
-  pc_->network_thread()->Invoke<void>(
-      RTC_FROM_HERE, [&, sctp_transport_name = pc_->sctp_transport_name(),
-                      sctp_mid = pc_->sctp_mid()]() mutable {
+  pc_->network_thread()->BlockingCall(
+      [&, sctp_transport_name = pc_->sctp_transport_name(),
+       sctp_mid = pc_->sctp_mid()]() mutable {
         stats = ExtractSessionInfo_n(
             transceivers, std::move(sctp_transport_name), std::move(sctp_mid));
       });
@@ -1049,7 +1048,7 @@ void LegacyStatsCollector::ExtractBweInfo() {
   }
 
   if (!video_media_channels.empty()) {
-    pc_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&] {
+    pc_->worker_thread()->BlockingCall([&] {
       for (const auto& channel : video_media_channels) {
         channel->FillBitrateInfo(&bwe_info);
       }
@@ -1200,7 +1199,7 @@ void LegacyStatsCollector::ExtractMediaInfo(
     }
   }
 
-  pc_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&] {
+  pc_->worker_thread()->BlockingCall([&] {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
     // Populate `receiver_track_id_by_ssrc` for the gatherers.
     int i = 0;

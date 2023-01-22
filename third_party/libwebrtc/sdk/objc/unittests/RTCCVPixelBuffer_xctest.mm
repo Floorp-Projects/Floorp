@@ -21,6 +21,44 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "third_party/libyuv/include/libyuv.h"
 
+namespace {
+
+struct ToI420WithCropAndScaleSetting {
+  int inputWidth;
+  int inputHeight;
+  int offsetX;
+  int offsetY;
+  int cropWidth;
+  int cropHeight;
+  int scaleWidth;
+  int scaleHeight;
+};
+
+constexpr const ToI420WithCropAndScaleSetting kToI420WithCropAndScaleSettings[] = {
+    ToI420WithCropAndScaleSetting{
+        .inputWidth = 640,
+        .inputHeight = 360,
+        .offsetX = 0,
+        .offsetY = 0,
+        .cropWidth = 640,
+        .cropHeight = 360,
+        .scaleWidth = 320,
+        .scaleHeight = 180,
+    },
+    ToI420WithCropAndScaleSetting{
+        .inputWidth = 640,
+        .inputHeight = 360,
+        .offsetX = 160,
+        .offsetY = 90,
+        .cropWidth = 160,
+        .cropHeight = 90,
+        .scaleWidth = 320,
+        .scaleHeight = 180,
+    },
+};
+
+}  // namespace
+
 @interface RTCCVPixelBufferTests : XCTestCase
 @end
 
@@ -183,6 +221,76 @@
   [self toI420WithPixelFormat:kCVPixelFormatType_32ARGB];
 }
 
+- (void)testToI420WithCropAndScale_NV12 {
+  for (const auto &setting : kToI420WithCropAndScaleSettings) {
+    [self toI420WithCropAndScaleWithPixelFormat:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+                                        setting:setting];
+  }
+}
+
+- (void)testToI420WithCropAndScale_32BGRA {
+  for (const auto &setting : kToI420WithCropAndScaleSettings) {
+    [self toI420WithCropAndScaleWithPixelFormat:kCVPixelFormatType_32BGRA setting:setting];
+  }
+}
+
+- (void)testToI420WithCropAndScale_32ARGB {
+  for (const auto &setting : kToI420WithCropAndScaleSettings) {
+    [self toI420WithCropAndScaleWithPixelFormat:kCVPixelFormatType_32ARGB setting:setting];
+  }
+}
+
+- (void)testScaleBufferTest {
+  CVPixelBufferRef pixelBufferRef = NULL;
+  CVPixelBufferCreate(
+      NULL, 1920, 1080, kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange, NULL, &pixelBufferRef);
+
+  rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer = CreateI420Gradient(1920, 1080);
+  CopyI420BufferToCVPixelBuffer(i420Buffer, pixelBufferRef);
+
+  RTC_OBJC_TYPE(RTCCVPixelBuffer) *buffer =
+      [[RTC_OBJC_TYPE(RTCCVPixelBuffer) alloc] initWithPixelBuffer:pixelBufferRef];
+
+  XCTAssertEqual(buffer.width, 1920);
+  XCTAssertEqual(buffer.height, 1080);
+  XCTAssertEqual(buffer.cropX, 0);
+  XCTAssertEqual(buffer.cropY, 0);
+  XCTAssertEqual(buffer.cropWidth, 1920);
+  XCTAssertEqual(buffer.cropHeight, 1080);
+
+  RTC_OBJC_TYPE(RTCCVPixelBuffer) *buffer2 =
+      (RTC_OBJC_TYPE(RTCCVPixelBuffer) *)[buffer cropAndScaleWith:320
+                                                          offsetY:180
+                                                        cropWidth:1280
+                                                       cropHeight:720
+                                                       scaleWidth:960
+                                                      scaleHeight:540];
+
+  XCTAssertEqual(buffer2.width, 960);
+  XCTAssertEqual(buffer2.height, 540);
+  XCTAssertEqual(buffer2.cropX, 320);
+  XCTAssertEqual(buffer2.cropY, 180);
+  XCTAssertEqual(buffer2.cropWidth, 1280);
+  XCTAssertEqual(buffer2.cropHeight, 720);
+
+  RTC_OBJC_TYPE(RTCCVPixelBuffer) *buffer3 =
+      (RTC_OBJC_TYPE(RTCCVPixelBuffer) *)[buffer2 cropAndScaleWith:240
+                                                           offsetY:135
+                                                         cropWidth:480
+                                                        cropHeight:270
+                                                        scaleWidth:320
+                                                       scaleHeight:180];
+
+  XCTAssertEqual(buffer3.width, 320);
+  XCTAssertEqual(buffer3.height, 180);
+  XCTAssertEqual(buffer3.cropX, 640);
+  XCTAssertEqual(buffer3.cropY, 360);
+  XCTAssertEqual(buffer3.cropWidth, 640);
+  XCTAssertEqual(buffer3.cropHeight, 360);
+
+  CVBufferRelease(pixelBufferRef);
+}
+
 #pragma mark - Shared test code
 
 - (void)cropAndScaleTestWithNV12 {
@@ -295,6 +403,51 @@
   RTC_OBJC_TYPE(RTCI420Buffer) *fromCVPixelBuffer = [buffer toI420];
 
   double psnr = I420PSNR(*i420Buffer, *[fromCVPixelBuffer nativeI420Buffer]);
+  double target = webrtc::kPerfectPSNR;
+  if (pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange) {
+    // libyuv's I420ToRGB functions seem to lose some quality.
+    target = 19.0;
+  }
+  XCTAssertGreaterThanOrEqual(psnr, target);
+
+  CVBufferRelease(pixelBufferRef);
+}
+
+- (void)toI420WithCropAndScaleWithPixelFormat:(OSType)pixelFormat
+                                      setting:(const ToI420WithCropAndScaleSetting &)setting {
+  rtc::scoped_refptr<webrtc::I420Buffer> i420Buffer =
+      CreateI420Gradient(setting.inputWidth, setting.inputHeight);
+
+  CVPixelBufferRef pixelBufferRef = NULL;
+  CVPixelBufferCreate(
+      NULL, setting.inputWidth, setting.inputHeight, pixelFormat, NULL, &pixelBufferRef);
+
+  CopyI420BufferToCVPixelBuffer(i420Buffer, pixelBufferRef);
+
+  RTC_OBJC_TYPE(RTCI420Buffer) *objcI420Buffer =
+      [[RTC_OBJC_TYPE(RTCI420Buffer) alloc] initWithFrameBuffer:i420Buffer];
+  RTC_OBJC_TYPE(RTCI420Buffer) *scaledObjcI420Buffer =
+      (RTC_OBJC_TYPE(RTCI420Buffer) *)[objcI420Buffer cropAndScaleWith:setting.offsetX
+                                                               offsetY:setting.offsetY
+                                                             cropWidth:setting.cropWidth
+                                                            cropHeight:setting.cropHeight
+                                                            scaleWidth:setting.scaleWidth
+                                                           scaleHeight:setting.scaleHeight];
+  RTC_OBJC_TYPE(RTCCVPixelBuffer) *buffer =
+      [[RTC_OBJC_TYPE(RTCCVPixelBuffer) alloc] initWithPixelBuffer:pixelBufferRef];
+  id<RTC_OBJC_TYPE(RTCVideoFrameBuffer)> scaledBuffer =
+      [buffer cropAndScaleWith:setting.offsetX
+                       offsetY:setting.offsetY
+                     cropWidth:setting.cropWidth
+                    cropHeight:setting.cropHeight
+                    scaleWidth:setting.scaleWidth
+                   scaleHeight:setting.scaleHeight];
+  XCTAssertTrue([scaledBuffer isKindOfClass:[RTC_OBJC_TYPE(RTCCVPixelBuffer) class]]);
+
+  RTC_OBJC_TYPE(RTCI420Buffer) *fromCVPixelBuffer = [scaledBuffer toI420];
+
+  double psnr =
+      I420PSNR(*[scaledObjcI420Buffer nativeI420Buffer], *[fromCVPixelBuffer nativeI420Buffer]);
   double target = webrtc::kPerfectPSNR;
   if (pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange) {
     // libyuv's I420ToRGB functions seem to lose some quality.

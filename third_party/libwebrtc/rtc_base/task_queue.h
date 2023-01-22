@@ -90,7 +90,6 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueue {
   // Returns non-owning pointer to the task queue implementation.
   webrtc::TaskQueueBase* Get() { return impl_; }
 
-  // TODO(tommi): For better debuggability, implement RTC_FROM_HERE.
   void PostTask(absl::AnyInvocable<void() &&> task) {
     impl_->PostTask(std::move(task));
   }
