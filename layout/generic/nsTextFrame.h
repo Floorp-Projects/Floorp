@@ -941,6 +941,7 @@ class nsTextFrame : public nsIFrame {
    * @return            true if the selection affects colors, false otherwise
    */
   static bool GetSelectionTextColors(SelectionType aSelectionType,
+                                     const nsAtom* aHighlightName,
                                      nsTextPaintStyle& aTextPaintStyle,
                                      const TextRangeStyle& aRangeStyle,
                                      nscolor* aForeground,
