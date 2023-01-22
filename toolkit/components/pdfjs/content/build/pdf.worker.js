@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * JavaScript code in this page
  *
- * Copyright 2022 Mozilla Foundation
+ * Copyright 2023 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.3.55';
+    const workerVersion = '3.3.97';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -4683,7 +4683,10 @@ class Annotation {
     if (!(as instanceof _primitives.Name) || !normalAppearanceState.has(as.name)) {
       return;
     }
-    this.appearance = normalAppearanceState.get(as.name);
+    const appearance = normalAppearanceState.get(as.name);
+    if (appearance instanceof _base_stream.BaseStream) {
+      this.appearance = appearance;
+    }
   }
   setOptionalContent(dict) {
     this.oc = null;
@@ -6056,8 +6059,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       this.data.fieldValue = "Off";
     }
     this.data.exportValue = exportValues[1];
-    this.checkedAppearance = normalAppearance.get(this.data.exportValue) || null;
-    this.uncheckedAppearance = normalAppearance.get("Off") || null;
+    const checkedAppearance = normalAppearance.get(this.data.exportValue);
+    this.checkedAppearance = checkedAppearance instanceof _base_stream.BaseStream ? checkedAppearance : null;
+    const uncheckedAppearance = normalAppearance.get("Off");
+    this.uncheckedAppearance = uncheckedAppearance instanceof _base_stream.BaseStream ? uncheckedAppearance : null;
     if (this.checkedAppearance) {
       this._streams.push(this.checkedAppearance);
     } else {
@@ -6092,8 +6097,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
         break;
       }
     }
-    this.checkedAppearance = normalAppearance.get(this.data.buttonValue) || null;
-    this.uncheckedAppearance = normalAppearance.get("Off") || null;
+    const checkedAppearance = normalAppearance.get(this.data.buttonValue);
+    this.checkedAppearance = checkedAppearance instanceof _base_stream.BaseStream ? checkedAppearance : null;
+    const uncheckedAppearance = normalAppearance.get("Off");
+    this.uncheckedAppearance = uncheckedAppearance instanceof _base_stream.BaseStream ? uncheckedAppearance : null;
     if (this.checkedAppearance) {
       this._streams.push(this.checkedAppearance);
     } else {
@@ -14986,6 +14993,8 @@ class DecodingContext {
     return (0, _util.shadow)(this, "contextCache", cache);
   }
 }
+const MAX_INT_32 = 2 ** 31 - 1;
+const MIN_INT_32 = -(2 ** 31);
 function decodeInteger(contextCache, procedure, decoder) {
   const contexts = contextCache.getContexts(procedure);
   let prev = 1;
@@ -15000,10 +15009,14 @@ function decodeInteger(contextCache, procedure, decoder) {
   }
   const sign = readBits(1);
   const value = readBits(1) ? readBits(1) ? readBits(1) ? readBits(1) ? readBits(1) ? readBits(32) + 4436 : readBits(12) + 340 : readBits(8) + 84 : readBits(6) + 20 : readBits(4) + 4 : readBits(2);
+  let signedValue;
   if (sign === 0) {
-    return value;
+    signedValue = value;
   } else if (value > 0) {
-    return -value;
+    signedValue = -value;
+  }
+  if (signedValue >= MIN_INT_32 && signedValue <= MAX_INT_32) {
+    return signedValue;
   }
   return null;
 }
@@ -20548,7 +20561,52 @@ function adjustWidths(properties) {
   }
   properties.defaultWidth *= scale;
 }
-function adjustToUnicode(properties, builtInEncoding) {
+function adjustTrueTypeToUnicode(properties, isSymbolicFont, nameRecords) {
+  if (properties.isInternalFont) {
+    return;
+  }
+  if (properties.hasIncludedToUnicodeMap) {
+    return;
+  }
+  if (properties.hasEncoding) {
+    return;
+  }
+  if (properties.toUnicode instanceof _to_unicode_map.IdentityToUnicodeMap) {
+    return;
+  }
+  if (!isSymbolicFont) {
+    return;
+  }
+  if (nameRecords.length === 0) {
+    return;
+  }
+  if (properties.defaultEncoding === _encodings.WinAnsiEncoding) {
+    return;
+  }
+  for (const r of nameRecords) {
+    if (!isWinNameRecord(r)) {
+      return;
+    }
+  }
+  const encoding = _encodings.WinAnsiEncoding;
+  const toUnicode = [],
+    glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+  for (const charCode in encoding) {
+    const glyphName = encoding[charCode];
+    if (glyphName === "") {
+      continue;
+    }
+    const unicode = glyphsUnicodeMap[glyphName];
+    if (unicode === undefined) {
+      continue;
+    }
+    toUnicode[charCode] = String.fromCharCode(unicode);
+  }
+  if (toUnicode.length > 0) {
+    properties.toUnicode.amend(toUnicode);
+  }
+}
+function adjustType1ToUnicode(properties, builtInEncoding) {
   if (properties.isInternalFont) {
     return;
   }
@@ -20565,7 +20623,7 @@ function adjustToUnicode(properties, builtInEncoding) {
     glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
   for (const charCode in builtInEncoding) {
     if (properties.hasEncoding) {
-      if (properties.differences.length === 0 || properties.differences[charCode] !== undefined) {
+      if (properties.baseEncodingName || properties.differences[charCode] !== undefined) {
         continue;
       }
     }
@@ -20733,6 +20791,12 @@ function buildToFontChar(encoding, glyphsUnicodeMap, differences) {
     }
   }
   return toFontChar;
+}
+function isMacNameRecord(r) {
+  return r.platform === 1 && r.encoding === 0 && r.language === 0;
+}
+function isWinNameRecord(r) {
+  return r.platform === 3 && r.encoding === 1 && r.language === 0x409;
 }
 function convertCidString(charCode, cid, shouldThrow = false) {
   switch (cid.length) {
@@ -21377,7 +21441,7 @@ class Font {
         if (!potentialTables.name) {
           throw new _util.FormatError('TrueType Collection font must contain a "name" table.');
         }
-        const nameTable = readNameTable(potentialTables.name);
+        const [nameTable] = readNameTable(potentialTables.name);
         for (let j = 0, jj = nameTable.length; j < jj; j++) {
           for (let k = 0, kk = nameTable[j].length; k < kk; k++) {
             const nameEntry = nameTable[j][k] && nameTable[j][k].replace(/\s/g, "");
@@ -21979,17 +22043,17 @@ class Font {
     function readNameTable(nameTable) {
       const start = (font.start || 0) + nameTable.offset;
       font.pos = start;
-      const names = [[], []];
+      const names = [[], []],
+        records = [];
       const length = nameTable.length,
         end = start + length;
       const format = font.getUint16();
       const FORMAT_0_HEADER_LENGTH = 6;
       if (format !== 0 || length < FORMAT_0_HEADER_LENGTH) {
-        return names;
+        return [names, records];
       }
       const numRecords = font.getUint16();
       const stringsStart = font.getUint16();
-      const records = [];
       const NAME_RECORD_LENGTH = 12;
       let i, ii;
       for (i = 0; i < numRecords && font.pos + NAME_RECORD_LENGTH <= end; i++) {
@@ -22001,7 +22065,7 @@ class Font {
           length: font.getUint16(),
           offset: font.getUint16()
         };
-        if (r.platform === 1 && r.encoding === 0 && r.language === 0 || r.platform === 3 && r.encoding === 1 && r.language === 0x409) {
+        if (isMacNameRecord(r) || isWinNameRecord(r)) {
           records.push(r);
         }
       }
@@ -22026,7 +22090,7 @@ class Font {
           names[0][nameIndex] = font.getString(record.length);
         }
       }
-      return names;
+      return [names, records];
     }
     const TTOpsStackDeltas = [0, 0, 0, 0, 0, 0, 0, 0, -2, -2, -2, -2, 0, 0, -2, -5, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, -1, -1, 1, -1, -999, 0, 1, 0, -1, -2, 0, -1, -2, -1, -1, 0, -1, -1, 0, 0, -999, -999, -1, -1, -1, -1, -2, -999, -2, -2, -999, 0, -2, -2, 0, 0, -2, 0, -2, 0, 0, 0, -2, -1, -1, 1, 1, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, -1, -1, 0, -999, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -999, -999, -999, -999, -999, -1, -1, -2, -2, 0, 0, 0, 0, -1, -1, -999, -2, -2, 0, 0, -1, -2, -2, 0, 0, 0, -1, -1, -1, -2];
     function sanitizeTTProgram(table, ttContext) {
@@ -22567,9 +22631,12 @@ class Font {
         data: createNameTable(this.name)
       };
     } else {
-      const namePrototype = readNameTable(tables.name);
+      const [namePrototype, nameRecords] = readNameTable(tables.name);
       tables.name.data = createNameTable(name, namePrototype);
       this.psName = namePrototype[0][6] || null;
+      if (!properties.composite) {
+        adjustTrueTypeToUnicode(properties, this.isSymbolicFont, nameRecords);
+      }
     }
     const builder = new _opentype_file_builder.OpenTypeFileBuilder(header.version);
     for (const tableTag in tables) {
@@ -22580,7 +22647,7 @@ class Font {
   convert(fontName, font, properties) {
     properties.fixedPitch = false;
     if (properties.builtInEncoding) {
-      adjustToUnicode(properties, properties.builtInEncoding);
+      adjustType1ToUnicode(properties, properties.builtInEncoding);
     }
     let glyphZeroId = 1;
     if (font instanceof _cff_font.CFFFont) {
@@ -52350,8 +52417,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.3.55';
-const pdfjsBuild = '1d683708e';
+const pdfjsVersion = '3.3.97';
+const pdfjsBuild = 'edfdb693e';
 })();
 
 /******/ 	return __webpack_exports__;

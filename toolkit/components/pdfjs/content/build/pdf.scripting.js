@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * JavaScript code in this page
  *
- * Copyright 2022 Mozilla Foundation
+ * Copyright 2023 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4247,8 +4247,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.3.55';
-const pdfjsBuild = '1d683708e';
+const pdfjsVersion = '3.3.97';
+const pdfjsBuild = 'edfdb693e';
 })();
 
 /******/ 	return __webpack_exports__;
