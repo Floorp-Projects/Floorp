@@ -457,11 +457,6 @@ class Selection final : public nsSupportsWeakReference,
   SelectionType Type() const { return mSelectionType; }
 
   /**
-   * @brief Set a highlight name, if this is a highlight selection.
-   */
-  void SetHighlightName(const nsAtom* aHighlightName);
-
-  /**
    * See documentation of `GetRangesForInterval` in Selection.webidl.
    *
    * @param aReturn references, not copies, of the internal ranges.
@@ -943,7 +938,6 @@ class Selection final : public nsSupportsWeakReference,
   CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;
   const SelectionType mSelectionType;
-  RefPtr<const nsAtom> mHighlightName;
   UniquePtr<SelectionCustomColors> mCustomColors;
 
   // Non-zero if we don't want any changes we make to the selection to be

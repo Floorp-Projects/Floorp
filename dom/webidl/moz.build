@@ -586,7 +586,6 @@ WEBIDL_FILES = [
     "GetUserMediaRequest.webidl",
     "Grid.webidl",
     "Headers.webidl",
-    "Highlight.webidl",
     "History.webidl",
     "HTMLAllCollection.webidl",
     "HTMLAnchorElement.webidl",

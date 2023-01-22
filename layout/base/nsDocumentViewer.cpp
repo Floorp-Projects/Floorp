@@ -696,10 +696,7 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   NS_ASSERTION(!mPresShell, "Someone should have destroyed the presshell!");
 
   // Now make the shell for the document
-  nsCOMPtr<Document> doc = mDocument;
-  RefPtr<nsPresContext> presContext = mPresContext;
-  RefPtr<nsViewManager> viewManager = mViewManager;
-  mPresShell = doc->CreatePresShell(presContext, viewManager);
+  mPresShell = mDocument->CreatePresShell(mPresContext, mViewManager);
   if (!mPresShell) {
     return NS_ERROR_FAILURE;
   }

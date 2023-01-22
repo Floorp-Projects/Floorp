@@ -136,7 +136,7 @@ nsRange::~nsRange() {
 }
 
 nsRange::nsRange(nsINode* aNode)
-    : AbstractRange(aNode, /* aIsDynamicRange = */ true),
+    : AbstractRange(aNode),
       mRegisteredClosestCommonInclusiveAncestor(nullptr),
       mNextStartRef(nullptr),
       mNextEndRef(nullptr) {
