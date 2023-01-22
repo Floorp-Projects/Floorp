@@ -11,6 +11,7 @@ EXPORTS.mozilla.dom += [
     "WebTransportError.h",
     "WebTransportReceiveStream.h",
     "WebTransportSendStream.h",
+    "WebTransportStreams.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -18,6 +19,7 @@ UNIFIED_SOURCES += [
     "WebTransportBidirectionalStream.cpp",
     "WebTransportDatagramDuplexStream.cpp",
     "WebTransportError.cpp",
+    "WebTransportStreams.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
