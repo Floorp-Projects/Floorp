@@ -790,8 +790,8 @@ struct AssemblerBufferWithConstantPools
  public:
   // Get the next buffer offset where an instruction would be inserted.
   // This may flush the current constant pool before returning nextOffset().
-  BufferOffset nextInstrOffset() {
-    if (!hasSpaceForInsts(/* numInsts= */ 1, /* numPoolEntries= */ 0)) {
+  BufferOffset nextInstrOffset(int numInsts = 1) {
+    if (!hasSpaceForInsts(numInsts, /* numPoolEntries= */ 0)) {
       JitSpew(JitSpew_Pools,
               "nextInstrOffset @ %d caused a constant pool spill",
               this->nextOffset().getOffset());
