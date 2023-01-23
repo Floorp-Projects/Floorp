@@ -2,13 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["AboutHttpsOnlyErrorChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
@@ -21,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsISerializationHelper"
 );
 
-class AboutHttpsOnlyErrorChild extends RemotePageChild {
+export class AboutHttpsOnlyErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
 

@@ -33,8 +33,8 @@ TESTING_JS_MODULES += [
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "AboutHttpsOnlyErrorChild.jsm",
-    "AboutHttpsOnlyErrorParent.jsm",
+    "AboutHttpsOnlyErrorChild.sys.mjs",
+    "AboutHttpsOnlyErrorParent.sys.mjs",
     "AudioPlaybackChild.jsm",
     "AudioPlaybackParent.jsm",
     "AutoCompleteChild.jsm",

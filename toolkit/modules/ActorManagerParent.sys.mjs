@@ -77,10 +77,10 @@ let JSWINDOWACTORS = {
 
   AboutHttpsOnlyError: {
     parent: {
-      moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorParent.jsm",
+      esModuleURI: "resource://gre/actors/AboutHttpsOnlyErrorParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorChild.jsm",
+      esModuleURI: "resource://gre/actors/AboutHttpsOnlyErrorChild.sys.mjs",
       events: {
         DOMDocElementInserted: {},
       },
