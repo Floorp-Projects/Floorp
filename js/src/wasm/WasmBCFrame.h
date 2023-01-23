@@ -1109,17 +1109,54 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 //
 // MachineStackTracker, used for stack-slot pointerness tracking.
 
+// An expensive operation in stack-map creation is copying of the
+// MachineStackTracker (MST) into the final StackMap.  This is done in
+// StackMapGenerator::createStackMap.  Given that this is basically a
+// bit-array copy, it is reasonable to ask whether the two classes could have
+// a more similar representation, so that the copy could then be done with
+// `memcpy`.
+//
+// Although in principle feasible, the follow complications exist, and so for
+// the moment, this has not been done.
+//
+// * StackMap is optimised for compact size (storage) since there will be
+//   many, so it uses a true bitmap.  MST is intended to be fast and simple,
+//   and only one exists at once (per compilation thread).  Doing this would
+//   require MST to use a true bitmap, and hence ..
+//
+// * .. the copying can't be a straight memcpy, since StackMap has entries for
+//   words not covered by MST.  Hence the copy would need to shift bits in
+//   each byte left or right (statistically speaking, in 7 cases out of 8) in
+//   order to ensure no "holes" in the resulting bitmap.
+//
+// * Furthermore the copying would need to logically invert the direction of
+//   the stacks.  For MST, index zero in the vector corresponds to the highest
+//   address in the stack. For StackMap, bit index zero corresponds to the
+//   lowest address in the stack.
+//
+// * Finally, StackMap is a variable-length structure whose size must be known
+//   at creation time.  The size of an MST by contrast isn't known at creation
+//   time -- it grows as the baseline compiler pushes stuff on its value
+//   stack. That's why it has to have vector entry 0 being the highest address.
+//
+// * Although not directly relevant, StackMaps are also created by the via-Ion
+//   compilation routes, by translation from the pre-existing "JS-era"
+//   LSafePoints (CreateStackMapFromLSafepoint).  So if we want to mash
+//   StackMap around to suit baseline better, we also need to ensure it
+//   doesn't break Ion somehow.
+
 class MachineStackTracker {
-  // Simulates the machine's stack, with one bool per word.  Index zero in
-  // this vector corresponds to the highest address in the machine stack.  The
-  // last entry corresponds to what SP currently points at.  This all assumes
-  // a grow-down stack.
+  // Simulates the machine's stack, with one bool per word.  The booleans are
+  // represented as `uint8_t`s so as to guarantee the element size is one
+  // byte.  Index zero in this vector corresponds to the highest address in
+  // the machine's stack.  The last entry corresponds to what SP currently
+  // points at.  This all assumes a grow-down stack.
   //
   // numPtrs_ contains the number of "true" values in vec_, and is therefore
   // redundant.  But it serves as a constant-time way to detect the common
   // case where vec_ holds no "true" values.
   size_t numPtrs_;
-  Vector<bool, 64, SystemAllocPolicy> vec_;
+  Vector<uint8_t, 64, SystemAllocPolicy> vec_;
 
  public:
   MachineStackTracker() : numPtrs_(0) {}
@@ -1127,7 +1164,7 @@ class MachineStackTracker {
   ~MachineStackTracker() {
 #ifdef DEBUG
     size_t n = 0;
-    for (bool b : vec_) {
+    for (uint8_t b : vec_) {
       n += (b ? 1 : 0);
     }
     MOZ_ASSERT(n == numPtrs_);
@@ -1139,7 +1176,7 @@ class MachineStackTracker {
 
   // Notionally push |n| non-pointers on the stack.
   [[nodiscard]] bool pushNonGCPointers(size_t n) {
-    return vec_.appendN(false, n);
+    return vec_.appendN(uint8_t(false), n);
   }
 
   // Mark the stack slot |offsetFromSP| up from the bottom as holding a
@@ -1151,23 +1188,23 @@ class MachineStackTracker {
 
     size_t offsetFromTop = vec_.length() - 1 - offsetFromSP;
     numPtrs_ = numPtrs_ + 1 - (vec_[offsetFromTop] ? 1 : 0);
-    vec_[offsetFromTop] = true;
+    vec_[offsetFromTop] = uint8_t(true);
   }
 
   // Query the pointerness of the slot |offsetFromSP| up from the bottom.
-  bool isGCPointer(size_t offsetFromSP) {
+  bool isGCPointer(size_t offsetFromSP) const {
     MOZ_ASSERT(offsetFromSP < vec_.length());
 
     size_t offsetFromTop = vec_.length() - 1 - offsetFromSP;
-    return vec_[offsetFromTop];
+    return bool(vec_[offsetFromTop]);
   }
 
   // Return the number of words tracked by this MachineStackTracker.
-  size_t length() { return vec_.length(); }
+  size_t length() const { return vec_.length(); }
 
   // Return the number of pointer-typed words tracked by this
   // MachineStackTracker.
-  size_t numPtrs() {
+  size_t numPtrs() const {
     MOZ_ASSERT(numPtrs_ <= length());
     return numPtrs_;
   }
@@ -1178,6 +1215,80 @@ class MachineStackTracker {
     vec_.clear();
     numPtrs_ = 0;
   }
+
+  // An iterator that produces indices of reftyped slots, starting at the
+  // logical bottom of the (grow-down) stack.  Indices have the same meaning
+  // as the arguments to `isGCPointer`.  That is, if this iterator produces a
+  // value `i`, then it means that `isGCPointer(i) == true`; if the value `i`
+  // is never produced then `isGCPointer(i) == false`.  The values are
+  // produced in ascending order.
+  //
+  // Because most slots are non-reftyped, some effort has been put into
+  // skipping over large groups of non-reftyped slots quickly.
+  class Iter {
+    // Both `bufU8_` and `bufU32_` are made to point to `vec_`s array of
+    // `uint8_t`s, so we can scan (backwards) through it either in bytes or
+    // 32-bit words.  Recall that the last element in `vec_` pertains to the
+    // lowest-addressed word in the machine's grow-down stack, and we want to
+    // iterate logically "up" this stack, so we need to iterate backwards
+    // through `vec_`.
+    //
+    // This dual-pointer scheme assumes that the `vec_`s content array is at
+    // least 32-bit aligned.
+    const uint8_t* bufU8_;
+    const uint32_t* bufU32_;
+    // The number of elements in `bufU8_`.
+    const size_t nElems_;
+    // The index in `bufU8_` where the next search should start.
+    size_t next_;
+
+   public:
+    explicit Iter(const MachineStackTracker& mst)
+        : bufU8_((uint8_t*)mst.vec_.begin()),
+          bufU32_((uint32_t*)mst.vec_.begin()),
+          nElems_(mst.vec_.length()),
+          next_(mst.vec_.length() - 1) {
+      MOZ_ASSERT(uintptr_t(bufU8_) == uintptr_t(bufU32_));
+      // Check minimum alignment constraint on the array.
+      MOZ_ASSERT(0 == (uintptr_t(bufU8_) & 3));
+    }
+
+    ~Iter() { MOZ_ASSERT(uintptr_t(bufU8_) == uintptr_t(bufU32_)); }
+
+    // It is important, for termination of the search loop in `next()`, that
+    // this has the value obtained by subtracting 1 from size_t(0).
+    static constexpr size_t FINISHED = ~size_t(0);
+    static_assert(FINISHED == size_t(0) - 1);
+
+    // Returns the next index `i` for which `isGCPointer(i) == true`.
+    size_t get() {
+      while (next_ != FINISHED) {
+        if (bufU8_[next_]) {
+          next_--;
+          return nElems_ - 1 - (next_ + 1);
+        }
+        // Invariant: next_ != FINISHED (so it's still a valid index)
+        //       and: bufU8_[next_] == 0
+        //            (so we need to move backwards by at least 1)
+        //
+        // BEGIN optimization -- this could be removed without affecting
+        // correctness.
+        if ((next_ & 7) == 0) {
+          // We're at the "bottom" of the current dual-4-element word.  Check
+          // if we can jump backwards by 8.  This saves a conditional branch
+          // and a few cycles by ORing two adjacent 32-bit words together,
+          // whilst not requiring 64-bit alignment of `bufU32_`.
+          while (next_ >= 8 &&
+                 (bufU32_[(next_ - 4) >> 2] | bufU32_[(next_ - 8) >> 2]) == 0) {
+            next_ -= 8;
+          }
+        }
+        // END optimization
+        next_--;
+      }
+      return FINISHED;
+    }
+  };
 };
 
 //////////////////////////////////////////////////////////////////////////////
