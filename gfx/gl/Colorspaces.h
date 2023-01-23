@@ -715,6 +715,12 @@ struct ColorProfileDesc {
 
 template <class C>
 inline float SampleOutByIn(const C& outByIn, const float in) {
+  switch (outByIn.size()) {
+    case 0:
+      return in;
+    case 1:
+      return outByIn.at(0);
+  }
   MOZ_ASSERT(outByIn.size() >= 2);
   const auto begin = outByIn.begin();
 
