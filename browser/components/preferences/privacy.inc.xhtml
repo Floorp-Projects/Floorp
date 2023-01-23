@@ -465,7 +465,7 @@
                 class="tail-with-learn-more"
                 data-l10n-id="relay-integration"
                 search-l10n-ids="relay-integration.label" />
-      <label id="relayIntegrationLearnMoreLink" class="learnMore" is="text-link"
+      <html:a id="relayIntegrationLearnMoreLink" class="learnMore"
              data-l10n-id="relay-integration-learn-more-link"/>
     </hbox>
     <hbox class="indent" id="breachAlertsBox" flex="1" align="center">
@@ -933,8 +933,8 @@
 
   <description>
     <label class="tail-with-learn-more" data-l10n-id="collection-description"/>
-    <label id="dataCollectionPrivacyNotice"
-           class="learnMore" is="text-link"
+    <html:a id="dataCollectionPrivacyNotice"
+           class="learnMore"
            data-l10n-id="collection-privacy-notice"/>
   </description>
 #ifdef MOZ_DATA_REPORTING
@@ -957,8 +957,8 @@
       <checkbox id="submitHealthReportBox"
                 data-l10n-id="collection-health-report"
                 class="tail-with-learn-more"/>
-      <label id="FHRLearnMore"
-             class="learnMore" is="text-link"
+      <html:a id="FHRLearnMore"
+             class="learnMore"
              data-l10n-id="collection-health-report-link"/>
       <vbox class="indent">
         <hbox align="center">
@@ -982,10 +982,10 @@
       <checkbox id="optOutStudiesEnabled"
                 class="tail-with-learn-more"
                 data-l10n-id="collection-studies"/>
-      <label id="viewShieldStudies"
+      <html:a id="viewShieldStudies"
               href="about:studies"
               useoriginprincipal="true"
-              class="learnMore" is="text-link"
+              class="learnMore"
               data-l10n-id="collection-studies-link"/>
     </hbox>
 #endif
