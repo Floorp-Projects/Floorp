@@ -10,7 +10,27 @@ To make it easier for developers to find the tests they need to run we built a p
 
 When you trigger a try run from the perf selector, two try runs will be created. One with your changes, and one without. In your console, after you trigger the try runs, you'll find a PerfCompare link that will bring you directly to a comparison of the two pushes when they have completed.
 
-The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the `--help`.
+The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the `--help`. Here's a small sample of what you'll find there which highlights the most relevant flags::
+
+    $ ./mach try perf --help
+
+        perf arguments:
+            --show-all            Show all available tasks.
+            --android             Show android test categories (disabled by default).
+            --chrome              Show tests available for Chrome-based browsers (disabled by default).
+            --safari              Show tests available for Safari (disabled by default).
+            --live-sites          Run tasks with live sites (if possible). You can also use the `live-sites` variant.
+            --profile             Run tasks with profiling (if possible). You can also use the `profiling` variant.
+            --single-run          Run tasks without a comparison
+            --variants [ [ ...]]  Select variants to display in the selector from: no-fission, bytecode-cached, live-sites, profiling, swr
+            --platforms [ [ ...]]
+                                Select specific platforms to target. Android only available with --android. Available platforms: android-a51, android,
+                                windows, linux, macosx, desktop
+            --apps [ [ ...]]      Select specific applications to target from: firefox, chrome, chromium, geckoview, fenix, chrome-m, safari
+
+        task configuration arguments:
+            --artifact            Force artifact builds where possible.
+
 
 Standard Usage
 --------------
@@ -173,6 +193,23 @@ The following fields are available:
      * **variant-restrictions**: A list of variants available for each suite.
 
 Note that setting the App/Variant-Restriction fields should be used to restrict the available apps and variants, not expand them as the suites, apps, and platforms combined already provide the largest coverage. The restrictions should be used when you know certain things definitely won't work, or will never be implemented for this category of tests. For instance, our `Resource Usage` tests only work on Firefox even though they may exist in Raptor which can run tests with Chrome.
+
+Frequently Asked Questions (FAQ)
+--------------------------------
+
+If you have any questions which aren't already answered below please reach out to us in the `perftest matrix channel <https://matrix.to/#/#perftest:mozilla.org>`_.
+
+     * **How can I tell what a category or a set of selections will run?**
+
+       At the moment, you need to run your command with an additional option to see what will be run: `./mach try perf --no-push`. See the `Categories`_ section for more information about this. In the future, we plan on having an dynamically updated list for the tasks in the `Categories`_ section of this document.
+
+     * **What's the difference between `Pageload desktop`, and `Pageload desktop firefox`?**
+
+       If you simply ran `./mach try perf` with no additional options, then there is no difference. If you start adding additional browsers to the try run with commands like `./mach try perf --chrome`, then `Pageload desktop` will select all tests available for ALL browsers available, and `Pageload desktop firefox` will only select Firefox tests. When `--chrome` is provided, you'll also see a `Pageload desktop chrome` option.
+
+     * **Help! I can't find a test in any of the categories. What should I do?**
+
+       Use the option `--show-all`. This will let you select tests from the `./mach try fuzzy --full` interface directly instead of the categories. You will always be able to find your tests this way. Please be careful with your task selections though as it's easy to run far too many tests in this way!
 
 Future Work
 -----------

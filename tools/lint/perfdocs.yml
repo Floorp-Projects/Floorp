@@ -3,11 +3,12 @@ perfdocs:
     description: Performance Documentation linter
     # This task handles its own search, so just include cwd
     include: [
-        'testing/raptor',
         'python/mozperftest',
-        'testing/talos',
         'testing/awsy',
-        'testing/fxrecord',
+        'testing/raptor',
+        'testing/talos',
+        'testing/performance/fxrecord',
+        'testing/performance/mach-try-perf',
     ]
     exclude: []
     extensions: ['rst', 'ini', 'yml']
