@@ -207,7 +207,7 @@ def report_deprecated(value):
 # =======================================================
 option(
     "--enable-simulator",
-    choices=("arm", "arm64", "mips32", "mips64", "loong64"),
+    choices=("arm", "arm64", "mips32", "mips64", "loong64", "riscv64"),
     nargs=1,
     help="Enable a JIT code simulator for the specified architecture",
 )
@@ -224,7 +224,7 @@ def simulator(jit_enabled, simulator_enabled, target):
         if target.cpu != "x86":
             die("The %s simulator only works on x86." % sim_cpu)
 
-    if sim_cpu in ("arm64", "mips64", "loong64"):
+    if sim_cpu in ("arm64", "mips64", "loong64", "riscv64"):
         if target.cpu != "x86_64" and target.cpu != "aarch64":
             die("The %s simulator only works on x86-64 or arm64." % sim_cpu)
 
@@ -237,12 +237,14 @@ set_config("JS_SIMULATOR_ARM64", simulator.arm64)
 set_config("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_config("JS_SIMULATOR_MIPS64", simulator.mips64)
 set_config("JS_SIMULATOR_LOONG64", simulator.loong64)
+set_config("JS_SIMULATOR_RISCV64", simulator.riscv64)
 set_define("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
 set_define("JS_SIMULATOR_ARM", simulator.arm)
 set_define("JS_SIMULATOR_ARM64", simulator.arm64)
 set_define("JS_SIMULATOR_MIPS32", simulator.mips32)
 set_define("JS_SIMULATOR_MIPS64", simulator.mips64)
 set_define("JS_SIMULATOR_LOONG64", simulator.loong64)
+set_define("JS_SIMULATOR_RISCV64", simulator.riscv64)
 
 
 @depends("--enable-jit", simulator, target)
@@ -269,18 +271,22 @@ set_config("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_config("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_config("JS_CODEGEN_MIPS64", jit_codegen.mips64)
 set_config("JS_CODEGEN_LOONG64", jit_codegen.loong64)
+set_config("JS_CODEGEN_RISCV64", jit_codegen.riscv64)
 set_config("JS_CODEGEN_X86", jit_codegen.x86)
 set_config("JS_CODEGEN_X64", jit_codegen.x64)
 set_config("JS_CODEGEN_WASM32", jit_codegen.wasm32)
+
 set_define("JS_CODEGEN_NONE", jit_codegen.none)
 set_define("JS_CODEGEN_ARM", jit_codegen.arm)
 set_define("JS_CODEGEN_ARM64", jit_codegen.arm64)
 set_define("JS_CODEGEN_MIPS32", jit_codegen.mips32)
 set_define("JS_CODEGEN_MIPS64", jit_codegen.mips64)
 set_define("JS_CODEGEN_LOONG64", jit_codegen.loong64)
+set_define("JS_CODEGEN_RISCV64", jit_codegen.riscv64)
 set_define("JS_CODEGEN_X86", jit_codegen.x86)
 set_define("JS_CODEGEN_X64", jit_codegen.x64)
 set_define("JS_CODEGEN_WASM32", jit_codegen.wasm32)
+
 
 # Profiling
 # =======================================================
@@ -462,6 +468,23 @@ def jit_disasm_arm(jit_enabled, spew, simulator, target, debug):
 
 set_config("JS_DISASM_ARM", jit_disasm_arm)
 set_define("JS_DISASM_ARM", jit_disasm_arm)
+
+
+@depends("--enable-jit", "--enable-jitspew", simulator, target, moz_debug)
+def jit_disasm_riscv(jit_enabled, spew, simulator, target, debug):
+    if not jit_enabled:
+        return
+
+    if simulator and (debug or spew):
+        if getattr(simulator, "riscv64", None):
+            return True
+
+    if target.cpu == "riscv64" and (debug or spew):
+        return True
+
+
+set_config("JS_DISASM_RISCV64", jit_disasm_riscv)
+set_define("JS_DISASM_RISCV64", jit_disasm_riscv)
 
 
 @depends("--enable-jit", "--enable-jitspew", simulator, target, moz_debug)
