@@ -100,8 +100,6 @@ class MFMediaEngineStream
     return MediaDataDecoder::ConversionRequired::kNeedNone;
   }
 
-  virtual bool IsEncrypted() const = 0;
-
  protected:
   HRESULT GenerateStreamDescriptor(
       Microsoft::WRL::ComPtr<IMFMediaType>& aMediaType);
