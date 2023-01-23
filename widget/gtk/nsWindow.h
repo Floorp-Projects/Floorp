@@ -140,7 +140,7 @@ class nsWindow final : public nsBaseWidget {
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 nsNativeWidget aNativeParent,
                                 const LayoutDeviceIntRect& aRect,
-                                nsWidgetInitData* aInitData) override;
+                                InitData* aInitData) override;
   void Destroy() override;
   nsIWidget* GetParent() override;
   float GetDPI() override;
@@ -209,7 +209,7 @@ class nsWindow final : public nsBaseWidget {
 
   // utility method, -1 if no change should be made, otherwise returns a
   // value that can be passed to gdk_window_set_decorations
-  gint ConvertBorderStyles(nsBorderStyle aStyle);
+  gint ConvertBorderStyles(BorderStyle aStyle);
 
   mozilla::widget::IMContextWrapper* GetIMContext() const { return mIMContext; }
 
@@ -311,8 +311,8 @@ class nsWindow final : public nsBaseWidget {
   void ApplyTransparencyBitmap();
   void ClearTransparencyBitmap();
 
-  void SetTransparencyMode(nsTransparencyMode aMode) override;
-  nsTransparencyMode GetTransparencyMode() override;
+  void SetTransparencyMode(TransparencyMode aMode) override;
+  TransparencyMode GetTransparencyMode() override;
   void SetInputRegion(const InputRegion&) override;
   nsresult UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                 uint8_t* aAlphas,
@@ -470,7 +470,7 @@ class nsWindow final : public nsBaseWidget {
   void RegisterTouchWindow() override;
 
   nsCOMPtr<nsIWidget> mParent;
-  nsPopupType mPopupHint{};
+  PopupType mPopupHint{};
   int mWindowScaleFactor = 1;
 
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
@@ -498,7 +498,7 @@ class nsWindow final : public nsBaseWidget {
   void EnsureGdkWindow();
   void SetUrgencyHint(GtkWidget* top_window, bool state);
   void SetDefaultIcon(void);
-  void SetWindowDecoration(nsBorderStyle aStyle);
+  void SetWindowDecoration(BorderStyle aStyle);
   void InitButtonEvent(mozilla::WidgetMouseEvent& aEvent,
                        GdkEventButton* aGdkEvent,
                        const mozilla::LayoutDeviceIntPoint& aRefPoint);

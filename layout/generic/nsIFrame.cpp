@@ -375,7 +375,7 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
   const nsIFrame* frame = this;
   while (frame) {
     nsView* view = frame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide) {
+    if (view && view->GetVisibility() == ViewVisibility::Hide) {
       return false;
     }
 
@@ -1556,8 +1556,8 @@ void nsIFrame::SyncFrameViewProperties(nsView* aView) {
     // See if the view should be hidden or visible
     ComputedStyle* sc = Style();
     vm->SetViewVisibility(aView, sc->StyleVisibility()->IsVisible()
-                                     ? nsViewVisibility_kShow
-                                     : nsViewVisibility_kHide);
+                                     ? ViewVisibility::Show
+                                     : ViewVisibility::Hide);
   }
 
   const auto zIndex = ZIndex();

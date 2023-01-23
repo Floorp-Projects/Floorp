@@ -29,8 +29,9 @@
 #include "mozilla/StartupTimeline.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
-nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
+nsView::nsView(nsViewManager* aViewManager, ViewVisibility aVisibility)
     : mViewManager(aViewManager),
       mParent(nullptr),
       mNextSibling(nullptr),
@@ -201,12 +202,12 @@ void nsView::ResetWidgetBounds(bool aRecurse, bool aForceSync) {
 
 bool nsView::IsEffectivelyVisible() {
   for (nsView* v = this; v; v = v->mParent) {
-    if (v->GetVisibility() == nsViewVisibility_kHide) return false;
+    if (v->GetVisibility() == ViewVisibility::Hide) return false;
   }
   return true;
 }
 
-LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType) {
+LayoutDeviceIntRect nsView::CalcWidgetBounds(WindowType aType) {
   int32_t p2a = mViewManager->AppUnitsPerDevPixel();
 
   nsRect viewBounds(mDimBounds);
@@ -219,7 +220,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType) {
     // make viewBounds be relative to the parent widget, in appunits
     viewBounds += offset;
 
-    if (parentWidget && aType == eWindowType_popup && IsEffectivelyVisible()) {
+    if (parentWidget && aType == WindowType::Popup && IsEffectivelyVisible()) {
       // put offset into screen coordinates. (based on client area origin)
       LayoutDeviceIntPoint screenPoint = parentWidget->WidgetToScreenOffset();
       viewBounds += nsPoint(NSIntPixelsToAppUnits(screenPoint.x, p2a),
@@ -237,7 +238,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType) {
   // rounding to the nearest value that won't yield a fractional display pixel.
   nsIWidget* widget = parentWidget ? parentWidget : mWindow.get();
   uint32_t round;
-  if (aType == eWindowType_popup && widget &&
+  if (aType == WindowType::Popup && widget &&
       ((round = widget->RoundsWidgetCoordinatesTo()) > 1)) {
     LayoutDeviceIntSize pixelRoundedSize = newBounds.Size();
     // round the top left and bottom right to the nearest round pixel
@@ -300,12 +301,12 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize) {
   // from sync painting/flushing from Show/Move/Resize on the widget).
   LayoutDeviceIntRect newBounds;
 
-  nsWindowType type = widget->WindowType();
+  WindowType type = widget->GetWindowType();
 
   LayoutDeviceIntRect curBounds = widget->GetClientBounds();
-  bool invisiblePopup = type == eWindowType_popup &&
+  bool invisiblePopup = type == WindowType::Popup &&
                         ((curBounds.IsEmpty() && mDimBounds.IsEmpty()) ||
-                         mVis == nsViewVisibility_kHide);
+                         mVis == ViewVisibility::Hide);
 
   if (invisiblePopup) {
     // We're going to hit the early exit below, avoid calling CalcWidgetBounds.
@@ -395,7 +396,7 @@ void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible) {
   }
 
   for (nsView* child = mFirstChild; child; child = child->mNextSibling) {
-    if (child->mVis == nsViewVisibility_kHide) {
+    if (child->mVis == ViewVisibility::Hide) {
       // It was effectively hidden and still is
       continue;
     }
@@ -404,7 +405,7 @@ void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible) {
   }
 }
 
-void nsView::SetVisibility(nsViewVisibility aVisibility) {
+void nsView::SetVisibility(ViewVisibility aVisibility) {
   mVis = aVisibility;
   NotifyEffectiveVisibilityChanged(IsEffectivelyVisible());
 }
@@ -514,19 +515,19 @@ static int32_t FindNonAutoZIndex(nsView* aView) {
   return 0;
 }
 
-struct DefaultWidgetInitData : public nsWidgetInitData {
-  DefaultWidgetInitData() : nsWidgetInitData() {
-    mWindowType = eWindowType_child;
+struct DefaultWidgetInitData : public widget::InitData {
+  DefaultWidgetInitData() : widget::InitData() {
+    mWindowType = WindowType::Child;
     mClipChildren = true;
     mClipSiblings = true;
   }
 };
 
-nsresult nsView::CreateWidget(nsWidgetInitData* aWidgetInitData,
+nsresult nsView::CreateWidget(widget::InitData* aWidgetInitData,
                               bool aEnableDragDrop, bool aResetVisibility) {
   AssertNoWindow();
   MOZ_ASSERT(
-      !aWidgetInitData || aWidgetInitData->mWindowType != eWindowType_popup,
+      !aWidgetInitData || aWidgetInitData->mWindowType != WindowType::Popup,
       "Use CreateWidgetForPopup");
 
   DefaultWidgetInitData defaultInitData;
@@ -553,12 +554,12 @@ nsresult nsView::CreateWidget(nsWidgetInitData* aWidgetInitData,
 }
 
 nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
-                                       nsWidgetInitData* aWidgetInitData,
+                                       widget::InitData* aWidgetInitData,
                                        bool aEnableDragDrop,
                                        bool aResetVisibility) {
   AssertNoWindow();
   MOZ_ASSERT(
-      !aWidgetInitData || aWidgetInitData->mWindowType != eWindowType_popup,
+      !aWidgetInitData || aWidgetInitData->mWindowType != WindowType::Popup,
       "Use CreateWidgetForPopup");
   MOZ_ASSERT(aParentWidget, "Parent widget required");
 
@@ -577,13 +578,13 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
   return NS_OK;
 }
 
-nsresult nsView::CreateWidgetForPopup(nsWidgetInitData* aWidgetInitData,
+nsresult nsView::CreateWidgetForPopup(widget::InitData* aWidgetInitData,
                                       nsIWidget* aParentWidget,
                                       bool aEnableDragDrop,
                                       bool aResetVisibility) {
   AssertNoWindow();
   MOZ_ASSERT(aWidgetInitData, "Widget init data required");
-  MOZ_ASSERT(aWidgetInitData->mWindowType == eWindowType_popup,
+  MOZ_ASSERT(aWidgetInitData->mWindowType == WindowType::Popup,
              "Use one of the other CreateWidget methods");
 
   LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
@@ -663,14 +664,14 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
   mWindow = aWidget;
 
   mWindow->SetAttachedWidgetListener(this);
-  if (mWindow->WindowType() != eWindowType_invisible) {
+  if (mWindow->GetWindowType() != WindowType::Invisible) {
     nsresult rv = mWindow->AsyncEnableDragDrop(true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mWidgetIsTopLevel = true;
 
   // Refresh the view bounds
-  CalcWidgetBounds(mWindow->WindowType());
+  CalcWidgetBounds(mWindow->GetWindowType());
 
   return NS_OK;
 }
@@ -760,8 +761,8 @@ void nsView::List(FILE* out, int32_t aIndent) const {
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d} @ %d,%d", brect.X(), brect.Y(), brect.Width(),
           brect.Height(), mPosX, mPosY);
-  fprintf(out, " flags=%x z=%d vis=%d frame=%p <\n", mVFlags, mZIndex, mVis,
-          static_cast<void*>(mFrame));
+  fprintf(out, " flags=%x z=%d vis=%d frame=%p <\n", mVFlags, mZIndex,
+          int(mVis), mFrame);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);
@@ -914,7 +915,7 @@ nsPoint nsView::ConvertFromParentCoords(nsPoint aPt) const {
 }
 
 static bool IsPopupWidget(nsIWidget* aWidget) {
-  return (aWidget->WindowType() == eWindowType_popup);
+  return aWidget->GetWindowType() == WindowType::Popup;
 }
 
 PresShell* nsView::GetPresShell() { return GetViewManager()->GetPresShell(); }

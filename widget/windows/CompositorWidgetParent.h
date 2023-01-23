@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace widget {
 
+enum class TransparencyMode : uint8_t;
+
 namespace remote_backbuffer {
 class Client;
 }
@@ -53,7 +55,7 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;
   mozilla::ipc::IPCResult RecvLeavePresentLock() override;
   mozilla::ipc::IPCResult RecvUpdateTransparency(
-      const nsTransparencyMode& aMode) override;
+      const TransparencyMode& aMode) override;
   mozilla::ipc::IPCResult RecvNotifyVisibilityUpdated(
       const nsSizeMode& aSizeMode, const bool& aIsFullyOccluded) override;
   mozilla::ipc::IPCResult RecvClearTransparentWindow() override;
@@ -77,8 +79,7 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   gfx::CriticalSection mPresentLock;
 
   // Transparency handling.
-  mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
-      mTransparencyMode;
+  mozilla::Atomic<uint32_t, MemoryOrdering::Relaxed> mTransparencyMode;
 
   // Visibility handling.
   mozilla::Atomic<nsSizeMode, MemoryOrdering::Relaxed> mSizeMode;

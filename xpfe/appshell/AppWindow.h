@@ -37,20 +37,19 @@
 #include "nsITimer.h"
 #include "nsIXULStore.h"
 
-namespace mozilla {
-namespace dom {
-class Element;
-}  // namespace dom
-}  // namespace mozilla
-
 class nsAtom;
 class nsXULTooltipListener;
-struct nsWidgetInitData;
 
 namespace mozilla {
 class PresShell;
 class AppWindowTimerCallback;
 class L10nReadyPromiseHandler;
+namespace dom {
+class Element;
+}  // namespace dom
+namespace widget {
+struct InitData;
+}  // namespace widget
 }  // namespace mozilla
 
 // AppWindow
@@ -144,7 +143,7 @@ class AppWindow final : public nsIBaseWindow,
   // AppWindow methods...
   nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
                       int32_t aInitialWidth, int32_t aInitialHeight,
-                      bool aIsHiddenWindow, nsWidgetInitData& widgetInitData);
+                      bool aIsHiddenWindow, widget::InitData& widgetInitData);
 
   nsDocShell* GetDocShell() { return mDocShell; }
 

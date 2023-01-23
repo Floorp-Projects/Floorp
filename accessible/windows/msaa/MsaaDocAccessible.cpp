@@ -116,7 +116,8 @@ MsaaDocAccessible::get_accParent(
       nsIFrame* frame = docAcc->GetFrame();
       if (frame) {
         nsIWidget* widget = frame->GetNearestWidget();
-        if (widget->WindowType() == eWindowType_child && !widget->GetParent()) {
+        if (widget->GetWindowType() == widget::WindowType::Child &&
+            !widget->GetParent()) {
           // Bug 1427304: Windows opened with popup=yes (such as the WebRTC
           // sharing indicator) get two HWNDs. The root widget is associated
           // with the inner HWND, but the outer HWND still answers to

@@ -291,7 +291,7 @@ class nsChildView final : public nsBaseWidget {
   // nsIWidget interface
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                         const LayoutDeviceIntRect& aRect,
-                                        nsWidgetInitData* aInitData = nullptr) override;
+                                        InitData* = nullptr) override;
 
   virtual void Destroy() override;
 

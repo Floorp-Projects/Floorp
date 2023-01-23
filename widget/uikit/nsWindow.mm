@@ -396,8 +396,8 @@ void nsWindow::TearDownView() {
 }
 
 bool nsWindow::IsTopLevel() {
-  return mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog ||
-         mWindowType == eWindowType_invisible;
+  return mWindowType == WindowType::TopLevel || mWindowType == WindowType::Dialog ||
+         mWindowType == WindowType::Invisible;
 }
 
 //
@@ -405,7 +405,7 @@ bool nsWindow::IsTopLevel() {
 //
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                          const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData) {
+                          const LayoutDeviceIntRect& aRect, widget::InitData* aInitData) {
   ALOG("nsWindow[%p]::Create %p/%p [%d %d %d %d]", (void*)this, (void*)aParent,
        (void*)aNativeParent, aRect.x, aRect.y, aRect.width, aRect.height);
   nsWindow* parent = (nsWindow*)aParent;
@@ -433,8 +433,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
        mBounds.height);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
-  mWindowType = eWindowType_toplevel;
-  mBorderStyle = eBorderStyle_default;
+  mWindowType = WindowType::TopLevel;
+  mBorderStyle = BorderStyle::Default;
 
   Inherited::BaseCreate(aParent, aInitData);
 

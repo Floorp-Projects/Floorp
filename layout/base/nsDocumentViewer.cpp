@@ -2273,11 +2273,11 @@ nsresult nsDocumentViewer::MakeWindow(const nsSize& aSize,
     // hierarchy will stand alone. otherwise the view will find its own parent
     // widget and "do the right thing" to establish a parent/child widget
     // relationship
-    nsWidgetInitData initData;
-    nsWidgetInitData* initDataPtr;
+    widget::InitData initData;
+    widget::InitData* initDataPtr;
     if (!mParentWidget) {
       initDataPtr = &initData;
-      initData.mWindowType = eWindowType_invisible;
+      initData.mWindowType = widget::WindowType::Invisible;
     } else {
       initDataPtr = nullptr;
     }
@@ -3250,9 +3250,10 @@ bool nsDocumentViewer::ShouldAttachToTopLevel() {
 
   // On windows, in the parent process we also attach, but just to
   // chrome items
-  nsWindowType winType = mParentWidget->WindowType();
-  if ((winType == eWindowType_toplevel || winType == eWindowType_dialog ||
-       winType == eWindowType_invisible) &&
+  auto winType = mParentWidget->GetWindowType();
+  if ((winType == widget::WindowType::TopLevel ||
+       winType == widget::WindowType::Dialog ||
+       winType == widget::WindowType::Invisible) &&
       mPresContext->IsChrome()) {
     return true;
   }

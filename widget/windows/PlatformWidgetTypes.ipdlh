@@ -11,7 +11,7 @@ include HeadlessWidgetTypes;
 
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using nsSizeMode from "nsIWidgetListener.h";
-using nsTransparencyMode from "nsIWidget.h";
+using TransparencyMode from "nsIWidget.h";
 
 namespace mozilla {
 namespace widget {
@@ -20,7 +20,7 @@ struct WinCompositorWidgetInitData
 {
   WindowsHandle hWnd;
   uintptr_t widgetKey;
-  nsTransparencyMode transparencyMode;
+  TransparencyMode transparencyMode;
   nsSizeMode sizeMode;
 };
 

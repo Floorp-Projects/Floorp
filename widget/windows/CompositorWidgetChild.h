@@ -34,7 +34,7 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   void OnDestroyWindow() override;
   bool OnWindowResize(const LayoutDeviceIntSize& aSize) override;
   void OnWindowModeChange(nsSizeMode aSizeMode) override;
-  void UpdateTransparency(nsTransparencyMode aMode) override;
+  void UpdateTransparency(TransparencyMode aMode) override;
   void NotifyVisibilityUpdated(nsSizeMode aSizeMode,
                                bool aIsFullyOccluded) override;
   void ClearTransparentWindow() override;
@@ -51,7 +51,7 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   HWND mCompositorWnd;
 
   HWND mWnd;
-  nsTransparencyMode mTransparencyMode;
+  TransparencyMode mTransparencyMode;
 
   std::unique_ptr<remote_backbuffer::Provider> mRemoteBackbufferProvider;
 };

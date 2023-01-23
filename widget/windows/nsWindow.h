@@ -163,7 +163,7 @@ class nsWindow final : public nsBaseWidget {
   [[nodiscard]] nsresult Create(nsIWidget* aParent,
                                 nsNativeWidget aNativeParent,
                                 const LayoutDeviceIntRect& aRect,
-                                nsWidgetInitData* aInitData = nullptr) override;
+                                InitData* aInitData = nullptr) override;
   void Destroy() override;
   void SetParent(nsIWidget* aNewParent) override;
   nsIWidget* GetParent(void) override;
@@ -270,8 +270,8 @@ class nsWindow final : public nsBaseWidget {
                        const InputContextAction& aAction) override;
   InputContext GetInputContext() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
-  void SetTransparencyMode(nsTransparencyMode aMode) override;
-  nsTransparencyMode GetTransparencyMode() override;
+  void SetTransparencyMode(TransparencyMode aMode) override;
+  TransparencyMode GetTransparencyMode() override;
   void UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
   nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) override;
@@ -547,14 +547,14 @@ class nsWindow final : public nsBaseWidget {
   HRGN ExcludeNonClientFromPaintRegion(HRGN aRegion);
   static const wchar_t* GetMainWindowClass();
   bool HasGlass() const {
-    return mTransparencyMode == eTransparencyBorderlessGlass;
+    return mTransparencyMode == TransparencyMode::BorderlessGlass;
   }
   HWND GetOwnerWnd() const { return ::GetWindow(mWnd, GW_OWNER); }
   bool IsOwnerForegroundWindow() const {
     HWND owner = GetOwnerWnd();
     return owner && owner == ::GetForegroundWindow();
   }
-  bool IsPopup() const { return mWindowType == eWindowType_popup; }
+  bool IsPopup() const { return mWindowType == WindowType::Popup; }
   bool IsCloaked() const { return mIsCloaked; }
 
   /**
@@ -618,8 +618,7 @@ class nsWindow final : public nsBaseWidget {
   DWORD WindowStyle();
   DWORD WindowExStyle();
 
-  static const wchar_t* ChooseWindowClass(nsWindowType,
-                                          bool aForMenupopupFrame);
+  static const wchar_t* ChooseWindowClass(WindowType, bool aForMenupopupFrame);
   // This method registers the given window class, and returns the class name.
   static const wchar_t* RegisterWindowClass(const wchar_t* aClassName,
                                             UINT aExtraStyle, LPWSTR aIconID);
@@ -645,8 +644,8 @@ class nsWindow final : public nsBaseWidget {
   /**
    * Window transparency helpers
    */
-  void SetWindowTranslucencyInner(nsTransparencyMode aMode);
-  nsTransparencyMode GetWindowTranslucencyInner() const {
+  void SetWindowTranslucencyInner(TransparencyMode aMode);
+  TransparencyMode GetWindowTranslucencyInner() const {
     return mTransparencyMode;
   }
   void UpdateGlass();
@@ -825,7 +824,7 @@ class nsWindow final : public nsBaseWidget {
   ResizeState mResizeState = NOT_RESIZING;
 
   // Transparency
-  nsTransparencyMode mTransparencyMode = eTransparencyOpaque;
+  TransparencyMode mTransparencyMode = TransparencyMode::Opaque;
   nsIntRegion mPossiblyTransparentRegion;
   MARGINS mGlassMargins = {0, 0, 0, 0};
 

@@ -159,7 +159,6 @@ EXPORTS += [
     "nsPaper.h",
     "nsPrinterListBase.h",
     "nsUserIdleService.h",
-    "nsWidgetInitData.h",
     "nsWidgetsCID.h",
     "PuppetWidget.h",
 ]
@@ -195,6 +194,7 @@ EXPORTS.mozilla.widget += [
     "CompositorWidget.h",
     "IconLoader.h",
     "IMEData.h",
+    "InitData.h",
     "InProcessCompositorWidget.h",
     "MediaKeysEventSourceFactory.h",
     "NativeMenu.h",

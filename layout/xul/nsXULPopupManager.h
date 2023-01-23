@@ -12,6 +12,7 @@
 #define nsXULPopupManager_h__
 
 #include "mozilla/Logging.h"
+#include "mozilla/widget/InitData.h"
 #include "nsHashtablesFwd.h"
 #include "nsIContent.h"
 #include "nsIRollupListener.h"
@@ -25,7 +26,6 @@
 #include "nsThreadUtils.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
-#include "nsWidgetInitData.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/widget/NativeMenu.h"
 #include "Units.h"
@@ -213,9 +213,10 @@ struct PendingPopup {
 // doubly linked list. Note that the linked list is stored beginning from
 // the lowest child in a chain of menus, as this is the active submenu.
 class nsMenuChainItem {
- private:
+  using PopupType = mozilla::widget::PopupType;
+
   nsMenuPopupFrame* mFrame;  // the popup frame
-  nsPopupType mPopupType;    // the popup type of the frame
+  PopupType mPopupType;      // the popup type of the frame
   bool mNoAutoHide;          // true for noautohide panels
   bool mIsContext;           // true for context menus
   bool mOnMenuBar;           // true if the menu is on a menu bar
@@ -234,7 +235,7 @@ class nsMenuChainItem {
 
  public:
   nsMenuChainItem(nsMenuPopupFrame* aFrame, bool aNoAutoHide, bool aIsContext,
-                  nsPopupType aPopupType)
+                  PopupType aPopupType)
       : mFrame(aFrame),
         mPopupType(aPopupType),
         mNoAutoHide(aNoAutoHide),
@@ -250,10 +251,10 @@ class nsMenuChainItem {
 
   nsIContent* Content();
   nsMenuPopupFrame* Frame() { return mFrame; }
-  nsPopupType PopupType() { return mPopupType; }
+  PopupType GetPopupType() { return mPopupType; }
   bool IsNoAutoHide() { return mNoAutoHide; }
   void SetNoAutoHide(bool aNoAutoHide) { mNoAutoHide = aNoAutoHide; }
-  bool IsMenu() { return mPopupType == ePopupTypeMenu; }
+  bool IsMenu() { return mPopupType == PopupType::Menu; }
   bool IsContextMenu() { return mIsContext; }
   nsIgnoreKeys IgnoreKeys() { return mIgnoreKeys; }
   void SetIgnoreKeys(nsIgnoreKeys aIgnoreKeys) { mIgnoreKeys = aIgnoreKeys; }
@@ -274,9 +275,11 @@ class nsMenuChainItem {
 
 // this class is used for dispatching popuphiding events asynchronously.
 class nsXULPopupHidingEvent : public mozilla::Runnable {
+  using PopupType = mozilla::widget::PopupType;
+
  public:
   nsXULPopupHidingEvent(nsIContent* aPopup, nsIContent* aNextPopup,
-                        nsIContent* aLastPopup, nsPopupType aPopupType,
+                        nsIContent* aLastPopup, PopupType aPopupType,
                         bool aDeselectMenu, bool aIsCancel)
       : mozilla::Runnable("nsXULPopupHidingEvent"),
         mPopup(aPopup),
@@ -296,7 +299,7 @@ class nsXULPopupHidingEvent : public mozilla::Runnable {
   nsCOMPtr<nsIContent> mPopup;
   nsCOMPtr<nsIContent> mNextPopup;
   nsCOMPtr<nsIContent> mLastPopup;
-  nsPopupType mPopupType;
+  PopupType mPopupType;
   bool mDeselectMenu;
   bool mIsRollup;
 };
@@ -363,6 +366,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   friend class nsXULPopupPositionedEvent;
   friend class nsXULMenuCommandEvent;
   friend class TransitionEnder;
+
+  using PopupType = mozilla::widget::PopupType;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -576,10 +581,10 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   /**
    * Return the frame for the topmost open popup of a given type, or null if
-   * no popup of that type is open. If aType is ePopupTypeAny, a menu of any
+   * no popup of that type is open. If aType is PopupType::Any, a menu of any
    * type is returned.
    */
-  nsIFrame* GetTopPopup(nsPopupType aType);
+  nsIFrame* GetTopPopup(PopupType aType);
 
   /**
    * Returns the topmost active menuitem that's currently visible, if any.
@@ -747,7 +752,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                                             bool aSelectFirstItem);
   MOZ_CAN_RUN_SCRIPT void HidePopupCallback(
       nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
-      nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu);
+      nsIContent* aLastPopup, PopupType aPopupType, bool aDeselectMenu);
 
   /**
    * Trigger frame construction and reflow in the popup, fire a popupshowing
@@ -785,7 +790,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FirePopupHidingEvent(nsIContent* aPopup, nsIContent* aNextPopup,
                             nsIContent* aLastPopup, nsPresContext* aPresContext,
-                            nsPopupType aPopupType, bool aDeselectMenu,
+                            PopupType aPopupType, bool aDeselectMenu,
                             bool aIsCancel);
 
   /**

@@ -73,15 +73,15 @@ class PuppetWidget : public nsBaseWidget,
   using nsBaseWidget::Create;  // for Create signature not overridden here
   virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
-                          nsWidgetInitData* aInitData = nullptr) override;
+                          widget::InitData* aInitData = nullptr) override;
   void InfallibleCreate(nsIWidget* aParent, nsNativeWidget aNativeParent,
                         const LayoutDeviceIntRect& aRect,
-                        nsWidgetInitData* aInitData = nullptr);
+                        widget::InitData* aInitData = nullptr);
 
   void InitIMEState();
 
   virtual already_AddRefed<nsIWidget> CreateChild(
-      const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData = nullptr,
+      const LayoutDeviceIntRect& aRect, widget::InitData* aInitData = nullptr,
       bool aForceUseIWidgetParent = false) override;
 
   virtual void Destroy() override;
@@ -171,8 +171,8 @@ class PuppetWidget : public nsBaseWidget,
   // same-process subdocuments, we force the widget here to be
   // transparent, which in turn will cause layout to use a transparent
   // backstop background color.
-  virtual nsTransparencyMode GetTransparencyMode() override {
-    return eTransparencyTransparent;
+  virtual TransparencyMode GetTransparencyMode() override {
+    return TransparencyMode::Transparent;
   }
 
   virtual WindowRenderer* GetWindowRenderer() override;

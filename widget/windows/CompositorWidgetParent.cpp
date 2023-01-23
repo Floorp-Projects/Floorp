@@ -34,8 +34,8 @@ CompositorWidgetParent::CompositorWidgetParent(
                           aOptions),
       mWnd(reinterpret_cast<HWND>(
           aInitData.get_WinCompositorWidgetInitData().hWnd())),
-      mTransparencyMode(
-          aInitData.get_WinCompositorWidgetInitData().transparencyMode()),
+      mTransparencyMode(uint32_t(
+          aInitData.get_WinCompositorWidgetInitData().transparencyMode())),
       mSizeMode(nsSizeMode_Normal),
       mIsFullyOccluded(false),
       mRemoteBackbufferClient() {
@@ -122,7 +122,7 @@ bool CompositorWidgetParent::HasGlass() const {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
              wr::RenderThread::IsInRenderThread());
 
-  return mTransparencyMode == eTransparencyBorderlessGlass;
+  return mTransparencyMode == uint32_t(TransparencyMode::BorderlessGlass);
 }
 
 bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
@@ -144,9 +144,8 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvLeavePresentLock() {
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvUpdateTransparency(
-    const nsTransparencyMode& aMode) {
-  mTransparencyMode = aMode;
-
+    const TransparencyMode& aMode) {
+  mTransparencyMode = uint32_t(aMode);
   return IPC_OK();
 }
 

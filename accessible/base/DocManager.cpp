@@ -450,7 +450,7 @@ DocAccessible* DocManager::CreateDocOrRootAccessible(Document* aDocument) {
   }
 
   nsIWidget* widget = nsContentUtils::WidgetForDocument(aDocument);
-  if (!widget || widget->WindowType() == eWindowType_invisible) {
+  if (!widget || widget->GetWindowType() == widget::WindowType::Invisible) {
     return nullptr;
   }
 

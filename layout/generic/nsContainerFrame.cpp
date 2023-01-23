@@ -7,6 +7,7 @@
 /* base class #1 for rendering objects that have child lists */
 
 #include "nsContainerFrame.h"
+#include "mozilla/widget/InitData.h"
 #include "nsContainerFrameInlines.h"
 
 #include "mozilla/ComputedStyle.h"
@@ -729,10 +730,12 @@ static nsIWidget* GetPresContextContainerWidget(nsPresContext* aPresContext) {
 }
 
 static bool IsTopLevelWidget(nsIWidget* aWidget) {
-  nsWindowType windowType = aWidget->WindowType();
-  return windowType == eWindowType_toplevel ||
-         windowType == eWindowType_dialog || windowType == eWindowType_popup ||
-         windowType == eWindowType_sheet;
+  using WindowType = mozilla::widget::WindowType;
+
+  auto windowType = aWidget->GetWindowType();
+  return windowType == WindowType::TopLevel ||
+         windowType == WindowType::Dialog || windowType == WindowType::Popup ||
+         windowType == WindowType::Sheet;
 }
 
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
@@ -793,7 +796,7 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     // openDialog("something.html") to produce an opaque window
     // even if the HTML doesn't have a background-color set.
     auto* canvas = aPresContext->PresShell()->GetCanvasFrame();
-    nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(
+    widget::TransparencyMode mode = nsLayoutUtils::GetFrameTransparency(
         canvas ? canvas : aFrame, rootFrame);
     StyleWindowShadow shadow = rootFrame->StyleUIReset()->mWindowShadow;
     nsCOMPtr<nsIWidget> viewWidget = aView->GetWidget();
