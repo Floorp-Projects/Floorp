@@ -39,8 +39,8 @@ fi
 
 ERROR_HELP=""
 RESUME=""
-if [ -f log_resume.txt ]; then
-  RESUME=`tail -1 log_resume.txt`
+if [ -f $STATE_DIR/resume_state ]; then
+  RESUME=`tail -1 $STATE_DIR/resume_state`
 fi
 
 GIT_IS_REBASING=`cd $MOZ_LIBWEBRTC_SRC && git status | grep "interactive rebase in progress" | wc -l | tr -d " " || true`
@@ -202,41 +202,41 @@ function handle_renamed_upstream_files {
 }
 
 if [ $SKIP_TO = "run" ]; then
-  echo "resume2" > log_resume.txt
+  echo "resume2" > $STATE_DIR/resume_state
   rebase_mozlibwebrtc_stack;
 fi
 
 if [ $SKIP_TO = "resume2" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume3" > log_resume.txt
+  echo "resume3" > $STATE_DIR/resume_state
   vendor_off_next_commit;
 fi
 
 if [ $SKIP_TO = "resume3" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume4" > log_resume.txt
+  echo "resume4" > $STATE_DIR/resume_state
   regen_mozbuild_files;
 fi
 
 if [ $SKIP_TO = "resume4" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume5" > log_resume.txt
+  echo "resume5" > $STATE_DIR/resume_state
   remove_deleted_upstream_files;
 fi
 
 if [ $SKIP_TO = "resume5" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume6" > log_resume.txt
+  echo "resume6" > $STATE_DIR/resume_state
   add_new_upstream_files;
 fi
 
 if [ $SKIP_TO = "resume6" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume7" > log_resume.txt
+  echo "resume7" > $STATE_DIR/resume_state
   handle_renamed_upstream_files;
 fi
 
-echo "" > log_resume.txt
+echo "" > $STATE_DIR/resume_state
 echo "-------"
 echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "-------"
