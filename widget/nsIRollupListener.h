@@ -16,26 +16,29 @@ class nsIWidget;
 
 class nsIRollupListener {
  public:
+  enum class FlushViews : bool { No, Yes };
+  struct RollupOptions {
+    // aCount is the number of popups in a chain to close. If this is
+    // zero, then all popups are closed.
+    uint32_t mCount = 0;
+    // If this is true, then views should be flushed after the rollup.
+    FlushViews mFlush = FlushViews::No;
+    // This is the mouse pointer position where the event that triggered the
+    // rollup occurred, which may be nullptr.
+    const mozilla::LayoutDeviceIntPoint* mPoint = nullptr;
+  };
+
   /**
    * Notifies the object to rollup, optionally returning the node that
-   * was just rolled up.
+   * was just rolled up in aLastRolledUp, if non-null.
    *
-   * If aFlush is true, then views should be flushed after the rollup.
-   *
-   * aPoint is the mouse pointer position where the event that triggered the
-   * rollup occurred, which may be nullptr.
-   *
-   * aCount is the number of popups in a chain to close. If this is
-   * UINT32_MAX, then all popups are closed.
-   * If aLastRolledUp is non-null, it will be set to the last rolled up popup,
-   * if this is supported. aLastRolledUp is not addrefed.
+   * aLastRolledUp is not addrefed.
    *
    * Returns true if the event that the caller is processing should be consumed.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual bool Rollup(uint32_t aCount, bool aFlush,
-                      const mozilla::LayoutDeviceIntPoint* aPoint,
-                      nsIContent** aLastRolledUp) = 0;
+  virtual bool Rollup(const RollupOptions&,
+                      nsIContent** aLastRolledUp = nullptr) = 0;
 
   /**
    * Asks the RollupListener if it should rollup on mouse wheel events

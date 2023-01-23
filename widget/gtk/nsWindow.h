@@ -504,7 +504,8 @@ class nsWindow final : public nsBaseWidget {
                        const mozilla::LayoutDeviceIntPoint& aRefPoint);
   bool CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
                       bool aAlwaysRollup);
-  void CheckForRollupDuringGrab() { CheckForRollup(0, 0, false, true); }
+  void RollupAllMenus() { CheckForRollup(0, 0, false, true); }
+  void CheckForRollupDuringGrab() { RollupAllMenus(); }
 
   bool GetDragInfo(mozilla::WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
                    gint* aButton, gint* aRootX, gint* aRootY);
