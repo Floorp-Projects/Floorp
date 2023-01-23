@@ -1940,7 +1940,6 @@ CSSCoord AsyncPanZoomController::ConvertScrollbarPoint(
 static bool AllowsScrollingMoreThanOnePage(double aMultiplier) {
   return Abs(aMultiplier) >=
          EventStateManager::MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
-  ;
 }
 
 ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
