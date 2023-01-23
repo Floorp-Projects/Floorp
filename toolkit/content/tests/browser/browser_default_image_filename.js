@@ -37,7 +37,7 @@ add_task(async function() {
 
       let showFilePickerPromise = new Promise(resolve => {
         MockFilePicker.showCallback = function(fp) {
-          is(fp.defaultString, "index.gif");
+          is(fp.defaultString, "Untitled.gif");
           resolve();
         };
       });
@@ -72,7 +72,7 @@ add_task(async function() {
     async function(browser) {
       let showFilePickerPromise = new Promise(resolve => {
         MockFilePicker.showCallback = function(fp) {
-          is(fp.defaultString, "index.gif");
+          is(fp.defaultString, "Untitled.gif");
           resolve();
         };
       });

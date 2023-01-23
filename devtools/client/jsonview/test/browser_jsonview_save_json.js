@@ -139,7 +139,7 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/json adds .json extension by default.");
-  const data = awaitSavedFileContents("index.json", "json");
+  const data = awaitSavedFileContents("Untitled.json", "json");
   await clickJsonNode(saveButton);
   info("Clicked Save button.");
   is(await data, "2", "JSON contents should have been saved.");
@@ -152,7 +152,7 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/manifest+json does not add .json extension.");
-  const data = awaitSavedFileContents("index", null);
+  const data = awaitSavedFileContents("Untitled", null);
   await clickJsonNode(saveButton);
   info("Clicked Save button.");
   is(await data, "3", "JSON contents should have been saved.");

@@ -49,8 +49,8 @@ const WEBP_DATA = atob(
   "UklGRiIAAABXRUJQVlA4TBUAAAAvY8AYAAfQ/4j+B4CE8H+/ENH/VCIA"
 );
 
-const DEFAULT_INDEX_FILENAME =
-  AppConstants.platform == "win" ? "index.htm" : "index.html";
+const DEFAULT_FILENAME =
+  AppConstants.platform == "win" ? "Untitled.htm" : "Untitled.html";
 
 const PROMISE_FILENAME_TYPE = "application/x-moz-file-promise-dest-filename";
 
@@ -279,7 +279,7 @@ add_task(async function save_document() {
       // This is special-cased on Windows. The default filename will be used, since
       // the filename is invalid, but since the previous test file has the same issue,
       // this second file will be saved with a number suffix added to it.
-      filename = "index_002";
+      filename = "Untitled_002";
     }
 
     let file = tmpDir.clone();
@@ -516,9 +516,9 @@ add_task(async function saveas_files() {
 
       // Trying to open an unknown or binary type will just open a blank
       // page, so trying to save will just save the blank page with the
-      // filename index.html.
+      // filename Untitled.html.
       let expectedFilename = expectedItems[idx].unknown
-        ? DEFAULT_INDEX_FILENAME
+        ? DEFAULT_FILENAME
         : expectedItems[idx].savepagename || expectedItems[idx].filename;
 
       // When saving via contentAreaUtils.js, the content disposition name
@@ -726,11 +726,11 @@ add_task(async function save_download_links() {
           " was saved with the correct name when link has download attribute"
       );
     } else {
-      if (idx == 66 && filename == "index(1)") {
+      if (idx == 66 && filename == "Untitled(1)") {
         // Sometimes, the previous test's file still exists or wasn't created in time
         // and a non-duplicated name is created. Allow this rather than figuring out
         // how to avoid it since it doesn't affect what is being tested here.
-        filename = "index";
+        filename = "Untitled";
       }
 
       is(
