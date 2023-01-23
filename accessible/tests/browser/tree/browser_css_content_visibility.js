@@ -36,6 +36,12 @@ const snippet1 = `
   </div>
   `;
 
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.content-visibility.enabled", true]],
+  });
+});
+
 // Check if the element specified with `content-visibility` property is accessible
 addAccessibleTask(
   snippet1,

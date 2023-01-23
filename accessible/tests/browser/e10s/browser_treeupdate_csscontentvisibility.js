@@ -38,6 +38,12 @@ const snippet = `
   </div>
   `;
 
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.content-visibility.enabled", true]],
+  });
+});
+
 async function setContentVisibility(browser, id, value) {
   let onReorder = waitForEvent(EVENT_REORDER, id);
 
