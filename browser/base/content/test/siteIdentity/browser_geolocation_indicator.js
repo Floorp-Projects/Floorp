@@ -5,8 +5,8 @@
 
 requestLongerTimeout(2);
 
-const { PermissionUI } = ChromeUtils.importESModule(
-  "resource:///modules/PermissionUI.sys.mjs"
+const { PermissionUI } = ChromeUtils.import(
+  "resource:///modules/PermissionUI.jsm"
 );
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
