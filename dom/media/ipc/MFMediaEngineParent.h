@@ -19,6 +19,7 @@
 
 namespace mozilla {
 
+class MFContentProtectionManager;
 class MFMediaEngineExtension;
 class MFMediaEngineStreamWrapper;
 class MFMediaSource;
@@ -102,6 +103,7 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   Microsoft::WRL::ComPtr<MFMediaEngineNotify> mMediaEngineNotify;
   Microsoft::WRL::ComPtr<MFMediaEngineExtension> mMediaEngineExtension;
   Microsoft::WRL::ComPtr<MFMediaSource> mMediaSource;
+  Microsoft::WRL::ComPtr<MFContentProtectionManager> mContentProtectionManager;
 
   MediaEventListener mMediaEngineEventListener;
   MediaEventListener mRequestSampleListener;
