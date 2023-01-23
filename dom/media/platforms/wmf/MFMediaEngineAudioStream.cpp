@@ -90,6 +90,10 @@ already_AddRefed<MediaData> MFMediaEngineAudioStream::OutputDataInternal() {
   return output.forget();
 }
 
+bool MFMediaEngineAudioStream::IsEncrypted() const {
+  return mAudioInfo.mCrypto.IsEncrypted();
+}
+
 #undef LOGV
 
 }  // namespace mozilla
