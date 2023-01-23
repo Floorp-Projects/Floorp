@@ -175,13 +175,13 @@ class MoveOp {
  protected:
   MoveOperand from_;
   MoveOperand to_;
-  bool cycleBegin_;
-  bool cycleEnd_;
-  int cycleBeginSlot_;
-  int cycleEndSlot_;
+  int32_t cycleBeginSlot_ = -1;
+  int32_t cycleEndSlot_ = -1;
+  bool cycleBegin_ = false;
+  bool cycleEnd_ = false;
 
  public:
-  enum Type { GENERAL, INT32, FLOAT32, DOUBLE, SIMD128 };
+  enum Type : uint8_t { GENERAL, INT32, FLOAT32, DOUBLE, SIMD128 };
 
  protected:
   Type type_;
@@ -199,10 +199,6 @@ class MoveOp {
   MoveOp(const MoveOperand& from, const MoveOperand& to, Type type)
       : from_(from),
         to_(to),
-        cycleBegin_(false),
-        cycleEnd_(false),
-        cycleBeginSlot_(-1),
-        cycleEndSlot_(-1),
         type_(type),
         endCycleType_(GENERAL)  // initialize to silence UBSan warning
   {}
