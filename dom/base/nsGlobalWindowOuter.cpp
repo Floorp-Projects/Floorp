@@ -3576,7 +3576,7 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
 
 CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
                                              ErrorResult& aError) {
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
     CSSSize size;
     aError = GetInnerSize(size);
     return RoundedToInt(size);
@@ -3656,7 +3656,7 @@ void nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
 CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
                                              ErrorResult& aError) {
   // When resisting fingerprinting, always return (0,0)
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
     return CSSIntPoint(0, 0);
   }
 
@@ -3749,7 +3749,7 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
 
 float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {
   // When resisting fingerprinting, always return 0.
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
     return 0.0;
   }
 
@@ -3759,7 +3759,7 @@ float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {
 
 float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   // Return 0 to prevent fingerprinting.
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (nsIGlobalObject::ShouldResistFingerprinting(aCallerType)) {
     return 0.0;
   }
 

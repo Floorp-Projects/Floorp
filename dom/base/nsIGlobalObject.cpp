@@ -9,6 +9,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/Report.h"
@@ -32,6 +33,7 @@ using mozilla::MallocSizeOf;
 using mozilla::Maybe;
 using mozilla::MicroTaskRunnable;
 using mozilla::dom::BlobURLProtocolHandler;
+using mozilla::dom::CallerType;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::Report;
 using mozilla::dom::ReportingObserver;
@@ -404,4 +406,8 @@ RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
   }
 
   return RTPCallerType::Normal;
+}
+
+bool nsIGlobalObject::ShouldResistFingerprinting(CallerType aCallerType) const {
+  return aCallerType != CallerType::System && ShouldResistFingerprinting();
 }
