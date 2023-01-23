@@ -62,17 +62,22 @@ void ImageBitmapRenderingContext::GetCanvas(
   }
 }
 
-void ImageBitmapRenderingContext::TransferImageBitmap(
-    ImageBitmap& aImageBitmap) {
-  TransferFromImageBitmap(&aImageBitmap);
+void ImageBitmapRenderingContext::TransferImageBitmap(ImageBitmap& aImageBitmap,
+                                                      ErrorResult& aRv) {
+  TransferFromImageBitmap(&aImageBitmap, aRv);
 }
 
 void ImageBitmapRenderingContext::TransferFromImageBitmap(
-    ImageBitmap* aImageBitmap) {
+    ImageBitmap* aImageBitmap, ErrorResult& aRv) {
   ResetBitmap();
 
   if (aImageBitmap) {
     mImage = aImageBitmap->TransferAsImage();
+
+    if (!mImage) {
+      aRv.ThrowInvalidStateError("The input ImageBitmap has been detached");
+      return;
+    }
 
     if (aImageBitmap->IsWriteOnly()) {
       if (mCanvasElement) {
