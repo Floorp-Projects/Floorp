@@ -2,20 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function promisePanelElementShown(win, panel) {
-  return new Promise((resolve, reject) => {
-    let timeoutId = win.setTimeout(() => {
-      reject("Panel did not show within 20 seconds.");
-    }, 20000);
-    function onPanelOpen(e) {
-      panel.removeEventListener("popupshown", onPanelOpen);
-      win.clearTimeout(timeoutId);
-      resolve();
-    }
-    panel.addEventListener("popupshown", onPanelOpen);
-  });
-}
-
 add_task(async function testPopupBorderRadius() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
@@ -135,14 +121,7 @@ add_task(async function testPopupBorderRadius() {
       "Should have an overflowing toolbar."
     );
 
-    if (window.gUnifiedExtensions.isEnabled) {
-      await window.gUnifiedExtensions.togglePanel();
-    } else {
-      let chevron = document.getElementById("nav-bar-overflow-button");
-      let shownPanelPromise = promisePanelElementShown(window, overflowPanel);
-      chevron.click();
-      await shownPanelPromise;
-    }
+    await window.gUnifiedExtensions.togglePanel();
 
     clickBrowserAction(extension);
     let browser = await awaitExtensionPanel(extension);

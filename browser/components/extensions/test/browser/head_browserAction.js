@@ -140,24 +140,10 @@ async function testPopupSize(
   let widget = getBrowserActionWidget(extension);
   CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
-  let panel = browserWin.gUnifiedExtensions.isEnabled
-    ? browserWin.gUnifiedExtensions.panel
-    : browserWin.PanelUI.overflowPanel;
+  let panel = browserWin.gUnifiedExtensions.panel;
   panel.setAttribute("animate", "false");
 
   let shownPromise = Promise.resolve();
-
-  if (!browserWin.gUnifiedExtensions.isEnabled) {
-    let panelMultiView = panel.firstElementChild;
-    let widgetId = makeWidgetId(extension.id);
-    // The 'ViewShown' event is the only way to correctly determine when the extensions'
-    // panelview has finished transitioning and is fully in view.
-    shownPromise = BrowserTestUtils.waitForEvent(
-      panelMultiView,
-      "ViewShown",
-      e => (e.originalTarget.id || "").includes(widgetId)
-    );
-  }
 
   let browser = await openBrowserActionPanel(extension, browserWin);
 

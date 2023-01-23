@@ -184,10 +184,9 @@ async function testOriginControls(
 // Move the widget to the toolbar or the addons panel (if Unified Extensions
 // is enabled) or the overflow panel otherwise.
 function moveWidget(ext, pinToToolbar = false) {
-  let overflowPanelArea = gUnifiedExtensions.isEnabled
-    ? CustomizableUI.AREA_ADDONS
-    : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
-  let area = pinToToolbar ? CustomizableUI.AREA_NAVBAR : overflowPanelArea;
+  let area = pinToToolbar
+    ? CustomizableUI.AREA_NAVBAR
+    : CustomizableUI.AREA_ADDONS;
   let widgetId = `${makeWidgetId(ext.id)}-browser-action`;
   CustomizableUI.addWidgetToArea(widgetId, area);
 }

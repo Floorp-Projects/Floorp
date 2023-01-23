@@ -336,9 +336,7 @@ var awaitExtensionPanel = function(extension, win = window, awaitLoad = true) {
 };
 
 function getCustomizableUIPanelID(win = window) {
-  return win.gUnifiedExtensions.isEnabled
-    ? CustomizableUI.AREA_ADDONS
-    : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
+  return CustomizableUI.AREA_ADDONS;
 }
 
 function getBrowserActionWidget(extension) {
@@ -351,9 +349,8 @@ function getBrowserActionPopup(extension, win = window) {
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     return win.document.getElementById("customizationui-widget-panel");
   }
-  return win.gUnifiedExtensions.isEnabled
-    ? win.gUnifiedExtensions.panel
-    : win.PanelUI.overflowPanel;
+
+  return win.gUnifiedExtensions.panel;
 }
 
 var showBrowserAction = function(extension, win = window) {
@@ -379,10 +376,8 @@ async function triggerBrowserActionWithKeyboard(
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     await focusButtonAndPressKey(key, node, modifiers);
   } else if (group.areaType == CustomizableUI.TYPE_PANEL) {
-    // Use key navigation so that the PanelMultiView doesn't ignore key events
-    let panel = win.gUnifiedExtensions.isEnabled
-      ? win.gUnifiedExtensions.panel
-      : win.document.getElementById("widget-overflow");
+    // Use key navigation so that the PanelMultiView doesn't ignore key events.
+    let panel = win.gUnifiedExtensions.panel;
     while (win.document.activeElement != node) {
       EventUtils.synthesizeKey("KEY_ArrowDown");
       ok(
