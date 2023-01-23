@@ -247,7 +247,11 @@ add_task(async function pickHelpButton() {
           },
         ],
         helpUrl,
-        helpL10n: { id: "urlbar-tip-help-icon" },
+        helpL10n: {
+          id: UrlbarPrefs.get("resultMenu")
+            ? "urlbar-result-menu-tip-get-help"
+            : "urlbar-tip-help-icon",
+        },
       }
     ),
   ];
@@ -268,17 +272,38 @@ add_task(async function pickHelpButton() {
       UrlbarProviderInterventions.TIP_TYPE.CLEAR
     );
 
-    let helpButton = element._buttons.get("help");
-    Assert.ok(helpButton, "Help button exists");
-    Assert.ok(
-      BrowserTestUtils.is_visible(helpButton),
-      "Help button is visible"
-    );
-    EventUtils.synthesizeMouseAtCenter(helpButton, {});
+    if (UrlbarPrefs.get("resultMenu")) {
+      let tabOpenPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "http://example.com/"
+      );
+      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
+        openByMouse: true,
+        resultIndex: 1,
+      });
+      info("Waiting for help URL to load in a new tab");
+      await tabOpenPromise;
+      gBrowser.removeCurrentTab();
+    } else {
+      let helpButton = element._buttons.get("help");
+      Assert.ok(helpButton, "Help button exists");
+      Assert.ok(
+        BrowserTestUtils.is_visible(helpButton),
+        "Help button is visible"
+      );
+      EventUtils.synthesizeMouseAtCenter(helpButton, {});
 
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, helpUrl);
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, helpUrl);
+      await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    }
 
+    if (UrlbarPrefs.get("resultMenu")) {
+      todo(
+        false,
+        "help telemetry for the result menu to be implemented in bug 1790020"
+      );
+      return;
+    }
     const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
     TelemetryTestUtils.assertKeyedScalar(
       scalars,

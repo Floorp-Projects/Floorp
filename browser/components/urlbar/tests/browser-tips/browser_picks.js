@@ -105,6 +105,14 @@ add_task(async function mouse_insideTipButNotOnButtons() {
  *   to pick the main button instead.
  */
 async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
+  if (UrlbarPrefs.get("resultMenu") && helpUrl) {
+    todo(
+      false,
+      "help telemetry for the result menu to be implemented in bug 1790020"
+    );
+    return;
+  }
+
   // Open a new tab for the test if we expect to load a URL.
   let tab;
   if (buttonUrl || helpUrl) {

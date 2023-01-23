@@ -157,9 +157,17 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredIabCategory: suggest.iab_category,
       isSponsored: suggest.iab_category !== "5 - Education",
       helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+      helpL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
+      },
       isBlockable: false,
-      blockL10n: { id: "firefox-suggest-urlbar-block" },
+      blockL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
+      },
       displayUrl: suggest.url,
       source: "remote-settings",
     },

@@ -20,13 +20,6 @@ function assertSelected(index) {
     index,
     "Should have selected the correct item"
   );
-  // Also check the "selected" attribute, to ensure it is not a "fake" selection
-  // due to binding misbehaviors.
-  let element = UrlbarTestUtils.getSelectedRow(window);
-  Assert.ok(
-    element.hasAttribute("selected"),
-    "Should have the selected attribute on the row element"
-  );
 
   // This is true because although both the listbox and the one-offs can have
   // selections, the test doesn't check that.

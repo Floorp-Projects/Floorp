@@ -297,13 +297,18 @@ async function expectTabThroughResults(options = { reverse: false }) {
 
   for (let i = initiallySelectedIndex + 1; i < resultCount; i++) {
     EventUtils.synthesizeKey("KEY_Tab", { shiftKey: options.reverse });
+    if (UrlbarTestUtils.getButtonForResultIndex(window, "menu")) {
+      EventUtils.synthesizeKey("KEY_Tab", { shiftKey: options.reverse });
+    }
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
       options.reverse ? resultCount - i : i
     );
   }
 
-  EventUtils.synthesizeKey("KEY_Tab");
+  EventUtils.synthesizeKey("KEY_Tab", {
+    repeat: UrlbarPrefs.get("resultMenu") && result.heuristic ? 2 : 1,
+  });
 
   if (!options.reverse) {
     Assert.equal(

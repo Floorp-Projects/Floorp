@@ -762,11 +762,15 @@ function makeExpectedResult(temperatureUnit = undefined) {
       iconId: "6",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
-        id: "firefox-suggest-urlbar-learn-more",
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
       },
       isBlockable: true,
       blockL10n: {
-        id: "firefox-suggest-urlbar-block",
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
       },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",

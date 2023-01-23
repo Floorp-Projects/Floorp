@@ -333,7 +333,11 @@ async function doUpdateTest({
     Assert.ok(button.test(actualButton), "Button regexp");
   }
 
-  Assert.ok(element._buttons.has("help"), "Tip has a help button");
+  if (UrlbarPrefs.get("resultMenu")) {
+    Assert.ok(element._buttons.has("menu"), "Tip has a menu button");
+  } else {
+    Assert.ok(element._buttons.has("help"), "Tip has a help button");
+  }
 
   // Pick the tip and wait for the action.
   let values = await Promise.all([awaitCallback(), pickTip()]);
@@ -488,12 +492,21 @@ function checkIntervention({
       Assert.ok(button.test(actualButton), "Button regexp");
     }
 
-    let helpButton = element._buttons.get("help");
-    Assert.ok(helpButton, "Help button exists");
-    Assert.ok(
-      BrowserTestUtils.is_visible(helpButton),
-      "Help button is visible"
-    );
+    if (UrlbarPrefs.get("resultMenu")) {
+      let menuButton = element._buttons.get("menu");
+      Assert.ok(menuButton, "Menu button exists");
+      Assert.ok(
+        BrowserTestUtils.is_visible(menuButton),
+        "Menu button is visible"
+      );
+    } else {
+      let helpButton = element._buttons.get("help");
+      Assert.ok(helpButton, "Help button exists");
+      Assert.ok(
+        BrowserTestUtils.is_visible(helpButton),
+        "Help button is visible"
+      );
+    }
 
     let values = await Promise.all([awaitCallback(), pickTip()]);
     Assert.ok(true, "Refresh dialog opened");
