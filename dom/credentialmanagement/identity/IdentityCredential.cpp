@@ -305,6 +305,13 @@ RefPtr<IdentityCredential::ValidationPromise>
 IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
                                       const IdentityProvider& aProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (StaticPrefs::
+          dom_security_credentialmanagement_identity_test_ignore_well_known()) {
+    return IdentityCredential::ValidationPromise::CreateAndResolve(true,
+                                                                   __func__);
+  }
+
   // Build the URL
   nsString configLocation = aProvider.mConfigURL;
   nsCOMPtr<nsIURI> configURI;
