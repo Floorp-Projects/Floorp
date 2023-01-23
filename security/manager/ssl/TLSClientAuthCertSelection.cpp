@@ -868,27 +868,42 @@ bool SelectTLSClientAuthCertParent::Dispatch(
       new RemoteClientAuthCertificateSelected(this));
   ClientAuthInfo authInfo(aHostName, aOriginAttributes, aPort, aProviderFlags,
                           aProviderTlsFlags);
-  SECItem serverCertItem{
-      siBuffer,
-      const_cast<uint8_t*>(aServerCertBytes.data().Elements()),
-      static_cast<unsigned int>(aServerCertBytes.data().Length()),
-  };
-  UniqueCERTCertificate serverCert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &serverCertItem, nullptr, false, true));
-  if (!serverCert) {
+  nsCOMPtr<nsIEventTarget> socketThread =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!socketThread)) {
     return false;
   }
-  nsTArray<nsTArray<uint8_t>> caNames;
-  for (auto& caName : aCANames) {
-    caNames.AppendElement(std::move(caName.data()));
-  }
-  UniqueCERTCertList potentialClientCertificates(
-      FindClientCertificatesWithPrivateKeys());
-  RefPtr<SelectClientAuthCertificate> selectClientAuthCertificate(
-      new SelectClientAuthCertificate(
-          std::move(authInfo), std::move(serverCert), std::move(caNames),
-          std::move(potentialClientCertificates), continuation));
-  return NS_SUCCEEDED(NS_DispatchToMainThread(selectClientAuthCertificate));
+  // Dispatch the work of instantiating a CERTCertificate and searching for
+  // client certificates to the socket thread.
+  nsresult rv = socketThread->Dispatch(NS_NewRunnableFunction(
+      "SelectTLSClientAuthCertParent::Dispatch",
+      [authInfo(std::move(authInfo)), continuation(std::move(continuation)),
+       serverCertBytes(aServerCertBytes),
+       caNames(std::move(aCANames))]() mutable {
+        SECItem serverCertItem{
+            siBuffer,
+            const_cast<uint8_t*>(serverCertBytes.data().Elements()),
+            static_cast<unsigned int>(serverCertBytes.data().Length()),
+        };
+        UniqueCERTCertificate serverCert(CERT_NewTempCertificate(
+            CERT_GetDefaultCertDB(), &serverCertItem, nullptr, false, true));
+        if (!serverCert) {
+          return;
+        }
+        nsTArray<nsTArray<uint8_t>> caNamesArray;
+        for (auto& caName : caNames) {
+          caNamesArray.AppendElement(std::move(caName.data()));
+        }
+        UniqueCERTCertList potentialClientCertificates(
+            FindClientCertificatesWithPrivateKeys());
+        RefPtr<SelectClientAuthCertificate> selectClientAuthCertificate(
+            new SelectClientAuthCertificate(
+                std::move(authInfo), std::move(serverCert),
+                std::move(caNamesArray), std::move(potentialClientCertificates),
+                continuation));
+        Unused << NS_DispatchToMainThread(selectClientAuthCertificate);
+      }));
+  return NS_SUCCEEDED(rv);
 }
 
 void SelectTLSClientAuthCertParent::TLSClientAuthCertSelected(
