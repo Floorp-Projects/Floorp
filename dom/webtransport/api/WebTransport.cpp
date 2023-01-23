@@ -6,6 +6,7 @@
 
 #include "WebTransport.h"
 
+#include "mozilla/RefPtr.h"
 #include "nsUTF8Utils.h"
 #include "nsIURL.h"
 #include "mozilla/Assertions.h"
