@@ -161,21 +161,6 @@ enum nsIgnoreKeys {
   eIgnoreKeys_Shortcuts,
 };
 
-enum class HidePopupOption : uint8_t {
-  // If the entire chain of menus should be closed.
-  HideChain,
-  // If the parent <menu> of the popup should not be deselected. This will not
-  // be set when the menu is closed by pressing the Escape key.
-  DeselectMenu,
-  // If the first popuphiding event should be sent asynchrously. This should
-  // be set if HidePopup is called from a frame.
-  Async,
-  // If this popup is hiding due to being cancelled.
-  IsRollup,
-};
-
-using HidePopupOptions = mozilla::EnumSet<HidePopupOption>;
-
 #define NS_DIRECTION_IS_INLINE(dir) \
   (dir == eNavigationDirection_Start || dir == eNavigationDirection_End)
 #define NS_DIRECTION_IS_BLOCK(dir) \
@@ -292,13 +277,14 @@ class nsXULPopupHidingEvent : public mozilla::Runnable {
  public:
   nsXULPopupHidingEvent(nsIContent* aPopup, nsIContent* aNextPopup,
                         nsIContent* aLastPopup, nsPopupType aPopupType,
-                        HidePopupOptions aOptions)
+                        bool aDeselectMenu, bool aIsCancel)
       : mozilla::Runnable("nsXULPopupHidingEvent"),
         mPopup(aPopup),
         mNextPopup(aNextPopup),
         mLastPopup(aLastPopup),
         mPopupType(aPopupType),
-        mOptions(aOptions) {
+        mDeselectMenu(aDeselectMenu),
+        mIsRollup(aIsCancel) {
     NS_ASSERTION(aPopup,
                  "null popup supplied to nsXULPopupHidingEvent constructor");
     // aNextPopup and aLastPopup may be null
@@ -311,7 +297,8 @@ class nsXULPopupHidingEvent : public mozilla::Runnable {
   nsCOMPtr<nsIContent> mNextPopup;
   nsCOMPtr<nsIContent> mLastPopup;
   nsPopupType mPopupType;
-  HidePopupOptions mOptions;
+  bool mDeselectMenu;
+  bool mIsRollup;
 };
 
 // this class is used for dispatching popuppositioned events asynchronously.
@@ -383,8 +370,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   // nsIRollupListener
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  bool Rollup(const RollupOptions&,
-              nsIContent** aLastRolledUp = nullptr) override;
+  bool Rollup(uint32_t aCount, bool aFlush,
+              const mozilla::LayoutDeviceIntPoint* aPos,
+              nsIContent** aLastRolledUp) override;
   bool ShouldRollupOnMouseWheelEvent() override;
   bool ShouldConsumeOnMouseWheelEvent() override;
   bool ShouldRollupOnMouseActivate() override;
@@ -396,7 +384,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   enum class RollupKind { Tooltip, Menu };
   MOZ_CAN_RUN_SCRIPT
-  bool RollupInternal(RollupKind, const RollupOptions&,
+  bool RollupInternal(RollupKind, uint32_t aCount, bool aFlush,
+                      const mozilla::LayoutDeviceIntPoint* pos,
                       nsIContent** aLastRolledUp);
 
   // NativeMenu::Observer
@@ -513,10 +502,21 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   /*
    * Hide a popup aPopup. If the popup is in a <menu>, then also inform the
    * menu that the popup is being hidden.
+   *
+   * aHideChain - true if the entire chain of menus should be closed. If false,
+   *              only this popup is closed.
+   * aDeselectMenu - true if the parent <menu> of the popup should be
+   *                 deselected. This will be false when the menu is closed by
+   *                 pressing the Escape key.
+   * aAsynchronous - true if the first popuphiding event should be sent
+   *                 asynchrously. This should be true if HidePopup is called
+   *                 from a frame.
+   * aIsCancel - true if this popup is hiding due to being cancelled.
    * aLastPopup - optional popup to close last when hiding a chain of menus.
    *              If null, then all popups will be closed.
    */
-  void HidePopup(nsIContent* aPopup, HidePopupOptions,
+  void HidePopup(nsIContent* aPopup, bool aHideChain, bool aDeselectMenu,
+                 bool aAsynchronous, bool aIsCancel,
                  nsIContent* aLastPopup = nullptr);
 
   /*
@@ -747,7 +747,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                                             bool aSelectFirstItem);
   MOZ_CAN_RUN_SCRIPT void HidePopupCallback(
       nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
-      nsIContent* aLastPopup, nsPopupType aPopupType, HidePopupOptions);
+      nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu);
 
   /**
    * Trigger frame construction and reflow in the popup, fire a popupshowing
@@ -779,13 +779,14 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * aLastPopup - the last popup in the chain to hide
    * aPresContext - nsPresContext for the popup's frame
    * aPopupType - the PopupType of the frame.
-   * aOptions - the relevant options to hide the popup. Only a subset is looked
-   * at.
+   * aDeselectMenu - true to unhighlight the menu when hiding it
+   * aIsCancel - true if this popup is hiding due to being cancelled.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FirePopupHidingEvent(nsIContent* aPopup, nsIContent* aNextPopup,
                             nsIContent* aLastPopup, nsPresContext* aPresContext,
-                            nsPopupType aPopupType, HidePopupOptions aOptions);
+                            nsPopupType aPopupType, bool aDeselectMenu,
+                            bool aIsCancel);
 
   /**
    * Handle keyboard navigation within a menu popup specified by aItem.

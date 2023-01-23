@@ -207,7 +207,7 @@ nsresult nsMenuBarListener::KeyUp(Event* aKeyEvent) {
       // handle key events when menubar is active and IME should be
       // disabled.
       if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-        pm->Rollup({});
+        pm->Rollup(0, false, nullptr, nullptr);
       }
       // If menubar active state is changed or the menubar is destroyed
       // during closing the popups, we should do nothing anymore.
