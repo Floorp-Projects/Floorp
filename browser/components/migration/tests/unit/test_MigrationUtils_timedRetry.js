@@ -9,17 +9,21 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     await dbConn.close();
-    IOUtils.remove(tmpFile.path);
+    await IOUtils.remove(tmpFile.path);
   });
 });
 
 add_task(async function testgetRowsFromDBWithoutLocksRetries() {
+  let deferred = PromiseUtils.defer();
   let promise = MigrationUtils.getRowsFromDBWithoutLocks(
     tmpFile.path,
     "Temp DB",
-    "SELECT * FROM moz_temp_table"
+    "SELECT * FROM moz_temp_table",
+    deferred.promise
   );
   await new Promise(resolve => do_timeout(50, resolve));
-  dbConn.execute("CREATE TABLE moz_temp_table (id INTEGER PRIMARY KEY)");
+  dbConn
+    .execute("CREATE TABLE moz_temp_table (id INTEGER PRIMARY KEY)")
+    .then(deferred.resolve);
   await promise;
 });

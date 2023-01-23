@@ -204,12 +204,19 @@ class MigrationUtils {
    *   trying to open.
    * @param {string} selectQuery
    *   The SELECT query to use to fetch the rows.
+   * @param {Promise} [testDelayPromise]
+   *   An optional promise to await for after the first loop, used in tests.
    *
    * @returns {Promise<object[]|Error>}
    *   A promise that resolves to an array of rows. The promise will be
    *   rejected if the read/fetch failed even after retrying.
    */
-  getRowsFromDBWithoutLocks(path, description, selectQuery) {
+  getRowsFromDBWithoutLocks(
+    path,
+    description,
+    selectQuery,
+    testDelayPromise = null
+  ) {
     let dbOptions = {
       readOnly: true,
       ignoreLockingMode: true,
@@ -220,23 +227,24 @@ class MigrationUtils {
     const RETRYINTERVAL = 100;
     return (async function innerGetRows() {
       let rows = null;
-      for (let retryCount = RETRYLIMIT; retryCount && !rows; retryCount--) {
+      for (let retryCount = RETRYLIMIT; retryCount; retryCount--) {
         // Attempt to get the rows. If this succeeds, we will bail out of the loop,
         // close the database in a failsafe way, and pass the rows back.
         // If fetching the rows throws, we will wait RETRYINTERVAL ms
         // and try again. This will repeat a maximum of RETRYLIMIT times.
         let db;
         let didOpen = false;
-        let previousException = { message: null };
+        let previousExceptionMessage = null;
         try {
           db = await lazy.Sqlite.openConnection(dbOptions);
           didOpen = true;
           rows = await db.execute(selectQuery);
+          break;
         } catch (ex) {
-          if (previousException.message != ex.message) {
+          if (previousExceptionMessage != ex.message) {
             console.error(ex);
           }
-          previousException = ex;
+          previousExceptionMessage = ex.message;
         } finally {
           try {
             if (didOpen) {
@@ -244,9 +252,10 @@ class MigrationUtils {
             }
           } catch (ex) {}
         }
-        if (previousException) {
-          await new Promise(resolve => lazy.setTimeout(resolve, RETRYINTERVAL));
-        }
+        await Promise.all([
+          new Promise(resolve => lazy.setTimeout(resolve, RETRYINTERVAL)),
+          testDelayPromise,
+        ]);
       }
       if (!rows) {
         throw new Error(
