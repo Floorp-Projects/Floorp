@@ -77,10 +77,10 @@ echo "MOZ_LIBWEBRTC_REVERT_SHA: $MOZ_LIBWEBRTC_REVERT_SHA"
 # generate these two files.
 echo $"Essentially a no-op since we're going to see this change
 reverted when we vendor in $MOZ_LIBWEBRTC_REVERT_SHA." \
-> ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
+> $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
 
 echo "We already cherry-picked this when we vendored $MOZ_LIBWEBRTC_NEXT_BASE." \
-> ~/$MOZ_LIBWEBRTC_REVERT_SHA.no-op-cherry-pick-msg
+> $STATE_DIR/$MOZ_LIBWEBRTC_REVERT_SHA.no-op-cherry-pick-msg
 
 cd $MOZ_LIBWEBRTC_SRC
 rm -f *.patch *.patch.bak

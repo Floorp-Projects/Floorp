@@ -111,8 +111,8 @@ fi
 SKIP_NEXT_REVERT_CHK="0"
 ERROR_HELP=""
 
-echo "===loop-ff=== looking for ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
-if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+echo "===loop-ff=== looking for $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
+if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
   echo "===loop-ff=== detected special commit msg, setting HANDLE_NOOP_COMMIT=1"
   HANDLE_NOOP_COMMIT="1"
 fi
