@@ -147,8 +147,8 @@ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
     double timestampDiff = unwrapped_ts90khz - *first_unwrapped_timestamp_;
     auto diff_ms = static_cast<int64_t>((timestampDiff - w_[1]) / w_[0] + 0.5);
 #if defined(DEBUG) && defined(NIGHTLY_BUILD)
-    std::cerr << "##### TimestampExtrapolator DEBUG start_ = " << start_.ms()
-              << "ms; diff_ms = (" << unwrapped_ts90khz << " - "
+    std::cout << "##### TimestampExtrapolator " << this << " DEBUG start_ = "
+              << start_.ms() << "ms; diff_ms = (" << unwrapped_ts90khz << " - "
               << *first_unwrapped_timestamp_ << " - " << w_[1] << ") / "
               << w_[0] << " + 0.5 = " << diff_ms << "ms" << std::endl;
 #endif
