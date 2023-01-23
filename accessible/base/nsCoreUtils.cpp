@@ -584,8 +584,8 @@ bool nsCoreUtils::CanCreateAccessibleWithoutFrame(nsIContent* aContent) {
     return false;
   }
 
-  // If we aren't display: contents or optgroup/optgroup we can't create an
-  // accessible without frame. Our select combobox code relies on the later.
+  // If we aren't display: contents or option/optgroup we can't create an
+  // accessible without frame. Our select combobox code relies on the latter.
   if (!element->IsDisplayContents() &&
       !element->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup)) {
     return false;
