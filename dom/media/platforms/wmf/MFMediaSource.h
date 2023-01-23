@@ -17,6 +17,8 @@
 
 namespace mozilla {
 
+class MFCDMProxy;
+
 // An event to indicate a need for a certain type of sample.
 struct SampleRequest {
   SampleRequest(TrackInfo::TrackType aType, bool aIsEnough)
@@ -33,12 +35,11 @@ struct SampleRequest {
  *
  * https://docs.microsoft.com/en-us/windows/win32/api/mfidl/nn-mfidl-imfmediasource
  */
-// TODO : support IMFTrustedInput
-class MFMediaSource
-    : public Microsoft::WRL::RuntimeClass<
-          Microsoft::WRL::RuntimeClassFlags<
-              Microsoft::WRL::RuntimeClassType::ClassicCom>,
-          IMFMediaSource, IMFRateControl, IMFRateSupport, IMFGetService> {
+class MFMediaSource : public Microsoft::WRL::RuntimeClass<
+                          Microsoft::WRL::RuntimeClassFlags<
+                              Microsoft::WRL::RuntimeClassType::ClassicCom>,
+                          IMFMediaSource, IMFRateControl, IMFRateSupport,
+                          IMFGetService, IMFTrustedInput> {
  public:
   MFMediaSource();
   ~MFMediaSource();
@@ -85,8 +86,16 @@ class MFMediaSource
   IFACEMETHODIMP SetRate(BOOL aSupportsThinning, float aRate) override;
   IFACEMETHODIMP GetRate(BOOL* aSupportsThinning, float* aRate) override;
 
+  // IMFTrustedInput
+  IFACEMETHODIMP GetInputTrustAuthority(DWORD aStreamId, REFIID aRiid,
+                                        IUnknown** aITAOut) override;
+
   MFMediaEngineStream* GetAudioStream();
   MFMediaEngineStream* GetVideoStream();
+
+  MFMediaEngineStream* GetStreamByIndentifier(DWORD aStreamId) const;
+
+  void SetCDMProxy(MFCDMProxy* aCDMProxy);
 
   TaskQueue* GetTaskQueue() const { return mTaskQueue; }
 
@@ -164,6 +173,8 @@ class MFMediaSource
 
   // Modify and access on MF thread pool.
   float mPlaybackRate = 0.0f;
+
+  RefPtr<MFCDMProxy> mCDMProxy;
 };
 
 }  // namespace mozilla
