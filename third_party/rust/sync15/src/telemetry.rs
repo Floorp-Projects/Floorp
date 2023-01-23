@@ -21,7 +21,7 @@ where
     T: serde::Serialize,
 {
     assert_eq!(
-        serde_json::to_value(&v).expect("should get a value"),
+        serde_json::to_value(v).expect("should get a value"),
         expected
     );
 }

@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::storage::{ClientRemoteTabs, RemoteTab};
+use crate::schema;
+use crate::storage::{ClientRemoteTabs, RemoteTab, TABS_CLIENT_TTL};
 use crate::store::TabsStore;
 use crate::sync::record::{TabsRecord, TabsRecordTab};
 use crate::Result;
@@ -10,13 +11,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, Weak};
 use sync15::bso::{IncomingBso, OutgoingBso, OutgoingEnvelope};
 use sync15::engine::{
-    CollectionRequest, EngineSyncAssociation, IncomingChangeset, OutgoingChangeset, SyncEngine,
-    SyncEngineId,
+    CollSyncIds, CollectionRequest, EngineSyncAssociation, IncomingChangeset, OutgoingChangeset,
+    SyncEngine, SyncEngineId,
 };
 use sync15::{telemetry, ClientData, DeviceType, RemoteClient, ServerTimestamp};
 use sync_guid::Guid;
-
-const TTL_1_YEAR: u32 = 31_622_400;
 
 // Our "sync manager" will use whatever is stashed here.
 lazy_static::lazy_static! {
@@ -40,7 +39,7 @@ pub fn get_registered_sync_engine(engine_id: &SyncEngineId) -> Option<Box<dyn Sy
 }
 
 impl ClientRemoteTabs {
-    fn from_record_with_remote_client(
+    pub(crate) fn from_record_with_remote_client(
         client_id: String,
         last_modified: ServerTimestamp,
         remote_client: &RemoteClient,
@@ -49,13 +48,21 @@ impl ClientRemoteTabs {
         Self {
             client_id,
             client_name: remote_client.device_name.clone(),
-            device_type: remote_client.device_type.unwrap_or(DeviceType::Unknown),
+            device_type: remote_client.device_type,
             last_modified: last_modified.as_millis(),
             remote_tabs: record.tabs.iter().map(RemoteTab::from_record_tab).collect(),
         }
     }
 
-    fn from_record(client_id: String, last_modified: ServerTimestamp, record: TabsRecord) -> Self {
+    // Note that this should die as part of https://github.com/mozilla/application-services/issues/5199
+    // If we don't have a `RemoteClient` record, then we don't know whether the ID passed here is
+    // the fxa_device_id (which is must be) or the client_id (which it will be if this ends up being
+    // called for desktop records, where client_id != fxa_device_id)
+    pub(crate) fn from_record(
+        client_id: String,
+        last_modified: ServerTimestamp,
+        record: TabsRecord,
+    ) -> Self {
         Self {
             client_id,
             client_name: record.client_name,
@@ -78,7 +85,7 @@ impl ClientRemoteTabs {
 }
 
 impl RemoteTab {
-    fn from_record_tab(tab: &TabsRecordTab) -> Self {
+    pub(crate) fn from_record_tab(tab: &TabsRecordTab) -> Self {
         Self {
             title: tab.title.clone(),
             url_history: tab.url_history.clone(),
@@ -100,9 +107,6 @@ impl RemoteTab {
 // (We hope to get these 2 engines even closer in the future, but for now, we suck this up)
 pub struct TabsSyncImpl {
     pub(super) store: Arc<TabsStore>,
-    remote_clients: HashMap<String, RemoteClient>,
-    pub(super) last_sync: Option<ServerTimestamp>,
-    sync_store_assoc: EngineSyncAssociation,
     pub(super) local_id: String,
 }
 
@@ -110,15 +114,19 @@ impl TabsSyncImpl {
     pub fn new(store: Arc<TabsStore>) -> Self {
         Self {
             store,
-            remote_clients: HashMap::new(),
-            last_sync: None,
-            sync_store_assoc: EngineSyncAssociation::Disconnected,
             local_id: Default::default(),
         }
     }
 
     pub fn prepare_for_sync(&mut self, client_data: ClientData) -> Result<()> {
-        self.remote_clients = client_data.recent_clients;
+        let mut storage = self.store.storage.lock().unwrap();
+        // We only know the client list at sync time, but need to return tabs potentially
+        // at any time -- so we store the clients in the meta table to be able to properly
+        // return a ClientRemoteTab struct
+        storage.put_meta(
+            schema::REMOTE_CLIENTS_KEY,
+            &serde_json::to_string(&client_data.recent_clients)?,
+        )?;
         self.local_id = client_data.local_client_id;
         Ok(())
     }
@@ -132,6 +140,13 @@ impl TabsSyncImpl {
         let mut remote_tabs = Vec::with_capacity(inbound.len());
         let mut incoming_telemetry = telemetry::EngineIncoming::new();
 
+        let remote_clients: HashMap<String, RemoteClient> = {
+            let mut storage = self.store.storage.lock().unwrap();
+            match storage.get_meta::<String>(schema::REMOTE_CLIENTS_KEY)? {
+                None => HashMap::default(),
+                Some(json) => serde_json::from_str(&json).unwrap(),
+            }
+        };
         for incoming in inbound {
             if incoming.envelope.id == local_id {
                 // That's our own record, ignore it.
@@ -147,38 +162,7 @@ impl TabsSyncImpl {
                     continue;
                 }
             };
-            let id = record.id.clone();
-            let crt = if let Some(remote_client) = self.remote_clients.get(&id) {
-                ClientRemoteTabs::from_record_with_remote_client(
-                    remote_client
-                        .fxa_device_id
-                        .as_ref()
-                        .unwrap_or(&id)
-                        .to_owned(),
-                    modified,
-                    remote_client,
-                    record,
-                )
-            } else {
-                // A record with a device that's not in our remote clients seems unlikely, but
-                // could happen - in most cases though, it will be due to a disconnected client -
-                // so we really should consider just dropping it? (Sadly though, it does seem
-                // possible it's actually a very recently connected client, so we keep it)
-
-                // XXX - this is actually a foot-gun, particularly for desktop. If we don't know
-                // the device, we assume the device ID is the fxa-device-id, which may not be the
-                // case.
-                // So we should drop these records! But we can't do this now because stand alone
-                // syncing (ie, store.sync()) doesn't allow us to pass the device list in, so
-                // we'd get no rows!
-                // See also: https://github.com/mozilla/application-services/issues/5199
-                log::info!(
-                    "Storing tabs from a client that doesn't appear in the devices list: {}",
-                    id,
-                );
-                ClientRemoteTabs::from_record(id, modified, record)
-            };
-            remote_tabs.push(crt);
+            remote_tabs.push((record, modified));
         }
 
         // We want to keep the mutex for as short as possible
@@ -189,18 +173,13 @@ impl TabsSyncImpl {
             if !remote_tabs.is_empty() {
                 storage.replace_remote_tabs(remote_tabs)?;
             }
+            storage.remove_stale_clients()?;
             storage.prepare_local_tabs_for_upload()
         };
         let outgoing = if let Some(local_tabs) = local_tabs {
-            let (client_name, device_type) = self
-                .remote_clients
+            let (client_name, device_type) = remote_clients
                 .get(&local_id)
-                .map(|client| {
-                    (
-                        client.device_name.clone(),
-                        client.device_type.unwrap_or(DeviceType::Unknown),
-                    )
-                })
+                .map(|client| (client.device_name.clone(), client.device_type))
                 .unwrap_or_else(|| (String::new(), DeviceType::Unknown));
             let local_record = ClientRemoteTabs {
                 client_id: local_id.clone(),
@@ -212,7 +191,7 @@ impl TabsSyncImpl {
             log::trace!("outgoing {:?}", local_record);
             let envelope = OutgoingEnvelope {
                 id: local_id.into(),
-                ttl: Some(TTL_1_YEAR),
+                ttl: Some(TABS_CLIENT_TTL),
                 ..Default::default()
             };
             vec![OutgoingBso::from_content(
@@ -235,28 +214,61 @@ impl TabsSyncImpl {
             "sync completed after uploading {} records",
             records_synced.len()
         );
-        self.last_sync = Some(new_timestamp);
+        self.set_last_sync(new_timestamp)?;
         Ok(())
     }
 
-    pub fn reset(&mut self, assoc: EngineSyncAssociation) -> Result<()> {
-        self.remote_clients.clear();
-        self.sync_store_assoc = assoc;
-        self.last_sync = None;
-        self.store.storage.lock().unwrap().wipe_remote_tabs()?;
+    pub fn reset(&mut self, assoc: &EngineSyncAssociation) -> Result<()> {
+        self.set_last_sync(ServerTimestamp(0))?;
+        let mut storage = self.store.storage.lock().unwrap();
+        storage.delete_meta(schema::REMOTE_CLIENTS_KEY)?;
+        storage.wipe_remote_tabs()?;
+        match assoc {
+            EngineSyncAssociation::Disconnected => {
+                storage.delete_meta(schema::GLOBAL_SYNCID_META_KEY)?;
+                storage.delete_meta(schema::COLLECTION_SYNCID_META_KEY)?;
+            }
+            EngineSyncAssociation::Connected(ids) => {
+                storage.put_meta(schema::GLOBAL_SYNCID_META_KEY, &ids.global.to_string())?;
+                storage.put_meta(schema::COLLECTION_SYNCID_META_KEY, &ids.coll.to_string())?;
+            }
+        };
         Ok(())
     }
 
     pub fn wipe(&mut self) -> Result<()> {
-        self.reset(EngineSyncAssociation::Disconnected)?;
+        self.reset(&EngineSyncAssociation::Disconnected)?;
         // not clear why we need to wipe the local tabs - the app is just going
         // to re-add them?
         self.store.storage.lock().unwrap().wipe_local_tabs();
         Ok(())
     }
 
-    pub fn get_sync_assoc(&self) -> &EngineSyncAssociation {
-        &self.sync_store_assoc
+    pub fn get_sync_assoc(&self) -> Result<EngineSyncAssociation> {
+        let mut storage = self.store.storage.lock().unwrap();
+        let global = storage.get_meta::<String>(schema::GLOBAL_SYNCID_META_KEY)?;
+        let coll = storage.get_meta::<String>(schema::COLLECTION_SYNCID_META_KEY)?;
+        Ok(if let (Some(global), Some(coll)) = (global, coll) {
+            EngineSyncAssociation::Connected(CollSyncIds {
+                global: Guid::from_string(global),
+                coll: Guid::from_string(coll),
+            })
+        } else {
+            EngineSyncAssociation::Disconnected
+        })
+    }
+
+    pub fn set_last_sync(&self, last_sync: ServerTimestamp) -> Result<()> {
+        let mut storage = self.store.storage.lock().unwrap();
+        log::debug!("Updating last sync to {}", last_sync);
+        let last_sync_millis = last_sync.as_millis() as i64;
+        storage.put_meta(schema::LAST_SYNC_META_KEY, &last_sync_millis)
+    }
+
+    pub fn get_last_sync(&self) -> Result<Option<ServerTimestamp>> {
+        let mut storage = self.store.storage.lock().unwrap();
+        let millis = storage.get_meta::<i64>(schema::LAST_SYNC_META_KEY)?;
+        Ok(millis.map(ServerTimestamp))
     }
 }
 
@@ -322,7 +334,12 @@ impl SyncEngine for TabsEngine {
         &self,
         server_timestamp: ServerTimestamp,
     ) -> anyhow::Result<Vec<CollectionRequest>> {
-        let since = self.sync_impl.lock().unwrap().last_sync.unwrap_or_default();
+        let since = self
+            .sync_impl
+            .lock()
+            .unwrap()
+            .get_last_sync()?
+            .unwrap_or_default();
         Ok(if since == server_timestamp {
             vec![]
         } else {
@@ -331,11 +348,11 @@ impl SyncEngine for TabsEngine {
     }
 
     fn get_sync_assoc(&self) -> anyhow::Result<EngineSyncAssociation> {
-        Ok(self.sync_impl.lock().unwrap().get_sync_assoc().clone())
+        Ok(self.sync_impl.lock().unwrap().get_sync_assoc()?)
     }
 
     fn reset(&self, assoc: &EngineSyncAssociation) -> anyhow::Result<()> {
-        Ok(self.sync_impl.lock().unwrap().reset(assoc.clone())?)
+        Ok(self.sync_impl.lock().unwrap().reset(assoc)?)
     }
 
     fn wipe(&self) -> anyhow::Result<()> {
@@ -385,6 +402,19 @@ pub mod test {
                     "lastUsed": 1643764207
                 }]
             }),
+            // test an updated payload will replace the previous record
+            json!({
+                "id": "device-with-a-tab",
+                "clientName": "device with an updated tab",
+                "tabs": [{
+                    "title": "the new title",
+                    "urlHistory": [
+                        "https://mozilla.org/"
+                    ],
+                    "icon": "https://mozilla.org/icon",
+                    "lastUsed": 1643764208
+                }]
+            }),
             // This has the main payload as OK but the tabs part invalid.
             json!({
                 "id": "device-with-invalid-tab",
@@ -421,10 +451,10 @@ pub mod test {
         crts.sort_by(|a, b| a.client_name.partial_cmp(&b.client_name).unwrap());
         assert_eq!(crts.len(), 2, "we currently include devices with no tabs");
         let crt = &crts[0];
-        assert_eq!(crt.client_name, "device with a tab");
+        assert_eq!(crt.client_name, "device with an updated tab");
         assert_eq!(crt.device_type, DeviceType::Unknown);
         assert_eq!(crt.remote_tabs.len(), 1);
-        assert_eq!(crt.remote_tabs[0].title, "the title");
+        assert_eq!(crt.remote_tabs[0].title, "the new title");
 
         let crt = &crts[1];
         assert_eq!(crt.client_name, "device with no tabs");

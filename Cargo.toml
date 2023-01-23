@@ -164,12 +164,12 @@ warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef
 cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "722b30d2f1634714befab967ecae627813fa4cf0" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "51b984ecb21ba00694c3eee33364123a064a7cbb" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

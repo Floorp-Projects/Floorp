@@ -153,7 +153,7 @@ pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<MigrationInfo> {
 
 fn read_rows(filename: &Path) -> (Vec<LegacyRow>, MigrationInfo) {
     let flags = OpenFlags::SQLITE_OPEN_NO_MUTEX | OpenFlags::SQLITE_OPEN_READ_ONLY;
-    let src_conn = match Connection::open_with_flags(&filename, flags) {
+    let src_conn = match Connection::open_with_flags(filename, flags) {
         Ok(conn) => conn,
         Err(e) => {
             log::warn!("Failed to open the source DB: {}", e);

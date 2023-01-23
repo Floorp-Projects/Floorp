@@ -8,6 +8,8 @@
 pub mod bso;
 #[cfg(feature = "sync-client")]
 pub mod client;
+// Type to describe device types
+mod device_type;
 // Types to describe client records
 mod client_types;
 // Note that `clients_engine` should probably be in `sync_client`, but let's not make
@@ -25,7 +27,8 @@ mod record_types;
 mod server_timestamp;
 pub mod telemetry;
 
-pub use crate::client_types::{ClientData, DeviceType, RemoteClient};
+pub use crate::client_types::{ClientData, RemoteClient};
+pub use crate::device_type::DeviceType;
 pub use crate::error::{Error, Result};
 #[cfg(feature = "crypto")]
 pub use enc_payload::EncryptedPayload;

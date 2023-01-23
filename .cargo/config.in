@@ -72,7 +72,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
-rev = "51b984ecb21ba00694c3eee33364123a064a7cbb"
+rev = "c6370008f53328529e8bcf06aaa5014dffcd298b"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/audioipc"]

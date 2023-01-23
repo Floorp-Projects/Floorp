@@ -15,8 +15,8 @@ pub struct ClientRecord {
 
     pub name: String,
 
-    #[serde(default, rename = "type")]
-    pub typ: Option<crate::DeviceType>,
+    #[serde(rename = "type")]
+    pub typ: crate::DeviceType,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandRecord>,

@@ -53,7 +53,7 @@ impl BridgedEngine for BridgedEngineImpl {
                 .sync_impl
                 .lock()
                 .unwrap()
-                .last_sync
+                .get_last_sync()?
                 .unwrap_or_default()
                 .as_millis())
         }
@@ -61,15 +61,14 @@ impl BridgedEngine for BridgedEngineImpl {
 
     fn set_last_sync(&self, last_sync_millis: i64) -> ApiResult<()> {
         handle_error! {
-            self.sync_impl.lock().unwrap().last_sync =
-                Some(ServerTimestamp::from_millis(last_sync_millis));
+            self.sync_impl.lock().unwrap().set_last_sync(ServerTimestamp::from_millis(last_sync_millis))?;
             Ok(())
         }
     }
 
     fn sync_id(&self) -> ApiResult<Option<String>> {
         handle_error! {
-            Ok(match self.sync_impl.lock().unwrap().get_sync_assoc() {
+            Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
                 EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
                 EngineSyncAssociation::Disconnected => None,
             })
@@ -86,7 +85,7 @@ impl BridgedEngine for BridgedEngineImpl {
             self.sync_impl
                 .lock()
                 .unwrap()
-                .reset(EngineSyncAssociation::Connected(new_coll_ids))?;
+                .reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
             Ok(new_id)
         }
     }
@@ -94,7 +93,7 @@ impl BridgedEngine for BridgedEngineImpl {
     fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
         handle_error! {
             let mut sync_impl = self.sync_impl.lock().unwrap();
-            let assoc = sync_impl.get_sync_assoc();
+            let assoc = sync_impl.get_sync_assoc()?;
             if matches!(assoc, EngineSyncAssociation::Connected(c) if c.coll == sync_id) {
                 log::debug!("ensure_current_sync_id is current");
             } else {
@@ -102,7 +101,7 @@ impl BridgedEngine for BridgedEngineImpl {
                     global: SyncGuid::empty(),
                     coll: sync_id.into(),
                 };
-                sync_impl.reset(EngineSyncAssociation::Connected(new_coll_ids))?;
+                sync_impl.reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
             }
             Ok(sync_id.to_string()) // this is a bit odd, why the result?
         }
@@ -169,7 +168,7 @@ impl BridgedEngine for BridgedEngineImpl {
             self.sync_impl
                 .lock()
                 .unwrap()
-                .reset(EngineSyncAssociation::Disconnected)?;
+                .reset(&EngineSyncAssociation::Disconnected)?;
             Ok(())
         }
     }
@@ -273,13 +272,11 @@ impl TabsBridgedEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::RemoteTab;
+    use crate::storage::{RemoteTab, TABS_CLIENT_TTL};
     use crate::sync::record::TabsRecordTab;
     use serde_json::json;
     use std::collections::HashMap;
-    use sync15::{ClientData, RemoteClient};
-
-    const TTL_1_YEAR: u32 = 31_622_400;
+    use sync15::{ClientData, DeviceType, RemoteClient};
 
     // A copy of the normal "engine" tests but which go via the bridge
     #[test]
@@ -315,7 +312,7 @@ mod tests {
                     RemoteClient {
                         fxa_device_id: None,
                         device_name: "my device".to_string(),
-                        device_type: None,
+                        device_type: sync15::DeviceType::Unknown,
                     },
                 ),
                 (
@@ -323,7 +320,7 @@ mod tests {
                     RemoteClient {
                         fxa_device_id: None,
                         device_name: "device with no tabs".to_string(),
-                        device_type: None,
+                        device_type: DeviceType::Unknown,
                     },
                 ),
                 (
@@ -331,7 +328,7 @@ mod tests {
                     RemoteClient {
                         fxa_device_id: None,
                         device_name: "device with a tab".to_string(),
-                        device_type: None,
+                        device_type: DeviceType::Unknown,
                     },
                 ),
             ]),
@@ -416,7 +413,7 @@ mod tests {
                 "clientName": "my device",
                 "tabs": serde_json::to_value(expected_tabs).unwrap(),
             }).to_string(),
-            "ttl": TTL_1_YEAR,
+            "ttl": TABS_CLIENT_TTL,
         });
 
         assert_eq!(ours, expected);
@@ -431,6 +428,8 @@ mod tests {
         let store = Arc::new(TabsStore::new_with_mem_path("test-meta"));
         let bridge = store.bridged_engine();
 
+        // Should not error or panic
+        assert_eq!(bridge.last_sync().unwrap(), 0);
         bridge.set_last_sync(3).unwrap();
         assert_eq!(bridge.last_sync().unwrap(), 3);
 
