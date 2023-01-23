@@ -633,6 +633,14 @@ void MFMediaEngineParent::UpdateStatisticsData() {
   }
 }
 
+void MFMediaEngineParent::SetCDMProxy(MFCDMProxy* aCDMProxy) {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mContentProtectionManager);
+  MOZ_ASSERT(mMediaSource);
+  RETURN_VOID_IF_FAILED(mContentProtectionManager->SetCDMProxy(aCDMProxy));
+  mMediaSource->SetCDMProxy(aCDMProxy);
+}
+
 #undef LOG
 #undef RETURN_IF_FAILED
 #undef ENSURE_EVENT_DISPATCH_DURING_PLAYING
