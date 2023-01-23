@@ -473,7 +473,6 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
                         "We're missing screen?");
   return mScreenList[monitor];
 }
-#endif
 
 static bool IsGNOMECompositor() {
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
