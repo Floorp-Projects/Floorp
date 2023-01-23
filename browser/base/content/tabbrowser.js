@@ -5041,8 +5041,8 @@
 
       const [lowerIndex, higherIndex] =
         indexOfTab1 < indexOfTab2
-          ? [indexOfTab1, indexOfTab2]
-          : [indexOfTab2, indexOfTab1];
+          ? [Math.max(0, indexOfTab1), indexOfTab2]
+          : [Math.max(0, indexOfTab2), indexOfTab1];
 
       for (let i = lowerIndex; i <= higherIndex; i++) {
         this.addToMultiSelectedTabs(tabs[i]);
