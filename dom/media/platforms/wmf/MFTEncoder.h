@@ -13,6 +13,7 @@
 #  include "mozilla/ResultVariant.h"
 #  include "nsISupportsImpl.h"
 #  include "nsDeque.h"
+#  include "nsTArray.h"
 #  include "WMF.h"
 
 namespace mozilla {

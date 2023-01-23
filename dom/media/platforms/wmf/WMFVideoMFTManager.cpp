@@ -336,7 +336,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       }
     }
 
-    if (gfxVars::HwDecodedVideoZeroCopy() && mKnowsCompositor &&
+    if (gfx::gfxVars::HwDecodedVideoZeroCopy() && mKnowsCompositor &&
         mKnowsCompositor->UsingHardwareWebRender() && mDXVA2Manager &&
         mDXVA2Manager->SupportsZeroCopyNV12Texture()) {
       mZeroCopyNV12Texture = true;
