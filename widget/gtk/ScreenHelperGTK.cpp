@@ -479,6 +479,7 @@ static bool IsGNOMECompositor() {
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
 }
+#endif
 
 RefPtr<nsIScreen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   return gScreenGetter->GetScreenForWindow(aWindow);
