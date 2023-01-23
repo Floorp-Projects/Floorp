@@ -83,9 +83,9 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
     return nullptr;
   }
 
-  nsWidgetInitData widgetInit;
+  widget::InitData widgetInit;
   widgetInit.mClipChildren = true;
-  widgetInit.mWindowType = eWindowType_child;
+  widgetInit.mWindowType = widget::WindowType::Child;
   LayoutDeviceIntRect bounds(0, 0, 0, 0);
 
   mInternalWidget->SetWidgetListener(&mWidgetListenerDelegate);

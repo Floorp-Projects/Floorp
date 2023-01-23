@@ -1898,7 +1898,7 @@ already_AddRefed<nsWindow> nsWindow::From(nsIWidget* aWidget) {
   // widget is a top-level window and that its NS_NATIVE_WIDGET value is
   // non-null, which is not the case for non-native widgets like
   // PuppetWidget.
-  if (aWidget && aWidget->WindowType() == nsWindowType::eWindowType_toplevel &&
+  if (aWidget && aWidget->GetWindowType() == WindowType::TopLevel &&
       aWidget->GetNativeData(NS_NATIVE_WIDGET) == aWidget) {
     RefPtr<nsWindow> window = static_cast<nsWindow*>(aWidget);
     return window.forget();
@@ -1918,7 +1918,7 @@ void nsWindow::LogWindow(nsWindow* win, int index, int indent) {
   ALOG("%s [% 2d] 0x%p [parent 0x%p] [% 3d,% 3dx% 3d,% 3d] vis %d type %d",
        spaces, index, win, win->mParent, win->mBounds.x, win->mBounds.y,
        win->mBounds.width, win->mBounds.height, win->mIsVisible,
-       win->mWindowType);
+       int(win->mWindowType));
 #endif
 }
 
@@ -1951,14 +1951,14 @@ nsWindow::~nsWindow() {
 }
 
 bool nsWindow::IsTopLevel() {
-  return mWindowType == eWindowType_toplevel ||
-         mWindowType == eWindowType_dialog ||
-         mWindowType == eWindowType_invisible;
+  return mWindowType == WindowType::TopLevel ||
+         mWindowType == WindowType::Dialog ||
+         mWindowType == WindowType::Invisible;
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
-                          nsWidgetInitData* aInitData) {
+                          InitData* aInitData) {
   ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent,
        aRect.x, aRect.y, aRect.width, aRect.height);
 
@@ -2167,7 +2167,7 @@ double nsWindow::GetDefaultScaleInternal() {
 void nsWindow::Show(bool aState) {
   ALOG("nsWindow[%p]::Show %d", (void*)this, aState);
 
-  if (mWindowType == eWindowType_invisible) {
+  if (mWindowType == WindowType::Invisible) {
     ALOG("trying to show invisible window! ignoring..");
     return;
   }
@@ -2420,7 +2420,7 @@ void nsWindow::CreateLayerManager() {
   }
 
   nsWindow* topLevelWindow = FindTopLevel();
-  if (!topLevelWindow || topLevelWindow->mWindowType == eWindowType_invisible) {
+  if (!topLevelWindow || topLevelWindow->mWindowType == WindowType::Invisible) {
     // don't create a layer manager for an invisible top-level window
     return;
   }

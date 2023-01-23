@@ -69,7 +69,7 @@ bool WebRenderLayerManager::Initialize(
   static bool hasInitialized = false;
 
   WindowKind windowKind;
-  if (mWidget->WindowType() != eWindowType_popup) {
+  if (mWidget->GetWindowType() != widget::WindowType::Popup) {
     windowKind = WindowKind::MAIN;
   } else {
     windowKind = WindowKind::SECONDARY;

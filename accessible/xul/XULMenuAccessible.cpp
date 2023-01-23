@@ -322,7 +322,7 @@ XULMenupopupAccessible::XULMenupopupAccessible(nsIContent* aContent,
                                                DocAccessible* aDoc)
     : XULSelectControlAccessible(aContent, aDoc) {
   if (nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame())) {
-    if (menuPopupFrame->PopupType() == ePopupTypeMenu) {
+    if (menuPopupFrame->GetPopupType() == widget::PopupType::Menu) {
       mType = eMenuPopupType;
     }
   }

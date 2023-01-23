@@ -118,7 +118,7 @@ nsWindow::TaskbarConcealer::GetWindowState(HWND aWnd) {
 
   // nsWindows of other window-classes include tooltips and drop-shadow-bearing
   // menus.
-  if (pWin->mWindowType != eWindowType_toplevel) {
+  if (pWin->mWindowType != WindowType::TopLevel) {
     return Nothing();
   }
 

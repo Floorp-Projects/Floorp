@@ -1224,11 +1224,6 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
   return p.forget();
 }
 
-#if defined(XP_WIN)
-/*static*/
-void ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {}
-#endif  // defined(XP_WIN)
-
 static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {
   // Propagate the private-browsing status of the element's parent
   // docshell to the remote docshell, via the chrome flags.

@@ -111,7 +111,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
       mYPos(0),
       mAlignmentOffset(0),
       mLastClientOffset(0, 0),
-      mPopupType(ePopupTypePanel),
+      mPopupType(PopupType::Panel),
       mPopupState(ePopupClosed),
       mPopupAlignment(POPUPALIGNMENT_NONE),
       mPopupAnchor(POPUPALIGNMENT_NONE),
@@ -149,7 +149,7 @@ static nsIWidget::InputRegion ComputeInputRegion(const ComputedStyle& aStyle,
 }
 
 bool nsMenuPopupFrame::ShouldCreateWidgetUpfront() const {
-  if (mPopupType != ePopupTypeMenu) {
+  if (mPopupType != PopupType::Menu) {
     // Any panel with a type attribute, such as the autocomplete popup, is
     // always generated right away.
     return mContent->AsElement()->HasAttr(nsGkAtoms::type);
@@ -178,11 +178,11 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   nsViewManager* viewManager = ourView->GetViewManager();
   viewManager->SetViewFloating(ourView, true);
 
-  mPopupType = ePopupTypePanel;
+  mPopupType = PopupType::Panel;
   if (aContent->IsAnyOfXULElements(nsGkAtoms::menupopup, nsGkAtoms::popup)) {
-    mPopupType = ePopupTypeMenu;
+    mPopupType = PopupType::Menu;
   } else if (aContent->IsXULElement(nsGkAtoms::tooltip)) {
-    mPopupType = ePopupTypeTooltip;
+    mPopupType = PopupType::Tooltip;
   }
 
   if (PresContext()->IsChrome()) {
@@ -216,23 +216,23 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 bool nsMenuPopupFrame::HasRemoteContent() const {
-  return (!mInContentShell && mPopupType == ePopupTypePanel &&
-          mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::remote,
-                                             nsGkAtoms::_true, eIgnoreCase));
+  return !mInContentShell && mPopupType == PopupType::Panel &&
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::remote, nsGkAtoms::_true,
+                                            eIgnoreCase);
 }
 
 bool nsMenuPopupFrame::IsNoAutoHide() const {
   // Panels with noautohide="true" don't hide when the mouse is clicked
   // outside of them, or when another application is made active. Non-autohide
   // panels cannot be used in content windows.
-  return (!mInContentShell && mPopupType == ePopupTypePanel &&
-          mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::noautohide,
-                                             nsGkAtoms::_true, eIgnoreCase));
+  return !mInContentShell && mPopupType == PopupType::Panel &&
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::noautohide,
+                                            nsGkAtoms::_true, eIgnoreCase);
 }
 
-nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
+widget::PopupLevel nsMenuPopupFrame::GetPopupLevel(bool aIsNoAutoHide) const {
   // The popup level is determined as follows, in this order:
   //   1. non-panels (menus and tooltips) are always topmost
   //   2. any specified level attribute
@@ -241,7 +241,9 @@ nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
   //   5. use the platform-specific default level
 
   // If this is not a panel, this is always a top-most popup.
-  if (mPopupType != ePopupTypePanel) return ePopupLevelTop;
+  if (mPopupType != PopupType::Panel) {
+    return PopupLevel::Top;
+  }
 
   // If the level attribute has been set, use that.
   static Element::AttrValuesArray strings[] = {
@@ -249,22 +251,25 @@ nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
   switch (mContent->AsElement()->FindAttrValueIn(
       kNameSpaceID_None, nsGkAtoms::level, strings, eCaseMatters)) {
     case 0:
-      return ePopupLevelTop;
+      return PopupLevel::Top;
     case 1:
-      return ePopupLevelParent;
+      return PopupLevel::Parent;
     case 2:
-      return ePopupLevelFloating;
+      return PopupLevel::Floating;
   }
 
   // Panels with titlebars most likely want to be floating popups.
-  if (mContent->AsElement()->HasAttr(nsGkAtoms::titlebar))
-    return ePopupLevelFloating;
+  if (mContent->AsElement()->HasAttr(nsGkAtoms::titlebar)) {
+    return PopupLevel::Floating;
+  }
 
   // If this panel is a noautohide panel, the default is the parent level.
-  if (aIsNoAutoHide) return ePopupLevelParent;
+  if (aIsNoAutoHide) {
+    return PopupLevel::Parent;
+  }
 
   // Otherwise, the result depends on the platform.
-  return sDefaultLevelIsTop ? ePopupLevelTop : ePopupLevelParent;
+  return sDefaultLevelIsTop ? PopupLevel::Top : PopupLevel::Parent;
 }
 
 void nsMenuPopupFrame::PrepareWidget(bool aRecreate) {
@@ -289,9 +294,9 @@ void nsMenuPopupFrame::PrepareWidget(bool aRecreate) {
 
 nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   // Create a widget for ourselves.
-  nsWidgetInitData widgetData;
-  widgetData.mWindowType = eWindowType_popup;
-  widgetData.mBorderStyle = eBorderStyle_default;
+  widget::InitData widgetData;
+  widgetData.mWindowType = widget::WindowType::Popup;
+  widgetData.mBorderStyle = widget::BorderStyle::Default;
   widgetData.mForMenupopupFrame = true;
   widgetData.mClipSiblings = true;
   widgetData.mPopupHint = mPopupType;
@@ -299,7 +304,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   if (!mInContentShell) {
     // A drag popup may be used for non-static translucent drag feedback
-    if (mPopupType == ePopupTypePanel &&
+    if (mPopupType == PopupType::Panel &&
         mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                            nsGkAtoms::drag, eIgnoreCase)) {
       widgetData.mIsDragPopup = true;
@@ -307,36 +312,32 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   }
 
   nsAutoString title;
-  if (widgetData.mNoAutoHide) {
-    if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::titlebar,
-                                           nsGkAtoms::normal, eCaseMatters)) {
-      widgetData.mBorderStyle = eBorderStyle_title;
+  if (widgetData.mNoAutoHide &&
+      mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::titlebar,
+                                         nsGkAtoms::normal, eCaseMatters)) {
+    widgetData.mBorderStyle = widget::BorderStyle::Title;
 
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label,
-                                     title);
-
-      if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::close, nsGkAtoms::_true,
-                                             eCaseMatters)) {
-        widgetData.mBorderStyle = static_cast<enum nsBorderStyle>(
-            widgetData.mBorderStyle | eBorderStyle_close);
-      }
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, title);
+    if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::close,
+                                           nsGkAtoms::_true, eCaseMatters)) {
+      widgetData.mBorderStyle =
+          widgetData.mBorderStyle | widget::BorderStyle::Close;
     }
   }
 
   bool remote = HasRemoteContent();
 
-  nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
+  auto mode = nsLayoutUtils::GetFrameTransparency(this, this);
   widgetData.mHasRemoteContent = remote;
-  widgetData.mSupportTranslucency = mode == eTransparencyTransparent;
-  widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
+  widgetData.mSupportTranslucency =
+      mode == widget::TransparencyMode::Transparent;
+  widgetData.mPopupLevel = GetPopupLevel(widgetData.mNoAutoHide);
 
   // Panels which have a parent level need a parent widget. This allows them to
   // always appear in front of the parent window but behind other windows that
   // should be in front of it.
   nsCOMPtr<nsIWidget> parentWidget;
-  if (widgetData.mPopupLevel != ePopupLevelTop) {
+  if (widgetData.mPopupLevel != PopupLevel::Top) {
     nsCOMPtr<nsIDocShellTreeItem> dsti = PresContext()->GetDocShell();
     if (!dsti) return NS_ERROR_FAILURE;
 
@@ -712,7 +713,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState) {
       mPopupState = ePopupVisible;
     }
 
-    viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+    viewManager->SetViewVisibility(view, ViewVisibility::Show);
     SyncFrameViewProperties(view);
   }
 
@@ -1037,10 +1038,8 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
     mIsOpenChanged = true;
 
     // Clear mouse capture when a popup is opened.
-    if (mPopupType == ePopupTypeMenu) {
-      EventStateManager* activeESM = static_cast<EventStateManager*>(
-          EventStateManager::GetActiveEventStateManager());
-      if (activeESM) {
+    if (mPopupType == PopupType::Menu) {
+      if (auto* activeESM = EventStateManager::GetActiveEventStateManager()) {
         EventStateManager::ClearGlobalActiveContent(activeESM);
       }
 
@@ -1056,7 +1055,7 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
 
-    if (mPopupType == ePopupTypeMenu) {
+    if (mPopupType == PopupType::Menu) {
       nsCOMPtr<nsISound> sound(do_GetService("@mozilla.org/sound;1"));
       if (sound) sound->PlayEventSound(nsISound::EVENT_MENU_POPUP);
     }
@@ -1128,7 +1127,7 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
 
   nsView* view = GetView();
   nsViewManager* viewManager = view->GetViewManager();
-  viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+  viewManager->SetViewVisibility(view, ViewVisibility::Hide);
 
   RefPtr popup = &PopupElement();
   // XXX, bug 137033, In Windows, if mouse is outside the window when the
@@ -1531,7 +1530,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(bool aIsMove) {
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
   bool isNoAutoHide = IsNoAutoHide();
-  nsPopupLevel popupLevel = PopupLevel(isNoAutoHide);
+  PopupLevel popupLevel = GetPopupLevel(isNoAutoHide);
 
   if (anchored) {
     // if we are anchored, there are certain things we don't want to do when
@@ -1580,7 +1579,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(bool aIsMove) {
     // the window is moved. Popups at the parent level follow the parent
     // window as it is moved and remained anchored, so we want to maintain the
     // anchoring instead.
-    if (isNoAutoHide && (popupLevel != ePopupLevelParent ||
+    if (isNoAutoHide && (popupLevel != PopupLevel::Parent ||
                          mAnchorType == MenuPopupAnchorType_Rect)) {
       // Account for the margin that will end up being added to the screen
       // coordinate the next time SetPopupPosition is called.
@@ -1607,7 +1606,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(bool aIsMove) {
 #ifdef XP_MACOSX
     // OSX tooltips follow standard flip rule but other popups flip horizontally
     // not vertically
-    if (mPopupType == ePopupTypeTooltip) {
+    if (mPopupType == PopupType::Tooltip) {
       vFlip = FlipStyle_Outside;
     } else {
       hFlip = FlipStyle_Outside;
@@ -1629,7 +1628,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(bool aIsMove) {
   if (!IS_WAYLAND_DISPLAY() &&
       (mInContentShell ||
        (mFlip != FlipType_None &&
-        (!aIsMove || mIsOffset || mPopupType != ePopupTypePanel)))) {
+        (!aIsMove || mIsOffset || mPopupType != PopupType::Panel)))) {
     const nsRect screenRect = [&] {
       int32_t appPerDev = presContext->AppUnitsPerDevPixel();
       auto anchorRectDevPix =
@@ -1731,7 +1730,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(bool aIsMove) {
   // titlebar or borders, we skip these calculations anyway for non-panels
   // to save time since they will never have a titlebar.
   nsIWidget* widget = view->GetWidget();
-  if (mPopupType == ePopupTypePanel && widget) {
+  if (mPopupType == PopupType::Panel && widget) {
     mLastClientOffset = widget->GetClientOffset();
     viewPoint.x += presContext->DevPixelsToAppUnits(mLastClientOffset.x);
     viewPoint.y += presContext->DevPixelsToAppUnits(mLastClientOffset.y);
@@ -1796,7 +1795,7 @@ void nsMenuPopupFrame::WidgetPositionOrSizeDidChange() {
 
 LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
     const LayoutDeviceIntRect& aAnchorRect,
-    const LayoutDeviceIntRect& aRootScreenRect, nsPopupLevel aPopupLevel) {
+    const LayoutDeviceIntRect& aRootScreenRect, PopupLevel aPopupLevel) {
   LayoutDeviceIntRect screenRectPixels;
 
   // GetConstraintRect() does not work on Wayland as we can't get absolute
@@ -1825,7 +1824,7 @@ LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
     if (screen) {
       // Non-top-level popups (which will always be panels)
       // should never overlap the OS bar:
-      bool dontOverlapOSBar = aPopupLevel != ePopupLevelTop;
+      bool dontOverlapOSBar = aPopupLevel != PopupLevel::Top;
       // get the total screen area if the popup is allowed to overlap it.
       if (!dontOverlapOSBar && mMenuCanOverlapOSBar && !mInContentShell)
         screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
@@ -2354,7 +2353,7 @@ void nsMenuPopupFrame::CreatePopupView() {
 
   // Create a view
   nsView* parentView = viewManager->GetRootView();
-  nsViewVisibility visibility = nsViewVisibility_kHide;
+  auto visibility = ViewVisibility::Hide;
 
   NS_ASSERTION(parentView, "no parent view");
 
@@ -2392,9 +2391,9 @@ bool nsMenuPopupFrame::ShouldFollowAnchor() {
     return false;
   }
 
-  return (mPopupType == ePopupTypePanel &&
-          mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                             nsGkAtoms::arrow, eCaseMatters));
+  return mPopupType == PopupType::Panel &&
+         mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                            nsGkAtoms::arrow, eCaseMatters);
 }
 
 bool nsMenuPopupFrame::ShouldFollowAnchor(nsRect& aRect) {

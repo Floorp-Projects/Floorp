@@ -58,11 +58,11 @@ already_AddRefed<nsIWidget> nsIWidget::CreatePuppetWidget(
 namespace mozilla {
 namespace widget {
 
-static bool IsPopup(const nsWidgetInitData* aInitData) {
-  return aInitData && aInitData->mWindowType == eWindowType_popup;
+static bool IsPopup(const widget::InitData* aInitData) {
+  return aInitData && aInitData->mWindowType == WindowType::Popup;
 }
 
-static bool MightNeedIMEFocus(const nsWidgetInitData* aInitData) {
+static bool MightNeedIMEFocus(const widget::InitData* aInitData) {
   // In the puppet-widget world, popup widgets are just dummies and
   // shouldn't try to mess with IME state.
 #ifdef MOZ_CROSS_PROCESS_IME
@@ -95,7 +95,7 @@ PuppetWidget::~PuppetWidget() { Destroy(); }
 void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
                                     nsNativeWidget aNativeParent,
                                     const LayoutDeviceIntRect& aRect,
-                                    nsWidgetInitData* aInitData) {
+                                    widget::InitData* aInitData) {
   MOZ_ASSERT(!aNativeParent, "got a non-Puppet native parent");
 
   BaseCreate(nullptr, aInitData);
@@ -121,7 +121,7 @@ void PuppetWidget::InfallibleCreate(nsIWidget* aParent,
 
 nsresult PuppetWidget::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                               const LayoutDeviceIntRect& aRect,
-                              nsWidgetInitData* aInitData) {
+                              widget::InitData* aInitData) {
   InfallibleCreate(aParent, aNativeParent, aRect, aInitData);
   return NS_OK;
 }
@@ -137,7 +137,7 @@ void PuppetWidget::InitIMEState() {
 }
 
 already_AddRefed<nsIWidget> PuppetWidget::CreateChild(
-    const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData,
+    const LayoutDeviceIntRect& aRect, widget::InitData* aInitData,
     bool aForceUseIWidgetParent) {
   bool isPopup = IsPopup(aInitData);
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mBrowserChild);
@@ -273,7 +273,7 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
   debug_DumpEvent(stdout, aEvent->mWidget, aEvent, "PuppetWidget", 0);
 #endif
 
-  MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,
+  MOZ_ASSERT(!mChild || mChild->mWindowType == WindowType::Popup,
              "Unexpected event dispatch!");
 
   MOZ_ASSERT(!aEvent->AsKeyboardEvent() ||
@@ -994,7 +994,7 @@ bool PuppetWidget::NeedsPaint() {
   // here
   if (XRE_IsContentProcess() &&
       StaticPrefs::browser_tabs_remote_desktopbehavior() &&
-      mWindowType == eWindowType_popup) {
+      mWindowType == WindowType::Popup) {
     NS_WARNING("Trying to paint an e10s popup in the child process!");
     return false;
   }

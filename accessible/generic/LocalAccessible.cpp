@@ -322,7 +322,7 @@ uint64_t LocalAccessible::VisibilityState() const {
   nsIFrame* curFrame = frame;
   do {
     nsView* view = curFrame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide) {
+    if (view && view->GetVisibility() == ViewVisibility::Hide) {
       return states::INVISIBLE;
     }
 

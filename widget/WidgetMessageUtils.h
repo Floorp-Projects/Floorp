@@ -39,9 +39,11 @@ struct ParamTraits<mozilla::LookAndFeel::ColorID>
 };
 
 template <>
-struct ParamTraits<nsTransparencyMode>
-    : ContiguousEnumSerializerInclusive<nsTransparencyMode, eTransparencyOpaque,
-                                        eTransparencyBorderlessGlass> {};
+struct ParamTraits<mozilla::widget::TransparencyMode>
+    : ContiguousEnumSerializerInclusive<
+          mozilla::widget::TransparencyMode,
+          mozilla::widget::TransparencyMode::Opaque,
+          mozilla::widget::TransparencyMode::BorderlessGlass> {};
 
 template <>
 struct ParamTraits<nsCursor>

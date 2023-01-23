@@ -325,17 +325,6 @@ class ContentParent final : public PContentParent,
   // been updated and so full reflows are in order.
   static void NotifyUpdatedFonts(bool aFullRebuild);
 
-#if defined(XP_WIN)
-  /**
-   * Windows helper for firing off an update window request to a plugin
-   * instance.
-   *
-   * aWidget - the eWindowType_plugin_ipc_chrome widget associated with
-   *           this plugin window.
-   */
-  static void SendAsyncUpdate(nsIWidget* aWidget);
-#endif
-
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
   mozilla::ipc::IPCResult RecvRemovePermission(

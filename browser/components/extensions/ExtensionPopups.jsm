@@ -250,10 +250,10 @@ class BasePopup {
               }
               // Wait the reflow before asking the popup panel to grab the focus, otherwise
               // `nsFocusManager::SetFocus` may ignore out request because the panel view
-              // visibility is still set to `nsViewVisibility_kHide` (waiting the document
+              // visibility is still set to `ViewVisibility::Hide` (waiting the document
               // to be fully flushed makes us sure that when the popup panel grabs the focus
               // nsMenuPopupFrame::LayoutPopup has already been colled and set the frame
-              // visibility to `nsViewVisibility_kShow`).
+              // visibility to `ViewVisibility::Show`).
               this.browser.ownerGlobal.promiseDocumentFlushed(() => {
                 if (this.destroyed) {
                   return;

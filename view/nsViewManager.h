@@ -62,7 +62,7 @@ class nsViewManager final {
    * @result The new view.  Never null.
    */
   nsView* CreateView(const nsRect& aBounds, nsView* aParent,
-                     nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+                     ViewVisibility aVisibilityFlag = ViewVisibility::Show);
 
   /**
    * Get the root of the view tree.
@@ -198,7 +198,7 @@ class nsViewManager final {
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  void SetViewVisibility(nsView* aView, nsViewVisibility aVisible);
+  void SetViewVisibility(nsView* aView, ViewVisibility aVisible);
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view

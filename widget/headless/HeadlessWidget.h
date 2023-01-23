@@ -52,10 +52,10 @@ class HeadlessWidget : public nsBaseWidget {
 
   virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
-                          nsWidgetInitData* aInitData = nullptr) override;
+                          widget::InitData* aInitData = nullptr) override;
   using nsBaseWidget::Create;  // for Create signature not overridden here
   virtual already_AddRefed<nsIWidget> CreateChild(
-      const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData = nullptr,
+      const LayoutDeviceIntRect& aRect, widget::InitData* aInitData = nullptr,
       bool aForceUseIWidgetParent = false) override;
 
   virtual nsIWidget* GetTopLevelWidget() override;

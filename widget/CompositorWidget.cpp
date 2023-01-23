@@ -67,7 +67,7 @@ LayoutDeviceIntRegion CompositorWidget::GetTransparentRegion() {
   // transparent. Widgets wanting more complex transparency region determination
   // should override this method.
   auto* widget = RealWidget();
-  if (!widget || widget->GetTransparencyMode() != eTransparencyOpaque ||
+  if (!widget || widget->GetTransparencyMode() != TransparencyMode::Opaque ||
       widget->WidgetPaintsBackground()) {
     return LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), GetClientSize());
   }

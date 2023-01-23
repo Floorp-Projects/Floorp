@@ -49,12 +49,12 @@ class MockWidget : public nsBaseWidget {
 
   virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
-                          nsWidgetInitData* aInitData = nullptr) override {
+                          InitData* aInitData = nullptr) override {
     return NS_OK;
   }
   virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const DesktopIntRect& aRect,
-                          nsWidgetInitData* aInitData = nullptr) override {
+                          InitData* aInitData = nullptr) override {
     return NS_OK;
   }
   virtual void Show(bool aState) override {}

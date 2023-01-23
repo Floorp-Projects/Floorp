@@ -116,7 +116,7 @@ nsresult nsViewManager::Init(nsDeviceContext* aContext) {
 }
 
 nsView* nsViewManager::CreateView(const nsRect& aBounds, nsView* aParent,
-                                  nsViewVisibility aVisibilityFlag) {
+                                  ViewVisibility aVisibilityFlag) {
   auto* v = new nsView(this, aVisibilityFlag);
   v->SetParent(aParent);
   v->SetPosition(aBounds.X(), aBounds.Y());
@@ -251,7 +251,7 @@ nsView* nsViewManager::GetDisplayRootFor(nsView* aView) {
     // distinguish this situation. We do this by looking for a widget. Any view
     // with a widget is a display root.
     nsIWidget* widget = displayRoot->GetWidget();
-    if (widget && widget->WindowType() == eWindowType_popup) {
+    if (widget && widget->GetWindowType() == widget::WindowType::Popup) {
       NS_ASSERTION(displayRoot->GetFloating() && displayParent->GetFloating(),
                    "this should only happen with floating views that have "
                    "floating parents");
@@ -836,8 +836,7 @@ void nsViewManager::SetViewFloating(nsView* aView, bool aFloating) {
   aView->SetFloating(aFloating);
 }
 
-void nsViewManager::SetViewVisibility(nsView* aView,
-                                      nsViewVisibility aVisible) {
+void nsViewManager::SetViewVisibility(nsView* aView, ViewVisibility aVisible) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   if (aVisible != aView->GetVisibility()) {

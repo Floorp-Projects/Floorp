@@ -169,7 +169,7 @@ already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
              lockRect.height, aInvalidRegion.GetNumRects());
 #endif
 
-  if (mWindow->WindowType() == eWindowType_invisible) {
+  if (mWindow->GetWindowType() == WindowType::Invisible) {
     return nullptr;
   }
   mFrameInProcess = true;

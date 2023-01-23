@@ -227,12 +227,11 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   NS_DECL_NSPIWIDGETCOCOA;  // semicolon for clang-format bug 1629756
 
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                                        const DesktopIntRect& aRect,
-                                        nsWidgetInitData* aInitData = nullptr) override;
+                                        const DesktopIntRect& aRect, InitData* = nullptr) override;
 
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                         const LayoutDeviceIntRect& aRect,
-                                        nsWidgetInitData* aInitData = nullptr) override;
+                                        InitData* = nullptr) override;
 
   virtual void Destroy() override;
 
@@ -304,8 +303,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void CaptureRollupEvents(bool aDoCapture) override;
   [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override;
   virtual bool HasPendingInputEvent() override;
-  virtual nsTransparencyMode GetTransparencyMode() override;
-  virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
+  virtual TransparencyMode GetTransparencyMode() override;
+  virtual void SetTransparencyMode(TransparencyMode aMode) override;
   virtual void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) override;
   virtual void SetWindowOpacity(float aOpacity) override;
   virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) override;
@@ -367,9 +366,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
  protected:
   virtual ~nsCocoaWindow();
 
-  nsresult CreateNativeWindow(const NSRect& aRect, nsBorderStyle aBorderStyle,
-                              bool aRectIsFrameRect);
-  nsresult CreatePopupContentView(const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData);
+  nsresult CreateNativeWindow(const NSRect& aRect, BorderStyle aBorderStyle, bool aRectIsFrameRect);
+  nsresult CreatePopupContentView(const LayoutDeviceIntRect& aRect, InitData*);
   void DestroyNativeWindow();
   void UpdateBounds();
   int32_t GetWorkspaceID();

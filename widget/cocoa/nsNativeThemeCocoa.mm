@@ -374,8 +374,12 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame) {
 
   // XUL popups, e.g. the toolbar customization popup, can't become key windows,
   // but controls in these windows should still get the active look.
-  if (topLevelWidget->WindowType() == eWindowType_popup) return YES;
-  if ([win isSheet]) return [win isKeyWindow];
+  if (topLevelWidget->GetWindowType() == widget::WindowType::Popup) {
+    return YES;
+  }
+  if ([win isSheet]) {
+    return [win isKeyWindow];
+  }
   return [win isMainWindow] && ![win attachedSheet];
 }
 

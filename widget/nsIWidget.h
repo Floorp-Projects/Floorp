@@ -40,7 +40,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTHashMap.h"
-#include "nsWidgetInitData.h"
+#include "mozilla/widget/InitData.h"
 #include "nsXULAppAPI.h"
 
 // forward declarations
@@ -163,15 +163,19 @@ typedef void* nsNativeWidget;
  * Transparency modes
  */
 
-enum nsTransparencyMode {
-  eTransparencyOpaque = 0,      // Fully opaque
-  eTransparencyTransparent,     // Parts of the window may be transparent
-  eTransparencyBorderlessGlass  // Transparent parts of the window has windows 7
-                                // glass effect, without a border around opaque
-                                // areas.
+namespace mozilla::widget {
+
+enum class TransparencyMode : uint8_t {
+  Opaque = 0,       // Fully opaque
+  Transparent,      // Parts of the window may be transparent
+  BorderlessGlass,  // Transparent parts of the window has windows 7
+                    // glass effect, without a border around opaque
+                    // areas.
   // If you add to the end here, you must update the serialization code in
   // WidgetMessageUtils.h
 };
+
+}
 
 /**
  * Cursor types.
@@ -393,6 +397,13 @@ class nsIWidget : public nsISupports {
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSRect CSSRect;
 
+  using InitData = mozilla::widget::InitData;
+  using WindowType = mozilla::widget::WindowType;
+  using PopupType = mozilla::widget::PopupType;
+  using PopupLevel = mozilla::widget::PopupLevel;
+  using BorderStyle = mozilla::widget::BorderStyle;
+  using TransparencyMode = mozilla::widget::TransparencyMode;
+
   // Used in UpdateThemeGeometries.
   struct ThemeGeometry {
     // The ThemeGeometryType value for the themed widget, see
@@ -412,7 +423,7 @@ class nsIWidget : public nsISupports {
       : mLastChild(nullptr),
         mPrevSibling(nullptr),
         mOnDestroyCalled(false),
-        mWindowType(eWindowType_child),
+        mWindowType(WindowType::Child),
         mZIndex(0)
 
   {
@@ -450,10 +461,10 @@ class nsIWidget : public nsISupports {
    * @param     aInitData     data that is used for widget initialization
    *
    */
-  [[nodiscard]] virtual nsresult Create(
-      nsIWidget* aParent, nsNativeWidget aNativeParent,
-      const LayoutDeviceIntRect& aRect,
-      nsWidgetInitData* aInitData = nullptr) = 0;
+  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
+                                        nsNativeWidget aNativeParent,
+                                        const LayoutDeviceIntRect& aRect,
+                                        InitData* = nullptr) = 0;
 
   /*
    * As above, but with aRect specified in DesktopPixel units (for top-level
@@ -466,7 +477,7 @@ class nsIWidget : public nsISupports {
   [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
                                         nsNativeWidget aNativeParent,
                                         const DesktopIntRect& aRect,
-                                        nsWidgetInitData* aInitData = nullptr) {
+                                        InitData* aInitData = nullptr) {
     LayoutDeviceIntRect devPixRect =
         RoundedToInt(aRect * GetDesktopToDeviceScale());
     return Create(aParent, aNativeParent, devPixRect, aInitData);
@@ -489,7 +500,7 @@ class nsIWidget : public nsISupports {
    * understood code, and shouldn't be used in new code.
    */
   virtual already_AddRefed<nsIWidget> CreateChild(
-      const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData = nullptr,
+      const LayoutDeviceIntRect& aRect, InitData* = nullptr,
       bool aForceUseIWidgetParent = false) = 0;
 
   /**
@@ -1019,7 +1030,7 @@ class nsIWidget : public nsISupports {
   /**
    * Get the window type of this widget.
    */
-  nsWindowType WindowType() { return mWindowType; }
+  WindowType GetWindowType() const { return mWindowType; }
 
   /**
    * Set the transparency mode of the top-level window containing this widget.
@@ -1038,13 +1049,13 @@ class nsIWidget : public nsISupports {
    * all pixels are reset to 1.
    * Pixel RGB color values are already premultiplied with alpha channel values.
    */
-  virtual void SetTransparencyMode(nsTransparencyMode aMode) = 0;
+  virtual void SetTransparencyMode(TransparencyMode aMode) = 0;
 
   /**
    * Get the transparency mode of the top-level window that contains this
    * widget.
    */
-  virtual nsTransparencyMode GetTransparencyMode() = 0;
+  virtual TransparencyMode GetTransparencyMode() = 0;
 
   /**
    * Set the shadow style of the window.
@@ -2130,7 +2141,7 @@ class nsIWidget : public nsISupports {
   nsIWidget* MOZ_NON_OWNING_REF mPrevSibling;
   // When Destroy() is called, the sub class should set this true.
   bool mOnDestroyCalled;
-  nsWindowType mWindowType;
+  WindowType mWindowType;
   int32_t mZIndex;
 };
 

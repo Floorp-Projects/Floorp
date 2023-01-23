@@ -31,7 +31,7 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
   virtual void OnWindowModeChange(nsSizeMode aSizeMode) = 0;
 
   // Transparency handling.
-  virtual void UpdateTransparency(nsTransparencyMode aMode) = 0;
+  virtual void UpdateTransparency(TransparencyMode aMode) = 0;
   virtual void ClearTransparentWindow() = 0;
 
   // Deliver visibility info
