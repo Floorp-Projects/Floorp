@@ -472,9 +472,7 @@ WindowGlobalParent* DocumentLoadListener::GetParentWindowContext() const {
 }
 
 bool CheckRecursiveLoad(CanonicalBrowsingContext* aLoadingContext,
-                        nsDocShellLoadState* aLoadState,
-                        DocumentLoadListener* aDLL, bool aIsDocumentLoad,
-                        LoadInfo* aLoadInfo) {
+                        nsDocShellLoadState* aLoadState, bool aIsDocumentLoad) {
   // Bug 136580: Check for recursive frame loading excluding about:srcdoc URIs.
   // srcdoc URIs require their contents to be specified inline, so it isn't
   // possible for undesirable recursion to occur without the aid of a
@@ -613,8 +611,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 
   // Check for infinite recursive object or iframe loads
   if (aLoadState->OriginalFrameSrc() || !mIsDocumentLoad) {
-    if (!CheckRecursiveLoad(loadingContext, aLoadState, this, mIsDocumentLoad,
-                            aLoadInfo)) {
+    if (!CheckRecursiveLoad(loadingContext, aLoadState, mIsDocumentLoad)) {
       *aRv = NS_ERROR_RECURSIVE_DOCUMENT_LOAD;
       mParentChannelListener = nullptr;
       return nullptr;
