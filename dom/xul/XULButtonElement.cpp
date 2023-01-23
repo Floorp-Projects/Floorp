@@ -95,9 +95,9 @@ void XULButtonElement::HandleEnterKeyPress(WidgetEvent& aEvent) {
 #ifdef XP_WIN
     if (XULPopupElement* popup = GetContainingPopupElement()) {
       if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-        pm->HidePopup(popup, /* aHideChain = */ true,
-                      /* aDeselectMenu = */ true, /* aAsynchronous = */ true,
-                      /* aIsCancel = */ false);
+        pm->HidePopup(
+            popup, {HidePopupOption::HideChain, HidePopupOption::DeselectMenu,
+                    HidePopupOption::Async});
       }
     }
 #endif
@@ -211,7 +211,11 @@ void XULButtonElement::CloseMenuPopup(bool aDeselectMenu) {
     return;
   }
   if (auto* popup = GetMenuPopupContent()) {
-    pm->HidePopup(popup, false, aDeselectMenu, true, false);
+    HidePopupOptions options{HidePopupOption::Async};
+    if (aDeselectMenu) {
+      options += HidePopupOption::DeselectMenu;
+    }
+    pm->HidePopup(popup, options);
   }
 }
 
