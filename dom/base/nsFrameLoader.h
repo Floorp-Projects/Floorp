@@ -169,7 +169,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   already_AddRefed<nsIRemoteTab> GetRemoteTab();
 
-  already_AddRefed<nsILoadContext> LoadContext();
+  already_AddRefed<nsILoadContext> GetLoadContext();
 
   mozilla::dom::BrowsingContext* GetBrowsingContext();
   mozilla::dom::BrowsingContext* GetExtantBrowsingContext();

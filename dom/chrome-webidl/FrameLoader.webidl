@@ -32,7 +32,7 @@ interface FrameLoader {
    * frames, a shim is returned that contains private browsing and app
    * information.
    */
-  readonly attribute LoadContext loadContext;
+  readonly attribute LoadContext? loadContext;
 
   /**
    * Get the root BrowsingContext within the frame.
