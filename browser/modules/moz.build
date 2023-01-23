@@ -76,7 +76,7 @@ with Files("OpenInTabsUtils.jsm"):
 with Files("PartnerLinkAttribution.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("PermissionUI.sys.mjs"):
+with Files("PermissionUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("ProcessHangMonitor.jsm"):
@@ -138,7 +138,7 @@ EXTRA_JS_MODULES += [
     "OpenInTabsUtils.jsm",
     "PageActions.jsm",
     "PartnerLinkAttribution.sys.mjs",
-    "PermissionUI.sys.mjs",
+    "PermissionUI.jsm",
     "PingCentre.jsm",
     "ProcessHangMonitor.jsm",
     "Sanitizer.sys.mjs",

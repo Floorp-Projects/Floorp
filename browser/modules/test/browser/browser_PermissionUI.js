@@ -9,8 +9,8 @@
 const { Integration } = ChromeUtils.importESModule(
   "resource://gre/modules/Integration.sys.mjs"
 );
-const { PermissionUI } = ChromeUtils.importESModule(
-  "resource:///modules/PermissionUI.sys.mjs"
+const { PermissionUI } = ChromeUtils.import(
+  "resource:///modules/PermissionUI.jsm"
 );
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
@@ -42,25 +42,22 @@ add_task(async function test_permission_prompt_for_request() {
       };
 
       let mockRequest = makeMockPermissionRequest(browser);
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get request() {
-          return mockRequest;
-        }
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction, secondaryAction];
-        }
-      }
+      let TestPrompt = {
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
+
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
       let notification = PopupNotifications.getNotification(
         kTestNotificationID,
@@ -136,30 +133,25 @@ add_task(async function test_permission_prompt_for_popupOptions() {
       };
 
       let mockRequest = makeMockPermissionRequest(browser);
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get request() {
-          return mockRequest;
-        }
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction, secondaryAction];
-        }
-        get popupOptions() {
-          return {
-            displayURI: false,
-          };
-        }
-      }
+      let TestPrompt = {
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+        popupOptions: {
+          displayURI: false,
+        },
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
+
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
       let notification = PopupNotifications.getNotification(
         kTestNotificationID,
@@ -222,37 +214,31 @@ add_task(async function test_with_permission_key() {
       registerCleanupFunction(function() {
         PermissionTestUtils.remove(principal.URI, kTestPermissionKey);
       });
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get request() {
-          return mockRequest;
-        }
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get permissionKey() {
-          return kTestPermissionKey;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction, secondaryAction];
-        }
-        get popupOptions() {
-          return {
-            checkbox: {
-              label: "Remember this decision",
-              show: true,
-              checked: true,
-            },
-          };
-        }
-      }
+
+      let TestPrompt = {
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        permissionKey: kTestPermissionKey,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+        popupOptions: {
+          checkbox: {
+            label: "Remember this decision",
+            show: true,
+            checked: true,
+          },
+        },
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
+
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
       let notification = PopupNotifications.getNotification(
         kTestNotificationID,
@@ -329,7 +315,7 @@ add_task(async function test_with_permission_key() {
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
 
       // Test denying the permission request.
@@ -370,7 +356,7 @@ add_task(async function test_with_permission_key() {
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
 
       // Test allowing the permission request.
@@ -417,38 +403,27 @@ add_task(async function test_on_before_show() {
 
       let mockRequest = makeMockPermissionRequest(browser);
       let beforeShown = false;
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get request() {
-          return mockRequest;
-        }
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction];
-        }
-        get popupOptions() {
-          return {
-            checkbox: {
-              label: "Remember this decision",
-              show: true,
-              checked: true,
-            },
-          };
-        }
+
+      let TestPrompt = {
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction],
         onBeforeShow() {
           beforeShown = true;
           return true;
-        }
-      }
+        },
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
+
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       Assert.ok(beforeShown, "Should have called onBeforeShown");
       await shownPromise;
       let notification = PopupNotifications.getNotification(
@@ -499,33 +474,28 @@ add_task(async function test_no_request() {
       const kTestMessage = "Test message with no request";
       let principal = browser.contentPrincipal;
       let beforeShown = false;
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get principal() {
-          return principal;
-        }
-        get browser() {
-          return browser;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction, secondaryAction];
-        }
+
+      let TestPrompt = {
+        notificationID: kTestNotificationID,
+        principal,
+        browser,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
         onBeforeShow() {
           beforeShown = true;
           return true;
-        }
-      }
+        },
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
 
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       Assert.ok(beforeShown, "Should have called onBeforeShown");
       await shownPromise;
       let notification = PopupNotifications.getNotification(
@@ -582,7 +552,7 @@ add_task(async function test_no_request() {
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
 
       // Next test allowing the permission request.
@@ -616,25 +586,23 @@ add_task(async function test_window_swap() {
       };
 
       let mockRequest = makeMockPermissionRequest(browser);
-      class TestPrompt extends PermissionUI.PermissionPromptForRequest {
-        get request() {
-          return mockRequest;
-        }
-        get notificationID() {
-          return kTestNotificationID;
-        }
-        get message() {
-          return kTestMessage;
-        }
-        get promptActions() {
-          return [mainAction, secondaryAction];
-        }
-      }
+
+      let TestPrompt = {
+        request: mockRequest,
+        notificationID: kTestNotificationID,
+        message: kTestMessage,
+        promptActions: [mainAction, secondaryAction],
+      };
+      Object.setPrototypeOf(
+        TestPrompt,
+        PermissionUI.PermissionPromptForRequestPrototype
+      );
+
       let shownPromise = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
         "popupshown"
       );
-      new TestPrompt().prompt();
+      TestPrompt.prompt();
       await shownPromise;
 
       let newWindowOpened = BrowserTestUtils.waitForNewWindow();
@@ -646,7 +614,7 @@ add_task(async function test_window_swap() {
           newWindow.PopupNotifications.panel,
           "popupshown"
         );
-        new TestPrompt().prompt();
+        TestPrompt.prompt();
         await shownPromise;
       }
 
