@@ -5,6 +5,9 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
+interface nsIURI;
+
 [scriptable, builtinclass, uuid(f2a4aaa4-046a-439e-beef-893b15a90cff)]
 interface nsIObliviousHttpClientResponse : nsISupports {
     // Decrypt an encrypted response ("enc_response" in the RFC).
@@ -61,4 +64,10 @@ interface nsIObliviousHttp : nsISupports
         in Array<octet> request);
 
     nsIObliviousHttpServer server();
+};
+
+[scriptable, builtinclass, uuid(b1f08d56-fca6-4290-9500-d5168dc9d8c3)]
+interface nsIObliviousHttpService : nsISupports
+{
+  nsIChannel newChannel(in nsIURI relayURI, in nsIURI targetURI, in Array<octet> encodedConfig);
 };
