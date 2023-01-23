@@ -84,51 +84,46 @@ module.exports = {
   create(context) {
     return {
       CallExpression(node) {
-        let checkNode;
-        if (
-          node.arguments.length >= 1 &&
-          node.arguments[0].type == "MemberExpression"
-        ) {
-          // Handles cases of `.foo(Cu.reportError)`.
-          checkNode = node.arguments[0];
-        } else {
+        let checkNodes = [];
+        if (isCuReportError(node.callee)) {
           // Handles cases of `Cu.reportError()`.
-          checkNode = node.callee;
-        }
-        if (!isCuReportError(checkNode)) {
-          return;
+          if (node.arguments.length > 1) {
+            // TODO: Bug 1802347 For initial landing, we allow the two
+            // argument form of Cu.reportError as the second argument is a stack
+            // argument which is more complicated to deal with.
+            return;
+          }
+          checkNodes = [node.callee];
+        } else if (node.arguments.length >= 1) {
+          // Handles cases of `.foo(Cu.reportError)`.
+          checkNodes = node.arguments.filter(n => isCuReportError(n));
         }
 
-        if (checkNode == node.callee && node.arguments.length > 1) {
-          // TODO: Bug 1802347 For initial landing, we allow the two
-          // argument form of Cu.reportError as the second argument is a stack
-          // argument which is more complicated to deal with.
-          return;
+        for (let checkNode of checkNodes) {
+          context.report({
+            node,
+            fix: fixer => {
+              let fixes = [
+                fixer.replaceText(checkNode.object, "console"),
+                fixer.replaceText(checkNode.property, "error"),
+              ];
+              // If we're adding stuff together as an argument, split
+              // into multiple arguments instead:
+              if (
+                checkNode == node.callee &&
+                isConcatenation(node.arguments[0])
+              ) {
+                let { fixes: recursiveFixes } = replaceConcatWithComma(
+                  fixer,
+                  node.arguments[0]
+                );
+                fixes.push(...recursiveFixes);
+              }
+              return fixes;
+            },
+            messageId: "useConsoleError",
+          });
         }
-
-        context.report({
-          node,
-          fix: fixer => {
-            let fixes = [
-              fixer.replaceText(checkNode.object, "console"),
-              fixer.replaceText(checkNode.property, "error"),
-            ];
-            // If we're adding stuff together as an argument, split
-            // into multiple arguments instead:
-            if (
-              checkNode == node.callee &&
-              isConcatenation(node.arguments[0])
-            ) {
-              let { fixes: recursiveFixes } = replaceConcatWithComma(
-                fixer,
-                node.arguments[0]
-              );
-              fixes.push(...recursiveFixes);
-            }
-            return fixes;
-          },
-          messageId: "useConsoleError",
-        });
       },
     };
   },

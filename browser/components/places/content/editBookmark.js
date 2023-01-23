@@ -647,7 +647,7 @@ var gEditItemOverlay = {
         if (this._paneInfo) {
           this._mayUpdateFirstEditField("tagsField");
         }
-      }, Cu.reportError);
+      }, console.error);
     }
   },
 

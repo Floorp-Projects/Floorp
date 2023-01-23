@@ -3923,7 +3923,7 @@ BrowserGlue.prototype = {
           .catch(console.error)
           .then(() => enableProfilerButton(wasAddonActive))
           .catch(console.error);
-      }, Cu.reportError);
+      }, console.error);
     }
 
     // Clear unused socks proxy backup values - see bug 1625773.

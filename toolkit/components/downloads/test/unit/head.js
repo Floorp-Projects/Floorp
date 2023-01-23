@@ -1160,7 +1160,7 @@ add_setup(function test_common_initialize() {
         aResponse.finish();
         info("Aborting response with network reset.");
       })
-      .then(null, Cu.reportError);
+      .then(null, console.error);
   });
 
   // During unit tests, most of the functions that require profile access or

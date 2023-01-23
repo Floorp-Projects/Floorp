@@ -316,7 +316,7 @@ EnterprisePoliciesManager.prototype = {
         break;
 
       case "EnterprisePolicies:Restart":
-        this._restart().then(null, Cu.reportError);
+        this._restart().then(null, console.error);
         break;
     }
   },
