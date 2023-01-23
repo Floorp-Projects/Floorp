@@ -378,9 +378,20 @@ bool StackMapGenerator::createStackMap(
       i++;
     }
   }
-  // Followed by the "main" part of the map.
-  for (uint32_t i = 0; i < augmentedMstWords; i++) {
-    if (augmentedMst.isGCPointer(i)) {
+  {
+    // Followed by the "main" part of the map.
+    //
+    // This is really just a bit-array copy, so it is reasonable to ask
+    // whether the representation of MachineStackTracker could be made more
+    // similar to that of StackMap, so that the copy could be done with
+    // `memcpy`.  Unfortunately it's not so simple; see comment on `class
+    // MachineStackTracker` for details.
+    MachineStackTracker::Iter iter(augmentedMst);
+    while (true) {
+      size_t i = iter.get();
+      if (i == MachineStackTracker::Iter::FINISHED) {
+        break;
+      }
       stackMap->setBit(extraWords + i);
     }
   }
