@@ -61,7 +61,7 @@ static const uint32_t INT64_PIECES = sizeof(int64_t) / sizeof(uintptr_t);
 
 // Represents storage for an operand. For constants, the pointer is tagged
 // with a single bit, and the untagged pointer is a pointer to a Value.
-class LAllocation : public TempObject {
+class LAllocation {
   uintptr_t bits_;
 
   // 3 bits gives us enough for an interesting set of Kinds and also fits
