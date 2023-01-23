@@ -190,7 +190,7 @@ export var Troubleshoot = {
           dataProviders[name](providerDone.bind(null, name));
         } catch (err) {
           let msg = "Troubleshoot data provider failed: " + name + "\n" + err;
-          Cu.reportError(msg);
+          console.error(msg);
           providerDone(name, msg);
         }
       }
@@ -920,7 +920,7 @@ var dataProviders = {
       ].map(promise =>
         promise
           .catch(error => {
-            Cu.reportError(error);
+            console.error(error);
             return [];
           })
           .then(items => items.sort((a, b) => a.slug.localeCompare(b.slug)))
