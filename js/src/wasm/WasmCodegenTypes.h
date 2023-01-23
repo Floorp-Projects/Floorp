@@ -269,8 +269,8 @@ class CodeRange {
       union {
         struct {
           uint32_t lineOrBytecode_;
-          uint8_t beginToUncheckedCallEntry_;
-          uint8_t beginToTierEntry_;
+          uint16_t beginToUncheckedCallEntry_;
+          uint16_t beginToTierEntry_;
         } func;
       };
     };

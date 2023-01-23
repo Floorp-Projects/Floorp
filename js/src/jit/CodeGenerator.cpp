@@ -12048,7 +12048,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   // the capacity check below is sufficient.
   Label allocElement, addNewElement;
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
-    defined(JS_CODEGEN_LOONG64)
+    defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
   // Had to reimplement for MIPS because there are no flags.
   bailoutCmp32(Assembler::NotEqual, initLength, index, ins->snapshot());
 #else

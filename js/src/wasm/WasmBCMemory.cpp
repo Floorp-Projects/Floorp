@@ -332,7 +332,8 @@ void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr instance, RegI64 ptr,
 
 // Make sure the ptr could be used as an index register.
 static inline void ToValidIndex(MacroAssembler& masm, RegI32 ptr) {
-#if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
+#if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || \
+    defined(JS_CODEGEN_RISCV64)
   // When ptr is used as an index, it will be added to a 64-bit register.
   // So we should explicitly promote ptr to 64-bit. Since now ptr holds a
   // unsigned 32-bit value, we zero-extend it to 64-bit here.
@@ -548,6 +549,8 @@ void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
   } else {
     masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
   }
+#elif defined(JS_CODEGEN_RISCV64)
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
 #else
   MOZ_CRASH("BaseCompiler platform hook: load");
 #endif
@@ -1214,6 +1217,24 @@ static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
   bc->maybeFree(temps.t2);
 }
 
+#elif defined(JS_CODEGEN_RISCV64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, AtomicOp,
+                           RegI32*, RegI32*, Temps*) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, AtomicOp,
+                    RegI32, RegI32, const Temps&) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Deallocate(BaseCompiler*, RegI32, const Temps&) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 
 using Temps = Nothing;
@@ -1373,6 +1394,20 @@ static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
 static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
   bc->freeI64(rv);
   bc->freeI64(temp);
+}
+#elif defined(JS_CODEGEN_RISCV64)
+
+static void PopAndAllocate(BaseCompiler*, AtomicOp, RegI64*, RegI64*, RegI64*) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex,
+                    AtomicOp op, RegI64, RegI64, RegI64) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Deallocate(BaseCompiler*, AtomicOp, RegI64, RegI64) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -1550,6 +1585,22 @@ static void Deallocate(BaseCompiler* bc, RegI32 rv, const Temps& temps) {
   bc->maybeFree(temps.t2);
 }
 
+#elif defined(JS_CODEGEN_RISCV64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
+                           RegI32*, Temps*) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
+                    RegI32, const Temps&) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+static void Deallocate(BaseCompiler*, RegI32, const Temps&) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 
 using Temps = Nothing;
@@ -1673,6 +1724,15 @@ static void PopAndAllocate(BaseCompiler* bc, RegI64* rd, RegI64* rv) {
 static void Deallocate(BaseCompiler* bc, RegI64 rd, RegI64 rv) {
   bc->freeI64(rv);
   bc->maybeFree(rd);
+}
+
+#elif defined(JS_CODEGEN_RISCV64)
+
+static void PopAndAllocate(BaseCompiler*, RegI64*, RegI64*) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+static void Deallocate(BaseCompiler*, RegI64, RegI64) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -1858,6 +1918,24 @@ static void Deallocate(BaseCompiler* bc, RegI32 rexpect, RegI32 rnew,
   bc->maybeFree(temps.t0);
   bc->maybeFree(temps.t1);
   bc->maybeFree(temps.t2);
+}
+
+#elif defined(JS_CODEGEN_RISCV64)
+
+using Temps = Nothing;
+
+static void PopAndAllocate(BaseCompiler*, ValType, Scalar::Type, RegI32*,
+                           RegI32*, RegI32*, Temps*) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Perform(BaseCompiler*, const MemoryAccessDesc&, BaseIndex, RegI32,
+                    RegI32, RegI32, const Temps& temps) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+
+static void Deallocate(BaseCompiler*, RegI32, RegI32, const Temps&) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
@@ -2069,6 +2147,22 @@ template <typename RegIndexType>
 static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
   bc->freeI64(rexpect);
   bc->freeI64(rnew);
+}
+
+#elif defined(JS_CODEGEN_RISCV64)
+
+template <typename RegIndexType>
+static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
+                           RegI64* rd) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
+                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
+}
+template <typename RegIndexType>
+static void Deallocate(BaseCompiler* bc, RegI64 rexpect, RegI64 rnew) {
+  MOZ_CRASH("UNIMPLEMENTED ON RISCV64");
 }
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)

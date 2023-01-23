@@ -552,12 +552,18 @@ class LDefinition {
   Type type() const { return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK); }
 
   static bool isFloatRegCompatible(Type type, FloatRegister reg) {
+#ifdef JS_CODEGEN_RISCV64
+    if (type == FLOAT32 || type == DOUBLE) {
+      return reg.isSingle() || reg.isDouble();
+    }
+#else
     if (type == FLOAT32) {
       return reg.isSingle();
     }
     if (type == DOUBLE) {
       return reg.isDouble();
     }
+#endif
     MOZ_ASSERT(type == SIMD128);
     return reg.isSimd128();
   }
@@ -1931,6 +1937,8 @@ AnyRegister LAllocation::toRegister() const {
 #  include "jit/arm64/LIR-arm64.h"
 #elif defined(JS_CODEGEN_LOONG64)
 #  include "jit/loong64/LIR-loong64.h"
+#elif defined(JS_CODEGEN_RISCV64)
+#  include "jit/riscv64/LIR-riscv64.h"
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 #  if defined(JS_CODEGEN_MIPS32)
 #    include "jit/mips32/LIR-mips32.h"
