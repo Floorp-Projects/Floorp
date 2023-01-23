@@ -248,7 +248,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let uppercaseUnit = result.payload.temperatureUnit.toUpperCase();
 
     return {
-      currently: { l10n: { id: "firefox-suggest-weather-currently" } },
+      currently: {
+        l10n: {
+          id: "firefox-suggest-weather-currently",
+          cacheable: true,
+        },
+      },
       temperature: {
         l10n: {
           id: "firefox-suggest-weather-temperature",
@@ -256,6 +261,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
             value: result.payload.temperature,
             unit: uppercaseUnit,
           },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
         },
       },
       weatherIcon: {
@@ -265,6 +272,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         l10n: {
           id: "firefox-suggest-weather-title",
           args: { city: result.payload.city },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
         },
       },
       url: {
@@ -277,6 +286,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
             currentConditions: result.payload.currentConditions,
             forecast: result.payload.forecast,
           },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
         },
       },
       highLow: {
@@ -287,12 +298,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
             low: result.payload.low,
             unit: uppercaseUnit,
           },
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
         },
       },
       bottom: {
         l10n: {
           id: "firefox-suggest-weather-sponsored",
           args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
+          cacheable: true,
         },
       },
     };

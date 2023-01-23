@@ -1718,10 +1718,7 @@ export class UrlbarView {
         if (update.l10n.cacheable) {
           await this.#l10nCache.ensureAll([update.l10n]);
         }
-        this.#setElementL10n(node, {
-          id: update.l10n.id,
-          args: update.l10n.args || undefined,
-        });
+        this.#setElementL10n(node, update.l10n);
       } else if (update.textContent) {
         node.textContent = update.textContent;
       }
@@ -2319,8 +2316,10 @@ export class UrlbarView {
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
       if (
-        lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-        lazy.UrlbarPrefs.get("suggest.bestmatch")
+        (lazy.UrlbarPrefs.get("bestMatchEnabled") &&
+          lazy.UrlbarPrefs.get("suggest.bestmatch")) ||
+        (lazy.UrlbarPrefs.get("weatherFeatureGate") &&
+          lazy.UrlbarPrefs.get("suggest.weather"))
       ) {
         idArgs.push({ id: "urlbar-group-best-match" });
       }
@@ -2404,16 +2403,26 @@ export class UrlbarView {
    *   Options object.
    * @param {string} options.id
    *   The l10n string ID.
-   * @param {object} [options.args]
+   * @param {object} options.args
    *   The l10n string arguments.
-   * @param {string} [options.attribute]
+   * @param {string} options.attribute
    *   If you're setting an attribute string, then pass the name of the
    *   attribute. In that case, the string in the Fluent file should define a
    *   value for the attribute, like ".foo = My value for the foo attribute".
    *   If you're setting the element's textContent, then leave this undefined.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true if the string was cached using a key that excluded arguments.
    */
-  #setElementL10n(element, { id, args = undefined, attribute = undefined }) {
-    let message = this.#l10nCache.get(id, args);
+  #setElementL10n(
+    element,
+    {
+      id,
+      args = undefined,
+      attribute = undefined,
+      excludeArgsFromCacheKey = false,
+    }
+  ) {
+    let message = this.#l10nCache.get({ id, args, excludeArgsFromCacheKey });
     if (message) {
       element.removeAttribute("data-l10n-id");
       if (attribute) {
