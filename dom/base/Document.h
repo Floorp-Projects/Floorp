@@ -2013,6 +2013,11 @@ class Document : public nsINode,
    */
   static bool HandlePendingFullscreenRequests(Document* aDocument);
 
+  /**
+   * Clear pending fullscreen in aDocument.
+   */
+  static void ClearPendingFullscreenRequests(Document* aDocument);
+
   // ScreenOrientation related APIs
 
   void ClearOrientationPendingPromise();
