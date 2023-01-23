@@ -125,7 +125,7 @@ MOZ_CHANGED=`hg diff -c tip --stat \
    | wc -l | tr -d " " || true`
 GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
    git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
-   | csplit -f gitshow -sk - 2 ; cat gitshow01 \
+   | csplit -f $TMP_DIR/gitshow -sk - 2 ; cat $TMP_DIR/gitshow01 \
    | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
    | wc -l | tr -d " " || true`
 FILE_CNT_MISMATCH_MSG=$"

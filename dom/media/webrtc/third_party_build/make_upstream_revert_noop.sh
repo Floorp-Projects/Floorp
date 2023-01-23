@@ -83,16 +83,16 @@ echo "We already cherry-picked this when we vendored $MOZ_LIBWEBRTC_NEXT_BASE." 
 > $STATE_DIR/$MOZ_LIBWEBRTC_REVERT_SHA.no-op-cherry-pick-msg
 
 cd $MOZ_LIBWEBRTC_SRC
-rm -f *.patch *.patch.bak
+rm -f $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 git checkout -b moz-cherry-pick $MOZ_LIBWEBRTC_BASE
-git format-patch -k --start-number 1 \
+git format-patch -o $TMP_DIR -k --start-number 1 \
     $MOZ_LIBWEBRTC_NEXT_BASE^..$MOZ_LIBWEBRTC_NEXT_BASE
-git format-patch -k --start-number 2 \
+git format-patch -o $TMP_DIR -k --start-number 2 \
     $MOZ_LIBWEBRTC_REVERT_SHA^..$MOZ_LIBWEBRTC_REVERT_SHA
-sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_NEXT_BASE)/" 0001*.patch
-sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_REVERT_SHA)/" 0002*.patch
-sed -i.bak -e 's/^Subject: /Subject: (tmp-cherry-pick) /' *.patch
-git am *.patch
+sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_NEXT_BASE)/" $TMP_DIR/0001*.patch
+sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_REVERT_SHA)/" $TMP_DIR/0002*.patch
+sed -i.bak -e 's/^Subject: /Subject: (tmp-cherry-pick) /' $TMP_DIR/*.patch
+git am $TMP_DIR/*.patch
 git checkout $MOZ_LIBWEBRTC_BRANCH
 git rebase moz-cherry-pick
 git branch -d moz-cherry-pick
