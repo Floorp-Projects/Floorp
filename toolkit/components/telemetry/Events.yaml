@@ -573,7 +573,7 @@ address:
                   `filled`, `not_filled`, `user_filled` or `unavailable`
         'filled_modified': Recorded when a field is autofilled and then modified by the user.
                            Using field_name to record the field that triggers this event.
-        'submitted': Recorded when a form is submitted. Possible values are `autofilled`, `user_filled` or `unavailable`
+        'submitted': Recorded when a form is submitted. Possible values are `autofilled`, `not_filled`, `user_filled` or `unavailable`
         'cleared' Recorded when a form is cleared . Using field_name to record the field that triggers this event
     objects: ["address_form"]
     methods: ["detected", "popup_shown", "filled", "filled_modified", "submitted", "cleared"]
