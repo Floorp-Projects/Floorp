@@ -222,8 +222,8 @@ add_task(function normandyErrorHandling() {
     NormandyTestUtils.withStub(PreferenceRollouts, "getAllActive", {
       returnValue: Promise.reject("Expected error - PreferenceRollouts"),
     }),
-    NormandyTestUtils.withConsoleSpy(),
-    async function testNormandyErrorHandling({ consoleSpy }) {
+    async function testNormandyErrorHandling() {
+      let consoleEndFn = TestUtils.listenForConsoleMessages();
       let snapshot = await Troubleshoot.snapshot();
       let info = snapshot.normandy;
       Assert.deepEqual(
@@ -241,12 +241,33 @@ add_task(function normandyErrorHandling() {
         [],
         "pref rollouts should be an empty list if there is an error"
       );
-
-      consoleSpy.assertAtLeast([
+      let msgs = await consoleEndFn();
+      let expectedSet = new Set([
         /Expected error - PreferenceExperiments/,
         /Expected error - AddonStudies/,
         /Expected error - PreferenceRollouts/,
       ]);
+
+      for (let msg of msgs) {
+        msg = msg.wrappedJSObject;
+        if (msg.level != "error") {
+          continue;
+        }
+
+        let msgContents = msg.arguments[0];
+        for (let expected of expectedSet) {
+          if (expected.test(msgContents)) {
+            expectedSet.delete(expected);
+            break;
+          }
+        }
+      }
+
+      Assert.equal(
+        expectedSet.size,
+        0,
+        "Should have no messages left in the expected set"
+      );
     }
   )();
 });
