@@ -26,6 +26,12 @@
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
 
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Jańa bet</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Jańa jeke bet</string>
+
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Hámmesin kórsetiw</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
@@ -98,6 +104,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Til</string>
 
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Qosımshalar</string>
+
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">YAQSHI</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -106,6 +115,11 @@
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Shıǵıw</string>
 
+
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Qurılma atı</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Mánziller</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->

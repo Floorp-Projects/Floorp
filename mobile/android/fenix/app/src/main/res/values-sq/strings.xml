@@ -398,7 +398,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduktim Banderolash Për Cookie-t</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nga një sajt, nëse është e mundur, apo të pranohen cookies kur s’është e mundur?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nga një sajt, nëse është e mundur, apo të pranohen cookies, kur s’është e mundur?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nëse është e mundur?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->

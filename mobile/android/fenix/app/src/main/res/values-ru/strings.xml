@@ -69,11 +69,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Добавьте ярлык, чтобы открывать приватные вкладки с домашнего экрана.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Добавьте ярлык, чтобы открывать приватные вкладки с домашнего экрана.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Запустите следующую приватную вкладку одним касанием.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Добавить ярлык</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Добавить ярлык</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Добавить на Домашний экран</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -269,7 +269,7 @@
     <string name="search_settings_menu_item">Настройки поиска</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">В этот раз искать:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">В этот раз искать:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">В этот раз искать в:</string>
@@ -301,14 +301,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Уведомления помогают вам делать больше с %s</string>
+    <string name="onboarding_home_enable_notifications_title">Уведомления помогают вам делать больше с %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Синхронизируйте вкладки между устройствами, управляйте загрузками, получайте советы о том, как максимально эффективно использовать защиту конфиденциальности %s, и многое другое.</string>
+    <string name="onboarding_home_enable_notifications_description">Синхронизируйте вкладки между устройствами, управляйте загрузками, получайте советы о том, как максимально эффективно использовать защиту конфиденциальности %s, и многое другое.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Продолжить</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Продолжить</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Не сейчас</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Не сейчас</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -367,7 +367,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Снижать число уведомлений о куках</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox автоматически пытается отклонить запросы на установку кук при показе уведомлений о них. Если вариант отклонения недоступен, Firefox может принять все куки, чтобы скрыть уведомление.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox автоматически пытается отклонить запросы на установку кук при показе уведомлений о них. Если вариант отклонения недоступен, Firefox может принять все куки, чтобы скрыть уведомление.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Отключено для этого сайта</string>
@@ -380,12 +380,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s удалит куки этого сайта и обновит страницу. Удаление всех кук может привести к выходу из системы или к пропаже покупок из корзины.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s может попытаться автоматически отклонить запросы на использование кук. Если вариант отклонения недоступен, %2$s может принять все куки, чтобы скрыть уведомление.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s может попытаться автоматически отклонить запросы на использование кук. Если вариант отклонения недоступен, %2$s может принять все куки, чтобы скрыть уведомление.</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Уведомления о куках исчезли!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Автоматически отклонять запросы кук, когда это возможно. В противном случае принять все куки, чтобы скрыть уведомления о куках.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Автоматически отклонять запросы кук, когда это возможно. В противном случае принять все куки, чтобы скрыть уведомления о куках.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Не сейчас</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -395,21 +395,23 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Меньше всплывающих окон о куках</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Автоматически отвечать на всплывающие окна о куках, чтобы не отвлекаться от просмотра. %1$s будет отклонять все запросы, если это возможно, или принимать все, если нет.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Автоматически отвечать на всплывающие окна о куках, чтобы не отвлекаться от просмотра. %1$s будет отклонять все запросы, если это возможно, или принимать все, если нет.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Автоматически отвечать на уведомления о куках, чтобы не отвлекаться от просмотра. %1$s будет отклонять все запросы, если это возможно.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Скрывать всплывающие окна</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Снижение числа уведомлений о куках</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Разрешить %1$s отклонять запрос согласия сайта на использование кук, если это возможно, или принимать доступ к кукам, когда это невозможно?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Разрешить %1$s отклонять запрос согласия сайта на использование кук, если это возможно, или принимать доступ к кукам, когда это невозможно?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Разрешить</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Автоматически пытаться подключиться к сайтам через протокол шифрования HTTPS для повышения безопасности.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Вкл.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Вкл.</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Откл.</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Подробнее</string>
@@ -489,6 +491,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Уведомления</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Разрешены</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Не разрешены</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Собственный сборник дополнений</string>
@@ -511,8 +518,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Недавно посещённые</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Истории, наводящие на размышления</string>
@@ -1037,10 +1042,16 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Исключения</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Включена</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Включена</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Отключена</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Стандартная</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Строгая</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Персональная</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Разрешить звук и видео</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1792,7 +1803,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Используемая поисковая строка</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Замените строку запроса на “%s”. Пример:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Замените строку запроса на “%s”. Пример:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Сведения о выбранной поисковой системе</string>
@@ -1993,8 +2004,6 @@
     <string name="pocket_stories_categories_header">Истории по темам</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Узнайте больше</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">С использованием Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">При поддержке %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
