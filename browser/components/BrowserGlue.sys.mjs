@@ -1627,7 +1627,7 @@ BrowserGlue.prototype = {
         let { Troubleshoot } = ChromeUtils.importESModule(
           "resource://gre/modules/Troubleshoot.sys.mjs"
         );
-        Troubleshoot.snapshot(snapshotData => {
+        Troubleshoot.snapshot().then(snapshotData => {
           // for privacy we remove crash IDs and all preferences (but bug 1091944
           // exists to expose prefs once we are confident of privacy implications)
           delete snapshotData.crashes;
