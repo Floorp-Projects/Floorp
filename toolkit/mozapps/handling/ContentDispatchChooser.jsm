@@ -102,7 +102,7 @@ class nsContentDispatchChooser {
         aURI
       );
     } catch (error) {
-      Cu.reportError(error.message);
+      console.error(error.message);
     }
 
     if (!shouldOpenHandler) {
