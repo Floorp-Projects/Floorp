@@ -12,6 +12,7 @@
 #include <vector>
 #include <windows.h>
 
+#include "Colorspaces.h"
 #include "GLTypes.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/layers/OverlayInfo.h"
@@ -27,7 +28,11 @@ struct ID3D11VideoContext;
 struct ID3D11VideoProcessor;
 struct ID3D11VideoProcessorEnumerator;
 struct ID3D11VideoProcessorOutputView;
+struct IDCompositionColorMatrixEffect;
+struct IDCompositionFilterEffect;
+struct IDCompositionTableTransferEffect;
 struct IDCompositionDevice2;
+struct IDCompositionDevice3;
 struct IDCompositionSurface;
 struct IDCompositionTarget;
 struct IDCompositionVisual2;
@@ -65,6 +70,23 @@ struct GpuOverlayInfo {
   UINT mBgra8OverlaySupportFlags = 0;
   UINT mRgb10a2OverlaySupportFlags = 0;
 };
+
+// -
+
+struct ColorManagementChain {
+  RefPtr<IDCompositionColorMatrixEffect> srcRgbFromSrcYuv;
+  RefPtr<IDCompositionTableTransferEffect> srcLinearFromSrcTf;
+  RefPtr<IDCompositionColorMatrixEffect> dstLinearFromSrcLinear;
+  RefPtr<IDCompositionTableTransferEffect> dstTfFromDstLinear;
+  RefPtr<IDCompositionFilterEffect> last;
+
+  static ColorManagementChain From(IDCompositionDevice3& dcomp,
+                                   const color::ColorProfileConversionDesc&);
+
+  ~ColorManagementChain();
+};
+
+// -
 
 /**
  * DCLayerTree manages direct composition layers.
@@ -210,6 +232,19 @@ class DCLayerTree {
 
   bool mPendingCommit;
 
+  static color::ColorProfileDesc QueryOutputColorProfile();
+
+  mutable Maybe<color::ColorProfileDesc> mOutputColorProfile;
+
+ public:
+  const color::ColorProfileDesc& OutputColorProfile() const {
+    if (!mOutputColorProfile) {
+      mOutputColorProfile = Some(QueryOutputColorProfile());
+    }
+    return *mOutputColorProfile;
+  }
+
+ protected:
   static UniquePtr<GpuOverlayInfo> sGpuOverlayInfo;
 };
 
@@ -322,6 +357,7 @@ class DCExternalSurfaceWrapper : public DCSurface {
 
   UniquePtr<DCSurface> mSurface;
   const bool mIsOpaque;
+  Maybe<ColorManagementChain> mCManageChain;
 };
 
 class DCSurfaceVideo : public DCSurface {
