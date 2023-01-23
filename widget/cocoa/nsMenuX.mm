@@ -1159,7 +1159,7 @@ void nsMenuX::Dump(uint32_t aIndent) const {
     if (rollupListener) {
       nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
       if (rollupWidget) {
-        rollupListener->Rollup({0, nsIRollupListener::FlushViews::Yes});
+        rollupListener->Rollup(0, true, nullptr, nullptr);
         [menu cancelTracking];
         return;
       }

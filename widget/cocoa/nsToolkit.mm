@@ -179,7 +179,7 @@ void nsToolkit::MonitorAllProcessMouseEvents() {
                                           return;
                                         }
 
-                                        rollupListener->Rollup({});
+                                        rollupListener->Rollup(0, false, nullptr, nullptr);
                                       }];
   }
 
