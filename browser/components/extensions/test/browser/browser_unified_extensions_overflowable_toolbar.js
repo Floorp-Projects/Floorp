@@ -427,7 +427,7 @@ async function verifyExtensionWidget(win, widget, unifiedExtensionsEnabled) {
  * panel.
  */
 add_task(async function test_overflowable_toolbar() {
-  let win = await promiseEnableUnifiedExtensions();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let movedNode;
 
   await withWindowOverflowed(win, {
@@ -491,7 +491,7 @@ add_task(async function test_overflowable_toolbar() {
 });
 
 add_task(async function test_context_menu() {
-  let win = await promiseEnableUnifiedExtensions();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
 
   await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
@@ -513,8 +513,8 @@ add_task(async function test_context_menu() {
       const firstExtensionWidget = unifiedExtensionList.children[0];
       Assert.ok(firstExtensionWidget, "expected extension widget");
       let contextMenu = await openUnifiedExtensionsContextMenu(
-        win,
-        firstExtensionWidget.dataset.extensionid
+        firstExtensionWidget.dataset.extensionid,
+        win
       );
       Assert.ok(contextMenu, "expected a context menu");
       let visibleItems = getVisibleMenuItems(contextMenu);
@@ -547,8 +547,8 @@ add_task(async function test_context_menu() {
       const secondExtensionWidget = unifiedExtensionList.children[1];
       Assert.ok(secondExtensionWidget, "expected extension widget");
       contextMenu = await openUnifiedExtensionsContextMenu(
-        win,
-        secondExtensionWidget.dataset.extensionid
+        secondExtensionWidget.dataset.extensionid,
+        win
       );
       visibleItems = getVisibleMenuItems(contextMenu);
       is(visibleItems.length, 7, "expected 7 menu items");
@@ -571,8 +571,8 @@ add_task(async function test_context_menu() {
       const thirdExtensionWidget = unifiedExtensionList.children[2];
       Assert.ok(thirdExtensionWidget, "expected extension widget");
       contextMenu = await openUnifiedExtensionsContextMenu(
-        win,
-        thirdExtensionWidget.dataset.extensionid
+        thirdExtensionWidget.dataset.extensionid,
+        win
       );
       Assert.ok(contextMenu, "expected a context menu");
       visibleItems = getVisibleMenuItems(contextMenu);
@@ -589,7 +589,7 @@ add_task(async function test_context_menu() {
 });
 
 add_task(async function test_message_deck() {
-  let win = await promiseEnableUnifiedExtensions();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
 
   await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
@@ -614,8 +614,8 @@ add_task(async function test_message_deck() {
 
           info("verify message when focusing the action button");
           const item = getUnifiedExtensionsItem(
-            win,
-            firstExtensionWidget.dataset.extensionid
+            firstExtensionWidget.dataset.extensionid,
+            win
           );
           Assert.ok(item, "expected an item for the extension");
 
@@ -766,7 +766,7 @@ add_task(async function test_message_deck() {
  * button is put into the addons panel overflow list.
  */
 add_task(async function test_pinning_to_toolbar_when_overflowed() {
-  let win = await promiseEnableUnifiedExtensions();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let movedNode;
   let extensionWidgetID;
 
@@ -816,7 +816,7 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
  * then does not underflow.
  */
 add_task(async function test_() {
-  let win = await promiseEnableUnifiedExtensions();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let extensionID;
 
   await withWindowOverflowed(win, {
@@ -843,8 +843,8 @@ add_task(async function test_() {
       // uncheck it (i.e. unpin the extension).
       await openExtensionsPanel(win);
       const contextMenu = await openUnifiedExtensionsContextMenu(
-        win,
-        extensionID
+        extensionID,
+        win
       );
       Assert.ok(contextMenu, "expected a context menu");
 
@@ -891,7 +891,7 @@ add_task(async function test_() {
     afterUnderflowed: async () => {
       await openExtensionsPanel(win);
 
-      const item = getUnifiedExtensionsItem(win, extensionID);
+      const item = getUnifiedExtensionsItem(extensionID, win);
       Assert.ok(
         item,
         "expected extension widget to be listed in the unified extensions panel"

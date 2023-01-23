@@ -9,21 +9,16 @@
             ensureMaximizedWindow,
             getUnifiedExtensionsItem,
             openExtensionsPanel,
-            openUnifiedExtensionsContextMenu,
-            promiseEnableUnifiedExtensions
+            openUnifiedExtensionsContextMenu
 */
 
-const promiseEnableUnifiedExtensions = async (options = {}) => {
-  return BrowserTestUtils.openNewBrowserWindow(options);
-};
-
-const getListView = win => {
+const getListView = (win = window) => {
   const { panel } = win.gUnifiedExtensions;
   ok(panel, "expected panel to be created");
   return panel.querySelector("#unified-extensions-view");
 };
 
-const openExtensionsPanel = async win => {
+const openExtensionsPanel = async (win = window) => {
   const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
@@ -35,7 +30,7 @@ const openExtensionsPanel = async win => {
   await viewShown;
 };
 
-const closeExtensionsPanel = async win => {
+const closeExtensionsPanel = async (win = window) => {
   const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
@@ -48,7 +43,7 @@ const closeExtensionsPanel = async win => {
   await hidden;
 };
 
-const getUnifiedExtensionsItem = (win, extensionId) => {
+const getUnifiedExtensionsItem = (extensionId, win = window) => {
   const view = getListView(win);
 
   // First try to find a CUI widget, otherwise a custom element when the
@@ -59,8 +54,8 @@ const getUnifiedExtensionsItem = (win, extensionId) => {
   );
 };
 
-const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
-  const item = getUnifiedExtensionsItem(win, extensionId);
+const openUnifiedExtensionsContextMenu = async (extensionId, win = window) => {
+  const item = getUnifiedExtensionsItem(extensionId, win);
   ok(item, `expected item for extensionId=${extensionId}`);
   const button = item.querySelector(".unified-extensions-item-menu-button");
   ok(button, "expected menu button");
@@ -88,7 +83,7 @@ const clickUnifiedExtensionsItem = async (
   // The panel should be closed automatically when we click an extension item.
   await openExtensionsPanel(win);
 
-  const item = getUnifiedExtensionsItem(win, extensionId);
+  const item = getUnifiedExtensionsItem(extensionId, win);
   ok(item, `expected item for ${extensionId}`);
 
   // The action button should be disabled when users aren't supposed to click

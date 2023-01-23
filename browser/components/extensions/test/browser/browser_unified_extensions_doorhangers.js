@@ -5,19 +5,7 @@
 
 loadTestSubscript("head_unified_extensions.js");
 
-let win;
-
-add_setup(async function() {
-  // Only load a new window with the unified extensions feature enabled once to
-  // speed up the execution of this test file.
-  win = await promiseEnableUnifiedExtensions();
-
-  registerCleanupFunction(async () => {
-    await BrowserTestUtils.closeWindow(win);
-  });
-});
-
-const verifyPermissionsPrompt = async (win, expectedAnchorID) => {
+const verifyPermissionsPrompt = async expectedAnchorID => {
   const ext = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
@@ -72,14 +60,13 @@ const verifyPermissionsPrompt = async (win, expectedAnchorID) => {
     },
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser: win.gBrowser }, async () => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     const defaultSearchPopupPromise = promisePopupNotificationShown(
-      "addon-webext-defaultsearch",
-      win
+      "addon-webext-defaultsearch"
     );
     let [panel] = await Promise.all([defaultSearchPopupPromise, ext.startup()]);
     ok(panel, "expected panel");
-    let notification = win.PopupNotifications.getNotification(
+    let notification = PopupNotifications.getNotification(
       "addon-webext-defaultsearch"
     );
     ok(notification, "expected notification");
@@ -99,13 +86,12 @@ const verifyPermissionsPrompt = async (win, expectedAnchorID) => {
     await ext.awaitMessage("ready");
 
     const popupPromise = promisePopupNotificationShown(
-      "addon-webext-permissions",
-      win
+      "addon-webext-permissions"
     );
     ext.sendMessage("grant-permission");
     panel = await popupPromise;
     ok(panel, "expected panel");
-    notification = win.PopupNotifications.getNotification(
+    notification = PopupNotifications.getNotification(
       "addon-webext-permissions"
     );
     ok(notification, "expected notification");
@@ -125,6 +111,6 @@ const verifyPermissionsPrompt = async (win, expectedAnchorID) => {
   });
 };
 
-add_task(async function test_permissions_prompt_with_pref_enabled() {
-  await verifyPermissionsPrompt(win, "unified-extensions-button");
+add_task(async function test_permissions_prompt() {
+  await verifyPermissionsPrompt("unified-extensions-button");
 });

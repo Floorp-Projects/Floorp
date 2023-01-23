@@ -10,16 +10,13 @@ loadTestSubscript("head_unified_extensions.js");
  * invoked, that the panel is hidden.
  */
 add_task(async function test_hide_panel_when_customizing() {
-  let win = await promiseEnableUnifiedExtensions();
-  await openExtensionsPanel(win);
+  await openExtensionsPanel();
 
-  let panel = win.gUnifiedExtensions.panel;
+  let panel = gUnifiedExtensions.panel;
   Assert.equal(panel.state, "open");
 
   let panelHidden = BrowserTestUtils.waitForPopupEvent(panel, "hidden");
-  CustomizableUI.dispatchToolboxEvent("customizationstarting", {}, win);
+  CustomizableUI.dispatchToolboxEvent("customizationstarting", {});
   await panelHidden;
   Assert.equal(panel.state, "closed");
-
-  await BrowserTestUtils.closeWindow(win);
 });
