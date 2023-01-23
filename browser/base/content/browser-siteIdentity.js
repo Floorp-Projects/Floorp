@@ -515,7 +515,7 @@ var gIdentityHandler = {
     let principal = gBrowser.contentPrincipal;
     // ...but if we're on the HTTPS-Only error page, the content-principal is
     // for HTTPS but. We always want to set the exception for HTTP. (Code should
-    // be almost identical to the one in AboutHttpsOnlyErrorParent.jsm)
+    // be almost identical to the one in AboutHttpsOnlyErrorParent.sys.mjs)
     let newURI;
     if (this._isAboutHttpsOnlyErrorPage) {
       newURI = gBrowser.currentURI

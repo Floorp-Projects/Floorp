@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AboutHttpsOnlyErrorParent"];
-
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
-class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
+export class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
   get browser() {
     return this.browsingContext.top.embedderElement;
   }
