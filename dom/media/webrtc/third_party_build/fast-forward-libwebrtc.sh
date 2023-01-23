@@ -244,15 +244,15 @@ UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
     git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
     | grep "^commit " | awk '{ print $NF }'`
 echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
-    > commit_msg.txt
-echo "" >> commit_msg.txt
+    > $TMP_DIR/commit_msg.txt
+echo "" >> $TMP_DIR/commit_msg.txt
 if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
-  cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> commit_msg.txt
-  echo "" >> commit_msg.txt
+  cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> $TMP_DIR/commit_msg.txt
+  echo "" >> $TMP_DIR/commit_msg.txt
   rm $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
 fi
-echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> commit_msg.txt
+echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> $TMP_DIR/commit_msg.txt
 (cd $MOZ_LIBWEBRTC_SRC && \
-git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> commit_msg.txt
+git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> $TMP_DIR/commit_msg.txt
 
-hg commit -l commit_msg.txt third_party/libwebrtc
+hg commit -l $TMP_DIR/commit_msg.txt third_party/libwebrtc

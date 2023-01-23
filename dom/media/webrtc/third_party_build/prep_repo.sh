@@ -59,11 +59,11 @@ git branch $MOZ_LIBWEBRTC_BRANCH $CHERRY_PICK_BASE
 git checkout $MOZ_LIBWEBRTC_BRANCH
 
 # grab the patches for all the commits in chrome's release branch for libwebrtc
-git format-patch -k $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM
+git format-patch -o $TMP_DIR -k $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM
 # tweak the release branch commit summaries to show they were cherry picked
-sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" *.patch
-git am *.patch # applies to branch mozpatches
-rm *.patch
+sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" $TMP_DIR/*.patch
+git am $TMP_DIR/*.patch # applies to branch mozpatches
+rm $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 
 # write no-op files for the cherry-picked release branch commits.  For more
 # details on what this is doing, see make_upstream_revert_noop.sh.
@@ -81,9 +81,9 @@ done
 
 # grab all the moz patches and apply
 # git format-patch -k $MOZ_LIBWEBRTC_BASE..$MOZ_PRIOR_LIBWEBRTC_BRANCH
-git format-patch -k branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM..$MOZ_PRIOR_LIBWEBRTC_BRANCH
-git am *.patch # applies to branch mozpatches
-rm *.patch
+git format-patch -o $TMP_DIR -k branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM..$MOZ_PRIOR_LIBWEBRTC_BRANCH
+git am $TMP_DIR/*.patch # applies to branch mozpatches
+rm $TMP_DIR/*.patch
 
 cd $CURRENT_DIR
 
