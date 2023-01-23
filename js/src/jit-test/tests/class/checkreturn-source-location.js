@@ -14,5 +14,6 @@ try {
     ex = e;
 }
 assertEq(ex instanceof ReferenceError, true);
-assertEq(ex.lineNumber, 6);
-assertEq(ex.columnNumber, 13);
+// The closing '}' of B's constructor.
+assertEq(ex.lineNumber, 8);
+assertEq(ex.columnNumber, 5);

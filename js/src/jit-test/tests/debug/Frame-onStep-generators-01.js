@@ -28,4 +28,4 @@ dbg.onEnterFrame = frame => {
 };
 
 g.f();
-assertEq(log.join(" "), "5 6 1 6 7 1 2 7 8 2 3 8 9 3 9 10");
+assertEq(log.join(" "), "5 6 1 6 7 1 2 7 8 2 3 8 9 3 4 9 10");
