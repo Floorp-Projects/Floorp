@@ -146,7 +146,7 @@ var IntegrationPoint = function() {
           " they change when new overrides are registered.",
         Cr.NS_ERROR_NO_INTERFACE
       );
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     },
   };
@@ -243,7 +243,7 @@ IntegrationPoint.prototype = {
         combined = Object.create(combined, descriptors);
       } catch (ex) {
         // Any error will result in the current override being skipped.
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

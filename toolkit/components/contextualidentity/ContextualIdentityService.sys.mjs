@@ -205,7 +205,7 @@ _ContextualIdentityService.prototype = {
   loadError(error) {
     if (error != null && error.name != "NotFoundError") {
       // Let's report the error.
-      Cu.reportError(error);
+      console.error(error);
     }
 
     // If synchronous loading happened in the meantime, exit now.

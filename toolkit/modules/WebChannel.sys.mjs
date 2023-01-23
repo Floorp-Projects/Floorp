@@ -26,7 +26,7 @@ export var WebChannelBroker = Object.create({
     if (!this._channelMap.has(channel)) {
       this._channelMap.set(channel);
     } else {
-      Cu.reportError("Failed to register the channel. Channel already exists.");
+      console.error("Failed to register the channel. Channel already exists.");
     }
   },
 
@@ -40,7 +40,7 @@ export var WebChannelBroker = Object.create({
    */
   unregisterChannel(channelToRemove) {
     if (!this._channelMap.delete(channelToRemove)) {
-      Cu.reportError("Failed to unregister the channel. Channel not found.");
+      console.error("Failed to unregister the channel. Channel not found.");
     }
   },
 
@@ -215,7 +215,7 @@ WebChannel.prototype = {
     if (message && browsingContext && principal) {
       let { currentWindowGlobal } = browsingContext;
       if (!currentWindowGlobal) {
-        Cu.reportError(
+        console.error(
           "Failed to send a WebChannel message. No currentWindowGlobal."
         );
         return;
@@ -229,9 +229,9 @@ WebChannel.prototype = {
           principal,
         });
     } else if (!message) {
-      Cu.reportError("Failed to send a WebChannel message. Message not set.");
+      console.error("Failed to send a WebChannel message. Message not set.");
     } else {
-      Cu.reportError("Failed to send a WebChannel message. Target invalid.");
+      console.error("Failed to send a WebChannel message. Target invalid.");
     }
   },
 
@@ -264,11 +264,11 @@ WebChannel.prototype = {
           },
           sendingContext
         );
-        Cu.reportError("Failed to execute WebChannel callback:");
-        Cu.reportError(ex);
+        console.error("Failed to execute WebChannel callback:");
+        console.error(ex);
       }
     } else {
-      Cu.reportError("No callback set for this channel.");
+      console.error("No callback set for this channel.");
     }
   },
 };

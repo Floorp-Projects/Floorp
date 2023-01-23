@@ -93,7 +93,7 @@ class Validator {
   addSchema(schema, id) {
     const draft = detectSchemaDraft(schema, undefined);
     if (draft && this.#draft != draft) {
-      Cu.reportError(
+      console.error(
         `Adding a draft "${draft}" schema to a draft "${
           this.#draft
         }" validator.`
@@ -162,7 +162,7 @@ function detectSchemaDraft(schema, defaultDraft = "2019-09") {
       return "2020-12";
 
     default:
-      Cu.reportError(
+      console.error(
         `Unexpected $schema "${$schema}", defaulting to ${defaultDraft}.`
       );
       return defaultDraft;

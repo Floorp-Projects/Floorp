@@ -2152,7 +2152,7 @@ function setupDbForShutdown(conn, name) {
         conn.close();
         reject(ex);
       }
-    }).catch(Cu.reportError);
+    }).catch(console.error);
 
     // Make sure that Sqlite.sys.mjs doesn't close until we are done
     // with the high-level connection.
@@ -2177,7 +2177,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBConnPromised", () =>
       setupDbForShutdown(conn, "PlacesUtils read-only connection");
       return conn;
     })
-    .catch(Cu.reportError)
+    .catch(console.error)
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBWrapperPromised", () =>
@@ -2188,7 +2188,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBWrapperPromised", () =>
       setupDbForShutdown(conn, "PlacesUtils wrapped connection");
       return conn;
     })
-    .catch(Cu.reportError)
+    .catch(console.error)
 );
 
 var gAsyncDBLargeCacheConnDeferred = PromiseUtils.defer();
@@ -2225,7 +2225,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBLargeCacheConnPromised", () =>
       gAsyncDBLargeCacheConnDeferred.resolve(conn);
       return conn;
     })
-    .catch(Cu.reportError)
+    .catch(console.error)
 );
 
 /**

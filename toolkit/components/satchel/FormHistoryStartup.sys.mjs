@@ -22,7 +22,7 @@ FormHistoryStartup.prototype = {
     switch (topic) {
       case "idle-daily":
       case "formhistory-expire-now":
-        lazy.FormHistory.expireOldEntries().catch(Cu.reportError);
+        lazy.FormHistory.expireOldEntries().catch(console.error);
         break;
       case "profile-after-change":
         this.init();

@@ -128,7 +128,7 @@ const AdjustableTitle = {
           !DOMException.isInstance(ex) ||
           ex.name != "NoModificationAllowedError"
         ) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
         return;
       }

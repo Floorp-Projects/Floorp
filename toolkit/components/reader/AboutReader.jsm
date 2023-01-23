@@ -79,7 +79,7 @@ var AboutReader = function(
     if (Services.prefs.getBoolPref("reader.errors.includeURLs")) {
       errorMsg += " Tried to load: " + url + ".";
     }
-    Cu.reportError(errorMsg);
+    console.error(errorMsg);
     win.location.href = "about:blank";
     return;
   }

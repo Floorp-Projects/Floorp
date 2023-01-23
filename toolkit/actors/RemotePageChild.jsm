@@ -109,7 +109,7 @@ class RemotePageChild extends JSWindowActorChild {
       try {
         listener(clonedMessage);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }

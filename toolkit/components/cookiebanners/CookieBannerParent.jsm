@@ -132,9 +132,9 @@ class CookieBannerParent extends JSWindowActorParent {
         // is disabled. We will fallback to global pref setting if any errors
         // occur.
         if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-          Cu.reportError("The cookie banner handling service is not available");
+          console.error("The cookie banner handling service is not available");
         } else {
-          Cu.reportError("Fail on getting domain pref:" + e);
+          console.error("Fail on getting domain pref:", e);
         }
       }
     }

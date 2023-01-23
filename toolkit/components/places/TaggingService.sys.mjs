@@ -550,7 +550,7 @@ TagAutoCompleteSearch.prototype = {
       this._search.cancel();
     }
     this._search = new TagSearch(searchString, this, listener);
-    this._search.start().catch(Cu.reportError);
+    this._search.start().catch(console.error);
   },
 
   /**

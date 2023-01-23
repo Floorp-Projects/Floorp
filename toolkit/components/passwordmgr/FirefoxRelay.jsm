@@ -59,7 +59,7 @@ async function getRelayTokenAsync() {
   try {
     return await lazy.fxAccounts.getOAuthToken({ scope: config.scope });
   } catch (e) {
-    Cu.reportError(`There was an error getting the user's token: ${e.message}`);
+    console.error(`There was an error getting the user's token: ${e.message}`);
     return undefined;
   }
 }

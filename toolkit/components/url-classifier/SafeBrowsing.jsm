@@ -385,7 +385,7 @@ var SafeBrowsing = {
       default:
         let err =
           "SafeBrowsing getReportURL() called with unknown kind: " + kind;
-        Cu.reportError(err);
+        console.error(err);
         throw err;
     }
 

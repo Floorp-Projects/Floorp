@@ -45,7 +45,7 @@ function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
     } catch (ex) {
       if (shouldExpectStateChange) {
         ok(false, "Should not have gotten an exception from the dropped link handler, but got: " + ex);
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

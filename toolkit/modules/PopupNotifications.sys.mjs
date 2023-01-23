@@ -644,7 +644,7 @@ PopupNotifications.prototype = {
    * temporarily be hidden while the given panel is showing.
    */
   suppressWhileOpen(panel) {
-    this._hidePanel().catch(Cu.reportError);
+    this._hidePanel().catch(console.error);
     panel.addEventListener("popuphidden", aEvent => {
       this._update();
     });
@@ -739,7 +739,7 @@ PopupNotifications.prototype = {
     // Notifications are suppressed, ensure that the panel is hidden.
     if (!this._suppress) {
       this._suppress = true;
-      this._hidePanel().catch(Cu.reportError);
+      this._hidePanel().catch(console.error);
     }
   },
 
@@ -947,10 +947,10 @@ PopupNotifications.prototype = {
         text.secondName = tmp;
       }
     } else if (array.length > 3) {
-      Cu.reportError(
+      console.error(
         "Unexpected array length encountered in " +
-          "_formatDescriptionMessage: " +
-          array.length
+          "_formatDescriptionMessage: ",
+        array.length
       );
     }
     return text;
@@ -1081,7 +1081,7 @@ PopupNotifications.prototype = {
           }
           popupnotification.setAttribute("origin", uri);
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
           popupnotification.removeAttribute("origin");
         }
       } else {
@@ -1642,7 +1642,7 @@ PopupNotifications.prototype = {
     let other = otherBrowser.ownerGlobal.PopupNotifications;
     if (!other) {
       if (ourNotifications.length) {
-        Cu.reportError(
+        console.error(
           "unable to swap notifications: otherBrowser doesn't support notifications"
         );
       }
@@ -1695,7 +1695,7 @@ PopupNotifications.prototype = {
         return n.options.eventCallback.call(n, event, ...args);
       }
     } catch (error) {
-      Cu.reportError(error);
+      console.error(error);
     }
     return undefined;
   },
@@ -1905,7 +1905,7 @@ PopupNotifications.prototype = {
           event,
         });
       } catch (error) {
-        Cu.reportError(error);
+        console.error(error);
       }
 
       if (action.dismiss) {
@@ -1937,7 +1937,7 @@ PopupNotifications.prototype = {
         source: "menucommand",
       });
     } catch (error) {
-      Cu.reportError(error);
+      console.error(error);
     }
 
     if (target.action.dismiss) {

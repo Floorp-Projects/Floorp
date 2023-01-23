@@ -2020,7 +2020,7 @@ class LoginManagerChild extends JSWindowActorChild {
 
     this._getLoginDataFromParent(form, { showPrimaryPassword: true })
       .then(this.loginsFound.bind(this))
-      .catch(Cu.reportError);
+      .catch(console.error);
   }
 
   isPasswordGenerationForcedOn(passwordField) {
@@ -2203,7 +2203,7 @@ class LoginManagerChild extends JSWindowActorChild {
               userTriggered: true,
             });
           })
-          .catch(Cu.reportError);
+          .catch(console.error);
         // Use `loginGUID !== null` to distinguish whether this is called when the
         // field is filled or tabbed away from. For the latter, don't highlight the field.
       } else if (loginGUID !== null) {

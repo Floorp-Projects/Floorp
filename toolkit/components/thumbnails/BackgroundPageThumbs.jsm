@@ -395,9 +395,7 @@ const BackgroundPageThumbs = {
         return;
       }
 
-      Cu.reportError(
-        "BackgroundThumbnails remote process crashed - recovering"
-      );
+      console.error("BackgroundThumbnails remote process crashed - recovering");
       this._destroyBrowser();
       let curCapture = this._captureQueue.length ? this._captureQueue[0] : null;
       // we could retry the pending capture, but it's possible the crash
@@ -730,7 +728,7 @@ Capture.prototype = {
         try {
           callback.call(options, this.url, reason, info);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
         }
       }
 

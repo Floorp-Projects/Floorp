@@ -112,7 +112,7 @@ export class PrincipalsCollector {
         resolve(principalsMap);
       };
     }).catch(ex => {
-      Cu.reportError("QuotaManagerService promise failed: " + ex);
+      console.error("QuotaManagerService promise failed: ", ex);
       return [];
     });
 

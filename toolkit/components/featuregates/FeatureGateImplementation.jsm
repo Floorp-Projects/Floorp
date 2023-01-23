@@ -268,7 +268,7 @@ class FeatureGateImplementation {
       try {
         observer[method](...args);
       } catch (err) {
-        Cu.reportError(err);
+        console.error(err);
       }
     }
   }
@@ -292,7 +292,7 @@ class FeatureGateImplementation {
         }
       }
     } else {
-      Cu.reportError(
+      console.error(
         new Error(`Unexpected event observed: ${aSubject}, ${aTopic}, ${aData}`)
       );
     }

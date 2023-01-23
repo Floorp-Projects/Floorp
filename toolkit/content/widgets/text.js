@@ -336,7 +336,7 @@
             uri.scheme +
             ": link using \
                          the text-link binding.";
-          Cu.reportError(msg);
+          console.error(msg);
           return;
         }
 
@@ -352,7 +352,7 @@
           return;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
 
       aEvent.preventDefault();

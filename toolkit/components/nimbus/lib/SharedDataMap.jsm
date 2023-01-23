@@ -42,13 +42,13 @@ class SharedDataMap extends EventEmitter {
             const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
             path = PathUtils.join(profileDir, `${sharedDataKey}.json`);
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
         try {
           store = new lazy.JSONFile({ path });
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
         return store;
       });
@@ -66,7 +66,7 @@ class SharedDataMap extends EventEmitter {
         this._syncToChildren({ flush: true });
         this._checkIfReady();
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }

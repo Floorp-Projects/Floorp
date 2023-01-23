@@ -903,7 +903,7 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
         aResponse.finish();
         info("Interruptible request finished.");
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   });
 }
 

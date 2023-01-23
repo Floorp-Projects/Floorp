@@ -872,7 +872,7 @@ const StorageAccessCleaner = {
         try {
           Services.perms.removePermission(perm);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       });
   },
@@ -1174,7 +1174,7 @@ const ClientAuthRememberCleaner = {
               originSuffix
             );
           } catch (e) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 
@@ -1572,7 +1572,7 @@ ClearDataService.prototype = Object.freeze({
     // This is mainly needed for GeckoView that doesn't start QMS on startup
     // time.
     if (!Services.qms) {
-      Cu.reportError("Failed initializiation of QuotaManagerService.");
+      console.error("Failed initializiation of QuotaManagerService.");
     }
   },
 
@@ -1733,7 +1733,7 @@ ClearDataService.prototype = Object.freeze({
       return Promise.all(
         c.cleaners.map(cleaner => {
           return aHelper(cleaner).catch(e => {
-            Cu.reportError(e);
+            console.error(e);
             resultFlags |= c.flag;
           });
         })

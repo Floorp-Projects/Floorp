@@ -53,7 +53,7 @@ export var KeywordUtils = {
         }
       } catch (ex) {
         // makeURI() throws if url is invalid.
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

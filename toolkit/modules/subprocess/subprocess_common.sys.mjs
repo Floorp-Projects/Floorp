@@ -104,7 +104,7 @@ export class PromiseWorker extends ChromeWorker {
       try {
         listener(event.data);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }

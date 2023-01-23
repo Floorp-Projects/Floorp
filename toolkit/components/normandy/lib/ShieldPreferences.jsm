@@ -74,7 +74,7 @@ var ShieldPreferences = {
 
           const allPromises = studyPromises
             .concat(experimentPromises)
-            .map(p => p && p.catch(err => Cu.reportError(err)));
+            .map(p => p && p.catch(err => console.error(err)));
           await Promise.all(allPromises);
         }
         break;

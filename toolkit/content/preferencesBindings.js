@@ -240,7 +240,7 @@ const Preferences = (window.Preferences = (function() {
         });
         return aTarget.dispatchEvent(event);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
       return false;
     },
@@ -441,7 +441,7 @@ const Preferences = (window.Preferences = (function() {
             return rv;
           }
         } catch (e) {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
 

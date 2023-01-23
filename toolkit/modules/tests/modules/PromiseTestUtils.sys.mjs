@@ -50,7 +50,7 @@ export var PromiseTestUtils = {
    */
   init() {
     if (this._initialized) {
-      Cu.reportError("This object was already initialized.");
+      console.error("This object was already initialized.");
       return;
     }
 

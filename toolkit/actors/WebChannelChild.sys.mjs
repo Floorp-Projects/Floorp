@@ -65,7 +65,7 @@ export class WebChannelChild extends JSWindowActorChild {
           whitelisted => principal.originNoSuffix == whitelisted.originNoSuffix
         );
         if (!objectsAllowed) {
-          Cu.reportError(
+          console.error(
             "WebChannelMessageToChrome sent with an object from a non-whitelisted principal"
           );
           return;
@@ -82,7 +82,7 @@ export class WebChannelChild extends JSWindowActorChild {
         principal,
       });
     } else {
-      Cu.reportError("WebChannel message failed. No message detail.");
+      console.error("WebChannel message failed. No message detail.");
     }
   }
 
@@ -99,7 +99,7 @@ export class WebChannelChild extends JSWindowActorChild {
         eventTarget = ContentDOMReference.resolve(eventTarget);
       }
       if (!eventTarget) {
-        Cu.reportError("WebChannel message failed. No target.");
+        console.error("WebChannel message failed. No target.");
         return;
       }
 
@@ -123,10 +123,10 @@ export class WebChannelChild extends JSWindowActorChild {
           })
         );
       } else {
-        Cu.reportError("WebChannel message failed. Principal mismatch.");
+        console.error("WebChannel message failed. Principal mismatch.");
       }
     } else {
-      Cu.reportError("WebChannel message failed. No message data.");
+      console.error("WebChannel message failed. No message data.");
     }
   }
 }

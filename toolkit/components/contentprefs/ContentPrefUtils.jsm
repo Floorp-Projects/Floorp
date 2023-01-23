@@ -43,7 +43,7 @@ function safeCallback(callbackObj, methodName, args) {
   try {
     callbackObj[methodName].apply(callbackObj, args);
   } catch (err) {
-    Cu.reportError(err);
+    console.error(err);
   }
 }
 

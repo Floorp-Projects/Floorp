@@ -412,7 +412,7 @@ FinderHighlighter.prototype = {
     try {
       window = this.getTopWindow(window);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return;
     }
     let dict = this.getForWindow(window);

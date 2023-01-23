@@ -59,7 +59,7 @@ function recordEvent(service, source = {}) {
   } catch (err) {
     // If the telemetry throws just log the error so it doesn't break any
     // functionality.
-    Cu.reportError(err);
+    console.error(err);
   }
 }
 

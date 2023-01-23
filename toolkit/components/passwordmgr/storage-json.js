@@ -84,7 +84,7 @@ class LoginManagerStorage_json {
         // Load the data asynchronously.
         this.log(`Opening database at ${this._store.path}.`);
         await this._store.load();
-      })().catch(Cu.reportError);
+      })().catch(console.error);
     } catch (e) {
       this.log(`Initialization failed ${e.name}.`);
       throw new Error("Initialization failed");

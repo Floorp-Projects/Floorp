@@ -72,7 +72,7 @@ function validateCert(aCertificate, aCerts) {
 
   if (!aCertificate) {
     const missingCertErr = "A required certificate was not present.";
-    Cu.reportError(missingCertErr);
+    console.error(missingCertErr);
     throw new Ce(missingCertErr, Cr.NS_ERROR_ILLEGAL_VALUE);
   }
 
@@ -113,7 +113,7 @@ function validateCert(aCertificate, aCerts) {
     errors.forEach(Cu.reportError.bind(Cu));
     const certCheckErr =
       "Certificate checks failed. See previous errors for details.";
-    Cu.reportError(certCheckErr);
+    console.error(certCheckErr);
     throw new Ce(certCheckErr, Cr.NS_ERROR_ILLEGAL_VALUE);
   }
 }

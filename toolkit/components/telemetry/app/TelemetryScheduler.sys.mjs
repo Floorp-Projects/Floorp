@@ -121,7 +121,7 @@ export var TelemetryScheduler = {
       if (this._log) {
         this._log.error("shutdown - Already shut down");
       } else {
-        Cu.reportError("TelemetryScheduler.shutdown - Already shut down");
+        console.error("TelemetryScheduler.shutdown - Already shut down");
       }
       return;
     }

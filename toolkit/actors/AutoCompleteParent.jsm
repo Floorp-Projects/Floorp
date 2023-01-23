@@ -488,7 +488,7 @@ class AutoCompleteParent extends JSWindowActorParent {
       try {
         listener(window);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }

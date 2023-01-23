@@ -596,7 +596,7 @@ Download.prototype = {
     this._deferSucceeded.resolve();
 
     if (this.launchWhenSucceeded) {
-      this.launch().catch(Cu.reportError);
+      this.launch().catch(console.error);
 
       // Always schedule files to be deleted at the end of the private browsing
       // mode, regardless of the value of the pref.
@@ -1072,7 +1072,7 @@ Download.prototype = {
 
         this._notifyChange();
       }
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 
   /**
@@ -2053,7 +2053,7 @@ DownloadSaver.prototype = {
   addToHistory() {
     if (AppConstants.MOZ_PLACES) {
       lazy.DownloadHistory.addDownloadToHistory(this.download).catch(
-        Cu.reportError
+        console.error
       );
     }
   },

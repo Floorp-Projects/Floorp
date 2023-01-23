@@ -113,9 +113,7 @@ function goUpdateCommand(aCommand) {
 
     goSetCommandEnabled(aCommand, enabled);
   } catch (e) {
-    Cu.reportError(
-      "An error occurred updating the " + aCommand + " command: " + e
-    );
+    console.error("An error occurred updating the ", aCommand, " command: ", e);
   }
 }
 
@@ -128,8 +126,11 @@ function goDoCommand(aCommand) {
       controller.doCommand(aCommand);
     }
   } catch (e) {
-    Cu.reportError(
-      "An error occurred executing the " + aCommand + " command: " + e
+    console.error(
+      "An error occurred executing the ",
+      aCommand,
+      " command: ",
+      e
     );
   }
 }

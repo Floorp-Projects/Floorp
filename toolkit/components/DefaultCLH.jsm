@@ -45,7 +45,7 @@ nsDefaultCLH.prototype = {
       }
 
       dump(out + "\n");
-      Cu.reportError(out);
+      console.error(out);
     }
 
     var printDirList;
@@ -65,7 +65,7 @@ nsDefaultCLH.prototype = {
       }
 
       dump(out + "\n");
-      Cu.reportError(out);
+      console.error(out);
     }
 
     if (cmdLine.handleFlag("silent", false)) {

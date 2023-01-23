@@ -87,11 +87,11 @@ FinderParent.prototype = {
         l[aCallback].apply(l, aArgs);
       } catch (e) {
         if (!l[aCallback]) {
-          Cu.reportError(
+          console.error(
             `Missing ${aCallback} callback on RemoteFinderListener`
           );
         } else {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -565,7 +565,7 @@ FinderParent.prototype = {
           return;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

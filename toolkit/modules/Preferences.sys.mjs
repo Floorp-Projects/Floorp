@@ -137,13 +137,12 @@ Preferences._set = function(prefName, prefValue) {
       }
       this._prefBranch.setIntPref(prefName, prefValue);
       if (prefValue % 1 != 0) {
-        Cu.reportError(
-          "Warning: setting the " +
-            prefName +
-            " pref to the " +
-            "non-integer number " +
-            prefValue +
-            " converted it " +
+        console.error(
+          "Warning: setting the ",
+          prefName,
+          " pref to the non-integer number ",
+          prefValue,
+          " converted it " +
             "to the integer number " +
             this.get(prefName) +
             "; to retain fractional precision, store non-integer " +
@@ -343,7 +342,7 @@ Preferences.ignore = function(prefName, callback, thisObject) {
     Preferences._prefBranch.removeObserver(fullPrefName, observer);
     observers.splice(observers.indexOf(observer), 1);
   } else {
-    Cu.reportError(
+    console.error(
       `Attempt to stop observing a preference "${prefName}" that's not being observed`
     );
   }

@@ -297,7 +297,7 @@ var gViewSourceUtils = {
         }
       } catch (ex) {
         // we failed loading it with the external editor.
-        Cu.reportError(ex);
+        console.error(ex);
         reject(data);
       }
     });
@@ -317,7 +317,7 @@ var gViewSourceUtils = {
 
       return editor;
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     return null;
@@ -373,7 +373,7 @@ var gViewSourceUtils = {
         this.resolve(this.data);
       } catch (ex) {
         // we failed loading it with the external editor.
-        Cu.reportError(ex);
+        console.error(ex);
         this.reject(this.data);
       } finally {
         this.destroy();

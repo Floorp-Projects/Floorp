@@ -279,11 +279,11 @@ export let RemotePageAccessManager = {
       aDocument
     );
     if (!accessMapForFeature) {
-      Cu.reportError(
-        "RemotePageAccessManager does not allow access to Feature: " +
-          aFeature +
-          " for: " +
-          aDocument.location
+      console.error(
+        "RemotePageAccessManager does not allow access to Feature: ",
+        aFeature,
+        " for: ",
+        aDocument.location
       );
 
       return false;

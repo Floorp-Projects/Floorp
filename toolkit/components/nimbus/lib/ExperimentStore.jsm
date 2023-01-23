@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyGetter(lazy, "syncDataStore", () => {
       try {
         branch.setStringPref(pref, JSON.stringify(value));
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     },
     _trySetTypedPrefValue(pref, value) {
@@ -302,7 +302,7 @@ class ExperimentStore extends SharedDataMap {
     try {
       data = Object.values(this._data || {});
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     return data;

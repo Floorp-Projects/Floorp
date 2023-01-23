@@ -114,7 +114,7 @@ class PreferenceRolloutAction extends BaseAction {
             break;
           }
           default: {
-            Cu.reportError(
+            console.error(
               new Error(
                 `Updated pref rollout in unexpected state: ${existingRollout.state}`
               )

@@ -26,11 +26,11 @@ InlineSpellChecker.prototype = {
     if (this.mRemote) {
       // We shouldn't get here, but let's just recover instead of bricking the
       // menu by throwing exceptions:
-      Cu.reportError(new Error("Unexpected remote spellchecker present!"));
+      console.error(new Error("Unexpected remote spellchecker present!"));
       try {
         this.mRemote.uninit();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       this.mRemote = null;
     }

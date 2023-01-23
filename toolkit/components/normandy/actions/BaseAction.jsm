@@ -89,14 +89,12 @@ class BaseAction {
         break;
       }
       default: {
-        Cu.reportError(
-          new Error("BaseAction.fail() called at unexpected time")
-        );
+        console.error(new Error("BaseAction.fail() called at unexpected time"));
       }
     }
     this.state = BaseAction.STATE_FAILED;
     this.lastError = err;
-    Cu.reportError(err);
+    console.error(err);
   }
 
   // Gets the name of the action. Does not necessarily match the
@@ -170,7 +168,7 @@ class BaseAction {
       try {
         recipe.arguments = this.validateArguments(recipe.arguments);
       } catch (error) {
-        Cu.reportError(error);
+        console.error(error);
         uptakeResult = Uptake.RECIPE_EXECUTION_ERROR;
         suitability = BaseAction.suitability.ARGUMENTS_INVALID;
       }
@@ -179,7 +177,7 @@ class BaseAction {
     try {
       await this._processRecipe(recipe, suitability);
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
       uptakeResult = Uptake.RECIPE_EXECUTION_ERROR;
     }
     Uptake.reportRecipe(recipe, uptakeResult);
@@ -249,7 +247,7 @@ class BaseAction {
           }
 
           this.lastError = err;
-          Cu.reportError(err);
+          console.error(err);
         }
         break;
       }

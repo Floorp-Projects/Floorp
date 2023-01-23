@@ -22,7 +22,7 @@ export class WebChannelParent extends JSWindowActorParent {
       try {
         data = JSON.parse(data);
       } catch (e) {
-        Cu.reportError("Failed to parse WebChannel data as a JSON object");
+        console.error("Failed to parse WebChannel data as a JSON object");
         return;
       }
     }
@@ -52,7 +52,7 @@ export class WebChannelParent extends JSWindowActorParent {
         }
       }
     } else {
-      Cu.reportError("WebChannel channel id missing");
+      console.error("WebChannel channel id missing");
     }
   }
 
@@ -85,8 +85,8 @@ export class WebChannelParent extends JSWindowActorParent {
           principal,
         });
     } else {
-      Cu.reportError("Failed to send a WebChannel error. Target invalid.");
+      console.error("Failed to send a WebChannel error. Target invalid.");
     }
-    Cu.reportError(id.toString() + " error message. " + errorMsg);
+    console.error(id.toString() + " error message. ", errorMsg);
   }
 }

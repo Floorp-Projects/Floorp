@@ -290,7 +290,7 @@ TrackingDBService.prototype = {
         }
       });
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     // If milestone CFR messaging is not enabled we don't need to update the milestone pref or send the event.

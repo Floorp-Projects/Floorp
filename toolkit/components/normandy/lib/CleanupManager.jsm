@@ -33,7 +33,7 @@ class CleanupManagerClass {
           try {
             await handler();
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
       })();

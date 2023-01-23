@@ -137,10 +137,10 @@ function LinksStorage() {
   } catch (ex) {
     // Something went wrong in the update process, we can't recover from here,
     // so just clear the storage and start from scratch (dataloss!).
-    Cu.reportError(
+    console.error(
       "Unable to migrate the newTab storage to the current version. " +
-        "Restarting from scratch.\n" +
-        ex
+        "Restarting from scratch.\n",
+      ex
     );
     this.clear();
   }
@@ -560,7 +560,7 @@ var BlockedLinks = {
         try {
           obs[methodName](...args);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
         }
       }
     }
@@ -719,7 +719,7 @@ var PlacesProvider = {
         try {
           obs[aMethodName](this, aArg);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
         }
       }
     }
@@ -1018,7 +1018,7 @@ var ActivityStreamProvider = {
         return [];
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       return [];
     }
     /* Extract relevant parts needed to show this card as a highlight:
@@ -2143,7 +2143,7 @@ var Links = {
         try {
           obs[methodName](this, ...args);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
         }
       }
     }

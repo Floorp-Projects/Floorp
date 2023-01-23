@@ -42,7 +42,7 @@ var WindowsVersionInfo = {
       if (throwOnError) {
         throw err;
       }
-      Cu.reportError(err);
+      console.error(err);
       return WindowsVersionInfo.UNKNOWN_VERSION_INFO;
     }
 

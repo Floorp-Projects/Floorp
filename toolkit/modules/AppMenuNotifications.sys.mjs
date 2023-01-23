@@ -147,7 +147,7 @@ export var AppMenuNotifications = {
       try {
         action.callback(win, fromDoorhanger);
       } catch (error) {
-        Cu.reportError(error);
+        console.error(error);
       }
 
       dismiss = action.dismiss;

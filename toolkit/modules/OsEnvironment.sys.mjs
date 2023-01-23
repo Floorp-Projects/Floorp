@@ -56,7 +56,7 @@ export let OsEnvironment = {
     try {
       haveAppSourcesFeature = OsEnvironment.Policy.windowsVersionHasAppSourcesFeature();
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       Services.telemetry.scalarSet(appSourceScalar, "Error");
       return;
     }
@@ -69,7 +69,7 @@ export let OsEnvironment = {
     try {
       allowedAppSources = OsEnvironment.Policy.getAllowedAppSources();
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       Services.telemetry.scalarSet(appSourceScalar, "Error");
       return;
     }
