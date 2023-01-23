@@ -8,12 +8,6 @@ const { ExtensionPermissions } = ChromeUtils.import(
 
 loadTestSubscript("head_unified_extensions.js");
 
-add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
-  });
-});
-
 function makeRunAtScript(runAt) {
   return `
     window.order ??= [];
@@ -27,7 +21,7 @@ async function makeExtension({
   manifest_version = 3,
   granted = [],
   noStaticScript = false,
-  withUnifiedExtensionsPanel,
+  verifyExtensionsPanel,
 }) {
   info(`Loading extension ` + JSON.stringify({ id, granted }));
 
@@ -45,9 +39,8 @@ async function makeExtension({
         ],
   };
 
-  // When the unified extensions pref is enabled, we want to verify the behavior
-  // of the non-CUI widgets inside the panel.
-  if (!withUnifiedExtensionsPanel) {
+  if (!verifyExtensionsPanel) {
+    // Pin the browser action widget to the navbar (toolbar).
     if (manifest_version === 3) {
       manifest.action = {
         default_area: "navbar",
@@ -170,14 +163,14 @@ async function testActiveScript(
   expectCount,
   expectHosts,
   win,
-  withUnifiedExtensionsPanel
+  verifyExtensionsPanel
 ) {
   info(`Testing ${extension.id} on ${gBrowser.currentURI.spec}.`);
 
   extension.sendMessage("expect-count", expectCount);
   await extension.awaitMessage("expect-done");
 
-  if (withUnifiedExtensionsPanel) {
+  if (verifyExtensionsPanel) {
     await clickUnifiedExtensionsItem(win, extension.id, true);
   } else {
     await clickBrowserAction(extension, win);
@@ -202,7 +195,7 @@ async function testActiveScript(
   // The test extension queries the current active tab and then execute the
   // counter content script from inside a `browser.test.withHandlingUserInput()`
   // callback.
-  if (withUnifiedExtensionsPanel) {
+  if (verifyExtensionsPanel) {
     extension.sendMessage("execute-count-script");
   }
 
@@ -212,38 +205,38 @@ async function testActiveScript(
 }
 
 const verifyActionActiveScript = async ({
-  win,
-  withUnifiedExtensionsPanel = false,
-}) => {
+  win = window,
+  verifyExtensionsPanel = false,
+} = {}) => {
   // Static MV2 extension content scripts are not affected.
   let ext0 = await makeExtension({
     id: "ext0@test",
     manifest_version: 2,
     granted: ["*://example.com/*"],
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   let ext1 = await makeExtension({
     id: "ext1@test",
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   let ext2 = await makeExtension({
     id: "ext2@test",
     granted: ["*://example.com/*"],
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   let ext3 = await makeExtension({
     id: "ext3@test",
     granted: ["*://mochi.test/*"],
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   // Test run_at script ordering.
   let ext4 = await makeExtension({
     id: "ext4@test",
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   // Test without static scripts in the manifest, because they add optional
@@ -251,17 +244,17 @@ const verifyActionActiveScript = async ({
   let ext5 = await makeExtension({
     id: "ext5@test",
     noStaticScript: true,
-    withUnifiedExtensionsPanel,
+    verifyExtensionsPanel,
   });
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     info("No content scripts run on top level about:blank.");
-    await testActiveScript(ext0, 0, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext1, 0, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext2, 0, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext3, 0, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext4, 0, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext5, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext0, 0, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext1, 0, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext2, 0, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext3, 0, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext4, 0, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext5, 0, [], win, verifyExtensionsPanel);
   });
 
   let dynamicScript = {
@@ -303,21 +296,21 @@ const verifyActionActiveScript = async ({
     );
 
     info("Clicking ext0 button should not run content script again.");
-    await testActiveScript(ext0, 3, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext0, 3, [], win, verifyExtensionsPanel);
 
     info("ext2 has host permission, content script should run automatically.");
     let static2 = await ext2.awaitMessage("injected");
     is(static2, "static@example.com", "Script ran automatically");
 
     info("Clicking ext2 button should not run content script again.");
-    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext2, 1, [], win, verifyExtensionsPanel);
 
     await testActiveScript(
       ext1,
       1,
       ["static@example.com"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     await testActiveScript(
@@ -329,7 +322,7 @@ const verifyActionActiveScript = async ({
         "static@example.com",
       ],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     await testActiveScript(
@@ -337,7 +330,7 @@ const verifyActionActiveScript = async ({
       1,
       ["static@example.com"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     info("ext5 only has dynamic scripts that run with activeTab.");
@@ -346,7 +339,7 @@ const verifyActionActiveScript = async ({
       2,
       ["dynamic-frame@example.com", "dynamic-top@example.com"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     // Navigate same-origin iframe to another page, activeScripts shouldn't run.
@@ -359,18 +352,18 @@ const verifyActionActiveScript = async ({
     is(dynamic0, "dynamic-frame@example.com", "Script ran automatically");
 
     info("Clicking all buttons again should not activeScripts.");
-    await testActiveScript(ext0, 4, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext1, 1, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext0, 4, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext1, 1, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext2, 1, [], win, verifyExtensionsPanel);
     // Except ext3 dynamic allFrames script runs in the new navigated page.
     await testActiveScript(
       ext3,
       4,
       ["dynamic-frame@example.com"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
-    await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext4, 1, [], win, verifyExtensionsPanel);
 
     // ext5 dynamic allFrames script also runs in the new navigated page.
     await testActiveScript(
@@ -378,7 +371,7 @@ const verifyActionActiveScript = async ({
       3,
       ["dynamic-frame@example.com"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
   });
 
@@ -400,7 +393,7 @@ const verifyActionActiveScript = async ({
     is(static0, "static@mochi.test:8888", "Script ran automatically.");
 
     info("Clicking ext0 button should not run content script again.");
-    await testActiveScript(ext0, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext0, 1, [], win, verifyExtensionsPanel);
 
     info("ext3 has host permission, content script should run automatically.");
     let received3 = [
@@ -414,21 +407,21 @@ const verifyActionActiveScript = async ({
     );
 
     info("Clicking ext3 button should not run content script again.");
-    await testActiveScript(ext3, 2, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext3, 2, [], win, verifyExtensionsPanel);
 
     await testActiveScript(
       ext1,
       1,
       ["static@mochi.test:8888"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
     await testActiveScript(
       ext2,
       1,
       ["static@mochi.test:8888"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     // Expect run_at content scripts to run in the correct order.
@@ -442,7 +435,7 @@ const verifyActionActiveScript = async ({
         "static@mochi.test:8888",
       ],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     info("ext5 dynamic scripts with activeTab should run when activated.");
@@ -451,16 +444,16 @@ const verifyActionActiveScript = async ({
       1,
       ["dynamic-top@mochi.test:8888"],
       win,
-      withUnifiedExtensionsPanel
+      verifyExtensionsPanel
     );
 
     info("Clicking all buttons again should not run content scripts.");
-    await testActiveScript(ext0, 1, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext1, 1, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext3, 2, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
-    await testActiveScript(ext5, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext0, 1, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext1, 1, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext2, 1, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext3, 2, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext4, 1, [], win, verifyExtensionsPanel);
+    await testActiveScript(ext5, 1, [], win, verifyExtensionsPanel);
   });
 
   await ext0.unload();
@@ -472,13 +465,9 @@ const verifyActionActiveScript = async ({
 };
 
 add_task(async function test_action_activeScript() {
-  await verifyActionActiveScript({ win: window });
+  await verifyActionActiveScript();
 });
 
 add_task(async function test_activeScript_with_unified_extensions_panel() {
-  const win = await promiseEnableUnifiedExtensions();
-
-  await verifyActionActiveScript({ win, withUnifiedExtensionsPanel: true });
-
-  await BrowserTestUtils.closeWindow(win);
+  await verifyActionActiveScript({ verifyExtensionsPanel: true });
 });

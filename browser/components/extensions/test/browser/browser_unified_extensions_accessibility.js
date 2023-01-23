@@ -5,22 +5,6 @@
 
 loadTestSubscript("head_unified_extensions.js");
 
-let win;
-
-add_setup(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
-  });
-
-  // Only load a new window with the unified extensions feature enabled once to
-  // speed up the execution of this test file.
-  win = await promiseEnableUnifiedExtensions();
-
-  registerCleanupFunction(async () => {
-    await BrowserTestUtils.closeWindow(win);
-  });
-});
-
 add_task(async function test_keyboard_navigation_activeScript() {
   const extension1 = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -60,17 +44,17 @@ add_task(async function test_keyboard_navigation_activeScript() {
   });
 
   BrowserTestUtils.loadURIString(
-    win.gBrowser.selectedBrowser,
+    gBrowser.selectedBrowser,
     "https://example.org/"
   );
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   await Promise.all([extension1.startup(), extension2.startup()]);
 
   // Open the extension panel.
-  await openExtensionsPanel(win);
+  await openExtensionsPanel();
 
-  let item = getUnifiedExtensionsItem(win, extension1.id);
+  let item = getUnifiedExtensionsItem(extension1.id);
   ok(item, `expected item for ${extension1.id}`);
 
   info("moving focus to first item in the unified extensions panel");
@@ -78,35 +62,35 @@ add_task(async function test_keyboard_navigation_activeScript() {
     ".unified-extensions-item-action-button"
   );
   let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("VK_TAB", {}, win);
+  EventUtils.synthesizeKey("VK_TAB", {});
   await focused;
   is(
     actionButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected action button of first extension item to be focused"
   );
 
-  item = getUnifiedExtensionsItem(win, extension2.id);
+  item = getUnifiedExtensionsItem(extension2.id);
   ok(item, `expected item for ${extension2.id}`);
 
   info("moving focus to second item in the unified extensions panel");
   actionButton = item.querySelector(".unified-extensions-item-action-button");
   focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   await focused;
   is(
     actionButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected action button of second extension item to be focused"
   );
 
   info("granting permission");
   const popupHidden = BrowserTestUtils.waitForEvent(
-    win.document,
+    document,
     "popuphidden",
     true
   );
-  EventUtils.synthesizeKey(" ", {}, win);
+  EventUtils.synthesizeKey(" ", {});
   await Promise.all([popupHidden, extension2.awaitMessage("script executed")]);
 
   await Promise.all([extension1.unload(), extension2.unload()]);
@@ -143,16 +127,16 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   await extension3.startup();
 
   // Open the extension panel.
-  await openExtensionsPanel(win);
+  await openExtensionsPanel();
 
-  let item = getUnifiedExtensionsItem(win, extension1.id);
+  let item = getUnifiedExtensionsItem(extension1.id);
   ok(item, `expected item for ${extension1.id}`);
 
   let messageDeck = item.querySelector(".unified-extensions-item-message-deck");
   ok(messageDeck, "expected a message deck element");
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
     "expected selected message in the deck to be the default message"
   );
 
@@ -161,16 +145,16 @@ add_task(async function test_keyboard_navigation_opens_menu() {
     ".unified-extensions-item-action-button"
   );
   let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("VK_TAB", {}, win);
+  EventUtils.synthesizeKey("VK_TAB", {});
   await focused;
   is(
     actionButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected action button of the first extension item to be focused"
   );
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
     "expected selected message in the deck to be the hover message"
   );
 
@@ -180,37 +164,37 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   let menuButton = item.querySelector(".unified-extensions-item-menu-button");
   focused = BrowserTestUtils.waitForEvent(menuButton, "focus");
   ok(menuButton, "expected menu button");
-  EventUtils.synthesizeKey("VK_TAB", {}, win);
+  EventUtils.synthesizeKey("VK_TAB", {});
   await focused;
   is(
     menuButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected menu button in first extension item to be focused"
   );
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
     "expected selected message in the deck to be the message when hovering the menu button"
   );
 
   info("opening menu of the first item");
-  const contextMenu = win.document.getElementById(
+  const contextMenu = document.getElementById(
     "unified-extensions-context-menu"
   );
   ok(contextMenu, "expected menu");
   const shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  EventUtils.synthesizeKey(" ", {}, win);
+  EventUtils.synthesizeKey(" ", {});
   await shown;
 
-  await closeChromeContextMenu(contextMenu.id, null, win);
+  await closeChromeContextMenu(contextMenu.id, null);
 
   info("moving focus back to the action button of the first item");
   focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, win);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
   await focused;
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
     "expected selected message in the deck to be the hover message"
   );
 
@@ -220,7 +204,7 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   // "activeTab", which makes the extension "clickable". This allows us to
   // verify the focus/blur behavior of custom elments.
   info("moving focus to third item in the panel");
-  item = getUnifiedExtensionsItem(win, extension3.id);
+  item = getUnifiedExtensionsItem(extension3.id);
   ok(item, `expected item for ${extension3.id}`);
   actionButton = item.querySelector(".unified-extensions-item-action-button");
   ok(actionButton, `expected action button for ${extension3.id}`);
@@ -228,22 +212,22 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   ok(messageDeck, `expected message deck for ${extension3.id}`);
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
     "expected selected message in the deck to be the default message"
   );
   // Now that we checked everything on this third extension, let's actually
   // focus it with the arrow down key.
   focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
   await focused;
   is(
     actionButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected action button of the third extension item to be focused"
   );
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
     "expected selected message in the deck to be the hover message"
   );
 
@@ -253,30 +237,30 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   menuButton = item.querySelector(".unified-extensions-item-menu-button");
   focused = BrowserTestUtils.waitForEvent(menuButton, "focus");
   ok(menuButton, "expected menu button");
-  EventUtils.synthesizeKey("VK_TAB", {}, win);
+  EventUtils.synthesizeKey("VK_TAB", {});
   await focused;
   is(
     menuButton,
-    win.document.activeElement,
+    document.activeElement,
     "expected menu button in third extension item to be focused"
   );
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
     "expected selected message in the deck to be the message when hovering the menu button"
   );
 
   info("moving focus back to the action button of the third item");
   focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, win);
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
   await focused;
   is(
     messageDeck.selectedIndex,
-    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
     "expected selected message in the deck to be the hover message"
   );
 
-  await closeExtensionsPanel(win);
+  await closeExtensionsPanel();
 
   await extension1.unload();
   await extension2.unload();
@@ -284,11 +268,11 @@ add_task(async function test_keyboard_navigation_opens_menu() {
 });
 
 add_task(async function test_open_panel_with_keyboard_navigation() {
-  const { button, panel } = win.gUnifiedExtensions;
+  const { button, panel } = gUnifiedExtensions;
   ok(button, "expected button");
   ok(panel, "expected panel");
 
-  const listView = getListView(win);
+  const listView = getListView();
   ok(listView, "expected list view");
 
   // Force focus on the unified extensions button.
@@ -301,18 +285,18 @@ add_task(async function test_open_panel_with_keyboard_navigation() {
 
   // Use the "space" key to open the panel.
   let viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
-  EventUtils.synthesizeKey(" ", {}, win);
+  EventUtils.synthesizeKey(" ", {});
   await viewShown;
 
-  await closeExtensionsPanel(win);
+  await closeExtensionsPanel();
 
   // Force focus on the unified extensions button again.
   forceFocusUnifiedExtensionsButton();
 
   // Use the "return" key to open the panel.
   viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
-  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  EventUtils.synthesizeKey("KEY_Enter", {});
   await viewShown;
 
-  await closeExtensionsPanel(win);
+  await closeExtensionsPanel();
 });
