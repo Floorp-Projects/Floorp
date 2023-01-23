@@ -110,7 +110,7 @@ static bool IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent) {
 }
 
 CredentialsContainer::CredentialsContainer(nsPIDOMWindowInner* aParent)
-    : mParent(aParent), mActiveIdentityRequest(false) {
+    : mParent(aParent) {
   MOZ_ASSERT(aParent);
 }
 
@@ -159,27 +159,14 @@ already_AddRefed<Promise> CredentialsContainer::Get(
       StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
     RefPtr<Promise> promise = CreatePromise(mParent, aRv);
 
-    if (mActiveIdentityRequest) {
-      promise->MaybeRejectWithInvalidStateError(
-          "Concurrent 'identity' credentials.get requests are not supported."_ns);
-      return promise.forget();
-    }
-    mActiveIdentityRequest = true;
-
-    RefPtr<CredentialsContainer> self = this;
-
     IdentityCredential::DiscoverFromExternalSource(
         mParent, aOptions, IsSameOriginWithAncestors(mParent))
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [self, promise](const RefPtr<IdentityCredential>& credential) {
-              self->mActiveIdentityRequest = false;
+            [promise](RefPtr<IdentityCredential> credential) {
               promise->MaybeResolve(credential);
             },
-            [self, promise](nsresult error) {
-              self->mActiveIdentityRequest = false;
-              promise->MaybeReject(error);
-            });
+            [promise](nsresult error) { promise->MaybeReject(error); });
 
     return promise.forget();
   }

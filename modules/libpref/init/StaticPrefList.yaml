@@ -3764,13 +3764,6 @@
   value: false
   mirror: always
 
-# pref controls `identity` credential platform behavior for testing. When true,
-# the .well-known file check is not performed.
-- name: dom.security.credentialmanagement.identity.test_ignore_well_known
-  type: bool
-  value: false
-  mirror: always
-
 # pref controls whether we should delay identity credential rejections at all
 - name: dom.security.credentialmanagement.identity.reject_delay.enabled
   type: bool

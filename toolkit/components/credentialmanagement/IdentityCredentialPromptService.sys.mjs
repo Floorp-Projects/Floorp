@@ -112,11 +112,6 @@ export class IdentityCredentialPromptService {
         browsingContext.currentWindowContext.documentPrincipal.originNoSuffix;
       let options = {
         name: currentOrigin,
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
       };
       let mainAction = {
         label: cancelLabel,
@@ -236,13 +231,7 @@ export class IdentityCredentialPromptService {
       }
 
       // Construct the necessary arguments for notification behavior
-      let options = {
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
-      };
+      let options = {};
       let mainAction = {
         label: acceptLabel,
         accessKey: acceptKey,
@@ -358,11 +347,6 @@ export class IdentityCredentialPromptService {
       // Construct the necessary arguments for notification behavior
       let options = {
         name: currentOrigin,
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
       };
       let mainAction = {
         label: cancelLabel,
