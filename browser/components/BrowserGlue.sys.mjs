@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+  PermissionUI: "resource:///modules/PermissionUI.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
@@ -75,7 +76,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PdfJs: "resource://pdf.js/PdfJs.jsm",
-  PermissionUI: "resource:///modules/PermissionUI.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PublicSuffixList: "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm",
@@ -5210,7 +5210,7 @@ var ContentBlockingCategoriesPrefs = {
  * can also be overridden by system add-ons or tests to provide new ones.
  *
  * This override ability is provided by Integration.sys.mjs. See
- * PermissionUI.jsm for an example of how to provide a new prompt
+ * PermissionUI.sys.mjs for an example of how to provide a new prompt
  * from an add-on.
  */
 const ContentPermissionIntegration = {
@@ -5228,7 +5228,7 @@ const ContentPermissionIntegration = {
    *        Example: "geolocation"
    * @param {nsIContentPermissionRequest} request
    *        The request for a permission from content.
-   * @return {PermissionPrompt} (see PermissionUI.jsm),
+   * @return {PermissionPrompt} (see PermissionUI.sys.mjs),
    *         or undefined if the type cannot be handled.
    */
   createPermissionPrompt(type, request) {
