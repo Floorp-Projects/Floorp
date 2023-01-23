@@ -438,9 +438,7 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
   nsIContent* node = GetContent()->GetFirstChild();
   SVGBBox unionBBox, tmpBBox;
   for (; node; node = node->GetNextSibling()) {
-    SVGElement* svgNode = static_cast<SVGElement*>(node);
-    nsIFrame* frame = svgNode->GetPrimaryFrame();
-    if (frame) {
+    if (nsIFrame* frame = node->GetPrimaryFrame()) {
       ISVGDisplayableFrame* svg = do_QueryFrame(frame);
       if (svg) {
         gfxMatrix matrix =
