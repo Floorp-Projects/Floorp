@@ -694,7 +694,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
         break;
       case VMFunctionData::WordByRef:
         masm.passABIArg(
-            MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
+            MoveOperand(argsBase, argDisp, MoveOperand::Kind::EffectiveAddress),
             MoveOp::GENERAL);
         argDisp += sizeof(void*);
         break;
