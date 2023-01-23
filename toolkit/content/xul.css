@@ -689,8 +689,10 @@ scrollbox {
   overflow: hidden;
 }
 
-scrollbox[smoothscroll=true] {
-  scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+  scrollbox[smoothscroll=true] {
+    scroll-behavior: smooth;
+  }
 }
 
 /********** stringbundle **********/
