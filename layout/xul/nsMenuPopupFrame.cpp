@@ -62,6 +62,7 @@
 #include <algorithm>
 
 #include "X11UndefineNone.h"
+#include "nsXULPopupManager.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -2463,7 +2464,8 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
     if (pm) {
       // As the caller will be iterating over the open popups, hide
       // asyncronously.
-      pm->HidePopup(mContent, false, true, true, false);
+      pm->HidePopup(mContent,
+                    {HidePopupOption::DeselectMenu, HidePopupOption::Async});
     }
 
     return;

@@ -2435,14 +2435,16 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       }
 
       if (shouldRollup) {
+        LayoutDeviceIntPoint devPoint;
+        nsIRollupListener::RollupOptions rollupOptions{popupsToRollup,
+                                                       nsIRollupListener::FlushViews::Yes};
         if ([theEvent type] == NSEventTypeLeftMouseDown) {
           NSPoint point = [NSEvent mouseLocation];
           FlipCocoaScreenCoordinate(point);
-          LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(point);
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, &devPoint, nullptr);
-        } else {
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
+          devPoint = mGeckoChild->CocoaPointsToDevPixels(point);
+          rollupOptions.mPoint = &devPoint;
         }
+        consumeEvent = (BOOL)rollupListener->Rollup(rollupOptions);
       }
     }
   }
