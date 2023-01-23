@@ -49,7 +49,7 @@ add_task(async function test_with_pref_enabled() {
   BrowserTestUtils.loadURIString(gBrowser, kTestURI);
   let win = await windowPromise;
 
-  let expectedValue = "index.csv";
+  let expectedValue = "Untitled.csv";
   is(
     win.document.getElementById("location").value,
     expectedValue,

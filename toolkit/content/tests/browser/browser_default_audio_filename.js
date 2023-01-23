@@ -40,9 +40,9 @@ add_task(async function() {
       let showFilePickerPromise = new Promise(resolve => {
         MockFilePicker.showCallback = function(fp) {
           is(
-            fp.defaultString.startsWith("index"),
+            fp.defaultString.startsWith("Untitled"),
             true,
-            "File name should be index"
+            "File name should be Untitled"
           );
           resolve();
         };
@@ -82,9 +82,9 @@ add_task(async function() {
       let showFilePickerPromise = new Promise(resolve => {
         MockFilePicker.showCallback = function(fp) {
           is(
-            fp.defaultString.startsWith("index"),
+            fp.defaultString.startsWith("Untitled"),
             true,
-            "File name should be index"
+            "File name should be Untitled"
           );
           resolve();
         };

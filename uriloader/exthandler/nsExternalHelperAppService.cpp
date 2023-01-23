@@ -3461,15 +3461,15 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
               "chrome://global/locale/contentAreaCommands.properties",
               getter_AddRefs(bundle)))) {
         nsAutoString defaultFileName;
-        bundle->GetStringFromName("DefaultSaveFileName", defaultFileName);
+        bundle->GetStringFromName("UntitledSaveFileName", defaultFileName);
         // Append any existing extension to the default filename.
         fileName = defaultFileName + fileName;
       }
     }
 
-    // Use 'index' as a last resort.
+    // Use 'Untitled' as a last resort.
     if (!fileName.Length()) {
-      fileName.AssignLiteral("index");
+      fileName.AssignLiteral("Untitled");
     }
   }
 

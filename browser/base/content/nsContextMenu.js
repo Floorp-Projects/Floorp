@@ -2056,6 +2056,14 @@ class nsContextMenu {
         this.principal
       );
     } else if (this.onVideo || this.onAudio) {
+      let defaultFileName = "";
+      if (this.mediaURL.startsWith("data")) {
+        // Use default file name "Untitled" for data URIs
+        defaultFileName = ContentAreaUtils.stringBundle.GetStringFromName(
+          "UntitledSaveFileName"
+        );
+      }
+
       var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
       this.saveHelper(
         this.mediaURL,
@@ -2066,7 +2074,7 @@ class nsContextMenu {
         referrerInfo,
         cookieJarSettings,
         this.frameOuterWindowID,
-        this.mediaURL.startsWith("data") ? "index" : "", // use default file name "index" for data URIs
+        defaultFileName,
         isContentWindowPrivate
       );
     }

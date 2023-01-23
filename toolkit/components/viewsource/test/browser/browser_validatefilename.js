@@ -7,7 +7,7 @@ add_task(async function() {
   let tests = [
     {
       uri: "data:text/html,Test",
-      basename: "index",
+      basename: "Untitled",
     },
     {
       uri: "data:text/html,<title>Hello There</title>Test",
