@@ -240,10 +240,8 @@ void SVGMPathElement::UnlinkHrefTarget(bool aNotifyParent) {
 }
 
 void SVGMPathElement::NotifyParentOfMpathChange(nsIContent* aParent) {
-  if (aParent && aParent->IsSVGElement(nsGkAtoms::animateMotion)) {
-    SVGAnimateMotionElement* animateMotionParent =
-        static_cast<SVGAnimateMotionElement*>(aParent);
-
+  if (auto* animateMotionParent =
+          SVGAnimateMotionElement::FromNodeOrNull(aParent)) {
     animateMotionParent->MpathChanged();
     AnimationNeedsResample();
   }

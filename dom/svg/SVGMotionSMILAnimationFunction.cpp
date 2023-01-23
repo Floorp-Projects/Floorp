@@ -140,13 +140,12 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
   MOZ_ASSERT(mPathVertices.IsEmpty(),
              "regenerating when we already have vertices");
 
-  if (!aContextElem->IsSVGElement()) {
+  const auto* context = SVGElement::FromNode(aContextElem);
+  if (!context) {
     NS_ERROR("Uh oh, SVG animateMotion element targeting a non-SVG node");
     return;
   }
-
-  SVGMotionSMILPathUtils::PathGenerator pathGenerator(
-      static_cast<const SVGElement*>(aContextElem));
+  SVGMotionSMILPathUtils::PathGenerator pathGenerator(context);
 
   bool success = false;
   if (HasAttr(nsGkAtoms::values)) {

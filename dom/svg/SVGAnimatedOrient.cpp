@@ -424,7 +424,7 @@ SVGAnimatedOrient::DOMAnimatedEnum::~DOMAnimatedEnum() {
 }
 
 UniquePtr<SMILAttr> SVGAnimatedOrient::ToSMILAttr(SVGElement* aSVGElement) {
-  if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
+  if (aSVGElement->IsSVGElement(nsGkAtoms::marker)) {
     return MakeUnique<SMILOrient>(this, aSVGElement);
   }
   // SMILOrient would not be useful for general angle attributes (also,

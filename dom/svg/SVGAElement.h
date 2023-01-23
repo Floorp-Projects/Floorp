@@ -91,7 +91,7 @@ class SVGAElement final : public SVGAElementBase,
     SVGAElementBase::NodeInfoChanged(aOldDoc);
   }
 
-  NS_IMPL_FROMNODE_WITH_TAG(SVGAElement, kNameSpaceID_SVG, nsGkAtoms::a);
+  NS_IMPL_FROMNODE_WITH_TAG(SVGAElement, kNameSpaceID_SVG, a)
 
  protected:
   virtual ~SVGAElement() = default;

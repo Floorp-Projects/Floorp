@@ -134,10 +134,11 @@ void SVGDisplayContainerFrame::Init(nsIContent* aContent,
 
 void SVGDisplayContainerFrame::BuildDisplayList(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  // mContent could be a XUL element so check for an SVG element before casting
-  if (mContent->IsSVGElement() &&
-      !static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
-    return;
+  // content could be a XUL element so check for an SVG element
+  if (auto* svg = SVGElement::FromNode(GetContent())) {
+    if (!svg->HasValidDimensions()) {
+      return;
+    }
   }
   DisplayOutline(aBuilder, aLists);
   return BuildDisplayListForNonBlockChildren(aBuilder, aLists);
@@ -210,9 +211,8 @@ bool SVGDisplayContainerFrame::IsSVGTransformed(
             aFromParentTransform);
   }
 
-  // mContent could be a XUL element so check for an SVG element before casting
-  if (mContent->IsSVGElement()) {
-    SVGElement* content = static_cast<SVGElement*>(GetContent());
+  // content could be a XUL element so check for an SVG element
+  if (auto* content = SVGElement::FromNode(GetContent())) {
     SVGAnimatedTransformList* transformList =
         content->GetAnimatedTransformList();
     if ((transformList && transformList->HasTransform()) ||
@@ -245,9 +245,8 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
   }
 
   gfxMatrix matrix = aTransform;
-  if (GetContent()->IsSVGElement()) {  // must check before cast
-    matrix = static_cast<const SVGElement*>(GetContent())
-                 ->PrependLocalTransformsTo(matrix, eChildToUserSpace);
+  if (auto* svg = SVGElement::FromNode(GetContent())) {
+    matrix = svg->PrependLocalTransformsTo(matrix, eChildToUserSpace);
     if (matrix.IsSingular()) {
       return;
     }
@@ -258,8 +257,7 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
     // PaintFrameWithEffects() expects the transform that is passed to it to
     // include the transform to the passed frame's user space, so add it:
     const nsIContent* content = kid->GetContent();
-    if (content->IsSVGElement()) {  // must check before cast
-      const SVGElement* element = static_cast<const SVGElement*>(content);
+    if (const SVGElement* element = SVGElement::FromNode(content)) {
       if (!element->HasValidDimensions()) {
         continue;  // nothing to paint for kid
       }
@@ -384,26 +382,25 @@ SVGBBox SVGDisplayContainerFrame::GetBBoxContribution(
     const Matrix& aToBBoxUserspace, uint32_t aFlags) {
   SVGBBox bboxUnion;
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsIContent* content = kid->GetContent();
+  for (nsIFrame* kid : mFrames) {
     ISVGDisplayableFrame* svgKid = do_QueryFrame(kid);
-    // content could be a XUL element so check for an SVG element before casting
-    if (svgKid &&
-        (!content->IsSVGElement() ||
-         static_cast<const SVGElement*>(content)->HasValidDimensions())) {
-      gfxMatrix transform = gfx::ThebesMatrix(aToBBoxUserspace);
-      if (content->IsSVGElement()) {
-        transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
-                        {}, eChildToUserSpace) *
-                    SVGUtils::GetTransformMatrixInUserSpace(kid) * transform;
-      }
-      // We need to include zero width/height vertical/horizontal lines, so we
-      // have to use UnionEdges.
-      bboxUnion.UnionEdges(
-          svgKid->GetBBoxContribution(gfx::ToMatrix(transform), aFlags));
+    if (!svgKid) {
+      continue;
     }
-    kid = kid->GetNextSibling();
+    // content could be a XUL element
+    auto* svg = SVGElement::FromNode(kid->GetContent());
+    if (svg && !svg->HasValidDimensions()) {
+      continue;
+    }
+    gfxMatrix transform = gfx::ThebesMatrix(aToBBoxUserspace);
+    if (svg) {
+      transform = svg->PrependLocalTransformsTo({}, eChildToUserSpace) *
+                  SVGUtils::GetTransformMatrixInUserSpace(kid) * transform;
+    }
+    // We need to include zero width/height vertical/horizontal lines, so we
+    // have to use UnionEdges.
+    bboxUnion.UnionEdges(
+        svgKid->GetBBoxContribution(gfx::ToMatrix(transform), aFlags));
   }
 
   return bboxUnion;

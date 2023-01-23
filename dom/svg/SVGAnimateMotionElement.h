@@ -30,6 +30,9 @@ class SVGAnimateMotionElement final : public SVGAnimationElement {
                      JS::Handle<JSObject*> aGivenProto) override;
 
  public:
+  NS_IMPL_FROMNODE_WITH_TAG(SVGAnimateMotionElement, kNameSpaceID_SVG,
+                            animateMotion)
+
   // nsINode specializations
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

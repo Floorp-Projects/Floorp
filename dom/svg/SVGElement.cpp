@@ -1062,8 +1062,8 @@ SVGSVGElement* SVGElement::GetOwnerSVGElement() {
     if (ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
       return nullptr;
     }
-    if (ancestor->IsSVGElement(nsGkAtoms::svg)) {
-      return static_cast<SVGSVGElement*>(ancestor);
+    if (auto* svg = SVGSVGElement::FromNode(ancestor)) {
+      return svg;
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }

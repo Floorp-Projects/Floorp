@@ -138,10 +138,7 @@ SVGSVGElement* SVGContentUtils::GetOuterSVGElement(SVGElement* aSVGElement) {
     ancestor = element->GetParentElementCrossingShadowRoot();
   }
 
-  if (element && element->IsSVGElement(nsGkAtoms::svg)) {
-    return static_cast<SVGSVGElement*>(element);
-  }
-  return nullptr;
+  return SVGSVGElement::FromNodeOrNull(element);
 }
 
 enum DashState {
@@ -506,8 +503,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     element = static_cast<SVGElement*>(ancestor);
     matrix *= getLocalTransformHelper(element, true);
     if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
-      if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
-          !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
+      if (!element->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
         NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
         return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
       }
@@ -546,17 +542,15 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
   if (!ancestor || !ancestor->IsElement()) {
     return gfx::ToMatrix(matrix);
   }
-  if (ancestor->IsSVGElement()) {
-    return gfx::ToMatrix(matrix) *
-           GetCTMInternal(static_cast<SVGElement*>(ancestor), true, true);
+  if (auto* ancestorSVG = SVGElement::FromNode(ancestor)) {
+    return gfx::ToMatrix(matrix) * GetCTMInternal(ancestorSVG, true, true);
   }
 
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
   Document* currentDoc = aElement->GetComposedDoc();
   float x = 0.0f, y = 0.0f;
-  if (currentDoc &&
-      element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
+  if (currentDoc && element->IsSVGElement(nsGkAtoms::svg)) {
     PresShell* presShell = currentDoc->GetPresShell();
     if (presShell) {
       nsIFrame* frame = element->GetPrimaryFrame();

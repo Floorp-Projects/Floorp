@@ -36,8 +36,7 @@ FilterPrimitiveDescription SVGFEMergeElement::GetPrimitiveDescription(
 void SVGFEMergeElement::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {
   for (nsIContent* child = nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    if (child->IsSVGElement(nsGkAtoms::feMergeNode)) {
-      SVGFEMergeNodeElement* node = static_cast<SVGFEMergeNodeElement*>(child);
+    if (auto* node = SVGFEMergeNodeElement::FromNode(child)) {
       aSources.AppendElement(SVGStringInfo(node->GetIn1(), node));
     }
   }

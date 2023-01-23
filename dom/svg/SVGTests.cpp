@@ -193,9 +193,8 @@ void SVGTests::GetAttrValue(uint8_t aAttrEnum, nsAttrValue& aValue) const {
 void SVGTests::MaybeInvalidate() {
   nsIContent* parent = AsSVGElement()->GetFlattenedTreeParent();
 
-  if (parent &&
-      parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
-    static_cast<dom::SVGSwitchElement*>(parent)->MaybeInvalidate();
+  if (auto* svgSwitch = SVGSwitchElement::FromNodeOrNull(parent)) {
+    svgSwitch->MaybeInvalidate();
   }
 }
 
