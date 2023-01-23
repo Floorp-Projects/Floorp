@@ -624,5 +624,23 @@ IMFMediaEngineEx : public IMFMediaEngine {
 };
 #  endif /* __IMFMediaEngineEx_INTERFACE_DEFINED__ */
 
+#  ifndef __IMFCdmSuspendNotify_INTERFACE_DEFINED__
+#    define __IMFCdmSuspendNotify_INTERFACE_DEFINED__
+
+/* interface IMFCdmSuspendNotify */
+/* [unique][uuid][object] */
+
+EXTERN_C const IID IID_IMFCdmSuspendNotify;
+
+MIDL_INTERFACE("7a5645d2-43bd-47fd-87b7-dcd24cc7d692")
+IMFCdmSuspendNotify : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE Begin(void) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE End(void) = 0;
+};
+
+#  endif /* __IMFCdmSuspendNotify_INTERFACE_DEFINED__ */
+
 #endif  // extra class copy from mfmediaengine.h
 #endif  // DOM_MEDIA_PLATFORM_WMF_MFMEDIAENGINENOTIFY_H

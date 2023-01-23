@@ -10,6 +10,8 @@
 #include <windows.media.protection.h>
 #include <wrl.h>
 
+#include "MFCDMProxy.h"
+
 namespace mozilla {
 
 /**
@@ -58,12 +60,13 @@ class MFContentProtectionManager
   IFACEMETHODIMP get_Properties(
       ABI::Windows::Foundation::Collections::IPropertySet** aValue) override;
 
-  // TODO : change void to a CDM proxy type after we finish its implementation.
-  HRESULT SetCDMProxy(void* aCDMProxy);
+  HRESULT SetCDMProxy(MFCDMProxy* aCDMProxy);
 
  private:
   HRESULT SetPMPServer(
       ABI::Windows::Media::Protection::IMediaProtectionPMPServer* aPMPServer);
+
+  RefPtr<MFCDMProxy> mCDMProxy;
 
   Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IPropertySet>
       mPMPServerSet;
