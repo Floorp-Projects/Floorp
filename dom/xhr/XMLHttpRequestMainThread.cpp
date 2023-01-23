@@ -187,7 +187,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread(
     : XMLHttpRequest(aGlobalObject),
       mResponseBodyDecodedPos(0),
       mResponseType(XMLHttpRequestResponseType::_empty),
-      mRequestObserver(nullptr),
       mState(XMLHttpRequest_Binding::UNSENT),
       mFlagSynchronous(false),
       mFlagAborted(false),
@@ -215,7 +214,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread(
       mLoadTransferred(0),
       mIsSystem(false),
       mIsAnon(false),
-      mFirstStartRequestSeen(false),
       mInLoadProgressEvent(false),
       mResultJSON(JS::UndefinedValue()),
       mArrayBufferBuilder(new ArrayBufferBuilder()),
@@ -327,11 +325,6 @@ void XMLHttpRequestMainThread::ResetResponse() {
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
   mEofDecoded = false;
-}
-
-void XMLHttpRequestMainThread::SetRequestObserver(
-    nsIRequestObserver* aObserver) {
-  mRequestObserver = aObserver;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestMainThread)
@@ -1820,10 +1813,6 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
   nsresult rv = NS_OK;
-  if (!mFirstStartRequestSeen && mRequestObserver) {
-    mFirstStartRequestSeen = true;
-    mRequestObserver->OnStartRequest(request);
-  }
 
   if (request != mChannel) {
     // Can this still happen?
@@ -2102,12 +2091,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   }
 
   mWaitingForOnStopRequest = false;
-
-  if (mRequestObserver) {
-    NS_ASSERTION(mFirstStartRequestSeen, "Inconsistent state!");
-    mFirstStartRequestSeen = false;
-    mRequestObserver->OnStopRequest(request, status);
-  }
 
   // make sure to notify the listener if we were aborted
   // XXX in fact, why don't we do the cleanup below in this case??

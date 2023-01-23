@@ -431,8 +431,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
                              const ProgressEventType aType, int64_t aLoaded,
                              int64_t aTotal);
 
-  void SetRequestObserver(nsIRequestObserver* aObserver);
-
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
       XMLHttpRequestMainThread, XMLHttpRequest)
   virtual bool IsCertainlyAliveForCC() const override;
@@ -643,8 +641,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   nsCOMPtr<nsIChannelEventSink> mChannelEventSink;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 
-  nsIRequestObserver* mRequestObserver;
-
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
@@ -731,7 +727,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
    */
   void CloseRequestWithError(const ProgressEventType aType);
 
-  bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;
 
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
