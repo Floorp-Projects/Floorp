@@ -68,7 +68,11 @@ HRESULT MFContentProtectionManager::BeginEnableContent(
     LOG("Error - MFENABLETYPE_MF_UpdateUntrustedComponent");
     return HRESULT_FROM_WIN32(ERROR_INVALID_IMAGE_HASH);
   }
-  // TODO : ask CDM proxy to process enabler.
+
+  MOZ_ASSERT(mCDMProxy);
+  RETURN_IF_FAILED(
+      mCDMProxy->SetContentEnabler(unknownObject.Get(), asyncResult.Get()));
+
   // TODO : maybe need to notify waiting for key status?
   LOG("Finished BeginEnableContent");
   return S_OK;
@@ -128,10 +132,11 @@ HRESULT MFContentProtectionManager::get_Properties(
   return mPMPServerSet.CopyTo(properties);
 }
 
-HRESULT MFContentProtectionManager::SetCDMProxy(void* aCDMProxy) {
+HRESULT MFContentProtectionManager::SetCDMProxy(MFCDMProxy* aCDMProxy) {
   MOZ_ASSERT(aCDMProxy);
+  mCDMProxy = aCDMProxy;
   ComPtr<ABI::Windows::Media::Protection::IMediaProtectionPMPServer> pmpServer;
-  // TODO : get pmp server from a CDM proxy
+  RETURN_IF_FAILED(mCDMProxy->GetPMPServer(IID_PPV_ARGS(&pmpServer)));
   RETURN_IF_FAILED(SetPMPServer(pmpServer.Get()));
   return S_OK;
 }
