@@ -815,20 +815,23 @@ IdentityCredentialStorageService::Observe(nsISupports* aSubject,
   AssertIsOnMainThread();
   // Double check that we have the right topic.
   if (!nsCRT::strcmp(aTopic, "last-pb-context-exited")) {
-    nsCOMPtr<mozIStorageFunction> patternMatchFunction(
-        new PrivateBrowsingOriginSQLFunction());
-    nsresult rv = mMemoryDatabaseConnection->CreateFunction(
-        "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN"_ns, 1, patternMatchFunction);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MonitorAutoLock lock(mMonitor);
+    if (mInitialized && mMemoryDatabaseConnection) {
+      nsCOMPtr<mozIStorageFunction> patternMatchFunction(
+          new PrivateBrowsingOriginSQLFunction());
+      nsresult rv = mMemoryDatabaseConnection->CreateFunction(
+          "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN"_ns, 1, patternMatchFunction);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mMemoryDatabaseConnection->ExecuteSimpleSQL(
-        "DELETE FROM identity WHERE "
-        "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN(rpOrigin);"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = mMemoryDatabaseConnection->ExecuteSimpleSQL(
+          "DELETE FROM identity WHERE "
+          "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN(rpOrigin);"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mMemoryDatabaseConnection->RemoveFunction(
-        "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = mMemoryDatabaseConnection->RemoveFunction(
+          "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   return NS_OK;
 }
