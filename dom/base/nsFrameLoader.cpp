@@ -3478,7 +3478,7 @@ already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {
   return nullptr;
 }
 
-already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
+already_AddRefed<nsILoadContext> nsFrameLoader::GetLoadContext() {
   return do_AddRef(GetBrowsingContext());
 }
 
