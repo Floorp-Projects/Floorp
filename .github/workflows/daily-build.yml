@@ -110,6 +110,10 @@ jobs:
       run: |
         echo ${{ github.sha }} > browser/config/version_display.txt
 
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
     - name: Build 🔨
       run: |
         ./mach build
@@ -297,6 +301,10 @@ jobs:
       run: |
         echo ${{ github.sha }} > browser/config/version_display.txt
 
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
     - name: Build 🔨
       run: |
         ./mach build
@@ -419,6 +427,10 @@ jobs:
     - name: Set Display Version
       run: |
         echo ${{ github.sha }} > browser/config/version_display.txt
+
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
 
     - name: Build 🔨
       run: |
