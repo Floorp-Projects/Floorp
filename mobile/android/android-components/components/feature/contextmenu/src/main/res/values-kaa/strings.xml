@@ -4,6 +4,10 @@
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">Siltemeni jańa bette ashıw</string>
     <!-- Text for context menu item to open the link in a private tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Siltemeni jeke bette ashıw</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Súwretti taza bette ashıw</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Siltemeni bólisiw</string>
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">Súwretti bólisiw</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->

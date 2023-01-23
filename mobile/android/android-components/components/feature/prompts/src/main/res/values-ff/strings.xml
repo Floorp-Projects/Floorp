@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">Finnde</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">Hoto danndu</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Hoto danndu abada</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Danndu</string>
     <!-- Positive confirmation that we should save the updated login -->
@@ -26,6 +28,8 @@
     <string name="mozac_feature_prompt_error_empty_password">Gallol finnde fotaani wonde mehol</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Horiima danndude seŋorde</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Ɓeydu innde kuutoro e finnde danndaade?</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Yamir</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->

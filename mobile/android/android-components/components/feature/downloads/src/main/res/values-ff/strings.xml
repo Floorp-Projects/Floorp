@@ -36,4 +36,9 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Uddu</string>
-</resources>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Horiima uddide %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Yamiroore keɓgol piille e mejaaje ena coklaa ngam aawtaade piille. Yah to teelte Android, tappu e jamirooje, tappaa yamir.</string>
+
+    </resources>

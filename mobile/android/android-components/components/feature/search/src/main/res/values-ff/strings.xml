@@ -3,4 +3,6 @@
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description">Uddit tabbere hesre %1$s</string>
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Njiilaw sawto</string>
+</resources>
