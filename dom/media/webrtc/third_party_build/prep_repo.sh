@@ -16,6 +16,11 @@ echo "MOZ_PRIOR_LIBWEBRTC_BRANCH: $MOZ_PRIOR_LIBWEBRTC_BRANCH"
 # * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
+# wipe no-op commit tracking files for new run
+rm -f $STATE_DIR/*.no-op-cherry-pick-msg
+# wipe resume_state for new run
+rm -f $STATE_DIR/resume_state
+
 # read the last line of README.moz-ff-commit to retrieve our current base
 # commit in moz-libwebrtc
 MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
