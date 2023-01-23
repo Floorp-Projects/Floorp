@@ -13,6 +13,7 @@
 #include "nsIContent.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/PresShellForwards.h"
+#include "mozilla/ServoStyleConsts.h"
 
 #include "nsPoint.h"
 #include "nsTArray.h"
@@ -324,6 +325,13 @@ class nsCoreUtils {
    */
   static bool IsDocumentVisibleConsideringInProcessAncestors(
       const Document* aDocument);
+
+  /**
+   * Return true if the given node is hidden by its ancestor specified with
+   * `content-visibility` property
+   */
+  static bool IsHiddenNodeByContentVisibilityOnAnyAncestor(
+      nsINode* aNode, const mozilla::StyleContentVisibility& aValue);
 };
 
 #endif

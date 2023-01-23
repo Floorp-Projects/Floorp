@@ -972,6 +972,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
     if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
+      // Check if display:contents element is hidden by `content-visibility:
+      // hidden`
+      if (nsCoreUtils::IsHiddenNodeByContentVisibilityOnAnyAncestor(
+              aNode, StyleContentVisibility::Hidden)) {
+        if (aIsSubtreeHidden) *aIsSubtreeHidden = true;
+        return nullptr;
+      }
+
       const MarkupMapInfo* markupMap = GetMarkupMapInfoFor(content);
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =
@@ -987,6 +995,12 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
     if (aIsSubtreeHidden && !frame) *aIsSubtreeHidden = true;
 
+    return nullptr;
+  }
+
+  if (frame->IsHiddenByContentVisibilityOnAnyAncestor(
+          nsIFrame::IncludeContentVisibility::Hidden)) {
+    if (aIsSubtreeHidden) *aIsSubtreeHidden = true;
     return nullptr;
   }
 

@@ -602,3 +602,36 @@ bool nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(
   } while ((parent = parent->GetInProcessParentDocument()));
   return true;
 }
+
+bool nsCoreUtils::IsHiddenNodeByContentVisibilityOnAnyAncestor(
+    nsINode* aNode, const mozilla::StyleContentVisibility& aValue) {
+  nsIFrame* ancestorFrame = nullptr;
+  // Find the closest ancestor element which has frame
+  for (nsINode* ancestor = aNode->GetFlattenedTreeParentNode();
+       ancestor && ancestor->IsContent();
+       ancestor = ancestor->GetFlattenedTreeParentNode()) {
+    ancestorFrame = ancestor->AsContent()->GetPrimaryFrame();
+    if (ancestorFrame) {
+      break;
+    }
+  }
+
+  // If the `display:contents` element has the closest frame from its
+  // ancestor element and the frame itself or its ancestor has
+  // `content-visibility: hidden`, return true
+  if (aValue == mozilla::StyleContentVisibility::Hidden) {
+    return ancestorFrame &&
+           (ancestorFrame->HidesContent(
+                nsIFrame::IncludeContentVisibility::Hidden) ||
+            ancestorFrame->IsHiddenByContentVisibilityOnAnyAncestor(
+                nsIFrame::IncludeContentVisibility::Hidden));
+  }
+  if (aValue == mozilla::StyleContentVisibility::Auto) {
+    return ancestorFrame &&
+           (ancestorFrame->HidesContent(
+                nsIFrame::IncludeContentVisibility::Auto) ||
+            ancestorFrame->IsHiddenByContentVisibilityOnAnyAncestor(
+                nsIFrame::IncludeContentVisibility::Auto));
+  }
+  return false;
+}

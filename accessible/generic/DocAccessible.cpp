@@ -1382,6 +1382,24 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       SelectionMgr()->SetControlSelectionListener(aRoot->AsElement());
     }
 
+    // If the frame is hidden because its ancestor is specified with
+    // `content-visibility: hidden`, remove its Accessible.
+    if (frame && frame->IsHiddenByContentVisibilityOnAnyAncestor(
+                     nsIFrame::IncludeContentVisibility::Hidden)) {
+      ContentRemoved(aRoot);
+      return false;
+    }
+
+    if (!frame && nsCoreUtils::CanCreateAccessibleWithoutFrame(aRoot)) {
+      // If the content has `display:contents` and is hidden by
+      // `content-visibility: hidden` from its ancestor, remove its Accessible
+      if (nsCoreUtils::IsHiddenNodeByContentVisibilityOnAnyAncestor(
+              aRoot, StyleContentVisibility::Hidden)) {
+        ContentRemoved(aRoot);
+        return false;
+      }
+    }
+
     // If the accessible is a table, or table part, its layout table
     // status may have changed. We need to invalidate the associated
     // mac table cache, which listens for the following event. We don't
