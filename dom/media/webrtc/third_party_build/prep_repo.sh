@@ -75,7 +75,7 @@ for commit in $COMMITS; do
   SHORT_SHA=`git show --name-only $CHERRY_PICK_COMMIT --format='%h' | head -1`
 
   echo "We already cherry-picked this when we vendored $commit." \
-  > ~/$SHORT_SHA.no-op-cherry-pick-msg
+  > $STATE_DIR/$SHORT_SHA.no-op-cherry-pick-msg
 
 done
 

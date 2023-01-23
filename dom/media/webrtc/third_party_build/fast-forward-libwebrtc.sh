@@ -72,8 +72,8 @@ fi
 find_base_commit
 find_next_commit
 
-echo "looking for ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
-if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+echo "looking for $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
+if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
   echo "***"
   echo "*** detected special commit msg, setting HANDLE_NOOP_COMMIT"
   echo "***"
@@ -246,10 +246,10 @@ UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
 echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
     > commit_msg.txt
 echo "" >> commit_msg.txt
-if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
-  cat ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> commit_msg.txt
+if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> commit_msg.txt
   echo "" >> commit_msg.txt
-  rm ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
+  rm $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
 fi
 echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> commit_msg.txt
 (cd $MOZ_LIBWEBRTC_SRC && \
