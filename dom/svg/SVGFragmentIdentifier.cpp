@@ -24,14 +24,6 @@ static bool IsMatchingParameter(const nsAString& aString,
          aString.CharAt(aParameterName.Length()) == '(';
 }
 
-static SVGViewElement* GetViewElement(Document* aDocument,
-                                      const nsAString& aId) {
-  Element* element = aDocument->GetElementById(aId);
-  return (element && element->IsSVGElement(nsGkAtoms::view))
-             ? static_cast<SVGViewElement*>(element)
-             : nullptr;
-}
-
 // Handles setting/clearing the root's mSVGView pointer.
 class MOZ_RAII AutoSVGViewHandler {
  public:
@@ -162,10 +154,10 @@ bool SVGFragmentIdentifier::ProcessFragmentIdentifier(
   MOZ_ASSERT(aDocument->GetRootElement()->IsSVGElement(nsGkAtoms::svg),
              "expecting an SVG root element");
 
-  SVGSVGElement* rootElement =
-      static_cast<SVGSVGElement*>(aDocument->GetRootElement());
+  auto* rootElement = SVGSVGElement::FromNode(aDocument->GetRootElement());
 
-  const SVGViewElement* viewElement = GetViewElement(aDocument, aAnchorName);
+  const auto* viewElement =
+      SVGViewElement::FromNodeOrNull(aDocument->GetElementById(aAnchorName));
 
   if (viewElement) {
     if (!rootElement->mCurrentViewID) {

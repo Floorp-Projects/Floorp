@@ -31,6 +31,8 @@ class SVGSwitchElement final : public SVGSwitchElementBase {
                      JS::Handle<JSObject*> aGivenProto) override;
 
  public:
+  NS_IMPL_FROMNODE_WITH_TAG(SVGSwitchElement, kNameSpaceID_SVG, svgSwitch)
+
   nsIContent* GetActiveChild() const { return mActiveChild; }
   void MaybeInvalidate();
 

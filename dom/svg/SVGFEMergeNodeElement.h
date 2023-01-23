@@ -29,6 +29,9 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
                      JS::Handle<JSObject*> aGivenProto) override;
 
  public:
+  NS_IMPL_FROMNODE_WITH_TAG(SVGFEMergeNodeElement, kNameSpaceID_SVG,
+                            feMergeNode)
+
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   bool AttributeAffectsRendering(int32_t aNameSpaceID,

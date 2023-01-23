@@ -350,9 +350,8 @@ void SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
   if (aType == imgINotificationObserver::LOAD_COMPLETE ||
       aType == imgINotificationObserver::FRAME_UPDATE ||
       aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    if (GetParent() && GetParent()->IsSVGElement(nsGkAtoms::filter)) {
-      SVGObserverUtils::InvalidateDirectRenderingObservers(
-          static_cast<SVGFilterElement*>(GetParent()));
+    if (auto* filter = SVGFilterElement::FromNodeOrNull(GetParent())) {
+      SVGObserverUtils::InvalidateDirectRenderingObservers(filter);
     }
   }
 }

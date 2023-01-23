@@ -72,6 +72,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
   ~SVGSVGElement() = default;
 
  public:
+  NS_IMPL_FROMNODE_WITH_TAG(SVGSVGElement, kNameSpaceID_SVG, svg)
+
   // interfaces:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_SVGSVGELEMENT_IID)
   NS_DECL_ISUPPORTS_INHERITED

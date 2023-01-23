@@ -558,9 +558,7 @@ SVGViewElement* SVGSVGElement::GetCurrentViewElement() const {
     Document* doc = GetUncomposedDoc();
     if (doc) {
       Element* element = doc->GetElementById(*mCurrentViewID);
-      if (element && element->IsSVGElement(nsGkAtoms::view)) {
-        return static_cast<SVGViewElement*>(element);
-      }
+      return SVGViewElement::FromNodeOrNull(element);
     }
   }
   return nullptr;

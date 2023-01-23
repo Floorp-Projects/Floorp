@@ -90,10 +90,7 @@ SVGElement* SVGAnimationElement::GetTargetElement() {
   FlushAnimations();
 
   // We'll just call the other GetTargetElement method, and QI to the right type
-  nsIContent* target = GetTargetElementContent();
-
-  return (target && target->IsSVGElement()) ? static_cast<SVGElement*>(target)
-                                            : nullptr;
+  return SVGElement::FromNodeOrNull(GetTargetElementContent());
 }
 
 float SVGAnimationElement::GetStartTime(ErrorResult& rv) {
