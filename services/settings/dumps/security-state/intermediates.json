@@ -1,6 +1,132 @@
 {
   "data": [
     {
+      "schema": 1674182897507,
+      "derHash": "KQ5piTmiT3tjqxTQSQ3pK+vvbBwtO+cX83dbccGrYm0=",
+      "subject": "CN=DigiCert Secure Site Pro EV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MHAxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFIMEYGA1UEAxM/RGlnaUNlcnQgU2VjdXJlIFNpdGUgUHJvIEVWIEc1IFRMUyBDTiBFQ0MgUC0zODQgU0hBMzg0IDIwMjIgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e7281a5cc6b8ad939617a94a997a9d4f8e60101945ab0c6a2064d606f464aebd",
+        "size": 1272,
+        "filename": "eaAynczvJkYEkjTwg_ILts_B3O7ARwBKF0ub7873vVM=.pem",
+        "location": "security-state-staging/intermediates/83c1b12e-a743-4a04-91c3-770e33065b74.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "eaAynczvJkYEkjTwg/ILts/B3O7ARwBKF0ub7873vVM=",
+      "crlite_enrolled": false,
+      "id": "23afcb2c-5fad-450a-bf51-1b8775e39f55",
+      "last_modified": 1674183423088
+    },
+    {
+      "schema": 1674182899250,
+      "derHash": "B/VaEF6IbRkfvSJTKD53sfwczcyfJqPmx+aXBqdZP+8=",
+      "subject": "CN=GeoTrust EV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGAxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE4MDYGA1UEAxMvR2VvVHJ1c3QgRVYgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4e7d5787c48a69aecf8754f51666658f6ba679c85810cf7a9e76c8b7e6d74020",
+        "size": 1252,
+        "filename": "hjn_zL9duyFlCwJVMDWpZeXWqrF0eR2hde5cLK6Xvh0=.pem",
+        "location": "security-state-staging/intermediates/0ce3adb0-b82e-42b3-85b6-70713ba66e1f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "hjn/zL9duyFlCwJVMDWpZeXWqrF0eR2hde5cLK6Xvh0=",
+      "crlite_enrolled": false,
+      "id": "a8dfed55-8274-47e6-8ff8-8575d9461d93",
+      "last_modified": 1674183423080
+    },
+    {
+      "schema": 1674182898405,
+      "derHash": "nlYaS0hgdsIZ88lTh78RZw1y9sTw3Nm7tH9Z9cFC74g=",
+      "subject": "CN=DigiCert Secure Site OV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGwxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFEMEIGA1UEAxM7RGlnaUNlcnQgU2VjdXJlIFNpdGUgT1YgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6fef87f0a78395da32d0436f9980bd232d2069fa4379f28b443bf28f831291e2",
+        "size": 1268,
+        "filename": "-bKsY1_ebGdh706aKSpuQG2wjpqVTRyv5l5GKLMAsN8=.pem",
+        "location": "security-state-staging/intermediates/500a052e-f9d0-436f-a97d-8d8a81cfbd65.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+bKsY1/ebGdh706aKSpuQG2wjpqVTRyv5l5GKLMAsN8=",
+      "crlite_enrolled": false,
+      "id": "e6075397-e203-45dc-8f90-252857f402b2",
+      "last_modified": 1674183423072
+    },
+    {
+      "schema": 1674182896623,
+      "derHash": "HXWgs3tK4R6IPJfT/w3F2E2T/hKcEt14CGxKeNrz9wk=",
+      "subject": "CN=DigiCert Basic OV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGYxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE+MDwGA1UEAxM1RGlnaUNlcnQgQmFzaWMgT1YgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7a5b159d88726a07412283a5ff3c3a09e10eb0426af96c313264eb793d07111d",
+        "size": 1260,
+        "filename": "4YfxE5kGg9f6-I9qqArY8w3vHxgVrg4p4hX5bjloYcs=.pem",
+        "location": "security-state-staging/intermediates/f502395c-c61b-4579-8603-18bbb1f4a448.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4YfxE5kGg9f6+I9qqArY8w3vHxgVrg4p4hX5bjloYcs=",
+      "crlite_enrolled": false,
+      "id": "cf5c07ee-1ea4-468a-87eb-777dd91007ba",
+      "last_modified": 1674183423064
+    },
+    {
+      "schema": 1674182900174,
+      "derHash": "/bdueKRQwPOvCT1RhsOyihKAVnoOxTHKWXf/TmFrNeM=",
+      "subject": "CN=DigiCert Basic EV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGYxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE+MDwGA1UEAxM1RGlnaUNlcnQgQmFzaWMgRVYgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cbcc3f4565b240aaecb93498a8781f9703fa293fbc6547545c92da602a6d9406",
+        "size": 1260,
+        "filename": "HbhL5NSlVqU1eh1D7iUq1b7A4F-fPzRviUPz4YSnvWI=.pem",
+        "location": "security-state-staging/intermediates/65a21908-6d48-49ff-ba25-552cd3741a4a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "HbhL5NSlVqU1eh1D7iUq1b7A4F+fPzRviUPz4YSnvWI=",
+      "crlite_enrolled": false,
+      "id": "e93ab04a-9ddd-461e-a523-4a7af2101ff8",
+      "last_modified": 1674183423056
+    },
+    {
+      "schema": 1674182894905,
+      "derHash": "1Ds/vC5nFbM9PXA3IA+p1Bgfl0ksRNvrqPuuloDWTNA=",
+      "subject": "CN=DigiCert Secure Site Pro G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MG0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFFMEMGA1UEAxM8RGlnaUNlcnQgU2VjdXJlIFNpdGUgUHJvIEc1IFRMUyBDTiBFQ0MgUC0zODQgU0hBMzg0IDIwMjIgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "25fb1b289af8f75a357fe21eccb42da287893c642aa7f3586f7404e8f6124c66",
+        "size": 1272,
+        "filename": "1XQ_a9PQAwNYJCt4Vu5FJDvAa2SS0jm309aXwhfEKQU=.pem",
+        "location": "security-state-staging/intermediates/64f6535c-a700-4c21-b5cc-0cbc50967ee8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1XQ/a9PQAwNYJCt4Vu5FJDvAa2SS0jm309aXwhfEKQU=",
+      "crlite_enrolled": false,
+      "id": "6684d072-74a1-4660-bb0a-4c1cf025b1f0",
+      "last_modified": 1674183423048
+    },
+    {
+      "schema": 1674182895794,
+      "derHash": "ScHyWoi1sVqAwaLaEViREcWtjiIhBP3EkCL9au8c9U0=",
+      "subject": "CN=DigiCert Secure Site EV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGwxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFEMEIGA1UEAxM7RGlnaUNlcnQgU2VjdXJlIFNpdGUgRVYgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b766a9772a8f22b658c23425163dd19d89e906f71fcd49a48721a6612359d82b",
+        "size": 1268,
+        "filename": "3oRtcRQOa5w2ww2itGpyEVFhTkjFjKvPeJvy3pvOnZk=.pem",
+        "location": "security-state-staging/intermediates/ac21d77c-c219-4555-a8aa-7223e66109f6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "3oRtcRQOa5w2ww2itGpyEVFhTkjFjKvPeJvy3pvOnZk=",
+      "crlite_enrolled": false,
+      "id": "be93a29a-9e5f-4baa-a79a-01ea2608e676",
+      "last_modified": 1674183423040
+    },
+    {
       "schema": 1674118097821,
       "derHash": "66aICm2WCiaSoFqlOe8cjsA7PEVTCN7loPak3AUO3qM=",
       "subject": "CN=GlobalSign Atlas R3 OV TLS CA 2023 Q2,O=GlobalSign nv-sa,C=BE",
@@ -27271,5 +27397,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1674118623211
+  "timestamp": 1674183423088
 }
