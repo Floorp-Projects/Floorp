@@ -6,6 +6,8 @@ import { DOMLocalization } from "@fluent/dom";
 import { FluentBundle, FluentResource } from "@fluent/bundle";
 import { css, html } from "lit.all.mjs";
 import { MozLitElement } from "toolkit/content/widgets/lit-utils.mjs";
+import { setCustomElementsManifest } from "@storybook/web-components";
+import customElementsManifest from "../custom-elements.json";
 
 // Base Fluent set up.
 let storybookBundle = new FluentBundle("en-US");
@@ -143,3 +145,6 @@ export const decorators = [
       ></with-common-styles>
     `,
 ];
+
+// Enable props tables documentation.
+setCustomElementsManifest(customElementsManifest);

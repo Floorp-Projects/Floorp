@@ -19,28 +19,21 @@ const fluentStrings = [
 
 export default {
   title: "Design System/Experiments/MozSupportLink",
+  component: "moz-support-link",
   argTypes: {
-    dataL10nId: {
-      type: "string",
+    "data-l10n-id": {
       options: [fluentStrings[0], fluentStrings[1], fluentStrings[2]],
       control: { type: "select" },
-      description: "Fluent ID used to generate the text content.",
-    },
-    supportPage: {
-      type: "string",
-      description:
-        "Short-hand string from SUMO to the specific support page. **Note:** changing this will not create a valid URL since we don't have access to the generated support link used in Firefox",
-    },
-    utmContent: {
-      type: "string",
-      description:
-        "UTM parameter for a URL, if it is an AMO URL. **Note:** changing this will not create a valid URL since we don't have access to the generated support link used in Firefox",
     },
     onClick: { action: "clicked" },
   },
 };
 
-const Template = ({ dataL10nId, supportPage, utmContent }) => html`
+const Template = ({
+  "data-l10n-id": dataL10nId,
+  "support-page": supportPage,
+  "utm-content": utmContent,
+}) => html`
   <a
     is="moz-support-link"
     data-l10n-id=${ifDefined(dataL10nId)}
@@ -52,18 +45,20 @@ const Template = ({ dataL10nId, supportPage, utmContent }) => html`
 
 export const withAMOUrl = Template.bind({});
 withAMOUrl.args = {
-  dataL10nId: fluentStrings[0],
-  supportPage: "addons",
-  utmContent: "promoted-addon-badge",
+  "data-l10n-id": fluentStrings[0],
+  "support-page": "addons",
+  "utm-content": "promoted-addon-badge",
 };
 
 export const Primary = Template.bind({});
 Primary.args = {
-  supportPage: "preferences",
+  "support-page": "preferences",
+  "utm-content": "",
 };
 
 export const withFluentId = Template.bind({});
 withFluentId.args = {
-  dataL10nId: fluentStrings[1],
-  supportPage: "preferences",
+  "data-l10n-id": fluentStrings[1],
+  "support-page": "preferences",
+  "utm-content": "",
 };

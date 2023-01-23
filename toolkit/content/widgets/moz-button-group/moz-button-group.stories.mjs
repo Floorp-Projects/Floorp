@@ -11,6 +11,7 @@ import {
 
 export default {
   title: "Design System/Experiments/MozButtonGroup",
+  component: "moz-button-group",
   argTypes: {
     platform: {
       options: [PLATFORM_LINUX, PLATFORM_MACOS, PLATFORM_WINDOWS],

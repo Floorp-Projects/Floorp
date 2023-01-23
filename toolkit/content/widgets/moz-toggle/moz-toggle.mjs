@@ -5,6 +5,19 @@
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
+/**
+ * A simple toggle element that can be used to switch between two states.
+ *
+ * @tagname moz-toggle
+ * @property {boolean} pressed - Whether or not the element is pressed.
+ * @property {boolean} disabled - Whether or not the element is disabled.
+ * @property {string} label - The label text.
+ * @property {string} description - The description text.
+ * @property {string} ariaLabel
+ *  The aria-label text for cases where there is no visible label.
+ * @fires toggle
+ *  Custom event indicating that the toggle's pressed state has changed.
+ */
 export default class MozToggle extends MozLitElement {
   static shadowRootOptions = {
     ...MozLitElement.shadowRootOptions,

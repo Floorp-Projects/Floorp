@@ -4,14 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "analyze": "cem analyze",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-storybook": "build-storybook",
-    "storybook": "start-storybook -p 5703 --no-open"
+    "build-storybook": "npm run analyze && build-storybook",
+    "storybook": "npm run analyze && start-storybook -p 5703 --no-open"
   },
   "author": "",
   "license": "MPL-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.0",
+    "@custom-elements-manifest/analyzer": "^0.6.6",
     "@fluent/bundle": "^0.17.1",
     "@fluent/dom": "^0.8.1",
     "@storybook/addon-a11y": "^6.5.15",
