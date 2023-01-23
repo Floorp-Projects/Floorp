@@ -7,6 +7,8 @@
 #ifndef jit_MoveResolver_h
 #define jit_MoveResolver_h
 
+#include <algorithm>
+
 #include "jit/InlineList.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
@@ -41,8 +43,11 @@ class MoveOperand {
 
  private:
   Kind kind_;
-  uint32_t code_;
+  uint8_t code_;
   int32_t disp_;
+
+  static_assert(std::max(Registers::Total, FloatRegisters::Total) <= UINT8_MAX,
+                "Any register code must fit in code_");
 
  public:
   MoveOperand() = delete;
