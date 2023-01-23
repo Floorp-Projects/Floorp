@@ -17,20 +17,20 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `BrowserToolbarBehavior` will not position the `Snackbar.SnackbarLayout` anymore. The ownership for the positioning behavior should be reversed with the snackbar choosing whether it want to be shown above the toolbar and exactly how. [Bug 1812518](https://bugzilla.mozilla.org/show_bug.cgi?id=1812518)
 
 * **browser-engine-gecko**
-  * 🚒 Bug fixed [bug 1811183](https://bugzilla.mozilla.org/show_bug.cgi?id=1811183). Handles non-digit values for `DateTimePrompt.stepValue`.
+  * 🚒 Bug fixed [Bug 1811183](https://bugzilla.mozilla.org/show_bug.cgi?id=1811183). Handles non-digit values for `DateTimePrompt.stepValue`.
 
 * **concept-engine**
-  * 🌟 Expose the release channel of GeckoView through a new `releaseChannel` property of `EngineVersion`. [bug #1811448](https://bugzilla.mozilla.org/show_bug.cgi?id=1811448).
+  * 🌟 Expose the release channel of GeckoView through a new `releaseChannel` property of `EngineVersion`. [Bug 1811448](https://bugzilla.mozilla.org/show_bug.cgi?id=1811448).
 
 * **concept-engine**
-  * 🆕 Added `Settings.cookieBannerHandlingDetectOnlyMode` which helps to detect cookie banner events without handle the banners + indicating the mode of the events, see [bug 1810743](https://bugzilla.mozilla.org/show_bug.cgi?id=1810743)
+  * 🆕 Added `Settings.cookieBannerHandlingDetectOnlyMode` which helps to detect cookie banner events without handle the banners + indicating the mode of the events, see [Bug 1810743](https://bugzilla.mozilla.org/show_bug.cgi?id=1810743)
   * ⚠️ **This is a breaking change**: Removed `CookieBannerMode.MODE_DETECT_ONLY` use `Settings.cookieBannerHandlingDetectOnlyMode` instead.
 
 * **feature-webnotifications**
-  * 🌟 Added support for silent web notifications. Default importance level for web notifications was set to `IMPORTANCE_DEFAULT`.[bug #1796766](https://bugzilla.mozilla.org/show_bug.cgi?id=1796766).
+  * 🌟 Added support for silent web notifications. Default importance level for web notifications was set to `IMPORTANCE_DEFAULT`. [Bug 1796766](https://bugzilla.mozilla.org/show_bug.cgi?id=1796766).
 
 * **feature-media**
-  * 🚒 Bug fixed [bug #1802620](https://bugzilla.mozilla.org/show_bug.cgi?id=1802620). Handles `ForegroundServiceStartNotAllowedException`.
+  * 🚒 Bug fixed [Bug 1802620](https://bugzilla.mozilla.org/show_bug.cgi?id=1802620). Handles `ForegroundServiceStartNotAllowedException`.
 
 # 110.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v109.0.0...v110.0.0)
@@ -39,29 +39,29 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/.config.yml)
 
 * **support-telemetry-sync**
-  * 🚒 Bug fixed [bug #1804996](https://bugzilla.mozilla.org/show_bug.cgi?id=1804996). Removed fpsa, ftas, ftsa and ffos DDG type tags and replaced them with fpas.
+  * 🚒 Bug fixed [Bug 1804996](https://bugzilla.mozilla.org/show_bug.cgi?id=1804996). Removed fpsa, ftas, ftsa and ffos DDG type tags and replaced them with fpas.
 
 * **lib-crash**
-  * 🚒 Bug fixed [bug 1802975](https://bugzilla.mozilla.org/show_bug.cgi?id=1802975). Allow crash dumps to be shared using a11y services.
+  * 🚒 Bug fixed [Bug 1802975](https://bugzilla.mozilla.org/show_bug.cgi?id=1802975). Allow crash dumps to be shared using a11y services.
 
 * **concept-engine**
-  * 🌟️️ Add `CookieBannerHandlingStatus` to `SessionState` instance to indicate the status of the given session state see more on [bug #1797568](https://bugzilla.mozilla.org/show_bug.cgi?id=1797568).
+  * 🌟️️ Add `CookieBannerHandlingStatus` to `SessionState` instance to indicate the status of the given session state see more on [Bug 1797568](https://bugzilla.mozilla.org/show_bug.cgi?id=1797568).
 
 * **feature-share**
-  * 🚒 Bug fixed [bug #1806411](https://bugzilla.mozilla.org/show_bug.cgi?id=1806411). Remove image link from share message when sharing an image.
+  * 🚒 Bug fixed [Bug 1806411](https://bugzilla.mozilla.org/show_bug.cgi?id=1806411). Remove image link from share message when sharing an image.
 
 * **concept-engine**
-* 🆕 Added `CookieBannerMode.MODE_DETECT_ONLY`, this help to dected cookie banner events without handle the banners see [bug #1806435](https://bugzilla.mozilla.org/show_bug.cgi?id=1804594)
+* 🆕 Added `CookieBannerMode.MODE_DETECT_ONLY`, this help to dected cookie banner events without handle the banners see [Bug 1806435](https://bugzilla.mozilla.org/show_bug.cgi?id=1804594)
 
 * **browser-state**, **feature-search**
-  * Added a new parameter `isGeneral` to `SearchEngine` to specify whether or not the search engine is a general search engine (eg, provides broad search results). Search engines read from storage will now have this parameter set based on a list of general search engines. [bug #1804594](https://bugzilla.mozilla.org/show_bug.cgi?id=1804594)
+  * Added a new parameter `isGeneral` to `SearchEngine` to specify whether or not the search engine is a general search engine (eg, provides broad search results). Search engines read from storage will now have this parameter set based on a list of general search engines. [Bug 1804594](https://bugzilla.mozilla.org/show_bug.cgi?id=1804594)
   * Added Selector `BrowserState.findNormalOrPrivateTabByUrlIgnoringFragment` to match urls ignoring the fragment/anchor of the url, allowing `SelectorAddUseCase` to use this functionality.
 
 * **feature-tabs**
-  * Added `ignoreFragment` param in `SelectOrAddUseCase` to match urls ignoring the anchor/fragment. This sets the the foundation to fix [bug 1796319](https://bugzilla.mozilla.org/show_bug.cgi?id=1796319).
+  * Added `ignoreFragment` param in `SelectOrAddUseCase` to match urls ignoring the anchor/fragment. This sets the the foundation to fix [Bug 1796319](https://bugzilla.mozilla.org/show_bug.cgi?id=1796319).
 
 * **lib-crash-sentry**
-  * 🚒 Bug fixed [bug #1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Properly synchronize access to the crash reporter breadcrumb list.
+  * 🚒 Bug fixed [Bug 1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Properly synchronize access to the crash reporter breadcrumb list.
 
 * **feature-prompts**:
   * Added permission requests for accessing media files (`READ_MEDIA_AUDIO`, `READ_MEDIA_AUDIO`, `READ_MEDIA_AUDIO`) when uploading files on devices with Android 13 and later.
@@ -76,7 +76,7 @@ permalink: /changelog/
   * 🆕 Added a new parameter `shouldDisplaySearchTerms` to `ToolbarFeature` which allows clients to specify if the search terms should be shown instead of the URL when the toolbar is in display mode. [Bug 1805164](https://bugzilla.mozilla.org/show_bug.cgi?id=1805164)
 
 * **browser-engine-gecko**
-  * 🆕 Added `GeckoCookieBannersStorage.addPersistentExceptionInPrivateMode` to allow to add persistent cookie banner exceptions in private browsing [bug #1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1806924).
+  * 🆕 Added `GeckoCookieBannersStorage.addPersistentExceptionInPrivateMode` to allow to add persistent cookie banner exceptions in private browsing [Bug 1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1806924).
 
 # 109.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...v109.0.0)
@@ -85,13 +85,13 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/.config.yml)
 
 * **support-ktx, feature-contextmenu**
-  * 🚒 Bug fixed [bug #1798873](https://bugzilla.mozilla.org/show_bug.cgi?id=1798873) Added a way to exclude current app from share targets. Used when sharing text.
+  * 🚒 Bug fixed [Bug 1798873](https://bugzilla.mozilla.org/show_bug.cgi?id=1798873) Added a way to exclude current app from share targets. Used when sharing text.
 
 * **feature-top-sites**
-  * 🆕 A new filter `hasHost` was added when getting top frecent sites in order to remove duplicate frecent top sites that have same host/domain as provided top sites. For more references see [bug #1801285](https://bugzilla.mozilla.org/show_bug.cgi?id=1801285).
+  * 🆕 A new filter `hasHost` was added when getting top frecent sites in order to remove duplicate frecent top sites that have same host/domain as provided top sites. For more references see [Bug 1801285](https://bugzilla.mozilla.org/show_bug.cgi?id=1801285).
 
 * **browser-menu**:
-  * 🚒 Bug Fixed [bug #1800885](https://bugzilla.mozilla.org/show_bug.cgi?id=1800885) Increase touch target of Add/Edit checkbox from `mozac_browser_menu_item_image_text_checkbox_button.xml` to improve accessibility.
+  * 🚒 Bug Fixed [Bug 1800885](https://bugzilla.mozilla.org/show_bug.cgi?id=1800885) Increase touch target of Add/Edit checkbox from `mozac_browser_menu_item_image_text_checkbox_button.xml` to improve accessibility.
 
 * **All components**
   * ⚠️Increased `compileSdkVersion` to 33 (Android 13)
@@ -102,19 +102,19 @@ permalink: /changelog/
   * Added `String.toShortUrl` extension that allows making URLs more user friendly [#1796379](https://bugzilla.mozilla.org/show_bug.cgi?id=1796379)
 
 * **browser-engine-gecko**
-  * 🆕 Added `GeckoCookieBannersStorage.kt` to manage cookie banner exceptions [bug #1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1797605).
+  * 🆕 Added `GeckoCookieBannersStorage.kt` to manage cookie banner exceptions [Bug 1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1797605).
 
 * **concept-engine**
-  * 🚒 Bug fixed [bug #1801648](https://bugzilla.mozilla.org/show_bug.cgi?id=1801648). Fix autoplay settings are not getting updated in private mode.
+  * 🚒 Bug fixed [Bug 1801648](https://bugzilla.mozilla.org/show_bug.cgi?id=1801648). Fix autoplay settings are not getting updated in private mode.
 
 * **browser-storage-sync**
-  * Removed Fennec to Fenix migration code. Deleted the `importVisitsFromFennec`, `importBookmarksFromFennec` and `readPinnedSitesFromFennec` functions. [bug #1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
+  * Removed Fennec to Fenix migration code. Deleted the `importVisitsFromFennec`, `importBookmarksFromFennec` and `readPinnedSitesFromFennec` functions. [Bug 1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
 
 * **service-sync-logins**
-  * Removed Fennec to Fenix migration code. Deleted `importLoginsAsync` function. [bug #1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
+  * Removed Fennec to Fenix migration code. Deleted `importLoginsAsync` function. [Bug 1803632](https://bugzilla.mozilla.org/show_bug.cgi?id=1803632)
 
 * **lib-crash-sentry**
-  * 🚒 Bug fixed [bug #1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Copy the breadcrumb date to the Sentry breadcrumb.
+  * 🚒 Bug fixed [Bug 1801349](https://bugzilla.mozilla.org/show_bug.cgi?id=1801349).  Copy the breadcrumb date to the Sentry breadcrumb.
 
 # 108.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)
@@ -123,20 +123,20 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/.config.yml)
 
 * **feature-search**
-  * 🆕 A new action `RefreshSearchEnginesAction` was added to the `BrowserAction` to allow for refreshing search engines when app locale is changed. For more references see [bug #1800209](https://bugzilla.mozilla.org/show_bug.cgi?id=1800209).
+  * 🆕 A new action `RefreshSearchEnginesAction` was added to the `BrowserAction` to allow for refreshing search engines when app locale is changed. For more references see [Bug 1800209](https://bugzilla.mozilla.org/show_bug.cgi?id=1800209).
 
 * **feature-readerview**:
-  * [bug #1798672](https://bugzilla.mozilla.org/show_bug.cgi?id=1798672) Reader view font controls have adaptive font sizes to support smaller width devices.
+  * [Bug 1798672](https://bugzilla.mozilla.org/show_bug.cgi?id=1798672) Reader view font controls have adaptive font sizes to support smaller width devices.
 
 * **ui-autocomplete**
-  * 🚒 Bug fixed [bug #1794933](https://bugzilla.mozilla.org/show_bug.cgi?id=1794933) Immediately remove autocomplete when not applicable anymore.
+  * 🚒 Bug fixed [Bug 1794933](https://bugzilla.mozilla.org/show_bug.cgi?id=1794933) Immediately remove autocomplete when not applicable anymore.
 
 * **concept-engine**
-  * [bug #1798359](https://bugzilla.mozilla.org/show_bug.cgi?id=1798359) Set Total Cookie Protection as the default cookie policy for all Tracking Protection modes. Read more about Total Cookie Protection [here](https://blog.mozilla.org/en/mozilla/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/).
+  * [Bug 1798359](https://bugzilla.mozilla.org/show_bug.cgi?id=1798359) Set Total Cookie Protection as the default cookie policy for all Tracking Protection modes. Read more about Total Cookie Protection [here](https://blog.mozilla.org/en/mozilla/firefox-rolls-out-total-cookie-protection-by-default-to-all-users-worldwide/).
   * Renamed `EngineSession.onSaveToPdfError` to `EngineSession.onSaveToPdfException`.
 
 * **browser-engine-gecko**
-  * 🆕 A new action `SaveToPdfExceptionAction` was added to the `EngineAction` to allow for notifying consumers on unsuccessful Save to PDF requests. For more references see [bug #1796482](https://bugzilla.mozilla.org/show_bug.cgi?id=1796482).
+  * 🆕 A new action `SaveToPdfExceptionAction` was added to the `EngineAction` to allow for notifying consumers on unsuccessful Save to PDF requests. For more references see [Bug 1796482](https://bugzilla.mozilla.org/show_bug.cgi?id=1796482).
   * ⚠️ When using the save to pdf feature, now it's required have a middleware that handles the `SaveToPdfExceptionAction`, or your application will crash when an error happens when requesting a page to be saved as PDF.
 
 * **compose-cfr**
@@ -2290,7 +2290,7 @@ permalink: /changelog/
 * **service-glean**
   * Glean was updated to v29.1.0
     * ⚠️ **This is a breaking change**: glinter errors found during code generation will now return an error code.
-    * The minimum and maximum values of a timing distribution can now be controlled by the `time_unit` parameter. See [bug 1630997](https://bugzilla.mozilla.org/show_bug.cgi?id=1630997) for more details.
+    * The minimum and maximum values of a timing distribution can now be controlled by the `time_unit` parameter. See [Bug 1630997](https://bugzilla.mozilla.org/show_bug.cgi?id=1630997) for more details.
 
 * **feature-accounts**
   *  ⚠️ **This is a breaking change**: Refactored component to use `browser-state` instead of `browser-session`. The `FxaWebChannelFeature`  now requires a `BrowserStore` instance instead of a `SessionManager`.
@@ -2911,7 +2911,7 @@ permalink: /changelog/
       function. This removes the requirement to call `setUploadEnabled()` prior to calling
       the `initialize()` function.
     * A new metric `glean.error.preinit_tasks_overflow` was added to report when
-      the preinit task queue overruns, leading to data loss. See [bug
+      the preinit task queue overruns, leading to data loss. See [Bug
       1609482](https://bugzilla.mozilla.org/show_bug.cgi?id=1609482)
     * The metrics ping scheduler will now only send metrics pings while the
       application is running. The application will no longer "wake up" at 4am
@@ -3182,7 +3182,7 @@ permalink: /changelog/
 * **service-glean**
   * Glean was updated to v21.2.0
     * Two new metrics were added to investigate sending of metrics and baseline pings.
-      See [bug 1597980](https://bugzilla.mozilla.org/show_bug.cgi?id=1597980) for more information.
+      See [Bug 1597980](https://bugzilla.mozilla.org/show_bug.cgi?id=1597980) for more information.
     * Glean's two lifecycle observers were refactored to avoid the use of reflection.
     * Timespans will now not record an error if stopping after setting upload enabled to false.
     * The `GleanTimerId` can now be accessed in Java and is no longer a `typealias`.
@@ -3762,7 +3762,7 @@ permalink: /changelog/
   * Adds the ability to create a basic shortcut with a custom label
 
 * **browser-engine-gecko-nightly**
-  * Adds support for exposing Gecko scalars through the Glean SDK. See [bug 1579365](https://bugzilla.mozilla.org/show_bug.cgi?id=1579365) for details.
+  * Adds support for exposing Gecko scalars through the Glean SDK. See [Bug 1579365](https://bugzilla.mozilla.org/show_bug.cgi?id=1579365) for details.
 
 * **support-utils**
   * `Intent.asForegroundServicePendingIntent(Context)` extension method to create pending intent for the service that will play nicely with background execution limitations introduced in Android O (e.g. foreground service).
