@@ -172,7 +172,11 @@ class _SphinxManager(object):
 
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(self.staging_dir, remove_empty_directories=False)
+
+        # In the case of livereload, we don't want to delete unmodified (unaccounted) files.
+        copier.copy(
+            self.staging_dir, remove_empty_directories=False, remove_unaccounted=False
+        )
 
         with open(self.index_path, "r") as fh:
             data = fh.read()
