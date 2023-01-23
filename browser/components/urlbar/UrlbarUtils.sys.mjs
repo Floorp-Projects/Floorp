@@ -2424,10 +2424,14 @@ export class L10nCache {
   /**
    * Gets a cached l10n message.
    *
-   * @param {string} id
+   * @param {object} options
+   *   Options
+   * @param {string} options.id
    *   The string's Fluent ID.
-   * @param {object} [args]
+   * @param {object} options.args
    *   The Fluent arguments as passed to `l10n.setAttributes`.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true if the string was cached using a key that excluded arguments.
    * @returns {object}
    *   The message object or undefined if it's not cached. The message object is
    *   similar to `L10nMessage` (defined in Localization.webidl) but its
@@ -2457,19 +2461,29 @@ export class L10nCache {
    *     cache.get("bar")
    *     // => { value: null, attributes: { label: "Bar's label value" }}
    */
-  get(id, args = undefined) {
-    return this._messagesByKey.get(this._key(id, args));
+  get({ id, args = undefined, excludeArgsFromCacheKey = false }) {
+    return this._messagesByKey.get(
+      this._key({ id, args, excludeArgsFromCacheKey })
+    );
   }
 
   /**
    * Fetches a string from Fluent and caches it.
    *
-   * @param {string} id
+   * @param {object} options
+   *   Options
+   * @param {string} options.id
    *   The string's Fluent ID.
-   * @param {object} [args]
+   * @param {object} options.args
    *   The Fluent arguments as passed to `l10n.setAttributes`.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true to cache the string using a key that excludes the arguments.
+   *   The string will be cached only by its ID. This is useful if the string is
+   *   used only once in the UI, its arguments vary, and it's acceptable to
+   *   fetch and show a cached value with old arguments until the string is
+   *   relocalized with new arguments.
    */
-  async add(id, args = undefined) {
+  async add({ id, args = undefined, excludeArgsFromCacheKey = false }) {
     let l10n = this.l10n.get();
     if (!l10n) {
       return;
@@ -2494,7 +2508,10 @@ export class L10nCache {
         {}
       );
     }
-    this._messagesByKey.set(this._key(id, args), message);
+    this._messagesByKey.set(
+      this._key({ id, args, excludeArgsFromCacheKey }),
+      message
+    );
   }
 
   /**
@@ -2502,27 +2519,32 @@ export class L10nCache {
    * slight optimization over `add` that avoids calling into Fluent
    * unnecessarily.
    *
-   * @param {string} id
+   * @param {object} options
+   *   Options
+   * @param {string} options.id
    *   The string's Fluent ID.
-   * @param {object} [args]
+   * @param {object} options.args
    *   The Fluent arguments as passed to `l10n.setAttributes`.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true to cache the string using a key that excludes the arguments.
+   *   The string will be cached only by its ID. See `add()` for more.
    */
-  async ensure(id, args = undefined) {
-    if (!this.get(id, args)) {
-      await this.add(id, args);
+  async ensure({ id, args = undefined, excludeArgsFromCacheKey = false }) {
+    if (!this.get({ id, args, excludeArgsFromCacheKey })) {
+      await this.add({ id, args, excludeArgsFromCacheKey });
     }
   }
 
   /**
    * Fetches and caches strings that aren't already cached.
    *
-   * @param {Array} idArgs
-   *   An array of `{ id, args }` objects.
+   * @param {Array} objects
+   *   An array of objects as passed to `ensure()`.
    */
-  async ensureAll(idArgs) {
+  async ensureAll(objects) {
     let promises = [];
-    for (let { id, args } of idArgs) {
-      promises.push(this.ensure(id, args));
+    for (let obj of objects) {
+      promises.push(this.ensure(obj));
     }
     await Promise.all(promises);
   }
@@ -2530,13 +2552,20 @@ export class L10nCache {
   /**
    * Removes a cached string.
    *
-   * @param {string} id
+   * @param {object} options
+   *   Options
+   * @param {string} options.id
    *   The string's Fluent ID.
-   * @param {object} [args]
+   * @param {object} options.args
    *   The Fluent arguments as passed to `l10n.setAttributes`.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true if the string was cached using a key that excludes the
+   *   arguments. If true, `args` is ignored.
    */
-  delete(id, args = undefined) {
-    this._messagesByKey.delete(this._key(id, args));
+  delete({ id, args = undefined, excludeArgsFromCacheKey = false }) {
+    this._messagesByKey.delete(
+      this._key({ id, args, excludeArgsFromCacheKey })
+    );
   }
 
   /**
@@ -2583,20 +2612,25 @@ export class L10nCache {
   /**
    * Returns a cache key for a string in `_messagesByKey`.
    *
-   * @param {string} id
+   * @param {object} options
+   *   Options
+   * @param {string} options.id
    *   The string's Fluent ID.
-   * @param {object} [args]
+   * @param {object} options.args
    *   The Fluent arguments as passed to `l10n.setAttributes`.
+   * @param {boolean} options.excludeArgsFromCacheKey
+   *   Pass true to exclude the arguments from the key and include only the ID.
    * @returns {string}
    *   The cache key.
    */
-  _key(id, args) {
+  _key({ id, args, excludeArgsFromCacheKey }) {
     // Keys are `id` plus JSON'ed `args` values. `JSON.stringify` doesn't
     // guarantee a particular ordering of object properties, so instead of
     // stringifying `args` as is, sort its entries by key and then pull out the
     // values. The final key is a JSON'ed array of `id` concatenated with the
     // sorted-by-key `args` values.
-    let argValues = Object.entries(args || [])
+    args = (!excludeArgsFromCacheKey && args) || [];
+    let argValues = Object.entries(args)
       .sort(([key1], [key2]) => key1.localeCompare(key2))
       .map(([_, value]) => value);
     let parts = [id].concat(argValues);
