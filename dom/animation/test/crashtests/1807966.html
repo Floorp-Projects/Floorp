@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<style>
+  #target {
+    transition-timing-function: linear(calc(15 / 0), 10 10%);
+    transition-duration: 10s;
+  }
+</style>
+<script>
+  window.addEventListener('load', () => {
+    target.style.paddingBlock = "10px 10px";
+  })
+</script>
+<slot id="target"></slot>
