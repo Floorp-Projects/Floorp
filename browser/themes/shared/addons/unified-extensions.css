@@ -42,8 +42,7 @@ unified-extensions-item {
  * of the action button to draw the attention dot.
  * Otherwise (in the extensions panel), we use the action button itself. */
 toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-button > .toolbarbutton-badge-stack,
-#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button,
-.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action-button {
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button {
   background-image: radial-gradient(circle, var(--uei-button-attention-dot-color), var(--uei-button-attention-dot-color) 2px, transparent 2px);
   background-size: var(--uei-attention-dot-size) var(--uei-attention-dot-size);
   background-repeat: no-repeat;
@@ -63,21 +62,6 @@ toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-bu
 /* Adjust attention dots position in the unified extensions panel for RTL. */
 #unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button:-moz-locale-dir(rtl) {
   background-position-x: right var(--uei-dot-horizontal-position-in-panel);
-}
-
-/* Adjust attention dots position in the overflow panel. */
-.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action-button {
-  background-position-x: left calc(16px / 2 + var(--arrowpanel-menuitem-padding-inline) - var(--uei-attention-dot-size) / 2);
-  background-position-y: bottom calc(var(--arrowpanel-menuitem-padding-block) / 2 - var(--uei-attention-dot-size) / 2);
-}
-
-:root[uidensity="compact"] .widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action-button {
-  background-position-y: bottom -2px;
-}
-
-/* Adjust attention dots position in the overflow panel for RTL. */
-.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action-button:-moz-locale-dir(rtl) {
-  background-position-x: right calc(16px / 2 + var(--arrowpanel-menuitem-padding-inline) - var(--uei-attention-dot-size) / 2);
 }
 
 .unified-extensions-item-action-button {
@@ -101,16 +85,14 @@ toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-bu
 }
 
 .unified-extensions-item-icon,
-/* When the unified extensions pref is enabled, we also want to increase the
- * size of the icons in the extension CUI widgets. */
-panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+#unified-extensions-panel .unified-extensions-item .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: var(--uei-icon-size);
   width: var(--uei-icon-size);
 }
 
 /* The first selector is for the custom elements icon, which appears only in the UEP. */
 .unified-extensions-item-icon,
-panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack {
+#unified-extensions-panel .unified-extensions-item .webextension-browser-action > .toolbarbutton-badge-stack {
   margin-inline-end: 6px;
 }
 
@@ -141,58 +123,34 @@ panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-
   background-color: transparent;
 }
 
-.unified-extensions-item-menu-button.subviewbutton > .toolbarbutton-text {
+/* Hide subview label. */
+:is(unified-extensions-item, toolbaritem).unified-extensions-item .toolbarbutton-text {
   display: none;
 }
 
 /* --- browser action CUI widget styles --- */
 
-/* Hide secondary (menu) button when the widget is in the list of widgets in
- * customization mode. */
-toolbaritem.unified-extensions-item:not([cui-areatype="panel"], [overflowedItem=true]) .unified-extensions-item-menu-button {
+toolbar toolbaritem.unified-extensions-item .unified-extensions-item-menu-button {
   display: none;
 }
 
-/* Hide subviewbutton label by default, it should only be shown in the old
- * overflow panel and the palette. */
-toolbaritem.unified-extensions-item[cui-areatype="toolbar"] .toolbarbutton-text,
-#unified-extensions-area > toolbaritem.unified-extensions-item .toolbarbutton-text {
-  display: none;
-}
-
-/* Hide unified extensions content by default, unless the item is overflowed or in
- * a panel. Also hide this content if the item is visible in customize mode. */
-toolbaritem.unified-extensions-item:not([overflowedItem="true"], [cui-areatype="panel"]) .unified-extensions-item-contents,
-toolbarpaletteitem > toolbaritem.unified-extensions-item .unified-extensions-item-contents {
+/* Hide unified extensions content by default. */
+toolbar .unified-extensions-item .unified-extensions-item-contents {
   display: none;
 }
 
 toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton {
   -moz-box-flex: 0;
   margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
-  padding: var(--arrowpanel-menuitem-padding);
+  padding: 8px;
   border: 1px solid transparent;
 }
 
-/* When the unified extensions pref is set, we want to always have a "large"
- * menu button, even on compact mode since each extension has two lines of text
- * anyway (extension name and message). */
-toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensions-item-menu-button.subviewbutton {
-  padding: 8px;
-}
-
-/* --- browser action CUI widget styles in the overflow/unified extensions panel --- */
+/* --- browser action CUI widget styles in the extensions panel --- */
 
 /* Align CUI widgets with the custom elements in the unified extensions panel. */
 #unified-extensions-panel toolbaritem.unified-extensions-item {
   max-width: max-content;
-}
-
-/* Show CUI widget label in overflow panel when the unified extensions pref is
- * not set. */
-.widget-overflow-list toolbaritem.unified-extensions-item[unified-extensions="false"] .unified-extensions-item-action-button .toolbarbutton-text {
-  text-align: start;
-  display: block;
 }
 
 @media (prefers-contrast) {
