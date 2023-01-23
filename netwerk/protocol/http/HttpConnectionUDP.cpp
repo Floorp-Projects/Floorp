@@ -507,15 +507,9 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   mIsReused = true;
 }
 
-void HttpConnectionUDP::OnQuicTimeout(nsITimer* aTimer, void* aClosure) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("HttpConnectionUDP::OnQuicTimeout [this=%p]\n", aClosure));
-
-  HttpConnectionUDP* self = static_cast<HttpConnectionUDP*>(aClosure);
-  self->OnQuicTimeoutExpired();
-}
-
 void HttpConnectionUDP::OnQuicTimeoutExpired() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG(("HttpConnectionUDP::OnQuicTimeoutExpired [this=%p]\n", this));
   // if the transaction was dropped...
   if (!mHttp3Session) {
     LOG(("  no transaction; ignoring event\n"));

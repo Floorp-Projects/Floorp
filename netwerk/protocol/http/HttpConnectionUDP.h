@@ -77,7 +77,6 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   bool UsingHttp3() override { return true; }
 
-  static void OnQuicTimeout(nsITimer* aTimer, void* aClosure);
   void OnQuicTimeoutExpired();
 
   int64_t BytesWritten() override;
