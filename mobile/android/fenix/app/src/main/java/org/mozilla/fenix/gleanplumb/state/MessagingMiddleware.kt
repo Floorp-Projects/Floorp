@@ -73,7 +73,7 @@ class MessagingMiddleware(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
-        val newMessage = controller.processDisplayedMessage(oldMessage)
+        val newMessage = controller.updateMessageAsDisplayed(oldMessage)
         val newMessages = if (!newMessage.isExpired) {
             updateMessage(context, oldMessage, newMessage)
         } else {

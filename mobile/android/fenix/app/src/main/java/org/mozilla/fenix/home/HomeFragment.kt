@@ -103,6 +103,7 @@ import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.DefaultMessageController
 import org.mozilla.fenix.gleanplumb.MessagingFeature
+import org.mozilla.fenix.gleanplumb.NimbusMessagingController
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -372,7 +373,7 @@ class HomeFragment : Fragment() {
                 engine = components.core.engine,
                 messageController = DefaultMessageController(
                     appStore = components.appStore,
-                    messagingStorage = components.analytics.messagingStorage,
+                    messagingController = NimbusMessagingController(components.analytics.messagingStorage),
                     homeActivity = activity,
                 ),
                 store = store,

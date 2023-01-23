@@ -9,9 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -26,6 +24,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.createBaseNotification
 import java.util.concurrent.TimeUnit
 
 /**
@@ -79,22 +78,13 @@ class ReEngagementNotificationWorker(
         )
 
         with(applicationContext) {
-            val appName = getString(R.string.app_name)
-            return NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_status_logo)
-                .setContentTitle(
-                    applicationContext.getString(R.string.notification_re_engagement_title),
-                )
-                .setContentText(
-                    applicationContext.getString(R.string.notification_re_engagement_text, appName),
-                )
-                .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-                .setColor(ContextCompat.getColor(this, R.color.primary_text_light_theme))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setShowWhen(false)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .build()
+            return createBaseNotification(
+                this,
+                channelId,
+                getString(R.string.notification_re_engagement_title),
+                getString(R.string.notification_re_engagement_text, getString(R.string.app_name)),
+                pendingIntent,
+            )
         }
     }
 

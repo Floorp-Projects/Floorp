@@ -38,7 +38,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -91,9 +90,11 @@ import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hasTopDestination
+import org.mozilla.fenix.ext.isNotificationChannelEnabled
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.gleanplumb.MessageNotificationWorker
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.AssistIntentProcessor
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
@@ -111,6 +112,7 @@ import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.onboarding.MARKETING_CHANNEL_ID
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
@@ -152,7 +154,6 @@ import java.util.Locale
  * - home screen
  * - browser screen
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList", "LongMethod")
 open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     // DO NOT MOVE ANYTHING ABOVE THIS, GETTING INIT TIME IS CRITICAL
@@ -423,8 +424,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             // that we should not rely on the application being killed between user sessions.
             components.appStore.dispatch(AppAction.ResumedMetricsAction)
 
-            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
-            ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(applicationContext)
+            with(applicationContext) {
+                // Only set up Workers if notifications are enabled
+                val notificationManagerCompat = NotificationManagerCompat.from(this)
+                if (notificationManagerCompat.isNotificationChannelEnabled(MARKETING_CHANNEL_ID)) {
+                    DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(this)
+                    ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(this)
+                    MessageNotificationWorker.setMessageNotificationWorker(this)
+                }
+            }
         }
 
         // This was done in order to refresh search engines when app is running in background
@@ -1143,8 +1151,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
         const val OPEN_TO_SEARCH = "open_to_search"
         const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
-        const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
-        const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
         const val START_IN_RECENTS_SCREEN = "start_in_recents_screen"
 
         // PWA must have been used within last 30 days to be considered "recently used" for the

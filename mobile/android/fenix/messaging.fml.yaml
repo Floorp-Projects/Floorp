@@ -115,6 +115,13 @@ features:
               max-display-count: 1
           notification-config:
             polling-interval: 15 # minutes
+          messages:
+            test-notification:
+              title: "Test title"
+              text: "Test text"
+              surface: notification
+              trigger: [ "ALWAYS" ]
+              action: "MAKE_DEFAULT_BROWSER"
 
 objects:
   MessageData:
@@ -191,9 +198,9 @@ objects:
       polling-interval:
         type: Int
         description: >
-          How often, in seconds, the notification message worker will wake up and check for new
+          How often, in minutes, the notification message worker will wake up and check for new
           messages.
-        default: 3600
+        default: 60
 
 enums:
   ControlMessageBehavior:

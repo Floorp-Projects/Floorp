@@ -5,12 +5,12 @@
 package org.mozilla.fenix.gleanplumb
 
 import android.net.Uri
+import androidx.core.net.toUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Messaging
 
 /**
- * Class extracted from [MessagingMiddleware] to do the bookkeeping for message actions, in terms
- * of Glean messages and the messaging store.
+ * Bookkeeping for message actions in terms of Glean messages and the messaging store.
  */
 class NimbusMessagingController(
     private val messagingStorage: NimbusMessagingStorage,
@@ -19,15 +19,15 @@ class NimbusMessagingController(
     /**
      * Called when a message is just about to be shown to the user.
      *
-     * This updates the display count, and expires the message if necessary.
+     * Update the display count and time shown metadata for the given [message].
      */
-    fun processDisplayedMessage(oldMessage: Message): Message {
-        val newMetadata = oldMessage.metadata.copy(
-            displayCount = oldMessage.metadata.displayCount + 1,
+    fun updateMessageAsDisplayed(message: Message): Message {
+        val updatedMetadata = message.metadata.copy(
+            displayCount = message.metadata.displayCount + 1,
             lastTimeShown = now(),
         )
-        return oldMessage.copy(
-            metadata = newMetadata,
+        return message.copy(
+            metadata = updatedMetadata,
         )
     }
 
@@ -59,26 +59,20 @@ class NimbusMessagingController(
      * and any `uuid` needs to be recorded in the Glean event.
      *
      * We call this `process` as it has a side effect of logging a Glean event while it
-     * creates a URI string for
+     * creates a URI string for the message action.
      */
-    fun processMessageAction(message: Message): String {
-        val (uuid, action) = messagingStorage.getMessageAction(message.action)
+    fun processMessageActionToUri(message: Message): Uri {
+        val (uuid, action) = messagingStorage.generateUuidAndFormatAction(message.action)
         sendClickedMessageTelemetry(message.id, uuid)
 
-        return if (action.startsWith("http", ignoreCase = true)) {
-            "${BuildConfig.DEEP_LINK_SCHEME}://open?url=${Uri.encode(action)}"
-        } else if (action.startsWith("://")) {
-            "${BuildConfig.DEEP_LINK_SCHEME}$action"
-        } else {
-            action
-        }
+        return action.toDeepLinkSchemeUri()
     }
 
     /**
      * Called once the user has clicked on a message.
      *
      * This records that the message has been clicked on, but does not record a
-     * glean event. That should be done via [processMessageAction].
+     * glean event. That should be done via [processMessageActionToUri].
      */
     suspend fun onMessageClicked(message: Message) {
         val updatedMetadata = message.metadata.copy(pressed = true)
@@ -99,10 +93,19 @@ class NimbusMessagingController(
 
     private fun sendClickedMessageTelemetry(messageId: String, uuid: String?) {
         Messaging.messageClicked.record(
-            Messaging.MessageClickedExtra(
-                messageKey = messageId,
-                actionUuid = uuid,
-            ),
+            Messaging.MessageClickedExtra(messageKey = messageId, actionUuid = uuid),
         )
     }
+}
+
+private fun String.toDeepLinkSchemeUri(): Uri {
+    val actionWithDeepLinkScheme = if (startsWith("http", ignoreCase = true)) {
+        "${BuildConfig.DEEP_LINK_SCHEME}://open?url=${Uri.encode(this)}"
+    } else if (startsWith("://")) {
+        "${BuildConfig.DEEP_LINK_SCHEME}$this"
+    } else {
+        this
+    }
+
+    return actionWithDeepLinkScheme.toUri()
 }

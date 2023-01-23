@@ -169,7 +169,7 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessagedDisplayed(message, middlewareContext)
 
-        verify { messagingController.processDisplayedMessage(message) }
+        verify { messagingController.updateMessageAsDisplayed(message) }
         coVerify { messagingController.onMessageDisplayed(any()) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(displayCount = 1)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
@@ -310,7 +310,7 @@ class MessagingMiddlewareTest {
         spiedMiddleware.onMessagedDisplayed(oldMessage, middlewareContext)
 
         verify { spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage) }
-        verify { messagingController.processDisplayedMessage(oldMessage) }
+        verify { messagingController.updateMessageAsDisplayed(oldMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
         coVerify { messagingController.onMessageDisplayed(updatedMessage) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
@@ -342,7 +342,7 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessagedDisplayed(oldMessage, middlewareContext)
 
-        verify { messagingController.processDisplayedMessage(oldMessage) }
+        verify { messagingController.updateMessageAsDisplayed(oldMessage) }
         verify { spiedMiddleware.consumeMessageToShowIfNeeded(middlewareContext, oldMessage) }
         verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }

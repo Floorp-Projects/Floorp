@@ -133,7 +133,7 @@ class NimbusMessagingStorage(
      * The fully resolved (with all substitutions) action is returned as the second value
      * of the [Pair].
      */
-    fun getMessageAction(action: String): Pair<String?, String> {
+    fun generateUuidAndFormatAction(action: String): Pair<String?, String> {
         val helper = gleanPlumb.createMessageHelper(customAttributes)
         val uuid = helper.getUuid(action)
 

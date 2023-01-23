@@ -5,6 +5,7 @@
 package org.mozilla.fenix.gleanplumb
 
 import android.net.Uri
+import androidx.core.net.toUri
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -13,6 +14,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -25,7 +27,9 @@ import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
 import org.mozilla.fenix.nimbus.StyleData
-import java.util.*
+import java.util.UUID
+
+private const val MOCK_TIME_MILLIS = 1000L
 
 @RunWith(FenixRobolectricTestRunner::class)
 class NimbusMessagingControllerTest {
@@ -37,7 +41,7 @@ class NimbusMessagingControllerTest {
     private val coroutinesTestRule = MainCoroutineRule()
     private val coroutineScope = coroutinesTestRule.scope
 
-    private val controller = NimbusMessagingController(storage) { 0L }
+    private val controller = NimbusMessagingController(storage) { MOCK_TIME_MILLIS }
 
     @Before
     fun setup() {
@@ -45,130 +49,201 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling onMessageDismissed THEN record a messageDismissed event and updates metadata`() = coroutineScope.runTest {
-        val message = createMessage("id-1")
-        assertNull(Messaging.messageDismissed.testGetValue())
+    fun `WHEN calling updateMessageAsDisplayed message THEN message metadata is updated`() =
+        coroutineScope.runTest {
+            val message = createMessage("id-1")
+            assertEquals(0, message.metadata.displayCount)
+            assertEquals(0L, message.metadata.lastTimeShown)
 
-        controller.onMessageDismissed(message)
+            val expectedMessage = with(message) {
+                copy(metadata = metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
+            }
 
-        assertNotNull(Messaging.messageDismissed.testGetValue())
-        val event = Messaging.messageDismissed.testGetValue()!!
-        assertEquals(1, event.size)
-        assertEquals(message.id, event.single().extra!!["message_key"])
-
-        coVerify { storage.updateMetadata(message.metadata.copy(dismissed = true)) }
-    }
-
-    @Test
-    fun `WHEN calling processDisplayedMessage THEN record a messageDisplayed event and updates metadata`() = coroutineScope.runTest {
-        val message = createMessage("id-1")
-        assertNull(Messaging.messageShown.testGetValue())
-        assertEquals(0, message.metadata.displayCount)
-
-        val updated = controller.processDisplayedMessage(message)
-        controller.onMessageDisplayed(updated)
-
-        assertNotNull(Messaging.messageShown.testGetValue())
-        val event = Messaging.messageShown.testGetValue()!!
-        assertEquals(1, event.size)
-        assertEquals(message.id, event.single().extra!!["message_key"])
-
-        coVerify { storage.updateMetadata(message.metadata.copy(displayCount = 1)) }
-        assertEquals(1, updated.metadata.displayCount)
-    }
+            assertEquals(expectedMessage, controller.updateMessageAsDisplayed(message))
+        }
 
     @Test
-    fun `WHEN calling processDisplayedMessage on an expiring message THEN record a messageExpired event`() = coroutineScope.runTest {
-        val message = createMessage("id-1", style = StyleData(maxDisplayCount = 1))
-        assertNull(Messaging.messageShown.testGetValue())
-        assertEquals(0, message.metadata.displayCount)
+    fun `GIVEN message not expired WHEN calling onMessageDisplayed THEN record a messageShown event and update storage`() =
+        coroutineScope.runTest {
+            val message = createMessage("id-1", style = StyleData(maxDisplayCount = 1))
+            // Assert telemetry is initially null
+            assertNull(Messaging.messageShown.testGetValue())
+            assertNull(Messaging.messageExpired.testGetValue())
 
-        val updated = controller.processDisplayedMessage(message)
-        controller.onMessageDisplayed(updated)
+            controller.onMessageDisplayed(message)
 
-        assertNotNull(Messaging.messageShown.testGetValue())
-        val shownEvent = Messaging.messageShown.testGetValue()!!
-        assertEquals(1, shownEvent.size)
-        assertEquals(message.id, shownEvent.single().extra!!["message_key"])
+            // Shown telemetry
+            assertNotNull(Messaging.messageShown.testGetValue())
+            val shownEvent = Messaging.messageShown.testGetValue()!!
+            assertEquals(1, shownEvent.size)
+            assertEquals(message.id, shownEvent.single().extra!!["message_key"])
 
-        coVerify { storage.updateMetadata(message.metadata.copy(displayCount = 1)) }
-        assertEquals(1, updated.metadata.displayCount)
+            // Expired telemetry
+            assertNull(Messaging.messageExpired.testGetValue())
 
-        assertNotNull(Messaging.messageExpired.testGetValue())
-        val expiredEvent = Messaging.messageExpired.testGetValue()!!
-        assertEquals(1, expiredEvent.size)
-        assertEquals(message.id, expiredEvent.single().extra!!["message_key"])
-    }
+            coVerify { storage.updateMetadata(message.metadata) }
+        }
 
     @Test
-    fun `GIVEN a URL WHEN calling createMessageAction THEN treat it as an open uri deeplink`() {
-        val message = createMessage("id-1", action = "http://mozilla.org")
-        every { storage.getMessageAction(any()) } returns Pair(null, message.action)
+    fun `GIVEN message is expired WHEN calling onMessageDisplayed THEN record messageShown, messageExpired events and update storage`() =
+        coroutineScope.runTest {
+            val message =
+                createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 1)
+            // Assert telemetry is initially null
+            assertNull(Messaging.messageShown.testGetValue())
+            assertNull(Messaging.messageExpired.testGetValue())
 
-        val uri = controller.processMessageAction(message)
+            controller.onMessageDisplayed(message)
 
-        val encodedUrl = Uri.encode("http://mozilla.org")
-        assertEquals(
-            "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl",
-            uri,
+            // Shown telemetry
+            assertNotNull(Messaging.messageShown.testGetValue())
+            val shownEvent = Messaging.messageShown.testGetValue()!!
+            assertEquals(1, shownEvent.size)
+            assertEquals(message.id, shownEvent.single().extra!!["message_key"])
+
+            // Expired telemetry
+            assertNotNull(Messaging.messageExpired.testGetValue())
+            val expiredEvent = Messaging.messageExpired.testGetValue()!!
+            assertEquals(1, expiredEvent.size)
+            assertEquals(message.id, expiredEvent.single().extra!!["message_key"])
+
+            coVerify { storage.updateMetadata(message.metadata) }
+        }
+
+    @Test
+    fun `WHEN calling onMessageDismissed THEN record a messageDismissed event and update metadata`() =
+        coroutineScope.runTest {
+            val message = createMessage("id-1")
+            assertNull(Messaging.messageDismissed.testGetValue())
+
+            controller.onMessageDismissed(message)
+
+            assertNotNull(Messaging.messageDismissed.testGetValue())
+            val event = Messaging.messageDismissed.testGetValue()!!
+            assertEquals(1, event.size)
+            assertEquals(message.id, event.single().extra!!["message_key"])
+
+            coVerify { storage.updateMetadata(message.metadata.copy(dismissed = true)) }
+        }
+
+    @Test
+    fun `GIVEN action is URL WHEN calling processMessageActionToUri THEN record a clicked telemetry event and return an open URI`() {
+        val url = "http://mozilla.org"
+        val message = createMessage("id-1", action = url)
+        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
+            null,
+            message.action,
         )
+        // Assert telemetry is initially null
+        assertNull(Messaging.messageClicked.testGetValue())
+
+        val encodedUrl = Uri.encode(url)
+        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl".toUri()
+
+        val actualUri = controller.processMessageActionToUri(message)
+
+        // Updated telemetry
+        assertNotNull(Messaging.messageClicked.testGetValue())
+        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertEquals(1, clickedEvent.size)
+        assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
+
+        assertEquals(expectedUri, actualUri)
     }
 
     @Test
-    fun `GIVEN an deeplink WHEN calling createMessageAction THEN treat it as a deeplink`() {
-        val message = createMessage("id-1", action = "://a-deep-link")
-        every { storage.getMessageAction(any()) } returns Pair(null, message.action)
-
-        val uri = controller.processMessageAction(message)
-
-        assertEquals(
-            "${BuildConfig.DEEP_LINK_SCHEME}://a-deep-link",
-            uri,
-        )
-    }
-
-    @Test
-    fun `GIVEN a URL WHEN calling createMessageAction THEN record a messageClicked event`() {
-        val message = createMessage("id-1", action = "http://mozilla.org")
-        every { storage.getMessageAction(any()) } returns Pair(null, message.action)
-
-        controller.processMessageAction(message)
-
-        val clickedEvents = Messaging.messageClicked.testGetValue()
-        assertNotNull(clickedEvents)
-        val clickedEvent = clickedEvents!!.single()
-
-        assertEquals(message.id, clickedEvent.extra!!["message_key"])
-        assertEquals(null, clickedEvent.extra!!["action_uuid"])
-    }
-
-    @Test
-    fun `GIVEN a URL with a {uuid} WHEN calling createMessageAction THEN record a messageClicked event with a uuid`() {
-        val message = createMessage("id-1", action = "http://mozilla.org?uuid={uuid}")
+    fun `GIVEN a URL with a {uuid} WHEN calling processMessageActionToUri THEN record a clicked telemetry event and return an open URI`() {
+        val url = "http://mozilla.org?uuid={uuid}"
+        val message = createMessage("id-1", action = url)
         val uuid = UUID.randomUUID().toString()
-        every { storage.getMessageAction(any()) } returns Pair(uuid, message.action)
+        every { storage.generateUuidAndFormatAction(any()) } returns Pair(uuid, message.action)
 
-        controller.processMessageAction(message)
+        // Assert telemetry is initially null
+        assertNull(Messaging.messageClicked.testGetValue())
 
+        val encodedUrl = Uri.encode(url)
+        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl".toUri()
+
+        val actualUri = controller.processMessageActionToUri(message)
+
+        // Updated telemetry
         val clickedEvents = Messaging.messageClicked.testGetValue()
         assertNotNull(clickedEvents)
         val clickedEvent = clickedEvents!!.single()
-
         assertEquals(message.id, clickedEvent.extra!!["message_key"])
         assertEquals(uuid, clickedEvent.extra!!["action_uuid"])
+
+        assertEquals(expectedUri, actualUri)
     }
+
+    @Test
+    fun `GIVEN action is deeplink WHEN calling processMessageActionToUri THEN return a deeplink URI`() {
+        val message = createMessage("id-1", action = "://a-deep-link")
+        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
+            null,
+            message.action,
+        )
+        // Assert telemetry is initially null
+        assertNull(Messaging.messageClicked.testGetValue())
+
+        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}${message.action}".toUri()
+        val actualUri = controller.processMessageActionToUri(message)
+
+        // Updated telemetry
+        assertNotNull(Messaging.messageClicked.testGetValue())
+        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertEquals(1, clickedEvent.size)
+        assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
+
+        assertEquals(expectedUri, actualUri)
+    }
+
+    @Test
+    fun `GIVEN action unknown format WHEN calling processMessageActionToUri THEN return the action URI`() {
+        val message = createMessage("id-1", action = "unknown")
+        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
+            null,
+            message.action,
+        )
+        // Assert telemetry is initially null
+        assertNull(Messaging.messageClicked.testGetValue())
+
+        val expectedUri = message.action.toUri()
+        val actualUri = controller.processMessageActionToUri(message)
+
+        // Updated telemetry
+        assertNotNull(Messaging.messageClicked.testGetValue())
+        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertEquals(1, clickedEvent.size)
+        assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
+
+        assertEquals(expectedUri, actualUri)
+    }
+
+    @Test
+    fun `WHEN calling onMessageClicked THEN update stored metadata for message`() =
+        coroutineScope.runTest {
+            val message = createMessage("id-1")
+            assertFalse(message.metadata.pressed)
+
+            controller.onMessageClicked(message)
+
+            val updatedMetadata = message.metadata.copy(pressed = true)
+            coVerify { storage.updateMetadata(updatedMetadata) }
+        }
 
     private fun createMessage(
         id: String,
         messageData: MessageData = MessageData(),
         action: String = messageData.action,
         style: StyleData = StyleData(),
+        displayCount: Int = 0,
     ): Message =
         Message(
             id,
             data = messageData,
             style = style,
-            metadata = Message.Metadata(id),
+            metadata = Message.Metadata(id, displayCount),
             triggers = emptyList(),
             action = action,
         )

@@ -5,8 +5,6 @@
 package org.mozilla.fenix.gleanplumb
 
 import android.content.Intent
-import androidx.annotation.VisibleForTesting
-import androidx.core.net.toUri
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
@@ -17,26 +15,18 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDi
  */
 class DefaultMessageController(
     private val appStore: AppStore,
-    messagingStorage: NimbusMessagingStorage,
-    private val messagingController: NimbusMessagingController = NimbusMessagingController(messagingStorage),
+    private val messagingController: NimbusMessagingController,
     private val homeActivity: HomeActivity,
 ) : MessageController {
 
     override fun onMessagePressed(message: Message) {
-        val action = messagingController.processMessageAction(message)
-        handleAction(action)
+        val actionUri = messagingController.processMessageActionToUri(message)
+        homeActivity.processIntent(Intent(Intent.ACTION_VIEW, actionUri))
+
         appStore.dispatch(MessageClicked(message))
     }
 
     override fun onMessageDismissed(message: Message) {
         appStore.dispatch(MessageDismissed(message))
-    }
-
-    @VisibleForTesting
-    internal fun handleAction(action: String): Intent {
-        val intent = Intent(Intent.ACTION_VIEW, action.toUri())
-        homeActivity.processIntent(intent)
-
-        return intent
     }
 }
