@@ -131,8 +131,12 @@ nsresult EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     timeCode = 0;
   }
 
-  MOZ_RELEASE_ASSERT(timeCode >= SHRT_MIN);
-  MOZ_RELEASE_ASSERT(timeCode <= SHRT_MAX);
+  if (MOZ_UNLIKELY(timeCode < SHRT_MIN || timeCode > SHRT_MAX)) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Invalid cluster timecode! audio=%d, video=%d, timeCode=%" PRId64
+        "ms, currentClusterTimecode=%" PRIu64 "ms",
+        mHasAudio, mHasVideo, timeCode, mCurrentClusterTimecode);
+  }
 
   writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode),
                    isVP8IFrame, 0, 0,
