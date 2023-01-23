@@ -122,7 +122,7 @@ function rebase_mozlibwebrtc_stack {
   ( cd $MOZ_LIBWEBRTC_SRC && \
     git checkout -q $MOZ_LIBWEBRTC_BRANCH && \
     git rebase $MOZ_LIBWEBRTC_NEXT_BASE \
-    &> log-rebase-moz-libwebrtc.txt \
+    &> $LOG_DIR/log-rebase-moz-libwebrtc.txt \
   )
   ERROR_HELP=""
 }
@@ -147,7 +147,7 @@ function regen_mozbuild_files {
   echo "------- Restore moz.build files from repo"
   echo "-------"
   hg revert --include "third_party/libwebrtc/**moz.build" \
-    third_party/libwebrtc &> log-regen-mozbuild-files.txt
+    third_party/libwebrtc &> $LOG_DIR/log-regen-mozbuild-files.txt
 }
 
 function add_new_upstream_files {
@@ -163,7 +163,7 @@ function add_new_upstream_files {
     echo "------- Add new upstream files"
     echo "-------"
     (cd third_party/libwebrtc && hg add $UPSTREAM_ADDED_FILES)
-    echo "$UPSTREAM_ADDED_FILES" &> log-new-upstream-files.txt
+    echo "$UPSTREAM_ADDED_FILES" &> $LOG_DIR/log-new-upstream-files.txt
   fi
 }
 
@@ -180,7 +180,7 @@ function remove_deleted_upstream_files {
     echo "------- Remove deleted upstream files"
     echo "-------"
     (cd third_party/libwebrtc && hg rm $UPSTREAM_DELETED_FILES)
-    echo "$UPSTREAM_DELETED_FILES" &> log-deleted-upstream-files.txt
+    echo "$UPSTREAM_DELETED_FILES" &> $LOG_DIR/log-deleted-upstream-files.txt
   fi
 }
 
@@ -197,7 +197,7 @@ function handle_renamed_upstream_files {
     echo "------- Handle renamed upstream files"
     echo "-------"
     (cd third_party/libwebrtc && echo "$UPSTREAM_RENAMED_FILES" | while read line; do hg rename --after $line; done)
-    echo "$UPSTREAM_RENAMED_FILES" &> log-renamed-upstream-files.txt
+    echo "$UPSTREAM_RENAMED_FILES" &> $LOG_DIR/log-renamed-upstream-files.txt
   fi
 }
 
