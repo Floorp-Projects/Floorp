@@ -17,9 +17,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -321,7 +319,7 @@ class DownloadsFeature(
     }
 
     private fun withActiveDownload(block: (Pair<SessionState, DownloadState>) -> Unit) {
-        val state = store.state.findCustomTabOrSelectedTab(tabId) ?: return
+        val state = store.state.findTabOrCustomTabOrSelectedTab(tabId) ?: return
         val download = state.content.download ?: return
         block(Pair(state, download))
     }
