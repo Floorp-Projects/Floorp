@@ -5345,6 +5345,16 @@ nsresult XREMain::XRE_mainRun() {
     // files can't override JS engine start-up prefs.
     mDirProvider.FinishInitializingUserPrefs();
 
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+    // Now that we have preferences and the directory provider, we can
+    // finish initializing SandboxBroker. This must happen before the GFX
+    // platform is initialized (which will launch the GPU process), which
+    // occurs when the "app-startup" category is started up below
+    //
+    // After this completes, we are ready to launch sandboxed processes
+    mozilla::SandboxBroker::GeckoDependentInitialize();
+#endif
+
     nsCOMPtr<nsIFile> workingDir;
     rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
                                 getter_AddRefs(workingDir));

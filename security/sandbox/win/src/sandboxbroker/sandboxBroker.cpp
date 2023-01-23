@@ -906,8 +906,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 }
 
-void SandboxBroker::SetSecurityLevelForGPUProcess(
-    int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) {
+void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   MOZ_RELEASE_ASSERT(mPolicy, "mPolicy must be set before this call.");
 
   sandbox::JobLevel jobLevel;
@@ -1000,14 +999,14 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
 
-  // TEMPORARY WORKAROUND - We don't want to back out the GPU sandbox, so we're
-  // going to give access to the entire filesystem until we can figure out a
-  // reliable way to only give access to the Shader Cache
-  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                            sandbox::TargetPolicy::FILES_ALLOW_ANY, L"*");
-  MOZ_RELEASE_ASSERT(
-      sandbox::SBOX_ALL_OK == result,
-      "With these static arguments AddRule should never fail, what happened?");
+  // The GPU process needs to write to a shader cache for performance reasons
+  if (sProfileDir) {
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sProfileDir, u"\\shader-cache"_ns);
+
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                     sProfileDir, u"\\shader-cache\\*"_ns);
+  }
 
   // The process needs to be able to duplicate shared memory handles,
   // which are Section handles, to the broker process and other child processes.

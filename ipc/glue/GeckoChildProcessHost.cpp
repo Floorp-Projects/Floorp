@@ -253,7 +253,6 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
   WindowsProcessLauncher(GeckoChildProcessHost* aHost,
                          std::vector<std::string>&& aExtraOpts)
       : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
-        mProfileDir(aHost->mProfileDir),
         mCachedNtdllThunk(GetCachedNtDllThunk()),
         mWerDataPointer(&(aHost->mWerData)) {}
 
@@ -265,8 +264,6 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 
   mozilla::Maybe<CommandLine> mCmdLine;
   bool mUseSandbox = false;
-
-  nsCOMPtr<nsIFile> mProfileDir;
 
   const Buffer<IMAGE_THUNK_DATA>* mCachedNtdllThunk;
   CrashReporter::WindowsErrorReportingData const* mWerDataPointer;
@@ -643,10 +640,6 @@ void GeckoChildProcessHost::PrepareLaunch() {
   mEnableSandboxLogging =
       mEnableSandboxLogging || !!PR_GetEnv("MOZ_SANDBOX_LOGGING");
 
-  if (ShouldHaveDirectoryService() && mProcessType == GeckoProcessType_GPU) {
-    mozilla::Unused << NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                              getter_AddRefs(mProfileDir));
-  }
 #  endif
 #elif defined(XP_MACOSX)
 #  if defined(MOZ_SANDBOX)
@@ -1435,8 +1428,7 @@ bool WindowsProcessLauncher::DoSetup() {
         // For now we treat every failure as fatal in
         // SetSecurityLevelForGPUProcess and just crash there right away. Should
         // this change in the future then we should also handle the error here.
-        mResults.mSandboxBroker->SetSecurityLevelForGPUProcess(mSandboxLevel,
-                                                               mProfileDir);
+        mResults.mSandboxBroker->SetSecurityLevelForGPUProcess(mSandboxLevel);
         mUseSandbox = true;
       }
       break;
