@@ -7467,29 +7467,22 @@ var ToolbarContextMenu = {
       element.hidden = !addon;
     }
 
-    // The pinToToolbar item is only available in the toolbar context menu popup,
-    // and not in the overflow panel context menu, and should only be made visible
-    // for addons when the Unified Extensions UI is enabled.
     if (pinToToolbar) {
-      pinToToolbar.hidden = !addon || !gUnifiedExtensions.isEnabled;
+      pinToToolbar.hidden = !addon;
     }
 
     reportExtension.hidden = !addon || !gAddonAbuseReportEnabled;
 
     if (addon) {
-      if (gUnifiedExtensions.isEnabled) {
-        popup.querySelector(".customize-context-moveToPanel").hidden = true;
-        popup.querySelector(
-          ".customize-context-removeFromToolbar"
-        ).hidden = true;
+      popup.querySelector(".customize-context-moveToPanel").hidden = true;
+      popup.querySelector(".customize-context-removeFromToolbar").hidden = true;
 
-        if (pinToToolbar) {
-          let widgetId = this._getWidgetId(popup);
-          if (widgetId) {
-            let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
-            let inToolbar = area != CustomizableUI.AREA_ADDONS;
-            pinToToolbar.setAttribute("checked", inToolbar);
-          }
+      if (pinToToolbar) {
+        let widgetId = this._getWidgetId(popup);
+        if (widgetId) {
+          let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
+          let inToolbar = area != CustomizableUI.AREA_ADDONS;
+          pinToToolbar.setAttribute("checked", inToolbar);
         }
       }
 

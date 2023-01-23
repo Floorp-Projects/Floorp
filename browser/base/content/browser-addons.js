@@ -289,13 +289,10 @@ var gXPInstallObserver = {
       displayURI: installInfo.originatingURI,
       persistent: true,
       hideClose: true,
-    };
-
-    if (gUnifiedExtensions.isEnabled) {
-      options.popupOptions = {
+      popupOptions: {
         position: "bottomright topright",
-      };
-    }
+      },
+    };
 
     let acceptInstallation = () => {
       for (let install of installInfo.installs) {
@@ -524,13 +521,10 @@ var gXPInstallObserver = {
       persistent: true,
       hideClose: true,
       timeout: Date.now() + 30000,
-    };
-
-    if (gUnifiedExtensions.isEnabled) {
-      options.popupOptions = {
+      popupOptions: {
         position: "bottomright topright",
-      };
-    }
+      },
+    };
 
     switch (aTopic) {
       case "addon-install-disabled": {
@@ -1249,23 +1243,21 @@ var gUnifiedExtensions = {
       return;
     }
 
-    if (this.isEnabled) {
-      this._button = document.getElementById("unified-extensions-button");
-      // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
-      this._button.hidden = false;
+    this._button = document.getElementById("unified-extensions-button");
+    // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
+    this._button.hidden = false;
 
-      document
-        .getElementById("nav-bar")
-        .setAttribute("unifiedextensionsbuttonshown", true);
+    document
+      .getElementById("nav-bar")
+      .setAttribute("unifiedextensionsbuttonshown", true);
 
-      gBrowser.addTabsProgressListener(this);
-      window.addEventListener("TabSelect", () => this.updateAttention());
+    gBrowser.addTabsProgressListener(this);
+    window.addEventListener("TabSelect", () => this.updateAttention());
 
-      this.permListener = () => this.updateAttention();
-      lazy.ExtensionPermissions.addListener(this.permListener);
+    this.permListener = () => this.updateAttention();
+    lazy.ExtensionPermissions.addListener(this.permListener);
 
-      gNavToolbox.addEventListener("customizationstarting", this);
-    }
+    gNavToolbox.addEventListener("customizationstarting", this);
 
     this._initialized = true;
   },
@@ -1276,10 +1268,6 @@ var gUnifiedExtensions = {
       this.permListener = null;
     }
     gNavToolbox.removeEventListener("customizationstarting", this);
-  },
-
-  get isEnabled() {
-    return true;
   },
 
   onLocationChange(browser, webProgress, _request, _uri, flags) {
@@ -1317,25 +1305,21 @@ var gUnifiedExtensions = {
   },
 
   getPopupAnchorID(aBrowser, aWindow) {
-    if (this.isEnabled) {
-      const anchorID = "unified-extensions-button";
-      const attr = anchorID + "popupnotificationanchor";
+    const anchorID = "unified-extensions-button";
+    const attr = anchorID + "popupnotificationanchor";
 
-      if (!aBrowser[attr]) {
-        // A hacky way of setting the popup anchor outside the usual url bar
-        // icon box, similar to how it was done for CFR.
-        // See: https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/toolkit/modules/PopupNotifications.sys.mjs#40
-        aBrowser[attr] = aWindow.document.getElementById(
-          anchorID
-          // Anchor on the toolbar icon to position the popup right below the
-          // button.
-        ).firstElementChild;
-      }
-
-      return anchorID;
+    if (!aBrowser[attr]) {
+      // A hacky way of setting the popup anchor outside the usual url bar
+      // icon box, similar to how it was done for CFR.
+      // See: https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/toolkit/modules/PopupNotifications.sys.mjs#40
+      aBrowser[attr] = aWindow.document.getElementById(
+        anchorID
+        // Anchor on the toolbar icon to position the popup right below the
+        // button.
+      ).firstElementChild;
     }
 
-    return "addons-notification-icon";
+    return anchorID;
   },
 
   get button() {

@@ -522,46 +522,44 @@ add_task(async function webextension() {
 
     await extension2.unload();
 
-    // Now test that browser action items in the add-ons panel also get telemetry
-    // recorded for them.
-    if (gUnifiedExtensions.isEnabled) {
-      const extension3 = ExtensionTestUtils.loadExtension({
-        manifest: {
-          version: "1",
-          browser_specific_settings: {
-            gecko: { id: "random_addon3@example.com" },
-          },
-          browser_action: {
-            default_icon: "default.png",
-            default_title: "Hello",
-          },
+    // Now test that browser action items in the add-ons panel also get
+    // telemetry recorded for them.
+    const extension3 = ExtensionTestUtils.loadExtension({
+      manifest: {
+        version: "1",
+        browser_specific_settings: {
+          gecko: { id: "random_addon3@example.com" },
         },
-      });
-
-      await extension3.startup();
-
-      const shown = BrowserTestUtils.waitForPopupEvent(
-        gUnifiedExtensions.panel,
-        "shown"
-      );
-      await gUnifiedExtensions.togglePanel();
-      await shown;
-
-      click("random_addon3_example_com-browser-action");
-      assertInteractionScalars({
-        unified_extensions_area: {
-          addon2: 1,
+        browser_action: {
+          default_icon: "default.png",
+          default_title: "Hello",
         },
-      });
-      const hidden = BrowserTestUtils.waitForPopupEvent(
-        gUnifiedExtensions.panel,
-        "hidden"
-      );
-      await gUnifiedExtensions.panel.hidePopup();
-      await hidden;
+      },
+    });
 
-      await extension3.unload();
-    }
+    await extension3.startup();
+
+    const shown = BrowserTestUtils.waitForPopupEvent(
+      gUnifiedExtensions.panel,
+      "shown"
+    );
+    await gUnifiedExtensions.togglePanel();
+    await shown;
+
+    click("random_addon3_example_com-browser-action");
+    assertInteractionScalars({
+      unified_extensions_area: {
+        addon2: 1,
+      },
+    });
+    const hidden = BrowserTestUtils.waitForPopupEvent(
+      gUnifiedExtensions.panel,
+      "hidden"
+    );
+    await gUnifiedExtensions.panel.hidePopup();
+    await hidden;
+
+    await extension3.unload();
   });
 });
 

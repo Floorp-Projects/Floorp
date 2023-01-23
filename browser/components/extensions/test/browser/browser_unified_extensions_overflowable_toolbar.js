@@ -315,15 +315,13 @@ async function withWindowOverflowed(
   }
 }
 
-async function verifyExtensionWidget(win, widget, unifiedExtensionsEnabled) {
+async function verifyExtensionWidget(win, widget) {
   Assert.ok(widget, "expected widget");
 
   Assert.equal(
     widget.getAttribute("unified-extensions"),
-    unifiedExtensionsEnabled ? "true" : "false",
-    `expected unified-extensions attribute to be ${String(
-      unifiedExtensionsEnabled
-    )}`
+    "true",
+    "expected unified-extensions attribute to be true"
   );
 
   let actionButton = widget.firstElementChild;
@@ -342,83 +340,68 @@ async function verifyExtensionWidget(win, widget, unifiedExtensionsEnabled) {
     ".unified-extensions-item-contents"
   );
 
-  if (unifiedExtensionsEnabled) {
-    Assert.ok(
-      contents,
-      `expected contents element when unifiedExtensionsEnabled=${unifiedExtensionsEnabled}`
-    );
-    // This is needed to correctly position the contents (vbox) element in the
-    // toolbarbutton.
-    Assert.equal(
-      contents.getAttribute("move-after-stack"),
-      "true",
-      "expected move-after-stack attribute to be set"
-    );
-    // Make sure the contents element is inserted after the stack one (which is
-    // automagically created by the toolbarbutton element).
-    Assert.deepEqual(
-      Array.from(actionButton.childNodes.values()).map(
-        child => child.classList[0]
-      ),
-      [
-        // The stack (which contains the extension icon) should be the first
-        // child.
-        "toolbarbutton-badge-stack",
-        // This is the widget label, which is hidden with CSS.
-        "toolbarbutton-text",
-        // This is the contents element, which displays the extension name and
-        // messages.
-        "unified-extensions-item-contents",
-      ],
-      "expected the correct order for the children of the action button"
-    );
+  Assert.ok(contents, "expected contents element");
+  // This is needed to correctly position the contents (vbox) element in the
+  // toolbarbutton.
+  Assert.equal(
+    contents.getAttribute("move-after-stack"),
+    "true",
+    "expected move-after-stack attribute to be set"
+  );
+  // Make sure the contents element is inserted after the stack one (which is
+  // automagically created by the toolbarbutton element).
+  Assert.deepEqual(
+    Array.from(actionButton.childNodes.values()).map(
+      child => child.classList[0]
+    ),
+    [
+      // The stack (which contains the extension icon) should be the first
+      // child.
+      "toolbarbutton-badge-stack",
+      // This is the widget label, which is hidden with CSS.
+      "toolbarbutton-text",
+      // This is the contents element, which displays the extension name and
+      // messages.
+      "unified-extensions-item-contents",
+    ],
+    "expected the correct order for the children of the action button"
+  );
 
-    let name = contents.querySelector(".unified-extensions-item-name");
-    Assert.ok(name, "expected name element");
-    Assert.ok(
-      name.textContent.startsWith("Extension "),
-      "expected name to not be empty"
-    );
-    Assert.ok(
-      contents.querySelector(".unified-extensions-item-message-default"),
-      "expected message default element"
-    );
-    Assert.ok(
-      contents.querySelector(".unified-extensions-item-message-hover"),
-      "expected message hover element"
-    );
+  let name = contents.querySelector(".unified-extensions-item-name");
+  Assert.ok(name, "expected name element");
+  Assert.ok(
+    name.textContent.startsWith("Extension "),
+    "expected name to not be empty"
+  );
+  Assert.ok(
+    contents.querySelector(".unified-extensions-item-message-default"),
+    "expected message default element"
+  );
+  Assert.ok(
+    contents.querySelector(".unified-extensions-item-message-hover"),
+    "expected message hover element"
+  );
 
-    Assert.equal(
-      win.document.l10n.getAttributes(menuButton).id,
-      "unified-extensions-item-open-menu",
-      "expected l10n id attribute for the extension"
-    );
-    Assert.deepEqual(
-      Object.keys(win.document.l10n.getAttributes(menuButton).args),
-      ["extensionName"],
-      "expected l10n args attribute for the extension"
-    );
-    Assert.ok(
-      win.document.l10n
-        .getAttributes(menuButton)
-        .args.extensionName.startsWith("Extension "),
-      "expected l10n args attribute to start with the correct name"
-    );
-    Assert.ok(
-      menuButton.getAttribute("aria-label") !== "",
-      "expected menu button to have non-empty localized content"
-    );
-  } else {
-    Assert.ok(
-      !contents,
-      `expected no contents element when unifiedExtensionsEnabled=${unifiedExtensionsEnabled}`
-    );
-
-    Assert.ok(
-      actionButton.getAttribute("label")?.startsWith("Extension "),
-      "expected button's label to not be empty"
-    );
-  }
+  Assert.equal(
+    win.document.l10n.getAttributes(menuButton).id,
+    "unified-extensions-item-open-menu",
+    "expected l10n id attribute for the extension"
+  );
+  Assert.deepEqual(
+    Object.keys(win.document.l10n.getAttributes(menuButton).args),
+    ["extensionName"],
+    "expected l10n args attribute for the extension"
+  );
+  Assert.ok(
+    win.document.l10n
+      .getAttributes(menuButton)
+      .args.extensionName.startsWith("Extension "),
+    "expected l10n args attribute to start with the correct name"
+  );
+  Assert.ok(
+    menuButton.getAttribute("aria-label") !== "",
+    "expected menu button to have non-empty localized content"
+  );
 }
 
 /**
