@@ -408,10 +408,10 @@ TalosPowersService.prototype = {
       const { Troubleshoot } = ChromeUtils.importESModule(
         "resource://gre/modules/Troubleshoot.sys.mjs"
       );
-      Troubleshoot.snapshot(function(snapshot) {
+      Troubleshoot.snapshot().then(snapshot => {
         dump("about:support\t" + JSON.stringify(snapshot) + "\n");
+        callback();
       });
-      callback();
     },
   },
 

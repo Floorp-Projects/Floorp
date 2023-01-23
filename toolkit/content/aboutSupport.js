@@ -33,7 +33,7 @@ ChromeUtils.defineESModuleGetters(this, {
 window.addEventListener("load", function onload(event) {
   try {
     window.removeEventListener("load", onload);
-    Troubleshoot.snapshot(async function(snapshot) {
+    Troubleshoot.snapshot().then(async snapshot => {
       for (let prop in snapshotFormatters) {
         try {
           await snapshotFormatters[prop](snapshot[prop]);
@@ -46,7 +46,7 @@ window.addEventListener("load", function onload(event) {
       if (location.hash) {
         scrollToSection();
       }
-    });
+    }, console.error);
     populateActionBox();
     setupEventListeners();
 
@@ -1363,8 +1363,8 @@ function copyRawDataToClipboard(button) {
   if (button) {
     button.disabled = true;
   }
-  try {
-    Troubleshoot.snapshot(async function(snapshot) {
+  Troubleshoot.snapshot().then(
+    async snapshot => {
       if (button) {
         button.disabled = false;
       }
@@ -1383,13 +1383,14 @@ function copyRawDataToClipboard(button) {
         null,
         Ci.nsIClipboard.kGlobalClipboard
       );
-    });
-  } catch (err) {
-    if (button) {
-      button.disabled = false;
+    },
+    err => {
+      if (button) {
+        button.disabled = false;
+      }
+      console.error(err);
     }
-    throw err;
-  }
+  );
 }
 
 function getLoadContext() {

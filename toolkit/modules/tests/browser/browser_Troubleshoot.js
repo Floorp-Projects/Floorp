@@ -51,46 +51,44 @@ registerCleanupFunction(function() {
 });
 
 var tests = [
-  function snapshotSchema(done) {
-    Troubleshoot.snapshot(function(snapshot) {
-      try {
-        validateObject(snapshot, SNAPSHOT_SCHEMA);
-        ok(true, "The snapshot should conform to the schema.");
-      } catch (err) {
-        ok(false, "Schema mismatch, " + err);
-      }
-      done();
-    });
+  async function snapshotSchema(done) {
+    let snapshot = await Troubleshoot.snapshot();
+    try {
+      validateObject(snapshot, SNAPSHOT_SCHEMA);
+      ok(true, "The snapshot should conform to the schema.");
+    } catch (err) {
+      ok(false, "Schema mismatch, " + err);
+    }
+    done();
   },
 
   async function experimentalFeatures(done) {
     let featureGates = await FeatureGate.all();
     ok(featureGates.length, "Should be at least one FeatureGate");
 
-    Troubleshoot.snapshot(snapshot => {
-      for (let i = 0; i < snapshot.experimentalFeatures.length; i++) {
-        let experimentalFeature = snapshot.experimentalFeatures[i];
-        is(
-          experimentalFeature[0],
-          featureGates[i].title,
-          "The first item in the array should be the title's l10n-id of the FeatureGate"
-        );
-        is(
-          experimentalFeature[1],
-          featureGates[i].preference,
-          "The second item in the array should be the preference name for the FeatureGate"
-        );
-        is(
-          experimentalFeature[2],
-          Services.prefs.getBoolPref(featureGates[i].preference),
-          "The third item in the array should be the preference value of the FeatureGate"
-        );
-      }
-      done();
-    });
+    let snapshot = await Troubleshoot.snapshot();
+    for (let i = 0; i < snapshot.experimentalFeatures.length; i++) {
+      let experimentalFeature = snapshot.experimentalFeatures[i];
+      is(
+        experimentalFeature[0],
+        featureGates[i].title,
+        "The first item in the array should be the title's l10n-id of the FeatureGate"
+      );
+      is(
+        experimentalFeature[1],
+        featureGates[i].preference,
+        "The second item in the array should be the preference name for the FeatureGate"
+      );
+      is(
+        experimentalFeature[2],
+        Services.prefs.getBoolPref(featureGates[i].preference),
+        "The third item in the array should be the preference value of the FeatureGate"
+      );
+    }
+    done();
   },
 
-  function modifiedPreferences(done) {
+  async function modifiedPreferences(done) {
     let prefs = [
       "javascript.troubleshoot",
       "troubleshoot.foo",
@@ -102,39 +100,38 @@ var tests = [
       is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
     });
     Services.prefs.setCharPref("dom.push.userAgentID", "testvalue");
-    Troubleshoot.snapshot(function(snapshot) {
-      let p = snapshot.modifiedPreferences;
-      is(
-        p["javascript.troubleshoot"],
-        true,
-        "The pref should be present because it's in the allowed prefs " +
-          "and not in the pref regexes that are disallowed."
-      );
-      ok(
-        !("troubleshoot.foo" in p),
-        "The pref should be absent because it's not in the allowed prefs."
-      );
-      ok(
-        !("network.proxy.troubleshoot" in p),
-        "The pref should be absent because it's in the pref regexes " +
-          "that are disallowed."
-      );
-      ok(
-        !("dom.push.userAgentID" in p),
-        "The pref should be absent because it's in the pref regexes " +
-          "that are disallowed."
-      );
-      ok(
-        !("print.print_to_filename" in p),
-        "The pref should be absent because it's not in the allowed prefs."
-      );
-      prefs.forEach(p => Services.prefs.deleteBranch(p));
-      Services.prefs.clearUserPref("dom.push.userAgentID");
-      done();
-    });
+    let snapshot = await Troubleshoot.snapshot();
+    let p = snapshot.modifiedPreferences;
+    is(
+      p["javascript.troubleshoot"],
+      true,
+      "The pref should be present because it's in the allowed prefs " +
+        "and not in the pref regexes that are disallowed."
+    );
+    ok(
+      !("troubleshoot.foo" in p),
+      "The pref should be absent because it's not in the allowed prefs."
+    );
+    ok(
+      !("network.proxy.troubleshoot" in p),
+      "The pref should be absent because it's in the pref regexes " +
+        "that are disallowed."
+    );
+    ok(
+      !("dom.push.userAgentID" in p),
+      "The pref should be absent because it's in the pref regexes " +
+        "that are disallowed."
+    );
+    ok(
+      !("print.print_to_filename" in p),
+      "The pref should be absent because it's not in the allowed prefs."
+    );
+    prefs.forEach(p => Services.prefs.deleteBranch(p));
+    Services.prefs.clearUserPref("dom.push.userAgentID");
+    done();
   },
 
-  function unicodePreferences(done) {
+  async function unicodePreferences(done) {
     let name = "font.name.sans-serif.x-western";
     let utf8Value = "\xc4\x8capk\xc5\xafv Krasopis";
     let unicodeValue = "\u010Capk\u016Fv Krasopis";
@@ -142,15 +139,14 @@ var tests = [
     // set/getCharPref work with 8bit strings (utf8)
     Services.prefs.setCharPref(name, utf8Value);
 
-    Troubleshoot.snapshot(function(snapshot) {
-      let p = snapshot.modifiedPreferences;
-      is(p[name], unicodeValue, "The pref should have correct Unicode value.");
-      Services.prefs.deleteBranch(name);
-      done();
-    });
+    let snapshot = await Troubleshoot.snapshot();
+    let p = snapshot.modifiedPreferences;
+    is(p[name], unicodeValue, "The pref should have correct Unicode value.");
+    Services.prefs.deleteBranch(name);
+    done();
   },
 
-  function printingPreferences(done) {
+  async function printingPreferences(done) {
     let prefs = [
       "javascript.print_to_filename",
       "print.print_bgimages",
@@ -160,20 +156,19 @@ var tests = [
       Services.prefs.setBoolPref(p, true);
       is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
     });
-    Troubleshoot.snapshot(function(snapshot) {
-      let p = snapshot.printingPreferences;
-      is(p["print.print_bgimages"], true, "The pref should be present");
-      ok(
-        !("print.print_to_filename" in p),
-        "The pref should not be present (sensitive)"
-      );
-      ok(
-        !("javascript.print_to_filename" in p),
-        "The pref should be absent because it's not a print pref."
-      );
-      prefs.forEach(p => Services.prefs.deleteBranch(p));
-      done();
-    });
+    let snapshot = await Troubleshoot.snapshot();
+    let p = snapshot.printingPreferences;
+    is(p["print.print_bgimages"], true, "The pref should be present");
+    ok(
+      !("print.print_to_filename" in p),
+      "The pref should not be present (sensitive)"
+    );
+    ok(
+      !("javascript.print_to_filename" in p),
+      "The pref should be absent because it's not a print pref."
+    );
+    prefs.forEach(p => Services.prefs.deleteBranch(p));
+    done();
   },
 
   function normandy(done) {
@@ -221,28 +216,24 @@ var tests = [
         addonStudies,
         prefRollouts,
       }) {
-        await new Promise(resolve => {
-          Troubleshoot.snapshot(function(snapshot) {
-            let info = snapshot.normandy;
-            // The order should be flipped, since each category is sorted by slug.
-            Assert.deepEqual(
-              info.prefStudies,
-              [prefExperiments[1], prefExperiments[0]],
-              "prefs studies should exist in the right order"
-            );
-            Assert.deepEqual(
-              info.addonStudies,
-              [addonStudies[1], addonStudies[0]],
-              "addon studies should exist in the right order"
-            );
-            Assert.deepEqual(
-              info.prefRollouts,
-              [prefRollouts[1], prefRollouts[0]],
-              "pref rollouts should exist in the right order"
-            );
-            resolve();
-          });
-        });
+        let snapshot = await Troubleshoot.snapshot();
+        let info = snapshot.normandy;
+        // The order should be flipped, since each category is sorted by slug.
+        Assert.deepEqual(
+          info.prefStudies,
+          [prefExperiments[1], prefExperiments[0]],
+          "prefs studies should exist in the right order"
+        );
+        Assert.deepEqual(
+          info.addonStudies,
+          [addonStudies[1], addonStudies[0]],
+          "addon studies should exist in the right order"
+        );
+        Assert.deepEqual(
+          info.prefRollouts,
+          [prefRollouts[1], prefRollouts[0]],
+          "pref rollouts should exist in the right order"
+        );
       }
     )().then(done);
   },
@@ -260,34 +251,29 @@ var tests = [
       }),
       NormandyTestUtils.withConsoleSpy(),
       async function testNormandyErrorHandling({ consoleSpy }) {
-        await new Promise(resolve => {
-          Troubleshoot.snapshot(snapshot => {
-            let info = snapshot.normandy;
-            Assert.deepEqual(
-              info.prefStudies,
-              [],
-              "prefs studies should be an empty list if there is an error"
-            );
-            Assert.deepEqual(
-              info.addonStudies,
-              [],
-              "addon studies should be an empty list if there is an error"
-            );
-            Assert.deepEqual(
-              info.prefRollouts,
-              [],
-              "pref rollouts should be an empty list if there is an error"
-            );
+        let snapshot = await Troubleshoot.snapshot();
+        let info = snapshot.normandy;
+        Assert.deepEqual(
+          info.prefStudies,
+          [],
+          "prefs studies should be an empty list if there is an error"
+        );
+        Assert.deepEqual(
+          info.addonStudies,
+          [],
+          "addon studies should be an empty list if there is an error"
+        );
+        Assert.deepEqual(
+          info.prefRollouts,
+          [],
+          "pref rollouts should be an empty list if there is an error"
+        );
 
-            consoleSpy.assertAtLeast([
-              /Expected error - PreferenceExperiments/,
-              /Expected error - AddonStudies/,
-              /Expected error - PreferenceRollouts/,
-            ]);
-
-            resolve();
-          });
-        });
+        consoleSpy.assertAtLeast([
+          /Expected error - PreferenceExperiments/,
+          /Expected error - AddonStudies/,
+          /Expected error - PreferenceRollouts/,
+        ]);
       }
     )().then(done);
   },

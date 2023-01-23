@@ -42,11 +42,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   var { Troubleshoot } = ChromeUtils.importESModule(
     "resource://gre/modules/Troubleshoot.sys.mjs"
   );
-  var data = await new Promise((resolve, reject) => {
-    Troubleshoot.snapshot(data => {
-      resolve(data);
-    });
-  });
+  var data = await Troubleshoot.snapshot();
 
   ok(
     data.graphics.windowLayerManagerType !== "None",

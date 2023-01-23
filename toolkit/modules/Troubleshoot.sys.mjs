@@ -171,28 +171,30 @@ export var Troubleshoot = {
    * Captures a snapshot of data that may help troubleshooters troubleshoot
    * trouble.
    *
-   * @param done A function that will be asynchronously called when the
-   *             snapshot completes.  It will be passed the snapshot object.
+   * @returns {Promise}
+   *   A promise that is resolved with the snapshot data.
    */
-  snapshot: function snapshot(done) {
-    let snapshot = {};
-    let numPending = Object.keys(dataProviders).length;
-    function providerDone(providerName, providerData) {
-      snapshot[providerName] = providerData;
-      if (--numPending == 0) {
-        // Ensure that done is always and truly called asynchronously.
-        Services.tm.dispatchToMainThread(done.bind(null, snapshot));
+  snapshot() {
+    return new Promise(resolve => {
+      let snapshot = {};
+      let numPending = Object.keys(dataProviders).length;
+      function providerDone(providerName, providerData) {
+        snapshot[providerName] = providerData;
+        if (--numPending == 0) {
+          // Ensure that done is always and truly called asynchronously.
+          Services.tm.dispatchToMainThread(() => resolve(snapshot));
+        }
       }
-    }
-    for (let name in dataProviders) {
-      try {
-        dataProviders[name](providerDone.bind(null, name));
-      } catch (err) {
-        let msg = "Troubleshoot data provider failed: " + name + "\n" + err;
-        Cu.reportError(msg);
-        providerDone(name, msg);
+      for (let name in dataProviders) {
+        try {
+          dataProviders[name](providerDone.bind(null, name));
+        } catch (err) {
+          let msg = "Troubleshoot data provider failed: " + name + "\n" + err;
+          Cu.reportError(msg);
+          providerDone(name, msg);
+        }
       }
-    }
+    });
   },
 
   kMaxCrashAge: 3 * 24 * 60 * 60 * 1000, // 3 days
