@@ -409,17 +409,26 @@ ColorProfileConversionDesc ColorProfileConversionDesc::From(
           dstLinearRgbFromXyzd65 * desc.src.xyzd65FromLinearRgb,
       .dstTfFromDstLinear = {},
   };
-  const auto Invert = [](const std::vector<float>& linearFromTf,
-                         std::vector<float>* const tfFromLinear) {
-    const auto size = linearFromTf.size();
-    MOZ_ASSERT(size != 1);  // Less than two is uninvertable.
-    if (size < 2) return;
-    (*tfFromLinear).resize(size);
-    InvertLut(linearFromTf, &*tfFromLinear);
-  };
-  Invert(desc.dst.linearFromTf.r, &ret.dstTfFromDstLinear.r);
-  Invert(desc.dst.linearFromTf.g, &ret.dstTfFromDstLinear.g);
-  Invert(desc.dst.linearFromTf.b, &ret.dstTfFromDstLinear.b);
+  bool sameTF = true;
+  sameTF &= desc.src.linearFromTf.r == desc.dst.linearFromTf.r;
+  sameTF &= desc.src.linearFromTf.g == desc.dst.linearFromTf.g;
+  sameTF &= desc.src.linearFromTf.b == desc.dst.linearFromTf.b;
+  if (sameTF) {
+    ret.srcLinearFromSrcTf = {};
+    ret.dstTfFromDstLinear = {};
+  } else {
+    const auto Invert = [](const std::vector<float>& linearFromTf,
+                           std::vector<float>* const tfFromLinear) {
+      const auto size = linearFromTf.size();
+      MOZ_ASSERT(size != 1);  // Less than two is uninvertable.
+      if (size < 2) return;
+      (*tfFromLinear).resize(size);
+      InvertLut(linearFromTf, &*tfFromLinear);
+    };
+    Invert(desc.dst.linearFromTf.r, &ret.dstTfFromDstLinear.r);
+    Invert(desc.dst.linearFromTf.g, &ret.dstTfFromDstLinear.g);
+    Invert(desc.dst.linearFromTf.b, &ret.dstTfFromDstLinear.b);
+  }
   return ret;
 }
 

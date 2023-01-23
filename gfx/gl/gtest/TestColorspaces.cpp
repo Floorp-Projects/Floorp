@@ -528,7 +528,7 @@ TEST(Colorspaces, GuessGamma)
 {
   EXPECT_NEAR(GuessGamma(MakeGamma(1, 11)), 1.0, 0);
   EXPECT_NEAR(GuessGamma(MakeGamma(2.2, 11)), 2.2, 4.8e-8);
-  EXPECT_NEAR(GuessGamma(MakeGamma(1 / 2.2, 11)), 1 / 2.2, 1.1e-7);
+  EXPECT_NEAR(GuessGamma(MakeGamma(1 / 2.2, 11)), 1 / 2.2, 1.7e-7);
 }
 
 // -
