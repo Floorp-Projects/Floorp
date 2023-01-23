@@ -50,6 +50,7 @@ class ServiceWorker;
 class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
 class StorageManager;
+enum class CallerType : uint32_t;
 }  // namespace dom
 namespace ipc {
 class PrincipalInfo;
@@ -255,6 +256,9 @@ class nsIGlobalObject : public nsISupports,
    * https://w3c.github.io/fingerprinting-guidance/
    */
   virtual bool ShouldResistFingerprinting() const = 0;
+
+  // CallerType::System callers never have to resist fingerprinting.
+  bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType) const;
 
   RTPCallerType GetRTPCallerType() const;
 

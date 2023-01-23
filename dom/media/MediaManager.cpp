@@ -2509,7 +2509,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   }
 
   const bool resistFingerprinting =
-      nsContentUtils::ResistFingerprinting(aCallerType);
+      !isChrome && doc->ShouldResistFingerprinting();
   if (resistFingerprinting) {
     ReduceConstraint(c.mVideo);
     ReduceConstraint(c.mAudio);
@@ -3002,6 +3002,8 @@ RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
         __func__);
   }
   uint64_t windowID = aWindow->WindowID();
+  const bool resistFingerprinting =
+      aWindow->AsGlobal()->ShouldResistFingerprinting(aCallerType);
   return EnumerateDevicesImpl(aWindow, MediaSourceEnum::Other,
                               MediaSourceEnum::Other,
                               {EnumerationFlag::EnumerateAudioOutputs,
@@ -3009,7 +3011,7 @@ RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<MediaManager>(this), windowID, aOptions, aCallerType,
-           isHandlingUserInput,
+           resistFingerprinting, isHandlingUserInput,
            principalInfo](RefPtr<LocalMediaDeviceSetRefCnt> aDevices) mutable {
             // Ensure that the window is still good.
             RefPtr<nsPIDOMWindowInner> window =
@@ -3024,7 +3026,7 @@ RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
             }
             if (aDevices->IsEmpty()) {
               LOG("SelectAudioOutput: no devices found");
-              auto error = nsContentUtils::ResistFingerprinting(aCallerType)
+              auto error = resistFingerprinting
                                ? MediaMgrError::Name::NotAllowedError
                                : MediaMgrError::Name::NotFoundError;
               return LocalDevicePromise::CreateAndReject(

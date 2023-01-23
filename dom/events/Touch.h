@@ -57,7 +57,7 @@ class Touch final : public nsISupports,
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsIGlobalObject* GetParentObject();
+  nsIGlobalObject* GetParentObject() const;
 
   // WebIDL
   int32_t Identifier() const { return mIdentifier; }

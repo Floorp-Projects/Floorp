@@ -348,6 +348,10 @@ class nsContentUtils {
   // This function can be called both in the main thread and worker threads.
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
+  // Similar to the function above, but always allows CallerType::System
+  // callers.
+  static bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType,
+                                         nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
   // These functions are the new, nuanced functions
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
@@ -2432,16 +2436,6 @@ class nsContentUtils {
    */
   static bool IsCutCopyAllowed(Document* aDocument,
                                nsIPrincipal& aSubjectPrincipal);
-
-  /*
-   * Returns true if the browser should attempt to prevent the given caller type
-   * from collecting distinctive information about the browser that could
-   * be used to "fingerprint" and track the user across websites.
-   */
-  static bool ResistFingerprinting(mozilla::dom::CallerType aCallerType) {
-    return aCallerType != mozilla::dom::CallerType::System &&
-           ShouldResistFingerprinting();
-  }
 
   /**
    * Returns true if CSSOM origin check should be skipped for WebDriver

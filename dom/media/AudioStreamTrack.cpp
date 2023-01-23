@@ -60,7 +60,9 @@ void AudioStreamTrack::SetAudioOutputVolume(void* aKey, float aVolume) {
 }
 
 void AudioStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
+  nsIGlobalObject* global =
+      GetParentObject() ? GetParentObject()->AsGlobal() : nullptr;
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, global)) {
     aLabel.AssignLiteral("Internal Microphone");
     return;
   }
