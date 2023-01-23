@@ -101,11 +101,13 @@ class AutofillTelemetryBase {
       // If the `guid` is not null, it means we're editing an existing record.
       // In that case, all fields in the record are autofilled, and fields in
       // `untouchedFields` are unmodified.
-      for (let fieldName of Object.keys(record.record)) {
+      for (const [fieldName, value] of Object.entries(record.record)) {
         if (record.untouchedFields?.includes(fieldName)) {
           this.#setFormEventExtra(extra, fieldName, "autofilled");
-        } else {
+        } else if (value) {
           this.#setFormEventExtra(extra, fieldName, "user_filled");
+        } else {
+          this.#setFormEventExtra(extra, fieldName, "not_filled");
         }
       }
     } else {
