@@ -74,7 +74,7 @@ function test_base64URLEncode() {
     testEncode(decoded, encoded);
   }
 
-  let textEncoder = new TextEncoder("utf-8");
+  let textEncoder = new TextEncoder();
   for (let decoded of Object.keys(textTests)) {
     let input = textEncoder.encode(decoded);
     testEncode(input, textTests[decoded]);
@@ -132,7 +132,7 @@ function test_base64URLDecode() {
     testDecode(encoded, decoded);
   }
 
-  let textEncoder = new TextEncoder("utf-8");
+  let textEncoder = new TextEncoder();
   for (let decoded of Object.keys(textTests)) {
     let expectedBuffer = textEncoder.encode(decoded);
     testDecode(textTests[decoded], expectedBuffer);

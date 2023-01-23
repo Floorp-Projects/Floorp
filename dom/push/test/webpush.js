@@ -20,10 +20,8 @@
     namedCurve: "P-256",
   };
   var webCrypto = g.crypto.subtle;
-  var ENCRYPT_INFO = new TextEncoder("utf-8").encode(
-    "Content-Encoding: aesgcm128"
-  );
-  var NONCE_INFO = new TextEncoder("utf-8").encode("Content-Encoding: nonce");
+  var ENCRYPT_INFO = new TextEncoder().encode("Content-Encoding: aesgcm128");
+  var NONCE_INFO = new TextEncoder().encode("Content-Encoding: nonce");
 
   function chunkArray(array, size) {
     var start = array.byteOffset || 0;
@@ -86,7 +84,7 @@
   /* Coerces data into a Uint8Array */
   function ensureView(data) {
     if (typeof data === "string") {
-      return new TextEncoder("utf-8").encode(data);
+      return new TextEncoder().encode(data);
     }
     if (data instanceof ArrayBuffer) {
       return new Uint8Array(data);

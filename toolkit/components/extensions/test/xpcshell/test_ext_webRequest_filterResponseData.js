@@ -375,9 +375,7 @@ add_task(async function test_filter_302() {
 
           filter.ondata = event => {
             const script = "forceError();";
-            filter.write(
-              new Uint8Array(new TextEncoder("utf-8").encode(script))
-            );
+            filter.write(new Uint8Array(new TextEncoder().encode(script)));
             filter.close();
             browser.test.sendMessage("filter-ondata");
           };

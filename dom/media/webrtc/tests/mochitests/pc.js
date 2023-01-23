@@ -287,7 +287,7 @@ PeerConnectionTest.prototype.send = async function(data, options) {
     } else if (d instanceof ArrayBuffer) {
       return d.byteLength;
     } else if (d instanceof String || typeof d === "string") {
-      return new TextEncoder("utf-8").encode(d).length;
+      return new TextEncoder().encode(d).length;
     } else {
       ok(false);
     }

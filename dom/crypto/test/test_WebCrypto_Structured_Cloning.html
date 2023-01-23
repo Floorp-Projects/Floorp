@@ -107,7 +107,7 @@ TestArray.addTest(
   "Structured Cloning: PBKDF2",
   function() {
     var that = this;
-    var key = new TextEncoder("utf-8").encode("password");
+    var key = new TextEncoder().encode("password");
 
     var alg = {
       name: "PBKDF2",
@@ -128,7 +128,7 @@ TestArray.addTest(
   "Structured Cloning: HKDF",
   function() {
     var that = this;
-    var key = new TextEncoder("utf-8").encode("password");
+    var key = new TextEncoder().encode("password");
 
     var alg = {
       name: "HKDF",

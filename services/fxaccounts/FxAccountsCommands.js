@@ -264,7 +264,7 @@ class SendTab {
   async send(to, tab) {
     log.info(`Sending a tab to ${to.length} devices.`);
     const flowID = this._fxai.telemetry.generateFlowID();
-    const encoder = new TextEncoder("utf8");
+    const encoder = new TextEncoder();
     const data = { entries: [{ title: tab.title, url: tab.url }] };
     const report = {
       succeeded: [],

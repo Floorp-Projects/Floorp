@@ -228,7 +228,7 @@ add_task(async function test_sendtab_receive_old_client() {
   // No 'flowID' in the encrypted payload, no 'streamID' anywhere.
   const payload = {
     flowID: "flow-id",
-    encrypted: new TextEncoder("utf8").encode(JSON.stringify(data)),
+    encrypted: new TextEncoder().encode(JSON.stringify(data)),
   };
   const reason = "push";
   await sendTab.handle("sender-id", payload, reason);

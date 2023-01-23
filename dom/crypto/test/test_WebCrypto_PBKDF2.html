@@ -28,7 +28,7 @@ TestArray.addTest(
   function() {
     var that = this;
     var alg = "PBKDF2";
-    var key = new TextEncoder("utf-8").encode("password");
+    var key = new TextEncoder().encode("password");
 
     crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"]).then(
       complete(that, hasKeyFields),
@@ -42,7 +42,7 @@ TestArray.addTest(
   "Unwrapping a PBKDF2 key in PKCS8 format should fail",
   function() {
     var that = this;
-    var pbkdf2Key = new TextEncoder("utf-8").encode("password");
+    var pbkdf2Key = new TextEncoder().encode("password");
     var alg = {name: "AES-GCM", length: 256, iv: new Uint8Array(16)};
     var wrappingKey;
 

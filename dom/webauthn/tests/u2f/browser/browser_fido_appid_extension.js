@@ -73,7 +73,7 @@ add_task(async function test_appid() {
     .then(arrivingHereIsBad)
     .catch(expectInvalidStateError);
 
-  let rpId = new TextEncoder("utf-8").encode(appid);
+  let rpId = new TextEncoder().encode(appid);
   let rpIdHash = await crypto.subtle.digest("SHA-256", rpId);
 
   // Succeed with the right fallback rpId.

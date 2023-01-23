@@ -2385,7 +2385,7 @@ PlacesUtils.metadata = {
   },
 
   _base64Encode(str) {
-    return ChromeUtils.base64URLEncode(new TextEncoder("utf-8").encode(str), {
+    return ChromeUtils.base64URLEncode(new TextEncoder().encode(str), {
       pad: true,
     });
   },

@@ -54,7 +54,7 @@ http://creativecommons.org/licenses/publicdomain/
   var idCounter = 1;
   function waitForDeliveryError(request) {
     return new Promise(resolve => {
-      var data = new TextEncoder("utf-8").encode(JSON.stringify(request));
+      var data = new TextEncoder().encode(JSON.stringify(request));
       var principal = SpecialPowers.wrap(window).clientPrincipal;
 
       let messageId = "message-" + (idCounter++);

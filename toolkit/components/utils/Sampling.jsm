@@ -73,7 +73,7 @@ var Sampling = {
    */
   async truncatedHash(data) {
     const hasher = crypto.subtle;
-    const input = new TextEncoder("utf-8").encode(JSON.stringify(data));
+    const input = new TextEncoder().encode(JSON.stringify(data));
     const hash = await hasher.digest("SHA-256", input);
     // truncate hash to 12 characters (2^48), because the full hash is larger
     // than JS can meaningfully represent as a number.

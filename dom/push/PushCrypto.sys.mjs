@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gDOMBundle", () =>
 );
 
 // getCryptoParamsFromHeaders is exported for test purposes.
-const UTF8 = new TextEncoder("utf-8");
+const UTF8 = new TextEncoder();
 
 const ECDH_KEY = { name: "ECDH", namedCurve: "P-256" };
 const ECDSA_KEY = { name: "ECDSA", namedCurve: "P-256" };

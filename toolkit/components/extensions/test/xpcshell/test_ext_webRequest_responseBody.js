@@ -268,7 +268,7 @@ const TASKS = [
   {
     url: "slow_response.sjs",
     task(filter, resolve, num) {
-      let encoder = new TextEncoder("utf-8");
+      let encoder = new TextEncoder();
 
       filter.onstop = event => {
         browser.test.fail(
@@ -344,7 +344,7 @@ const TASKS = [
   {
     url: "slow_response.sjs",
     task(filter, resolve, num) {
-      let encoder = new TextEncoder("utf-8");
+      let encoder = new TextEncoder();
       let decoder = new TextDecoder("utf-8");
 
       filter.onstop = event => {

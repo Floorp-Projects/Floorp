@@ -232,7 +232,7 @@ function sha512(string) {
   if (string == null) {
     return null;
   }
-  let encoder = new TextEncoder("utf-8");
+  let encoder = new TextEncoder();
   let bytes = encoder.encode(string);
   let hash = new CryptoHash("sha512");
   hash.update(bytes, bytes.length);

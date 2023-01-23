@@ -261,7 +261,7 @@ function iterateForOf(iter) {
 }
 
 function byteInflate(str) {
-  var encoder = new TextEncoder("utf-8");
+  var encoder = new TextEncoder();
   var encoded = encoder.encode(str);
   var result = "";
   for (var i = 0; i < encoded.length; ++i) {

@@ -521,7 +521,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
     for (let filename in files) {
       let script = files[filename];
       if (!instanceOf(script, "ArrayBuffer")) {
-        script = new TextEncoder("utf-8").encode(script).buffer;
+        script = new TextEncoder().encode(script).buffer;
       }
 
       let stream = Cc[
