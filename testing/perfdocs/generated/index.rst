@@ -10,7 +10,7 @@ Performance Testing
   DAMP
   awsy
   fxrecord
-  mach try perf
+  mach-try-perf
   mozperftest
   raptor
   talos
@@ -24,7 +24,7 @@ For more detailed information about each test suite and project, see their docum
   * :doc:`DAMP`
   * :doc:`awsy`
   * :doc:`fxrecord`
-  * :doc:`mach try perf`
+  * :doc:`mach-try-perf`
   * :doc:`mozperftest`
   * :doc:`raptor`
   * :doc:`talos`

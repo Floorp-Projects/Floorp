@@ -27,6 +27,15 @@ options, you can use `./mach perftest --help` to learn about them.
 Running in the CI
 -----------------
 
+.. warning::
+
+    If you are looking for how to run performance tests in CI and ended up here, you might want to checkout :ref:`Mach Try Perf`.
+
+.. warning::
+
+   If you plan to run tests often in the CI for android, you should contact the android
+   infra team to make sure there's availability in our pool of devices.
+
 You can run in the CI directly from the `mach perftest` command by adding the `--push-to-try` option
 to your locally working perftest call.
 
@@ -39,8 +48,4 @@ to run in the CI because they use sparse profiles. Depending on the
 availability of workers, once the task starts, it takes around 15mn to start
 the test.
 
-.. warning::
-
-   If you plan to run tests often in the CI for android, you should contact the android
-   infra team to make sure there's availability in our pool of devices.
 
