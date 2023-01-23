@@ -23,7 +23,14 @@ module.exports = {
   ],
   addons: [
     "@storybook/addon-links",
-    "@storybook/addon-essentials",
+    {
+      name: "@storybook/addon-essentials",
+      options: {
+        backgrounds: false,
+        measure: false,
+        outline: false,
+      },
+    },
     "@storybook/addon-a11y",
   ],
   framework: "@storybook/web-components",
