@@ -4,7 +4,7 @@
 
 pub(crate) mod bridge;
 pub(crate) mod engine;
-mod record;
+pub(crate) mod record;
 
 #[cfg(feature = "full-sync")]
 pub mod full_sync;

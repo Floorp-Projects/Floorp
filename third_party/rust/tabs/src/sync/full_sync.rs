@@ -14,7 +14,7 @@ impl TabsStore {
     pub fn reset(self: Arc<Self>) -> ApiResult<()> {
         handle_error! {
             let mut sync_impl = TabsSyncImpl::new(Arc::clone(&self));
-            sync_impl.reset(EngineSyncAssociation::Disconnected)?;
+            sync_impl.reset(&EngineSyncAssociation::Disconnected)?;
             Ok(())
         }
     }

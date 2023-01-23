@@ -205,7 +205,7 @@ impl<'a> Driver<'a> {
         ClientRecord {
             id: settings.fxa_device_id.clone(),
             name: settings.device_name.clone(),
-            typ: settings.device_type.into(),
+            typ: settings.device_type,
             commands: Vec::new(),
             fxa_device_id: Some(settings.fxa_device_id.clone()),
             version: None,
@@ -489,17 +489,17 @@ mod tests {
             RemoteClient {
                 fxa_device_id: Some("deviceAAAAAA".to_string()),
                 device_name: "Laptop".into(),
-                device_type: Some(DeviceType::Desktop),
+                device_type: DeviceType::Desktop,
             },
             RemoteClient {
                 fxa_device_id: Some("iPhooooooone".to_string()),
                 device_name: "iPhone".into(),
-                device_type: Some(DeviceType::Mobile),
+                device_type: DeviceType::Mobile,
             },
             RemoteClient {
                 fxa_device_id: Some("deviceCCCCCC".to_string()),
                 device_name: "Fenix".into(),
-                device_type: Some(DeviceType::Mobile),
+                device_type: DeviceType::Mobile,
             },
         ];
         let actual_remote_clients = expected_ids
@@ -624,12 +624,12 @@ mod tests {
             RemoteClient {
                 fxa_device_id: Some("deviceAAAAAA".to_string()),
                 device_name: "Laptop".into(),
-                device_type: Some(DeviceType::Desktop),
+                device_type: DeviceType::Desktop,
             },
             RemoteClient {
                 fxa_device_id: Some("iPhooooooone".to_string()),
                 device_name: "iPhone".into(),
-                device_type: Some(DeviceType::Mobile),
+                device_type: DeviceType::Mobile,
             },
         ];
         let actual_remote_clients = expected_ids
@@ -768,12 +768,12 @@ mod tests {
             RemoteClient {
                 fxa_device_id: Some("deviceAAAAAA".to_string()),
                 device_name: "Laptop".into(),
-                device_type: Some(DeviceType::Desktop),
+                device_type: DeviceType::Desktop,
             },
             RemoteClient {
                 fxa_device_id: Some("iPhooooooone".to_string()),
                 device_name: "iPhone".into(),
-                device_type: Some(DeviceType::Mobile),
+                device_type: DeviceType::Mobile,
             },
         ];
         let actual_remote_clients = expected_ids
