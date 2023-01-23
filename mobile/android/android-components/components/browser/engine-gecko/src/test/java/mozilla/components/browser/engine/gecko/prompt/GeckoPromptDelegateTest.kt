@@ -31,6 +31,7 @@ import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -573,6 +574,31 @@ class GeckoPromptDelegateTest {
         (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedTime.toDate("HH:mm:ss.SSS"))
         verify(millisecondsGeckoPrompt).confirm(confirmCaptor.capture())
         assertEquals(selectedTime, confirmCaptor.value)
+    }
+
+    @Test
+    fun `WHEN DateTimePrompt request with invalid stepValue parameter is triggered THEN stepValue is passed as null`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var timeSelectionRequest: PromptRequest.TimeSelection? = null
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
+        val geckoPrompt = geckoDateTimePrompt(
+            type = TIME,
+            defaultValue = "17:00",
+            stepValue = "Time",
+        )
+
+        promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
+
+        assertNotNull(timeSelectionRequest)
+        assertEquals(PromptRequest.TimeSelection.Type.TIME, timeSelectionRequest?.type)
+        assertNull(timeSelectionRequest?.stepValue)
     }
 
     @Test

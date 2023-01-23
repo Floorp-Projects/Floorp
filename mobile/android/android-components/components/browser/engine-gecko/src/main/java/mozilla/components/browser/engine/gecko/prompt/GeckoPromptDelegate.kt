@@ -399,10 +399,12 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onConfirm("")
         }
         val initialDateString = prompt.defaultValue ?: ""
-        val stepValue = if (prompt.stepValue.isNullOrBlank()) {
-            null
-        } else {
-            prompt.stepValue
+        val stepValue = with(prompt.stepValue) {
+            if (this?.toDoubleOrNull() == null) {
+                null
+            } else {
+                this
+            }
         }
 
         val format = when (prompt.type) {
