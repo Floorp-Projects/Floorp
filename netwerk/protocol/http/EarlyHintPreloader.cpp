@@ -209,7 +209,8 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   ASDestination destination = static_cast<ASDestination>(as.GetEnumValue());
   CollectResourcesTypeTelemetry(destination);
 
-  if (!StaticPrefs::network_early_hints_enabled()) {
+  if (!StaticPrefs::network_early_hints_enabled() ||
+      !StaticPrefs::network_preload()) {
     return;
   }
 
