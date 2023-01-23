@@ -695,10 +695,8 @@ let tv = {
 
   // RFC 6070 <http://tools.ietf.org/html/rfc6070>
   pbkdf2_sha1: {
-    password: new TextEncoder("utf-8").encode("passwordPASSWORDpassword"),
-    salt: new TextEncoder("utf-8").encode(
-      "saltSALTsaltSALTsaltSALTsaltSALTsalt"
-    ),
+    password: new TextEncoder().encode("passwordPASSWORDpassword"),
+    salt: new TextEncoder().encode("saltSALTsaltSALTsaltSALTsaltSALTsalt"),
     iterations: 4096,
     length: 25 * 8,
 
@@ -712,10 +710,8 @@ let tv = {
 
   // https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
   pbkdf2_sha256: {
-    password: new TextEncoder("utf-8").encode("passwordPASSWORDpassword"),
-    salt: new TextEncoder("utf-8").encode(
-      "saltSALTsaltSALTsaltSALTsaltSALTsalt"
-    ),
+    password: new TextEncoder().encode("passwordPASSWORDpassword"),
+    salt: new TextEncoder().encode("saltSALTsaltSALTsaltSALTsaltSALTsalt"),
     iterations: 4096,
     length: 40 * 8,
 
@@ -739,9 +735,7 @@ let tv = {
 
   pbkdf2_sha256_no_pwd: {
     password: new Uint8Array(),
-    salt: new TextEncoder("utf-8").encode(
-      "saltSALTsaltSALTsaltSALTsaltSALTsalt"
-    ),
+    salt: new TextEncoder().encode("saltSALTsaltSALTsaltSALTsaltSALTsalt"),
     length: 32 * 8,
     iterations: 1,
 

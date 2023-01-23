@@ -966,7 +966,7 @@ var AddonTestUtils = {
         data = JSON.stringify(data);
       }
       if (!(data instanceof ArrayBuffer)) {
-        data = new TextEncoder("utf-8").encode(data).buffer;
+        data = new TextEncoder().encode(data).buffer;
       }
 
       let stream = ArrayBufferInputStream(data, 0, data.byteLength);

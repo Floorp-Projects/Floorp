@@ -89,7 +89,7 @@ var waitForNotifierObservers = async function(
   );
 
   let scope = "chrome://test-scope";
-  let data = new TextEncoder("utf-8").encode(text);
+  let data = new TextEncoder().encode(text);
 
   if (shouldNotify) {
     pushNotifier.notifyPushWithData(scope, principal, "", data);

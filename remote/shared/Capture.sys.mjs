@@ -175,7 +175,7 @@ capture.toBase64 = function(canvas) {
  */
 capture.toHash = function(canvas) {
   let u = capture.toBase64(canvas);
-  let buffer = new TextEncoder("utf-8").encode(u);
+  let buffer = new TextEncoder().encode(u);
   return crypto.subtle.digest("SHA-256", buffer).then(hash => hex(hash));
 };
 

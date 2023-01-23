@@ -775,11 +775,7 @@ XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   return converter;
 });
 
-XPCOMUtils.defineLazyGetter(
-  Utils,
-  "utf8Encoder",
-  () => new TextEncoder("utf-8")
-);
+XPCOMUtils.defineLazyGetter(Utils, "utf8Encoder", () => new TextEncoder());
 
 /*
  * Commonly-used services

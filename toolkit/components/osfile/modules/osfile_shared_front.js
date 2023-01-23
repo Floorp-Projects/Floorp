@@ -432,8 +432,7 @@ if (typeof Components != "undefined") {
 
     if (typeof buffer == "string") {
       // Normalize buffer to a C buffer by encoding it
-      let encoding = options.encoding || "utf-8";
-      buffer = new TextEncoder(encoding).encode(buffer);
+      buffer = new TextEncoder().encode(buffer);
     }
 
     if ("compression" in options && options.compression == "lz4") {

@@ -11,7 +11,7 @@ test(function() {
   ];
 
   badStrings.forEach(function(t) {
-    var encoded = new TextEncoder("utf-8").encode(t.input);
+    var encoded = new TextEncoder().encode(t.input);
     var decoded = new TextDecoder("utf-8").decode(encoded);
     assert_equals(t.expected, decoded);
   });
@@ -323,7 +323,7 @@ test(function() {
         0xff,
       ],
     };
-    var encoded = octets[encoding] || new TextEncoder(encoding).encode(string);
+    var encoded = octets[encoding] || new TextEncoder().encode(string);
 
     for (var len = 1; len <= 5; ++len) {
       var out = "",
@@ -406,13 +406,13 @@ test(function() {
       string += String.fromCharCode(i);
       bytes.push(i);
     }
-    var ascii_encoded = new TextEncoder("utf-8").encode(string);
+    var ascii_encoded = new TextEncoder().encode(string);
     assert_equals(
       new TextDecoder(encoding).decode(ascii_encoded),
       string,
       encoding
     );
-    //assert_array_equals(new TextEncoder(encoding).encode(string), bytes, encoding);
+    //assert_array_equals(new TextEncoder().encode(string), bytes, encoding);
   });
 }, "Supersets of ASCII decode ASCII correctly");
 

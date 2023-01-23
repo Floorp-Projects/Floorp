@@ -33,7 +33,7 @@ function encodeEnvVar(name, value) {
     return `${name}=${value}`;
   }
 
-  let encoder = new TextEncoder("utf-8");
+  let encoder = new TextEncoder();
   function encode(val) {
     return typeof val === "string" ? encoder.encode(val) : val;
   }

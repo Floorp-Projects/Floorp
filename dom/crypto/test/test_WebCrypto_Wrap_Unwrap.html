@@ -385,7 +385,7 @@ TestArray.addTest(
     var wrapKey;
 
     function doBogusWrap() {
-      var abv = new TextEncoder("utf-8").encode("I am so not JSON");
+      var abv = new TextEncoder().encode("I am so not JSON");
       return crypto.subtle.encrypt(wrapAlg, wrapKey, abv);
     }
     function doUnwrap(wrappedKey) {

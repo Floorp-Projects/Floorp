@@ -615,7 +615,7 @@ class FxAccountsKeys {
       scopedKeyMetadata.keyRotationSecret
     );
     const salt = CommonUtils.hexToArrayBuffer(uid);
-    const context = new TextEncoder("utf8").encode(
+    const context = new TextEncoder().encode(
       "identity.mozilla.com/picl/v1/scoped_key\n" + scopedKeyMetadata.identifier
     );
 

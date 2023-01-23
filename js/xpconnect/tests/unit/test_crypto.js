@@ -13,14 +13,14 @@ function run_test() {
   sb.equal = equal;
   let innerPromise = new Promise(r => (sb.test_done = r));
   Cu.evalInSandbox('crypto.subtle.digest("SHA-256", ' +
-                   '                     new TextEncoder("utf-8").encode("abc"))' +
+                   '                     new TextEncoder().encode("abc"))' +
                    '  .then(h => equal(new Uint16Array(h)[0], 30906))' +
                    '  .then(test_done);', sb);
 
   Cu.importGlobalProperties(["crypto"]);
   ok(crypto);
   ok(crypto.subtle);
-  let outerPromise = crypto.subtle.digest("SHA-256", new TextEncoder("utf-8").encode("abc"))
+  let outerPromise = crypto.subtle.digest("SHA-256", new TextEncoder().encode("abc"))
       .then(h => Assert.equal(new Uint16Array(h)[0], 30906));
 
   do_test_pending();

@@ -92,8 +92,7 @@ var writeAtomic = function(path, buffer, options = {}) {
 
   if (typeof buffer == "string") {
     // Normalize buffer to a C buffer by encoding it
-    let encoding = options.encoding || "utf-8";
-    buffer = new TextEncoder(encoding).encode(buffer);
+    buffer = new TextEncoder().encode(buffer);
   }
 
   if (ArrayBuffer.isView(buffer)) {

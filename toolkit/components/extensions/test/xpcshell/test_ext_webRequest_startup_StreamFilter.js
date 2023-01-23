@@ -34,7 +34,7 @@ add_task(async function test_StreamFilter_at_restart() {
       details => {
         let filter = browser.webRequest.filterResponseData(details.requestId);
         filter.onstop = () => {
-          let encoded = new TextEncoder("utf-8").encode(data);
+          let encoded = new TextEncoder().encode(data);
           filter.write(encoded);
           filter.close();
         };

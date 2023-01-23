@@ -486,7 +486,7 @@ var Impl = {
         const payload = {};
         payload.encryptedData = await lazy.jwcrypto.generateJWE(
           aOptions.publicKey,
-          new TextEncoder("utf-8").encode(JSON.stringify(aPayload))
+          new TextEncoder().encode(JSON.stringify(aPayload))
         );
 
         payload.schemaVersion = aOptions.schemaVersion;
