@@ -564,10 +564,10 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     return;
   }
 
-  const nsIContent* content = aFrame->GetContent();
-  if (content->IsSVGElement() &&
-      !static_cast<const SVGElement*>(content)->HasValidDimensions()) {
-    return;
+  if (auto* svg = SVGElement::FromNode(aFrame->GetContent())) {
+    if (!svg->HasValidDimensions()) {
+      return;
+    }
   }
 
   if (aDirtyRect && !aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
@@ -829,10 +829,8 @@ nsIFrame* SVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
   // First we transform aPoint into the coordinate space established by aFrame
   // for its children (e.g. take account of any 'viewBox' attribute):
   gfxPoint point = aPoint;
-  if (aFrame->GetContent()->IsSVGElement()) {  // must check before cast
-    gfxMatrix m =
-        static_cast<const SVGElement*>(aFrame->GetContent())
-            ->PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
+  if (auto* svg = SVGElement::FromNode(aFrame->GetContent())) {
+    gfxMatrix m = svg->PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
     if (!m.IsIdentity()) {
       if (!m.Invert()) {
         return nullptr;
@@ -849,17 +847,17 @@ nsIFrame* SVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(current);
     if (SVGFrame) {
       const nsIContent* content = current->GetContent();
-      if (content->IsSVGElement() &&
-          !static_cast<const SVGElement*>(content)->HasValidDimensions()) {
-        continue;
+      if (auto* svg = SVGElement::FromNode(content)) {
+        if (!svg->HasValidDimensions()) {
+          continue;
+        }
       }
       // GetFrameForPoint() expects a point in its frame's SVG user space, so
       // we need to convert to that space:
       gfxPoint p = point;
-      if (content->IsSVGElement()) {  // must check before cast
+      if (auto* svg = SVGElement::FromNode(content)) {
         gfxMatrix m =
-            static_cast<const SVGElement*>(content)->PrependLocalTransformsTo(
-                gfxMatrix(), eUserSpaceToParent);
+            svg->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
         if (!m.IsIdentity()) {
           if (!m.Invert()) {
             continue;
@@ -1163,9 +1161,7 @@ gfxRect SVGUtils::GetRelativeRect(uint16_t aUnits,
   if (aUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     return GetBoundingBoxRelativeRect(aXYWH, aBBox);
   }
-  nsIContent* content = aFrame->GetContent();
-  if (content->IsSVGElement()) {
-    SVGElement* svgElement = static_cast<SVGElement*>(content);
+  if (SVGElement* svgElement = SVGElement::FromNode(aFrame->GetContent())) {
     return GetRelativeRect(aUnits, aXYWH, aBBox, SVGElementMetrics(svgElement));
   }
   return GetRelativeRect(aUnits, aXYWH, aBBox,
@@ -1524,10 +1520,11 @@ float SVGUtils::GetStrokeWidth(nsIFrame* aFrame,
 
 void SVGUtils::SetupStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
                                    SVGContextPaint* aContextPaint) {
+  MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "bad cast");
   SVGContentUtils::AutoStrokeOptions strokeOptions;
-  SVGContentUtils::GetStrokeOptions(
-      &strokeOptions, static_cast<SVGElement*>(aFrame->GetContent()),
-      aFrame->Style(), aContextPaint);
+  SVGContentUtils::GetStrokeOptions(&strokeOptions,
+                                    SVGElement::FromNode(aFrame->GetContent()),
+                                    aFrame->Style(), aContextPaint);
 
   if (strokeOptions.mLineWidth <= 0) {
     return;
@@ -1633,10 +1630,8 @@ bool SVGUtils::GetSVGGlyphExtents(Element* aElement,
   }
 
   gfxMatrix transform(aSVGToAppSpace);
-  nsIContent* content = frame->GetContent();
-  if (content->IsSVGElement()) {
-    transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
-        aSVGToAppSpace);
+  if (auto* svg = SVGElement::FromNode(frame->GetContent())) {
+    transform = svg->PrependLocalTransformsTo(aSVGToAppSpace);
   }
 
   *aResult =
