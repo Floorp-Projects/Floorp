@@ -253,6 +253,8 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "transition-duration",
       "transition-property",
       "transition-timing-function",
+      "view-timeline-axis",
+      "view-timeline-name",
       "-moz-window-shadow",
     ]),
   ],
