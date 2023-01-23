@@ -62,7 +62,7 @@ const WEBAPI_INSTALL_HOSTS =
 const WEBAPI_TEST_INSTALL_HOSTS =
   AppConstants.MOZ_APP_NAME !== "thunderbird"
     ? ["addons.allizom.org", "addons-dev.allizom.org", "example.com"]
-    : ["addons-stage.thunderbird.net"];
+    : ["addons-stage.thunderbird.net", "example.com"];
 
 const AMO_ATTRIBUTION_ALLOWED_SOURCES = ["amo", "disco"];
 const AMO_ATTRIBUTION_DATA_KEYS = [
