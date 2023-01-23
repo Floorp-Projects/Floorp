@@ -1595,29 +1595,28 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
 
   // get the frame again in case it went away
   popupFrame = do_QueryFrame(popup->GetPrimaryFrame());
-  if (popupFrame) {
-    // if the event was cancelled or the popup was closed in the mean time,
-    // don't open the popup, reset its state back to closed and clear its
-    // trigger content.
-    if (popupFrame->PopupState() == ePopupClosed ||
-        status == nsEventStatus_eConsumeNoDefault) {
-      popupFrame->SetPopupState(ePopupClosed);
-      popupFrame->ClearTriggerContent();
-    } else {
-      // Now check if we need to fire the popuppositioned event. If not, call
-      // ShowPopupCallback directly.
-
-      // The popuppositioned event only fires on arrow panels for now.
-      if (popup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                          nsGkAtoms::arrow, eCaseMatters)) {
-        popupFrame->ShowWithPositionedEvent();
-        presShell->FrameNeedsReflow(popupFrame,
-                                    IntrinsicDirty::FrameAndAncestors,
-                                    NS_FRAME_HAS_DIRTY_CHILDREN);
-      } else {
-        ShowPopupCallback(popup, popupFrame, aIsContextMenu, aSelectFirstItem);
-      }
-    }
+  if (!popupFrame) {
+    return;
+  }
+  // if the event was cancelled or the popup was closed in the mean time, don't
+  // open the popup, reset its state back to closed and clear its trigger
+  // content.
+  if (popupFrame->PopupState() == ePopupClosed ||
+      status == nsEventStatus_eConsumeNoDefault) {
+    popupFrame->SetPopupState(ePopupClosed);
+    popupFrame->ClearTriggerContent();
+    return;
+  }
+  // Now check if we need to fire the popuppositioned event. If not, call
+  // ShowPopupCallback directly.
+  // The popuppositioned event only fires on arrow panels for now.
+  if (popup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                      nsGkAtoms::arrow, eCaseMatters)) {
+    popupFrame->ShowWithPositionedEvent();
+    presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::FrameAndAncestors,
+                                NS_FRAME_HAS_DIRTY_CHILDREN);
+  } else {
+    ShowPopupCallback(popup, popupFrame, aIsContextMenu, aSelectFirstItem);
   }
 }
 
@@ -1657,57 +1656,62 @@ void nsXULPopupManager::FirePopupHidingEvent(
 
   // get frame again in case it went away
   nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
-  if (popupFrame) {
-    // if the event was cancelled, don't hide the popup, and reset its
-    // state back to open. Only popups in chrome shells can prevent a popup
-    // from hiding.
-    if (status == nsEventStatus_eConsumeNoDefault &&
-        !popupFrame->IsInContentShell()) {
-      // XXXndeakin
-      // If an attempt was made to hide this popup before the popupshown event
-      // fired, then ePopupShown is set here even though it should be
-      // ePopupVisible. This probably isn't worth the hassle of handling.
-      popupFrame->SetPopupState(ePopupShown);
-    } else {
-      // If the popup has an animate attribute and it is not set to false, check
-      // if it has a closing transition and wait for it to finish. The
-      // transition may still occur either way, but the view will be hidden and
-      // you won't be able to see it. If there is a next popup, indicating that
-      // mutliple popups are rolling up, don't wait and hide the popup right
-      // away since the effect would likely be undesirable.
-      if (LookAndFeel::GetInt(LookAndFeel::IntID::PanelAnimations) &&
-          !aNextPopup && aPopup->IsElement() &&
-          aPopup->AsElement()->HasAttr(nsGkAtoms::animate)) {
-        // If animate="false" then don't transition at all. If animate="cancel",
-        // only show the transition if cancelling the popup or rolling up.
-        // Otherwise, always show the transition.
-        nsAutoString animate;
-        aPopup->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::animate,
-                                     animate);
-
-        if (!animate.EqualsLiteral("false") &&
-            (!animate.EqualsLiteral("cancel") || aIsCancel)) {
-          presShell->FlushPendingNotifications(FlushType::Layout);
-
-          // Get the frame again in case the flush caused it to go away
-          popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
-          if (!popupFrame) return;
-
-          if (AnimationUtils::HasCurrentTransitions(
-                  aPopup->AsElement(), PseudoStyleType::NotPseudo)) {
-            RefPtr<TransitionEnder> ender =
-                new TransitionEnder(aPopup, aDeselectMenu);
-            aPopup->AddSystemEventListener(u"transitionend"_ns, ender, false,
-                                           false);
-            return;
-          }
-        }
-      }
-
-      HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup, aPopupType,
-                        aDeselectMenu);
-    }
+  if (!popupFrame) {
+    return;
   }
+
+  // If the event was cancelled, don't hide the popup, and reset its
+  // state back to open. Only popups in chrome shells can prevent a popup
+  // from hiding.
+  if (status == nsEventStatus_eConsumeNoDefault &&
+      !popupFrame->IsInContentShell()) {
+    // XXXndeakin
+    // If an attempt was made to hide this popup before the popupshown event
+    // fired, then ePopupShown is set here even though it should be
+    // ePopupVisible. This probably isn't worth the hassle of handling.
+    popupFrame->SetPopupState(ePopupShown);
+    return;
+  }
+
+  const bool shouldAnimate = [&] {
+    if (!LookAndFeel::GetInt(LookAndFeel::IntID::PanelAnimations)) {
+      return false;
+    }
+    // If there is a next popup, indicating that mutliple popups are rolling
+    // up, don't wait and hide the popup right away since the effect would
+    // likely be undesirable.
+    if (aNextPopup) {
+      return false;
+    }
+    nsAutoString animate;
+    if (!aPopup->IsElement() ||
+        !aPopup->AsElement()->GetAttr(nsGkAtoms::animate, animate)) {
+      return false;
+    }
+    // If animate="false" then don't transition at all.
+    if (animate.EqualsLiteral("false")) {
+      return false;
+    }
+    // If animate="cancel", only show the transition if cancelling the popup
+    // or rolling up.
+    if (animate.EqualsLiteral("cancel") && !aIsCancel) {
+      return false;
+    }
+    return true;
+  }();
+  // If we should animate the popup, check if it has a closing transition
+  // and wait for it to finish.
+  // The transition would still occur either way, but if we don't wait the
+  // view will be hidden and you won't be able to see it.
+  if (shouldAnimate && AnimationUtils::HasCurrentTransitions(
+                           aPopup->AsElement(), PseudoStyleType::NotPseudo)) {
+    RefPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
+    aPopup->AddSystemEventListener(u"transitionend"_ns, ender, false, false);
+    return;
+  }
+
+  HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup, aPopupType,
+                    aDeselectMenu);
 }
 
 bool nsXULPopupManager::IsPopupOpen(nsIContent* aPopup) {
