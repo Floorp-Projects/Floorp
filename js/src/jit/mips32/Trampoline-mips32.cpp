@@ -786,7 +786,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
         break;
       case VMFunctionData::WordByRef:
         masm.passABIArg(
-            MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
+            MoveOperand(argsBase, argDisp, MoveOperand::Kind::EffectiveAddress),
             MoveOp::GENERAL);
         argDisp += sizeof(uint32_t);
         break;
@@ -795,7 +795,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
         masm.ma_ldc1WordAligned(ScratchDoubleReg, argsBase, argDisp);
         masm.as_sdc1(ScratchDoubleReg, doubleArgs, doubleArgDisp);
         masm.passABIArg(MoveOperand(doubleArgs, doubleArgDisp,
-                                    MoveOperand::EFFECTIVE_ADDRESS),
+                                    MoveOperand::Kind::EffectiveAddress),
                         MoveOp::GENERAL);
         doubleArgDisp += sizeof(double);
         argDisp += sizeof(double);
@@ -808,9 +808,9 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
 
   // Copy the implicit outparam, if any.
   if (f.outParam != Type_Void) {
-    masm.passABIArg(
-        MoveOperand(doubleArgs, outParamOffset, MoveOperand::EFFECTIVE_ADDRESS),
-        MoveOp::GENERAL);
+    masm.passABIArg(MoveOperand(doubleArgs, outParamOffset,
+                                MoveOperand::Kind::EffectiveAddress),
+                    MoveOp::GENERAL);
   }
 
   masm.callWithABI(nativeFun, MoveOp::GENERAL,
