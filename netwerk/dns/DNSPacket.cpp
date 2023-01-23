@@ -1177,7 +1177,7 @@ bool ODoHDNSPacket::ParseODoHConfigs(Span<const uint8_t> aData,
   }
 
   nsTArray<ObliviousDoHConfig> result;
-  static const uint32_t kMinimumConfigContentLength = 12;
+  static const int kMinimumConfigContentLength = 12;
   while (std::distance(it, aData.cend()) > kMinimumConfigContentLength) {
     ObliviousDoHConfig config;
     if (!get16bit(aData, it, config.mVersion)) {
