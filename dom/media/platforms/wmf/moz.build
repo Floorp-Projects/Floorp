@@ -9,7 +9,6 @@ EXPORTS += [
     "MFTDecoder.h",
     "WMF.h",
     "WMFAudioMFTManager.h",
-    "WMFDataEncoderUtils.h",
     "WMFDecoderModule.h",
     "WMFEncoderModule.h",
     "WMFMediaDataDecoder.h",
@@ -20,9 +19,6 @@ EXPORTS += [
 
 if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
     EXPORTS += [
-        "MFCDMExtra.h",
-        "MFCDMProxy.h",
-        "MFContentProtectionManager.h",
         "MFMediaEngineAudioStream.h",
         "MFMediaEngineDecoderModule.h",
         "MFMediaEngineExtra.h",
@@ -31,8 +27,6 @@ if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         "MFMediaSource.h",
     ]
     UNIFIED_SOURCES += [
-        "MFCDMProxy.cpp",
-        "MFContentProtectionManager.cpp",
         "MFMediaEngineAudioStream.cpp",
         "MFMediaEngineDecoderModule.cpp",
         "MFMediaEngineExtension.cpp",
@@ -50,6 +44,7 @@ UNIFIED_SOURCES += [
     "WMFDecoderModule.cpp",
     "WMFEncoderModule.cpp",
     "WMFMediaDataDecoder.cpp",
+    "WMFMediaDataEncoder.cpp",
     "WMFVideoMFTManager.cpp",
 ]
 

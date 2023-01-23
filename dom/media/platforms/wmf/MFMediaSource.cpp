@@ -8,7 +8,6 @@
 #include <mfidl.h>
 #include <stdint.h>
 
-#include "MFCDMProxy.h"
 #include "MFMediaEngineAudioStream.h"
 #include "MFMediaEngineUtils.h"
 #include "MFMediaEngineVideoStream.h"
@@ -31,10 +30,7 @@ MFMediaSource::MFMediaSource()
   MOZ_COUNT_CTOR(MFMediaSource);
 }
 
-MFMediaSource::~MFMediaSource() {
-  // TODO : notify cdm about the last key id?
-  MOZ_COUNT_DTOR(MFMediaSource);
-}
+MFMediaSource::~MFMediaSource() { MOZ_COUNT_DTOR(MFMediaSource); }
 
 HRESULT MFMediaSource::RuntimeClassInitialize(
     const Maybe<AudioInfo>& aAudio, const Maybe<VideoInfo>& aVideo,
@@ -515,36 +511,6 @@ IFACEMETHODIMP MFMediaSource::GetRate(BOOL* aSupportsThinning, float* aRate) {
   return S_OK;
 }
 
-HRESULT MFMediaSource::GetInputTrustAuthority(DWORD aStreamId, REFIID aRiid,
-                                              IUnknown** aITAOut) {
-  // TODO : add threading assertion, not sure what thread it would be running on
-  // now.
-  {
-    MutexAutoLock lock(mMutex);
-    if (mState == State::Shutdowned) {
-      return MF_E_SHUTDOWN;
-    }
-  }
-
-  if (!mCDMProxy) {
-    return MF_E_NOT_PROTECTED;
-  }
-
-  // TODO : verify if this aStreamId is really matching our stream id or not.
-  ComPtr<MFMediaEngineStream> stream = GetStreamByIndentifier(aStreamId);
-  if (!stream) {
-    return E_INVALIDARG;
-  }
-
-  if (!stream->IsEncrypted()) {
-    return MF_E_NOT_PROTECTED;
-  }
-
-  RETURN_IF_FAILED(
-      mCDMProxy->GetInputTrustAuthority(aStreamId, nullptr, 0, aRiid, aITAOut));
-  return S_OK;
-}
-
 MFMediaSource::State MFMediaSource::GetState() const {
   MutexAutoLock lock(mMutex);
   return mState;
@@ -557,25 +523,6 @@ MFMediaEngineStream* MFMediaSource::GetAudioStream() {
 MFMediaEngineStream* MFMediaSource::GetVideoStream() {
   MutexAutoLock lock(mMutex);
   return mVideoStream.Get();
-}
-
-MFMediaEngineStream* MFMediaSource::GetStreamByIndentifier(
-    DWORD aStreamId) const {
-  MutexAutoLock lock(mMutex);
-  if (mAudioStream && mAudioStream->DescriptorId() == aStreamId) {
-    return mAudioStream.Get();
-  }
-  if (mVideoStream && mVideoStream->DescriptorId() == aStreamId) {
-    return mVideoStream.Get();
-  }
-  return nullptr;
-}
-
-void MFMediaSource::SetCDMProxy(MFCDMProxy* aCDMProxy) {
-  // TODO : add threading assertion, not sure what thread it would be running on
-  // now.
-  mCDMProxy = aCDMProxy;
-  // TODO : ask cdm proxy to refresh trusted input
 }
 
 void MFMediaSource::AssertOnManagerThread() const {
