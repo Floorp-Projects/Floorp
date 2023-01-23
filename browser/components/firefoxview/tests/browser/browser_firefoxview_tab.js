@@ -45,6 +45,22 @@ function forceFocus(aElem) {
   aElem.removeAttribute("tabindex");
 }
 
+function triggerClickOn(target, options) {
+  let promise = BrowserTestUtils.waitForEvent(target, "click");
+  if (AppConstants.platform == "macosx") {
+    options.metaKey = options.ctrlKey;
+    delete options.ctrlKey;
+  }
+  EventUtils.synthesizeMouseAtCenter(target, options);
+  return promise;
+}
+
+async function add_new_tab(URL) {
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  return tab;
+}
+
 add_task(async function aria_attributes() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   is(
@@ -245,5 +261,50 @@ add_task(async function testFirstTabFocusableWhenFxViewOpen() {
     let activeElement = win.document.activeElement;
     let expectedElement = firstVisibleTab;
     is(activeElement, expectedElement, "First visible tab should be focused");
+  });
+});
+
+// Test that Firefox View tab is not multiselectable
+add_task(async function testFxViewNotMultiselect() {
+  await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
+  await withFirefoxView({ win: window }, async browser => {
+    let win = browser.ownerGlobal;
+    Assert.ok(
+      win.FirefoxViewHandler.tab.selected,
+      "Firefox View tab is selected"
+    );
+    let tab2 = await add_new_tab("https://www.mozilla.org");
+    let fxViewBtn = win.document.getElementById("firefox-view-button");
+
+    info("We multi-select a visible tab with ctrl key down");
+    await triggerClickOn(tab2, { ctrlKey: true });
+    Assert.ok(
+      tab2.multiselected && gBrowser._multiSelectedTabsSet.has(tab2),
+      "Second visible tab is (multi) selected"
+    );
+    Assert.equal(gBrowser.multiSelectedTabsCount, 1, "One tab is selected.");
+    Assert.notEqual(
+      fxViewBtn,
+      gBrowser.selectedTab,
+      "Fx View tab doesn't have focus"
+    );
+
+    // Ctrl/Cmd click tab2 again to deselect it
+    await triggerClickOn(tab2, { ctrlKey: true });
+
+    info("We multi-select visible tabs with shift key down");
+    await triggerClickOn(tab2, { shiftKey: true });
+    Assert.ok(
+      tab2.multiselected && gBrowser._multiSelectedTabsSet.has(tab2),
+      "Second visible tab is (multi) selected"
+    );
+    Assert.equal(gBrowser.multiSelectedTabsCount, 2, "Two tabs are selected.");
+    Assert.notEqual(
+      fxViewBtn,
+      gBrowser.selectedTab,
+      "Fx View tab doesn't have focus"
+    );
+
+    BrowserTestUtils.removeTab(tab2);
   });
 });
