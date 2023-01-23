@@ -286,7 +286,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
         menuButton.setAttribute("closemenu", "none");
 
         let node = document.createXULElement("toolbaritem");
-        node.setAttribute("unified-extensions", String(true));
         node.classList.add(
           "toolbaritem-combined-buttons",
           "unified-extensions-item"

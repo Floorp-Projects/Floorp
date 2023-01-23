@@ -318,12 +318,6 @@ async function withWindowOverflowed(
 async function verifyExtensionWidget(win, widget) {
   Assert.ok(widget, "expected widget");
 
-  Assert.equal(
-    widget.getAttribute("unified-extensions"),
-    "true",
-    "expected unified-extensions attribute to be true"
-  );
-
   let actionButton = widget.firstElementChild;
   Assert.ok(
     actionButton.classList.contains("unified-extensions-item-action-button"),
