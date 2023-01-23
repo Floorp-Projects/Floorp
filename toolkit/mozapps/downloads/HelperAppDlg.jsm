@@ -417,7 +417,7 @@ nsUnknownContentTypeDialog.prototype = {
           aLauncher.saveDestinationAvailable(result, true);
         });
       });
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 
   getFinalLeafName(aLeafName, aFileExt) {

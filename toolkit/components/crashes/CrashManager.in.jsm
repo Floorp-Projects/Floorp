@@ -83,7 +83,7 @@ function parseAndRemoveField(obj, field) {
     try {
       value = JSON.parse(obj[field]);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     delete obj[field];
@@ -344,10 +344,10 @@ CrashManager.prototype = Object.freeze({
                 break;
 
               default:
-                Cu.reportError(
+                console.error(
                   "Unhandled crash event file return code. Please " +
-                    "file a bug: " +
-                    result
+                    "file a bug: ",
+                  result
                 );
             }
           } catch (ex) {
@@ -360,7 +360,7 @@ CrashManager.prototype = Object.freeze({
               //
               // If we get here, report the error and delete the source file
               // so we don't see it again.
-              Cu.reportError(
+              console.error(
                 "Exception when processing crash event file: " +
                   lazy.Log.exceptionStr(ex)
               );
@@ -450,10 +450,10 @@ CrashManager.prototype = Object.freeze({
   addCrash(processType, crashType, id, date, metadata) {
     let promise = (async () => {
       if (!this.isValidProcessType(processType)) {
-        Cu.reportError(
-          "Unhandled process type. Please file a bug: '" +
-            processType +
-            "'. Ignore in the context of " +
+        console.error(
+          "Unhandled process type. Please file a bug: '",
+          processType,
+          "'. Ignore in the context of " +
             "test_crash_manager.js:test_addCrashWrong()."
         );
         return;
@@ -645,7 +645,7 @@ CrashManager.prototype = Object.freeze({
 
         return entries;
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
         return [];
       }
     })();

@@ -81,7 +81,7 @@ const SpecialMessageActions = {
         install
       );
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   },
 

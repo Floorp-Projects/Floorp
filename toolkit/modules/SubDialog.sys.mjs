@@ -247,7 +247,7 @@ SubDialog.prototype = {
       try {
         this._closingCallback.call(null, aEvent);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       this._closingCallback = null;
     }
@@ -275,7 +275,7 @@ SubDialog.prototype = {
         try {
           this._closedCallback.call(null, aEvent);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
         this._closedCallback = null;
       }
@@ -618,13 +618,12 @@ SubDialog.prototype = {
     let maxHeight = this._window.innerHeight - frameOverhead;
     // Do this with a frame height in pixels...
     if (!frameHeight.endsWith("px")) {
-      Cu.reportError(
-        "This dialog (" +
-          this._frame.contentWindow.location.href +
-          ") " +
-          "set a height in non-px-non-em units ('" +
-          frameHeight +
-          "'), " +
+      console.error(
+        "This dialog (",
+        this._frame.contentWindow.location.href,
+        ") set a height in non-px-non-em units ('",
+        frameHeight,
+        "'), " +
           "which is likely to lead to bad sizing in in-content preferences. " +
           "Please consider changing this."
       );

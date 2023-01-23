@@ -183,9 +183,7 @@ export var BrowserUtils = {
           }
           // otherwise, fall through...
         } catch (ex) {
-          Cu.reportError(
-            "Invalid blob URI passed to formatURIForDisplay: " + ex
-          );
+          console.error("Invalid blob URI passed to formatURIForDisplay: ", ex);
         }
       /* For blob URIs without an origin, fall through and use the data URI
        * logic (shows just "(data)", localized). */
@@ -217,7 +215,7 @@ export var BrowserUtils = {
             }
           }
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
     }
     return uri.asciiHost || uri.spec;

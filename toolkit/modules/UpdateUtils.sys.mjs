@@ -57,7 +57,7 @@ export var UpdateUtils = {
           });
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
 
@@ -135,10 +135,9 @@ export var UpdateUtils = {
       }
     }
 
-    Cu.reportError(
-      FILE_UPDATE_LOCALE +
-        " file doesn't exist in either the " +
-        "application or GRE directories"
+    console.error(
+      FILE_UPDATE_LOCALE,
+      " file doesn't exist in either the application or GRE directories"
     );
 
     return (this._locale = null);
@@ -458,10 +457,10 @@ export var UpdateUtils = {
           await writeUpdateConfig(config);
           return config;
         } catch (e) {
-          Cu.reportError(
+          console.error(
             "UpdateUtils.writeUpdateConfigSetting: App update configuration " +
-              "file write failed. Exception: " +
-              e
+              "file write failed. Exception: ",
+            e
           );
           // Re-throw the error so the caller knows that writing the value in
           // the app update config file failed.
@@ -778,7 +777,7 @@ function readEffectiveValue(config, prefName) {
     if (prefTypeFns.isValid(config[prefName])) {
       return config[prefName];
     }
-    Cu.reportError(
+    console.error(
       `readEffectiveValue: Got invalid value for update config's` +
         ` '${prefName}' value: "${config[prefName]}"`
     );
@@ -813,7 +812,7 @@ function readDefaultValue(config, prefName) {
       if (prefTypeFns.isValid(defaults[prefName])) {
         return defaults[prefName];
       }
-      Cu.reportError(
+      console.error(
         `readEffectiveValue: Got invalid default value for update` +
           ` config's '${prefName}' value: "${defaults[prefName]}"`
       );
@@ -849,7 +848,7 @@ async function readUpdateConfig() {
           onMigrationSuccessful();
           return migrationConfig;
         } catch (e) {
-          Cu.reportError("readUpdateConfig: Migration failed: " + e);
+          console.error("readUpdateConfig: Migration failed: ", e);
         }
       }
     } else {
@@ -858,10 +857,10 @@ async function readUpdateConfig() {
       // it doesn't happen again.
       setUpdateConfigMigrationDone();
 
-      Cu.reportError(
+      console.error(
         "readUpdateConfig: Unable to read app update configuration file. " +
-          "Exception: " +
-          e
+          "Exception: ",
+        e
       );
     }
     return makeDefaultUpdateConfig();
@@ -948,9 +947,7 @@ function getMemoryMB() {
       memoryMB = Math.round(memoryMB / 1024 / 1024);
     }
   } catch (e) {
-    Cu.reportError(
-      "Error getting system info memsize property. Exception: " + e
-    );
+    console.error("Error getting system info memsize property. Exception: ", e);
   }
   return memoryMB;
 }
@@ -1009,7 +1006,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
   try {
     kernel32 = lazy.ctypes.open("Kernel32");
   } catch (e) {
-    Cu.reportError("Unable to open kernel32! Exception: " + e);
+    console.error("Unable to open kernel32! Exception: ", e);
   }
 
   if (kernel32) {
@@ -1040,7 +1037,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
           break;
       }
     } catch (e) {
-      Cu.reportError("Error getting processor architecture. Exception: " + e);
+      console.error("Error getting processor architecture. Exception: ", e);
     } finally {
       kernel32.close();
     }
@@ -1054,7 +1051,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
   try {
     abi = Services.appinfo.XPCOMABI;
   } catch (e) {
-    Cu.reportError("XPCOM ABI unknown");
+    console.error("XPCOM ABI unknown");
   }
 
   if (AppConstants.platform == "win") {
@@ -1078,7 +1075,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
       " " +
       Services.sysinfo.getProperty("version");
   } catch (e) {
-    Cu.reportError("OS Version unknown.");
+    console.error("OS Version unknown.");
   }
 
   if (osVersion) {
@@ -1092,9 +1089,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
         } = lazy.WindowsVersionInfo.get();
         osVersion += `.${servicePackMajor}.${servicePackMinor}.${buildNumber}`;
       } catch (err) {
-        Cu.reportError(
-          "Unable to retrieve windows version information: " + err
-        );
+        console.error("Unable to retrieve windows version information: ", err);
         osVersion += ".unknown";
       }
 

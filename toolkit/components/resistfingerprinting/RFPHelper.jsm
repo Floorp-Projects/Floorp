@@ -334,7 +334,7 @@ class _RFPHelper {
   _parseLetterboxingDimensions(aPrefValue) {
     if (!aPrefValue || !aPrefValue.match(/^(?:\d+x\d+,\s*)*(?:\d+x\d+)$/)) {
       if (aPrefValue) {
-        Cu.reportError(
+        console.error(
           `Invalid pref value for ${kPrefLetterboxingDimensions}: ${aPrefValue}`
         );
       }

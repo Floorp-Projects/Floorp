@@ -210,7 +210,8 @@ module.exports = {
       files: [
         "dom/push/test/mockpushserviceparent.js",
         "browser/components/extensions/**",
-        "toolkit/**",
+        "toolkit/components/extensions/**",
+        "toolkit/mozapps/extensions/**",
       ],
       rules: {
         "mozilla/no-cu-reportError": "off",

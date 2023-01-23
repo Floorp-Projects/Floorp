@@ -573,7 +573,7 @@ var DownloadHistoryList = function(publicList, place) {
   this._slotForDownload = new WeakMap();
 
   // Start the asynchronous queries to retrieve history and session downloads.
-  publicList.addView(this).catch(Cu.reportError);
+  publicList.addView(this).catch(console.error);
   let query = {},
     options = {};
   lazy.PlacesUtils.history.queryStringToQuery(place, query, options);

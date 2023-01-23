@@ -119,7 +119,7 @@ DownloadLegacyTransfer.prototype = {
             }
           });
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     } else if (
       aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
       aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
@@ -137,7 +137,7 @@ DownloadLegacyTransfer.prototype = {
           }
           download.saver.onTransferFinished(aStatus);
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
 
       // Release the reference to the component executing the download.
       this._cancelable = null;
@@ -183,7 +183,7 @@ DownloadLegacyTransfer.prototype = {
         .then(download => {
           download.saver.onTransferFinished(aStatus);
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
   },
 
@@ -236,7 +236,7 @@ DownloadLegacyTransfer.prototype = {
           this._delayedMaxTotalProgress
         );
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
   _hasDelayedProgress: false,
   _delayedCurTotalProgress: 0,
@@ -447,7 +447,7 @@ DownloadLegacyTransfer.prototype = {
           aDownload._notifyChange();
         }
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
 
   setSha256Hash(hash) {

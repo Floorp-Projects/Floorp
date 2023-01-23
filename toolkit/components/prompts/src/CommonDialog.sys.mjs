@@ -99,8 +99,9 @@ CommonDialog.prototype = {
         this.ui.password1Label.setAttribute("value", "");
         break;
       default:
-        Cu.reportError(
-          "commonDialog opened for unknown type: " + this.args.promptType
+        console.error(
+          "commonDialog opened for unknown type: ",
+          this.args.promptType
         );
         throw new Error("unknown dialog type");
     }
@@ -234,7 +235,7 @@ CommonDialog.prototype = {
           .playEventSound(this.soundID);
       }
     } catch (e) {
-      Cu.reportError("Couldn't play common dialog event sound: " + e);
+      console.error("Couldn't play common dialog event sound: ", e);
     }
 
     if (commonDialogEl) {

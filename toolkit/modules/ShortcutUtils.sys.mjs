@@ -130,7 +130,7 @@ export var ShortcutUtils = {
         // Some keys might not exist in the locale file, which will throw.
         key = bundle.GetStringFromName(keyCode);
       } catch (ex) {
-        Cu.reportError("Error finding " + keyCode + ": " + ex);
+        console.error("Error finding ", keyCode, ": ", ex);
         key = keyCode.replace(/^VK_/, "");
       }
     } else {

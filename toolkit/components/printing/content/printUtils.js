@@ -78,7 +78,7 @@ var PrintUtils = {
       // Need the await for the try to trigger...
       return await sourceActor.sendQuery("PrintingSelection:HasSelection", {});
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
     return false;
   },
@@ -203,7 +203,7 @@ var PrintUtils = {
       args
     );
     closedPromise.catch(e => {
-      Cu.reportError(e);
+      console.error(e);
     });
 
     let settingsBrowser = dialog._frame;
@@ -549,7 +549,7 @@ var PrintUtils = {
         );
       }
     } catch (e) {
-      Cu.reportError("PrintUtils.getPrintSettings failed: " + e + "\n");
+      console.error("PrintUtils.getPrintSettings failed: ", e, "\n");
     }
     return printSettings;
   },

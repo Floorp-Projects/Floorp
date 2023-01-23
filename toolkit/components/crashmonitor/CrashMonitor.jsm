@@ -108,7 +108,7 @@ var CrashMonitorInternal = {
       } catch (ex) {
         // Ignore file not found errors, but report all others.
         if (ex.name !== "NotFoundError") {
-          Cu.reportError(
+          console.error(
             `Error while loading crash monitor data: ${ex.message}`
           );
         }
@@ -117,7 +117,7 @@ var CrashMonitorInternal = {
 
       // If `notifications` isn't an object, then the monitor data isn't valid.
       if (Object(notifications) !== notifications) {
-        Cu.reportError(
+        console.error(
           "Error while parsing crash monitor data: invalid monitor data"
         );
         return null;

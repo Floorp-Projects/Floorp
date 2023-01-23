@@ -207,7 +207,7 @@ const LoginManagerContextMenu = {
         loginFormOrigin: formOrigin,
         login,
       })
-      .catch(Cu.reportError);
+      .catch(console.error);
   },
 
   /**

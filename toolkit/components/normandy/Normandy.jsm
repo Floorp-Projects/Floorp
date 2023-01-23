@@ -234,7 +234,7 @@ var Normandy = {
         targetPrefType !== Services.prefs.PREF_INVALID &&
         targetPrefType !== sourcePrefType
       ) {
-        Cu.reportError(
+        console.error(
           new Error(
             `Error setting startup pref ${prefName}; pref type does not match.`
           )
@@ -274,7 +274,7 @@ var Normandy = {
           originalValues[prefName] = null;
         } else {
           // Unexpected error, report it and move on
-          Cu.reportError(e);
+          console.error(e);
           continue;
         }
       }
@@ -301,7 +301,7 @@ var Normandy = {
         }
         default: {
           // This should never happen.
-          Cu.reportError(
+          console.error(
             new Error(
               `Error getting startup pref ${prefName}; unexpected value type ${sourcePrefType}.`
             )

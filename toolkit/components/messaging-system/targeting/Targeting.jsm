@@ -134,7 +134,7 @@ class TargetingContext {
     const logUndesiredEvent = (event, key, prop) => {
       const value = key ? `${key}.${prop}` : prop;
       this._sendUndesiredEvent({ event, value });
-      Cu.reportError(`${event}: ${value}`);
+      console.error(`${event}: ${value}`);
     };
 
     return new Proxy(context, {
@@ -157,7 +157,7 @@ class TargetingContext {
           } catch (error) {
             logUndesiredEvent(ERROR_TYPES.ATTRIBUTE_ERROR, key, prop);
             reject(error);
-            Cu.reportError(error);
+            console.error(error);
           } finally {
             lazy.clearTimeout(timeout);
           }

@@ -232,7 +232,7 @@ JSONFile.prototype = {
       let errorNo = ex.winLastError || ex.unixErrno;
       this._recordTelemetry("load", errorNo ? errorNo.toString() : "");
       if (!(DOMException.isInstance(ex) && ex.name == "NotFoundError")) {
-        Cu.reportError(ex);
+        console.error(ex);
 
         // Move the original file to a backup location, ignoring errors.
         try {
@@ -244,7 +244,7 @@ JSONFile.prototype = {
           await IOUtils.move(this.path, uniquePath);
           this._recordTelemetry("load", "invalid_json");
         } catch (e2) {
-          Cu.reportError(e2);
+          console.error(e2);
         }
       }
 
@@ -256,7 +256,7 @@ JSONFile.prototype = {
           await IOUtils.copy(this._options.backupFile, this.path);
         } catch (e) {
           if (!(DOMException.isInstance(e) && e.name == "NotFoundError")) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 
@@ -275,7 +275,7 @@ JSONFile.prototype = {
           this._recordTelemetry("load", "used_backup");
         } catch (e3) {
           if (!(DOMException.isInstance(e3) && e3.name == "NotFoundError")) {
-            Cu.reportError(e3);
+            console.error(e3);
           }
         }
       }
@@ -337,7 +337,7 @@ JSONFile.prototype = {
           ex.result == Cr.NS_ERROR_FILE_NOT_FOUND
         )
       ) {
-        Cu.reportError(ex);
+        console.error(ex);
         // Move the original file to a backup location, ignoring errors.
         try {
           let originalFile = new lazy.FileUtils.File(this.path);
@@ -350,7 +350,7 @@ JSONFile.prototype = {
           backupFile.remove(false);
           originalFile.moveTo(backupFile.parent, backupFile.leafName);
         } catch (e2) {
-          Cu.reportError(e2);
+          console.error(e2);
         }
       }
 
@@ -364,7 +364,7 @@ JSONFile.prototype = {
           backupFile.copyTo(null, basename);
         } catch (e) {
           if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
-            Cu.reportError(e);
+            console.error(e);
           }
         }
 
@@ -390,7 +390,7 @@ JSONFile.prototype = {
           }
         } catch (e3) {
           if (e3.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
-            Cu.reportError(e3);
+            console.error(e3);
           }
         }
       }

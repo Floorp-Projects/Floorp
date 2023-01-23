@@ -38,8 +38,11 @@ window.addEventListener("load", function onload(event) {
         try {
           await snapshotFormatters[prop](snapshot[prop]);
         } catch (e) {
-          Cu.reportError(
-            "stack of snapshot error for about:support: " + e + ": " + e.stack
+          console.error(
+            "stack of snapshot error for about:support: ",
+            e,
+            ": ",
+            e.stack
           );
         }
       }
@@ -55,9 +58,7 @@ window.addEventListener("load", function onload(event) {
       $("update-history-row").hidden = true;
     }
   } catch (e) {
-    Cu.reportError(
-      "stack of load error for about:support: " + e + ": " + e.stack
-    );
+    console.error("stack of load error for about:support: ", e, ": ", e.stack);
   }
 });
 

@@ -563,7 +563,7 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {}) {
       try {
         consoleEvent.groupName = Array.prototype.join.call(aArgs, " ");
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         Cu.reportError(ex.stack);
         return;
       }

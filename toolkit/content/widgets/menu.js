@@ -286,7 +286,7 @@
         }
         let key = document.getElementById(keyId);
         if (!key) {
-          Cu.reportError(
+          console.error(
             `Key ${keyId} of menuitem ${this.getAttribute("label")} ` +
               `could not be found`
           );

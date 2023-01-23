@@ -164,7 +164,7 @@ Submitter.prototype = {
         })
       );
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     this.notifyStatus(SUCCESS, ret);
@@ -542,7 +542,7 @@ var CrashSubmit = {
     try {
       dirIter = new lazy.OS.File.DirectoryIterator(pendingDir);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     }
 
@@ -588,7 +588,7 @@ var CrashSubmit = {
         }
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     } finally {
       dirIter.close();
@@ -636,7 +636,7 @@ var CrashSubmit = {
         }
       });
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       throw ex;
     } finally {
       dirIter.close();

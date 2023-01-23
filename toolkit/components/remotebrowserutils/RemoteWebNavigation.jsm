@@ -170,7 +170,7 @@ class RemoteWebNavigation {
     try {
       this._browser.sendMessageToActor(aMessage, aData, "WebNavigation");
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
 }

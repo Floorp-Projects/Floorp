@@ -1100,7 +1100,7 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
             await Promise.resolve();
           }
         })
-        .catch(Cu.reportError);
+        .catch(console.error);
     }
   }
 

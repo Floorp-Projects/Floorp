@@ -840,7 +840,7 @@ export var Bookmarks = Object.freeze({
           ) {
             // ...though we don't wait for the calculation.
             updateFrecency(db, [item.url, updatedItem.url]).catch(
-              Cu.reportError
+              console.error
             );
           }
 
@@ -1403,7 +1403,7 @@ export var Bookmarks = Object.freeze({
         // We don't wait for the frecency calculation.
         if (urls && urls.length) {
           await lazy.PlacesUtils.keywords.eraseEverything();
-          updateFrecency(db, urls).catch(Cu.reportError);
+          updateFrecency(db, urls).catch(console.error);
         }
       }
     );
@@ -2186,7 +2186,7 @@ function insertBookmark(item, parent) {
       // If not a tag recalculate frecency...
       if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
         // ...though we don't wait for the calculation.
-        updateFrecency(db, [item.url]).catch(Cu.reportError);
+        updateFrecency(db, [item.url]).catch(console.error);
       }
 
       return item;
@@ -2256,7 +2256,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
       });
 
       // We don't wait for the frecency calculation.
-      updateFrecency(db, urls).catch(Cu.reportError);
+      updateFrecency(db, urls).catch(console.error);
 
       return items;
     }
@@ -2778,7 +2778,7 @@ function removeBookmarks(items, options) {
 
       if (urls.length) {
         await lazy.PlacesUtils.keywords.removeFromURLsIfNotBookmarked(urls);
-        updateFrecency(db, urls).catch(Cu.reportError);
+        updateFrecency(db, urls).catch(console.error);
       }
     }
   );

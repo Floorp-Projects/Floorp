@@ -20,17 +20,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("clearUnsubmittedReports")
     .addEventListener("click", () => {
-      clearUnsubmittedReports().catch(Cu.reportError);
+      clearUnsubmittedReports().catch(console.error);
     });
   document
     .getElementById("submitAllUnsubmittedReports")
     .addEventListener("click", () => {
-      submitAllUnsubmittedReports().catch(Cu.reportError);
+      submitAllUnsubmittedReports().catch(console.error);
     });
   document
     .getElementById("clearSubmittedReports")
     .addEventListener("click", () => {
-      clearSubmittedReports().catch(Cu.reportError);
+      clearSubmittedReports().catch(console.error);
     });
 });
 

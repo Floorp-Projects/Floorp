@@ -112,7 +112,7 @@ class RemotePages {
         // Unless the port is in the process of unloading, something strange
         // happened but allow other ports to receive the message
         if (e.result !== Cr.NS_ERROR_NOT_INITIALIZED) {
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -324,7 +324,7 @@ var RemotePageManagerInternal = {
   initPort({ target: browser, data: { url, portID } }) {
     let callback = this.pages.get(url);
     if (!callback) {
-      Cu.reportError("Unexpected remote page load: " + url);
+      console.error("Unexpected remote page load: ", url);
       return;
     }
 

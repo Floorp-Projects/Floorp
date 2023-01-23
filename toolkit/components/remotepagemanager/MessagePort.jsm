@@ -35,7 +35,7 @@ class MessageListener {
       try {
         listener(message);
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }
@@ -179,7 +179,7 @@ class MessagePort {
 
     let deferred = this.requests[messagedata.requestID];
     if (!deferred) {
-      Cu.reportError("Received a response to an unknown request.");
+      console.error("Received a response to an unknown request.");
       return;
     }
 

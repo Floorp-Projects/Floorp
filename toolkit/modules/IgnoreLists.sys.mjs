@@ -84,7 +84,7 @@ class IgnoreListsManager {
       }
       // Don't throw an error just log it, just continue with no data, and hopefully
       // a sync will fix things later on.
-      Cu.reportError(ex);
+      console.error(ex);
     }
     return result;
   }

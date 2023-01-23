@@ -66,5 +66,5 @@ try {
 } catch (ex) {
   // Do nothing if we fail to create a singleton instance,
   // showing the default no-module message.
-  Cu.reportError(ex);
+  console.error(ex);
 }

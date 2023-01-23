@@ -190,7 +190,7 @@ class _RemoteSettingsExperimentLoader {
       result = await targetingContext.evalWithDefault(jexlString);
     } catch (e) {
       lazy.log.debug("Targeting failed because of an error", e);
-      Cu.reportError(e);
+      console.error(e);
     }
     return result;
   }
@@ -254,7 +254,7 @@ class _RemoteSettingsExperimentLoader {
     } catch (e) {
       lazy.log.debug("Error getting recipes from remote settings.");
       loadingError = true;
-      Cu.reportError(e);
+      console.error(e);
     }
 
     let recipeValidator;
@@ -292,7 +292,7 @@ class _RemoteSettingsExperimentLoader {
         if (validationEnabled) {
           let validation = recipeValidator.validate(r);
           if (!validation.valid) {
-            Cu.reportError(
+            console.error(
               `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
                 validation.errors,
                 undefined,
@@ -409,7 +409,7 @@ class _RemoteSettingsExperimentLoader {
           emptyListFallback: false,
         });
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       throw new Error("Error getting recipes from remote settings.");
     }
 
@@ -488,9 +488,7 @@ class _RemoteSettingsExperimentLoader {
       for (const feature of features) {
         const { featureId, value } = feature;
         if (!lazy.NimbusFeatures[featureId]) {
-          Cu.reportError(
-            `Experiment ${id} has unknown featureId: ${featureId}`
-          );
+          console.error(`Experiment ${id} has unknown featureId: ${featureId}`);
 
           invalidFeatureIds.add(featureId);
           continue;
@@ -525,7 +523,7 @@ class _RemoteSettingsExperimentLoader {
 
         const result = validator.validate(value);
         if (!result.valid) {
-          Cu.reportError(
+          console.error(
             `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
               result.errors,
               undefined,
@@ -573,7 +571,7 @@ class _RemoteSettingsExperimentLoader {
 
         default:
           // NB: Experimenter doesn't outright reject invalid types either.
-          Cu.reportError(
+          console.error(
             `Feature ID ${featureId} has variable ${varName} with invalid FML type: ${prop.type}`
           );
           break;

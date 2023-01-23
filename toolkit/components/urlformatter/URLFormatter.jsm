@@ -147,7 +147,7 @@ nsURLFormatterService.prototype = {
       if (aKey in _this._defaults) {
         return _this._defaults[aKey].call(_this);
       }
-      Cu.reportError("formatURL: Couldn't find value for key: " + aKey);
+      console.error("formatURL: Couldn't find value for key: ", aKey);
       return aMatch;
     };
     return aFormat.replace(/%([A-Z_]+)%/g, replacementCallback);
@@ -159,7 +159,7 @@ nsURLFormatterService.prototype = {
     try {
       format = Services.prefs.getStringPref(aPref);
     } catch (ex) {
-      Cu.reportError("formatURLPref: Couldn't get pref: " + aPref);
+      console.error("formatURLPref: Couldn't get pref: ", aPref);
       return "about:blank";
     }
 

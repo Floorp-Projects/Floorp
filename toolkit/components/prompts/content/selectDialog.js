@@ -20,7 +20,7 @@ function onDCL() {
 
   let promptType = propBag.getProperty("promptType");
   if (promptType != "select") {
-    Cu.reportError("selectDialog opened for unknown type: " + promptType);
+    console.error("selectDialog opened for unknown type: ", promptType);
     window.close();
   }
 

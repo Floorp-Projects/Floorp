@@ -130,7 +130,7 @@ class URLQueryStrippingListService {
         break;
 
       default:
-        Cu.reportError(`Unexpected pref name ${pref}`);
+        console.error(`Unexpected pref name ${pref}`);
         return;
     }
 
@@ -224,7 +224,7 @@ class URLQueryStrippingListService {
         this._onPrefUpdate(data, prefValue);
         break;
       default:
-        Cu.reportError(`Unexpected event ${topic}`);
+        console.error(`Unexpected event ${topic}`);
     }
   }
 

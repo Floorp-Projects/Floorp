@@ -288,7 +288,7 @@ class ChromeActions {
     } catch (err) {
       // If there's an error here, it means that something is really wrong
       // on pdf.js side during sandbox initialization phase.
-      Cu.reportError(err);
+      console.error(err);
       return sendResp(false);
     }
 
@@ -967,7 +967,7 @@ PdfStreamConverter.prototype = {
     rv.shouldOpen = true;
     // Log that we're doing this to help debug issues if people end up being
     // surprised by this behaviour.
-    Cu.reportError("Found unusable PDF preferences. Fixing back to PDF.js");
+    console.error("Found unusable PDF preferences. Fixing back to PDF.js");
 
     mime.preferredAction = Ci.nsIHandlerInfo.handleInternally;
     mime.alwaysAskBeforeHandling = false;

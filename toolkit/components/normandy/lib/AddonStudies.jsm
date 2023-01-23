@@ -486,7 +486,7 @@ var AddonStudies = {
       try {
         await cb(reason);
       } catch (err) {
-        Cu.reportError(err);
+        console.error(err);
       }
     }
 

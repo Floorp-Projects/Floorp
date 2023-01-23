@@ -357,10 +357,10 @@ DownloadList.prototype = {
           // don't need to wait for the procedure to be complete before
           // processing the other downloads in the list.
           let removePartialData = !sameFileIsDownloading;
-          download.finalize(removePartialData).catch(Cu.reportError);
+          download.finalize(removePartialData).catch(console.error);
         }
       }
-    })().catch(Cu.reportError);
+    })().catch(console.error);
   },
 };
 
@@ -380,8 +380,8 @@ export var DownloadCombinedList = function(aPublicList, aPrivateList) {
   DownloadList.call(this);
   this._publicList = aPublicList;
   this._privateList = aPrivateList;
-  aPublicList.addView(this).catch(Cu.reportError);
-  aPrivateList.addView(this).catch(Cu.reportError);
+  aPublicList.addView(this).catch(console.error);
+  aPrivateList.addView(this).catch(console.error);
 };
 
 DownloadCombinedList.prototype = {

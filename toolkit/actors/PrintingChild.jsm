@@ -93,7 +93,7 @@ class PrintingChild extends JSWindowActorChild {
     try {
       article = await lazy.ReaderMode.parseDocument(contentWindow.document);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     await new Promise(resolve => {

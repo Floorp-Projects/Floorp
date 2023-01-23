@@ -179,7 +179,7 @@ export class FinderIterator {
         !this._areParamsEqual(this._currentParams, iterParams, allowDistance)
       ) {
         if (kDebug) {
-          Cu.reportError(
+          console.error(
             `We're currently iterating over '${this._currentParams.word}', not '${word}'\n` +
               new Error().stack
           );
@@ -363,7 +363,7 @@ export class FinderIterator {
       try {
         listener[callback](params);
       } catch (ex) {
-        Cu.reportError("FinderIterator Error: " + ex);
+        console.error("FinderIterator Error: ", ex);
       }
     }
   }

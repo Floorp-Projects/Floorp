@@ -207,7 +207,7 @@ class _ExperimentManager {
           }
           this.unenroll(slug, reason);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
         }
       }
     }

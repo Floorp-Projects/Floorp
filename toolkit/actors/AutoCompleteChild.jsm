@@ -84,7 +84,7 @@ class AutoCompleteChild extends JSWindowActorChild {
       try {
         listener.popupStateChanged(messageName, data, this.contentWindow);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }

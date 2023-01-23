@@ -459,7 +459,7 @@ Finder.prototype = {
           return;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 

@@ -205,7 +205,7 @@ var PageThumbs = {
             resolve(blob, this.contentType);
           });
         })
-        .catch(e => Cu.reportError(e));
+        .catch(e => console.error(e));
     });
   },
 
@@ -435,7 +435,7 @@ var PageThumbs = {
       let buffer = await TaskUtils.readBlob(blob);
       await this._store(originalURL, url, buffer, channelError);
     } catch (ex) {
-      Cu.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
+      console.error("Exception thrown during thumbnail capture: '", ex, "'");
     }
   },
 
@@ -571,7 +571,7 @@ var PageThumbsStorage = {
       lazy.PageThumbsStorageService.path,
       { ignoreExisting: true },
     ]).catch(function onError(aReason) {
-      Cu.reportError("Could not create thumbnails directory" + aReason);
+      console.error("Could not create thumbnails directory", aReason);
     });
   },
 

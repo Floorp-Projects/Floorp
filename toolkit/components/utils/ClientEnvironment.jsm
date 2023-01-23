@@ -80,7 +80,7 @@ class ClientEnvironmentBase {
     try {
       target.main = lazy.TelemetryController.getCurrentPingData();
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
     }
 
     return new Proxy(target, {

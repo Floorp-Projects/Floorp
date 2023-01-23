@@ -229,7 +229,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           try {
             await this.unenroll(study.recipeId, "recipe-not-seen");
           } catch (err) {
-            Cu.reportError(err);
+            console.error(err);
           }
         }
       }

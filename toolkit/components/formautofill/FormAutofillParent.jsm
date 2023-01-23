@@ -401,7 +401,7 @@ class FormAutofillParent extends JSWindowActorParent {
           );
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }

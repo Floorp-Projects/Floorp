@@ -485,7 +485,7 @@ export function nsPlacesExpiration() {
       // Expire daily on idle.
       Services.obs.addObserver(this, TOPIC_IDLE_DAILY, true);
     })
-    .catch(Cu.reportError);
+    .catch(console.error);
 
   // Block shutdown.
   let shutdownClient =
@@ -503,7 +503,7 @@ export function nsPlacesExpiration() {
     // If the database is dirty, we want to expire some entries, to speed up
     // the expiration process.
     if (this.status == STATUS.DIRTY) {
-      this._expire(ACTION.SHUTDOWN_DIRTY, LIMIT.LARGE).catch(Cu.reportError);
+      this._expire(ACTION.SHUTDOWN_DIRTY, LIMIT.LARGE).catch(console.error);
     }
   });
 }
@@ -522,19 +522,19 @@ nsPlacesExpiration.prototype = {
         // Everything should be expired without any limit.  If history is over
         // capacity then all existing visits will be expired.
         // Should only be used in tests, since may cause dataloss.
-        this._expire(ACTION.DEBUG, LIMIT.UNLIMITED).catch(Cu.reportError);
+        this._expire(ACTION.DEBUG, LIMIT.UNLIMITED).catch(console.error);
       } else if (limit > 0) {
         // The number of expired visits is limited by this amount.  It may be
         // used for testing purposes, like checking that limited queries work.
         this._debugLimit = limit;
-        this._expire(ACTION.DEBUG, LIMIT.DEBUG).catch(Cu.reportError);
+        this._expire(ACTION.DEBUG, LIMIT.DEBUG).catch(console.error);
       } else {
         // Any other value is intended as a 0 limit, that means no visits
         // will be expired.  Even if this doesn't touch visits, it will remove
         // any orphan pages, icons, annotations and similar from the database,
         // so it may be used for cleanup purposes.
         this._debugLimit = -1;
-        this._expire(ACTION.DEBUG, LIMIT.DEBUG).catch(Cu.reportError);
+        this._expire(ACTION.DEBUG, LIMIT.DEBUG).catch(console.error);
       }
     } else if (aTopic == TOPIC_IDLE_BEGIN) {
       // Stop the expiration timer.  We don't want to keep up expiring on idle
@@ -544,7 +544,7 @@ nsPlacesExpiration.prototype = {
         this._timer = null;
       }
       if (this.expireOnIdle) {
-        this._expire(ACTION.IDLE_DIRTY, LIMIT.LARGE).catch(Cu.reportError);
+        this._expire(ACTION.IDLE_DIRTY, LIMIT.LARGE).catch(console.error);
       }
     } else if (aTopic == TOPIC_IDLE_END) {
       // Restart the expiration timer.
@@ -552,7 +552,7 @@ nsPlacesExpiration.prototype = {
         this._newTimer();
       }
     } else if (aTopic == TOPIC_IDLE_DAILY) {
-      this._expire(ACTION.IDLE_DAILY, LIMIT.LARGE).catch(Cu.reportError);
+      this._expire(ACTION.IDLE_DAILY, LIMIT.LARGE).catch(console.error);
     } else if (aTopic == TOPIC_TESTING_MODE) {
       this._testingMode = true;
     } else if (aTopic == lazy.PlacesUtils.TOPIC_INIT_COMPLETE) {
@@ -582,7 +582,7 @@ nsPlacesExpiration.prototype = {
       // Adapt expiration aggressivity to the number of pages over the limit.
       let limit =
         overLimitPages > OVERLIMIT_PAGES_THRESHOLD ? LIMIT.LARGE : LIMIT.SMALL;
-      this._expire(action, limit).catch(Cu.reportError);
+      this._expire(action, limit).catch(console.error);
     }, 300000);
   },
 

@@ -46,7 +46,7 @@ function parseJSON(value) {
     try {
       return JSON.parse(value);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   }
   return null;
@@ -112,7 +112,7 @@ const ExperimentAPI = {
         experimentData = this._store.getExperimentForFeature(featureId);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
     if (experimentData) {
       return {
@@ -151,7 +151,7 @@ const ExperimentAPI = {
         }
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
     if (experimentData) {
       return {
@@ -194,7 +194,7 @@ const ExperimentAPI = {
         experiment = this._store.getExperimentForFeature(featureId);
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     if (!experiment) {
@@ -276,7 +276,7 @@ const ExperimentAPI = {
     } catch (e) {
       // If an error occurs in .get(), an empty list is returned and the destructuring
       // assignment will throw.
-      Cu.reportError(e);
+      console.error(e);
       recipe = undefined;
     }
 
@@ -319,7 +319,7 @@ const ExperimentAPI = {
         }
       );
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
     Glean.nimbusEvents.exposure.record({
       experiment: experimentSlug,
@@ -346,7 +346,7 @@ class _ExperimentFeature {
     this.prefGetters = {};
     this.manifest = manifest || lazy.FeatureManifest[featureId];
     if (!this.manifest) {
-      Cu.reportError(
+      console.error(
         `No manifest entry for ${featureId}. Please add one to toolkit/components/nimbus/FeatureManifest.js`
       );
     }
