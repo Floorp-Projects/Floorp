@@ -35,6 +35,7 @@ compile_commands\.json
 ^\.clang-tidy
 ^\.mozconfig
 ^mozconfig*
+^\.moz-fast-forward
 ^old-configure$
 ^config\.cache$
 ^config\.log$
