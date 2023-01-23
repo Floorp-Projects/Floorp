@@ -120,7 +120,7 @@ static void RollUpPopups() {
 
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
   if (!rollupWidget) return;
-  rollupListener->Rollup({0, nsIRollupListener::FlushViews::Yes});
+  rollupListener->Rollup(0, true, nullptr, nullptr);
 }
 
 nsCocoaWindow::nsCocoaWindow()
