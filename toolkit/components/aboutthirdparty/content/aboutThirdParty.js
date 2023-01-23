@@ -15,6 +15,40 @@ let AboutThirdParty = null;
 let CrashModuleSet = null;
 let gBackgroundTasksDone = false;
 
+function moduleCompareForDisplay(a, b) {
+  // First, show blocked modules that were blocked at launch - this will keep the ordering
+  // consistent when the user blocks/unblocks things.
+  const bBlocked =
+    b.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUserAtLaunch
+      ? 1
+      : 0;
+  const aBlocked =
+    a.typeFlags & Ci.nsIAboutThirdParty.ModuleType_BlockedByUserAtLaunch
+      ? 1
+      : 0;
+
+  let diff = bBlocked - aBlocked;
+  if (diff) {
+    return diff;
+  }
+
+  // Next, show crasher modules
+  diff = b.isCrasher - a.isCrasher;
+  if (diff) {
+    return diff;
+  }
+
+  // Then unknown-type modules
+  diff = a.typeFlags - b.typeFlags;
+  if (diff) {
+    return diff;
+  }
+
+  // Lastly sort the remaining modules in descending order
+  // of duration to move up slower modules.
+  return b.loadingOnMain - a.loadingOnMain;
+}
+
 async function fetchData() {
   let data = null;
   try {
@@ -115,23 +149,7 @@ async function fetchData() {
     }
   }
 
-  data.modules.sort((a, b) => {
-    // Firstly, show crasher modules
-    let diff = b.isCrasher - a.isCrasher;
-    if (diff) {
-      return diff;
-    }
-
-    // Then unknown-type modules
-    diff = a.typeFlags - b.typeFlags;
-    if (diff) {
-      return diff;
-    }
-
-    // Lastly sort the remaining modules in descending order
-    // of duration to move up slower modules.
-    return b.loadingOnMain - a.loadingOnMain;
-  });
+  data.modules.sort(moduleCompareForDisplay);
 
   return { modules: data.modules, blocked: blockedModules };
 }

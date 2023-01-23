@@ -78,6 +78,47 @@ function verifyClipboardData(aModuleJson) {
   }
 }
 
+function verifyModuleSorting(compareFunc) {
+  const uninteresting = {
+    typeFlags: 0,
+    isCrasher: false,
+    loadingOnMain: 0,
+  };
+  const crasherNotBlocked = { ...uninteresting, isCrasher: true };
+  const crasherBlocked = {
+    ...uninteresting,
+    isCrasher: true,
+    typeFlags: Ci.nsIAboutThirdParty.ModuleType_BlockedByUserAtLaunch,
+  };
+  const justBlocked = {
+    ...uninteresting,
+    typeFlags: Ci.nsIAboutThirdParty.ModuleType_BlockedByUserAtLaunch,
+  };
+  const uninterestingButSlow = {
+    ...uninteresting,
+    loadingOnMain: 10,
+  };
+  let modules = [
+    uninteresting,
+    uninterestingButSlow,
+    crasherNotBlocked,
+    justBlocked,
+    crasherBlocked,
+  ];
+  modules.sort(compareFunc);
+  Assert.equal(
+    JSON.stringify([
+      crasherBlocked,
+      justBlocked,
+      crasherNotBlocked,
+      uninterestingButSlow,
+      uninteresting,
+    ]),
+    JSON.stringify(modules),
+    "Modules sort in expected order"
+  );
+}
+
 add_task(async () => {
   registerCleanupFunction(() => {
     unregisterAll();
@@ -270,5 +311,7 @@ add_task(async () => {
     const copiedJSON = JSON.parse(await navigator.clipboard.readText());
     Assert.ok(copiedJSON instanceof Object, "Data is an object.");
     verifyClipboardData(copiedJSON);
+
+    verifyModuleSorting(content.moduleCompareForDisplay);
   });
 });
