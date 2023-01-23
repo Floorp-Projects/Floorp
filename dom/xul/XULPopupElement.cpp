@@ -106,14 +106,9 @@ void XULPopupElement::OpenPopupAtScreenRect(const nsAString& aPosition,
 
 void XULPopupElement::HidePopup(bool aCancel) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (!pm) {
-    return;
+  if (pm) {
+    pm->HidePopup(this, false, true, false, aCancel);
   }
-  HidePopupOptions options{HidePopupOption::DeselectMenu};
-  if (aCancel) {
-    options += HidePopupOption::IsRollup;
-  }
-  pm->HidePopup(this, options);
 }
 
 static Modifiers ConvertModifiers(const ActivateMenuItemOptions& aModifiers) {
