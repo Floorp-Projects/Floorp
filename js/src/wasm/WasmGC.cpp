@@ -222,7 +222,11 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
                                   size_t valueOffset) {
   MOZ_ASSERT(valueAddr == PreBarrierReg);
 
-  masm.loadPtr(Address(instance, Instance::offsetOfPreBarrierCode()), scratch);
+  // Add the offset to the PreBarrierReg, if any.
+  if (valueOffset != 0) {
+    masm.addPtr(Imm32(valueOffset), valueAddr);
+  }
+
 #if defined(DEBUG) && defined(JS_CODEGEN_ARM64)
   // The prebarrier assumes that x28 == sp.
   Label ok;
@@ -231,7 +235,16 @@ void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
   masm.breakpoint();
   masm.bind(&ok);
 #endif
+
+  // Load and call the pre-write barrier code. It will preserve all volatile
+  // registers.
+  masm.loadPtr(Address(instance, Instance::offsetOfPreBarrierCode()), scratch);
   masm.call(scratch);
+
+  // Remove the offset we folded into PreBarrierReg, if any.
+  if (valueOffset != 0) {
+    masm.subPtr(Imm32(valueOffset), valueAddr);
+  }
 }
 
 void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
