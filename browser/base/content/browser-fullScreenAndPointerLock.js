@@ -901,12 +901,24 @@ var FullScreen = {
 };
 
 XPCOMUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
-  let { PermissionUI } = ChromeUtils.import(
-    "resource:///modules/PermissionUI.jsm"
+  let { PermissionUI } = ChromeUtils.importESModule(
+    "resource:///modules/PermissionUI.sys.mjs"
   );
   return (
     Object.values(PermissionUI)
-      .filter(value => value.prototype && value.prototype.notificationID)
+      .filter(value => {
+        let returnValue;
+        try {
+          returnValue = value.prototype.notificationID;
+        } catch (err) {
+          if (err.message === "Not implemented.") {
+            returnValue = false;
+          } else {
+            throw err;
+          }
+        }
+        return returnValue;
+      })
       .map(value => value.prototype.notificationID)
       // Additionally include webRTC permission prompt which does not use PermissionUI
       .concat(["webRTC-shareDevices"])

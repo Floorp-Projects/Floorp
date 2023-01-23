@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PermissionUI"];
-
 /**
  * PermissionUI is responsible for exposing both a prototype
  * PermissionPrompt that can be used by arbitrary browser
@@ -43,7 +39,7 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  *       };
  *       Object.setPrototypeOf(
  *         permissionPrompt,
- *         PermissionUI.PermissionPromptForRequestPrototype
+ *         PermissionUI.PermissionPromptForRequest
  *       );
  *       return permissionPrompt;
  *     },
@@ -58,20 +54,20 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  * // Add-on shutdown:
  * Integration.contentPermission.unregister(SoundCardIntegration);
  *
- * Note that PermissionPromptForRequestPrototype must be used as the
+ * Note that PermissionPromptForRequest must be used as the
  * prototype, since the prompt is wrapping an nsIContentPermissionRequest,
  * and going through nsIContentPermissionPrompt.
  *
  * It is, however, possible to take advantage of PermissionPrompt without
  * having to go through nsIContentPermissionPrompt or with a
- * nsIContentPermissionRequest. The PermissionPromptPrototype can be
+ * nsIContentPermissionRequest. The PermissionPrompt can be
  * imported, subclassed, and have prompt() called directly, without
  * the caller having called into createPermissionPrompt.
  */
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "AddonManager",
@@ -92,23 +88,20 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/network/idn-service;1",
   "nsIIDNService"
 );
-
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "ContentPrefService2",
   "@mozilla.org/content-pref/service;1",
   "nsIContentPrefService2"
 );
-
 XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
 });
 
-const { SITEPERMS_ADDON_PROVIDER_PREF } = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs"
-);
+import { SITEPERMS_ADDON_PROVIDER_PREF } from "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs";
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "sitePermsAddonsProviderEnabled",
@@ -116,18 +109,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-var PermissionUI = {};
-
 /**
- * PermissionPromptPrototype should be subclassed by callers that
+ * PermissionPrompt should be subclassed by callers that
  * want to display prompts to the user. See each method and property
  * below for guidance on what to override.
  *
  * Note that if you're creating a prompt for an
  * nsIContentPermissionRequest, you'll want to subclass
- * PermissionPromptForRequestPrototype instead.
+ * PermissionPromptForRequest instead.
  */
-var PermissionPromptPrototype = {
+class PermissionPrompt {
   /**
    * Returns the associated <xul:browser> for the request. This should
    * work for the e10s and non-e10s case.
@@ -138,7 +129,7 @@ var PermissionPromptPrototype = {
    */
   get browser() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * Returns the nsIPrincipal associated with the request.
@@ -149,7 +140,7 @@ var PermissionPromptPrototype = {
    */
   get principal() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * Indicates the type of the permission request from content. This type might
@@ -157,7 +148,7 @@ var PermissionPromptPrototype = {
    */
   get type() {
     return undefined;
-  },
+  }
 
   /**
    * If the nsIPermissionManager is being queried and written
@@ -172,7 +163,7 @@ var PermissionPromptPrototype = {
    */
   get permissionKey() {
     return undefined;
-  },
+  }
 
   /**
    * If true, user permissions will be read from and written to.
@@ -182,7 +173,7 @@ var PermissionPromptPrototype = {
    */
   get usePermissionManager() {
     return true;
-  },
+  }
 
   /**
    * Indicates what URI should be used as the scope when using temporary
@@ -190,7 +181,7 @@ var PermissionPromptPrototype = {
    */
   get temporaryPermissionURI() {
     return undefined;
-  },
+  }
 
   /**
    * These are the options that will be passed to the PopupNotification when it
@@ -203,7 +194,7 @@ var PermissionPromptPrototype = {
    */
   get popupOptions() {
     return {};
-  },
+  }
 
   /**
    * If true, automatically denied permission requests will
@@ -216,7 +207,7 @@ var PermissionPromptPrototype = {
    */
   get postPromptEnabled() {
     return false;
-  },
+  }
 
   /**
    * If true, the prompt will be cancelled automatically unless
@@ -224,7 +215,7 @@ var PermissionPromptPrototype = {
    */
   get requiresUserInput() {
     return false;
-  },
+  }
 
   /**
    * PopupNotification requires a unique ID to open the notification.
@@ -245,7 +236,7 @@ var PermissionPromptPrototype = {
    */
   get notificationID() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * The ID of the element to anchor the PopupNotification to.
@@ -254,7 +245,7 @@ var PermissionPromptPrototype = {
    */
   get anchorID() {
     return "default-notification-icon";
-  },
+  }
 
   /**
    * The message to show to the user in the PopupNotification, see
@@ -266,7 +257,7 @@ var PermissionPromptPrototype = {
    */
   get message() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * Provides the preferred name to use in the permission popups,
@@ -280,7 +271,7 @@ var PermissionPromptPrototype = {
     }
 
     return principal.hostPort;
-  },
+  }
 
   /**
    * This will be called if the request is to be cancelled.
@@ -290,7 +281,7 @@ var PermissionPromptPrototype = {
    */
   cancel() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * This will be called if the request is to be allowed.
@@ -300,7 +291,7 @@ var PermissionPromptPrototype = {
    */
   allow() {
     throw new Error("Not implemented.");
-  },
+  }
 
   /**
    * The actions that will be displayed in the PopupNotification
@@ -326,7 +317,7 @@ var PermissionPromptPrototype = {
    */
   get promptActions() {
     return [];
-  },
+  }
 
   /**
    * The actions that will be displayed in the PopupNotification
@@ -348,7 +339,7 @@ var PermissionPromptPrototype = {
    */
   get postPromptActions() {
     return null;
-  },
+  }
 
   /**
    * If the prompt will be shown to the user, this callback will
@@ -362,19 +353,19 @@ var PermissionPromptPrototype = {
    */
   onBeforeShow() {
     return true;
-  },
+  }
 
   /**
    * If the prompt was shown to the user, this callback will be called just
    * after it's been shown.
    */
-  onShown() {},
+  onShown() {}
 
   /**
    * If the prompt was shown to the user, this callback will be called just
    * after it's been hidden.
    */
-  onAfterShow() {},
+  onAfterShow() {}
 
   /**
    * Will determine if a prompt should be shown to the user, and if so,
@@ -536,8 +527,8 @@ var PermissionPromptPrototype = {
       popupNotificationActions.push(action);
     }
 
-    this._showNotification(popupNotificationActions);
-  },
+    this.#showNotification(popupNotificationActions);
+  }
 
   postPrompt() {
     let browser = this.browser;
@@ -598,10 +589,10 @@ var PermissionPromptPrototype = {
       anchor.setAttribute("animate", "true");
     }
 
-    this._showNotification(popupNotificationActions, true);
-  },
+    this.#showNotification(popupNotificationActions, true);
+  }
 
-  _showNotification(actions, postPrompt = false) {
+  #showNotification(actions, postPrompt = false) {
     let chromeWin = this.browser.ownerGlobal;
     let mainAction = actions.length ? actions[0] : null;
     let secondaryActions = actions.splice(1);
@@ -665,20 +656,18 @@ var PermissionPromptPrototype = {
         options
       );
     }
-  },
-};
-
-PermissionUI.PermissionPromptPrototype = PermissionPromptPrototype;
+  }
+}
 
 /**
- * A subclass of PermissionPromptPrototype that assumes
+ * A subclass of PermissionPrompt that assumes
  * that this.request is an nsIContentPermissionRequest
  * and fills in some of the required properties on the
  * PermissionPrompt. For callers that are wrapping an
  * nsIContentPermissionRequest, this should be subclassed
- * rather than PermissionPromptPrototype.
+ * rather than PermissionPrompt.
  */
-var PermissionPromptForRequestPrototype = {
+class PermissionPromptForRequest extends PermissionPrompt {
   get browser() {
     // In the e10s-case, the <xul:browser> will be at request.element.
     // In the single-process case, we have to use some XPCOM incantations
@@ -687,39 +676,33 @@ var PermissionPromptForRequestPrototype = {
       return this.request.element;
     }
     return this.request.window.docShell.chromeEventHandler;
-  },
+  }
 
   get principal() {
     let request = this.request.QueryInterface(Ci.nsIContentPermissionRequest);
     return request.getDelegatePrincipal(this.type);
-  },
+  }
 
   cancel() {
     this.request.cancel();
-  },
+  }
 
   allow(choices) {
     this.request.allow(choices);
-  },
-};
-Object.setPrototypeOf(
-  PermissionPromptForRequestPrototype,
-  PermissionPromptPrototype
-);
-
-PermissionUI.PermissionPromptForRequestPrototype = PermissionPromptForRequestPrototype;
+  }
+}
 
 /**
- * A subclass of PermissionPromptForRequestPrototype that prompts
+ * A subclass of PermissionPromptForRequest that prompts
  * for a Synthetic SitePermsAddon addon type and starts a synthetic
  * addon install flow.
  */
-var SitePermsAddonInstallRequestPrototype = {
+class SitePermsAddonInstallRequest extends PermissionPromptForRequest {
   prompt() {
     // fallback to regular permission prompt for localhost,
     // or when the SitePermsAddonProvider is not enabled.
     if (this.principal.isLoopbackHost || !lazy.sitePermsAddonsProviderEnabled) {
-      PermissionPromptForRequestPrototype.prompt.call(this);
+      super.prompt();
       return;
     }
 
@@ -755,7 +738,7 @@ var SitePermsAddonInstallRequestPrototype = {
         Services.console.logMessage(scriptError);
       }
     );
-  },
+  }
 
   /**
    * Returns an error message that will be printed to the console given a passed Component.Exception.
@@ -766,14 +749,8 @@ var SitePermsAddonInstallRequestPrototype = {
    */
   getInstallErrorMessage(err) {
     return null;
-  },
-};
-Object.setPrototypeOf(
-  SitePermsAddonInstallRequestPrototype,
-  PermissionPromptForRequestPrototype
-);
-
-PermissionUI.SitePermsAddonInstallRequestPrototype = SitePermsAddonInstallRequestPrototype;
+  }
+}
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
@@ -782,18 +759,19 @@ PermissionUI.SitePermsAddonInstallRequestPrototype = SitePermsAddonInstallReques
  * @param request (nsIContentPermissionRequest)
  *        The request for a permission from content.
  */
-function GeolocationPermissionPrompt(request) {
-  this.request = request;
-}
+class GeolocationPermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+  }
 
-GeolocationPermissionPrompt.prototype = {
   get type() {
     return "geo";
-  },
+  }
 
   get permissionKey() {
     return "geo";
-  },
+  }
 
   get popupOptions() {
     let pref = "browser.geolocation.warning.infoURL";
@@ -827,15 +805,15 @@ GeolocationPermissionPrompt.prototype = {
     }
 
     return options;
-  },
+  }
 
   get notificationID() {
     return "geolocation";
-  },
+  }
 
   get anchorID() {
     return "geo-notification-icon";
-  },
+  }
 
   get message() {
     if (this.principal.schemeIs("file")) {
@@ -855,7 +833,7 @@ GeolocationPermissionPrompt.prototype = {
       "geolocation.shareWithSite4",
       ["<>"]
     );
-  },
+  }
 
   get promptActions() {
     return [
@@ -874,9 +852,9 @@ GeolocationPermissionPrompt.prototype = {
         action: lazy.SitePermissions.BLOCK,
       },
     ];
-  },
+  }
 
-  _updateGeoSharing(state) {
+  #updateGeoSharing(state) {
     let gBrowser = this.browser.ownerGlobal.gBrowser;
     if (gBrowser == null) {
       return;
@@ -899,24 +877,18 @@ GeolocationPermissionPrompt.prototype = {
       new Date().toString(),
       this.browser.loadContext
     );
-  },
+  }
 
   allow(...args) {
-    this._updateGeoSharing(true);
-    PermissionPromptForRequestPrototype.allow.apply(this, args);
-  },
+    this.#updateGeoSharing(true);
+    super.allow(...args);
+  }
 
   cancel(...args) {
-    this._updateGeoSharing(false);
-    PermissionPromptForRequestPrototype.cancel.apply(this, args);
-  },
-};
-Object.setPrototypeOf(
-  GeolocationPermissionPrompt.prototype,
-  PermissionPromptForRequestPrototype
-);
-
-PermissionUI.GeolocationPermissionPrompt = GeolocationPermissionPrompt;
+    this.#updateGeoSharing(false);
+    super.cancel(...args);
+  }
+}
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
@@ -925,18 +897,19 @@ PermissionUI.GeolocationPermissionPrompt = GeolocationPermissionPrompt;
  * @param request (nsIContentPermissionRequest)
  *        The request for a permission from content.
  */
-function XRPermissionPrompt(request) {
-  this.request = request;
-}
+class XRPermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+  }
 
-XRPermissionPrompt.prototype = {
   get type() {
     return "xr";
-  },
+  }
 
   get permissionKey() {
     return "xr";
-  },
+  }
 
   get popupOptions() {
     let pref = "browser.xr.warning.infoURL";
@@ -964,15 +937,15 @@ XRPermissionPrompt.prototype = {
     }
 
     return options;
-  },
+  }
 
   get notificationID() {
     return "xr";
-  },
+  }
 
   get anchorID() {
     return "xr-notification-icon";
-  },
+  }
 
   get message() {
     if (this.principal.schemeIs("file")) {
@@ -982,7 +955,7 @@ XRPermissionPrompt.prototype = {
     return lazy.gBrowserBundle.formatStringFromName("xr.shareWithSite4", [
       "<>",
     ]);
-  },
+  }
 
   get promptActions() {
     return [
@@ -997,9 +970,9 @@ XRPermissionPrompt.prototype = {
         action: lazy.SitePermissions.BLOCK,
       },
     ];
-  },
+  }
 
-  _updateXRSharing(state) {
+  #updateXRSharing(state) {
     let gBrowser = this.browser.ownerGlobal.gBrowser;
     if (gBrowser == null) {
       return;
@@ -1012,24 +985,18 @@ XRPermissionPrompt.prototype = {
       return;
     }
     devicePermOrigins.add(this.principal.origin);
-  },
+  }
 
   allow(...args) {
-    this._updateXRSharing(true);
-    PermissionPromptForRequestPrototype.allow.apply(this, args);
-  },
+    this.#updateXRSharing(true);
+    super.allow(...args);
+  }
 
   cancel(...args) {
-    this._updateXRSharing(false);
-    PermissionPromptForRequestPrototype.cancel.apply(this, args);
-  },
-};
-Object.setPrototypeOf(
-  XRPermissionPrompt.prototype,
-  PermissionPromptForRequestPrototype
-);
-
-PermissionUI.XRPermissionPrompt = XRPermissionPrompt;
+    this.#updateXRSharing(false);
+    super.cancel(...args);
+  }
+}
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
@@ -1039,34 +1006,35 @@ PermissionUI.XRPermissionPrompt = XRPermissionPrompt;
  *        The request for a permission from content.
  * @return {PermissionPrompt} (see documentation in header)
  */
-function DesktopNotificationPermissionPrompt(request) {
-  this.request = request;
+class DesktopNotificationPermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
 
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "requiresUserInput",
-    "dom.webnotifications.requireuserinteraction"
-  );
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "postPromptEnabled",
-    "permissions.desktop-notification.postPrompt.enabled"
-  );
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "notNowEnabled",
-    "permissions.desktop-notification.notNow.enabled"
-  );
-}
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "requiresUserInput",
+      "dom.webnotifications.requireuserinteraction"
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "postPromptEnabled",
+      "permissions.desktop-notification.postPrompt.enabled"
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "notNowEnabled",
+      "permissions.desktop-notification.notNow.enabled"
+    );
+  }
 
-DesktopNotificationPermissionPrompt.prototype = {
   get type() {
     return "desktop-notification";
-  },
+  }
 
   get permissionKey() {
     return "desktop-notification";
-  },
+  }
 
   get popupOptions() {
     let learnMoreURL =
@@ -1077,22 +1045,22 @@ DesktopNotificationPermissionPrompt.prototype = {
       displayURI: false,
       name: this.getPrincipalName(),
     };
-  },
+  }
 
   get notificationID() {
     return "web-notifications";
-  },
+  }
 
   get anchorID() {
     return "web-notifications-notification-icon";
-  },
+  }
 
   get message() {
     return lazy.gBrowserBundle.formatStringFromName(
       "webNotifications.receiveFromSite3",
       ["<>"]
     );
-  },
+  }
 
   get promptActions() {
     let actions = [
@@ -1135,7 +1103,7 @@ DesktopNotificationPermissionPrompt.prototype = {
         : lazy.SitePermissions.SCOPE_PERSISTENT,
     });
     return actions;
-  },
+  }
 
   get postPromptActions() {
     let actions = [
@@ -1165,14 +1133,8 @@ DesktopNotificationPermissionPrompt.prototype = {
       action: lazy.SitePermissions.BLOCK,
     });
     return actions;
-  },
-};
-Object.setPrototypeOf(
-  DesktopNotificationPermissionPrompt.prototype,
-  PermissionPromptForRequestPrototype
-);
-
-PermissionUI.DesktopNotificationPermissionPrompt = DesktopNotificationPermissionPrompt;
+  }
+}
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
@@ -1181,18 +1143,19 @@ PermissionUI.DesktopNotificationPermissionPrompt = DesktopNotificationPermission
  * @param request (nsIContentPermissionRequest)
  *        The request for a permission from content.
  */
-function PersistentStoragePermissionPrompt(request) {
-  this.request = request;
-}
+class PersistentStoragePermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+  }
 
-PersistentStoragePermissionPrompt.prototype = {
   get type() {
     return "persistent-storage";
-  },
+  }
 
   get permissionKey() {
     return "persistent-storage";
-  },
+  }
 
   get popupOptions() {
     let learnMoreURL =
@@ -1203,22 +1166,22 @@ PersistentStoragePermissionPrompt.prototype = {
       displayURI: false,
       name: this.getPrincipalName(),
     };
-  },
+  }
 
   get notificationID() {
     return "persistent-storage";
-  },
+  }
 
   get anchorID() {
     return "persistent-storage-notification-icon";
-  },
+  }
 
   get message() {
     return lazy.gBrowserBundle.formatStringFromName(
       "persistentStorage.allowWithSite2",
       ["<>"]
     );
-  },
+  }
 
   get promptActions() {
     return [
@@ -1240,14 +1203,8 @@ PersistentStoragePermissionPrompt.prototype = {
         action: lazy.SitePermissions.BLOCK,
       },
     ];
-  },
-};
-Object.setPrototypeOf(
-  PersistentStoragePermissionPrompt.prototype,
-  PermissionPromptForRequestPrototype
-);
-
-PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionPrompt;
+  }
+}
 
 /**
  * Creates a PermissionPrompt for a nsIContentPermissionRequest for
@@ -1256,27 +1213,28 @@ PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionProm
  * @param request (nsIContentPermissionRequest)
  *        The request for a permission from content.
  */
-function MIDIPermissionPrompt(request) {
-  this.request = request;
-  let types = request.types.QueryInterface(Ci.nsIArray);
-  let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-  this.isSysexPerm =
-    !!perm.options.length &&
-    perm.options.queryElementAt(0, Ci.nsISupportsString) == "sysex";
-  this.permName = "midi";
-  if (this.isSysexPerm) {
-    this.permName = "midi-sysex";
+class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+    let types = request.types.QueryInterface(Ci.nsIArray);
+    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+    this.isSysexPerm =
+      !!perm.options.length &&
+      perm.options.queryElementAt(0, Ci.nsISupportsString) == "sysex";
+    this.permName = "midi";
+    if (this.isSysexPerm) {
+      this.permName = "midi-sysex";
+    }
   }
-}
 
-MIDIPermissionPrompt.prototype = {
   get type() {
     return "midi";
-  },
+  }
 
   get permissionKey() {
     return this.permName;
-  },
+  }
 
   get popupOptions() {
     // TODO (bug 1433235) We need a security/permissions explanation URL for this
@@ -1303,15 +1261,15 @@ MIDIPermissionPrompt.prototype = {
     }
 
     return options;
-  },
+  }
 
   get notificationID() {
     return "midi";
-  },
+  }
 
   get anchorID() {
     return "midi-notification-icon";
-  },
+  }
 
   get message() {
     let message;
@@ -1334,7 +1292,7 @@ MIDIPermissionPrompt.prototype = {
       ]);
     }
     return message;
-  },
+  }
 
   get promptActions() {
     return [
@@ -1353,7 +1311,7 @@ MIDIPermissionPrompt.prototype = {
         action: Ci.nsIPermissionManager.DENY_ACTION,
       },
     ];
-  },
+  }
 
   /**
    * @override
@@ -1362,51 +1320,46 @@ MIDIPermissionPrompt.prototype = {
    */
   getInstallErrorMessage(err) {
     return `WebMIDI access request was denied: ❝${err.message}❞. See https://developer.mozilla.org/docs/Web/API/Navigator/requestMIDIAccess for more information`;
-  },
-};
-Object.setPrototypeOf(
-  MIDIPermissionPrompt.prototype,
-  SitePermsAddonInstallRequestPrototype
-);
-
-PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
-
-function StorageAccessPermissionPrompt(request) {
-  this.request = request;
-  this.siteOption = null;
-
-  let types = this.request.types.QueryInterface(Ci.nsIArray);
-  let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-  let options = perm.options.QueryInterface(Ci.nsIArray);
-  // If we have an option, we are in a call from requestStorageAccessUnderSite
-  // which means that the embedding principal is not the current top-level.
-  // Instead we have to grab the Site string out of the option and use that
-  // in the UI.
-  if (options.length) {
-    this.siteOption = options.queryElementAt(0, Ci.nsISupportsString).data;
   }
 }
 
-StorageAccessPermissionPrompt.prototype = {
+class StorageAccessPermissionPrompt extends PermissionPromptForRequest {
+  constructor(request) {
+    super();
+    this.request = request;
+    this.siteOption = null;
+
+    let types = this.request.types.QueryInterface(Ci.nsIArray);
+    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+    let options = perm.options.QueryInterface(Ci.nsIArray);
+    // If we have an option, we are in a call from requestStorageAccessUnderSite
+    // which means that the embedding principal is not the current top-level.
+    // Instead we have to grab the Site string out of the option and use that
+    // in the UI.
+    if (options.length) {
+      this.siteOption = options.queryElementAt(0, Ci.nsISupportsString).data;
+    }
+  }
+
   get usePermissionManager() {
     return false;
-  },
+  }
 
   get type() {
     return "storage-access";
-  },
+  }
 
   get permissionKey() {
     // Make sure this name is unique per each third-party tracker
     return `3rdPartyStorage${lazy.SitePermissions.PERM_KEY_DELIMITER}${this.principal.origin}`;
-  },
+  }
 
   get temporaryPermissionURI() {
     if (this.siteOption) {
       return Services.io.newURI(this.siteOption);
     }
     return undefined;
-  },
+  }
 
   prettifyHostPort(hostport) {
     let [host, port] = hostport.split(":");
@@ -1415,7 +1368,7 @@ StorageAccessPermissionPrompt.prototype = {
       return `${host}:${port}`;
     }
     return host;
-  },
+  }
 
   get popupOptions() {
     let learnMoreURL =
@@ -1432,15 +1385,15 @@ StorageAccessPermissionPrompt.prototype = {
       hintText,
       escAction: "secondarybuttoncommand",
     };
-  },
+  }
 
   get notificationID() {
     return "storage-access";
-  },
+  }
 
   get anchorID() {
     return "storage-access-notification-icon";
-  },
+  }
 
   get message() {
     let embeddingHost = this.topLevelPrincipal.host;
@@ -1453,7 +1406,7 @@ StorageAccessPermissionPrompt.prototype = {
       this.prettifyHostPort(this.principal.hostPort),
       this.prettifyHostPort(embeddingHost),
     ]);
-  },
+  }
 
   get promptActions() {
     let self = this;
@@ -1484,15 +1437,19 @@ StorageAccessPermissionPrompt.prototype = {
         },
       },
     ];
-  },
+  }
 
   get topLevelPrincipal() {
     return this.request.topLevelPrincipal;
-  },
-};
-Object.setPrototypeOf(
-  StorageAccessPermissionPrompt.prototype,
-  PermissionPromptForRequestPrototype
-);
+  }
+}
 
-PermissionUI.StorageAccessPermissionPrompt = StorageAccessPermissionPrompt;
+export const PermissionUI = {
+  PermissionPromptForRequest,
+  GeolocationPermissionPrompt,
+  XRPermissionPrompt,
+  DesktopNotificationPermissionPrompt,
+  PersistentStoragePermissionPrompt,
+  MIDIPermissionPrompt,
+  StorageAccessPermissionPrompt,
+};
