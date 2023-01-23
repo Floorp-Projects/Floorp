@@ -15,6 +15,12 @@ JS_HEADER = """{license}
 import {{ html }} from "../vendor/lit.all.mjs";
 import {{ MozLitElement }} from "../lit-utils.mjs";
 
+/**
+ * Component description goes here.
+ *
+ * @tagname {element_name}
+ * @property {{string}} variant - Property description goes here
+ */
 export default class {class_name} extends MozLitElement {{
   static properties = {{
     variant: {{ type: String }},
@@ -47,6 +53,7 @@ import "./{element_name}.mjs";
 
 export default {{
   title: "Design System/Experiments/{class_name}",
+  component: "{element_name}",
   argTypes: {{
     variant: {{
       options: ["default", "other"],

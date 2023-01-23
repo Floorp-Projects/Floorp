@@ -4,6 +4,16 @@
 
 MozXULElement.insertFTLIfNeeded("browser/components/mozSupportLink.ftl");
 
+/**
+ * An extension of the anchor element that helps create links to Mozilla's
+ * support documentation. This should be used for SUMO links only - other "Learn
+ * more" links can use the regular anchor element.
+ *
+ * @tagname moz-support-link
+ * @attribute {string} support-page - Short-hand string from SUMO to the specific support page.
+ * @attribute {string} utm-content - UTM parameter for a URL, if it is an AMO URL.
+ * @attribute {string} data-l10n-id - Fluent ID used to generate the text content.
+ */
 export default class MozSupportLink extends HTMLAnchorElement {
   static SUPPORT_URL = "https://www.mozilla.org/";
   static get observedAttributes() {

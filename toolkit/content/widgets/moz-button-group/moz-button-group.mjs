@@ -9,6 +9,14 @@ export const PLATFORM_LINUX = "linux";
 export const PLATFORM_MACOS = "macosx";
 export const PLATFORM_WINDOWS = "win";
 
+/**
+ * A grouping of buttons. Primary button order will be set automatically based
+ * on class="primary", type="submit" or autofocus attribute. Set slot="primary"
+ * on a primary button that does not have primary styling to set its position.
+ *
+ * @tagname moz-button-group
+ * @property {string} platform - The detected platform, set automatically.
+ */
 export default class MozButtonGroup extends MozLitElement {
   static queries = {
     defaultSlotEl: "slot:not([name])",
