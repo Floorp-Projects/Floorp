@@ -6,9 +6,6 @@
 // that aren't initialized outside of a XUL app environment like AddonManager
 // and the "@mozilla.org/xre/app-info;1" component.
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { Troubleshoot } = ChromeUtils.importESModule(
   "resource://gre/modules/Troubleshoot.sys.mjs"
 );
@@ -32,252 +29,227 @@ const { NormandyTestUtils } = ChromeUtils.import(
 
 NormandyTestUtils.init({ Assert });
 
-function test() {
-  waitForExplicitFinish();
-  function doNextTest() {
-    if (!tests.length) {
-      finish();
-      return;
-    }
-    tests.shift()(doNextTest);
+add_task(async function snapshotSchema() {
+  let snapshot = await Troubleshoot.snapshot();
+  try {
+    validateObject(snapshot, SNAPSHOT_SCHEMA);
+    ok(true, "The snapshot should conform to the schema.");
+  } catch (err) {
+    ok(false, "Schema mismatch, " + err);
   }
-  doNextTest();
-}
-
-registerCleanupFunction(function() {
-  // Troubleshoot.sys.mjs is imported into the global scope -- the window -- above.
-  // If it's not deleted, it outlives the test and is reported as a leak.
-  delete window.Troubleshoot;
 });
 
-var tests = [
-  async function snapshotSchema(done) {
-    let snapshot = await Troubleshoot.snapshot();
-    try {
-      validateObject(snapshot, SNAPSHOT_SCHEMA);
-      ok(true, "The snapshot should conform to the schema.");
-    } catch (err) {
-      ok(false, "Schema mismatch, " + err);
-    }
-    done();
-  },
+add_task(async function experimentalFeatures() {
+  let featureGates = await FeatureGate.all();
+  ok(featureGates.length, "Should be at least one FeatureGate");
 
-  async function experimentalFeatures(done) {
-    let featureGates = await FeatureGate.all();
-    ok(featureGates.length, "Should be at least one FeatureGate");
-
-    let snapshot = await Troubleshoot.snapshot();
-    for (let i = 0; i < snapshot.experimentalFeatures.length; i++) {
-      let experimentalFeature = snapshot.experimentalFeatures[i];
-      is(
-        experimentalFeature[0],
-        featureGates[i].title,
-        "The first item in the array should be the title's l10n-id of the FeatureGate"
-      );
-      is(
-        experimentalFeature[1],
-        featureGates[i].preference,
-        "The second item in the array should be the preference name for the FeatureGate"
-      );
-      is(
-        experimentalFeature[2],
-        Services.prefs.getBoolPref(featureGates[i].preference),
-        "The third item in the array should be the preference value of the FeatureGate"
-      );
-    }
-    done();
-  },
-
-  async function modifiedPreferences(done) {
-    let prefs = [
-      "javascript.troubleshoot",
-      "troubleshoot.foo",
-      "network.proxy.troubleshoot",
-      "print.print_to_filename",
-    ];
-    prefs.forEach(function(p) {
-      Services.prefs.setBoolPref(p, true);
-      is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
-    });
-    Services.prefs.setCharPref("dom.push.userAgentID", "testvalue");
-    let snapshot = await Troubleshoot.snapshot();
-    let p = snapshot.modifiedPreferences;
+  let snapshot = await Troubleshoot.snapshot();
+  for (let i = 0; i < snapshot.experimentalFeatures.length; i++) {
+    let experimentalFeature = snapshot.experimentalFeatures[i];
     is(
-      p["javascript.troubleshoot"],
-      true,
-      "The pref should be present because it's in the allowed prefs " +
-        "and not in the pref regexes that are disallowed."
+      experimentalFeature[0],
+      featureGates[i].title,
+      "The first item in the array should be the title's l10n-id of the FeatureGate"
     );
-    ok(
-      !("troubleshoot.foo" in p),
-      "The pref should be absent because it's not in the allowed prefs."
+    is(
+      experimentalFeature[1],
+      featureGates[i].preference,
+      "The second item in the array should be the preference name for the FeatureGate"
     );
-    ok(
-      !("network.proxy.troubleshoot" in p),
-      "The pref should be absent because it's in the pref regexes " +
-        "that are disallowed."
+    is(
+      experimentalFeature[2],
+      Services.prefs.getBoolPref(featureGates[i].preference),
+      "The third item in the array should be the preference value of the FeatureGate"
     );
-    ok(
-      !("dom.push.userAgentID" in p),
-      "The pref should be absent because it's in the pref regexes " +
-        "that are disallowed."
-    );
-    ok(
-      !("print.print_to_filename" in p),
-      "The pref should be absent because it's not in the allowed prefs."
-    );
-    prefs.forEach(p => Services.prefs.deleteBranch(p));
-    Services.prefs.clearUserPref("dom.push.userAgentID");
-    done();
-  },
+  }
+});
 
-  async function unicodePreferences(done) {
-    let name = "font.name.sans-serif.x-western";
-    let utf8Value = "\xc4\x8capk\xc5\xafv Krasopis";
-    let unicodeValue = "\u010Capk\u016Fv Krasopis";
+add_task(async function modifiedPreferences() {
+  let prefs = [
+    "javascript.troubleshoot",
+    "troubleshoot.foo",
+    "network.proxy.troubleshoot",
+    "print.print_to_filename",
+  ];
+  prefs.forEach(function(p) {
+    Services.prefs.setBoolPref(p, true);
+    is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
+  });
+  Services.prefs.setCharPref("dom.push.userAgentID", "testvalue");
+  let snapshot = await Troubleshoot.snapshot();
+  let p = snapshot.modifiedPreferences;
+  is(
+    p["javascript.troubleshoot"],
+    true,
+    "The pref should be present because it's in the allowed prefs " +
+      "and not in the pref regexes that are disallowed."
+  );
+  ok(
+    !("troubleshoot.foo" in p),
+    "The pref should be absent because it's not in the allowed prefs."
+  );
+  ok(
+    !("network.proxy.troubleshoot" in p),
+    "The pref should be absent because it's in the pref regexes " +
+      "that are disallowed."
+  );
+  ok(
+    !("dom.push.userAgentID" in p),
+    "The pref should be absent because it's in the pref regexes " +
+      "that are disallowed."
+  );
+  ok(
+    !("print.print_to_filename" in p),
+    "The pref should be absent because it's not in the allowed prefs."
+  );
+  prefs.forEach(p => Services.prefs.deleteBranch(p));
+  Services.prefs.clearUserPref("dom.push.userAgentID");
+});
 
-    // set/getCharPref work with 8bit strings (utf8)
-    Services.prefs.setCharPref(name, utf8Value);
+add_task(async function unicodePreferences() {
+  let name = "font.name.sans-serif.x-western";
+  let utf8Value = "\xc4\x8capk\xc5\xafv Krasopis";
+  let unicodeValue = "\u010Capk\u016Fv Krasopis";
 
-    let snapshot = await Troubleshoot.snapshot();
-    let p = snapshot.modifiedPreferences;
-    is(p[name], unicodeValue, "The pref should have correct Unicode value.");
-    Services.prefs.deleteBranch(name);
-    done();
-  },
+  // set/getCharPref work with 8bit strings (utf8)
+  Services.prefs.setCharPref(name, utf8Value);
 
-  async function printingPreferences(done) {
-    let prefs = [
-      "javascript.print_to_filename",
-      "print.print_bgimages",
-      "print.print_to_filename",
-    ];
-    prefs.forEach(function(p) {
-      Services.prefs.setBoolPref(p, true);
-      is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
-    });
-    let snapshot = await Troubleshoot.snapshot();
-    let p = snapshot.printingPreferences;
-    is(p["print.print_bgimages"], true, "The pref should be present");
-    ok(
-      !("print.print_to_filename" in p),
-      "The pref should not be present (sensitive)"
-    );
-    ok(
-      !("javascript.print_to_filename" in p),
-      "The pref should be absent because it's not a print pref."
-    );
-    prefs.forEach(p => Services.prefs.deleteBranch(p));
-    done();
-  },
+  let snapshot = await Troubleshoot.snapshot();
+  let p = snapshot.modifiedPreferences;
+  is(p[name], unicodeValue, "The pref should have correct Unicode value.");
+  Services.prefs.deleteBranch(name);
+});
 
-  function normandy(done) {
-    const {
-      preferenceStudyFactory,
-      branchedAddonStudyFactory,
-      preferenceRolloutFactory,
-    } = NormandyTestUtils.factories;
+add_task(async function printingPreferences() {
+  let prefs = [
+    "javascript.print_to_filename",
+    "print.print_bgimages",
+    "print.print_to_filename",
+  ];
+  prefs.forEach(function(p) {
+    Services.prefs.setBoolPref(p, true);
+    is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
+  });
+  let snapshot = await Troubleshoot.snapshot();
+  let p = snapshot.printingPreferences;
+  is(p["print.print_bgimages"], true, "The pref should be present");
+  ok(
+    !("print.print_to_filename" in p),
+    "The pref should not be present (sensitive)"
+  );
+  ok(
+    !("javascript.print_to_filename" in p),
+    "The pref should be absent because it's not a print pref."
+  );
+  prefs.forEach(p => Services.prefs.deleteBranch(p));
+});
 
-    NormandyTestUtils.decorate(
-      PreferenceExperiments.withMockExperiments([
-        preferenceStudyFactory({
-          userFacingName: "Test Pref Study B",
-          branch: "test-branch-pref",
-        }),
-        preferenceStudyFactory({
-          userFacingName: "Test Pref Study A",
-          branch: "test-branch-pref",
-        }),
-      ]),
-      AddonStudies.withStudies([
-        branchedAddonStudyFactory({
-          userFacingName: "Test Addon Study B",
-          branch: "test-branch-addon",
-        }),
-        branchedAddonStudyFactory({
-          userFacingName: "Test Addon Study A",
-          branch: "test-branch-addon",
-        }),
-      ]),
-      PreferenceRollouts.withTestMock({
-        rollouts: [
-          preferenceRolloutFactory({
-            statue: "ACTIVE",
-            slug: "test-pref-rollout-b",
-          }),
-          preferenceRolloutFactory({
-            statue: "ACTIVE",
-            slug: "test-pref-rollout-a",
-          }),
-        ],
+add_task(function normandy() {
+  const {
+    preferenceStudyFactory,
+    branchedAddonStudyFactory,
+    preferenceRolloutFactory,
+  } = NormandyTestUtils.factories;
+
+  return NormandyTestUtils.decorate(
+    PreferenceExperiments.withMockExperiments([
+      preferenceStudyFactory({
+        userFacingName: "Test Pref Study B",
+        branch: "test-branch-pref",
       }),
-      async function testNormandyInfoInTroubleshooting({
-        prefExperiments,
-        addonStudies,
-        prefRollouts,
-      }) {
-        let snapshot = await Troubleshoot.snapshot();
-        let info = snapshot.normandy;
-        // The order should be flipped, since each category is sorted by slug.
-        Assert.deepEqual(
-          info.prefStudies,
-          [prefExperiments[1], prefExperiments[0]],
-          "prefs studies should exist in the right order"
-        );
-        Assert.deepEqual(
-          info.addonStudies,
-          [addonStudies[1], addonStudies[0]],
-          "addon studies should exist in the right order"
-        );
-        Assert.deepEqual(
-          info.prefRollouts,
-          [prefRollouts[1], prefRollouts[0]],
-          "pref rollouts should exist in the right order"
-        );
-      }
-    )().then(done);
-  },
+      preferenceStudyFactory({
+        userFacingName: "Test Pref Study A",
+        branch: "test-branch-pref",
+      }),
+    ]),
+    AddonStudies.withStudies([
+      branchedAddonStudyFactory({
+        userFacingName: "Test Addon Study B",
+        branch: "test-branch-addon",
+      }),
+      branchedAddonStudyFactory({
+        userFacingName: "Test Addon Study A",
+        branch: "test-branch-addon",
+      }),
+    ]),
+    PreferenceRollouts.withTestMock({
+      rollouts: [
+        preferenceRolloutFactory({
+          statue: "ACTIVE",
+          slug: "test-pref-rollout-b",
+        }),
+        preferenceRolloutFactory({
+          statue: "ACTIVE",
+          slug: "test-pref-rollout-a",
+        }),
+      ],
+    }),
+    async function testNormandyInfoInTroubleshooting({
+      prefExperiments,
+      addonStudies,
+      prefRollouts,
+    }) {
+      let snapshot = await Troubleshoot.snapshot();
+      let info = snapshot.normandy;
+      // The order should be flipped, since each category is sorted by slug.
+      Assert.deepEqual(
+        info.prefStudies,
+        [prefExperiments[1], prefExperiments[0]],
+        "prefs studies should exist in the right order"
+      );
+      Assert.deepEqual(
+        info.addonStudies,
+        [addonStudies[1], addonStudies[0]],
+        "addon studies should exist in the right order"
+      );
+      Assert.deepEqual(
+        info.prefRollouts,
+        [prefRollouts[1], prefRollouts[0]],
+        "pref rollouts should exist in the right order"
+      );
+    }
+  )();
+});
 
-  function normandyErrorHandling(done) {
-    NormandyTestUtils.decorate(
-      NormandyTestUtils.withStub(PreferenceExperiments, "getAllActive", {
-        returnValue: Promise.reject("Expected error - PreferenceExperiments"),
-      }),
-      NormandyTestUtils.withStub(AddonStudies, "getAllActive", {
-        returnValue: Promise.reject("Expected error - AddonStudies"),
-      }),
-      NormandyTestUtils.withStub(PreferenceRollouts, "getAllActive", {
-        returnValue: Promise.reject("Expected error - PreferenceRollouts"),
-      }),
-      NormandyTestUtils.withConsoleSpy(),
-      async function testNormandyErrorHandling({ consoleSpy }) {
-        let snapshot = await Troubleshoot.snapshot();
-        let info = snapshot.normandy;
-        Assert.deepEqual(
-          info.prefStudies,
-          [],
-          "prefs studies should be an empty list if there is an error"
-        );
-        Assert.deepEqual(
-          info.addonStudies,
-          [],
-          "addon studies should be an empty list if there is an error"
-        );
-        Assert.deepEqual(
-          info.prefRollouts,
-          [],
-          "pref rollouts should be an empty list if there is an error"
-        );
+add_task(function normandyErrorHandling() {
+  return NormandyTestUtils.decorate(
+    NormandyTestUtils.withStub(PreferenceExperiments, "getAllActive", {
+      returnValue: Promise.reject("Expected error - PreferenceExperiments"),
+    }),
+    NormandyTestUtils.withStub(AddonStudies, "getAllActive", {
+      returnValue: Promise.reject("Expected error - AddonStudies"),
+    }),
+    NormandyTestUtils.withStub(PreferenceRollouts, "getAllActive", {
+      returnValue: Promise.reject("Expected error - PreferenceRollouts"),
+    }),
+    NormandyTestUtils.withConsoleSpy(),
+    async function testNormandyErrorHandling({ consoleSpy }) {
+      let snapshot = await Troubleshoot.snapshot();
+      let info = snapshot.normandy;
+      Assert.deepEqual(
+        info.prefStudies,
+        [],
+        "prefs studies should be an empty list if there is an error"
+      );
+      Assert.deepEqual(
+        info.addonStudies,
+        [],
+        "addon studies should be an empty list if there is an error"
+      );
+      Assert.deepEqual(
+        info.prefRollouts,
+        [],
+        "pref rollouts should be an empty list if there is an error"
+      );
 
-        consoleSpy.assertAtLeast([
-          /Expected error - PreferenceExperiments/,
-          /Expected error - AddonStudies/,
-          /Expected error - PreferenceRollouts/,
-        ]);
-      }
-    )().then(done);
-  },
-];
+      consoleSpy.assertAtLeast([
+        /Expected error - PreferenceExperiments/,
+        /Expected error - AddonStudies/,
+        /Expected error - PreferenceRollouts/,
+      ]);
+    }
+  )();
+});
 
 // This is inspired by JSON Schema, or by the example on its Wikipedia page
 // anyway.
