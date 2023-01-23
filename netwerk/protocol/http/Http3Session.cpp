@@ -211,6 +211,11 @@ nsresult Http3Session::SendPriorityUpdateFrame(uint64_t aStreamId,
 void Http3Session::Shutdown() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  if (mTimer) {
+    mTimer->Cancel();
+  }
+  mTimer = nullptr;
+
   bool isEchRetry = mError == mozilla::psm::GetXPCOMFromNSSError(
                                   SSL_ERROR_ECH_RETRY_WITH_ECH);
   if ((mBeforeConnectedError ||
@@ -877,16 +882,15 @@ void Http3Session::SetupTimer(uint64_t aTimeout) {
     return;
   }
 
-  if (!mTimer) {
-    mTimer = NS_NewTimer();
-  }
+  nsresult rv = NS_NewTimerWithCallback(
+      getter_AddRefs(mTimer),
+      [conn = RefPtr{mUdpConn}](nsITimer*) { conn->OnQuicTimeoutExpired(); },
+      aTimeout, nsITimer::TYPE_ONE_SHOT,
+      "net::HttpConnectionUDP::OnQuicTimeout");
 
   mTimerActive = true;
 
-  if (!mTimer ||
-      NS_FAILED(mTimer->InitWithNamedFuncCallback(
-          &HttpConnectionUDP::OnQuicTimeout, mUdpConn, aTimeout,
-          nsITimer::TYPE_ONE_SHOT, "net::HttpConnectionUDP::OnQuicTimeout"))) {
+  if (NS_FAILED(rv)) {
     NS_DispatchToCurrentThread(
         NewRunnableMethod("net::HttpConnectionUDP::OnQuicTimeoutExpired",
                           mUdpConn, &HttpConnectionUDP::OnQuicTimeoutExpired));
@@ -1484,6 +1488,7 @@ void Http3Session::Close(nsresult aReason) {
     if (mTimer) {
       mTimer->Cancel();
     }
+    mTimer = nullptr;
     mConnection = nullptr;
     mUdpConn = nullptr;
     mState = CLOSED;
