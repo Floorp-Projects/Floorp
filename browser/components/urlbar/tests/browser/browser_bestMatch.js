@@ -32,7 +32,7 @@ add_task(async function nonsponsoredHelpButton() {
       window,
       value: "test",
     });
-    await checkBestMatchRow({ result, hasHelpButton: true });
+    await checkBestMatchRow({ result, hasHelpUrl: true });
     await UrlbarTestUtils.promisePopupClose(window);
   });
 });
@@ -61,7 +61,7 @@ add_task(async function sponsoredHelpButton() {
       window,
       value: "test",
     });
-    await checkBestMatchRow({ result, isSponsored: true, hasHelpButton: true });
+    await checkBestMatchRow({ result, isSponsored: true, hasHelpUrl: true });
     await UrlbarTestUtils.promisePopupClose(window);
   });
 });
@@ -75,7 +75,12 @@ add_task(async function keySelection() {
 
   await withProvider(result, async () => {
     // Ordered list of class names of the elements that should be selected.
-    let expectedClassNames = ["urlbarView-row-inner", "urlbarView-button-help"];
+    let expectedClassNames = [
+      "urlbarView-row-inner",
+      UrlbarPrefs.get("resultMenu")
+        ? "urlbarView-button-menu"
+        : "urlbarView-button-help",
+    ];
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -84,7 +89,7 @@ add_task(async function keySelection() {
     await checkBestMatchRow({
       result,
       isSponsored: true,
-      hasHelpButton: true,
+      hasHelpUrl: true,
     });
 
     // Test with the tab key in order vs. reverse order.
@@ -126,7 +131,7 @@ add_task(async function keySelection() {
 async function checkBestMatchRow({
   result,
   isSponsored = false,
-  hasHelpButton = false,
+  hasHelpUrl = false,
 }) {
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -177,16 +182,21 @@ async function checkBestMatchRow({
     );
   }
 
-  let helpButton = row._buttons.get("help");
+  let button = row._buttons.get(
+    UrlbarPrefs.get("resultMenu") ? "menu" : "help"
+  );
   Assert.equal(
     !!result.payload.helpUrl,
-    hasHelpButton,
-    "Sanity check: Row's expected hasHelpButton matches result"
+    hasHelpUrl,
+    "Sanity check: Row's expected hasHelpUrl matches result"
   );
-  if (hasHelpButton) {
-    Assert.ok(helpButton, "Row with helpUrl has a helpButton");
+  if (hasHelpUrl) {
+    Assert.ok(button, "Row with helpUrl has a help or menu button");
   } else {
-    Assert.ok(!helpButton, "Row without helpUrl does not have a helpButton");
+    Assert.ok(
+      !button,
+      "Row without helpUrl does not have a help or menu button"
+    );
   }
 }
 

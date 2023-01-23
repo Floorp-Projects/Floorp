@@ -41,9 +41,17 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
     sponsoredAdvertiser: "TestAdvertiser",
     isSponsored: true,
     helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+    helpL10n: {
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+        : "firefox-suggest-urlbar-learn-more",
+    },
     isBlockable: false,
-    blockL10n: { id: "firefox-suggest-urlbar-block" },
+    blockL10n: {
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-dismiss-firefox-suggest"
+        : "firefox-suggest-urlbar-block",
+    },
     displayUrl: "http://test.com/q=frabbits",
     source: "remote-settings",
   },
@@ -65,9 +73,17 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
     sponsoredAdvertiser: "advertiser",
     isSponsored: true,
     helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+    helpL10n: {
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+        : "firefox-suggest-urlbar-learn-more",
+    },
     isBlockable: false,
-    blockL10n: { id: "firefox-suggest-urlbar-block" },
+    blockL10n: {
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-dismiss-firefox-suggest"
+        : "firefox-suggest-urlbar-block",
+    },
     displayUrl: "url",
     requestId: "request_id",
     source: "merino",
@@ -463,9 +479,17 @@ add_task(async function multipleMerinoSuggestions() {
           sponsoredAdvertiser: "multipleMerinoSuggestions 1 advertiser",
           isSponsored: true,
           helpUrl: QuickSuggest.HELP_URL,
-          helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+          helpL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+              : "firefox-suggest-urlbar-learn-more",
+          },
           isBlockable: false,
-          blockL10n: { id: "firefox-suggest-urlbar-block" },
+          blockL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-dismiss-firefox-suggest"
+              : "firefox-suggest-urlbar-block",
+          },
           displayUrl: "multipleMerinoSuggestions 1 url",
           requestId: "request_id",
           source: "merino",
@@ -682,9 +706,17 @@ add_task(async function topPick() {
           sponsoredAdvertiser: "multipleMerinoSuggestions 2 advertiser",
           isSponsored: true,
           helpUrl: QuickSuggest.HELP_URL,
-          helpL10n: { id: "firefox-suggest-urlbar-learn-more" },
+          helpL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+              : "firefox-suggest-urlbar-learn-more",
+          },
           isBlockable: false,
-          blockL10n: { id: "firefox-suggest-urlbar-block" },
+          blockL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-dismiss-firefox-suggest"
+              : "firefox-suggest-urlbar-block",
+          },
           displayUrl: "multipleMerinoSuggestions 2 url",
           requestId: "request_id",
           source: "merino",

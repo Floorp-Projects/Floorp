@@ -200,10 +200,85 @@ export var UrlbarTestUtils = {
     return win.gURLBar.view.oneOffSearchButtons;
   },
 
+  /**
+   * Returns a specific button of a result.
+   *
+   * @param {object} win The window containing the urlbar
+   * @param {string} buttonName The name of the button, e.g. "menu", "0", etc.
+   * @param {number} resultIndex The index of the result
+   * @returns {HtmlElement} The button
+   */
   getButtonForResultIndex(win, buttonName, resultIndex) {
     return this.getRowAt(win, resultIndex).querySelector(
       `.urlbarView-button-${buttonName}`
     );
+  },
+
+  /**
+   * Opens the result menu of a specific result and presses an access key to
+   * activate a menu item.
+   *
+   * @param {object} win The window containing the urlbar
+   * @param {string} accesskey The access key to press once the menu is open
+   * @param {object} [options] The options object.
+   * @param {number} [options.resultIndex] The index of the result. Defaults
+   *        to the current selected index.
+   * @param {boolean} [options.openByMouse] Whether to open the menu by mouse
+   *        or keyboard.
+   */
+  async openResultMenuAndPressAccesskey(
+    win,
+    accesskey,
+    {
+      resultIndex = win.gURLBar.view.selectedRowIndex,
+      openByMouse = false,
+    } = {}
+  ) {
+    let menuButton = this.getButtonForResultIndex(win, "menu", resultIndex);
+    this.Assert?.ok(
+      menuButton,
+      `found the menu button at result index ${resultIndex}`
+    );
+    let promiseMenuOpen = lazy.BrowserTestUtils.waitForEvent(
+      win.gURLBar.view.resultMenu,
+      "popupshown"
+    );
+    this._testScope?.info(`selecting the result at index ${resultIndex}`);
+    while (win.gURLBar.view.selectedRowIndex != resultIndex) {
+      this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    }
+    if (openByMouse) {
+      this.EventUtils.synthesizeMouseAtCenter(menuButton, {}, win);
+    } else {
+      this.EventUtils.synthesizeKey("KEY_Tab", {}, win);
+      this.Assert?.equal(
+        this.getSelectedElement(win),
+        menuButton,
+        `selected the menu button at result index ${resultIndex}`
+      );
+      this.EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    }
+    this._testScope?.info("waiting for the menu to open");
+    await promiseMenuOpen;
+    await lazy.BrowserTestUtils.waitForCondition(
+      () =>
+        win.gURLBar.view.resultMenu.querySelector(
+          `menuitem[accesskey=${accesskey}]`
+        ),
+      "Waiting for strings to load"
+    );
+
+    this._testScope?.info(
+      `pressing access key (${accesskey}) to activate menu item`
+    );
+    let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
+      win.gURLBar.view.resultMenu,
+      "command"
+    );
+    this.EventUtils.synthesizeKey(accesskey, {}, win);
+    this._testScope?.info("waiting for command event");
+    await promiseCommand;
+    this._testScope?.info("got the command event");
   },
 
   /**

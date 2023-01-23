@@ -102,11 +102,17 @@ add_combo_task(async function basic_keyboard({ result, isBestMatch }) {
   await doBasicBlockTest({
     result,
     isBestMatch,
-    block: () => {
-      // TAB twice to select the block button: once to select the main
-      // part of the row, once to select the block button.
-      EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-      EventUtils.synthesizeKey("KEY_Enter");
+    block: async () => {
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+        });
+      } else {
+        // TAB twice to select the block button: once to select the main
+        // part of the row, once to select the block button.
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+        EventUtils.synthesizeKey("KEY_Enter");
+      }
     },
   });
 });
@@ -116,8 +122,18 @@ add_combo_task(async function basic_mouse({ result, isBestMatch }) {
   await doBasicBlockTest({
     result,
     isBestMatch,
-    block: blockButton => {
-      EventUtils.synthesizeMouseAtCenter(blockButton, {});
+    block: async () => {
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+          openByMouse: true,
+        });
+      } else {
+        EventUtils.synthesizeMouseAtCenter(
+          UrlbarTestUtils.getButtonForResultIndex(window, "block", 1),
+          {}
+        );
+      }
     },
   });
 });
@@ -150,7 +166,7 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
   );
 
   let isSponsored = result.keywords[0] == "sponsored";
-  let details = await QuickSuggestTestUtils.assertIsQuickSuggest({
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
     isBestMatch,
     isSponsored,
@@ -158,8 +174,7 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
   });
 
   // Block the suggestion.
-  let blockButton = details.element.row._buttons.get("block");
-  await block(blockButton);
+  await block();
 
   // The row should have been removed.
   Assert.ok(
@@ -268,8 +283,14 @@ add_task(async function blockMultiple() {
       });
 
       // Block it.
-      EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-      EventUtils.synthesizeKey("KEY_Enter");
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+        });
+      } else {
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+        EventUtils.synthesizeKey("KEY_Enter");
+      }
       Assert.ok(
         await QuickSuggest.blockedSuggestions.has(url),
         "Suggestion is blocked after picking block button"
@@ -357,7 +378,6 @@ async function doDisabledTest({
     originalUrl: result.url,
     isSponsored: result.keywords[0] == "sponsored",
   });
-  let blockButton = details.element.row._buttons.get("block");
 
   // Arrow down to select the suggestion and press the key shortcut to block.
   EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -372,7 +392,12 @@ async function doDisabledTest({
     (!isBestMatch && !quickSuggestBlockingEnabled)
   ) {
     // Blocking is disabled. The key shortcut shouldn't have done anything.
-    Assert.ok(!blockButton, "Block button is not present");
+    if (!UrlbarPrefs.get("resultMenu")) {
+      Assert.ok(
+        !details.element.row._buttons.get("block"),
+        "Block button is not present"
+      );
+    }
     Assert.equal(
       UrlbarTestUtils.getResultCount(window),
       expectedResultCount,
@@ -390,7 +415,12 @@ async function doDisabledTest({
     );
   } else {
     // Blocking is enabled. The suggestion should have been blocked.
-    Assert.ok(blockButton, "Block button is present");
+    if (!UrlbarPrefs.get("resultMenu")) {
+      Assert.ok(
+        details.element.row._buttons.get("block"),
+        "Block button is present"
+      );
+    }
     Assert.equal(
       UrlbarTestUtils.getResultCount(window),
       1,

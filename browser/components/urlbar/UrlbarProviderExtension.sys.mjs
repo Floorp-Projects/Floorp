@@ -362,7 +362,12 @@ export class UrlbarProviderExtension extends UrlbarProvider {
 
     let type = UrlbarProviderExtension.RESULT_TYPES[extResult.type];
     if (type == UrlbarUtils.RESULT_TYPE.TIP) {
-      extResult.payload.type = extResult.payload.type || "extension";
+      extResult.payload.type ||= "extension";
+      extResult.payload.helpL10n = {
+        id: lazy.UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-tip-get-help"
+          : "urlbar-tip-help-icon",
+      };
     }
 
     let result = new lazy.UrlbarResult(

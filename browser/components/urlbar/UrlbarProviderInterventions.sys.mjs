@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NLP: "resource://gre/modules/NLP.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
@@ -660,7 +661,11 @@ class ProviderInterventions extends UrlbarProvider {
         ...getPayloadForTip(this.currentTip),
         type: this.currentTip,
         icon: UrlbarUtils.ICON.TIP,
-        helpL10n: { id: "urlbar-tip-help-icon" },
+        helpL10n: {
+          id: lazy.UrlbarPrefs.get("resultMenu")
+            ? "urlbar-result-menu-tip-get-help"
+            : "urlbar-tip-help-icon",
+        },
       }
     );
     result.suggestedIndex = 1;

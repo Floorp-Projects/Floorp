@@ -97,6 +97,15 @@ async function setUpTelemetryTest({
   merinoSuggestions = null,
   config = QuickSuggestTestUtils.DEFAULT_CONFIG,
 }) {
+  if (UrlbarPrefs.get("resultMenu")) {
+    todo(
+      false,
+      "telemetry for the result menu to be implemented in bug 1790020"
+    );
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.resultMenu", false]],
+    });
+  }
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enable blocking on primary sponsored and nonsponsored suggestions so we

@@ -7,41 +7,6 @@ add_setup(async function() {
   });
 });
 
-async function openResultMenuAndPressAccesskey(resultIndex, accesskey) {
-  let menuButton = UrlbarTestUtils.getButtonForResultIndex(
-    window,
-    "menu",
-    resultIndex
-  );
-  ok(menuButton, `found the menu button at result index ${resultIndex}`);
-  while (gURLBar.view.selectedRowIndex != resultIndex) {
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-  }
-  EventUtils.synthesizeKey("KEY_Tab");
-  is(
-    UrlbarTestUtils.getSelectedElement(window),
-    menuButton,
-    `selected the menu button at result index ${resultIndex}`
-  );
-
-  let promiseMenuOpen = BrowserTestUtils.waitForEvent(
-    gURLBar.view.resultMenu,
-    "popupshown"
-  );
-  EventUtils.synthesizeKey("KEY_Enter", {});
-  info("waiting for the menu to open");
-  await promiseMenuOpen;
-
-  info(`pressing access key (${accesskey}) to activate menu item`);
-  let promiseCommand = BrowserTestUtils.waitForEvent(
-    gURLBar.view.resultMenu,
-    "command"
-  );
-  EventUtils.synthesizeKey(accesskey);
-  info("waiting for command event");
-  await promiseCommand;
-}
-
 add_task(async function test_remove_history() {
   const TEST_URL = "https://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
@@ -67,7 +32,9 @@ add_task(async function test_remove_history() {
 
   let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
 
-  await openResultMenuAndPressAccesskey(resultIndex, "R");
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R", {
+    resultIndex,
+  });
 
   const removeEvents = await promiseVisitRemoved;
   Assert.ok(
@@ -124,10 +91,13 @@ add_task(async function test_remove_search_history() {
     value: "foo",
   });
 
-  let index = 1;
+  let resultIndex = 1;
   let count = UrlbarTestUtils.getResultCount(window);
-  for (; index < count; index++) {
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+  for (; resultIndex < count; resultIndex++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      resultIndex
+    );
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       result.source == UrlbarUtils.RESULT_SOURCE.HISTORY
@@ -135,9 +105,11 @@ add_task(async function test_remove_search_history() {
       break;
     }
   }
-  Assert.ok(index < count, "Result found");
+  Assert.ok(resultIndex < count, "Result found");
 
-  await openResultMenuAndPressAccesskey(index, "R");
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R", {
+    resultIndex,
+  });
   await promiseRemoved;
 
   await TestUtils.waitForCondition(
@@ -224,13 +196,17 @@ add_task(async function firefoxSuggest() {
 
   await openResults();
   let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, helpUrl);
-  await openResultMenuAndPressAccesskey(0, "L");
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L", {
+    resultIndex: 0,
+  });
   info("Waiting for help URL to load in a new tab");
   await tabOpenPromise;
   gBrowser.removeCurrentTab();
 
   await openResults();
-  await openResultMenuAndPressAccesskey(0, "D");
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+    resultIndex: 0,
+  });
 
   Assert.equal(
     blockResultCallCount,

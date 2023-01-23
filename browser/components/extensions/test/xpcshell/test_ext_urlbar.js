@@ -382,6 +382,11 @@ add_task(async function test_onProviderResultsRequested() {
         buttonText: "Test tip-local result button text",
         buttonUrl: "https://example.com/tip-button",
         helpUrl: "https://example.com/tip-help",
+        helpL10n: {
+          id: UrlbarPrefs.get("resultMenu")
+            ? "urlbar-result-menu-tip-get-help"
+            : "urlbar-tip-help-icon",
+        },
         type: "extension",
       },
     },

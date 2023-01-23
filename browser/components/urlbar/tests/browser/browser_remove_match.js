@@ -219,6 +219,11 @@ add_task(async function test_searchMode_removeRestyledHistory() {
 });
 
 add_task(async function blockButton() {
+  if (UrlbarPrefs.get("resultMenu")) {
+    // This case is covered by browser_result_menu.js.
+    return;
+  }
+
   let url = "https://example.com/has-block-button";
   let provider = new UrlbarTestUtils.TestProvider({
     priority: Infinity,

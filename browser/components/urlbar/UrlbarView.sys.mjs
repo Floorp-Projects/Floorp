@@ -1105,7 +1105,6 @@ export class UrlbarView {
   #createRow() {
     let item = this.#createElement("div");
     item.className = "urlbarView-row";
-    item.setAttribute("role", "option");
     item._elements = new Map();
     item._buttons = new Map();
     return item;
@@ -1372,6 +1371,7 @@ export class UrlbarView {
       while (item.lastChild) {
         item.lastChild.remove();
       }
+      item.setAttribute("role", "option");
       item._elements.clear();
       item._buttons.clear();
       item._content = this.#createElement("span");
@@ -2285,7 +2285,8 @@ export class UrlbarView {
     if (result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP) {
       return false;
     }
-    let tipButton = this.#rows.firstElementChild._buttons.get("0");
+    let buttons = this.#rows.firstElementChild._buttons;
+    let tipButton = buttons.get("tip") || buttons.get("0");
     if (!tipButton) {
       throw new Error("Expected a tip button");
     }
