@@ -142,8 +142,7 @@ void RemoteSandboxBroker::SetSecurityLevelForContentProcess(
       "RemoteSandboxBroker::SetSecurityLevelForContentProcess not Implemented");
 }
 
-void RemoteSandboxBroker::SetSecurityLevelForGPUProcess(
-    int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) {
+void RemoteSandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   MOZ_CRASH(
       "RemoteSandboxBroker::SetSecurityLevelForGPUProcess not Implemented");
 }

@@ -147,7 +147,7 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsCOMPtr<nsIFile> mXULAppDir;
   nsCOMPtr<nsIFile> mProfileDir;
   nsCOMPtr<nsIFile> mProfileLocalDir;
-  bool mProfileNotified = false;
+  bool mAppStarted = false;
   bool mPrefsInitialized = false;
 #if defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mContentTempDir;

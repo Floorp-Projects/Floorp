@@ -43,8 +43,7 @@ class AbstractSandboxBroker {
   virtual void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                                  bool aIsFileProcess) = 0;
 
-  virtual void SetSecurityLevelForGPUProcess(
-      int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) = 0;
+  virtual void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) = 0;
   virtual bool SetSecurityLevelForRDDProcess() = 0;
   virtual bool SetSecurityLevelForSocketProcess() = 0;
   virtual bool SetSecurityLevelForUtilityProcess(
@@ -99,8 +98,7 @@ class SandboxBroker : public AbstractSandboxBroker {
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                          bool aIsFileProcess) override;
 
-  void SetSecurityLevelForGPUProcess(
-      int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) override;
+  void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForRDDProcess() override;
   bool SetSecurityLevelForSocketProcess() override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,

@@ -821,4 +821,24 @@ void RunTestsUtilityAudioDecoder(SandboxTestingChild* child,
 #endif    // XP_UNIX
 }
 
+void RunTestsGPU(SandboxTestingChild* child) {
+  MOZ_ASSERT(child, "No SandboxTestingChild*?");
+
+  RunGenericTests(child);
+
+#if defined(XP_WIN)
+
+  FileTest("R/W access to shader-cache dir"_ns, NS_APP_USER_PROFILE_50_DIR,
+           u"shader-cache\\"_ns, FILE_GENERIC_READ | FILE_GENERIC_WRITE, true,
+           child);
+
+  FileTest("R/W access to shader-cache files"_ns, NS_APP_USER_PROFILE_50_DIR,
+           u"shader-cache\\sandboxTest.txt"_ns,
+           FILE_GENERIC_READ | FILE_GENERIC_WRITE, true, child);
+
+#else   // defined(XP_WIN)
+  child->ReportNoTests();
+#endif  // defined(XP_WIN)
+}
+
 }  // namespace mozilla

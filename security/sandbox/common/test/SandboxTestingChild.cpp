@@ -81,6 +81,10 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     RunTestsSocket(this);
   }
 
+  if (XRE_IsGPUProcess()) {
+    RunTestsGPU(this);
+  }
+
   if (XRE_IsUtilityProcess()) {
     RefPtr<ipc::UtilityProcessChild> s = ipc::UtilityProcessChild::Get();
     MOZ_ASSERT(s, "Unable to grab a UtilityProcessChild");
