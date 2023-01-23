@@ -21,6 +21,8 @@
 #  include "jit/mips64/SharedICRegisters-mips64.h"
 #elif defined(JS_CODEGEN_LOONG64)
 #  include "jit/loong64/SharedICRegisters-loong64.h"
+#elif defined(JS_CODEGEN_RISCV64)
+#  include "jit/riscv64/SharedICRegisters-riscv64.h"
 #elif defined(JS_CODEGEN_WASM32)
 #  include "jit/wasm32/SharedICRegisters-wasm32.h"
 #elif defined(JS_CODEGEN_NONE)

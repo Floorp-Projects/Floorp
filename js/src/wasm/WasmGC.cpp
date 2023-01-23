@@ -282,6 +282,11 @@ bool wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
 #  elif defined(JS_CODEGEN_LOONG64)
   // TODO(loong64): Implement IsValidStackMapKey.
   return true;
+#  elif defined(JS_CODEGEN_RISCV64)
+  const uint32_t* insn = (const uint32_t*)nextPC;
+  return (((uintptr_t(insn) & 3) == 0) &&
+              (insn[-1] == 0x00006037 && insn[-2] == 0x00100073) ||  // break;
+          ((insn[-1] & kBaseOpcodeMask) == JALR));
 #  else
   MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
 #  endif

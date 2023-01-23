@@ -666,6 +666,9 @@ class JitABICall final : public JSAPITest, public DefineCheckArgs<Sig> {
 #elif defined(JS_CODEGEN_LOONG64)
     Register base = t0;
     regs.take(base);
+#elif defined(JS_CODEGEN_RISCV64)
+    Register base = t0;
+    regs.take(base);
 #else
 #  error "Unknown architecture!"
 #endif

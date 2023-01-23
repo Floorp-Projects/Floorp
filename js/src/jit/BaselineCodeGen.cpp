@@ -516,6 +516,8 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
   masm.push(ra);
 #elif defined(JS_CODEGEN_LOONG64)
   masm.push(ra);
+#elif defined(JS_CODEGEN_RISCV64)
+  masm.push(ra);
 #endif
   masm.pushValue(R0);
 
