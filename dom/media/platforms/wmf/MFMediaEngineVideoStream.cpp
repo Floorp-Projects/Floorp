@@ -66,6 +66,7 @@ void MFMediaEngineVideoStream::SetDCompSurfaceHandle(
 HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
                                                   IMFMediaType** aMediaType) {
   auto& videoInfo = *aInfo.GetAsVideoInfo();
+  mIsEncrypted = videoInfo.mCrypto.IsEncrypted();
 
   GUID subType = VideoMimeTypeToMediaFoundationSubtype(videoInfo.mMimeType);
   NS_ENSURE_TRUE(subType != GUID_NULL, MF_E_TOPO_CODEC_NOT_FOUND);
@@ -324,6 +325,8 @@ bool MFMediaEngineVideoStream::IsEnded() const {
   return (mReceivedEOS || !mPendingDrainPromise.IsEmpty()) &&
          mRawDataQueueForFeedingEngine.GetSize() == 0;
 }
+
+bool MFMediaEngineVideoStream::IsEncrypted() const { return mIsEncrypted; }
 
 #undef LOGV
 
