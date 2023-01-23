@@ -65,7 +65,7 @@ it.next();
 
 assertEq(ranges.length, 5);
 assertEq(ranges[4][0], 5);
-assertEq(ranges[4][1], 5);
+assertEq(ranges[4][1], 6);
 
 // The frame has finished evaluating, so the callee is no longer accessible.
 assertThrowsInstanceOf(() => frame.offset, Error);

@@ -10,7 +10,7 @@ async function aloop() {              // 2
         log += " ";                   // 5
     }                                 // 6
     log += "^";                       // 7
-}
+}                                     // 8
 `);
 
 // Set up debugger.
@@ -32,4 +32,4 @@ dbg.onEnterFrame = frame => {
 g.aloop();
 drainJobQueue();
 
-assertEq(g.log, "2345 345 345 37^");
+assertEq(g.log, "2345 345 345 37^8");

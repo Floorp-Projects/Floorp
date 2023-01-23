@@ -10,7 +10,7 @@ function* range(stop) {               // line 2
         log += " ";                   // 5
     }                                 // 6
     log += "^";                       // 7
-}
+}                                     // 8
 `);
 
 // Set up debugger.
@@ -33,4 +33,4 @@ for (let value of g.range(3)) {
     g.log += "*";
 }
 
-assertEq(g.log, "234*5 34*5 34*5 37^");
+assertEq(g.log, "234*5 34*5 34*5 37^8");

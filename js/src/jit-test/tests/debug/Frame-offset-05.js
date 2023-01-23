@@ -87,7 +87,7 @@ dbg.onEnterFrame = function(f) {
 
   assertEq(ranges.length, 8);
   assertEq(ranges[7][0], 5);
-  assertEq(ranges[7][1], 5);
+  assertEq(ranges[7][1], 6);
 
   // The frame has finished evaluating, so the callee is no longer accessible.
   assertThrowsInstanceOf(() => frame.offset, Error);
