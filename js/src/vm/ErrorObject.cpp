@@ -615,36 +615,30 @@ static bool FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj,
   //   (new NYI).stack
   // to continue returning stacks that are useless, but at least don't throw.
 
-  RootedObject target(cx, CheckedUnwrapStatic(obj));
-  if (!target) {
-    ReportAccessDenied(cx);
-    return false;
-  }
-
-  RootedObject proto(cx);
-  while (!IsErrorProtoKey(StandardProtoKeyOrNull(target))) {
-    if (!GetPrototype(cx, target, &proto)) {
-      return false;
-    }
-
-    if (!proto) {
-      // We walked the whole prototype chain and did not find an Error
-      // object.
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_INCOMPATIBLE_PROTO, js_Error_str,
-                                "(get stack)", obj->getClass()->name);
-      return false;
-    }
-
-    target = CheckedUnwrapStatic(proto);
+  RootedObject curr(cx, obj);
+  RootedObject target(cx);
+  do {
+    target = CheckedUnwrapStatic(curr);
     if (!target) {
       ReportAccessDenied(cx);
       return false;
     }
-  }
+    if (IsErrorProtoKey(StandardProtoKeyOrNull(target))) {
+      result.set(target);
+      return true;
+    }
 
-  result.set(target);
-  return true;
+    if (!GetPrototype(cx, curr, &curr)) {
+      return false;
+    }
+  } while (curr);
+
+  // We walked the whole prototype chain and did not find an Error
+  // object.
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_INCOMPATIBLE_PROTO, js_Error_str,
+                            "(get stack)", obj->getClass()->name);
+  return false;
 }
 
 static MOZ_ALWAYS_INLINE bool IsObject(HandleValue v) { return v.isObject(); }
