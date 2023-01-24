@@ -111,8 +111,8 @@ AndroidNativeWindowTextureData::AndroidNativeWindowTextureData(
     java::GeckoSurface::Param aSurface, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat)
     : mSurface(aSurface), mIsLocked(false), mSize(aSize), mFormat(aFormat) {
-  mNativeWindow =
-      ANativeWindow_fromSurface(jni::GetEnvForThread(), mSurface.Get());
+  mNativeWindow = ANativeWindow_fromSurface(jni::GetEnvForThread(),
+                                            mSurface->GetSurface().Get());
   MOZ_ASSERT(mNativeWindow, "Failed to create NativeWindow.");
 
   // SurfaceTextures don't technically support BGR, but we can just pretend to
