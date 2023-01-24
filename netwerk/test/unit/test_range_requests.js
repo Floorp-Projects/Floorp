@@ -113,6 +113,10 @@ Canceler.prototype = {
   onStartRequest(request) {},
 
   onDataAvailable(request, stream, offset, count) {
+    // Read stream so we don't assert for not reading from the stream
+    // if cancelling the channel is slow.
+    read_stream(stream, count);
+
     request.QueryInterface(Ci.nsIChannel).cancel(Cr.NS_BINDING_ABORTED);
   },
   onStopRequest(request, status) {
@@ -153,7 +157,9 @@ FailedChannelListener.prototype = {
   ]),
   onStartRequest(request) {},
 
-  onDataAvailable(request, stream, offset, count) {},
+  onDataAvailable(request, stream, offset, count) {
+    read_stream(stream, count);
+  },
 
   onStopRequest(request, status) {
     if (case_8_range_request) {
