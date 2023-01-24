@@ -25,14 +25,16 @@ def run_npm(command_context, args):
 @Command(
     "storybook",
     category="misc",
-    description="Start the Storybook server",
+    description="Start the Storybook server. This will install npm dependencies, if necessary.",
 )
 def storybook_run(command_context):
-    storybook_manifest(command_context)
+    ensure_env(command_context)
     return run_npm(command_context, args=["run", "storybook"])
 
 
-@SubCommand("storybook", "launch", description="Start Storybook in your local build.")
+@SubCommand(
+    "storybook", "launch", description="Launch the Storybook site in your local build."
+)
 def storybook_launch(command_context):
     return run_mach(
         command_context,
@@ -48,7 +50,7 @@ def storybook_launch(command_context):
     description="Install Storybook node dependencies.",
 )
 def storybook_install(command_context):
-    return run_npm(command_context, args=["ci"])
+    return install_npm_deps(command_context)
 
 
 @SubCommand(
@@ -57,7 +59,7 @@ def storybook_install(command_context):
     description="Build the Storybook for export.",
 )
 def storybook_build(command_context):
-    storybook_manifest(command_context)
+    ensure_env(command_context)
     return run_npm(command_context, args=["run", "build-storybook"])
 
 
@@ -146,3 +148,25 @@ def _parse_dest_to_chrome_uri(dest):
     return "chrome://{package}/{provider}/{path}".format(
         package=package, provider=provider, path=path
     )
+
+
+def ensure_env(command_context):
+    ensure_npm_deps(command_context)
+    storybook_manifest(command_context)
+
+
+def ensure_npm_deps(command_context):
+    if not check_npm_deps(command_context):
+        install_npm_deps(command_context)
+    else:
+        print("Dependencies up to date\n")
+
+
+def check_npm_deps(command_context):
+    print("Checking installed npm dependencies")
+    return not run_npm(command_context, args=["ls"])
+
+
+def install_npm_deps(command_context):
+    print("Installing missing npm dependencies")
+    run_npm(command_context, args=["ci"])
