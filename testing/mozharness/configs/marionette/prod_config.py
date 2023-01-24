@@ -22,7 +22,6 @@ config = {
         "install",
         "run-tests",
     ],
-    "download_symbols": "ondemand",
     "tooltool_cache": "/builds/worker/tooltool-cache",
     "suite_definitions": {
         "marionette_desktop": {
