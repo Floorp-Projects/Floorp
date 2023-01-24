@@ -13,4 +13,8 @@ EXTRA_JS_MODULES += [
     "*.sys.mjs",
 ]
 
+TESTING_JS_MODULES += [
+    "tests/browser/FirefoxViewTestUtils.sys.mjs",
+]
+
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

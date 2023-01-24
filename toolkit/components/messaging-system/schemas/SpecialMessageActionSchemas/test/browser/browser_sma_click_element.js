@@ -6,6 +6,14 @@
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
+const {
+  withFirefoxView,
+  assertFirefoxViewTab,
+  openFirefoxViewTab,
+  closeFirefoxViewTab,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+);
 
 const TEST_MESSAGE = {
   message: {
@@ -47,16 +55,6 @@ const TEST_MESSAGE = {
   },
 };
 
-/**
- * Like in ./browser_sma_open_firefox_view.js,
- * the setup code and the utility funcitons here are cribbed
- * from (mostly) browser/components/firefoxview/test/browser/head.js
- *
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1784979 has been filed to move
- * these to some place publically accessible, after which we will be able to
- * a bunch of code from this file.
- */
-
 let sandbox;
 
 add_setup(async () => {
@@ -71,62 +69,6 @@ add_setup(async () => {
     sandbox.restore();
   });
 });
-
-async function withFirefoxView({ win = null }, taskFn) {
-  let shouldCloseWin = false;
-  if (!win) {
-    win = await BrowserTestUtils.openNewBrowserWindow();
-    shouldCloseWin = true;
-  }
-  let tab = await openFirefoxViewTab(win);
-  let originalWindow = tab.ownerGlobal;
-  let result = await taskFn(tab.linkedBrowser);
-  let finalWindow = tab.ownerGlobal;
-  if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
-    // taskFn may resolve within a tick after opening a new tab.
-    // We shouldn't remove the newly opened tab in the same tick.
-    // Wait for the next tick here.
-    await TestUtils.waitForTick();
-    BrowserTestUtils.removeTab(tab);
-  } else {
-    Services.console.logStringMessage(
-      "withFirefoxView: Tab was already closed before " +
-        "removeTab would have been called"
-    );
-  }
-
-  if (shouldCloseWin) {
-    await BrowserTestUtils.closeWindow(win);
-  }
-  return result;
-}
-
-async function openFirefoxViewTab(w) {
-  ok(
-    !w.FirefoxViewHandler.tab,
-    "Firefox View tab doesn't exist prior to clicking the button"
-  );
-  info("Clicking the Firefox View button");
-  await EventUtils.synthesizeMouseAtCenter(
-    w.document.getElementById("firefox-view-button"),
-    { type: "mousedown" },
-    w
-  );
-  assertFirefoxViewTab(w);
-  ok(w.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
-  await BrowserTestUtils.browserLoaded(w.FirefoxViewHandler.tab.linkedBrowser);
-  return w.FirefoxViewHandler.tab;
-}
-
-function assertFirefoxViewTab(w) {
-  ok(w.FirefoxViewHandler.tab, "Firefox View tab exists");
-  ok(w.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
-  is(
-    w.gBrowser.visibleTabs.indexOf(w.FirefoxViewHandler.tab),
-    -1,
-    "Firefox View tab is not in the list of visible tabs"
-  );
-}
 
 add_task(async function test_CLICK_ELEMENT() {
   SpecialPowers.pushPrefEnv([

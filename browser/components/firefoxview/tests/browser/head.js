@@ -1,6 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const {
+  withFirefoxView,
+  assertFirefoxViewTab,
+  assertFirefoxViewTabSelected,
+  openFirefoxViewTab,
+  closeFirefoxViewTab,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+);
+
 /* exported testVisibility */
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -174,79 +184,6 @@ async function waitForVisibleSetupStep(browser, expected) {
       );
     }
   }
-}
-
-function assertFirefoxViewTab(w) {
-  ok(w.FirefoxViewHandler.tab, "Firefox View tab exists");
-  ok(w.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
-  is(
-    w.gBrowser.visibleTabs.indexOf(w.FirefoxViewHandler.tab),
-    -1,
-    "Firefox View tab is not in the list of visible tabs"
-  );
-}
-
-async function openFirefoxViewTab(w) {
-  ok(
-    !w.FirefoxViewHandler.tab,
-    "Firefox View tab doesn't exist prior to clicking the button"
-  );
-  info("Clicking the Firefox View button");
-  await EventUtils.synthesizeMouseAtCenter(
-    w.document.getElementById("firefox-view-button"),
-    { type: "mousedown" },
-    w
-  );
-  assertFirefoxViewTab(w);
-  ok(w.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
-  await BrowserTestUtils.browserLoaded(w.FirefoxViewHandler.tab.linkedBrowser);
-  return w.FirefoxViewHandler.tab;
-}
-
-function closeFirefoxViewTab(w) {
-  w.gBrowser.removeTab(w.FirefoxViewHandler.tab);
-  ok(
-    !w.FirefoxViewHandler.tab,
-    "Reference to Firefox View tab got removed when closing the tab"
-  );
-}
-
-async function withFirefoxView(
-  { resetFlowManager = true, win = null },
-  taskFn
-) {
-  let shouldCloseWin = false;
-  if (!win) {
-    win = await BrowserTestUtils.openNewBrowserWindow();
-    shouldCloseWin = true;
-  }
-  if (resetFlowManager) {
-    const { TabsSetupFlowManager } = ChromeUtils.importESModule(
-      "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
-    );
-    // reset internal state so we aren't reacting to whatever state the last invocation left behind
-    TabsSetupFlowManager.resetInternalState();
-  }
-  let tab = await openFirefoxViewTab(win);
-  let originalWindow = tab.ownerGlobal;
-  let result = await taskFn(tab.linkedBrowser);
-  let finalWindow = tab.ownerGlobal;
-  if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
-    // taskFn may resolve within a tick after opening a new tab.
-    // We shouldn't remove the newly opened tab in the same tick.
-    // Wait for the next tick here.
-    await TestUtils.waitForTick();
-    BrowserTestUtils.removeTab(tab);
-  } else {
-    Services.console.logStringMessage(
-      "withFirefoxView: Tab was already closed before " +
-        "removeTab would have been called"
-    );
-  }
-  if (shouldCloseWin) {
-    await BrowserTestUtils.closeWindow(win);
-  }
-  return result;
 }
 
 var gMockFxaDevices = null;
