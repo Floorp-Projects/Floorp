@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test feature policy - XSLT-transformed child document</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<!-- allow-scripts so we can check the permissions in the frame -->
+<iframe allow="microphone https://example.org" sandbox="allow-scripts" id="expected"></iframe>
+<!-- allow-same-origin to allow loading of the XSLT -->
+<iframe allow="microphone https://example.org" sandbox="allow-scripts allow-same-origin" id="actual"></iframe>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function loadCrossOriginURL(iframe, file) {
+  const url = new URL(file, location.href);
+  url.hostname = "example.org";
+  url.port = null;
+  return new Promise(resolve => {
+    window.addEventListener("message", event => {
+      let { fullscreen, features } = event.data;
+      resolve({ fullscreen, features: [...features].sort((a, b) => a[0].localeCompare(b[0])) });
+    }, { once: true });
+
+    let f = document.getElementById(iframe);
+    SimpleTest.promiseFocus(f.contentWindow, true).then(() => {
+      f.src = url;
+    });
+  });
+}
+
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["full-screen-api.enabled", true],
+    ["full-screen-api.allow-trusted-requests-only", false],
+    ["full-screen-api.transition-duration.enter", "0 0"],
+    ["full-screen-api.transition-duration.leave", "0 0"],
+  ],
+}).then(() => {
+  loadCrossOriginURL("expected", "file_xslt.html").then((expected) => {
+    loadCrossOriginURL("actual", "file_xslt.xml").then((actual) => {
+      isDeeply(actual, expected, "Permissions should be coming from the iframe's allow attribute and headers on the source document.");
+
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</body>
+</html>
