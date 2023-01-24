@@ -744,6 +744,7 @@ where
             Component::Root |
             Component::Empty |
             Component::Scope |
+            Component::ParentSelector |
             Component::Nth(..) |
             Component::Host(None) => 0,
         }
