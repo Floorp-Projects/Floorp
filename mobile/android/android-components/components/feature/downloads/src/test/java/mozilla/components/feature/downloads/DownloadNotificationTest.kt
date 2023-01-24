@@ -6,6 +6,9 @@ package mozilla.components.feature.downloads
 
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.EXTRA_PROGRESS
+import androidx.core.app.NotificationCompat.EXTRA_PROGRESS_INDETERMINATE
+import androidx.core.app.NotificationCompat.EXTRA_PROGRESS_MAX
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
@@ -188,6 +191,57 @@ class DownloadNotificationTest {
 
         val summary = DownloadNotification.getSummaryList(testContext, listOf(download1, download2))
         assertEquals(listOf("mozilla.txt 10%", "mozilla2.txt 20%"), summary)
+    }
+
+    @Test
+    fun `createOngoingDownloadNotification progress does not overflow`() {
+        val size = 3 * 1024L * 1024L * 1024L
+        val copiedSize = size / 2
+        val downloadJobState = DownloadJobState(
+            job = null,
+            state = DownloadState(
+                fileName = "mozilla.txt",
+                url = "mozilla.org/mozilla.txt",
+                contentLength = size,
+                currentBytesCopied = copiedSize,
+                status = DownloadState.Status.DOWNLOADING,
+            ),
+            foregroundServiceId = 1,
+            downloadDeleted = false,
+            currentBytesCopied = copiedSize,
+            status = DownloadState.Status.DOWNLOADING,
+        )
+
+        val style = AbstractFetchDownloadService.Style()
+
+        val notification = DownloadNotification.createOngoingDownloadNotification(
+            testContext,
+            downloadJobState,
+            notificationAccentColor = style.notificationAccentColor,
+        )
+
+        assertEquals(
+            50L,
+            100L * notification.extras.getInt(EXTRA_PROGRESS) / notification.extras.getInt(EXTRA_PROGRESS_MAX),
+        )
+
+        assertEquals(false, notification.extras.getBoolean(EXTRA_PROGRESS_INDETERMINATE))
+
+        val notificationNewDownload = DownloadNotification.createOngoingDownloadNotification(
+            testContext,
+            downloadJobState.copy(state = downloadJobState.state.copy(contentLength = null)),
+            notificationAccentColor = style.notificationAccentColor,
+        )
+
+        assertEquals(true, notificationNewDownload.extras.getBoolean(EXTRA_PROGRESS_INDETERMINATE))
+
+        val notificationDownloadWithNoSize = DownloadNotification.createOngoingDownloadNotification(
+            testContext,
+            downloadJobState.copy(state = downloadJobState.state.copy(contentLength = 0)),
+            notificationAccentColor = style.notificationAccentColor,
+        )
+
+        assertEquals(true, notificationDownloadWithNoSize.extras.getBoolean(EXTRA_PROGRESS_INDETERMINATE))
     }
 
     @Test
