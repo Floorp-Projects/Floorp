@@ -253,6 +253,24 @@ add_task(async function test_private_window_separate_engine() {
   Assert.equal(win.gURLBar.placeholder, expectedString);
 
   await BrowserTestUtils.closeWindow(win);
+
+  // Verify that the placeholder for private windows is updated even when no
+  // private window is visible (https://bugzilla.mozilla.org/1792816).
+  await Services.search.setDefault(
+    originalEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await Services.search.setDefaultPrivate(
+    extraPrivateEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  const win2 = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  Assert.equal(win2.gURLBar.placeholder, noEngineString);
+  await BrowserTestUtils.closeWindow(win2);
+
+  // And ensure this doesn't affect the placeholder for non private windows.
+  tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser));
+  Assert.equal(win.gURLBar.placeholder, expectedString);
 });
 
 add_task(async function test_search_mode_engine_web() {
