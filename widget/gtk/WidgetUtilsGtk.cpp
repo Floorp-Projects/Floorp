@@ -442,4 +442,8 @@ bool IsGnomeDesktopEnvironment() {
   return FindInReadable("gnome"_ns, GetDesktopEnvironmentIdentifier());
 }
 
+bool IsKdeDesktopEnvironment() {
+  return GetDesktopEnvironmentIdentifier().EqualsLiteral("kde");
+}
+
 }  // namespace mozilla::widget
