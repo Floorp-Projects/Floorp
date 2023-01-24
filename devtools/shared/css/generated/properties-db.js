@@ -12173,6 +12173,10 @@ exports.PREFERENCES = [
     "layout.css.scroll-driven-animations.enabled"
   ],
   [
+    "view-timeline",
+    "layout.css.scroll-driven-animations.enabled"
+  ],
+  [
     "-moz-transform",
     "layout.css.prefixes.transforms"
   ],
