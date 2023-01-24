@@ -13,5 +13,4 @@ config = {
         "python": sys.executable,
         "hg": os.path.join(os.environ["PROGRAMFILES"], "Mercurial", "hg"),
     },
-    "download_symbols": "ondemand",
 }

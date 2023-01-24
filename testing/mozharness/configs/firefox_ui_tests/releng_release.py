@@ -24,6 +24,4 @@ config = {
             os.path.join(external_tools_path, "gittool.py"),
         ],
     },
-    # mozcrash support
-    "download_symbols": "ondemand",
 }

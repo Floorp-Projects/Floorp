@@ -19,7 +19,6 @@ config = {
         "install",
         "run-tests",
     ],
-    "download_symbols": "ondemand",
     "suite_definitions": {
         "marionette_desktop": {
             "options": [
