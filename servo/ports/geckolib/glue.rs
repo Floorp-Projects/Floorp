@@ -4041,6 +4041,45 @@ fn debug_atom_array(atoms: &nsTArray<structs::RefPtr<nsAtom>>) -> String {
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_ComputedValues_ResolveHighlightPseudoStyle(
+    element: &RawGeckoElement,
+    highlight_name: *const nsAtom,
+    raw_data: &RawServoStyleSet,
+) -> Strong<ComputedValues> {
+    let element = GeckoElement(element);
+    let data = element
+        .borrow_data()
+        .expect("Calling ResolveHighlightPseudoStyle on unstyled element?");
+    let pseudo_element = unsafe {
+        AtomIdent::with(highlight_name, |atom| {
+            PseudoElement::Highlight(atom.to_owned())
+        })
+    };
+
+    let doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+
+    let matching_fn = |pseudo: &PseudoElement| *pseudo == pseudo_element;
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let style = get_pseudo_style(
+        &guard,
+        element,
+        &pseudo_element,
+        RuleInclusion::All,
+        &data.styles,
+        None,
+        &doc_data.stylist,
+        /* is_probe = */true,
+        Some(&matching_fn),
+    );
+    match style {
+        Some(s) => s.into(),
+        None => Strong::null(),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ComputedValues_ResolveXULTreePseudoStyle(
     element: &RawGeckoElement,
     pseudo_tag: *mut nsAtom,
