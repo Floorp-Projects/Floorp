@@ -75,11 +75,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // NOTE: If you need to change default value of members of AbstractRange,
 //       update nsRange::Create(nsINode* aNode) and ClearForReuse() too.
-AbstractRange::AbstractRange(nsINode* aNode, bool aIsDynamicRange)
-    : mIsPositioned(false),
-      mIsGenerated(false),
-      mCalledByJS(false),
-      mIsDynamicRange(aIsDynamicRange) {
+AbstractRange::AbstractRange(nsINode* aNode)
+    : mIsPositioned(false), mIsGenerated(false), mCalledByJS(false) {
   Init(aNode);
 }
 
