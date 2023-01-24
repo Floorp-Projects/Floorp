@@ -2903,7 +2903,6 @@ pub mod tests {
     pub enum PseudoElement {
         Before,
         After,
-        Highlight(String),
     }
 
     impl parser::PseudoElement for PseudoElement {
@@ -2957,11 +2956,6 @@ pub mod tests {
             match *self {
                 PseudoElement::Before => dest.write_str("::before"),
                 PseudoElement::After => dest.write_str("::after"),
-                PseudoElement::Highlight(ref name) => {
-                    dest.write_str("::highlight(")?;
-                    serialize_identifier(&name, dest)?;
-                    dest.write_char(')')
-                },
             }
         }
     }
@@ -3121,23 +3115,6 @@ pub mod tests {
                 )),
             )
         }
-
-        fn parse_functional_pseudo_element<'t>(
-            &self,
-            name: CowRcStr<'i>,
-            parser: &mut CssParser<'i, 't>,
-        ) -> Result<PseudoElement, SelectorParseError<'i>> {
-            match_ignore_ascii_case! {&name,
-                "highlight" => return Ok(PseudoElement::Highlight(parser.expect_ident()?.as_ref().to_owned())),
-                _ => {}
-            }
-            Err(
-                parser.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoClassOrElement(
-                    name,
-                )),
-            )
-        }
-
 
         fn default_namespace(&self) -> Option<DummyAtom> {
             self.default_ns.clone()
@@ -3665,8 +3642,6 @@ pub mod tests {
                 Default::default(),
             )]))
         );
-
-        assert!(parse("::highlight(foo)").is_ok());
 
         assert!(parse("::slotted()").is_err());
         assert!(parse("::slotted(div)").is_ok());

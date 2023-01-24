@@ -90,9 +90,6 @@ class Atom:
     def is_tree_pseudo_element(self):
         return self.value.startswith(":-moz-tree-")
 
-    def is_simple_pseudo_element(self) -> bool:
-        return not (self.is_tree_pseudo_element() or self.pseudo_ident == "highlight")
-
 
 def collect_atoms(objdir):
     atoms = []

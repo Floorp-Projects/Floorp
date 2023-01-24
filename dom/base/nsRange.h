@@ -455,14 +455,5 @@ class nsRange final : public mozilla::dom::AbstractRange,
 
   friend class mozilla::dom::AbstractRange;
 };
-namespace mozilla::dom {
-inline nsRange* AbstractRange::AsDynamicRange() {
-  MOZ_ASSERT(IsDynamicRange());
-  return static_cast<nsRange*>(this);
-}
-inline const nsRange* AbstractRange::AsDynamicRange() const {
-  MOZ_ASSERT(IsDynamicRange());
-  return static_cast<const nsRange*>(this);
-}
-}  // namespace mozilla::dom
+
 #endif /* nsRange_h___ */

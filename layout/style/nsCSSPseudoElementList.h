@@ -46,7 +46,6 @@ CSS_PSEUDO_ELEMENT(firstLetter, ":first-letter",
 CSS_PSEUDO_ELEMENT(firstLine, ":first-line",
                    CSS_PSEUDO_ELEMENT_IS_CSS2 |
                    CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS)
-CSS_PSEUDO_ELEMENT(highlight, ":highlight", 0)
 
 CSS_PSEUDO_ELEMENT(selection, ":selection",
                    CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS)
