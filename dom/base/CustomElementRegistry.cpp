@@ -325,8 +325,7 @@ void CustomElementData::Traverse(
 
   if (mElementInternals) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mElementInternals");
-    aCb.NoteNativeChild(mElementInternals,
-                        NS_CYCLE_COLLECTION_PARTICIPANT(ElementInternals));
+    aCb.NoteXPCOMChild(ToSupports(mElementInternals.get()));
   }
 }
 
