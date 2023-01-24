@@ -42,7 +42,6 @@ struct SelectionDetails {
   int32_t mStart;
   int32_t mEnd;
   mozilla::SelectionType mSelectionType;
-  RefPtr<const nsAtom> mHighlightName;
   mozilla::TextRangeStyle mTextRangeStyle;
   mozilla::UniquePtr<SelectionDetails> mNext;
 };
@@ -190,7 +189,6 @@ struct nsPrevNextBidiLevels {
 namespace mozilla {
 class SelectionChangeEventDispatcher;
 namespace dom {
-class Highlight;
 class Selection;
 }  // namespace dom
 
@@ -421,17 +419,6 @@ class nsFrameSelection final {
    */
   mozilla::dom::Selection* GetSelection(
       mozilla::SelectionType aSelectionType) const;
-
-  /**
-   * @brief Adds a highlight selection for `aHighlight`.
-   */
-  MOZ_CAN_RUN_SCRIPT void AddHighlightSelection(
-      const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
-      mozilla::ErrorResult& aRv);
-  /**
-   * @brief Removes the Highlight selection identified by `aHighlightName`.
-   */
-  void RemoveHighlightSelection(const nsAtom* aHighlightName);
 
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,
@@ -960,9 +947,6 @@ class nsFrameSelection final {
   RefPtr<mozilla::dom::Selection>
       mDomSelections[sizeof(mozilla::kPresentSelectionTypes) /
                      sizeof(mozilla::SelectionType)];
-
-  nsTHashMap<RefPtr<const nsAtom>, RefPtr<mozilla::dom::Selection>>
-      mHighlightSelections;
 
   struct TableSelection {
     // Get our first range, if its first selected node is a cell.  If this does
