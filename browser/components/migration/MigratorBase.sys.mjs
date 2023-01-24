@@ -51,10 +51,20 @@ export class MigratorBase {
    * migrator, for example "firefox", "chrome", "opera-gx". This key is what
    * is used as an identifier when calling MigrationUtils.getMigrator.
    *
-   * @type {boolean}
+   * @type {string}
    */
   static get key() {
-    throw new Error("MigratorBase must be overridden.");
+    throw new Error("MigratorBase.key must be overridden.");
+  }
+
+  /**
+   * This must be overridden to return a Fluent string ID mapping to the display
+   * name for this migrator. These strings should be defined in migrationWizard.ftl.
+   *
+   * @type {string}
+   */
+  static get displayNameL10nID() {
+    throw new Error("MigratorBase.displayNameL10nID must be overridden.");
   }
 
   /**

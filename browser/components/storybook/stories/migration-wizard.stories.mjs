@@ -16,15 +16,60 @@ export default {
 };
 
 const FAKE_BROWSER_LIST = [
-  "Google Chrome - Profile 1",
-  "Google Chrome - Profile 2",
-  "Internet Explorer",
-  "Edge",
-  "Brave",
-  "Safari",
-  "Vivaldi",
-  "Opera",
-  "Opera GX",
+  {
+    key: "chrome",
+    displayName: "Chrome",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
+  {
+    key: "chrome",
+    displayName: "Chrome",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "person-2", name: "Person 2" },
+  },
+  {
+    key: "ie",
+    displayName: "Microsoft Internet Explorer",
+    resourceTypes: ["HISTORY", "BOOKMARKS"],
+    profile: null,
+  },
+  {
+    key: "chromium-edge",
+    displayName: "Microsoft Edge",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
+  {
+    key: "brave",
+    displayName: "Brave",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
+  {
+    key: "safari",
+    displayName: "Safari",
+    resourceTypes: ["HISTORY", "PASSWORDS", "BOOKMARKS"],
+    profile: null,
+  },
+  {
+    key: "opera",
+    displayName: "Opera",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
+  {
+    key: "opera-gx",
+    displayName: "Opera GX",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
+  {
+    key: "vivaldi",
+    displayName: "Vivaldi",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: { id: "Default", name: "Default" },
+  },
 ];
 
 const Template = ({ state, dialogMode }) => {

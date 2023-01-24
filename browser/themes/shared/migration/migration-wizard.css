@@ -19,7 +19,7 @@ fieldset {
   border: 0;
 }
 
-label {
+label:not([hidden]) {
   display: flex;
   align-items: center;
 }

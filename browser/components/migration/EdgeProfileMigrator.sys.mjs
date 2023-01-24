@@ -472,6 +472,10 @@ export class EdgeProfileMigrator extends MigratorBase {
     return "edge";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-edge-legacy";
+  }
+
   getBookmarksMigratorForTesting(dbOverride) {
     return new EdgeBookmarksMigrator(dbOverride);
   }
