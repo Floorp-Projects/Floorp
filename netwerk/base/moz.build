@@ -316,6 +316,7 @@ LOCAL_INCLUDES += [
     "!/xpcom/components",
     "/docshell/base",
     "/dom/base",
+    "/js/xpconnect/src",
     "/netwerk/dns",
     "/netwerk/protocol/http",
     "/netwerk/protocol/webtransport",
