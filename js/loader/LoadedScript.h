@@ -36,7 +36,7 @@ class LoadedScript : public nsISupports {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(LoadedScript)
+  NS_DECL_CYCLE_COLLECTION_CLASS(LoadedScript)
 
   bool IsModuleScript() const { return mKind == ScriptKind::eModule; }
   bool IsEventScript() const { return mKind == ScriptKind::eEvent; }

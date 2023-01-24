@@ -20,8 +20,8 @@ namespace JS::loader {
   MOZ_LOG(ModuleLoaderBase::gModuleLoaderBaseLog, mozilla::LogLevel::Debug, \
           args)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoadRequest)
-NS_INTERFACE_MAP_END_INHERITING(ScriptLoadRequest)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ModuleLoadRequest,
+                                               ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleLoadRequest)
 
@@ -43,9 +43,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDynamicSpecifier)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDynamicPromise)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_ADDREF_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
-NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
 /* static */
 VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
