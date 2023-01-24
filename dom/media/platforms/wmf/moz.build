@@ -9,6 +9,7 @@ EXPORTS += [
     "MFTDecoder.h",
     "WMF.h",
     "WMFAudioMFTManager.h",
+    "WMFDataEncoderUtils.h",
     "WMFDecoderModule.h",
     "WMFEncoderModule.h",
     "WMFMediaDataDecoder.h",
@@ -46,7 +47,6 @@ UNIFIED_SOURCES += [
     "WMFDecoderModule.cpp",
     "WMFEncoderModule.cpp",
     "WMFMediaDataDecoder.cpp",
-    "WMFMediaDataEncoder.cpp",
     "WMFVideoMFTManager.cpp",
 ]
 
