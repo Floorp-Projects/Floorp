@@ -48,6 +48,13 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
+@_target_task("nightly-test")
+def target_tasks_nightly_test(full_task_graph, parameters, graph_config):
+    def filter(task, parameters):
+        return task.attributes.get("nightly-test", False)
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
+
+
 @_target_task("promote")
 def target_tasks_promote(full_task_graph, parameters, graph_config):
     return _filter_release_promotion(

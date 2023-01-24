@@ -1,19 +1,19 @@
 ---
 loader: taskgraph.loader.transform:loader
 transforms:
-    - fenix_taskgraph.transforms.browsertime:transforms
-    - fenix_taskgraph.transforms.notify:transforms
+    - android_taskgraph.transforms.browsertime:transforms
+    - android_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - signing
+    - signing-apk
     - toolchain
 
-primary-dependency: signing
+primary-dependency: signing-apk
 
 only-for-build-types:
-    - nightly-simulation
+    - fenix-nightly-simulation
 
 only-for-abis:
     - armeabi-v7a
