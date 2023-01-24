@@ -160,24 +160,6 @@ typedef void* nsNativeWidget;
   }
 
 /**
- * Transparency modes
- */
-
-namespace mozilla::widget {
-
-enum class TransparencyMode : uint8_t {
-  Opaque = 0,       // Fully opaque
-  Transparent,      // Parts of the window may be transparent
-  BorderlessGlass,  // Transparent parts of the window has windows 7
-                    // glass effect, without a border around opaque
-                    // areas.
-  // If you add to the end here, you must update the serialization code in
-  // WidgetMessageUtils.h
-};
-
-}
-
-/**
  * Cursor types.
  */
 
@@ -265,8 +247,7 @@ enum nsTopLevelWidgetZPlacement {  // for PlaceBehind()
  */
 #define NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC "mac_app_activate"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 /**
  * Size constraints for setting the minimum and maximum size of a widget.
@@ -347,8 +328,7 @@ struct AutoObserverNotifier {
   static nsTHashMap<uint64_t, nsCOMPtr<nsIObserver>> sSavedObservers;
 };
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
 
 /**
  * The base class for all the widgets. It provides the interface for

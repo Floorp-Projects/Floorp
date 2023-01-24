@@ -26,6 +26,7 @@ namespace mozilla {
 class PresShell;
 namespace widget {
 struct InitData;
+enum class TransparencyMode : uint8_t;
 enum class WindowType : uint8_t;
 }  // namespace widget
 }  // namespace mozilla
@@ -311,9 +312,7 @@ class nsView final : public nsIWidgetListener {
    * |aWidgetInitData| must be nonnull.
    */
   nsresult CreateWidgetForPopup(mozilla::widget::InitData*,
-                                nsIWidget* aParentWidget = nullptr,
-                                bool aEnableDragDrop = true,
-                                bool aResetVisibility = true);
+                                nsIWidget* aParentWidget = nullptr);
 
   /**
    * Destroys the associated widget for this view.  If this method is
@@ -395,7 +394,10 @@ class nsView final : public nsIWidgetListener {
    */
   bool IsRoot() const;
 
-  LayoutDeviceIntRect CalcWidgetBounds(mozilla::widget::WindowType);
+  LayoutDeviceIntRect CalcWidgetBounds(mozilla::widget::WindowType,
+                                       mozilla::widget::TransparencyMode);
+
+  LayoutDeviceIntRect RecalcWidgetBounds();
 
   // This is an app unit offset to add when converting view coordinates to
   // widget coordinates.  It is the offset in view coordinates from widget

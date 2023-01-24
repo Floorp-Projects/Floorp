@@ -586,7 +586,8 @@ static nsMenuPopupFrame* GetPopupToMoveOrResize(nsIFrame* aFrame) {
   return menuPopupFrame;
 }
 
-void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
+void nsXULPopupManager::PopupMoved(nsIFrame* aFrame,
+                                   const LayoutDeviceIntPoint& aPoint,
                                    bool aByMoveToRect) {
   nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aFrame);
   if (!menuPopupFrame) {
@@ -602,10 +603,9 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
 
   // Don't do anything if the popup is already at the specified location. This
   // prevents recursive calls when a popup is positioned.
-  LayoutDeviceIntRect curDevSize =
-      view->CalcWidgetBounds(widget::WindowType::Popup);
+  LayoutDeviceIntRect curDevBounds = view->RecalcWidgetBounds();
   nsIWidget* widget = menuPopupFrame->GetWidget();
-  if (curDevSize.x == aPnt.x && curDevSize.y == aPnt.y &&
+  if (curDevBounds.TopLeft() == aPoint &&
       (!widget ||
        widget->GetClientOffset() == menuPopupFrame->GetLastClientOffset())) {
     return;
@@ -621,14 +621,14 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
       !aByMoveToRect) {
     menuPopupFrame->SetPopupPosition(true);
   } else {
-    CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
-                      menuPopupFrame->PresContext()->CSSToDevPixelScale();
+    CSSPoint cssPos =
+        aPoint / menuPopupFrame->PresContext()->CSSToDevPixelScale();
     menuPopupFrame->MoveTo(cssPos, false, aByMoveToRect);
   }
 }
 
 void nsXULPopupManager::PopupResized(nsIFrame* aFrame,
-                                     LayoutDeviceIntSize aSize) {
+                                     const LayoutDeviceIntSize& aSize) {
   nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aFrame);
   if (!menuPopupFrame) {
     return;
@@ -641,18 +641,16 @@ void nsXULPopupManager::PopupResized(nsIFrame* aFrame,
     return;
   }
 
-  LayoutDeviceIntRect curDevSize =
-      view->CalcWidgetBounds(widget::WindowType::Popup);
+  const LayoutDeviceIntRect curDevBounds = view->RecalcWidgetBounds();
   // If the size is what we think it is, we have nothing to do.
-  if (curDevSize.width == aSize.width && curDevSize.height == aSize.height) {
+  if (curDevBounds.Size() == aSize) {
     return;
   }
 
   Element* popup = menuPopupFrame->GetContent()->AsElement();
 
   // Only set the width and height if the popup already has these attributes.
-  if (!popup->HasAttr(kNameSpaceID_None, nsGkAtoms::width) ||
-      !popup->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
+  if (!popup->HasAttr(nsGkAtoms::width) || !popup->HasAttr(nsGkAtoms::height)) {
     return;
   }
 
@@ -666,6 +664,8 @@ void nsXULPopupManager::PopupResized(nsIFrame* aFrame,
   nsAutoString width, height;
   width.AppendInt(newCSS.width);
   height.AppendInt(newCSS.height);
+  // FIXME(emilio): aNotify should be consistent (probably true in the two calls
+  // below?).
   popup->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, false);
   popup->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
 }
