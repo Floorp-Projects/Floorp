@@ -940,17 +940,6 @@ export var BrowserTestUtils = {
   },
 
   /**
-   * Compatibility shim. Should go away Very Soon.
-   * @param {xul:browser} browser
-   *        A xul:browser.
-   * @param {string} uri
-   *        The URI to load.
-   */
-  loadURI(browser, uri) {
-    return this.loadURIString(browser, uri);
-  },
-
-  /**
    * Maybe create a preloaded browser and ensure it's finished loading.
    *
    * @param gBrowser (<xul:tabbrowser>)

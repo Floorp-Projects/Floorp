@@ -32,7 +32,7 @@ add_task(async function() {
   try {
     const browser = win.gBrowser.selectedTab.linkedBrowser;
 
-    BrowserTestUtils.loadURI(browser, parentURL);
+    BrowserTestUtils.loadURIString(browser, parentURL);
     await BrowserTestUtils.browserLoaded(browser, false, parentURL);
 
     async function setup(url) {

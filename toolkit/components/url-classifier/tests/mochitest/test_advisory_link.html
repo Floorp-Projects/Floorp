@@ -74,7 +74,7 @@ function testOnWindow(aTestData) {
                                     subject => subject == win);
 
       let browser = win.gBrowser.selectedBrowser;
-      BrowserTestUtils.loadURI(browser, aTestData.url);
+      BrowserTestUtils.loadURIString(browser, aTestData.url);
       await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
 
       let doc = win.gBrowser.contentDocument;

@@ -59,7 +59,7 @@ function beginTest() {
       testOnPrivateWindow();
     }, "cookie-changed");
     let testURL = baseURL + "file_beaconSafelist.html";
-    BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testURL);
+    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, testURL);
     await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, false, testURL);
     await SpecialPowers.spawn(win.gBrowser.selectedBrowser, [], async () => {
       await new Promise((resolve, reject) => {
