@@ -658,9 +658,13 @@ var gEditItemOverlay = {
     this._tagsUpdatePromise = (async () => {
       const inputTags = this._getTagsArrayFromTagsInputField();
       await this._bookmarkState._tagsChanged(inputTags);
+      delete this._paneInfo._cachedCommonTags;
 
       // Ensure the tagsField is in sync, clean it up from empty tags
-      this._initTextField(this._tagsField, inputTags.sort().join(", "), false);
+      const currentTags = this._paneInfo.bulkTagging
+        ? this._getCommonTags()
+        : PlacesUtils.tagging.getTagsForURI(this._paneInfo.uri);
+      this._initTextField(this._tagsField, currentTags.join(", "), false);
 
       await this._initAllTags();
       await this._rebuildTagsSelectorList();
