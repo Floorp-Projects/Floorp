@@ -119,17 +119,17 @@ export class PictureInPictureParent extends JSWindowActorParent {
         }
         break;
       }
-      case "PictureInPicture:EnableSubtitlesButton": {
+      case "PictureInPicture:ShowSubtitlesButton": {
         let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
-          player.enableSubtitlesButton();
+          player.showSubtitlesButton();
         }
         break;
       }
-      case "PictureInPicture:DisableSubtitlesButton": {
+      case "PictureInPicture:HideSubtitlesButton": {
         let player = PictureInPicture.getWeakPipPlayer(this);
         if (player) {
-          player.disableSubtitlesButton();
+          player.hideSubtitlesButton();
         }
         break;
       }

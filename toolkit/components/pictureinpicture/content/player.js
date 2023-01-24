@@ -19,8 +19,6 @@ const AUDIO_TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.audio-toggle.enabled";
 const KEYBOARD_CONTROLS_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.keyboard-controls.enabled";
-const CAPTIONS_ENABLED_PREF =
-  "media.videocontrols.picture-in-picture.display-text-tracks.enabled";
 const CAPTIONS_TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled";
 const TEXT_TRACK_FONT_SIZE_PREF =
@@ -80,12 +78,12 @@ function setIsMutedState(isMuted) {
   Player.isMuted = isMuted;
 }
 
-function enableSubtitlesButton() {
-  Player.enableSubtitlesButton();
+function showSubtitlesButton() {
+  Player.showSubtitlesButton();
 }
 
-function disableSubtitlesButton() {
-  Player.disableSubtitlesButton();
+function hideSubtitlesButton() {
+  Player.hideSubtitlesButton();
 }
 
 function setScrubberPosition(position) {
@@ -235,25 +233,25 @@ let Player = {
     if (Services.prefs.getBoolPref(AUDIO_TOGGLE_ENABLED_PREF, false)) {
       const audioButton = document.getElementById("audio");
       audioButton.hidden = false;
-    }
-
-    if (Services.prefs.getBoolPref(CAPTIONS_ENABLED_PREF, false)) {
-      const closedCaptionButton = document.getElementById("closed-caption");
-      closedCaptionButton.hidden = false;
+      audioButton.previousElementSibling.hidden = false;
     }
 
     if (Services.prefs.getBoolPref(IMPROVED_CONTROLS_ENABLED_PREF, false)) {
       const fullscreenButton = document.getElementById("fullscreen");
       fullscreenButton.hidden = false;
+      fullscreenButton.previousElementSibling.hidden = false;
 
       const seekBackwardButton = document.getElementById("seekBackward");
       seekBackwardButton.hidden = false;
+      seekBackwardButton.nextElementSibling.hidden = false;
 
       const seekForwardButton = document.getElementById("seekForward");
       seekForwardButton.hidden = false;
+      seekForwardButton.previousElementSibling.hidden = false;
 
       this.scrubber.hidden = false;
       this.timestamp.hidden = false;
+      this.timestamp.nextElementSibling.hidden = false;
 
       const controlsBottomGradient = document.getElementById(
         "controls-bottom-gradient"
@@ -894,10 +892,11 @@ let Player = {
     }
   },
 
-  enableSubtitlesButton() {
-    let closedCaptionButton = document.getElementById("closed-caption");
-    closedCaptionButton.disabled = false;
-
+  showSubtitlesButton() {
+    let subtitlesContent = document.querySelectorAll(".subtitles");
+    for (let ele of subtitlesContent) {
+      ele.hidden = false;
+    }
     this.alignEndControlsButtonTooltips();
     this.captionsToggleEnabled = true;
     // If the CAPTIONS_TOGGLE_ENABLED_PREF pref is false then we will click
@@ -908,10 +907,11 @@ let Player = {
     }
   },
 
-  disableSubtitlesButton() {
-    let closedCaptionButton = document.getElementById("closed-caption");
-    closedCaptionButton.disabled = true;
-
+  hideSubtitlesButton() {
+    let subtitlesContent = document.querySelectorAll(".subtitles");
+    for (let ele of subtitlesContent) {
+      ele.hidden = true;
+    }
     this.alignEndControlsButtonTooltips();
   },
 
@@ -919,13 +919,31 @@ let Player = {
    * Sets focus state inline end tooltip for rightmost playback controls
    */
   alignEndControlsButtonTooltips() {
+    let fullscreenBtn = document.getElementById("fullscreen");
+    let subtitlesBtn = document.getElementById("closed-caption");
     let audioBtn = document.getElementById("audio");
-    let width = window.outerWidth;
+    let playPauseButton = document.getElementById("playpause");
+    let height = window.outerHeight;
 
-    if (300 < width && width <= 400) {
+    if (!fullscreenBtn.hidden) {
+      // we know the fullscreen button is the right most button (for LTR)
+      audioBtn.classList.replace("inline-end-tooltip", "center-tooltip");
+      subtitlesBtn.classList.replace("inline-end-tooltip", "center-tooltip");
+    } else if (fullscreenBtn.hidden && !subtitlesBtn.hidden && height > 325) {
+      // we know the subtitles button is the right most button (for LTR)
+      audioBtn.classList.replace("inline-end-tooltip", "center-tooltip");
+      playPauseButton.classList.replace("inline-end-tooltip", "center-tooltip");
+      subtitlesBtn.classList.replace("center-tooltip", "inline-end-tooltip");
+    } else if (
+      fullscreenBtn.hidden &&
+      (subtitlesBtn.hidden || height < 325) &&
+      !audioBtn.hidden
+    ) {
+      // we know the audio button is the right most button (for LTR)
       audioBtn.classList.replace("center-tooltip", "inline-end-tooltip");
     } else {
-      audioBtn.classList.replace("inline-end-tooltip", "center-tooltip");
+      // we know that play/pause button is the right most button (for LTR)
+      playPauseButton.classList.replace("center-tooltip", "inline-end-tooltip");
     }
   },
 
