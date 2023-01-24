@@ -21,15 +21,16 @@
 class JSObject;
 class nsIContent;
 class nsINode;
+class nsRange;
 struct JSContext;
 
 namespace mozilla::dom {
-
+class StaticRange;
 class Document;
 
 class AbstractRange : public nsISupports, public nsWrapperCache {
  protected:
-  explicit AbstractRange(nsINode* aNode);
+  explicit AbstractRange(nsINode* aNode, bool aIsDynamicRange);
   virtual ~AbstractRange();
 
  public:
@@ -93,6 +94,12 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   bool HasEqualBoundaries(const AbstractRange& aOther) const {
     return (mStart == aOther.mStart) && (mEnd == aOther.mEnd);
   }
+  bool IsDynamicRange() const { return mIsDynamicRange; }
+  bool IsStaticRange() const { return !mIsDynamicRange; }
+  inline nsRange* AsDynamicRange();
+  inline const nsRange* AsDynamicRange() const;
+  inline StaticRange* AsStaticRange();
+  inline const StaticRange* AsStaticRange() const;
 
  protected:
   template <typename SPT, typename SRT, typename EPT, typename ERT,
@@ -121,6 +128,9 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   bool mIsGenerated;
   // Used by nsRange, but this should have this for minimizing the size.
   bool mCalledByJS;
+
+  // true if this is an `nsRange` object.
+  const bool mIsDynamicRange;
 
   static bool sHasShutDown;
 };
