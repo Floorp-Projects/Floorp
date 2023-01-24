@@ -365,10 +365,15 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
-  ffi::WGPUTextureDescriptor desc = {};
+  // Somehow cbindgen does not successfully rename this into
+  // WGPUTextureDescriptor. See wgpu_bindings/cbindgen.toml.
+  ffi::WGPUTextureDescriptor______nsACString__FfiSlice_TextureFormat desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
+
+  // TODO: bug 1773723
+  desc.view_formats = {nullptr, 0};
 
   if (aDesc.mSize.IsRangeEnforcedUnsignedLongSequence()) {
     const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();

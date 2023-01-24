@@ -22,12 +22,12 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
-rev = "e98bd92"
+rev = "1be8024"
 replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "fac4731288117d951d0944d96cf0b00fa006dd6c"
+rev = "a3e3d2503fe4d7957224083fecac38690843a795"
 replace-with = "vendored-sources"
 
 [source."https://github.com/glandium/warp"]

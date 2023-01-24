@@ -8,7 +8,7 @@ use crate::{
 };
 
 use wgc::{hub::IdentityManager, id};
-use wgt::Backend;
+use wgt::{Backend, TextureFormat};
 
 pub use wgc::command::{compute_ffi::*, render_ffi::*};
 
@@ -477,7 +477,7 @@ pub extern "C" fn wgpu_client_make_buffer_id(
 pub extern "C" fn wgpu_client_create_texture(
     client: &Client,
     device_id: id::DeviceId,
-    desc: &wgt::TextureDescriptor<Option<&nsACString>>,
+    desc: &wgt::TextureDescriptor<Option<&nsACString>, crate::FfiSlice<TextureFormat>>,
     bb: &mut ByteBuf,
 ) -> id::TextureId {
     let label = wgpu_string(desc.label);
@@ -490,8 +490,11 @@ pub extern "C" fn wgpu_client_create_texture(
         .textures
         .alloc(backend);
 
-    let action = DeviceAction::CreateTexture(id, desc.map_label(|_| label));
+    let view_formats = unsafe { desc.view_formats.as_slice() }.to_vec();
+
+    let action = DeviceAction::CreateTexture(id, desc.map_label_and_view_formats(|_| label, |_| view_formats));
     *bb = make_byte_buf(&action);
+
     id
 }
 
