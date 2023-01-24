@@ -44,7 +44,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest)
   tmp->ClearPendingPullIntos();
   tmp->ClearQueue();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -52,7 +52,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ReadableByteStreamController,
                                                   ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableByteStreamController,
