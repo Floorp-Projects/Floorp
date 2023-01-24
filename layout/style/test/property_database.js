@@ -13699,6 +13699,39 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     ],
     invalid_values: ["", "bounce bounce"],
   };
+
+  gCSSProperties["view-timeline-name"] = {
+    domProp: "viewTimelineName",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: [
+      "all",
+      "ball",
+      "mall",
+      "color",
+      "foobar",
+      "\\32bounce",
+      "-bounce",
+      "-\\32bounce",
+      "\\32 0bounce",
+      "-\\32 0bounce",
+      "\\2bounce",
+      "-\\2bounce",
+      "bounce, abc",
+      "none, none",
+    ],
+    invalid_values: ["auto", "abc bounce", "10px", "rgb(1, 2, 3)"],
+  };
+
+  gCSSProperties["view-timeline-axis"] = {
+    domProp: "viewTimelineAxis",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["block"],
+    other_values: ["inline", "vertical", "horizontal", "inline, block"],
+    invalid_values: ["auto", "none", "abc", "inline block"],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {
