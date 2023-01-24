@@ -105,17 +105,29 @@ The ``processType`` field contains the type of process that crashed. There are
 currently multiple process types defined in ``nsICrashService`` but crash pings
 are sent only for the ones below:
 
-+---------------+---------------------------------------------------+
-| Type          | Description                                       |
-+===============+===================================================+
-| main          | Main process, also known as the browser process   |
-+---------------+---------------------------------------------------+
-| content       | Content process                                   |
-+---------------+---------------------------------------------------+
-| gpu           | GPU process                                       |
-+---------------+---------------------------------------------------+
-| vr            | VR process                                        |
-+---------------+---------------------------------------------------+
++---------------+-------------------------------------------------------------------------------+
+| Type          | Description                                                                   |
++===============+===============================================================================+
+| main          | :ref:`Main process <parent-process>`, also known as parent or browser process |
++---------------+-------------------------------------------------------------------------------+
+| content       | :ref:`Content process <content-process>`                                      |
++---------------+-------------------------------------------------------------------------------+
+| gmplugin      | :ref:`Gecko media plugin <gecko-media-plugins-process>`                       |
++---------------+-------------------------------------------------------------------------------+
+| gpu           | :ref:`GPU process <gpu-process>`                                              |
++---------------+-------------------------------------------------------------------------------+
+| vr            | :ref:`VR process <vr-process>`                                                |
++---------------+-------------------------------------------------------------------------------+
+| rdd           | :ref:`Data decoder process <data-decoder-process>`                            |
++---------------+-------------------------------------------------------------------------------+
+| socket        | :ref:`Network socket process <network-socket-process>`                        |
++---------------+-------------------------------------------------------------------------------+
+| sandboxbroker | :ref:`Remote sandbox broker <remote-sandbox-process>`                         |
++---------------+-------------------------------------------------------------------------------+
+| forkserver    | :ref:`Fork server <fork-server>`                                              |
++---------------+-------------------------------------------------------------------------------+
+| utility       | :ref:`Utility process <utility-process>`                                      |
++---------------+-------------------------------------------------------------------------------+
 
 .. _remote-process-types:
 
@@ -246,4 +258,5 @@ Version History
   and added WindowsErrorReporting (`bug 1703761 <https://bugzilla.mozilla.org/show_bug.cgi?id=1703761>`_).
 - Firefox 95: Added HeadlessMode and BackgroundTaskName (`bug 1697875 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697875>`_).
 - Firefox 96: Added WindowsPackageFamilyName (`bug 1738375 <https://bugzilla.mozilla.org/show_bug.cgi?id=1738375>`_).
-- Firefox 103: Removed ContainsMemoryReport (`bug 1776279 <https://bugzilla.mozilla.org/show_bug.cgi?id=1776279>` _).
+- Firefox 103: Removed ContainsMemoryReport (`bug 1776279 <https://bugzilla.mozilla.org/show_bug.cgi?id=1776279>`_).
+- Firefox 107: Added UtilityActorsName (`bug 1788596 <https://bugzilla.mozilla.org/show_bug.cgi?id=1788596>`_).
