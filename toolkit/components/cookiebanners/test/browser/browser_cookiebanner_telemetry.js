@@ -597,11 +597,16 @@ add_task(async function test_reload_telemetry_mode_disabled() {
         "cookiebanners.service.mode",
         Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
       ],
+      [
+        "cookiebanners.service.mode.privateBrowsing",
+        Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+      ],
     ],
   });
   insertTestClickRules();
 
-  // Disable the cookie banner service.
+  // Disable the cookie banner service in normal browsing.
+  // Keep it enabled in PBM so the service stays alive and can still collect telemetry.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_DISABLED],
