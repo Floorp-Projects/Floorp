@@ -228,7 +228,8 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
 }
 
 /* For readability, timestamp should maintain full opacity when visible */
-#controls:hover #timestamp {
+body:not(:fullscreen) #controls:hover #timestamp,
+body:fullscreen #controls[showing]:hover {
   opacity: 1;
 }
 
