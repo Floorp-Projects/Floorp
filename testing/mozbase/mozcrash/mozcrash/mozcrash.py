@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import traceback
 import zipfile
 from collections import namedtuple
 
@@ -194,7 +195,8 @@ ABORT_SIGNATURES = (
     "std::sys_common::backtrace::__rust_end_short_backtrace",
     "rust_begin_unwind",
     # This started showing up when we enabled dumping inlined functions
-    "MOZ_Crash",
+    "MOZ_Crash(char const*, int, char const*)",
+    "<alloc::boxed::Box<F,A> as core::ops::function::Fn<Args>>::call",
 )
 
 # Similar to above, but matches if the substring appears anywhere in the
@@ -365,60 +367,35 @@ class CrashInfo(object):
             if "MOZ_AUTOMATION" in os.environ:
                 command.append("--symbols-url=https://symbols.mozilla.org/")
 
-            # Specify the kind of output
-            command.append("--human")
-            if self.brief_output:
-                command.append("--brief")
+            with tempfile.TemporaryDirectory() as json_dir:
+                crash_id = os.path.basename(path)[:-4]
+                json_output = os.path.join(json_dir, "{}.trace".format(crash_id))
+                # Specify the kind of output
+                command.append("--cyborg={}".format(json_output))
+                if self.brief_output:
+                    command.append("--brief")
 
-            # The minidump path and symbols_path values are positional and come last
-            # (in practice the CLI parsers are more permissive, but best not to
-            # unecessarily play with fire).
-            command.append(path)
+                # The minidump path and symbols_path values are positional and come last
+                # (in practice the CLI parsers are more permissive, but best not to
+                # unecessarily play with fire).
+                command.append(path)
 
-            if self.symbols_path:
-                command.append(self.symbols_path)
+                if self.symbols_path:
+                    command.append(self.symbols_path)
 
-            self.logger.info("Copy/paste: {}".format(" ".join(command)))
-            # run minidump-stackwalk
-            p = subprocess.Popen(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            (out, err) = p.communicate()
-            retcode = p.returncode
-            if six.PY3:
-                out = six.ensure_str(out)
-                err = six.ensure_str(err)
+                self.logger.info("Copy/paste: {}".format(" ".join(command)))
+                # run minidump-stackwalk
+                p = subprocess.Popen(
+                    command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                (out, err) = p.communicate()
+                retcode = p.returncode
+                if six.PY3:
+                    out = six.ensure_str(out)
+                    err = six.ensure_str(err)
 
-            if len(out) > 3:
-                # minidump-stackwalk is chatty,
-                # so ignore stderr when it succeeds.
-                # The top frame of the crash is always the line after "Thread N (crashed)"
-                # Examples:
-                #  0  libc.so + 0xa888
-                #  0  libnss3.so!nssCertificate_Destroy [certificate.c : 102 + 0x0]
-                #  0  mozjs.dll!js::GlobalObject::getDebuggers() [GlobalObject.cpp:89df18f9b6da : 580 + 0x0] # noqa
-                # 0  libxul.so!void js::gc::MarkInternal<JSObject>(JSTracer*, JSObject**)
-                # [Marking.cpp : 92 + 0x28]
-                lines = out.splitlines()
-                for i, line in enumerate(lines):
-                    if "(crashed)" in line:
-                        # Try to find the first frame that isn't an abort
-                        # function to use as the signature.
-                        for line in lines[i + 1 :]:
-                            if not line.startswith(" "):
-                                break
-
-                            match = re.search(r"^ \d  (?:.*!)?(?:void )?([^\[]+)", line)
-                            if match:
-                                func = match.group(1).strip()
-                                signature = "@ %s" % func
-
-                                if not (
-                                    func in ABORT_SIGNATURES
-                                    or any(pat in func for pat in ABORT_SUBSTRINGS)
-                                ):
-                                    break
-                        break
+                if retcode == 0:
+                    signature = self._generate_signature(json_output)
 
         else:
             if not self.stackwalk_binary:
@@ -460,6 +437,39 @@ class CrashInfo(object):
             reason,
             java_stack,
         )
+
+    def _generate_signature(self, json_path):
+        signature = None
+
+        try:
+            json_file = open(json_path, "r")
+            crash_json = json.load(json_file)
+            json_file.close()
+            frames = crash_json.get("crashing_thread").get("frames")
+
+            flattened_frames = []
+            for frame in frames:
+                for inline in frame.get("inlines") or []:
+                    flattened_frames.append(inline.get("function"))
+
+                flattened_frames.append(
+                    frame.get("function")
+                    or "{} + {}".format(frame.get("module"), frame.get("module_offset"))
+                )
+
+            for func in flattened_frames:
+                signature = "@ %s" % func
+
+                if not (
+                    func in ABORT_SIGNATURES
+                    or any(pat in func for pat in ABORT_SUBSTRINGS)
+                ):
+                    break
+        except Exception as e:
+            traceback.print_exc()
+            signature = "an error occurred while generating the signature: {}".format(e)
+
+        return signature
 
     def _parse_extra_file(self, path):
         with open(path) as file:
