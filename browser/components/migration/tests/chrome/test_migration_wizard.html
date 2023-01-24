@@ -18,6 +18,21 @@
       "resource://testing-common/BrowserTestUtils.sys.mjs"
     );
 
+   const MIGRATOR_PROFILE_INSTANCES = [
+      {
+        key: "some-browser-0",
+        displayName: "Some Browser 0",
+        resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+        profile: { id: "person-2", name: "Person 2" },
+      },
+      {
+        key: "some-browser-1",
+        displayName: "Some Browser 1",
+        resourceTypes: ["HISTORY", "BOOKMARKS"],
+        profile: null,
+      },
+    ];
+
     let gWiz = null;
     let gShadowRoot = null;
     let gDeck = null;
@@ -69,13 +84,34 @@
     add_task(async function test_selection() {
       gWiz.setState({
         page: MigrationWizardConstants.PAGES.SELECTION,
-        migrators: ["some-browser-0", "some-browser-1"],
+        migrators: MIGRATOR_PROFILE_INSTANCES,
       });
 
       let selector = gShadowRoot.querySelector("#browser-profile-selector");
       is(selector.childElementCount, 2, "Should have two child elements");
       is(selector.children[0].value, "some-browser-0");
       is(selector.children[1].value, "some-browser-1");
+
+      let resourceTypeList = gShadowRoot.querySelector("#resource-type-list");
+
+      // Test that the resource type checkboxes are shown or hidden depending on
+      // which resourceTypes are included with the MigratorProfileInstance.
+      for (let migratorInstance of MIGRATOR_PROFILE_INSTANCES) {
+        selector.value = migratorInstance.key;
+        // Apparently we have to dispatch our own "change" events for <select>
+        // dropdowns.
+        selector.dispatchEvent(new CustomEvent("change", { "bubbles" : true }));
+
+        for (let displayedResourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+          let resourceTypeID = MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES[displayedResourceType];
+          let node = resourceTypeList.querySelector(`#${resourceTypeID}`);
+          if (migratorInstance.resourceTypes.includes(displayedResourceType)) {
+            ok(!isHidden(node), `Selection for ${displayedResourceType} should be shown.`);
+          } else {
+            ok(isHidden(node), `Selection for ${displayedResourceType} should be hidden.`);
+          }
+        }
+      }
     });
 
     /**
@@ -205,7 +241,7 @@
       gWiz.toggleAttribute("dialog-mode", true);
       gWiz.setState({
         page: MigrationWizardConstants.PAGES.SELECTION,
-        migrators: ["some-browser-0", "some-browser-1"],
+        migrators: MIGRATOR_PROFILE_INSTANCES,
       });
 
       // For now, there's only a single .cancel-close button, so let's just test
