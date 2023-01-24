@@ -254,6 +254,18 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens when the user resumes activity after n milliseconds of inactivity (keyboard/mouse interactions and audio playback all count as activity)"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["cookieBannerDetected"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when Firefox detects a cookie consent banner that could otherwise be handled by Cookie Banner Handling"
         }
       ]
     }

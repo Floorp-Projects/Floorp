@@ -916,6 +916,75 @@ const BASE_MESSAGES = () => [
     },
     targeting: "!inMr2022Holdback && doesAppNeedPrivatePin",
   },
+  {
+    id: "CFR_COOKIEBANNER",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_COOKIEBANNER",
+      anchor_id: "tracking-protection-icon-container",
+      layout: "icon_and_message",
+      icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      heading_text: {
+        string_id: "cfr-cookie-banner-handling-header",
+      },
+      text: {
+        string_id: "cfr-cookie-banner-handling-body",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-cookie-banner-accept-button",
+          },
+          action: {
+            type: "MULTI_ACTION",
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode",
+                      value: 1,
+                    },
+                  },
+                },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode.privateBrowsing",
+                      value: 1,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-cookie-banner-reject-button",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      custom: [{ period: 86400000, cap: 1 }],
+      lifetime: 2,
+    },
+    trigger: {
+      id: "cookieBannerDetected",
+    },
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.mode'|preferenceValue == 3`,
+  },
 ];
 
 // Eventually, move Feature Callout messages to their own provider

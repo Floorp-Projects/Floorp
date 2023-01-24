@@ -155,6 +155,32 @@ add_task(async function test_nthTabClosed() {
   Assert.ok(handlerStub.notCalled, "Not called after uninit");
 });
 
+add_task(async function test_cookieBannerDetected() {
+  const handlerStub = sinon.stub();
+  const bannerDetectedTrigger = ASRouterTriggerListeners.get(
+    "cookieBannerDetected"
+  );
+  bannerDetectedTrigger.uninit();
+  bannerDetectedTrigger.init(handlerStub);
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  let eventWait = BrowserTestUtils.waitForEvent(win, "cookiebannerdetected");
+  win.dispatchEvent(new Event("cookiebannerdetected"));
+  await eventWait;
+  let closeWindow = BrowserTestUtils.closeWindow(win);
+
+  Assert.ok(
+    handlerStub.called,
+    "Called after `cookiebannerdetected` event fires"
+  );
+
+  handlerStub.resetHistory();
+  bannerDetectedTrigger.uninit();
+
+  Assert.ok(handlerStub.notCalled, "Not called after uninit");
+  await closeWindow;
+});
+
 function getIdleTriggerMock() {
   const idleTrigger = ASRouterTriggerListeners.get("activityAfterIdle");
   idleTrigger.uninit();

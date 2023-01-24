@@ -268,6 +268,8 @@ Prefs that can be changed with this action are:
 - `browser.dataFeatureRecommendations.enabled`
 - `browser.privateWindowSeparation.enabled`
 - `browser.startup.homepage`
+- `cookiebanners.service.mode`
+- `cookiebanners.service.mode.privateBrowsing`
 
 * args:
 ```ts

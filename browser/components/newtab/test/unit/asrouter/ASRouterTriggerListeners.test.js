@@ -19,6 +19,9 @@ describe("ASRouterTriggerListeners", () => {
   const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
   const nthTabClosedListener = ASRouterTriggerListeners.get("nthTabClosed");
   const idleListener = ASRouterTriggerListeners.get("activityAfterIdle");
+  const cookieBannerDetectedListener = ASRouterTriggerListeners.get(
+    "cookieBannerDetected"
+  );
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   const regionFake = {
@@ -670,6 +673,58 @@ describe("ASRouterTriggerListeners", () => {
         );
         assert.calledOnce(aRequest.QueryInterface);
         assert.notCalled(newTriggerHandler);
+      });
+    });
+  });
+
+  describe("cookieBannerDetected", () => {
+    describe("#init", () => {
+      beforeEach(() => {
+        cookieBannerDetectedListener.init(triggerHandler);
+      });
+      afterEach(() => {
+        cookieBannerDetectedListener.uninit();
+      });
+
+      it("should set ._initialized to true and save the triggerHandler", () => {
+        assert.ok(cookieBannerDetectedListener._initialized);
+        assert.equal(
+          cookieBannerDetectedListener._triggerHandler,
+          triggerHandler
+        );
+      });
+
+      it("if already initialised, it should only update the trigger handler", () => {
+        const newTriggerHandler = () => {};
+        cookieBannerDetectedListener.init(newTriggerHandler);
+        assert.ok(cookieBannerDetectedListener._initialized);
+        assert.equal(
+          cookieBannerDetectedListener._triggerHandler,
+          newTriggerHandler
+        );
+      });
+
+      it("should add an event listeners to all existing browser windows", () => {
+        assert.calledOnce(existingWindow.addEventListener);
+      });
+    });
+    describe("#uninit", () => {
+      beforeEach(async () => {
+        cookieBannerDetectedListener.init(triggerHandler);
+        cookieBannerDetectedListener.uninit();
+      });
+      it("should set ._initialized to false and clear the triggerHandler and timestamps", () => {
+        assert.notOk(cookieBannerDetectedListener._initialized);
+        assert.equal(cookieBannerDetectedListener._triggerHandler, null);
+      });
+
+      it("should do nothing if already uninitialised", () => {
+        cookieBannerDetectedListener.uninit();
+        assert.notOk(cookieBannerDetectedListener._initialized);
+      });
+
+      it("should remove event listeners from all existing browser windows", () => {
+        assert.called(existingWindow.removeEventListener);
       });
     });
   });

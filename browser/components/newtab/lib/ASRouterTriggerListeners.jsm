@@ -964,6 +964,48 @@ const ASRouterTriggerListeners = new Map([
       ]),
     },
   ],
+  [
+    "cookieBannerDetected",
+    {
+      id: "cookieBannerDetected",
+      _initialized: false,
+      _triggerHandler: null,
+
+      init(triggerHandler) {
+        this._triggerHandler = triggerHandler;
+        if (!this._initialized) {
+          lazy.EveryWindow.registerCallback(
+            this.id,
+            win => {
+              win.addEventListener("cookiebannerdetected", this);
+            },
+            win => {
+              win.removeEventListener("cookiebannerdetected", this);
+            }
+          );
+          this._initialized = true;
+        }
+      },
+      handleEvent(event) {
+        if (this._initialized) {
+          const win = event.target || Services.wm.getMostRecentBrowserWindow();
+          if (!win) {
+            return;
+          }
+          this._triggerHandler(win.gBrowser.selectedBrowser, {
+            id: this.id,
+          });
+        }
+      },
+      uninit() {
+        if (this._initialized) {
+          lazy.EveryWindow.unregisterCallback(this.id);
+          this._initialized = false;
+          this._triggerHandler = null;
+        }
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];

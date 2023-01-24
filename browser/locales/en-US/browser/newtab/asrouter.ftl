@@ -237,6 +237,30 @@ colorways-cfr-header-14days = Independent Voices colorways expire in two weeks
 colorways-cfr-header-7days =  Independent Voices colorways expire this week
 colorways-cfr-header-today = Independent Voices colorways expire today
 
+## Cookie Banner Handling CFR
+
+# Alternate headline for localization: "See fewer cookie requests"
+cfr-cookiebanner-header = Cookie banners begone!
+cfr-cookiebanner-body = Allow { -brand-short-name } to automatically reject all cookie banner requests when possible.
+cfr-cookiebanner-accept-button = Dismiss Banners
+  .accesskey = D
+cfr-cookiebanner-reject-button = Not Now
+  .accesskey = N
+
+cfr-cookiebanner-header-variant-1 = See fewer cookie pop-ups
+cfr-cookiebanner-body-variant-1 = Let { -brand-short-name } automatically answer cookie pop-ups for you so you can get back to distraction-free browsing. { -brand-short-name } will reject all requests if possible.
+cfr-cookiebanner-accept-button-variant-1 = Dismiss Pop-ups
+  .accesskey = D
+cfr-cookiebanner-reject-button-variant-1 = No Thanks
+  .accesskey = N
+
+cfr-cookiebanner-header-variant-2 = Cookie Banner Reduction
+cfr-cookiebanner-body-variant-2 = Reduce the amount of cookie banners you see by allowing { -brand-short-name } to decline a website’s cookie consent request if possible.
+cfr-cookiebanner-accept-button-variant-2 = Allow
+  .accesskey = A
+cfr-cookiebanner-reject-button-variant-2 = Not Now
+  .accesskey = N
+
 ## These strings are used in the Fox doodle Pin/set default spotlights
 
 july-jam-headline = We’ve got you covered
