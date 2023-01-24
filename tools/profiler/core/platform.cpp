@@ -2772,7 +2772,10 @@ static PreRecordedMetaInformation PreRecordMetaInformation() {
       Unused << http->GetOscpu(info.mHttpOscpu);
     }
 
-    Unused << http->GetMisc(info.mHttpMisc);
+    // Firefox version is capped to 109.0 in the http "misc" field due to some
+    // webcompat issues (Bug 1805967). We need to put the real version instead.
+    info.mHttpMisc.AssignLiteral("rv:");
+    info.mHttpMisc.AppendLiteral(MOZILLA_UAVERSION);
   }
 
   if (nsCOMPtr<nsIXULRuntime> runtime =
