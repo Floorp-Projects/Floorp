@@ -26,6 +26,7 @@
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/Printf.h"
@@ -324,6 +325,14 @@ nsresult nsHttpHandler::Init() {
 
   LOG(("nsHttpHandler::Init\n"));
   MOZ_ASSERT(NS_IsMainThread());
+
+  // We should not create nsHttpHandler during shutdown, but we have some
+  // xpcshell tests doing this.
+  if (MOZ_UNLIKELY(AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown) &&
+                   !PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR"))) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Try to init HttpHandler after shutdown");
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
 
   rv = nsHttp::CreateAtomTable();
   if (NS_FAILED(rv)) return rv;
