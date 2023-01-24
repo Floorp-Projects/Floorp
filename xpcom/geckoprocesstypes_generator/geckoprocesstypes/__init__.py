@@ -88,7 +88,7 @@ process_types = [
         "Browser",
         "Browser",
         "DEFAULT",
-        False,
+        True,
     ),
     GeckoProcessType(
         2,
@@ -121,7 +121,7 @@ process_types = [
         "GMPlugin",
         "GmpPlugin",
         "GMPLUGIN",
-        False,
+        True,
     ),
     GeckoProcessType(
         5,
@@ -176,7 +176,7 @@ process_types = [
         "RemoteSandboxBroker",
         "RemoteSandboxBroker",
         "REMOTESANDBOXBROKER",
-        False,
+        True,
     ),
     GeckoProcessType(
         10,
@@ -187,7 +187,7 @@ process_types = [
         "ForkServer",
         "ForkServer",
         "FORKSERVER",
-        False,
+        True,
     ),
     GeckoProcessType(
         11,

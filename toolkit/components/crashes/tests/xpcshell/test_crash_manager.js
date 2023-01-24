@@ -73,16 +73,19 @@ add_task(async function test_process_ping() {
   Assert.ok(!m.isPingAllowed(42));
   Assert.ok(!m.isPingAllowed(null));
   Assert.ok(!m.isPingAllowed("default"));
-
-  Assert.ok(!m.isPingAllowed("main"));
   Assert.ok(!m.isPingAllowed("ipdlunittest"));
-  Assert.ok(!m.isPingAllowed("gmplugin"));
-  Assert.ok(!m.isPingAllowed("remotesandboxbroker"));
-  Assert.ok(!m.isPingAllowed("forkserver"));
+  Assert.ok(!m.isPingAllowed("tab"));
 
   Assert.ok(m.isPingAllowed("content"));
+  Assert.ok(m.isPingAllowed("forkserver"));
+  Assert.ok(m.isPingAllowed("gmplugin"));
   Assert.ok(m.isPingAllowed("gpu"));
+  Assert.ok(m.isPingAllowed("main"));
+  Assert.ok(m.isPingAllowed("rdd"));
+  Assert.ok(m.isPingAllowed("sandboxbroker"));
+  Assert.ok(m.isPingAllowed("socket"));
   Assert.ok(m.isPingAllowed("utility"));
+  Assert.ok(m.isPingAllowed("vr"));
 });
 
 // Unsubmitted dump files on disk are detected properly.
@@ -697,16 +700,20 @@ add_task(async function test_addCrash() {
 add_task(async function test_child_process_crash_ping() {
   let m = await getManager();
   const EXPECTED_PROCESSES = [
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GPU],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_VR],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_RDD],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_SOCKET],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_REMOTESANDBOXBROKER],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_FORKSERVER],
     m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_UTILITY],
   ];
 
   const UNEXPECTED_PROCESSES = [
-    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_IPDLUNITTEST],
     null,
     12, // non-string process type
   ];
