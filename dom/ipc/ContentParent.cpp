@@ -1050,6 +1050,13 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
           ("GetNewOrUsedProcess for type %s",
            PromiseFlatCString(aRemoteType).get()));
 
+  // Fallback check (we really want our callers to avoid this).
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        false, "Late attempt to GetNewOrUsedLaunchingBrowserProcess!");
+    return nullptr;
+  }
+
   // If we have an existing host process attached to this BrowsingContextGroup,
   // always return it, as we can never have multiple host processes within a
   // single BrowsingContextGroup.
@@ -1459,12 +1466,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       !aBrowsingContext->Canonical()->GetBrowserParent(),
       "BrowsingContext must not have BrowserParent, or have previous "
       "BrowserParent cleared");
-
-  // Take a shortcut (BeginSubprpocessLaunch would fail later, too).
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
-    MOZ_ASSERT(false, "Late attempt to CreateBrowser!");
-    return nullptr;
-  }
 
   nsAutoCString remoteType(aRemoteType);
   if (remoteType.IsEmpty()) {
@@ -2586,10 +2587,6 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // otherwise ActorDestroy will take care.
   AddShutdownBlockers();
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
-    MOZ_ASSERT(false, "Late attempt to launch a process!");
-    return false;
-  }
   if (!ContentProcessManager::GetSingleton()) {
     MOZ_ASSERT(false, "Unable to acquire ContentProcessManager singleton!");
     return false;
