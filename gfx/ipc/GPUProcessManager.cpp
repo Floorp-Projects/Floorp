@@ -280,6 +280,8 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
     gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
   }
 
+  MOZ_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+
   gfxCriticalNote << aMessage;
 
   gfxPlatform::DisableGPUProcess();

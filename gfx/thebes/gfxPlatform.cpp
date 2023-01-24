@@ -2907,7 +2907,13 @@ void gfxPlatform::InitWebGLConfig() {
 
   bool allowWebGLOop =
       IsFeatureOk(nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS);
-  gfxVars::SetAllowWebglOop(allowWebGLOop);
+  if (!kIsAndroid) {
+    gfxVars::SetAllowWebglOop(allowWebGLOop);
+  } else {
+    // On android, enable out-of-process WebGL only when GPU process exists.
+    gfxVars::SetAllowWebglOop(allowWebGLOop &&
+                              gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+  }
 
   bool threadsafeGL = IsFeatureOk(nsIGfxInfo::FEATURE_THREADSAFE_GL);
   threadsafeGL |= StaticPrefs::webgl_threadsafe_gl_force_enabled_AtStartup();
@@ -3107,6 +3113,11 @@ static void AcceleratedCanvas2DPrefChangeCallback(const char*, void*) {
   // gfx.canvas.accelerated.force-enabled overrides the blocklist.
   if (StaticPrefs::gfx_canvas_accelerated_force_enabled()) {
     feature.UserForceEnable("Force-enabled by pref");
+  }
+
+  if (kIsAndroid && !gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    feature.Disable(FeatureStatus::Blocked, "Disabled by GPU Process disabled",
+                    "FEATURE_FAILURE_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
   }
 
   // Check if blocklisted despite the default pref.
@@ -3685,6 +3696,15 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
 /* static */
 void gfxPlatform::DisableGPUProcess() {
   gfxVars::SetRemoteCanvasEnabled(false);
+  if (kIsAndroid) {
+    // On android, enable out-of-process WebGL only when GPU process exists.
+    gfxVars::SetAllowWebglOop(false);
+    // On android, enable accelerated canvas only when GPU process exists.
+    gfxVars::SetUseAcceleratedCanvas2D(false);
+    gfxConfig::Disable(Feature::ACCELERATED_CANVAS2D, FeatureStatus::Blocked,
+                       "Disabled by GPU Process disabled",
+                       "FEATURE_FAILURE_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
+  }
 
   RemoteTextureMap::Init();
   if (gfxVars::UseCanvasRenderThread()) {
