@@ -103,7 +103,10 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
     let global = Global(wgc::hub::Global::new(
         "wgpu",
         factory,
-        wgt::Backends::PRIMARY | wgt::Backends::GL,
+        wgt::InstanceDescriptor {
+            backends: wgt::Backends::PRIMARY,
+            dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
+        },
     ));
     Box::into_raw(Box::new(global))
 }

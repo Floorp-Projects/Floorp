@@ -3638,7 +3638,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.10.0"
-source = "git+https://github.com/gfx-rs/naga?rev=e98bd92#e98bd9264c3a6b04dff15a6b1213c0c80201740a"
+source = "git+https://github.com/gfx-rs/naga?rev=1be8024#1be8024bda3594987b417bead5024b98be9ab521"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -6347,7 +6347,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=fac4731288117d951d0944d96cf0b00fa006dd6c#fac4731288117d951d0944d96cf0b00fa006dd6c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6370,7 +6370,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=fac4731288117d951d0944d96cf0b00fa006dd6c#fac4731288117d951d0944d96cf0b00fa006dd6c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6408,7 +6408,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=fac4731288117d951d0944d96cf0b00fa006dd6c#fac4731288117d951d0944d96cf0b00fa006dd6c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
 dependencies = [
  "bitflags",
  "serde",
