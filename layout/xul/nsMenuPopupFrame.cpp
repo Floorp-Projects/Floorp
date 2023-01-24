@@ -329,8 +329,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   auto mode = nsLayoutUtils::GetFrameTransparency(this, this);
   widgetData.mHasRemoteContent = remote;
-  widgetData.mSupportTranslucency =
-      mode == widget::TransparencyMode::Transparent;
+  widgetData.mTransparencyMode = mode;
   widgetData.mPopupLevel = GetPopupLevel(widgetData.mNoAutoHide);
 
   // Panels which have a parent level need a parent widget. This allows them to
@@ -349,8 +348,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
     if (baseWindow) baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
   }
 
-  nsresult rv =
-      aView->CreateWidgetForPopup(&widgetData, parentWidget, true, true);
+  nsresult rv = aView->CreateWidgetForPopup(&widgetData, parentWidget);
   if (NS_FAILED(rv)) {
     return rv;
   }

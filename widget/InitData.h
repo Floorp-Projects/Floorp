@@ -73,6 +73,16 @@ enum class BorderStyle : int16_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(BorderStyle)
 
+enum class TransparencyMode : uint8_t {
+  Opaque = 0,       // Fully opaque
+  Transparent,      // Parts of the window may be transparent
+  BorderlessGlass,  // Transparent parts of the window has windows 7
+                    // glass effect, without a border around opaque
+                    // areas.
+  // If you add to the end here, you must update the serialization code in
+  // WidgetMessageUtils.h
+};
+
 // Basic struct for widget initialization data.
 // @see Create member function of nsIWidget
 struct InitData {
@@ -80,6 +90,7 @@ struct InitData {
   BorderStyle mBorderStyle = BorderStyle::Default;
   PopupType mPopupHint = PopupType::Panel;
   PopupLevel mPopupLevel = PopupLevel::Top;
+  TransparencyMode mTransparencyMode = TransparencyMode::Opaque;
   // when painting exclude area occupied by child windows and sibling windows
   bool mClipChildren = false;
   bool mClipSiblings = false;
@@ -90,7 +101,6 @@ struct InitData {
   // true if window creation animation is suppressed, e.g. for session restore
   bool mIsAnimationSuppressed = false;
   // true if the window should support an alpha channel, if available.
-  bool mSupportTranslucency = false;
   bool mHasRemoteContent = false;
   bool mAlwaysOnTop = false;
   // Is PictureInPicture window

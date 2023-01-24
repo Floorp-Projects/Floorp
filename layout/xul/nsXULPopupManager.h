@@ -621,15 +621,17 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   /**
    * Indicate that the popup associated with aView has been moved to the
-   * specified screen coordinates.
+   * specified device pixel coordinates.
    */
-  void PopupMoved(nsIFrame* aFrame, nsIntPoint aPoint, bool aByMoveToRect);
+  void PopupMoved(nsIFrame* aFrame, const mozilla::LayoutDeviceIntPoint& aPoint,
+                  bool aByMoveToRect);
 
   /**
    * Indicate that the popup associated with aView has been resized to the
    * given device pixel size aSize.
    */
-  void PopupResized(nsIFrame* aFrame, mozilla::LayoutDeviceIntSize aSize);
+  void PopupResized(nsIFrame* aFrame,
+                    const mozilla::LayoutDeviceIntSize& aSize);
 
   /**
    * Called when a popup frame is destroyed. In this case, just remove the
