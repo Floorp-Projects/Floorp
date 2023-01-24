@@ -11444,6 +11444,16 @@
   value: true
   mirror: always
 
+- name: network.dns.max_high_priority_threads
+  type: RelaxedAtomicUint32
+  value: 5
+  mirror: always
+
+- name: network.dns.max_any_priority_threads
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
