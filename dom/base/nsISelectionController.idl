@@ -41,8 +41,11 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_FIND                      = 8;
    const short SELECTION_URLSECONDARY              = 9;
    const short SELECTION_URLSTRIKEOUT              = 10;
+   // Custom Highlight API
+   // (see https://drafts.csswg.org/css-highlight-api-1/#enumdef-highlighttype)
+   const short SELECTION_HIGHLIGHT                 = 11;
    // End of RawSelectionType values.
-   const short NUM_SELECTIONTYPES                  = 11;
+   const short NUM_SELECTIONTYPES                  = 12;
 
    // SelectionRegion values:
    const short SELECTION_ANCHOR_REGION = 0;
@@ -308,6 +311,7 @@ enum class SelectionType : RawSelectionType
   eFind = nsISelectionController::SELECTION_FIND,
   eURLSecondary = nsISelectionController::SELECTION_URLSECONDARY,
   eURLStrikeout = nsISelectionController::SELECTION_URLSTRIKEOUT,
+  eHighlight = nsISelectionController::SELECTION_HIGHLIGHT,
 };
 
 // Using anonymous enum to define constants because these constants may be
@@ -334,6 +338,7 @@ static const SelectionType kPresentSelectionTypes[] = {
   SelectionType::eFind,
   SelectionType::eURLSecondary,
   SelectionType::eURLStrikeout,
+  SelectionType::eHighlight,
 };
 
 // Please include mozilla/dom/Selection.h for the following APIs.
