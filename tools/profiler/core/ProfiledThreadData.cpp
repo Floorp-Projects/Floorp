@@ -66,7 +66,6 @@ static void StreamTables(UniqueStacks&& aUniqueStacks, JSContext* aCx,
       schema.WriteField("relevantForJS");
       schema.WriteField("innerWindowID");
       schema.WriteField("implementation");
-      schema.WriteField("optimizations");
       schema.WriteField("line");
       schema.WriteField("column");
       schema.WriteField("category");

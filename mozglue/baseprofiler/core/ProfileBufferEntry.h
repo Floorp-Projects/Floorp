@@ -292,11 +292,10 @@ class UniqueStacks {
 //       "relevantForJS": 1,  /* bool */
 //       "innerWindowID": 2,  /* inner window ID of global JS `window` object */
 //       "implementation": 3, /* index into stringTable */
-//       "optimizations": 4,  /* arbitrary JSON */
-//       "line": 5,           /* number */
-//       "column": 6,         /* number */
-//       "category": 7,       /* index into profile.meta.categories */
-//       "subcategory": 8     /* index into
+//       "line": 4,           /* number */
+//       "column": 5,         /* number */
+//       "category": 6,       /* index into profile.meta.categories */
+//       "subcategory": 7     /* index into
 //       profile.meta.categories[category].subcategories */
 //     },
 //     "data":

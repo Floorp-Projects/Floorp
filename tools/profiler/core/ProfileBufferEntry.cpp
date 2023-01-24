@@ -493,11 +493,10 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     RELEVANT_FOR_JS = 1,
     INNER_WINDOW_ID = 2,
     IMPLEMENTATION = 3,
-    OPTIMIZATIONS = 4,
-    LINE = 5,
-    COLUMN = 6,
-    CATEGORY = 7,
-    SUBCATEGORY = 8
+    LINE = 4,
+    COLUMN = 5,
+    CATEGORY = 6,
+    SUBCATEGORY = 7
   };
 
   AutoArraySchemaWithStringsWriter writer(mFrameTableWriter, *mUniqueStrings);
@@ -538,11 +537,10 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
     RELEVANT_FOR_JS = 1,
     INNER_WINDOW_ID = 2,
     IMPLEMENTATION = 3,
-    OPTIMIZATIONS = 4,
-    LINE = 5,
-    COLUMN = 6,
-    CATEGORY = 7,
-    SUBCATEGORY = 8
+    LINE = 4,
+    COLUMN = 5,
+    CATEGORY = 6,
+    SUBCATEGORY = 7
   };
 
   AutoArraySchemaWithStringsWriter writer(aWriter, aUniqueStrings);
