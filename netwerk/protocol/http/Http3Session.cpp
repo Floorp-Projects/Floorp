@@ -2260,6 +2260,7 @@ void Http3Session::WebTransportNegotiationDone() {
     }
   }
   mWaitingForWebTransportNegotiation.Clear();
+  MaybeResumeSend();
 }
 
 //=========================================================================
