@@ -10,6 +10,7 @@
 #include "H264.h"
 #include "libyuv.h"
 #include "mozilla/Logging.h"
+#include "mozilla/mscom/EnsureMTA.h"
 
 #define WMF_ENC_LOGD(arg, ...)                    \
   MOZ_LOG(                                        \
