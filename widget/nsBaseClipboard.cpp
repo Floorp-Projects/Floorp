@@ -111,6 +111,7 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   }
 
   if (mIgnoreEmptyNotification) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "How did we get here?");
     return NS_OK;
   }
 
