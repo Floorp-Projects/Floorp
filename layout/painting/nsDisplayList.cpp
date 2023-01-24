@@ -2657,7 +2657,7 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
     return Some(clip->GetClipRect());
   }
 #ifdef DEBUG
-  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+  NS_ASSERTION(false, "item should have finite clip with respect to aASR");
 #endif
   return Nothing();
 }
@@ -8203,7 +8203,7 @@ Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
     return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
   }
 #ifdef DEBUG
-  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+  NS_ASSERTION(false, "item should have finite clip with respect to aASR");
 #endif
   return Nothing();
 }
