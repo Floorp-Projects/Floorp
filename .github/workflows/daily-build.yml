@@ -82,7 +82,6 @@ jobs:
         echo 'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
         echo 'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
-        cat mozconfig
         sudo apt update
         sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
@@ -310,6 +309,15 @@ jobs:
       run: |
         sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
 
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.dtd
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.ftl
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.properties
+        done
+
     - name: Build 🔨
       run: |
         ./mach build
@@ -404,7 +412,7 @@ jobs:
         mozconfig_file=(
         'ac_add_options --with-app-name=floorp'
         'ac_add_options --with-app-basename=Floorp'
-        'ac_add_options --with-branding=browser/branding/official'
+        'ac_add_options --with-branding=floorp/browser/branding/beta'
         'ac_add_options --disable-crashreporter'
         'ac_add_options --disable-updater'
         'ac_add_options --enable-proxy-bypass-protection'
@@ -436,6 +444,15 @@ jobs:
     - name: Change update url
       run: |
         sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.dtd
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.ftl
+          cp ./floorp/browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/floorp/browser/branding/beta/brand.properties
+        done
 
     - name: Build 🔨
       run: |
