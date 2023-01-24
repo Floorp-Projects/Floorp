@@ -419,6 +419,7 @@ void RemoteWorkerManager::Launch(RemoteWorkerController* aController,
     pending->mController = aController;
     pending->mData = aData;
 
+    // XXX: We do not check for failure here, should we?
     LaunchNewContentProcess(aData);
     return;
   }

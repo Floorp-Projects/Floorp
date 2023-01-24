@@ -544,6 +544,12 @@ bool BackgroundParentImpl::DeallocPRemoteWorkerParent(
 dom::PRemoteWorkerControllerParent*
 BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
     const dom::RemoteWorkerData& aRemoteWorkerData) {
+  // Creating RemoteWorkerController may result in creating new processes,
+  // but during parent shutdown that would add just noise, so better bail out.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return nullptr;
+  }
+
   RefPtr<dom::RemoteWorkerControllerParent> actor =
       new dom::RemoteWorkerControllerParent(aRemoteWorkerData);
   return actor.forget().take();
