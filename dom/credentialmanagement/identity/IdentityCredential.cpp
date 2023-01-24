@@ -81,34 +81,79 @@ IdentityCredential::DiscoverFromExternalSource(
         NS_ERROR_FAILURE, __func__);
   }
 
+  RefPtr<IdentityCredential::GetIdentityCredentialPromise::Private> result =
+      new IdentityCredential::GetIdentityCredentialPromise::Private(__func__);
+
+  if (StaticPrefs::
+          dom_security_credentialmanagement_identity_reject_delay_enabled()) {
+    // This is used to give the promise the appropriate lifetime so it is not
+    // freed before the callback below is called. This reference is taken as an
+    // argument to that callback.
+    RefPtr<IdentityCredential::GetIdentityCredentialPromise::Private>
+        forCallbackResult = result;
+
+    RefPtr<nsITimer> timeout;
+    nsresult rv = NS_NewTimerWithFuncCallback(
+        getter_AddRefs(timeout),
+        [](nsITimer* aTimer, void* aClosure) -> void {
+          auto* promise = static_cast<
+              IdentityCredential::GetIdentityCredentialPromise::Private*>(
+              aClosure);
+          if (!promise->IsResolved()) {
+            promise->Reject(NS_ERROR_DOM_NETWORK_ERR, __func__);
+          }
+          // This releases the promise we forgot when we returned from
+          // this function and the timer we forgot after we built this
+          // callback.
+          NS_RELEASE(promise);
+          NS_RELEASE(aTimer);
+        },
+        do_AddRef(forCallbackResult).take(),
+        StaticPrefs::
+            dom_security_credentialmanagement_identity_reject_delay_duration_ms(),
+        nsITimer::TYPE_ONE_SHOT, "IdentityCredentialTimeoutCallback");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      result->Reject(NS_ERROR_FAILURE, __func__);
+      return result.forget();
+    }
+
+    // Do not clean this timer when we return form this function. This will be
+    // done at the end of the callback above.
+    Unused << timeout.forget();
+  }
+
   // Kick the request off to the main process and translate the result to the
   // expected type when we get a result.
   MOZ_ASSERT(aOptions.mIdentity.WasPassed());
   RefPtr<WindowGlobalChild> wgc = aParent->GetWindowGlobalChild();
   MOZ_ASSERT(wgc);
   RefPtr<IdentityCredential> credential = new IdentityCredential(aParent);
-  return wgc
-      ->SendDiscoverIdentityCredentialFromExternalSource(
-          aOptions.mIdentity.Value())
+  wgc->SendDiscoverIdentityCredentialFromExternalSource(
+         aOptions.mIdentity.Value())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [credential](const WindowGlobalChild::
+          [result,
+           credential](const WindowGlobalChild::
                            DiscoverIdentityCredentialFromExternalSourcePromise::
                                ResolveValueType& aResult) {
             if (aResult.isSome()) {
               credential->CopyValuesFrom(aResult.value());
-              return IdentityCredential::GetIdentityCredentialPromise::
-                  CreateAndResolve(credential, __func__);
+              result->Resolve(credential, __func__);
+            } else if (
+                !StaticPrefs::
+                    dom_security_credentialmanagement_identity_reject_delay_enabled()) {
+              result->Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
             }
-            return IdentityCredential::GetIdentityCredentialPromise::
-                CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
           },
-          [](const WindowGlobalChild::
-                 DiscoverIdentityCredentialFromExternalSourcePromise::
-                     RejectValueType& aResult) {
-            return IdentityCredential::GetIdentityCredentialPromise::
-                CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+          [result](const WindowGlobalChild::
+                       DiscoverIdentityCredentialFromExternalSourcePromise::
+                           RejectValueType& aResult) {
+            if (!StaticPrefs::
+                    dom_security_credentialmanagement_identity_reject_delay_enabled()) {
+              result->Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+            }
           });
+  return result.forget();
 }
 
 // static
@@ -127,34 +172,12 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
         NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
   }
 
-  RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise::Private> result =
-      new IdentityCredential::GetIPCIdentityCredentialPromise::Private(
-          __func__);
-
-  RefPtr<nsITimer> timeout;
-  if (StaticPrefs::
-          dom_security_credentialmanagement_identity_reject_delay_enabled()) {
-    nsresult rv = NS_NewTimerWithCallback(
-        getter_AddRefs(timeout),
-        [=](auto) {
-          if (!result->IsResolved()) {
-            result->Reject(NS_ERROR_DOM_NETWORK_ERR, __func__);
-          }
-        },
-        StaticPrefs::
-            dom_security_credentialmanagement_identity_reject_delay_duration_ms(),
-        nsITimer::TYPE_ONE_SHOT, "IdentityCredentialTimeoutCallback");
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      result->Reject(NS_ERROR_FAILURE, __func__);
-      return result.forget();
-    }
-  }
-
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   RefPtr<CanonicalBrowsingContext> browsingContext(aBrowsingContext);
 
-  // Have the user choose a provider then create a credential for that provider.
-  PromptUserToSelectProvider(aBrowsingContext, aOptions.mProviders.Value())
+  // Have the user choose a provider.
+  return PromptUserToSelectProvider(aBrowsingContext,
+                                    aOptions.mProviders.Value())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [principal, browsingContext](const IdentityProvider& provider) {
@@ -164,25 +187,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
           [](nsresult error) {
             return IdentityCredential::GetIPCIdentityCredentialPromise::
                 CreateAndReject(error, __func__);
-          })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [result, timeout = std::move(timeout)](
-              const IdentityCredential::GetIPCIdentityCredentialPromise::
-                  ResolveOrRejectValue&& value) {
-            // Resolve the result
-            result->ResolveOrReject(value, __func__);
-
-            // Cancel the timer (if it is still pending) and
-            // release the hold on the variables leaked into the timer.
-            if (timeout &&
-                StaticPrefs::
-                    dom_security_credentialmanagement_identity_reject_delay_enabled()) {
-              timeout->Cancel();
-            }
           });
-
-  return result.forget();
 }
 
 // static
@@ -300,13 +305,6 @@ RefPtr<IdentityCredential::ValidationPromise>
 IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
                                       const IdentityProvider& aProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  if (StaticPrefs::
-          dom_security_credentialmanagement_identity_test_ignore_well_known()) {
-    return IdentityCredential::ValidationPromise::CreateAndResolve(true,
-                                                                   __func__);
-  }
-
   // Build the URL
   nsString configLocation = aProvider.mConfigURL;
   nsCOMPtr<nsIURI> configURI;
