@@ -332,7 +332,10 @@ void Http3WebTransportSession::Close(nsresult aResult) {
 
 void Http3WebTransportSession::OnSessionClosed(uint32_t aStatus,
                                                nsACString& aReason) {
-  MOZ_ASSERT(!mTransaction);
+  if (mTransaction) {
+    mTransaction->Close(NS_BASE_STREAM_CLOSED);
+    mTransaction = nullptr;
+  }
   if (mListener) {
     mListener->OnSessionClosed(aStatus, aReason);
     mListener = nullptr;
