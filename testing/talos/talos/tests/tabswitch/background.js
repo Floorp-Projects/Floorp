@@ -8,6 +8,4 @@
  * function that is used to report results.
  */
 
-let processScriptPath = "content/tabswitch-content-process.js";
-
-browser.tabswitch.setup({ processScriptPath });
+browser.tabswitch.setup();
