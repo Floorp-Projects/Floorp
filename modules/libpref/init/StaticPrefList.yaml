@@ -12438,12 +12438,6 @@
   value: false
   mirror: always
 
-# Whether the pages per sheet print setting is enabled.
-- name: print.pages_per_sheet.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether we attempt to generate links in Save As PDF output.
 - name: print.save_as_pdf.links.enabled
   type: RelaxedAtomicBool
