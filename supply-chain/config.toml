@@ -39,6 +39,10 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "Using non-crates.io revision because the color-4 changes has not been published yet."
 
+[policy.d3d12]
+audit-as-crates-io = true
+notes = "Unpublished wgpu revisions point to unpublished d3d12 revisions."
+
 [policy.firefox-on-glean]
 audit-as-crates-io = false
 notes = "The crates.io version of this is just a placeholder to allow public crates to depend on firefox-on-glean."
