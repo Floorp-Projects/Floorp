@@ -67,7 +67,7 @@ const kSubviewEvents = ["ViewShowing", "ViewHiding"];
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 18;
+var kVersion = 19;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -223,7 +223,6 @@ var CustomizableUIInternal = {
     this.loadSavedState();
     this._updateForNewVersion();
     this._updateForNewProtonVersion();
-    this._updateForUnifiedExtensions();
     this._markObsoleteBuiltinButtonsSeen();
 
     this.registerArea(
@@ -632,6 +631,46 @@ var CustomizableUIInternal = {
         tabstripPlacements.unshift("firefox-view-button");
       }
     }
+
+    // Unified Extensions addon button migration, which puts any browser action
+    // buttons in the overflow menu into the addons panel instead.
+    if (currentVersion < 19) {
+      let overflowPlacements =
+        gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] || [];
+      // The most likely case is that there are no AREA_ADDONS placements, in which case the
+      // array won't exist.
+      let addonsPlacements =
+        gSavedState.placements[CustomizableUI.AREA_ADDONS] || [];
+
+      // Migration algorithm for transitioning to Unified Extensions:
+      //
+      // 1. Create two arrays, one for extension widgets, one for built-in widgets.
+      // 2. Iterate all items in the overflow panel, and push them into the
+      //    appropriate array based on whether or not its an extension widget.
+      // 3. Overwrite the overflow panel placements with the built-in widgets array.
+      // 4. Prepend the extension widgets to the addonsPlacements array. Note that this
+      //    does not overwrite this array as a precaution because it's possible
+      //    (though pretty unlikely) that some widgets are already there.
+      //
+      // For extension widgets that were in the palette, they will be appended to the
+      // addons area when they're created within createWidget.
+      let extWidgets = [];
+      let builtInWidgets = [];
+      for (let widgetId of overflowPlacements) {
+        if (CustomizableUI.isWebExtensionWidget(widgetId)) {
+          extWidgets.push(widgetId);
+        } else {
+          builtInWidgets.push(widgetId);
+        }
+      }
+      gSavedState.placements[
+        CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+      ] = builtInWidgets;
+      gSavedState.placements[CustomizableUI.AREA_ADDONS] = [
+        ...extWidgets,
+        ...addonsPlacements,
+      ];
+    }
   },
 
   _updateForNewProtonVersion() {
@@ -686,48 +725,6 @@ var CustomizableUIInternal = {
     }
 
     Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
-  },
-
-  _updateForUnifiedExtensions() {
-    if (!gSavedState?.placements) {
-      return;
-    }
-
-    let overflowPlacements =
-      gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] || [];
-    // The most likely case is that there are no AREA_ADDONS placements, in which case the
-    // array won't exist.
-    let addonsPlacements =
-      gSavedState.placements[CustomizableUI.AREA_ADDONS] || [];
-
-    // Migration algorithm for transitioning to Unified Extensions:
-    //
-    // 1. Create two arrays, one for extension widgets, one for built-in widgets.
-    // 2. Iterate all items in the overflow panel, and push them into the
-    //    appropriate array based on whether or not its an extension widget.
-    // 3. Overwrite the overflow panel placements with the built-in widgets array.
-    // 4. Prepend the extension widgets to the addonsPlacements array. Note that this
-    //    does not overwrite this array as a precaution because it's possible
-    //    (though pretty unlikely) that some widgets are already there.
-    //
-    // For extension widgets that were in the palette, they will be appended to the
-    // addons area when they're created within createWidget.
-    let extWidgets = [];
-    let builtInWidgets = [];
-    for (let widgetId of overflowPlacements) {
-      if (CustomizableUI.isWebExtensionWidget(widgetId)) {
-        extWidgets.push(widgetId);
-      } else {
-        builtInWidgets.push(widgetId);
-      }
-    }
-    gSavedState.placements[
-      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-    ] = builtInWidgets;
-    gSavedState.placements[CustomizableUI.AREA_ADDONS] = [
-      ...extWidgets,
-      ...addonsPlacements,
-    ];
   },
 
   /**
