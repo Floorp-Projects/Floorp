@@ -206,6 +206,7 @@ nsresult nsCookieBannerService::Init() {
   NS_ENSURE_TRUE(obsSvc, NS_ERROR_FAILURE);
 
   obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_ATTACHED, false);
+  obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_DISCARDED, false);
 
   return NS_OK;
 }
@@ -232,6 +233,7 @@ nsresult nsCookieBannerService::Shutdown() {
   NS_ENSURE_TRUE(obsSvc, NS_ERROR_FAILURE);
 
   obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_ATTACHED);
+  obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_DISCARDED);
 
   return NS_OK;
 }
@@ -1137,7 +1139,14 @@ nsresult nsCookieBannerService::RemoveWebProgressListener(
 
   mReloadTelemetryData.Remove(bc->Id());
 
-  return bc->GetWebProgress()->RemoveProgressListener(this);
+  // The browsing context web progress can be null when navigating to about
+  // pages.
+  nsCOMPtr<nsIWebProgress> webProgress = bc->GetWebProgress();
+  if (!webProgress) {
+    return NS_OK;
+  }
+
+  return webProgress->RemoveProgressListener(this);
 }
 
 void nsCookieBannerService::ReportRuleLookupTelemetry(
