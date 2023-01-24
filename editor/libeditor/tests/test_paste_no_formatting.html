@@ -61,22 +61,88 @@ const isHeadless = await SpecialPowers.spawnChrome([], () => {
 
   const selection = window.getSelection();
 
-  // Paste into editable area
-  let editable = document.getElementById("editable");
-  selection.selectAllChildren(editable);
-  selection.collapseToStart();
-  doKey(editable, false);
-  is(editable.innerHTML,
-     isHeadless ? expectedText : expectedHTML, "paste into contenteditable");
+  const editable = document.getElementById("editable");
+  const innerHTMLBeforeTest = editable.innerHTML;
 
-  // Unformatted paste into editable area
-  selection.selectAllChildren(editable);
-  selection.collapseToEnd();
-  doKey(editable, true);
-  is(editable.innerHTML,
-     isHeadless ? expectedText + expectedText :
-                  expectedHTML + expectedText,
-     "paste unformatted into contenteditable");
+  (function test_pasteWithFormatIntoEditableArea() {
+    selection.selectAllChildren(editable);
+    selection.collapseToStart();
+    doKey(editable, false);
+    is(
+      editable.innerHTML,
+      isHeadless ? expectedText : expectedHTML,
+      "test_pasteWithFormatIntoEditableArea: Pasting with format should work as expected"
+    );
+    editable.innerHTML = innerHTMLBeforeTest;
+  }());
+
+  (function test_pasteWithoutFormatIntoEditableArea() {
+    selection.selectAllChildren(editable);
+    selection.collapseToEnd();
+    doKey(editable, true);
+    is(
+      editable.innerHTML,
+      expectedText,
+      "test_pasteWithoutFormatIntoEditableArea: Pasting without format should work as expected",
+    );
+    editable.innerHTML = innerHTMLBeforeTest;
+  })();
+
+  (function test_pasteWithFormatIntoEditableAreaWhenHTMLEditorIsInReadonlyMode() {
+    getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    selection.selectAllChildren(editable);
+    selection.collapseToStart();
+    let beforeInputEvents = [];
+    function onBeforeInput(aEvent) {
+      beforeInputEvents.push(aEvent);
+    }
+    editable.addEventListener("beforeinput", onBeforeInput);
+    doKey(editable, false);
+    const description = "test_pasteWithFormatIntoEditableAreaWhenHTMLEditorIsInReadonlyMode";
+    is(
+      editable.innerHTML,
+      innerHTMLBeforeTest,
+      `${description}: Pasting with format should not work`
+    );
+    is(
+      beforeInputEvents.length,
+      0,
+      `${description}: Pasting with format should not cause "beforeinput", but fired "${
+        beforeInputEvents[0]?.inputType
+      }"`
+    );
+    editable.removeEventListener("beforeinput", onBeforeInput);
+    editable.innerHTML = innerHTMLBeforeTest;
+    getEditor().flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+  })();
+
+  (function test_pasteWithoutFormatIntoEditableAreaWhenHTMLEditorIsInReadonlyMode() {
+    getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    selection.selectAllChildren(editable);
+    selection.collapseToStart();
+    let beforeInputEvents = [];
+    function onBeforeInput(aEvent) {
+      beforeInputEvents.push(aEvent);
+    }
+    editable.addEventListener("beforeinput", onBeforeInput);
+    doKey(editable, false);
+    const description = "test_pasteWithoutFormatIntoEditableAreaWhenHTMLEditorIsInReadonlyMode";
+    is(
+      editable.innerHTML,
+      innerHTMLBeforeTest,
+      `${description}: Pasting with format should not work`
+    );
+    is(
+      beforeInputEvents.length,
+      0,
+      `${description}: Pasting with format should not cause "beforeinput", but fired "${
+        beforeInputEvents[0]?.inputType
+      }"`
+    );
+    editable.removeEventListener("beforeinput", onBeforeInput);
+    editable.innerHTML = innerHTMLBeforeTest;
+    getEditor().flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+  })();
 
   let noneditable = document.getElementById("noneditable");
   selection.selectAllChildren(noneditable);
@@ -114,5 +180,10 @@ const isHeadless = await SpecialPowers.spawnChrome([], () => {
   // Formatted HTML text should not exist when pasting unformatted.
   is(result.html, "", "paste unformatted html into non-editable");
 });
+
+function getEditor() {
+  const editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window);
+}
 </script>
 </body>

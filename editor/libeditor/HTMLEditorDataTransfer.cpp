@@ -108,6 +108,10 @@ nsresult HTMLEditor::InsertDroppedDataTransferAsAction(
   MOZ_ASSERT(aDroppedAt.IsSet());
   MOZ_ASSERT(aDataTransfer.MozItemCount() > 0);
 
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   aEditActionData.InitializeDataTransfer(&aDataTransfer);
   RefPtr<StaticRange> targetRange = StaticRange::Create(
       aDroppedAt.GetContainer(), aDroppedAt.Offset(), aDroppedAt.GetContainer(),
@@ -254,6 +258,12 @@ NS_IMETHODIMP HTMLEditor::InsertHTML(const nsAString& aInString) {
 
 nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
                                         nsIPrincipal* aPrincipal) {
+  // FIXME: This should keep handling inserting HTML if the caller is
+  // nsIHTMLEditor::InsertHTML.
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertHTML,
                                           aPrincipal);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
@@ -523,10 +533,6 @@ nsresult HTMLEditor::InsertHTMLWithContextAsSubAction(
 
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (IsReadonly()) {
-    return NS_OK;
   }
 
   CommitComposition();
@@ -2254,6 +2260,10 @@ HTMLEditor::HavePrivateHTMLFlavor HTMLEditor::ClipboardHasPrivateHTMLFlavor(
 nsresult HTMLEditor::PasteAsAction(int32_t aClipboardType,
                                    bool aDispatchPasteEvent,
                                    nsIPrincipal* aPrincipal) {
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
                                           aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
@@ -2396,6 +2406,12 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
 
 nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
                                                nsIPrincipal* aPrincipal) {
+  // FIXME: This may be called as a call of nsIEditor::PasteTransferable.
+  // In this case, we should keep handling the paste even in the readonly mode.
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
                                           aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
@@ -2444,6 +2460,10 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
 
 nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
                                                nsIPrincipal* aPrincipal) {
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
                                           aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
@@ -2814,10 +2834,6 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
     const nsAString& aQuotedText) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (IsReadonly()) {
-    return NS_OK;
-  }
-
   {
     Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
     if (MOZ_UNLIKELY(result.isErr())) {
@@ -3062,10 +3078,6 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 
   if (aNodeInserted) {
     *aNodeInserted = nullptr;
-  }
-
-  if (IsReadonly()) {
-    return NS_OK;
   }
 
   {
@@ -3344,10 +3356,6 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
     nsINode** aNodeInserted) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsInPlaintextMode());
-
-  if (IsReadonly()) {
-    return NS_OK;
-  }
 
   {
     Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();
