@@ -1630,16 +1630,16 @@ SPAN_TEST(begin_end) {
     ASSERT_NE(it, beyond);
     CHECK_THROW(*beyond, fail_fast);
 
-    ASSERT_EQ(beyond - first, 4);
-    ASSERT_EQ(first - first, 0);
-    ASSERT_EQ(beyond - beyond, 0);
+    ASSERT_EQ(beyond - first, 4U);
+    ASSERT_EQ(first - first, 0U);
+    ASSERT_EQ(beyond - beyond, 0U);
 
     ++it;
-    ASSERT_EQ(it - first, 1);
+    ASSERT_EQ(it - first, 1U);
     ASSERT_EQ(*it, 2);
     *it = 22;
     ASSERT_EQ(*it, 22);
-    ASSERT_EQ(beyond - it, 3);
+    ASSERT_EQ(beyond - it, 3U);
 
     it = first;
     ASSERT_EQ(it, first);
@@ -1649,7 +1649,7 @@ SPAN_TEST(begin_end) {
     }
 
     ASSERT_EQ(it, beyond);
-    ASSERT_EQ(it - beyond, 0);
+    ASSERT_EQ(it - beyond, 0U);
 
     for (auto& n : s) {
       ASSERT_EQ(n, 5);
@@ -1685,14 +1685,14 @@ SPAN_TEST(cbegin_cend) {
     ASSERT_NE(it, beyond);
     CHECK_THROW(*beyond, fail_fast);
 
-    ASSERT_EQ(beyond - first, 4);
-    ASSERT_EQ(first - first, 0);
-    ASSERT_EQ(beyond - beyond, 0);
+    ASSERT_EQ(beyond - first, 4U);
+    ASSERT_EQ(first - first, 0U);
+    ASSERT_EQ(beyond - beyond, 0U);
 
     ++it;
-    ASSERT_EQ(it - first, 1);
+    ASSERT_EQ(it - first, 1U);
     ASSERT_EQ(*it, 2);
-    ASSERT_EQ(beyond - it, 3);
+    ASSERT_EQ(beyond - it, 3U);
 
     int last = 0;
     it = first;
@@ -1705,7 +1705,7 @@ SPAN_TEST(cbegin_cend) {
     }
 
     ASSERT_EQ(it, beyond);
-    ASSERT_EQ(it - beyond, 0);
+    ASSERT_EQ(it - beyond, 0U);
   }
 }
 
@@ -1723,16 +1723,16 @@ SPAN_TEST(rbegin_rend) {
     ASSERT_NE(it, beyond);
     CHECK_THROW(*beyond, fail_fast);
 
-    ASSERT_EQ(beyond - first, 4);
-    ASSERT_EQ(first - first, 0);
-    ASSERT_EQ(beyond - beyond, 0);
+    ASSERT_EQ(beyond - first, 4U);
+    ASSERT_EQ(first - first, 0U);
+    ASSERT_EQ(beyond - beyond, 0U);
 
     ++it;
-    ASSERT_EQ(it - first, 1);
+    ASSERT_EQ(it - first, 1U);
     ASSERT_EQ(*it, 3);
     *it = 22;
     ASSERT_EQ(*it, 22);
-    ASSERT_EQ(beyond - it, 3);
+    ASSERT_EQ(beyond - it, 3U);
 
     it = first;
     ASSERT_EQ(it, first);
@@ -1742,7 +1742,7 @@ SPAN_TEST(rbegin_rend) {
     }
 
     ASSERT_EQ(it, beyond);
-    ASSERT_EQ(it - beyond, 0);
+    ASSERT_EQ(it - beyond, 0U);
 
     for (auto& n : s) {
       ASSERT_EQ(n, 5);
@@ -1764,14 +1764,14 @@ SPAN_TEST(crbegin_crend) {
     ASSERT_NE(it, beyond);
     CHECK_THROW(*beyond, fail_fast);
 
-    ASSERT_EQ(beyond - first, 4);
-    ASSERT_EQ(first - first, 0);
-    ASSERT_EQ(beyond - beyond, 0);
+    ASSERT_EQ(beyond - first, 4U);
+    ASSERT_EQ(first - first, 0U);
+    ASSERT_EQ(beyond - beyond, 0U);
 
     ++it;
-    ASSERT_EQ(it - first, 1);
+    ASSERT_EQ(it - first, 1U);
     ASSERT_EQ(*it, 3);
-    ASSERT_EQ(beyond - it, 3);
+    ASSERT_EQ(beyond - it, 3U);
 
     it = first;
     ASSERT_EQ(it, first);
@@ -1784,7 +1784,7 @@ SPAN_TEST(crbegin_crend) {
     }
 
     ASSERT_EQ(it, beyond);
-    ASSERT_EQ(it - beyond, 0);
+    ASSERT_EQ(it - beyond, 0U);
   }
 }
 

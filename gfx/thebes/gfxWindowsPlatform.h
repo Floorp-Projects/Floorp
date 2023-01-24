@@ -200,13 +200,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
  protected:
   bool AccelerateLayersByDefault() override { return true; }
-
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
-
- public:
-  static nsTArray<uint8_t> GetPlatformCMSOutputProfileData_Impl();
-
- protected:
   void GetPlatformDisplayInfo(mozilla::widget::InfoObject& aObj) override;
 
   void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData) override;

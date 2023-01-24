@@ -454,6 +454,8 @@ pref("formhelper.autozoom.force-disable.test-only", false);
   pref("gfx.hidpi.enabled", 2);
 #endif
 
+pref("gfx.color_management.display_profile", "");
+
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.fallback_delay_short", 100);
