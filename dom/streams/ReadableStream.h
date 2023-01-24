@@ -23,7 +23,6 @@
 namespace mozilla::dom {
 
 class Promise;
-class ReadableStreamGenericReader;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
@@ -128,6 +127,15 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
                                         JS::Handle<JS::Value> aChunk,
                                         ErrorResult& aRv);
 
+  // The following algorithms can be used on arbitrary ReadableStream instances,
+  // including ones that are created by web developers. They can all fail in
+  // various operation-specific ways, and these failures should be handled by
+  // the calling specification.
+
+  // https://streams.spec.whatwg.org/#readablestream-get-a-reader
+  already_AddRefed<mozilla::dom::ReadableStreamDefaultReader> GetReader(
+      ErrorResult& aRv);
+
   // IDL layer functions
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
@@ -135,7 +143,8 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // IDL Methods
+  // IDL methods
+
   // TODO: Use MOZ_CAN_RUN_SCRIPT when IDL constructors can use it (bug 1749042)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<ReadableStream>
   Constructor(const GlobalObject& aGlobal,

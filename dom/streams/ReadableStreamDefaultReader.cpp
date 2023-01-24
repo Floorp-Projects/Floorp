@@ -417,4 +417,14 @@ void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
   aReader->ReadRequests().clear();
 }
 
+// https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-a-chunk
+// To read a chunk from a ReadableStreamDefaultReader reader, given a read
+// request readRequest, perform ! ReadableStreamDefaultReaderRead(reader,
+// readRequest).
+void ReadableStreamDefaultReader::ReadChunk(JSContext* aCx,
+                                            ReadRequest& aRequest,
+                                            ErrorResult& aRv) {
+  ReadableStreamDefaultReaderRead(aCx, this, &aRequest, aRv);
+}
+
 }  // namespace mozilla::dom

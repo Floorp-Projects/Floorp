@@ -451,9 +451,8 @@ void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
   // Step 1. If options["mode"] does not exist,
   // return ? AcquireReadableStreamDefaultReader(this).
   if (!aOptions.mMode.WasPassed()) {
-    RefPtr<ReadableStream> thisRefPtr = this;
     RefPtr<ReadableStreamDefaultReader> defaultReader =
-        AcquireReadableStreamDefaultReader(thisRefPtr, aRv);
+        AcquireReadableStreamDefaultReader(this, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -465,9 +464,8 @@ void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
   MOZ_ASSERT(aOptions.mMode.Value() == ReadableStreamReaderMode::Byob);
 
   // Step 3. Return ? AcquireReadableStreamBYOBReader(this).
-  RefPtr<ReadableStream> thisRefPtr = this;
   RefPtr<ReadableStreamBYOBReader> byobReader =
-      AcquireReadableStreamBYOBReader(thisRefPtr, aRv);
+      AcquireReadableStreamBYOBReader(this, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -1179,6 +1177,15 @@ void ReadableStream::EnqueueNative(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   // Step 5: Otherwise, perform ?
   // ReadableByteStreamControllerEnqueue(stream.[[controller]], chunk).
   ReadableByteStreamControllerEnqueue(aCx, controller, chunk, aRv);
+}
+
+// https://streams.spec.whatwg.org/#readablestream-get-a-reader
+// To get a reader for a ReadableStream stream, return ?
+// AcquireReadableStreamDefaultReader(stream). The result will be a
+// ReadableStreamDefaultReader.
+already_AddRefed<mozilla::dom::ReadableStreamDefaultReader>
+ReadableStream::GetReader(ErrorResult& aRv) {
+  return AcquireReadableStreamDefaultReader(this, aRv);
 }
 
 }  // namespace mozilla::dom
