@@ -39,35 +39,40 @@
     <div class="player-holder">
       <xul:browser type="content" primary="true" remote="true" remoteType="web" id="browser" tabindex="-1"></xul:browser>
     </div>
-    <div id="controls">
+    <div id="controls" dir="ltr">
       <button id="close"
       class="control-item control-button tooltip-under-controls" data-l10n-attrs="tooltip"
 #ifdef XP_MACOSX
       mac="true"
+      tabindex="8"
+#else
+      tabindex="9"
 #endif
-      tabindex="8"/>
-    <div id="controls-bottom-gradient" class="control-item" hidden="true"></div>
+      />
+      <button id="unpip"
+      class="control-item control-button tooltip-under-controls" data-l10n-id="pictureinpicture-unpip-btn" data-l10n-attrs="tooltip"
+#ifdef XP_MACOSX
+      mac="true"
+      tabindex="9"
+#else
+      tabindex="8"
+#endif
+      />
+    <div id="controls-bottom-gradient" class="control-item"></div>
     <div id="controls-bottom">
       <div class="controls-bottom-upper">
           <div class="scrubber-no-drag">
-            <input id="scrubber" class="control-item" hidden="true" min="0" max="1" step=".001" type="range" tabindex="9"/>
+            <input id="scrubber" class="control-item" min="0" max="1" step=".001" type="range" tabindex="10" hidden="true"/>
           </div>
       </div>
       <div class="controls-bottom-lower">
         <div id="timestamp" class="control-item" hidden="true"></div>
-        <div class="gap" hidden="true"></div>
-        <button id="unpip" class="control-item control-button tooltip-over-controls inline-start-tooltip" data-l10n-id="pictureinpicture-unpip-btn" data-l10n-attrs="tooltip" tabindex="10"></button>
-        <div class="gap"></div>
         <button id="seekBackward" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-id="pictureinpicture-seekbackward-btn" data-l10n-attrs="tooltip" tabindex="11"></button>
-        <div class="gap" hidden="true"></div>
         <button id="playpause" class="control-item control-button tooltip-over-controls center-tooltip" tabindex="1"
                 data-l10n-id="pictureinpicture-pause-btn" data-l10n-attrs="tooltip"/>
-        <div class="gap" hidden="true"></div>
         <button id="seekForward" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-id="pictureinpicture-seekforward-btn" data-l10n-attrs="tooltip" tabindex="2"></button>
-        <div class="gap" hidden="true"></div>
         <button id="audio" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-attrs="tooltip" tabindex="3"/>
-        <div class="gap subtitles" hidden="true"></div>
-        <button id="closed-caption" class="control-item control-button tooltip-over-controls center-tooltip closed-caption subtitles" hidden="true" data-l10n-id="pictureinpicture-subtitles-btn" data-l10n-attrs="tooltip" tabindex="4"></button>
+        <button id="closed-caption" class="control-item control-button tooltip-over-controls center-tooltip closed-caption" hidden="true" disabled="true" data-l10n-id="pictureinpicture-subtitles-btn" data-l10n-attrs="tooltip" tabindex="4"></button>
         <div id="settings" class="hide">
           <div class="panel">
             <div class="box">
@@ -98,7 +103,6 @@
             <div class="arrow"></div>
           </div>
         </div>
-        <div class="gap" hidden="true"></div>
         <button id="fullscreen" class="control-item control-button tooltip-over-controls inline-end-tooltip" hidden="true" data-l10n-id="pictureinpicture-fullscreen-btn" data-l10n-attrs="tooltip" tabindex="7"></button>
       </div>
     </div>

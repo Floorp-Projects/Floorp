@@ -1495,7 +1495,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
 
     if (!this.isSubtitlesEnabled) {
       this.isSubtitlesEnabled = true;
-      this.sendAsyncMessage("PictureInPicture:ShowSubtitlesButton");
+      this.sendAsyncMessage("PictureInPicture:EnableSubtitlesButton");
     }
 
     let allCuesArray = [...textTrackCues];
@@ -2356,7 +2356,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
         }
       );
     } else {
-      this.sendAsyncMessage("PictureInPicture:HideSubtitlesButton");
+      this.sendAsyncMessage("PictureInPicture:DisableSubtitlesButton");
     }
     this.#subtitlesEnabled = val;
   }
@@ -2529,7 +2529,7 @@ class PictureInPictureChildVideoWrapper {
     if (!this.#PictureInPictureChild.isSubtitlesEnabled && text) {
       this.#PictureInPictureChild.isSubtitlesEnabled = true;
       this.#PictureInPictureChild.sendAsyncMessage(
-        "PictureInPicture:ShowSubtitlesButton"
+        "PictureInPicture:EnableSubtitlesButton"
       );
     }
     let pipWindowTracksContainer = this.#PictureInPictureChild.document.getElementById(

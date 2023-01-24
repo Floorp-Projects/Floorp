@@ -73,7 +73,7 @@ browser {
   height: calc(var(--controls-bottom-distance) + 2 * var(--resize-margin) + var(--player-control-item-height) + var(--controls-bottom-upper-height) + var(--scrubber-vertical-margin));
   bottom: 0;
   width: 100vw;
-  margin: 0 0 calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin));
+  margin: 0 calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin));
   pointer-events: none;
 }
 
@@ -84,24 +84,23 @@ browser {
 }
 
 .controls-bottom-lower {
-  display: flex;
-  justify-content: center;
-}
-
-.gap {
-  flex: 0.1;
-  max-width: 50px;
+  display: grid;
+  grid-template-columns: 16ch auto repeat(3, minmax(16px, 32px)) auto repeat(3, minmax(16px, 32px));
+  grid-template-areas:
+      "timestamp . seekbackward playpause seekforward . audio closedcaption fullscreen";
+  margin: 0 24px;
+  gap: 8px;
 }
 
 .control-item {
   -moz-window-dragging: no-drag;
-  transition: opacity 160ms linear;
+  transition: opacity 160ms linear, fill-opacity 160ms linear;
   opacity: 0;
   cursor: pointer;
 }
 
 .control-button {
-  background-color: var(--btn-bg-color);
+  background-color: transparent;
   border-radius: 4px;
   /**
    * Make the button dimensions a square proportional to one
@@ -112,12 +111,22 @@ browser {
   width: 10vmax;
   max-width: 32px;
   min-width: 16px;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: var(--player-control-icon-fill);
   background-position: center;
   background-size: 60%;
   background-repeat: no-repeat;
+}
+
+.control-button:hover:enabled {
+  background-color: rgba(255, 255, 255, .25);
+}
+
+#controls:is(:hover, [keying], [showing]) .control-button:disabled {
+  /* Set `fill-opacity` to the desired opacity in addition to full `opacity`
+   * to allow having the button's tooltip in full opacity even if the button is disabled. */
+  fill-opacity: 0.4;
+  opacity: 1 !important;
 }
 
 .control-item:focus-visible::after,
@@ -141,14 +150,18 @@ browser {
 }
 
 #close:focus-visible::after,
-#close:hover::after {
-  float: right;
+#close:hover::after,
+#unpip[mac="true"]:focus-visible::after,
+#unpip[mac="true"]:hover::after {
+  float: inline-end;
   transform: translateX(1em);
 }
 
+#unpip:focus-visible::after,
+#unpip:hover::after,
 #close[mac="true"]:focus-visible::after,
 #close[mac="true"]:hover::after {
-  float: left;
+  float: inline-start;
   transform: translateX(-1em);
 }
 
@@ -175,33 +188,22 @@ browser {
   translate: calc(-50% + var(--player-control-item-half-width));
 }
 
-.center-tooltip:dir(rtl):focus-visible::after,
-.center-tooltip:dir(rtl):hover::after {
-  translate: calc(50% - var(--player-control-item-half-width));
-}
-
 /* Since the unpip button icon is reversed for RTL locales,
- * re-position the tooltip so that the tooltip is right aligned with the button. */
-#unpip:dir(rtl):focus-visible::after,
-#unpip:dir(rtl):hover::after {
-  float: inline-end;
-  inset-inline-start: 1em;
+ * re-position the tooltip so that the tooltip remains in the original placement */
+:root:dir(rtl) #unpip:focus-visible::after,
+:root:dir(rtl) #unpip:hover::after {
+  float: right;
 }
 
-/* Since the closed caption icon is reversed for RTL locales,
- * re-position the tooltip so that the tooltip is left aligned with the button. */
-.closed-caption.inline-end-tooltip:dir(rtl):focus-visible::after,
-.closed-caption.inline-end-tooltip:dir(rtl):hover::after {
-  float: inline-start;
-  inset-inline-end: 1em;
+:root:dir(rtl) #unpip[mac="true"]:focus-visible::after,
+:root:dir(rtl) #unpip[mac="true"]:hover::after {
+  float: left;
 }
 
-/* Since the unpip and closed caption icons are reversed for RTL locales,
- * flip the tooltips back */
-#unpip:dir(rtl):focus-visible::after,
-#unpip:dir(rtl):hover::after,
-.closed-caption:dir(rtl):focus-visible::after,
-.closed-caption:dir(rtl):hover::after {
+/* Since the unpip icon is reversed for RTL locales,
+ * flip its tooltip back */
+:root:dir(rtl) #unpip:focus-visible::after,
+:root:dir(rtl) #unpip:hover::after {
   scale: -1 1;
 }
 
@@ -232,13 +234,22 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
   opacity: 1;
 }
 
-#close {
-  background-color: var(--close-btn-bg-color);
-  background-image: url("chrome://global/skin/icons/close.svg");
+#close,
+#unpip {
+  background-color: rgba(255, 255, 255, .8);
   position: absolute;
+  fill: var(--close-btn-fill-color);
+}
+
+#close:is(:hover, :focus-visible),
+#unpip:is(:hover, :focus-visible) {
+  background-color: rgba(255, 255, 255, .9);
+}
+
+#close {
+  background-image: url("chrome://global/skin/icons/close.svg");
   right: 10px;
   top: 10px;
-  fill: var(--close-btn-fill-color);
 }
 
 #close[mac="true"] {
@@ -246,8 +257,27 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
   left: 10px;
 }
 
+#unpip {
+  background-image: url("chrome://global/skin/media/picture-in-picture-closed.svg");
+  left: 10px;
+  top: 10px;
+}
+
+#unpip[mac="true"] {
+  right: 10px;
+  left: auto;
+}
+
 #playpause {
-  left: 55%;
+  grid-area: playpause;
+}
+
+#audio {
+  grid-area: audio;
+}
+
+#fullscreen {
+  grid-area: fullscreen;
 }
 
 #controls.playing #playpause {
@@ -266,11 +296,6 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
   background-image: url("chrome://global/skin/media/audio.svg");
 }
 
-#unpip {
-  background-image: url("chrome://global/skin/media/picture-in-picture-closed.svg");
-  left: 45%;
-}
-
 body:fullscreen #fullscreen {
   background-image: url("chrome://global/skin/media/picture-in-picture-exit-fullscreen-button.svg");
   background-size: auto;
@@ -284,24 +309,23 @@ body:not(:fullscreen) #fullscreen {
 #seekBackward {
   background-image: url("chrome://global/skin/media/picture-in-picture-seekBackward-button.svg");
   background-size: auto;
+  grid-area: seekbackward;
 }
 
 #seekForward {
   background-image: url("chrome://global/skin/media/picture-in-picture-seekForward-button.svg");
   background-size: auto;
+  grid-area: seekforward;
 }
 
-#unpip:-moz-locale-dir(rtl) {
+:root:dir(rtl) #unpip {
   transform: scaleX(-1);
 }
 
-.closed-caption {
+#closed-caption {
   background-image: url("chrome://global/skin/media/closed-caption-settings-button.svg");
   color: white;
-}
-
-.closed-caption:dir(rtl) {
-  transform: scaleX(-1);
+  grid-area: closedcaption;
 }
 
 .box {
@@ -312,8 +336,11 @@ body:not(:fullscreen) #fullscreen {
   width: 186px;
   padding: 0 8px;
   margin: 0;
-  margin-inline-start: -70px;
   border-radius: 8px;
+}
+
+:root:dir(rtl) .box {
+  direction: rtl;
 }
 
 .hide {
@@ -330,16 +357,18 @@ body:not(:fullscreen) #fullscreen {
 }
 
 .box label:not(.switch) {
+  display: flex;
+  align-items: center;
   color: white;
   padding: 8px;
   font-family: sans-serif;
-  display: block;
 }
 
 .panel {
   position: absolute;
-  bottom: 22px;
+  bottom: 40px;
   user-select: none;
+  right: 24px;
 }
 
 .arrow {
@@ -347,7 +376,7 @@ body:not(:fullscreen) #fullscreen {
   border-top-color: #2B2A33;
   width: 0;
   height: 0;
-  inset-inline-start: -25px;
+  inset-inline-start: 136px;
   position: relative;
 }
 
@@ -361,17 +390,23 @@ body:not(:fullscreen) #fullscreen {
   background: #8F8F9D;
 }
 
+.font-size-selection > label {
+  width: fit-content;
+  cursor: pointer;
+}
+
 .font-size-selection > label > input[type="radio"] {
   appearance: none;
   width: 16px;
   height: 16px;
   border: 1px solid #8f8f9d;
   border-radius: 50%;
+  margin: 0;
+  margin-inline-end: 6px;
 }
 
 .font-size-selection > label > input[type="radio"]:checked {
   border: 4px solid #00ddff;
-  border-radius: 50%;
 }
 
 .subtitle-grid {
@@ -388,6 +423,7 @@ body:not(:fullscreen) #fullscreen {
   height: 16px;
   grid-column: 2;
   margin: 8px;
+  cursor: pointer;
 }
 
 .switch input {
@@ -424,19 +460,13 @@ input:checked + .slider::before {
   transform: translateX(16px);
 }
 
-input:checked + .slider:dir(rtl)::before {
+:root:dir(rtl) input:checked + .slider::before {
   transform: translateX(-16px);
 }
 
 .font-size-overlay {
   opacity: 0.4;
   pointer-events: none;
-}
-
-@media (max-height: 325px) {
-  .subtitles {
-    display: none;
-  }
 }
 
 .controls-bottom-upper {
@@ -458,7 +488,6 @@ input:checked + .slider:dir(rtl)::before {
 
 #scrubber {
   width: 100%;
-  direction: ltr;
   background-color: transparent;
   padding: 6px;
 }
@@ -495,9 +524,9 @@ input:checked + .slider:dir(rtl)::before {
   cursor: default;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
   font-size: 0.9em;
-  text-align: end;
   user-select: none;
   width: 16ch;
+  grid-area: timestamp;
 }
 
 #timestamp::after {
@@ -505,8 +534,58 @@ input:checked + .slider:dir(rtl)::before {
   content: unset;
 }
 
-@media (max-width: 580px), (max-height: 320px) {
+@media (height <= 325px), (width <= 475px) {
+  #closed-caption {
+    display: none;
+  }
+
+  .controls-bottom-lower {
+    grid-template-columns: 16ch auto repeat(3, minmax(16px, 32px)) auto repeat(2, minmax(16px, 32px));
+    grid-template-areas:
+        "timestamp . seekbackward playpause seekforward . audio fullscreen";
+  }
+}
+
+@media (width <= 400px) {
+  #fullscreen {
+    display: none;
+  }
+
+  .controls-bottom-lower {
+    grid-template-columns: 16ch repeat(3, minmax(16px, 32px)) auto minmax(16px, 32px);
+    grid-template-areas:
+        "timestamp seekbackward playpause seekforward . audio";
+  }
+}
+
+@media (width <= 350px) {
   #timestamp {
     display: none;
+  }
+
+  .controls-bottom-lower {
+    grid-template-columns: auto repeat(3, minmax(16px, 32px)) auto minmax(16px, 32px);
+    grid-template-areas:
+        ". seekbackward playpause seekforward . audio";
+  }
+}
+
+@media (height <= 200px) {
+  #scrubber {
+    display: none;
+  }
+}
+
+@media (width <= 300px) {
+  #scrubber,
+  #seekForward,
+  #seekBackward {
+    display: none;
+  }
+
+  .controls-bottom-lower {
+    grid-template-columns: auto minmax(16px, 32px) auto minmax(16px, 32px) auto;
+    grid-template-areas:
+        ". playpause . audio .";
   }
 }
