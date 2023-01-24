@@ -536,7 +536,9 @@ HRESULT MFMediaSource::GetInputTrustAuthority(DWORD aStreamId, REFIID aRiid,
     return E_INVALIDARG;
   }
 
-  // TODO : check if the stream is encrypted or not.
+  if (!stream->IsEncrypted()) {
+    return MF_E_NOT_PROTECTED;
+  }
 
   RETURN_IF_FAILED(
       mCDMProxy->GetInputTrustAuthority(aStreamId, nullptr, 0, aRiid, aITAOut));
