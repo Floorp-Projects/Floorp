@@ -498,8 +498,7 @@ enum class YUVRangedColorSpace : uint8_t {
 // one.
 // Some times Worse Is Better.
 enum class ColorSpace2 : uint8_t {
-  Display,
-  UNKNOWN = Display,  // We feel sufficiently bad about this TODO.
+  UNKNOWN,  // Really "DISPLAY". Eventually we will remove this.
   SRGB,
   DISPLAY_P3,
   BT601_525,  // aka smpte170m NTSC
@@ -507,7 +506,7 @@ enum class ColorSpace2 : uint8_t {
   BT601_625 =
       BT709,  // aka bt470bg PAL. Basically BT709, just Xg is 0.290 not 0.300.
   BT2020,
-  _First = Display,
+  _First = UNKNOWN,
   _Last = BT2020,
 };
 

@@ -30,10 +30,6 @@
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WINBLUE
 
-// We also need this, or dcomp.h won't give us e.g. IDCompositionDevice3:
-#undef _WIN32_WINNT_WINTHRESHOLD
-#define _WIN32_WINNT_WINTHRESHOLD _WIN32_WINNT
-
 #include <d3d11.h>
 #include <dcomp.h>
 #include <ddraw.h>
@@ -54,7 +50,6 @@ decltype(D3D11CreateDevice)* sD3D11CreateDeviceFn = nullptr;
 
 // It should only be used within CreateDirectCompositionDevice.
 decltype(DCompositionCreateDevice2)* sDcompCreateDevice2Fn = nullptr;
-decltype(DCompositionCreateDevice3)* sDcompCreateDevice3Fn = nullptr;
 
 // It should only be used within CreateDCompSurfaceHandle
 decltype(DCompositionCreateSurfaceHandle)* sDcompCreateSurfaceHandleFn =
@@ -122,7 +117,7 @@ bool DeviceManagerDx::LoadDcomp() {
   MOZ_ASSERT(gfxVars::UseWebRenderDCompWin());
 
   if (sDcompCreateDevice2Fn) {
-    return true;  // Already loaded.
+    return true;
   }
 
   nsModuleHandle module(LoadLibrarySystem32(L"dcomp.dll"));
@@ -132,8 +127,6 @@ bool DeviceManagerDx::LoadDcomp() {
 
   sDcompCreateDevice2Fn = (decltype(DCompositionCreateDevice2)*)GetProcAddress(
       module, "DCompositionCreateDevice2");
-  sDcompCreateDevice3Fn = (decltype(DCompositionCreateDevice3)*)GetProcAddress(
-      module, "DCompositionCreateDevice3");
   if (!sDcompCreateDevice2Fn) {
     return false;
   }
@@ -142,6 +135,9 @@ bool DeviceManagerDx::LoadDcomp() {
   sDcompCreateSurfaceHandleFn =
       (decltype(DCompositionCreateSurfaceHandle)*)::GetProcAddress(
           module, "DCompositionCreateSurfaceHandle");
+  if (!sDcompCreateDevice2Fn) {
+    return false;
+  }
 
   mDcompModule.steal(module);
   return true;
@@ -452,16 +448,10 @@ void DeviceManagerDx::CreateDirectCompositionDeviceLocked() {
   HRESULT hr;
   RefPtr<IDCompositionDesktopDevice> desktopDevice;
   MOZ_SEH_TRY {
-    hr = sDcompCreateDevice3Fn(
+    hr = sDcompCreateDevice2Fn(
         dxgiDevice.get(),
         IID_PPV_ARGS(
             (IDCompositionDesktopDevice**)getter_AddRefs(desktopDevice)));
-    if (!desktopDevice) {
-      hr = sDcompCreateDevice2Fn(
-          dxgiDevice.get(),
-          IID_PPV_ARGS(
-              (IDCompositionDesktopDevice**)getter_AddRefs(desktopDevice)));
-    }
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { return; }
 

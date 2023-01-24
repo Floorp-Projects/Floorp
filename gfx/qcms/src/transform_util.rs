@@ -440,10 +440,10 @@ invert_lut will produce an inverse of:
 which has an maximum error of about 9855 (pixel difference of ~38.346)
 
 For now, we punt the decision of output size to the caller. */
-fn invert_lut(table: &[u16], out_length: usize) -> Vec<u16> {
+fn invert_lut(table: &[u16], out_length: i32) -> Vec<u16> {
     /* for now we invert the lut by creating a lut of size out_length
      * and attempting to lookup a value for each entry using lut_inverse_interp16 */
-    let mut output = Vec::with_capacity(out_length);
+    let mut output = Vec::with_capacity(out_length as usize);
     for i in 0..out_length {
         let x: f64 = i as f64 * 65535.0f64 / (out_length - 1) as f64;
         let input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
@@ -476,7 +476,7 @@ pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPU
         curveType::Parametric(params) => {
             let mut gamma_table_uint: [u16; 256] = [0; 256];
 
-            let mut inverted_size: usize = 256;
+            let mut inverted_size: i32 = 256;
             let gamma_table = compute_curve_gamma_table_type_parametric(params);
             let mut i: u16 = 0u16;
             while (i as i32) < 256 {
@@ -498,7 +498,7 @@ pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPU
                 0 => compute_precache_linear(output),
                 1 => compute_precache_pow(output, 1. / u8Fixed8Number_to_float(data[0])),
                 _ => {
-                    let mut inverted_size = data.len();
+                    let mut inverted_size = data.len() as i32;
                     //XXX: the choice of a minimum of 256 here is not backed by any theory,
                     //     measurement or data, however it is what lcms uses.
                     //     the maximum number we would need is 65535 because that's the
@@ -514,8 +514,8 @@ pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPU
     }
     true
 }
-fn build_linear_table(length: usize) -> Vec<u16> {
-    let mut output = Vec::with_capacity(length);
+fn build_linear_table(length: i32) -> Vec<u16> {
+    let mut output = Vec::with_capacity(length as usize);
     for i in 0..length {
         let x: f64 = i as f64 * 65535.0f64 / (length - 1) as f64;
         let input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
@@ -523,8 +523,8 @@ fn build_linear_table(length: usize) -> Vec<u16> {
     }
     output
 }
-fn build_pow_table(gamma: f32, length: usize) -> Vec<u16> {
-    let mut output = Vec::with_capacity(length);
+fn build_pow_table(gamma: f32, length: i32) -> Vec<u16> {
+    let mut output = Vec::with_capacity(length as usize);
     for i in 0..length {
         let mut x: f64 = i as f64 / (length - 1) as f64;
         x = x.powf(gamma as f64);
@@ -534,75 +534,36 @@ fn build_pow_table(gamma: f32, length: usize) -> Vec<u16> {
     output
 }
 
-fn to_lut(params: &Param, len: usize) -> Vec<u16> {
-    let mut output = Vec::with_capacity(len);
-    for i in 0..len {
-        let X = i as f32 / (len-1) as f32;
-        output.push((params.eval(X) * 65535.) as u16);
-    }
-    output
-}
-
-pub(crate) fn build_lut_for_linear_from_tf(trc: &curveType,
-        lut_len: Option<usize>) -> Vec<u16> {
+pub(crate) fn build_output_lut(trc: &curveType) -> Option<Vec<u16>> {
     match trc {
         curveType::Parametric(params) => {
-            let lut_len = lut_len.unwrap_or(256);
             let params = Param::new(params);
-            to_lut(&params, lut_len)
-        },
-        curveType::Curve(data) => {
-            let autogen_lut_len = lut_len.unwrap_or(4096);
-            match data.len() {
-                0 => build_linear_table(autogen_lut_len),
-                1 => {
-                    let gamma = u8Fixed8Number_to_float(data[0]);
-                    build_pow_table(gamma, autogen_lut_len)
-                }
-                _ => {
-                    let lut_len = lut_len.unwrap_or(data.len());
-                    assert_eq!(lut_len, data.len());
-                    data.clone() // I feel bad about this.
-                }
-            }
-        },
-    }
-}
+            let inv_params = params.invert()?;
 
-pub(crate) fn build_lut_for_tf_from_linear(trc: &curveType) -> Option<Vec<u16>> {
-    match trc {
-        curveType::Parametric(params) => {
-            let lut_len = 256;
-            let params = Param::new(params);
-            if let Some(inv_params) = params.invert() {
-                return Some(to_lut(&inv_params, lut_len));
+            let mut output = Vec::with_capacity(256);
+            for i in 0..256 {
+                let X = i as f32 / 255.;
+                output.push((inv_params.eval(X) * 65535.) as u16);
             }
-            // else return None instead of fallthrough to generic lut inversion.
-            return None;
-        },
+            Some(output)
+        }
         curveType::Curve(data) => {
-            let autogen_lut_len = 4096;
             match data.len() {
-                0 => {
-                    return Some(build_linear_table(autogen_lut_len));
-                },
+                0 => Some(build_linear_table(4096)),
                 1 => {
                     let gamma = 1. / u8Fixed8Number_to_float(data[0]);
-                    return Some(build_pow_table(gamma, autogen_lut_len));
-                },
-                _ => {},
+                    Some(build_pow_table(gamma, 4096))
+                }
+                _ => {
+                    //XXX: the choice of a minimum of 256 here is not backed by any theory,
+                    //     measurement or data, however it is what lcms uses.
+                    let mut output_gamma_lut_length = data.len();
+                    if output_gamma_lut_length < 256 {
+                        output_gamma_lut_length = 256
+                    }
+                    Some(invert_lut(data, output_gamma_lut_length as i32))
+                }
             }
-        },
+        }
     }
-
-    let linear_from_tf = build_lut_for_linear_from_tf(trc, None);
-
-    //XXX: the choice of a minimum of 256 here is not backed by any theory,
-    //     measurement or data, however it is what lcms uses.
-    let inverted_lut_len = std::cmp::max(linear_from_tf.len(), 256);
-    Some(invert_lut(&linear_from_tf, inverted_lut_len))
-}
-
-pub(crate) fn build_output_lut(trc: &curveType) -> Option<Vec<u16>> {
-    build_lut_for_tf_from_linear(trc)
 }
