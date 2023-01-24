@@ -1220,6 +1220,12 @@ class TabManager extends TabManagerBase {
   wrapTab(nativeTab) {
     return new Tab(this.extension, nativeTab, tabTracker.getId(nativeTab));
   }
+
+  getWrapper(nativeTab) {
+    if (!nativeTab.ownerGlobal.gBrowserInit.isAdoptingTab()) {
+      return super.getWrapper(nativeTab);
+    }
+  }
 }
 
 class WindowManager extends WindowManagerBase {
