@@ -743,9 +743,6 @@ bool WarpCacheIRTranspiler::emitObjectToIteratorResult(
     return false;
   }
 
-  auto* barrier = MPostWriteBarrier::New(alloc(), ins, obj);
-  add(barrier);
-
   return true;
 }
 
