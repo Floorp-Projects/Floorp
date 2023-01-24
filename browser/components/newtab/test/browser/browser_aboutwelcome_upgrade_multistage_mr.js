@@ -6,6 +6,12 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
 const { SpecialMessageActions } = ChromeUtils.import(
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
 );
+const {
+  assertFirefoxViewTabSelected,
+  closeFirefoxViewTab,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+);
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
@@ -285,7 +291,7 @@ add_task(async function test_aboutwelcome_upgrade_show_firefox_view() {
   await BrowserTestUtils.waitForEvent(gBrowser, "TabSwitchDone");
   assertFirefoxViewTabSelected(gBrowser.ownerGlobal);
 
-  closeFirefoxViewTab();
+  closeFirefoxViewTab(gBrowser.ownerGlobal);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

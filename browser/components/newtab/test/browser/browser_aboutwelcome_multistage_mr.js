@@ -3,6 +3,12 @@
 const { AboutWelcomeParent } = ChromeUtils.import(
   "resource:///actors/AboutWelcomeParent.jsm"
 );
+const {
+  assertFirefoxViewTabSelected,
+  closeFirefoxViewTab,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+);
 
 async function clickVisibleButton(browser, selector) {
   // eslint-disable-next-line no-shadow
@@ -256,6 +262,6 @@ add_task(async function test_aboutwelcome_show_firefox_view() {
 
   // cleanup
   await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
-  closeFirefoxViewTab();
+  closeFirefoxViewTab(gBrowser.ownerGlobal);
   await cleanup();
 });
