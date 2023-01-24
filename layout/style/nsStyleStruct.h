@@ -1268,6 +1268,27 @@ struct StyleAnimation {
   StyleAnimationTimeline mTimeline;
 };
 
+struct StyleViewTimeline {
+  StyleViewTimeline() = default;
+  explicit StyleViewTimeline(const StyleViewTimeline& aCopy) = default;
+
+  // SetInitialValues() are called when ensuring the array length. So basically
+  // we can rely on the default constructor to handle the new constructed
+  // elements.
+  void SetInitialValues() {}
+
+  bool operator==(const StyleViewTimeline& aOther) const {
+    return mName == aOther.mName && mAxis == aOther.mAxis;
+  }
+  bool operator!=(const StyleViewTimeline& aOther) const {
+    return !(*this == aOther);
+  }
+
+ private:
+  StyleScrollTimelineName mName;
+  StyleScrollAxis mAxis = StyleScrollAxis::Block;
+};
+
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
@@ -1882,8 +1903,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mAnimationCompositionCount;
   uint32_t mAnimationTimelineCount;
 
+  // FIXME: Bug 1809005: scroll-timeline-{name|axis} should be a coordinated
+  // list property group.
   mozilla::StyleScrollTimelineName mScrollTimelineName;
   mozilla::StyleScrollAxis mScrollTimelineAxis;
+
+  nsStyleAutoArray<mozilla::StyleViewTimeline> mViewTimelines;
+  uint32_t mViewTimelineNameCount;
+  uint32_t mViewTimelineAxisCount;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
@@ -2256,5 +2283,7 @@ STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleTransition>,
                                  nsTArray_Simple<mozilla::StyleTransition>);
 STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleAnimation>,
                                  nsTArray_Simple<mozilla::StyleAnimation>);
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleViewTimeline>,
+                                 nsTArray_Simple<mozilla::StyleViewTimeline>);
 
 #endif /* nsStyleStruct_h___ */

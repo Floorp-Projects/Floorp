@@ -3259,6 +3259,8 @@ exports.CSS_PROPERTIES = {
       "animation-timeline",
       "scroll-timeline-name",
       "scroll-timeline-axis",
+      "view-timeline-name",
+      "view-timeline-axis",
       "-moz-box-align",
       "-moz-box-direction",
       "-moz-box-flex",
@@ -12108,6 +12110,14 @@ exports.PREFERENCES = [
   [
     "translate",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "view-timeline-axis",
+    "layout.css.scroll-driven-animations.enabled"
+  ],
+  [
+    "view-timeline-name",
+    "layout.css.scroll-driven-animations.enabled"
   ],
   [
     "contain-intrinsic-block-size",
