@@ -46,9 +46,9 @@ add_task(async () => {
 
       let subtitlesButton = pipWin.document.querySelector("#closed-caption");
       await TestUtils.waitForCondition(() => {
-        return !subtitlesButton.disabled;
-      }, "Waiting for subtitles button to be enabled");
-      ok(!subtitlesButton.disabled, "The subtitles button is enabled");
+        return !subtitlesButton.hidden;
+      }, "Waiting for subtitles button to show initially");
+      ok(!subtitlesButton.hidden, "The subtitles button is showing");
 
       let emptied = SpecialPowers.spawn(browser, [{ videoID }], async args => {
         let video = content.document.getElementById(args.videoID);
@@ -69,9 +69,9 @@ add_task(async () => {
       await emptied;
 
       await TestUtils.waitForCondition(() => {
-        return subtitlesButton.disabled;
-      }, "Waiting for subtitles button to be disabled after it was enabled");
-      ok(subtitlesButton.disabled, "The subtitles button is disabled");
+        return subtitlesButton.hidden;
+      }, "Waiting for subtitles button to hide after it was showing");
+      ok(subtitlesButton.hidden, "The subtitles button is not showing");
 
       await BrowserTestUtils.closeWindow(pipWin);
     }
@@ -111,9 +111,9 @@ add_task(async () => {
 
       let subtitlesButton = pipWin.document.querySelector("#closed-caption");
       await TestUtils.waitForCondition(() => {
-        return subtitlesButton.disabled;
-      }, "Making sure the subtitles button is disabled initially");
-      ok(subtitlesButton.disabled, "The subtitles button is disabled");
+        return subtitlesButton.hidden;
+      }, "Making sure the subtitles button is hidden initially");
+      ok(subtitlesButton.hidden, "The subtitles button is not showing");
 
       await SpecialPowers.spawn(
         browser,
@@ -145,9 +145,9 @@ add_task(async () => {
 
       subtitlesButton = pipWin.document.querySelector("#closed-caption");
       await TestUtils.waitForCondition(() => {
-        return !subtitlesButton.disabled;
-      }, "Waiting for the subtitles button to be enabled after switching to a video with subtitles.");
-      ok(!subtitlesButton.disabled, "The subtitles button is enabled");
+        return !subtitlesButton.hidden;
+      }, "Waiting for the subtitles button to show after switching to a video with subtitles.");
+      ok(!subtitlesButton.hidden, "The subtitles button is showing");
 
       await BrowserTestUtils.closeWindow(pipWin);
     }
