@@ -649,7 +649,7 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 372553-1.html 372553-1-ref.html
 == 372632-1.html 372632-1-ref.html
 == 372768-1.html 372768-1-ref.html
-fuzzy-if(winWidget,38-92,1-2) == 373295-1.html 373295-1-ref.html
+fuzzy-if(winWidget,46-92,1-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
 == 373381-1.html 373381-1-ref.html
 fuzzy-if(!Android,0-2,0-40) == 373381-2.html 373381-2-ref.html
@@ -922,7 +922,7 @@ fuzzy-if(winWidget,0-123,0-1600) fuzzy-if(swgl,0-1,0-39) == 409659-1a.html 40965
 fuzzy-if(winWidget,0-123,0-1900) fuzzy-if(swgl,0-1,0-39) == 409659-1d.html 409659-1-ref.html # Bug 1128229
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
-fuzzy-if(winWidget,46-138,652-770) == 411334-1.xml 411334-1-ref.xml
+fuzzy-if(winWidget,46-129,652-770) == 411334-1.xml 411334-1-ref.xml
 == 411585-1.html 411585-1-ref.html
 == 411585-2.html 411585-2-ref.html
 fails == 411585-3.html 411585-3-ref.html # bug 426909
@@ -2100,7 +2100,7 @@ skip-if(Android) == 1727172-1.xhtml 1727172-1-ref.html
 == 1726663-1.html 1726663-1-ref.html
 == 1727016-1.html 1727016-1-ref.html
 != 1730314-1.html 1730314-1-ref.html
-fuzzy(0-3,0-3) fuzzy-if(Android,0-3,0-1901) fuzzy-if(winWidget,0-154,0-123) == 1738700-1.html 1738700-1-ref.html
+fuzzy(0-3,0-3) fuzzy-if(Android,0-3,0-1901) fuzzy-if(winWidget,0-154,0-118) == 1738700-1.html 1738700-1-ref.html
 skip-if(Android||!browserIsFission) fuzzy(255-255,171000-171000) HTTP == 1743533-1.html 1743533-1-ref.html # do not decrease the fuzz! this is a not equal test, the high fuzz minimum is to ensure they differ by enough.
 == 1743560-1.html 1743560-1-ref.html
 == 1743851-1.html 1743851-1-ref.html
