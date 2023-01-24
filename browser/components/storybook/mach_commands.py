@@ -10,26 +10,24 @@ from mach.decorators import Command, SubCommand
 from mozpack.manifests import InstallManifest
 
 
-def run_mach(command_context, cmd, **kwargs):
-    return command_context._mach_context.commands.dispatch(
-        cmd, command_context._mach_context, **kwargs
-    )
-
-
-def run_npm(command_context, args):
-    return run_mach(
-        command_context, "npm", args=[*args, "--prefix=browser/components/storybook"]
-    )
-
-
 @Command(
     "storybook",
     category="misc",
     description="Start the Storybook server. This will install npm dependencies, if necessary.",
 )
-def storybook_run(command_context):
+def storybook_server(command_context):
     ensure_env(command_context)
     return run_npm(command_context, args=["run", "storybook"])
+
+
+@SubCommand(
+    "storybook",
+    "build",
+    description="Build the Storybook for export.",
+)
+def storybook_build(command_context):
+    ensure_env(command_context)
+    return run_npm(command_context, args=["run", "build-storybook"])
 
 
 @SubCommand(
@@ -44,32 +42,7 @@ def storybook_launch(command_context):
     )
 
 
-@SubCommand(
-    "storybook",
-    "install",
-    description="Install Storybook node dependencies.",
-)
-def storybook_install(command_context):
-    return install_npm_deps(command_context)
-
-
-@SubCommand(
-    "storybook",
-    "build",
-    description="Build the Storybook for export.",
-)
-def storybook_build(command_context):
-    ensure_env(command_context)
-    return run_npm(command_context, args=["run", "build-storybook"])
-
-
-@SubCommand(
-    "storybook",
-    "manifest",
-    description="Create rewrites.js which has mappings from chrome:// URIs to local paths. "
-    "Requires a ./mach build faster build. Required for our chrome-uri-loader.js webpack loader.",
-)
-def storybook_manifest(command_context):
+def build_storybook_manifest(command_context):
     config_environment = command_context.config_environment
     # The InstallManifest object will have mappings of JAR entries to paths on disk.
     unified_manifest = InstallManifest(
@@ -150,9 +123,21 @@ def _parse_dest_to_chrome_uri(dest):
     )
 
 
+def run_mach(command_context, cmd, **kwargs):
+    return command_context._mach_context.commands.dispatch(
+        cmd, command_context._mach_context, **kwargs
+    )
+
+
+def run_npm(command_context, args):
+    return run_mach(
+        command_context, "npm", args=[*args, "--prefix=browser/components/storybook"]
+    )
+
+
 def ensure_env(command_context):
     ensure_npm_deps(command_context)
-    storybook_manifest(command_context)
+    build_storybook_manifest(command_context)
 
 
 def ensure_npm_deps(command_context):
