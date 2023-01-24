@@ -20,6 +20,8 @@ EXPORTS += [
 
 if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
     EXPORTS += [
+        "MFCDMExtra.h",
+        "MFCDMProxy.h",
         "MFContentProtectionManager.h",
         "MFMediaEngineAudioStream.h",
         "MFMediaEngineDecoderModule.h",
@@ -29,6 +31,7 @@ if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         "MFMediaSource.h",
     ]
     UNIFIED_SOURCES += [
+        "MFCDMProxy.cpp",
         "MFContentProtectionManager.cpp",
         "MFMediaEngineAudioStream.cpp",
         "MFMediaEngineDecoderModule.cpp",
