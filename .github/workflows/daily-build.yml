@@ -77,7 +77,8 @@ jobs:
     - name: Setup 🪛
       run: |
         cp ./.github/mozconfig_win_pgo_base mozconfig
-        echo -e "\nac_add_options --enable-profile-generate=cross\n" >> mozconfig
+        echo 'ac_add_options --with-branding=floorp/browser/branding/beta' >> mozconfig
+        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
         echo 'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
         echo 'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
@@ -267,8 +268,11 @@ jobs:
     - name: Setup 🪛
       run: |
         cp ./.github/mozconfig_win_pgo_base mozconfig
-        echo -e "\nac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central\n" >> mozconfig
-        echo -e "\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata\nac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log\n" >> mozconfig
+        echo 'ac_add_options --with-branding=floorp/browser/branding/beta' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+        echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
+        echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
         echo 'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
         echo 'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
