@@ -22,6 +22,12 @@ if CONFIG['MOZ_ALSA']:
     ]
     DEFINES['USE_ALSA'] = True
 
+if CONFIG['MOZ_SUNAUDIO']:
+    SOURCES += [
+        'cubeb_sun.c',
+    ]
+    DEFINES['USE_SUN'] = True
+
 if (
     CONFIG["MOZ_PULSEAUDIO"]
     or CONFIG["MOZ_JACK"]

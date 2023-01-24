@@ -200,6 +200,10 @@ def audio_backends_default(target):
         return ("sndio",)
     elif target.os == "OSX":
         return ("audiounit",)
+    elif target.os == "NetBSD":
+        return ("sunaudio",)
+    elif target.os == "SunOS":
+        return ("sunaudio",)
     elif target.os == "WINNT":
         return ("wasapi",)
     else:
@@ -218,6 +222,7 @@ option(
         "oss",
         "pulseaudio",
         "sndio",
+        "sunaudio",
         "wasapi",
     ),
     default=audio_backends_default,
@@ -294,6 +299,15 @@ def imply_sndio(values, target):
 
 
 @depends("--enable-audio-backends", target)
+def imply_sunaudio(values, target):
+    if any("sunaudio" in value for value in values) and (
+        target.os != "NetBSD" and target.os != "SunOS"
+    ):
+        die("Cannot enable sunaudio on %s", target.os)
+    return any("sunaudio" in value for value in values) or None
+
+
+@depends("--enable-audio-backends", target)
 def imply_wasapi(values, target):
     if any("wasapi" in value for value in values) and target.os != "WINNT":
         die("Cannot enable WASAPI on %s", target.os)
@@ -315,6 +329,8 @@ set_config("MOZ_OSS", imply_oss, when="--enable-audio-backends")
 imply_option("--enable-pulseaudio", imply_pulseaudio, reason="--enable-audio-backends")
 
 imply_option("--enable-sndio", imply_sndio, reason="--enable-audio-backends")
+
+set_config("MOZ_SUNAUDIO", imply_sunaudio, when="--enable-audio-backends")
 
 set_config("MOZ_WASAPI", imply_wasapi, when="--enable-audio-backends")
 
