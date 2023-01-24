@@ -1105,17 +1105,6 @@ inline double StyleComputedTimingFunction::GetPortion(
   return aFn ? aFn->At(aPortion, aBeforeFlag) : aPortion;
 }
 
-/* static */
-template <>
-inline LengthPercentageOrAuto LengthPercentageOrAuto::Zero() {
-  return LengthPercentage(LengthPercentage::Zero());
-}
-
-template <>
-inline StyleViewTimelineInset::StyleGenericViewTimelineInset()
-    : start(LengthPercentageOrAuto::Zero()),
-      end(LengthPercentageOrAuto::Zero()) {}
-
 }  // namespace mozilla
 
 #endif

@@ -3259,9 +3259,6 @@ exports.CSS_PROPERTIES = {
       "animation-timeline",
       "scroll-timeline-name",
       "scroll-timeline-axis",
-      "view-timeline-name",
-      "view-timeline-axis",
-      "view-timeline-inset",
       "-moz-box-align",
       "-moz-box-direction",
       "-moz-box-flex",
@@ -12113,18 +12110,6 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "view-timeline-axis",
-    "layout.css.scroll-driven-animations.enabled"
-  ],
-  [
-    "view-timeline-inset",
-    "layout.css.scroll-driven-animations.enabled"
-  ],
-  [
-    "view-timeline-name",
-    "layout.css.scroll-driven-animations.enabled"
-  ],
-  [
     "contain-intrinsic-block-size",
     "layout.css.contain-intrinsic-size.enabled"
   ],
@@ -12170,10 +12155,6 @@ exports.PREFERENCES = [
   ],
   [
     "scroll-timeline",
-    "layout.css.scroll-driven-animations.enabled"
-  ],
-  [
-    "view-timeline",
     "layout.css.scroll-driven-animations.enabled"
   ],
   [
