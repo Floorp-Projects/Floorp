@@ -65,26 +65,22 @@ static const unsigned int NEGATIVE_RECORD_LIFETIME = 60;
 // the time. In particular, thread creation results in a res_init() call from
 // libc which is quite expensive.
 //
-// The pool dynamically grows between 0 and MAX_RESOLVER_THREADS in size. New
+// The pool dynamically grows between 0 and MaxResolverThreads() in size. New
 // requests go first to an idle thread. If that cannot be found and there are
-// fewer than MAX_RESOLVER_THREADS currently in the pool a new thread is created
+// fewer than MaxResolverThreads() currently in the pool a new thread is created
 // for high priority requests. If the new request is at a lower priority a new
-// thread will only be created if there are fewer than HighThreadThreshold
-// currently outstanding. If a thread cannot be created or an idle thread
-// located for the request it is queued.
+// thread will only be created if there are fewer than
+// MaxResolverThreadsAnyPriority() currently outstanding. If a thread cannot be
+// created or an idle thread located for the request it is queued.
 //
-// When the pool is greater than HighThreadThreshold in size a thread will be
-// destroyed after ShortIdleTimeoutSeconds of idle time. Smaller pools use
-// LongIdleTimeoutSeconds for a timeout period.
+// When the pool is greater than MaxResolverThreadsAnyPriority() in size a
+// thread will be destroyed after ShortIdleTimeoutSeconds of idle time. Smaller
+// pools use LongIdleTimeoutSeconds for a timeout period.
 
-#define HighThreadThreshold MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY
-#define LongIdleTimeoutSeconds 300  // for threads 1 -> HighThreadThreshold
-#define ShortIdleTimeoutSeconds \
-  60  // for threads HighThreadThreshold+1 -> MAX_RESOLVER_THREADS
-
-static_assert(
-    HighThreadThreshold <= MAX_RESOLVER_THREADS,
-    "High Thread Threshold should be less equal Maximum allowed thread");
+// for threads 1 -> MaxResolverThreadsAnyPriority()
+#define LongIdleTimeoutSeconds 300
+// for threads MaxResolverThreadsAnyPriority() + 1 -> MaxResolverThreads()
+#define ShortIdleTimeoutSeconds 60
 
 //----------------------------------------------------------------------------
 
@@ -228,8 +224,8 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   }
 
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
-  MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MAX_RESOLVER_THREADS));
-  MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(MAX_RESOLVER_THREADS));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MaxResolverThreads()));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(MaxResolverThreads()));
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadTimeout(poolTimeoutMs));
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
@@ -810,9 +806,9 @@ nsresult nsHostResolver::ConditionallyCreateThread(nsHostRecord* rec) {
   if (mNumIdleTasks) {
     // wake up idle tasks to process this lookup
     mIdleTaskCV.Notify();
-  } else if ((mActiveTaskCount < HighThreadThreshold) ||
+  } else if ((mActiveTaskCount < MaxResolverThreadsAnyPriority()) ||
              (IsHighPriority(rec->flags) &&
-              mActiveTaskCount < MAX_RESOLVER_THREADS)) {
+              mActiveTaskCount < MaxResolverThreads())) {
     nsCOMPtr<nsIRunnable> event = mozilla::NewRunnableMethod(
         "nsHostResolver::ThreadFunc", this, &nsHostResolver::ThreadFunc);
     mActiveTaskCount++;
@@ -1213,8 +1209,9 @@ bool nsHostResolver::GetHostToLookup(AddrHostRecord** result) {
 
   MutexAutoLock lock(mLock);
 
-  timeout = (mNumIdleTasks >= HighThreadThreshold) ? mShortIdleTimeout
-                                                   : mLongIdleTimeout;
+  timeout = (mNumIdleTasks >= MaxResolverThreadsAnyPriority())
+                ? mShortIdleTimeout
+                : mLongIdleTimeout;
   epoch = TimeStamp::Now();
 
   while (!mShutdown) {
@@ -1230,7 +1227,7 @@ bool nsHostResolver::GetHostToLookup(AddrHostRecord** result) {
       return true;
     }
 
-    if (mActiveAnyThreadCount < HighThreadThreshold) {
+    if (mActiveAnyThreadCount < MaxResolverThreadsAnyPriority()) {
       addrRec = mQueue.Dequeue(false, lock);
       if (addrRec) {
         MOZ_ASSERT(IsMediumPriority(addrRec->flags) ||

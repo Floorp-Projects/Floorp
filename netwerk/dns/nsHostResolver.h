@@ -27,11 +27,25 @@
 #include "mozilla/net/NetworkConnectivityService.h"
 #include "mozilla/net/DNSByTypeRecord.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 namespace net {
 class TRR;
 class TRRQuery;
+
+static inline uint32_t MaxResolverThreadsAnyPriority() {
+  return StaticPrefs::network_dns_max_any_priority_threads();
+}
+
+static inline uint32_t MaxResolverThreadsHighPriority() {
+  return StaticPrefs::network_dns_max_high_priority_threads();
+}
+
+static inline uint32_t MaxResolverThreads() {
+  return MaxResolverThreadsAnyPriority() + MaxResolverThreadsHighPriority();
+}
+
 }  // namespace net
 }  // namespace mozilla
 
@@ -41,13 +55,7 @@ class TRRQuery;
 
 extern mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
-#define MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY 3
-#define MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY 5
 #define MAX_NON_PRIORITY_REQUESTS 150
-
-#define MAX_RESOLVER_THREADS               \
-  (MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY + \
-   MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY)
 
 class AHostResolver {
  public:
