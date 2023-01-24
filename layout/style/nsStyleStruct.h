@@ -1278,7 +1278,8 @@ struct StyleViewTimeline {
   void SetInitialValues() {}
 
   bool operator==(const StyleViewTimeline& aOther) const {
-    return mName == aOther.mName && mAxis == aOther.mAxis;
+    return mName == aOther.mName && mAxis == aOther.mAxis &&
+           mInset == aOther.mInset;
   }
   bool operator!=(const StyleViewTimeline& aOther) const {
     return !(*this == aOther);
@@ -1287,6 +1288,7 @@ struct StyleViewTimeline {
  private:
   StyleScrollTimelineName mName;
   StyleScrollAxis mAxis = StyleScrollAxis::Block;
+  StyleViewTimelineInset mInset;
 };
 
 }  // namespace mozilla
@@ -1911,6 +1913,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   nsStyleAutoArray<mozilla::StyleViewTimeline> mViewTimelines;
   uint32_t mViewTimelineNameCount;
   uint32_t mViewTimelineAxisCount;
+  uint32_t mViewTimelineInsetCount;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {

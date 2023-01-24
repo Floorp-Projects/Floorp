@@ -13732,6 +13732,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     other_values: ["inline", "vertical", "horizontal", "inline, block"],
     invalid_values: ["auto", "none", "abc", "inline block"],
   };
+
+  gCSSProperties["view-timeline-inset"] = {
+    domProp: "viewTimelineInset",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["0px"],
+    other_values: ["auto", "1%", "1px 1%", "auto auto", "calc(0px) auto"],
+    invalid_values: ["none", "rgb(1, 2, 3)", "foo bar", "1px 2px 3px"],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {
