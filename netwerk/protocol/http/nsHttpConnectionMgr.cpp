@@ -20,6 +20,7 @@
 #include "NullHttpTransaction.h"
 #include "SpeculativeTransaction.h"
 #include "mozilla/Components.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
@@ -48,6 +49,32 @@
 #include "nsQueryObject.h"
 #include "nsSocketTransportService2.h"
 #include "nsStreamUtils.h"
+
+using namespace mozilla;
+
+namespace geckoprofiler::markers {
+
+struct UrlMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Url");
+  }
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::ProfilerString8View& aURL) {
+    if (aURL.Length() != 0) {
+      aWriter.StringProperty("url", aURL);
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
+    schema.SetTableLabel("{marker.name} - {marker.data.url}");
+    schema.AddKeyFormat("url", MS::Format::Url);
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
 
 namespace mozilla::net {
 
@@ -475,6 +502,10 @@ nsresult nsHttpConnectionMgr::SpeculativeConnect(
          ci->Origin()));
     return NS_OK;
   }
+
+  nsCString url = ci->EndToEndSSL() ? "https://"_ns : "http://"_ns;
+  url += ci->GetOrigin();
+  PROFILER_MARKER("SpeculativeConnect", NETWORK, {}, UrlMarker, url);
 
   RefPtr<SpeculativeConnectArgs> args = new SpeculativeConnectArgs();
 
