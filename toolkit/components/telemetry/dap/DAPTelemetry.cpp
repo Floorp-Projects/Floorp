@@ -247,14 +247,14 @@ bool dapHpkeEncrypt(HpkeContext* aContext, const uint8_t* aAad,
                     nsTArray<uint8_t>* aOutputShare) {
   SECItem aad_si = {siBuffer, toUcharPtr(aAad), aAadLength};
   SECItem plaintext_si = {siBuffer, toUcharPtr(aPlaintext), aPlaintextLength};
-  SECItem* ct = nullptr;
-  SECStatus rv = PK11_HPKE_Seal(aContext, &aad_si, &plaintext_si, &ct);
+  SECItem* chCt = nullptr;
+  SECStatus rv = PK11_HPKE_Seal(aContext, &aad_si, &plaintext_si, &chCt);
   if (rv != SECSuccess) {
     return false;
   }
+  UniqueSECItem ct(chCt);
 
   aOutputShare->AppendElements(ct->data, ct->len);
-
   return true;
 }
 
