@@ -20,11 +20,11 @@
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_dark_color_scheme_desc">Schema de color obscur</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_sephia"></string>
+    <string name="mozac_feature_readerview_sephia">Sepia</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">Schema de color sepia</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_light"></string>
+    <string name="mozac_feature_readerview_light">Clar</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_light_color_scheme_desc">Schema de color clar</string>
 </resources>

@@ -16,7 +16,7 @@
     <!-- Accessible description for increasing the font size -->
     <string name="mozac_feature_readerview_font_size_increase_desc">Павялічыць памер шрыфту</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_dark"></string>
+    <string name="mozac_feature_readerview_dark">Цёмная</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_dark_color_scheme_desc">Цёмная каляровая тэма</string>
     <!-- Color option for the background -->

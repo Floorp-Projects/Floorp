@@ -7,7 +7,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="mozac_browser_menu_new_tab">Tab baru</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="mozac_browser_menu_new_private_tab"></string>
+    <string name="mozac_browser_menu_new_private_tab">Tab pribadi baru</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Tutup tab</string>
     <!-- Menu option to duplicate the current tab -->

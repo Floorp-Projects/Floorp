@@ -26,7 +26,7 @@
     <string name="mozac_feature_downloads_open_not_supported1">No s’ha trobau garra aplicación pa ubrir los fichers %1$s</string>
 
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause"></string>
+    <string name="mozac_feature_downloads_button_pause">Pausar</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Continar</string>
     <!-- Button that cancels the download when pressed -->
@@ -42,4 +42,5 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Completar l\'acción con</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">No se puede ubrir %1$s</string>
-</resources>
+
+    </resources>

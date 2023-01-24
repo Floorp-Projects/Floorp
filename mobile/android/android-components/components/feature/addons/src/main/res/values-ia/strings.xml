@@ -25,13 +25,13 @@
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Acceder al schedas del navigator</string>
     <!-- Description for unlimited_storage permission. -->
-    <string name="mozac_feature_addons_permissions_unlimited_storage_description"></string>
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Immagazinar un quantitate illimitate de datos in le latere del cliente</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">Acceder al activitate del navigator durante le navigation</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Leger e modificar le marcapaginas</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description"></string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Leger e modificar le parametros del navigator</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Vacuar le chronologia de navigation recente, le cookies e le datos relative</string>
     <!-- Description for clipboard_read permission. -->
@@ -65,7 +65,7 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Celar e monstrar le schedas del navigator</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description"></string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Acceder al chronologia de navigation</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">Extender le instrumentos de disveloppamento pro acceder a tu datos in le schedas aperte</string>
     <!-- The version on of add-on. -->

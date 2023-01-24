@@ -30,5 +30,5 @@
     <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_always_allow">De longo</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
-    <string name="mozac_feature_sitepermissions_never_allow"></string>
-</resources>
+    <string name="mozac_feature_sitepermissions_never_allow">Mai</string>
+    </resources>
