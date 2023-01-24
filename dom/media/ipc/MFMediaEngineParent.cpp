@@ -8,6 +8,7 @@
 #include <intsafe.h>
 #include <mfapi.h>
 
+#include "MFContentProtectionManager.h"
 #include "MFMediaEngineExtension.h"
 #include "MFMediaEngineVideoStream.h"
 #include "MFMediaEngineUtils.h"
@@ -166,8 +167,9 @@ void MFMediaEngineParent::CreateMediaEngine() {
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
       creationAttributes.Get(), &mMediaEngine));
 
-  // TODO : deal with encrypted content (set ContentProtectionManager and cdm
-  // proxy)
+  // TODO : set the content protection manager to IMFMediaEngineProtectedContent
+  RETURN_VOID_IF_FAILED(MakeAndInitialize<MFContentProtectionManager>(
+      &mContentProtectionManager));
 
   LOG("Created media engine successfully");
   mIsCreatedMediaEngine = true;
