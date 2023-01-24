@@ -23,13 +23,7 @@ namespace loader {
 // ComponentScriptLoader
 //////////////////////////////////////////////////////////////
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ComponentScriptLoader)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION(ComponentScriptLoader)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ComponentScriptLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ComponentScriptLoader)
+NS_IMPL_ISUPPORTS0(ComponentScriptLoader)
 
 nsIURI* ComponentScriptLoader::GetBaseURI() const { return nullptr; }
 
