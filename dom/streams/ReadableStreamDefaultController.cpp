@@ -24,7 +24,8 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal, mAlgorithms)
+NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal, mAlgorithms,
+                         mStream)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamController)
 
@@ -32,20 +33,28 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamController)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+ReadableStreamController::ReadableStreamController(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal) {}
+
+void ReadableStreamController::SetStream(ReadableStream* aStream) {
+  mStream = aStream;
+}
+
 // Note: Using the individual macros vs NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE
-// because I need to specificy a manual implementation of
+// because I need to specify a manual implementation of
 // NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStrategySizeAlgorithm, mStream)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableStreamDefaultController,
+                                                ReadableStreamController)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStrategySizeAlgorithm)
   tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
     ReadableStreamDefaultController, ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStrategySizeAlgorithm, mStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStrategySizeAlgorithm)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultController,
@@ -87,15 +96,11 @@ JSObject* ReadableStreamDefaultController::WrapObject(
   return ReadableStreamDefaultController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void ReadableStreamDefaultController::SetStream(ReadableStream* aStream) {
-  mStream = aStream;
-}
-
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
 static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
     ReadableStreamDefaultController* aController) {
   // Step 1. Let state be controller.[[stream]].[[state]].
-  ReadableStream::ReaderState state = aController->GetStream()->State();
+  ReadableStream::ReaderState state = aController->Stream()->State();
 
   // Step 2. If controller.[[closeRequested]] is false and state is "readable",
   // return true.
@@ -112,7 +117,7 @@ bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
     ReadableStreamDefaultController* aController,
     CloseOrEnqueue aCloseOrEnqueue, ErrorResult& aRv) {
   // Step 1. Let state be controller.[[stream]].[[state]].
-  ReadableStream::ReaderState state = aController->GetStream()->State();
+  ReadableStream::ReaderState state = aController->Stream()->State();
 
   nsCString prefix;
   if (aCloseOrEnqueue == CloseOrEnqueue::Close) {
@@ -152,7 +157,7 @@ bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
 
 Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
     ReadableStreamDefaultController* aController) {
-  ReadableStream::ReaderState state = aController->GetStream()->State();
+  ReadableStream::ReaderState state = aController->Stream()->State();
   if (state == ReadableStream::ReaderState::Errored) {
     return nullptr;
   }
@@ -201,7 +206,7 @@ void ReadableStreamDefaultControllerClose(
   }
 
   // Step 2.
-  RefPtr<ReadableStream> stream = aController->GetStream();
+  RefPtr<ReadableStream> stream = aController->Stream();
 
   // Step 3.
   aController->SetCloseRequested(true);
@@ -242,7 +247,7 @@ void ReadableStreamDefaultControllerEnqueue(
   }
 
   // Step 2.
-  RefPtr<ReadableStream> stream = aController->GetStream();
+  RefPtr<ReadableStream> stream = aController->Stream();
 
   // Step 3.
   if (IsReadableStreamLocked(stream) &&
@@ -347,7 +352,7 @@ void ReadableStreamDefaultController::Error(JSContext* aCx,
 bool ReadableStreamDefaultControllerShouldCallPull(
     ReadableStreamDefaultController* aController) {
   // Step 1.
-  ReadableStream* stream = aController->GetStream();
+  ReadableStream* stream = aController->Stream();
 
   // Step 2.
   if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(aController)) {
@@ -381,7 +386,7 @@ void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   // Step 1.
-  ReadableStream* stream = aController->GetStream();
+  ReadableStream* stream = aController->Stream();
 
   // Step 2.
   if (stream->State() != ReadableStream::ReaderState::Readable) {

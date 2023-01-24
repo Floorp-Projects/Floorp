@@ -205,12 +205,10 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
 already_AddRefed<Promise> BodyStream::PullCallback(
     JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
   MOZ_ASSERT(aController.IsByte());
-  ReadableStream* stream = aController.AsByte()->Stream();
+  ReadableStream* stream = aController.Stream();
   MOZ_ASSERT(stream);
 
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   MOZ_DIAGNOSTIC_ASSERT(stream->Disturbed());
-#endif
 
   AssertIsOnOwningThread();
 
