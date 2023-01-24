@@ -63,12 +63,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Үй экранынан жекелік беттерді ашу үшін жарлықты қосыңыз.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Үй экранынан жекелік беттерді ашу үшін жарлықты қосыңыз.</string>
 
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Келесі жекелік бетін бір шерту арқылы ашыңыз.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Жарлықты қосу</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Жарлықты қосу</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Үй экранына қосу</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -259,7 +259,7 @@
     <string name="search_settings_menu_item">Іздеу баптаулары</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Бұл жолы іздеу:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Бұл жолы іздеу:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Бұл жолы келесі жерде іздеу:</string>
@@ -307,8 +307,6 @@
     <string name="search_widget_text_short">Іздеу</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Интернетте іздеу</string>
-    <!-- Content description (not visible, for screen readers etc.): Voice search -->
-    <string name="search_widget_voice"></string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -317,8 +315,6 @@
     <string name="preferences_category_general">Жалпы</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Осы туралы</string>
-    <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_default_search_engine"></string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Іздеу</string>
 
@@ -355,7 +351,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Cookie баннерлерін азайту</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox cookie баннерлеріндегі cookie сұрауларын автоматты түрде қабылдамау әрекетін жасайды. Қабылдамау опциясы қол жетімді болмаса, Firefox баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox cookie баннерлеріндегі cookie сұрауларын автоматты түрде қабылдамау әрекетін жасайды. Қабылдамау опциясы қол жетімді болмаса, Firefox баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s cookie баннерлеріндегі cookie сұрауларын автоматты түрде қабылдамау әрекетін жасайды.</string>
@@ -372,14 +368,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s осы сайттың cookie файлдарын тазартып, бетті жаңартады. Барлық cookie файлдарын тазарту салдарынан сіз сайттан шығуыңыз мүмкін немесе дүкен себеттері тазартылуы мүмкін.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s cookie сұрауларын автоматты түрде тайдыру әрекетін жасайды. Тайдыру опциясы қол жетімді болмаса, %2$s баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s cookie сұрауларын автоматты түрде тайдыру әрекетін жасайды. Тайдыру опциясы қол жетімді болмаса, %2$s баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s cookie сұрауларын автоматты түрде қабылдамау әрекетін жасай алады.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Cookie баннерлері жоғалсын!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Cookie сұрауларын мүмкіндігінше автоматты түрде тайдыру. Болмаса, cookie баннерлерін жабу үшін барлық cookie файлдарын қабылдау.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Cookie сұрауларын мүмкіндігінше автоматты түрде тайдыру. Болмаса, cookie баннерлерін жабу үшін барлық cookie файлдарын қабылдау.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Мүмкіндігінше cookie сұрауларын автоматты түрде қабылдамау.</string>
     <!-- Remind me later text button for the onboarding dialog -->
@@ -393,7 +389,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Азырақ cookie қалқымалы терезелерін көру</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Мазасыз шолу үшін cookie файлдарының қалқымалы терезелеріне автоматты түрде жауап беру. %1$s барлық сұрауларды мүмкіндігінше тайдырады, ал болмаса, барлығын қабылдайды.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Мазасыз шолу үшін cookie файлдарының қалқымалы терезелеріне автоматты түрде жауап беру. %1$s барлық сұрауларды мүмкіндігінше тайдырады, ал болмаса, барлығын қабылдайды.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Мазасыз шолу үшін cookie файлдарының қалқымалы терезелеріне автоматты түрде жауап беру. %1$s барлық сұрауларды мүмкіндігінше қабылдамайды.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -402,7 +398,7 @@
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie баннерлерін азайту</string>
 
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">%1$s сайтына cookie файлына рұқсат сұрауын тайдыру, немесе мүмкін болмаса, cookie файлдарына рұқсатын беру керек пе?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s сайтына cookie файлына рұқсат сұрауын тайдыру, немесе мүмкін болмаса, cookie файлдарына рұқсатын беру керек пе?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Мүмкін болса, %1$s үшін сайтының cookie файлына рұқсат сұрауын қабылдамауға рұқсат бересіз бе?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -411,7 +407,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Қауіпсіздікті арттыру үшін сайттарға HTTPS шифрлеу хаттамасын пайдаланып автоматты түрде қосылу әрекетін жасайды.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Іске қосулы</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Іске қосулы</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Сөндірулі</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1045,7 +1041,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ережеден бөлек</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Іске қосулы</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Іске қосулы</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Сөндірулі</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1796,7 +1792,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Қолданылатын іздеу жолы</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Сұранымды &quot;%s&quot; жолымен алмастырыңыз. Мысалы:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Сұранымды &quot;%s&quot; жолымен алмастырыңыз. Мысалы:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Таңдауыңызша іздеу жүйесінің ақпараты</string>
 

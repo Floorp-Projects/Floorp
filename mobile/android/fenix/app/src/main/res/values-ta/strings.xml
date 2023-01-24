@@ -49,15 +49,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">உங்கள் முகப்புத் திரையிலிருந்து கமுக்கக் கீற்றுகளைத் திறக்கக் குறுக்குவழியைச் சேர்க்கவும்.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">உங்கள் முகப்புத் திரையிலிருந்து கமுக்கக் கீற்றுகளைத் திறக்கக் குறுக்குவழியைச் சேர்க்கவும்.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">குறுக்குவழியைச் சேர்க்கவும்</string>
-    <!-- Text for the negative button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">குறுக்குவழியைச் சேர்க்கவும்</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">பரவாயில்லை நன்றி</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">தொடுப்புகள் செயலியில் திறக்கும்படி பயர்பாக்சை அமைக்கவும்</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">அமைவுகளுக்கு செல்</string>
     <!-- Text for the negative action button -->
@@ -161,8 +158,6 @@
     <string name="search_suggestions_onboarding_title">கமுக்க அமர்வுகளில் தேடல் பரிந்துரைகளை அனுமதிக்கவா?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">நீங்கள் முகவரி பட்டையில் உள்ளிடும் அனைத்தையும் %s உங்கள் இயல்புநிலை தேடுபொறியுடன் பகிர்ந்து கொள்ளும்.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">மேலும் அறிய</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">தேடல்</string>
@@ -208,6 +203,7 @@
     <string name="preferences_allow_screenshots_in_private_mode">கமுக்க உலாவலில் திரைப்பிடிப்பை அனுமதி</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">கமுக்க உலாவல் குறுக்குவழியைச் சேர்க்கவும்</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">அணுகுத்திறன்</string>
     <!-- Preference to override the Firefox Account server -->
@@ -227,8 +223,6 @@
     <string name="preferences_gestures">சைகைகள்</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">தனிப்பயனாக்கு</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">உங்கள் பயர்பாக்சு கணக்குடன் புத்தகக்குறிகள், கடவுச்சொற்கள், மற்றும் பலவற்றை ஒத்திசைக்கத் தொடங்குங்கள்.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">பயர்பாக்சு கணக்கு</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -334,9 +328,6 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">சந்தைப்படுத்தல் தரவு</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ஒத்திசைவை இயக்கு</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">மறுஇணைக்க புகுபதியுங்கள்</string>
     <!-- Preference for removing FxA account -->
@@ -444,8 +435,6 @@
     <string name="open_tabs_menu">கீற்றுப் பட்டியைத் திற</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">கீற்றுகளைத் திரட்டில் சேமி</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">கீற்றுப் பட்டி</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">திரட்டை நீக்கு</string>
     <!-- Text for the menu button to rename a collection -->
@@ -594,7 +583,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">விதிவிலக்குகள்</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">இயக்கு</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">இயக்கு</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">அணை</string>
 
@@ -662,13 +651,11 @@
     <string name="share_button_content_description">பகிர்</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">சாதனத்திற்கு அனுப்பு</string>
-    <!-- Sub-header in the dialog to share a link to an app from the full list -->
-    <string name="share_link_all_apps_subheader"></string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">சமீபத்தில் பாவித்தவை</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ஒத்திசைக்க உள்நுழை</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">அ.சாதனங்களுக்கும் அனுப்பு</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">ஒத்திசைவுக்கு மீண்டும் இணை</string>
@@ -705,8 +692,6 @@
     <string name="snackbar_tab_closed">கீற்று மூடப்பட்டது</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">கீற்றுகள் மூடப்பட்டன</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">சிறந்த தளங்களில் சேர்க்கப்பட்டன!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">கமுக்கக் கீற்று மூடப்பட்டது</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -778,8 +763,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">விலகு</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">இது உங்கள் உலாவல் தரவு அனைத்தையும் அழிக்கும்.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">தேர்ந்தெடுக்கப்பட்ட உலாவல் தரவை %s செயலி நீக்கும்.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -791,37 +774,6 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">உலாவி வரலாற்றை அழிக்கிறது…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">முன்னோட்ட பயர்பாக்சு இப்போது இராக்கால பயர்பாக்சு</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">ஒவ்வொரு இரவும் இராக்கால பயர்பாக்சு மேம்படுத்தப்பட்டு புதிய அம்சங்களைக் கொண்டு வெளியிடப்படுகிறது.
-        எப்படியாகினும், நிலைப்புத்தன்மை குறைந்திருக்கலாம். மேலும் நல்ல அனுபவத்திற்கு எங்கள் பீட்டா உலாவியைப் பதிவிறக்கவும்.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">பீட்டா ஆண்ட்ராய்டு பயர்பாக்சைப் பெறுக</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">இராக்கால பயர்பாக்சு நகர்ந்தது</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">இனி இச்செயலி பாதுகாப்பு புதுப்பிப்புகளைப் பெறாது. இச்செயலியை பாவிப்பதை நிறுத்திவிட்டு புதிய இராக்கால செயலிக்கு மாறவும்.
-        \n\nஉங்களின் புத்தகக்குறிகள், உள்நுழைவுகள் மற்றும் வரலாற்றை மற்றொரு செயலிக்கு மாற்ற, பயர்பாக்சு கணக்கை உருவாக்கவும்.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">புதிய இராக்கால உலாவிக்கு மாறவும்</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">இராக்கால பயர்பாக்சு நகர்ந்தது</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">இனி இச்செயலி பாதுகாப்பு புதுப்பிப்புகளைப் பெறாது. இச்செயலியை பாவிப்பதை நிறுத்திவிட்டு புதிய இராக்கால செயலிக்கு மாறவும்.
-        \n\nஉங்களின் புத்தகக்குறிகள், உள்நுழைவுகள் மற்றும் வரலாற்றை மற்றொரு செயலிக்கு மாற்ற, பயர்பாக்சு கணக்கை உருவாக்கவும்.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">புதிய இராக்கால உலாவியைப் பெறுங்கள்</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s செயலிக்கு வருக!</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ஒத்திசைவு இயக்கத்தில்</string>
 
@@ -830,8 +782,6 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">கண்டிப்பான</string>
 
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">உங்கள் தனியுரிமை</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">எங்கள் தனியுரிமை அறிவிக்கையைப் படிக்க</string>
 
@@ -1103,7 +1053,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">வினவலை “%s” ஆக மாற்றுக. எ.கா:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">வினவலை “%s” ஆக மாற்றுக. எ.கா:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">தனிப்பயன் தேடுபொறி விவரங்கள்</string>
 
@@ -1121,19 +1071,6 @@
     <string name="search_edit_custom_engine_success_message">%s சேமிக்கப்பட்டது</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s நீக்கப்பட்டது</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">புத்தம் புதிய %s க்கு வருக</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">இயங்கலையில் சிறப்பாகச் செயல்பட உங்களுக்கு உதவும் மேம்பட்ட செயல்திறன், அம்சங்களுடன் முற்றிலும் மறுவடிவமைக்கப்பட்ட உலாவி உங்களுக்காகக் காத்திருக்கிறது.\n\n நாங்கள் %s புதுப்பிக்கும் வரை காத்திருங்கள்</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s புதுப்பிக்கிறது…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s தொடங்குக</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">பெயர்வு முடிந்தது</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">கடவுச்சொற்கள்</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">அனுமதிக்க:</string>
@@ -1154,8 +1091,6 @@
     <string name="no_site_exceptions">தள விதிவிலக்குகள் இல்லை</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">இந்தப் புத்தகக்குறியை அழிக்க விரும்புகிறீர்களா?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">முதன்மைத் தளங்களில் சேர்</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">சரிபார்த்தது: %1$s</string>
@@ -1206,9 +1141,6 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">திறந்த கீற்றுகள் இல்லை</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">முதன்மை தள வரம்பை அடைந்தது</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">சரி, புரிந்தது</string>
 

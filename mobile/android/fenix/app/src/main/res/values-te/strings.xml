@@ -38,9 +38,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ఇటీవలి ఇష్టాంశాలు</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">ఇటీవల భద్రపరచినవి</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">తీసివేయి</string>
@@ -56,10 +53,10 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">మీ ముంగిలి తెర నుండి అంతరంగిక ట్యాబులను తెరవడానికి సత్వరమార్గాన్ని చేర్చుకోండి.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">మీ ముంగిలి తెర నుండి అంతరంగిక ట్యాబులను తెరవడానికి సత్వరమార్గాన్ని చేర్చుకోండి.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">సత్వరమార్గాన్ని చేర్చు</string>
-    <!-- Text for the negative button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">సత్వరమార్గాన్ని చేర్చు</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">ఫరవాలేదు వద్దు</string>
 
     <!-- Text for the positive action button -->
@@ -92,12 +89,6 @@
 
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">అన్నీ చూపించు</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; కోసం మీ వెతుకులాటలు</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d సైట్లు</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">తీసివేయి</string>
@@ -202,14 +193,6 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">వెతుకుడు అమరికలు</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$sలో కొత్తవి ఏమిటి</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ఇంతకుముందు మీరు ఆపిన చోటనుండి మొదలుపెట్టడం ఇప్పుడు తేలిక.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ఇటీవలి వెతుకులాటలు</string>
-
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">దాటవేయి</string>
 
@@ -262,6 +245,7 @@
     <string name="preferences_add_private_browsing_shortcut">అంతరంగిక విహరణ సత్వరమార్గాన్ని చేర్చు</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-మాత్రమే రీతి</string>
+
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ఇంకా తెలుసుకోండి</string>
     <!-- Option for the https only setting -->
@@ -290,8 +274,6 @@
     <string name="preferences_gestures">సైగలు</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">అభిమతీకరణ</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">మీ Firefox ఖాతాతో ఇష్టాంశాలను, సంకేతపదాలను, ఇంకా మరెన్నిటినో సింక్ చేసుకోండి</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox ఖాతా</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -301,8 +283,6 @@
 
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">డేటా ఎంపికలు</string>
-    <!-- Preference for data collection -->
-    <string name="preferences_data_collection"></string>
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB ద్వారా రిమోట్ డీబగ్గింగ్</string>
@@ -438,9 +418,6 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">అధ్యయనాలను స్థాపించడానికి, నడపడానికి Mozillaకు అనుమతినిస్తుంది</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">సింక్‌ను చేతనించు</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">మళ్ళీ అనుసంధానించడానికి ప్రవేశించండి</string>
     <!-- Preference for removing FxA account -->
@@ -626,9 +603,6 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (అంతరంగిక రీతి)</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ఇతర ట్యాబులు</string>
-
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">చరిత్రను తొలగించు</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -801,7 +775,7 @@
     <string name="preference_exceptions">మినహాయింపులు</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">చేతనం</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">చేతనం</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">అచేతనం</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -880,9 +854,6 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">సేకరణ %d</string>
 
-    <!-- Share -->
-    <!-- Share screen header -->
-    <string name="share_header_2"></string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">పంచుకోండి</string>
@@ -894,7 +865,7 @@
     <string name="share_link_recent_apps_subheader">ఇటీవల వాడినవి</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync లోనికి ప్రవేశించండి</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">పరికరాలన్నిటికీ పంపించు</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Syncకి మళ్ళీ అనుసంధానమవ్వండి</string>
@@ -1012,8 +983,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">నిష్క్రమించు</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ఇది మీ విహరణ డేటా అంతటినీ తొలగించివేస్తుంది.</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">ఈరోజు, నిన్న</string>
     <!-- Radio button in the delete browsing data dialog to delete all history. -->
@@ -1039,13 +1008,8 @@
     <string name="delete_history_group_prompt_allow">తొలగించు</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%sకి స్వాగతం!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">మెరుగైన అంతర్జాలానికి స్వాగతం</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">నమోదవ్వండి</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">సింక్ చేతనంగా ఉంది</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1054,8 +1018,6 @@
     <string name="onboarding_tracking_protection_strict_option">కఠినం</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">పనిముట్లపట్టీ ఎక్కడ ఉండాలో ఎంచుకోండి</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">మీ అంతరంగికత</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">మా గోప్యతా నోటీసును చదవండి</string>
 
@@ -1438,7 +1400,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">వాడాల్సిన శోధన పదబంధం</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">వెతుకుడు పదాన్ని “%s”తో పూరించండి. ఉదాహరణ:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">వెతుకుడు పదాన్ని “%s”తో పూరించండి. ఉదాహరణ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">అభిమత శోధన యంత్ర వివరాలు</string>
 
@@ -1583,4 +1545,5 @@
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">అమరికలకు వెళ్ళు</string>
+
     </resources>

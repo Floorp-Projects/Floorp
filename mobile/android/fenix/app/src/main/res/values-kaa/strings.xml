@@ -19,9 +19,17 @@
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Sazlamalardı ashıw</string>
 
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Jabıw</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Jabıw</string>
+
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Sazlamalarǵa ótiw</string>
 
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Jabıw</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
@@ -67,6 +75,11 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tekseriw</string>
 
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Ruqsat beriw</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Izlew sazlamaları</string>
+
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Baslaw</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -93,6 +106,9 @@
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
 
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Ruqsat beriw</string>
+
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Qosıwlı</string>
 
@@ -101,9 +117,19 @@
     <string name="preferences_https_only_off">Óshirilgen</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Bas bet</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox Akkaunt</string>
     <!-- Preference for language -->
     <string name="preferences_language">Til</string>
 
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Maǵlıwmatlardı tańlaw</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Maǵlıwmatlardı jıynaw</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Dawıslı izlewdi kórsetiw</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Akkaunt sazlamaları</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qosımshalar</string>
 
@@ -112,6 +138,13 @@
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Biykarlaw</string>
 
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Kóriw</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Tariyx</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Saylandılar</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Shıǵıw</string>
 
@@ -130,6 +163,10 @@
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Júklengenler</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Saylandılar</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Basqa saylandılar</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Tariyx</string>
     <!-- Settings Page Title -->
@@ -143,20 +180,42 @@
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Dizim</string>
 
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Betlerdi jabıw</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Bir kúnnen keyin</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Bir hápteden keyin</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Bir aydan keyin</string>
+
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Bas bet</string>
+
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Aqırǵı bet</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Alıp taslaw</string>
 
     <!-- Dialog button to confirm the removing a study. -->
-    <string name="studies_restart_dialog_ok">YAQSHI</string>
+    <string name="studies_restart_dialog_ok">MAQUL</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Biykarlaw</string>
 
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Jeke betler</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Bet qosıw</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Jeke bet qosıw</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Jeke</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Barlıq betlerdi bólisiw</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Bet sazlamaları</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Jabıw</string>
     <!-- Text for the menu button to rename a top site -->
@@ -183,6 +242,10 @@
     <string name="bookmark_menu_edit_button">Ózgeris kiritiw</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Bólisiw</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Jańa bette ashıw</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Jeke bette ashıw</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Óshiriw</string>
     <!--Bookmark overflow menu save button -->
@@ -196,11 +259,11 @@
     <string name="bookmark_undo_deletion">BIYKARLAW</string>
 
     <!-- Text for the OK button on Clear permissions dialog -->
-    <string name="clear_permissions_positive">YAQSHI</string>
+    <string name="clear_permissions_positive">MAQUL</string>
     <!-- Text for the cancel button on Clear permissions dialog -->
     <string name="clear_permissions_negative">Biykarlaw</string>
     <!-- Text for the OK button on Clear permission dialog -->
-    <string name="clear_permission_positive">YAQSHI</string>
+    <string name="clear_permission_positive">MAQUL</string>
     <!-- Text for the cancel button on Clear permission dialog -->
     <string name="clear_permission_negative">Biykarlaw</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -224,7 +287,7 @@
     <string name="create_collection_save">Saqlaw</string>
 
     <!-- Text for the OK button from collection dialogs -->
-    <string name="create_collection_positive">YAQSHI</string>
+    <string name="create_collection_positive">MAQUL</string>
     <!-- Text for the cancel button from collection dialogs -->
     <string name="create_collection_negative">Biykarlaw</string>
 
@@ -237,7 +300,7 @@
      <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">BIYKARLAW</string>
     <!-- QR code scanner prompt dialog positive option when there is an error -->
-    <string name="qr_scanner_dialog_invalid_ok">YAQSHI</string>
+    <string name="qr_scanner_dialog_invalid_ok">MAQUL</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Óshiriw</string>
 
@@ -275,8 +338,10 @@
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Biykarlaw</string>
 
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Maqul, tusindim</string>
     <!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">YAQSHI</string>
+	<string name="top_sites_rename_dialog_ok">MAQUL</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Biykarlaw</string>
 

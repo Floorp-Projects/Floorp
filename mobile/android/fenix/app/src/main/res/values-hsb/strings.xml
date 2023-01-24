@@ -66,9 +66,9 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Přidajće zwjazanje, zo byšće priwatne rajtarki ze swojeje startoweje wobrazowki wočinił.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Přidajće zwjazanje, zo byšće priwatne rajtarki ze swojeje startoweje wobrazowki wočinił.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Zwjazanje přidać</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Zwjazanje přidać</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Startowej wobrazowce přidać</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -257,7 +257,7 @@
     <string name="search_settings_menu_item">Pytanske nastajenja</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tónkróć pytać:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Tónkróć pytać:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Tónkróć pytać w:</string>
@@ -286,9 +286,9 @@
     <string name="onboarding_home_content_description_close_button">Začinić</string>
 
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Dale</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Dale</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Nic nětko</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -371,8 +371,8 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Pospytuje z pomocu zaklučowanskeho protokola HTTPS za powyšenu wěstotu awtomatisce ze sydłami zwjazać.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Zapinjeny</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Zapinjeny</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Wupinjeny</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Dalše informacije</string>
@@ -473,8 +473,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Njedawno wopytane</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Stawiznički, kotrež k přemyslowanju pohonjeja</string>
@@ -778,8 +776,6 @@
     <string name="tab_tray_menu_item_share">Wšě rajtarki dźělić</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Runje začinjene rajtarki</string>
-    <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources"></string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Kontowe nastajenja</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -999,7 +995,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Wuwzaća</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Zapinjeny</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Zapinjeny</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Wupinjeny</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1739,7 +1735,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Pytanski wuraz, kotryž ma so wužiwać</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Naprašowanje z „%s“ wuměnić. Přikład: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Naprašowanje z „%s“ wuměnić. Přikład: \nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Podrobnosće swójskeje pytawy</string>
@@ -1939,8 +1935,6 @@
     <string name="pocket_stories_categories_header">Stawiznički po temje</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Wjace wotkryć</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Wot Pocket spěchowany</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Spěchowany wot %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

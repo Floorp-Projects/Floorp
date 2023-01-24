@@ -67,11 +67,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Tambahkan pintasan untuk membuka tab privat dari layar Beranda Anda.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Tambahkan pintasan untuk membuka tab privat dari layar Beranda Anda.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Luncurkan tab pribadi berikutnya dengan sekali ketuk.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Tambahkan pintasan</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Tambahkan pintasan</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Tambahkan ke Beranda</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -264,7 +264,7 @@
     <string name="search_settings_menu_item">Setelan pencarian</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Kali ini temukan dengan:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Kali ini temukan dengan:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Kali ini, cari di:</string>
@@ -350,7 +350,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Kurangi spanduk kuki</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox secara otomatis mencoba menolak permintaan kuki di spanduk kuki. Jika opsi menolak tidak tersedia, Firefox akan menerima semua kuki untuk menutup spanduk tersebut.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox secara otomatis mencoba menolak permintaan kuki di spanduk kuki. Jika opsi menolak tidak tersedia, Firefox akan menerima semua kuki untuk menutup spanduk tersebut.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Nonaktif untuk situs ini</string>
@@ -364,13 +364,13 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s akan menghapus kuki situs ini dan menyegarkan laman ini. Membersihkan semua kuki dapat membuat Anda keluar dari suatu situs atau mengosongkan keranjang belanja.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s dapat mencoba menolak permintaan kuki secara otomatis. Jika opsi menolak tidak tersedia, %2$s dapat menerima semua kuki untuk menutup spanduk tersebut.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s dapat mencoba menolak permintaan kuki secara otomatis. Jika opsi menolak tidak tersedia, %2$s dapat menerima semua kuki untuk menutup spanduk tersebut.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Secara otomatis mencoba terhubung ke situs menggunakan protokol enkripsi HTTPS untuk meningkatkan keamanan.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Nyala</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Nyala</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Mati</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Pelajari lebih lanjut</string>
@@ -472,8 +472,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Baru dikunjungi</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Cerita yang menggugah pikiran</string>
@@ -997,7 +995,7 @@
     <string name="preference_exceptions">Kekecualian</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Aktif</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Aktif</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Nonaktif</string>
 
@@ -1023,7 +1021,7 @@
     <string name="delete_browsing_data_quit_off">Nonaktif</string>
 
     <!-- Summary of studies preference if it is set to on -->
-    <string name="studies_on"></string>
+    <string name="studies_on">Aktif</string>
     <!-- Summary of studies data on quit preference if it is set to off -->
     <string name="studies_off">Mati</string>
 
@@ -1737,7 +1735,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">String pencarian untuk digunakan</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Ganti kueir dengan “%s”. Contoh:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Ganti kueir dengan “%s”. Contoh:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Rincian mesin pencari kustom</string>
@@ -1938,8 +1936,6 @@
     <string name="pocket_stories_categories_header">Cerita berdasarkan topik</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Temukan lebih banyak</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Diberdayakan oleh Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Diberdayakan oleh %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

@@ -66,11 +66,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Thêm lối tắt để mở các thẻ riêng tư từ màn hình chính của bạn.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Thêm lối tắt để mở các thẻ riêng tư từ màn hình chính của bạn.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Khởi chạy thẻ riêng tư tiếp theo chỉ bằng một lần nhấn.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Thêm lối tắt</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Thêm lối tắt</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Thêm vào màn hình chính</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -171,6 +171,8 @@
     <string name="browser_menu_stop">Dừng</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Tiện ích</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Thông tin tài khoản</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Không có tiện ích nào ở đây</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -259,7 +261,7 @@
     <string name="search_settings_menu_item">Cài đặt tìm kiếm</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Lần này tìm kiếm:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Lần này tìm kiếm:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Lần này tìm kiếm trong:</string>
@@ -355,7 +357,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Giảm biểu ngữ cookie</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie.</string>
@@ -370,14 +372,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s sẽ xóa cookie của trang web này và làm mới trang. Xóa tất cả cookie có thể khiến bạn đăng xuất hoặc làm trống giỏ hàng.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s có thể thử tự động từ chối yêu cầu cookie. Nếu không có tùy chọn từ chối, %2$s có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s có thể thử tự động từ chối yêu cầu cookie. Nếu không có tùy chọn từ chối, %2$s có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s có thể cố gắng tự động từ chối yêu cầu cookie.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Biểu ngữ cookie sẽ biến mất!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể. Nếu không, chấp nhận tất cả cookie để loại bỏ biểu ngữ cookie.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể. Nếu không, chấp nhận tất cả cookie để loại bỏ biểu ngữ cookie.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Tự động từ chối các yêu cầu cookie khi có thể.</string>
     <!-- Remind me later text button for the onboarding dialog -->
@@ -389,7 +391,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Xem ít cửa sổ bật lên về cookie hơn</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể hoặc chấp nhận tất cả nếu không.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể hoặc chấp nhận tất cả nếu không.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Tự động trả lời các cửa sổ bật lên cookie để duyệt web không bị phân tâm. %1$s sẽ từ chối tất cả các yêu cầu nếu có thể.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -397,7 +399,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Giảm biểu ngữ cookie</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của trang web nếu có thể hoặc chấp nhận quyền truy cập cookie khi không thể?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của trang web nếu có thể hoặc chấp nhận quyền truy cập cookie khi không thể?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Cho phép %1$s từ chối yêu cầu chấp thuận cookie của một trang web nếu có thể?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -406,7 +408,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tự động cố gắng kết nối với các trang web bằng giao thức mã hóa HTTPS để tăng cường bảo mật.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Bật</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Bật</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Tắt</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1043,7 +1045,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ngoại trừ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Bật</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Bật</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Tắt</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1783,7 +1785,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Chi tiết công cụ tìm kiếm tùy chỉnh</string>
