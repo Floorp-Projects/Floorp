@@ -2818,6 +2818,12 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 }
 
 bool nsFrameLoader::TryRemoteBrowser() {
+  // Creating remote browsers may result in creating new processes, but during
+  // parent shutdown that would add just noise, so better bail out.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return false;
+  }
+
   // Try to create the internal remote browser.
   if (TryRemoteBrowserInternal()) {
     return true;
