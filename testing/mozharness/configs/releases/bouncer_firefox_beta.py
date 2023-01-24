@@ -80,6 +80,14 @@ config = {
                 "win64",
             ],
         },
+        "pkg": {
+            "product-name": "Firefox-%(version)s-pkg-SSL",
+            "platforms": ["osx"],
+        },
+        "pkg-latest": {
+            "product-name": "Firefox-beta-pkg-latest-SSL",
+            "platforms": ["osx"],
+        },
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
             "platforms": [
