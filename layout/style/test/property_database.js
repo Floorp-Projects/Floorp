@@ -13652,6 +13652,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     initial_values: ["none"],
     other_values: [
       "all",
+      "auto",
       "ball",
       "mall",
       "color",
@@ -13664,13 +13665,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "\\2bounce",
       "-\\2bounce",
     ],
-    invalid_values: [
-      "auto",
-      "bounce, abc",
-      "abc bounce",
-      "10px",
-      "rgb(1, 2, 3)",
-    ],
+    invalid_values: ["bounce, abc", "abc bounce", "10px", "rgb(1, 2, 3)"],
   };
 
   gCSSProperties["scroll-timeline-axis"] = {
@@ -13689,6 +13684,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     subproperties: ["scroll-timeline-name", "scroll-timeline-axis"],
     initial_values: ["none block", "block none", "block", "none"],
     other_values: [
+      "auto inline",
       "bounce inline",
       "bounce vertical",
       "horizontal bounce",
@@ -13707,6 +13703,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     initial_values: ["none"],
     other_values: [
       "all",
+      "auto",
       "ball",
       "mall",
       "color",
@@ -13721,7 +13718,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "bounce, abc",
       "none, none",
     ],
-    invalid_values: ["auto", "abc bounce", "10px", "rgb(1, 2, 3)"],
+    invalid_values: ["abc bounce", "10px", "rgb(1, 2, 3)"],
   };
 
   gCSSProperties["view-timeline-axis"] = {
@@ -13749,6 +13746,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     subproperties: ["view-timeline-name", "view-timeline-axis"],
     initial_values: ["none block", "none"],
     other_values: [
+      "auto inline",
       "bounce inline",
       "bounce vertical",
       "\\32bounce inline",
