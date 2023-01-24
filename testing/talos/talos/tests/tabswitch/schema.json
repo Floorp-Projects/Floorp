@@ -7,16 +7,7 @@
         "name": "setup",
         "type": "function",
         "description": "Prepares the tabswitch test to be run by the Talos framework.",
-        "parameters": [{
-          "type": "object",
-          "name": "setupArgs",
-          "properties": {
-            "processScriptPath": {
-              "type": "string",
-              "description": "Relative path for the process script to load for the test in the initial tab."
-            }
-          }
-        }]
+        "parameters": []
       }
     ]
   }

@@ -340,4 +340,20 @@ export let RemotePageAccessManager = {
     // if not, deny access.
     return accessMapForURI[aFeature];
   },
+
+  /**
+   * This function adds a new page to the access map, but can only
+   * be used in a test environment.
+   */
+  addPage(aUrl, aFunctionMap) {
+    if (!Cu.isInAutomation) {
+      throw new Error("Cannot only modify privileges during testing");
+    }
+
+    if (aUrl in this.accessMap) {
+      throw new Error("Cannot modify privileges of existing page");
+    }
+
+    this.accessMap[aUrl] = aFunctionMap;
+  },
 };
