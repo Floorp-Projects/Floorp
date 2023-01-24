@@ -1618,10 +1618,6 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
       // Move the Print button to the end if this isn't Windows.
       this.printButton.parentElement.append(this.printButton);
     }
-    this.querySelector("#pages-per-sheet").hidden = !Services.prefs.getBoolPref(
-      "print.pages_per_sheet.enabled",
-      false
-    );
   }
 
   removeNonPdfSettings() {
