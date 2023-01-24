@@ -179,7 +179,7 @@ impl Version {
     }
 
     fn supports_fma_function(&self) -> bool {
-        *self >= Version::Desktop(400) || *self >= Version::new_gles(310)
+        *self >= Version::Desktop(400) || *self >= Version::new_gles(320)
     }
 }
 
@@ -3849,6 +3849,12 @@ const fn glsl_storage_format(format: crate::StorageFormat) -> &'static str {
         Sf::Rgba32Uint => "rgba32ui",
         Sf::Rgba32Sint => "rgba32i",
         Sf::Rgba32Float => "rgba32f",
+        Sf::R16Unorm => "r16",
+        Sf::R16Snorm => "r16_snorm",
+        Sf::Rg16Unorm => "rg16",
+        Sf::Rg16Snorm => "rg16_snorm",
+        Sf::Rgba16Unorm => "rgba16",
+        Sf::Rgba16Snorm => "rgba16_snorm",
     }
 }
 

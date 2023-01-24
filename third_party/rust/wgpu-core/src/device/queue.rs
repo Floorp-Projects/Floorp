@@ -307,6 +307,8 @@ pub enum QueueSubmitError {
     DestroyedTexture(id::TextureId),
     #[error(transparent)]
     Unmap(#[from] BufferAccessError),
+    #[error("Buffer {0:?} is still mapped")]
+    BufferStillMapped(id::BufferId),
     #[error("surface output was dropped before the command buffer got submitted")]
     SurfaceOutputDropped,
     #[error("surface was unconfigured before the command buffer got submitted")]
@@ -387,6 +389,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         buffer_size: wgt::BufferSize,
         id_in: Input<G, id::StagingBufferId>,
     ) -> Result<(id::StagingBufferId, *mut u8), QueueWriteError> {
+        profiling::scope!("Queue::create_staging_buffer");
         let hub = A::hub(self);
         let root_token = &mut Token::root();
 
@@ -411,8 +414,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         buffer_offset: wgt::BufferAddress,
         staging_buffer_id: id::StagingBufferId,
     ) -> Result<(), QueueWriteError> {
-        profiling::scope!("Queue::write_buffer_with");
-
+        profiling::scope!("Queue::write_staging_buffer");
         let hub = A::hub(self);
         let root_token = &mut Token::root();
 
@@ -455,6 +457,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         buffer_offset: u64,
         buffer_size: u64,
     ) -> Result<(), QueueWriteError> {
+        profiling::scope!("Queue::validate_write_buffer");
         let hub = A::hub(self);
         let root_token = &mut Token::root();
 
@@ -910,7 +913,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             } else {
                                 match buffer.map_state {
                                     BufferMapState::Idle => (),
-                                    _ => panic!("Buffer {:?} is still mapped", id),
+                                    _ => return Err(QueueSubmitError::BufferStillMapped(id.0)),
                                 }
                             }
                         }

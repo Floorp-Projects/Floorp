@@ -20,6 +20,11 @@ git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 replace-with = "vendored-sources"
 
+[source."https://github.com/gfx-rs/d3d12-rs"]
+git = "https://github.com/gfx-rs/d3d12-rs"
+rev = "a990c93"
+replace-with = "vendored-sources"
+
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 rev = "1be8024"
@@ -27,7 +32,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "a3e3d2503fe4d7957224083fecac38690843a795"
+rev = "24a904256e225b20b11fb30f914ef53212a2909e"
 replace-with = "vendored-sources"
 
 [source."https://github.com/glandium/warp"]

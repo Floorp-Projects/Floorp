@@ -1211,8 +1211,7 @@ dependencies = [
 [[package]]
 name = "d3d12"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "827914e1f53b1e0e025ecd3d967a7836b7bcb54520f90e21ef8df7b4d88a2759"
+source = "git+https://github.com/gfx-rs/d3d12-rs?rev=a990c93#a990c93ec64eeab78f2292763d0715da9dba1d59"
 dependencies = [
  "bitflags",
  "libloading",
@@ -6347,7 +6346,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
+source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6370,7 +6369,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
+source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6408,7 +6407,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=a3e3d2503fe4d7957224083fecac38690843a795#a3e3d2503fe4d7957224083fecac38690843a795"
+source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
 dependencies = [
  "bitflags",
  "serde",
