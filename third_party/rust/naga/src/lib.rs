@@ -108,9 +108,7 @@ Naga's rules for when `Expression`s are evaluated are as follows:
     evaluated when the `Atomic` statement is executed.
 
 -   All other expressions are evaluated when the (unique) [`Statement::Emit`]
-    statement that covers them is executed. The [`Expression::needs_pre_emit`]
-    method returns `true` if the given expression is one of those variants that
-    does *not* need to be covered by an `Emit` statement.
+    statement that covers them is executed.
 
 Now, strictly speaking, not all `Expression` variants actually care when they're
 evaluated. For example, you can evaluate a [`BinaryOperator::Add`] expression
@@ -533,6 +531,14 @@ pub enum StorageFormat {
     Rgba32Uint,
     Rgba32Sint,
     Rgba32Float,
+
+    // Normalized 16-bit per channel formats
+    R16Unorm,
+    R16Snorm,
+    Rg16Unorm,
+    Rg16Snorm,
+    Rgba16Unorm,
+    Rgba16Snorm,
 }
 
 /// Sub-class of the image type.

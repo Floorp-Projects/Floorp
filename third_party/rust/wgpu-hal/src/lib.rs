@@ -90,9 +90,6 @@ pub mod api {
     pub use super::vulkan::Api as Vulkan;
 }
 
-#[cfg(feature = "vulkan")]
-pub use vulkan::UpdateAfterBindTypes;
-
 use std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -743,6 +740,7 @@ bitflags::bitflags! {
 pub struct InstanceDescriptor<'a> {
     pub name: &'a str,
     pub flags: InstanceFlags,
+    pub dx12_shader_compiler: wgt::Dx12Compiler,
 }
 
 #[derive(Clone, Debug)]
@@ -847,6 +845,9 @@ pub struct TextureDescriptor<'a> {
     pub format: wgt::TextureFormat,
     pub usage: TextureUses,
     pub memory_flags: MemoryFlags,
+    /// Allows views of this texture to have a different format
+    /// than the this texture does.
+    pub allow_different_view_format: bool,
 }
 
 /// TextureView descriptor.
