@@ -2856,14 +2856,6 @@ BrowserGlue.prototype = {
       },
 
       {
-        // Starts the JSOracle process for ORB JavaScript validation, if it hasn't started already.
-        name: "start-orb-javascript-oracle",
-        task: () => {
-          ChromeUtils.ensureJSOracleStarted();
-        },
-      },
-
-      {
         name: "browser-startup-idle-tasks-finished",
         task: () => {
           // Use idleDispatch a second time to run this after the per-window
