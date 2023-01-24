@@ -351,16 +351,23 @@
         await this._translationReady;
       }
 
+      let finalStep = () => {
+        this._sizeToPreferredSize();
+        this._snapCursorToDefaultButtonIfNeeded();
+      };
       // As a hack to ensure Windows sizes the window correctly,
       // _sizeToPreferredSize() needs to happen after
       // AppWindow::OnChromeLoaded. That one is called right after the load
       // event dispatch but within the same task. Using direct dispatch let's
       // all this code run before the next task (which might be a task to
       // paint the window).
-      Services.tm.dispatchDirectTaskToCurrentThread(() => {
-        this._sizeToPreferredSize();
-        this._snapCursorToDefaultButtonIfNeeded();
-      });
+      // But, MacOS doesn't like resizing after window/dialog becoming visible.
+      // Linux seems to be able to handle both cases.
+      if (Services.appinfo.OS == "Darwin") {
+        finalStep();
+      } else {
+        Services.tm.dispatchDirectTaskToCurrentThread(finalStep);
+      }
     }
 
     // This snaps the cursor to the default button rect on windows, when
