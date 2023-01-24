@@ -68,7 +68,7 @@ hw-a51-startup-fenix-cold-main-first-frame:
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cmff)
-    platform: android-hw-a51-11-0-arm7-shippable/opt
+    platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
     run:
@@ -92,7 +92,7 @@ hw-a51-startup-fenix-cold-view-nav-start:
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cvns)
-    platform: android-hw-a51-11-0-arm7-shippable/opt
+    platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
     run:
@@ -116,7 +116,7 @@ hw-a51-startup-focus-cold-main-first-frame:
     description: Run android startup perftest on Focus on a Samsung A51
     treeherder:
         symbol: perftest(startup-focus-cmff)
-    platform: android-hw-a51-11-0-arm7-shippable/opt
+    platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
     run:
@@ -140,7 +140,7 @@ hw-a51-startup-focus-cold-view-nav-start:
     description: Run android startup perftest on Focus on a Samsung A51
     treeherder:
         symbol: perftest(startup-focus-cvns)
-    platform: android-hw-a51-11-0-arm7-shippable/opt
+    platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
     run:
