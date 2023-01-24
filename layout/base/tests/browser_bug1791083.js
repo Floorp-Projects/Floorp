@@ -30,7 +30,7 @@ add_task(async function test() {
   // new location.
   newWin.resizeTo(50, 50);
 
-  BrowserTestUtils.loadURI(newWin.gBrowser.selectedBrowser, URL);
+  BrowserTestUtils.loadURIString(newWin.gBrowser.selectedBrowser, URL);
   await BrowserTestUtils.browserLoaded(newWin.gBrowser.selectedBrowser);
 
   await SpecialPowers.spawn(

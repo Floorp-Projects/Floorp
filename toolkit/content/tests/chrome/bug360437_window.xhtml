@@ -53,7 +53,7 @@
           addEventListener("DOMContentLoaded", () => resolve(), { once: true });
         });
       });
-      BrowserTestUtils.loadURI(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
+      BrowserTestUtils.loadURIString(gBrowser, "data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
       await loadedPromise;
       await contentLoadedPromise;
 

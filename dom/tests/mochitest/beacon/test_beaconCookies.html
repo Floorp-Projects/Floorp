@@ -54,7 +54,7 @@ function beginTest() {
       ok(true, "cookie set by beacon request in normal window");
       testOnPrivateWindow();
     }, "cookie-changed");
-    BrowserTestUtils.loadURI(aNormalWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+    BrowserTestUtils.loadURIString(aNormalWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
   });
 }
 
@@ -65,7 +65,7 @@ function testOnPrivateWindow() {
       ok(true, "private cookie set by beacon request in private window");
       cleanup();
     }, "private-cookie-changed");
-    BrowserTestUtils.loadURI(aPrivateWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+    BrowserTestUtils.loadURIString(aPrivateWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
   });
 }
 

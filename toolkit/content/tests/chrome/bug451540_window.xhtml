@@ -33,7 +33,7 @@
       gBrowser.addEventListener("pageshow", onPageShow, { once: true });
       let data = `data:text/html,<input id="inp" type="text" />
                                  <textarea id="tarea"/>`;
-      BrowserTestUtils.loadURI(gBrowser, data);
+      BrowserTestUtils.loadURIString(gBrowser, data);
     }
 
     function promiseHighlightFinished() {

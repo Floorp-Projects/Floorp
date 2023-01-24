@@ -63,7 +63,10 @@ var ControlCenter = {
           "navigator:browser"
         );
         let gBrowser = browserWindow.gBrowser;
-        BrowserTestUtils.loadURI(gBrowser.selectedBrowser, channel.file.path);
+        BrowserTestUtils.loadURIString(
+          gBrowser.selectedBrowser,
+          channel.file.path
+        );
         await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         await openIdentityPopup();
       },
@@ -290,7 +293,7 @@ var ControlCenter = {
 async function loadPage(url) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let gBrowser = browserWindow.gBrowser;
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url);
 }
 
