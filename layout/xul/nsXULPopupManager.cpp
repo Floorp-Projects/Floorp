@@ -613,10 +613,12 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
 
   // Update the popup's position using SetPopupPosition if the popup is
   // anchored and at the parent level as these maintain their position
-  // relative to the parent window. Otherwise, just update the popup to
-  // the specified screen coordinates.
+  // relative to the parent window (except if positioned by move to rect, in
+  // which case we better make sure that layout matches that). Otherwise, just
+  // update the popup to the specified screen coordinates.
   if (menuPopupFrame->IsAnchored() &&
-      menuPopupFrame->GetPopupLevel() == widget::PopupLevel::Parent) {
+      menuPopupFrame->GetPopupLevel() == widget::PopupLevel::Parent &&
+      !aByMoveToRect) {
     menuPopupFrame->SetPopupPosition(true);
   } else {
     CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
