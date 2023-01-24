@@ -2484,7 +2484,6 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_cue", ":cue"),
     PseudoElementAtom("PseudoElement_firstLetter", ":first-letter"),
     PseudoElementAtom("PseudoElement_firstLine", ":first-line"),
-    PseudoElementAtom("PseudoElement_highlight", ":highlight"),
     PseudoElementAtom("PseudoElement_selection", ":selection"),
     PseudoElementAtom("PseudoElement_mozFocusInner", ":-moz-focus-inner"),
     PseudoElementAtom("PseudoElement_mozNumberSpinBox", ":-moz-number-spin-box"),
