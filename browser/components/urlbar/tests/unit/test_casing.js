@@ -17,11 +17,10 @@ add_task(async function test_casing_1() {
     context,
     autofilled: "MOZilla.org/",
     completed: "http://mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
-        title: "mozilla.org",
+        fallbackTitle: "mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -44,7 +43,6 @@ add_task(async function test_casing_2() {
     context,
     autofilled: "mozilla.org/Test/",
     completed: "http://mozilla.org/test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -69,7 +67,6 @@ add_task(async function test_casing_3() {
     context,
     autofilled: "mozilla.org/Test/",
     completed: "http://mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/Test/",
@@ -91,7 +88,6 @@ add_task(async function test_casing_4() {
     context,
     autofilled: "mOzilla.org/test/",
     completed: "http://mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -116,7 +112,6 @@ add_task(async function test_casing_5() {
     context,
     autofilled: "mOzilla.org/Test/",
     completed: "http://mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/Test/",
@@ -138,11 +133,10 @@ add_task(async function test_untrimmed_casing() {
     context,
     autofilled: "http://mOzilla.org/",
     completed: "http://mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
-        title: "mozilla.org",
+        fallbackTitle: "mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -165,11 +159,10 @@ add_task(async function test_untrimmed_www_casing() {
     context,
     autofilled: "http://www.mOzilla.org/",
     completed: "http://www.mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/",
-        title: "www.mozilla.org",
+        fallbackTitle: "www.mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -192,7 +185,6 @@ add_task(async function test_untrimmed_path_casing() {
     context,
     autofilled: "http://mOzilla.org/test/",
     completed: "http://mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -217,7 +209,6 @@ add_task(async function test_untrimmed_path_casing_2() {
     context,
     autofilled: "http://mOzilla.org/Test/",
     completed: "http://mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/Test/",
@@ -239,7 +230,6 @@ add_task(async function test_untrimmed_path_www_casing() {
     context,
     autofilled: "http://www.mOzilla.org/test/",
     completed: "http://www.mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
@@ -264,7 +254,6 @@ add_task(async function test_untrimmed_path_www_casing_2() {
     context,
     autofilled: "http://www.mOzilla.org/Test/",
     completed: "http://www.mozilla.org/Test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/Test/",

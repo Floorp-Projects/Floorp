@@ -84,7 +84,7 @@ async function heuristicIsNotRestyled(expectedType, resultDetails) {
   if (
     expectedType === UrlbarUtils.RESULT_TYPE.URL &&
     resultDetails.result.heuristic &&
-    resultDetails.result.autofill?.hasTitle
+    resultDetails.result.payload.title
   ) {
     Assert.equal(
       resultDetails.displayed.url,

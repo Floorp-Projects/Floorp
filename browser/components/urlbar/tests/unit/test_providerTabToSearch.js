@@ -39,7 +39,6 @@ add_task(async function basic() {
     context,
     autofilled: "example.com/",
     completed: "https://example.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/",
@@ -66,7 +65,6 @@ add_task(async function basic() {
     context,
     autofilled: "example.com/",
     completed: "https://example.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/",
@@ -118,7 +116,6 @@ add_task(async function autofillDoesNotMatchEngine() {
     context,
     autofilled: "example.test.ca/",
     completed: "https://example.test.ca/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.test.ca/",
@@ -142,7 +139,6 @@ add_task(async function ignoreWww() {
     context,
     autofilled: "www.example.com/",
     completed: "https://www.example.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.example.com/",
@@ -179,7 +175,6 @@ add_task(async function ignoreWww() {
     context,
     autofilled: "foo.bar/",
     completed: "https://foo.bar/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://foo.bar/",
@@ -208,7 +203,6 @@ add_task(async function ignoreWww() {
     context,
     autofilled: "foo.bar/",
     completed: "https://www.foo.bar/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.foo.bar/",
@@ -268,7 +262,6 @@ add_task(async function conflictingEngines() {
     context,
     autofilled: "foo.com/",
     completed: "https://foo.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://foo.com/",
@@ -301,7 +294,6 @@ add_task(async function conflictingEngines() {
     context,
     autofilled: "foobar.com/",
     completed: "https://foobar.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://foobar.com/",
@@ -365,7 +357,6 @@ add_task(async function multipleEnginesForHostname() {
     context,
     autofilled: "example.com/",
     completed: "https://example.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/",
@@ -403,7 +394,6 @@ add_task(async function test_casing() {
     context,
     autofilled: "eXAmple.com/",
     completed: "https://example.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/",
@@ -484,7 +474,6 @@ add_task(async function test_publicSuffixIsHost() {
     context,
     autofilled: "com.mx/",
     completed: "https://com.mx/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://com.mx/",
@@ -516,7 +505,6 @@ add_task(async function test_disabledEngine() {
     context,
     autofilled: "disabled.com/",
     completed: "https://disabled.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://disabled.com/",
@@ -541,7 +529,6 @@ add_task(async function test_disabledEngine() {
     context,
     autofilled: "disabled.com/",
     completed: "https://disabled.com/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://disabled.com/",

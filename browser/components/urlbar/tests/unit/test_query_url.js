@@ -17,11 +17,10 @@ add_task(async function test_no_slash() {
     context,
     autofilled: "file.org/",
     completed: "http://file.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://file.org/",
-        title: "file.org",
+        fallbackTitle: "file.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -55,11 +54,10 @@ add_task(async function test_w_slash() {
     context,
     autofilled: "file.org/",
     completed: "http://file.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://file.org/",
-        title: "file.org/",
+        fallbackTitle: "file.org/",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -87,7 +85,6 @@ add_task(async function test_middle() {
     context,
     autofilled: "file.org/test/",
     completed: "http://file.org/test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://file.org/test/",

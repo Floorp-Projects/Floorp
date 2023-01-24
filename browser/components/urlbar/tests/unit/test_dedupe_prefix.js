@@ -48,7 +48,6 @@ add_task(async function dedupe_prefix() {
     context,
     autofilled: "example.com/foo/",
     completed: "https://www.example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.example.com/foo/",
@@ -86,7 +85,6 @@ add_task(async function dedupe_prefix() {
     context,
     autofilled: "example.com/foo/",
     completed: "http://www.example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.example.com/foo/",
@@ -128,7 +126,6 @@ add_task(async function dedupe_prefix() {
     context,
     autofilled: "example.com/foo/",
     completed: "https://example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/foo/",
@@ -188,7 +185,6 @@ add_task(async function hideHeuristic() {
     context,
     autofilled: "example.com/foo/",
     completed: "https://www.example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.example.com/foo/",
@@ -226,7 +222,6 @@ add_task(async function hideHeuristic() {
     context,
     autofilled: "example.com/foo/",
     completed: "http://www.example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.example.com/foo/",
@@ -264,7 +259,6 @@ add_task(async function hideHeuristic() {
     context,
     autofilled: "example.com/foo/",
     completed: "https://example.com/foo/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://example.com/foo/",

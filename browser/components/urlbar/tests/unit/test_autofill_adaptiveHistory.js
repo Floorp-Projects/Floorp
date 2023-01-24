@@ -23,7 +23,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -43,7 +42,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://www.example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -63,7 +61,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "www.example.com/test",
       completed: "http://www.example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -83,7 +80,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "eXAmple.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -104,7 +100,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "WWW.example.com/test",
       completed: "http://www.example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -133,7 +128,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/yes",
       completed: "http://example.com/yes",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -162,7 +156,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/many",
       completed: "http://example.com/many",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -191,7 +184,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/many",
       completed: "http://example.com/many",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -224,7 +216,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/many",
       completed: "http://example.com/many",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -249,12 +240,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -274,7 +264,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -295,7 +284,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -315,12 +303,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.org/",
       completed: "http://example.org/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.org/",
-            title: "example.org",
+            fallbackTitle: "example.org",
             heuristic: true,
           }),
         context =>
@@ -340,12 +327,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -409,7 +395,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -430,7 +415,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -480,7 +464,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/bookmarked",
       completed: "http://example.com/bookmarked",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -518,7 +501,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/bookmarked",
       completed: "http://example.com/bookmarked",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -575,7 +557,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -607,7 +588,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -639,7 +619,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -671,7 +650,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/testMany",
       completed: "http://example.com/testMany",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -759,7 +737,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -779,7 +756,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -800,7 +776,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http://example.com/test",
       completed: "http://www.example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -824,7 +799,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "http.example.com/test",
       completed: "http://http.example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -879,7 +853,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "totally.example.com/",
       completed: "http://totally.example.com/",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -908,7 +881,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -934,7 +906,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -961,12 +932,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -987,7 +957,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -1008,7 +977,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -1029,12 +997,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -1062,7 +1029,6 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
         context =>
           makeVisitResult(context, {
@@ -1090,12 +1056,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/test",
       completed: "http://example.com/test",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/test",
-            title: "example.com/test",
+            fallbackTitle: "example.com/test",
             heuristic: true,
           }),
         context =>
@@ -1117,11 +1082,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -1163,11 +1128,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
       ],
@@ -1185,11 +1150,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -1209,12 +1174,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -1234,12 +1198,11 @@ const TEST_DATA = [
     expected: {
       autofilled: "example.com/",
       completed: "http://example.com/",
-      hasAutofillTitle: false,
       results: [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
         context =>
@@ -1348,13 +1311,15 @@ add_task(async function urlCase() {
     const context = createContext(currentUserInput, { isPrivate: false });
 
     if (currentUserInput.length < testInput.length) {
-      // Not autofill.
+      // Autofill with host.
       await check_results({
         context,
+        autofilled: "example.com/",
+        completed: "http://example.com/",
         matches: [
           makeVisitResult(context, {
             uri: "http://example.com/",
-            title: "example.com",
+            fallbackTitle: "example.com",
             heuristic: true,
           }),
           makeVisitResult(context, {
@@ -1370,7 +1335,6 @@ add_task(async function urlCase() {
         context,
         autofilled,
         completed: "http://example.com/ABC/DEF",
-        hasAutofillTitle: true,
         matches: [
           makeVisitResult(context, {
             uri: "http://example.com/ABC/DEF",
@@ -1385,11 +1349,10 @@ add_task(async function urlCase() {
         context,
         autofilled: "example.COM/abc/def",
         completed: "http://example.com/abc/def",
-        hasAutofillTitle: false,
         matches: [
           makeVisitResult(context, {
             uri: "http://example.com/abc/def",
-            title: "example.com/abc/def",
+            fallbackTitle: "example.com/abc/def",
             heuristic: true,
           }),
           makeVisitResult(context, {
@@ -1416,7 +1379,6 @@ add_task(async function decayTest() {
     context: initContext,
     autofilled: "example.com/test",
     completed: "http://example.com/test",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(initContext, {
         uri: "http://example.com/test",
@@ -1442,7 +1404,6 @@ add_task(async function decayTest() {
     context: midContext,
     autofilled: "example.com/test",
     completed: "http://example.com/test",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(midContext, {
         uri: "http://example.com/test",
@@ -1461,11 +1422,10 @@ add_task(async function decayTest() {
     context,
     autofilled: "example.com/",
     completed: "http://example.com/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://example.com/",
-        title: "example.com",
+        fallbackTitle: "example.com",
         heuristic: true,
       }),
       makeVisitResult(context, {
