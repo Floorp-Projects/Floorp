@@ -63,6 +63,12 @@ bool SharedWorkerManager::MaybeCreateRemoteWorker(
     UniqueMessagePortId& aPortIdentifier, base::ProcessId aProcessId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
+  // Creating remote workers may result in creating new processes, but during
+  // parent shutdown that would add just noise, so better bail out.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return false;
+  }
+
   if (!mRemoteWorkerController) {
     mRemoteWorkerController =
         RemoteWorkerController::Create(aData, this, aProcessId);
