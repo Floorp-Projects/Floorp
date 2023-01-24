@@ -1537,6 +1537,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       displayUrl: {
         type: "string",
       },
+      fallbackTitle: {
+        type: "string",
+      },
       // l10n { id, args }
       helpL10n: {
         type: "object",

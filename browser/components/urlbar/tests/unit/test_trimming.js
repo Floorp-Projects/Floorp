@@ -19,11 +19,10 @@ add_task(async function test_untrimmed_secure_www() {
     context,
     autofilled: "mozilla.org/",
     completed: "https://www.mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.mozilla.org/",
-        title: "https://www.mozilla.org",
+        fallbackTitle: "https://www.mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -45,7 +44,6 @@ add_task(async function test_untrimmed_secure_www_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "https://www.mozilla.org/test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.mozilla.org/test/",
@@ -67,11 +65,10 @@ add_task(async function test_untrimmed_secure() {
     context,
     autofilled: "mozilla.org/",
     completed: "https://mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "https://mozilla.org/",
-        title: "https://mozilla.org",
+        fallbackTitle: "https://mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -93,7 +90,6 @@ add_task(async function test_untrimmed_secure_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "https://mozilla.org/test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://mozilla.org/test/",
@@ -115,11 +111,10 @@ add_task(async function test_untrimmed_www() {
     context,
     autofilled: "mozilla.org/",
     completed: "http://www.mozilla.org/",
-    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/",
-        title: "www.mozilla.org",
+        fallbackTitle: "www.mozilla.org",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -141,7 +136,6 @@ add_task(async function test_untrimmed_www_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "http://www.mozilla.org/test/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/test/",

@@ -821,6 +821,9 @@ function makeSearchResult(
  * @param {object} options Options for the result.
  * @param {string} options.title
  *   The page title.
+ * @param {string} [options.fallbackTitle]
+ *   The provider has capability to use the actual page title though,
+ *   when the provider can’t get the page title, use this value as the fallback.
  * @param {string} options.uri
  *   The page URI.
  * @param {Array} [options.tags]
@@ -840,6 +843,7 @@ function makeVisitResult(
   queryContext,
   {
     title,
+    fallbackTitle,
     uri,
     iconUri,
     providerName,
@@ -850,8 +854,15 @@ function makeVisitResult(
 ) {
   let payload = {
     url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
-    title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
   };
+
+  if (title) {
+    payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
+  }
+
+  if (fallbackTitle) {
+    payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
+  }
 
   if (iconUri) {
     payload.icon = iconUri;
@@ -895,8 +906,6 @@ function makeVisitResult(
  * @param {string} [options.completed]
  *   The value that would be filled if the autofill result was confirmed.
  *   Has no effect if `autofilled` is not specified.
- * @param {boolean} [options.hasAutofillTitle]
- *   The expected value of the `autofill.hasTitle` property of the first result.
  * @param {Array} options.matches
  *   An array of UrlbarResults.
  */
@@ -905,7 +914,6 @@ async function check_results({
   incompleteSearch,
   autofilled,
   completed,
-  hasAutofillTitle,
   matches = [],
 } = {}) {
   if (!context) {
@@ -961,11 +969,6 @@ async function check_results({
         "The completed autofill value is correct."
       );
     }
-    Assert.equal(
-      context.results[0].autofill.hasTitle,
-      hasAutofillTitle,
-      "The hasTitle flag is correct."
-    );
   }
   if (context.results.length != matches.length) {
     info("Actual results: " + JSON.stringify(context.results));

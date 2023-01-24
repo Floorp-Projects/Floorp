@@ -828,32 +828,37 @@ class ProviderAutofill extends UrlbarProvider {
       }
     }
 
-    const hasTitle = title !== null;
-    if (!hasTitle) {
+    let payload = {
+      url: [finalCompleteValue, UrlbarUtils.HIGHLIGHT.TYPED],
+      icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
+    };
+
+    if (title) {
+      payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
+    } else {
       let [autofilled] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
         stripHttp: true,
         trimEmptyQuery: true,
         trimSlash: !this._searchString.includes("/"),
       });
-      title = [autofilled, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.fallbackTitle = [autofilled, UrlbarUtils.HIGHLIGHT.TYPED];
     }
 
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        title,
-        url: [finalCompleteValue, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
-      })
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+        queryContext.tokens,
+        payload
+      )
     );
+
     result.autofill = {
       adaptiveHistoryInput,
       value: autofilledValue,
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
       type: autofilledType,
-      hasTitle,
     };
     return result;
   }

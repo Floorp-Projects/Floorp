@@ -26,7 +26,6 @@ add_task(async function test_urls_order() {
     context,
     autofilled: "visit2.mozilla.org/",
     completed: "http://visit2.mozilla.org/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://visit2.mozilla.org/",
@@ -55,7 +54,6 @@ add_task(async function test_bookmark_first() {
     context,
     autofilled: "bookmark1.mozilla.org/",
     completed: "http://bookmark1.mozilla.org/",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://bookmark1.mozilla.org/",
@@ -81,7 +79,6 @@ add_task(async function test_complete_querystring() {
     context,
     autofilled: "smokey.mozilla.org/foo?bacon=delicious",
     completed: "http://smokey.mozilla.org/foo?bacon=delicious",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://smokey.mozilla.org/foo?bacon=delicious",
@@ -105,7 +102,6 @@ add_task(async function test_complete_fragment() {
     context,
     autofilled: "smokey.mozilla.org/foo?bacon=delicious#bar",
     completed: "http://smokey.mozilla.org/foo?bacon=delicious#bar",
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://smokey.mozilla.org/foo?bacon=delicious#bar",

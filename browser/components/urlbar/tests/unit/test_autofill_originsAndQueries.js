@@ -76,7 +76,6 @@ add_autofill_task(async function basic() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -100,7 +99,6 @@ add_autofill_task(async function basicCase() {
     context,
     autofilled: searchCase + url.substr(searchCase.length),
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -124,7 +122,6 @@ add_autofill_task(async function noWWWShouldMatchWWW() {
     context,
     autofilled: url,
     completed: "http://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www." + url,
@@ -148,7 +145,6 @@ add_autofill_task(async function noWWWShouldMatchWWWCase() {
     context,
     autofilled: searchCase + url.substr(searchCase.length),
     completed: "http://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www." + url,
@@ -216,7 +212,6 @@ add_autofill_task(async function prefix() {
     context,
     autofilled: "http://" + url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -240,7 +235,6 @@ add_autofill_task(async function prefixCase() {
     context,
     autofilled: "HTTP://" + searchCase + url.substr(searchCase.length),
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -264,7 +258,6 @@ add_autofill_task(async function prefixNoWWWShouldMatchWWW() {
     context,
     autofilled: "http://" + url,
     completed: "http://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www." + url,
@@ -288,7 +281,6 @@ add_autofill_task(async function prefixNoWWWShouldMatchWWWCase() {
     context,
     autofilled: "HTTP://" + searchCase + url.substr(searchCase.length),
     completed: "http://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www." + url,
@@ -367,7 +359,6 @@ add_autofill_task(async function httpsBasic() {
     context,
     autofilled: url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -391,7 +382,6 @@ add_autofill_task(async function httpsNoWWWShouldMatchWWW() {
     context,
     autofilled: url,
     completed: "https://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www." + url,
@@ -459,7 +449,6 @@ add_autofill_task(async function httpsPrefix() {
     context,
     autofilled: "https://" + url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -483,7 +472,6 @@ add_autofill_task(async function httpsPrefixNoWWWShouldMatchWWW() {
     context,
     autofilled: "https://" + url,
     completed: "https://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www." + url,
@@ -576,7 +564,6 @@ add_autofill_task(async function httpsPrefixShouldNotMatchMoreFrecentHTTP() {
     context,
     autofilled: "https://" + url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -601,7 +588,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -620,7 +606,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -640,7 +625,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -664,7 +648,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "https://www." + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www." + url,
@@ -688,7 +671,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -712,7 +694,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -731,7 +712,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -784,7 +764,6 @@ add_autofill_task(async function frecency() {
       context,
       autofilled: url,
       completed: "https://" + url,
-      hasAutofillTitle: true,
       matches: [
         makeVisitResult(context, {
           uri: "https://" + url,
@@ -809,7 +788,6 @@ add_autofill_task(async function frecency() {
     context,
     autofilled: url,
     completed: "https://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://" + url,
@@ -896,7 +874,6 @@ add_autofill_task(async function bookmarkBelowThreshold() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -939,7 +916,6 @@ add_autofill_task(async function bookmarkAboveThreshold() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -985,7 +961,6 @@ add_autofill_task(async function zeroThreshold() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1017,7 +992,6 @@ add_autofill_task(async function suggestHistoryFalse_visit() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1076,7 +1050,6 @@ add_autofill_task(async function suggestHistoryFalse_visit_prefix() {
     context,
     autofilled: "http://" + url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1158,7 +1131,6 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_0() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1266,7 +1238,6 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_0() {
     context,
     autofilled: "http://" + url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1415,7 +1386,6 @@ add_autofill_task(async function suggestBookmarkFalse_visit_0() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1498,7 +1468,6 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_0() {
     context,
     autofilled: "http://" + url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1645,7 +1614,6 @@ add_autofill_task(async function suggestBookmarkFalse_unvisitedBookmark() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1707,7 +1675,6 @@ add_autofill_task(
       context,
       autofilled: "http://" + url,
       completed: "http://" + url,
-      hasAutofillTitle: true,
       matches: [
         makeVisitResult(context, {
           uri: "http://" + url,
@@ -1870,7 +1837,6 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmark_above() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,
@@ -1906,7 +1872,6 @@ add_autofill_task(
       context,
       autofilled: "http://" + url,
       completed: "http://" + url,
-      hasAutofillTitle: true,
       matches: [
         makeVisitResult(context, {
           uri: "http://" + url,
@@ -2457,7 +2422,6 @@ add_autofill_task(async function hideHeuristic() {
     context,
     autofilled: url,
     completed: "http://" + url,
-    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://" + url,

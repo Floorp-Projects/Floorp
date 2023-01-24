@@ -125,9 +125,19 @@ export class UrlbarResult {
             this.payloadHighlights.qsSuggestion,
           ];
         }
-        return this.payload.title
-          ? [this.payload.title, this.payloadHighlights.title]
-          : [this.payload.url || "", this.payloadHighlights.url || []];
+
+        if (this.payload.fallbackTitle) {
+          return [
+            this.payload.fallbackTitle,
+            this.payloadHighlights.fallbackTitle,
+          ];
+        }
+
+        if (this.payload.title) {
+          return [this.payload.title, this.payloadHighlights.title];
+        }
+
+        return [this.payload.url ?? "", this.payloadHighlights.url ?? []];
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.providesSearchMode) {
           return ["", []];
@@ -226,6 +236,7 @@ export class UrlbarResult {
 
     if (
       (!payloadInfo.title || !payloadInfo.title[0]) &&
+      !payloadInfo.fallbackTitle &&
       payloadInfo.url &&
       typeof payloadInfo.url[0] == "string"
     ) {
