@@ -625,7 +625,7 @@ void nsWindow::Destroy() {
   if (rollupListener) {
     nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
     if (static_cast<nsIWidget*>(this) == rollupWidget) {
-      rollupListener->Rollup(0, false, nullptr, nullptr);
+      rollupListener->Rollup({});
     }
   }
 
@@ -4017,7 +4017,7 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
     // This check avoids unwanted rollup on spurious configure events from
     // Cygwin/X (bug 672103).
     if (mBounds.x != screenBounds.x || mBounds.y != screenBounds.y) {
-      CheckForRollup(0, 0, false, true);
+      RollupAllMenus();
     }
   }
 
@@ -4782,7 +4782,7 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
     }();
 
     if (shouldRollupMenus) {
-      CheckForRollup(0, 0, false, true);
+      RollupAllMenus();
     }
 
     if (RefPtr pm = nsXULPopupManager::GetInstance()) {
@@ -7407,53 +7407,52 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
     return false;
   }
 
-  bool retVal = false;
   auto* currentPopup =
       (GdkWindow*)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
-    bool rollup = true;
-    if (aIsWheel) {
-      rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-      retVal = rollupListener->ShouldConsumeOnMouseWheelEvent();
+  if (!aAlwaysRollup && is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+    return false;
+  }
+  bool retVal = false;
+  if (aIsWheel) {
+    retVal = rollupListener->ShouldConsumeOnMouseWheelEvent();
+    if (!rollupListener->ShouldRollupOnMouseWheelEvent()) {
+      return retVal;
     }
-    // if we're dealing with menus, we probably have submenus and
-    // we don't want to rollup if the click is in a parent menu of
-    // the current submenu
-    uint32_t popupsToRollup = UINT32_MAX;
-    if (!aAlwaysRollup) {
-      AutoTArray<nsIWidget*, 5> widgetChain;
-      uint32_t sameTypeCount =
-          rollupListener->GetSubmenuWidgetChain(&widgetChain);
-      for (unsigned long i = 0; i < widgetChain.Length(); ++i) {
-        nsIWidget* widget = widgetChain[i];
-        auto* currWindow = (GdkWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-        if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-          // don't roll up if the mouse event occurred within a
-          // menu of the same type. If the mouse event occurred
-          // in a menu higher than that, roll up, but pass the
-          // number of popups to Rollup so that only those of the
-          // same type close up.
-          if (i < sameTypeCount) {
-            rollup = false;
-          } else {
-            popupsToRollup = sameTypeCount;
-          }
-          break;
+  }
+  LayoutDeviceIntPoint point;
+  nsIRollupListener::RollupOptions options{0,
+                                           nsIRollupListener::FlushViews::Yes};
+  // if we're dealing with menus, we probably have submenus and
+  // we don't want to rollup if the click is in a parent menu of
+  // the current submenu
+  if (!aAlwaysRollup) {
+    AutoTArray<nsIWidget*, 5> widgetChain;
+    uint32_t sameTypeCount =
+        rollupListener->GetSubmenuWidgetChain(&widgetChain);
+    for (unsigned long i = 0; i < widgetChain.Length(); ++i) {
+      nsIWidget* widget = widgetChain[i];
+      auto* currWindow = (GdkWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+      if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+        // Don't roll up if the mouse event occurred within a menu of the same
+        // type.
+        // If the mouse event occurred in a menu higher than that, roll up, but
+        // pass the number of popups to Rollup so that only those of the same
+        // type close up.
+        if (i < sameTypeCount) {
+          return retVal;
         }
-      }  // foreach parent menu widget
-    }    // if rollup listener knows about menus
-
-    // if we've determined that we should still rollup, do it.
-    bool usePoint = !aIsWheel && !aAlwaysRollup;
-    LayoutDeviceIntPoint point;
-    if (usePoint) {
+        options.mCount = sameTypeCount;
+        break;
+      }
+    }  // foreach parent menu widget
+    if (!aIsWheel) {
       point = GdkEventCoordsToDevicePixels(aMouseX, aMouseY);
+      options.mPoint = &point;
     }
-    if (rollup &&
-        rollupListener->Rollup(popupsToRollup, true,
-                               usePoint ? &point : nullptr, nullptr)) {
-      retVal = true;
-    }
+  }
+
+  if (rollupListener->Rollup(options)) {
+    retVal = true;
   }
   return retVal;
 }

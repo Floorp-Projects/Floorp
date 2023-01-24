@@ -170,7 +170,9 @@ void nsXULPopupListener::ClosePopup() {
     // popup is hidden. Use asynchronous hiding just to be safe so we don't
     // fire events during destruction.
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) pm->HidePopup(mPopupContent, false, true, true, false);
+    if (pm)
+      pm->HidePopup(mPopupContent,
+                    {HidePopupOption::DeselectMenu, HidePopupOption::Async});
     mPopupContent = nullptr;  // release the popup
   }
 }  // ClosePopup
