@@ -1132,17 +1132,12 @@ static void EnsureStyleAutoArrayLength(StyleType* aArray, size_t aLen) {
 }
 
 void Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen) {
-  auto* base = static_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
+  auto base = static_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
   EnsureStyleAutoArrayLength(base, aLen);
 }
 
 void Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen) {
-  auto* base = reinterpret_cast<nsStyleAutoArray<StyleTransition>*>(aArray);
-  EnsureStyleAutoArrayLength(base, aLen);
-}
-
-void Gecko_EnsureStyleViewTimelineArrayLength(void* aArray, size_t aLen) {
-  auto* base = static_cast<nsStyleAutoArray<StyleViewTimeline>*>(aArray);
+  auto base = reinterpret_cast<nsStyleAutoArray<StyleTransition>*>(aArray);
   EnsureStyleAutoArrayLength(base, aLen);
 }
 

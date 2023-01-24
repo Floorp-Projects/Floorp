@@ -13652,7 +13652,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     initial_values: ["none"],
     other_values: [
       "all",
-      "auto",
       "ball",
       "mall",
       "color",
@@ -13665,7 +13664,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "\\2bounce",
       "-\\2bounce",
     ],
-    invalid_values: ["bounce, abc", "abc bounce", "10px", "rgb(1, 2, 3)"],
+    invalid_values: [
+      "auto",
+      "bounce, abc",
+      "abc bounce",
+      "10px",
+      "rgb(1, 2, 3)",
+    ],
   };
 
   gCSSProperties["scroll-timeline-axis"] = {
@@ -13684,7 +13689,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     subproperties: ["scroll-timeline-name", "scroll-timeline-axis"],
     initial_values: ["none block", "block none", "block", "none"],
     other_values: [
-      "auto inline",
       "bounce inline",
       "bounce vertical",
       "horizontal bounce",
@@ -13694,69 +13698,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "horizontal -\\32 0bounce",
     ],
     invalid_values: ["", "bounce bounce"],
-  };
-
-  gCSSProperties["view-timeline-name"] = {
-    domProp: "viewTimelineName",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: [
-      "all",
-      "auto",
-      "ball",
-      "mall",
-      "color",
-      "foobar",
-      "\\32bounce",
-      "-bounce",
-      "-\\32bounce",
-      "\\32 0bounce",
-      "-\\32 0bounce",
-      "\\2bounce",
-      "-\\2bounce",
-      "bounce, abc",
-      "none, none",
-    ],
-    invalid_values: ["abc bounce", "10px", "rgb(1, 2, 3)"],
-  };
-
-  gCSSProperties["view-timeline-axis"] = {
-    domProp: "viewTimelineAxis",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["block"],
-    other_values: ["inline", "vertical", "horizontal", "inline, block"],
-    invalid_values: ["auto", "none", "abc", "inline block"],
-  };
-
-  gCSSProperties["view-timeline-inset"] = {
-    domProp: "viewTimelineInset",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["0px"],
-    other_values: ["auto", "1%", "1px 1%", "auto auto", "calc(0px) auto"],
-    invalid_values: ["none", "rgb(1, 2, 3)", "foo bar", "1px 2px 3px"],
-  };
-
-  gCSSProperties["view-timeline"] = {
-    domProp: "viewTimeline",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: ["view-timeline-name", "view-timeline-axis"],
-    initial_values: ["none block", "none"],
-    other_values: [
-      "auto inline",
-      "bounce inline",
-      "bounce vertical",
-      "\\32bounce inline",
-      "-bounce block",
-      "\\32 0bounce vertical",
-      "-\\32 0bounce horizontal",
-      "a, b, c",
-      "a block, b inline, c vertical",
-    ],
-    invalid_values: ["", ",", "abc abc", "horizontal a", "block abc"],
   };
 }
 

@@ -120,7 +120,6 @@ include = [
   "ScrollSnapStrictness",
   "ScrollSnapType",
   "ScrollTimelineName",
-  "ViewTimelineInset",
   "OverflowAnchor",
   "OverflowClipBox",
   "Resize",
@@ -420,8 +419,6 @@ renaming_overrides_prefixing = true
   // Just some convenient aliases for LengthOrAuto, to avoid confusing naming.
   inline bool IsLength() const;
   inline const StyleLength& AsLength() const;
-
-  static inline StyleGenericLengthPercentageOrAuto Zero();
 """
 
 "GenericSize" = """
@@ -949,14 +946,9 @@ renaming_overrides_prefixing = true
  SERVO_FIXED_POINT_HELPERS(StyleFontStretch, uint16_t, StyleFONT_STRETCH_FRACTION_BITS);
 """
 
-"AnimationName" = """
+"ScrollTimelineName" = """
  public:
-  StyleAnimationName(): _0(RefPtr<nsAtom>(nsGkAtoms::_empty).forget()) {}
-"""
-
-"GenericViewTimelineInset" = """
- public:
-  inline StyleGenericViewTimelineInset();
+  StyleScrollTimelineName(): _0(RefPtr<nsAtom>(nsGkAtoms::_empty).forget()) {}
 """
 
 "Time" = """
