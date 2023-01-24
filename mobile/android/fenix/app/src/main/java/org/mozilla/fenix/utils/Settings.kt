@@ -1515,12 +1515,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     fun getCookieBannerHandling(): CookieBannerHandlingMode {
         return when (shouldUseCookieBanner) {
             true -> CookieBannerHandlingMode.REJECT_ALL
-            false -> if (shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog) {
-                CookieBannerHandlingMode.DETECT_ONLY
+            false -> if (shouldEnabledCookieBannerDetectOnlyMode()) {
+                CookieBannerHandlingMode.REJECT_ALL
             } else {
                 CookieBannerHandlingMode.DISABLED
             }
         }
+    }
+
+    /**
+     * Indicates if the cookie banner detect only mode should be enabled.
+     */
+    fun shouldEnabledCookieBannerDetectOnlyMode(): Boolean {
+        return shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog && !shouldUseCookieBanner
     }
 
     var setAsDefaultGrowthSent by booleanPreference(

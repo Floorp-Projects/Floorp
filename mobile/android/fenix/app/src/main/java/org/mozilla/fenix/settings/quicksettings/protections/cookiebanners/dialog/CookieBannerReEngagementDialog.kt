@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.DialogFragment
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.DISABLED
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.REJECT_ALL
 import mozilla.components.concept.engine.Settings
 import mozilla.telemetry.glean.private.NoExtras
@@ -47,6 +48,7 @@ class CookieBannerReEngagementDialog : DialogFragment() {
                         requireContext().settings().shouldUseCookieBanner = true
                         getEngineSettings().cookieBannerHandlingModePrivateBrowsing = REJECT_ALL
                         getEngineSettings().cookieBannerHandlingMode = REJECT_ALL
+                        getEngineSettings().cookieBannerHandlingDetectOnlyMode = false
                         reload()
                         requireContext().getRootView()?.let {
                             FenixSnackbar.make(
@@ -64,6 +66,9 @@ class CookieBannerReEngagementDialog : DialogFragment() {
                         dismiss()
                     },
                     onCloseButtonClicked = {
+                        getEngineSettings().cookieBannerHandlingDetectOnlyMode = false
+                        getEngineSettings().cookieBannerHandlingModePrivateBrowsing = DISABLED
+                        getEngineSettings().cookieBannerHandlingMode = DISABLED
                         requireContext().settings().userOptOutOfReEngageCookieBannerDialog = true
                         CookieBanners.optOutReEngagementDialog.record(NoExtras())
                         dismiss()

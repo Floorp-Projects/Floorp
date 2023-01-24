@@ -617,6 +617,7 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
+    @Ignore("This will be re-visited when addressing bug 1810745")
     fun verifyCookieBannerReductionTest() {
         val webSite = "voetbal24.be"
 

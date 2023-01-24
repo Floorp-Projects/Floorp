@@ -8,8 +8,6 @@ import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
-import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.DISABLED
-import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.REJECT_ALL
 import mozilla.components.concept.engine.Settings
 import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.R
@@ -45,14 +43,17 @@ class CookieBannersFragment : PreferenceFragmentCompat() {
                     preference: Preference,
                     newValue: Any?,
                 ): Boolean {
-                    val (mode, metricTag) = if (newValue == true) {
-                        REJECT_ALL to "reject_all"
+                    val metricTag = if (newValue == true) {
+                        "reject_all"
                     } else {
-                        DISABLED to "disabled"
+                        "disabled"
                     }
                     requireContext().settings().shouldUseCookieBanner = newValue as Boolean
+                    val mode = requireContext().settings().getCookieBannerHandling()
                     getEngineSettings().cookieBannerHandlingModePrivateBrowsing = mode
                     getEngineSettings().cookieBannerHandlingMode = mode
+                    getEngineSettings().cookieBannerHandlingDetectOnlyMode =
+                        requireContext().settings().shouldEnabledCookieBannerDetectOnlyMode()
                     CookieBanners.settingChanged.record(CookieBanners.SettingChangedExtra(metricTag))
                     requireContext().components.useCases.sessionUseCases.reload()
                     return super.onPreferenceChange(preference, newValue)
