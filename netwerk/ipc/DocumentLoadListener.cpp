@@ -2442,8 +2442,14 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
 
   auto* loadingContext = GetLoadingBrowsingContext();
   if (!loadingContext || loadingContext->IsDiscarded()) {
-    DisconnectListeners(NS_ERROR_UNEXPECTED, NS_ERROR_UNEXPECTED);
+    Cancel(NS_ERROR_UNEXPECTED, "No valid LoadingBrowsingContext."_ns);
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    Cancel(NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+           "Aborting OnStartRequest after shutdown started."_ns);
+    return NS_OK;
   }
 
   // Block top-level data URI navigations if triggered by the web. Logging is
