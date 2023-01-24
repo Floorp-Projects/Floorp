@@ -182,7 +182,7 @@ skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-668) == colrv1-01
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-848) == colrv1-01.html#N colrv1-01-ref.html#N
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-675) == colrv1-01.html#O colrv1-01-ref.html#O
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-01.html#P colrv1-01-ref.html#P
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-148,0-318) == colrv1-01.html#Q colrv1-01-ref.html#Q
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-138,0-318) == colrv1-01.html#Q colrv1-01-ref.html#Q
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-214,0-158) == colrv1-01.html#R colrv1-01-ref.html#R
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-255,0-156) == colrv1-01.html#S colrv1-01-ref.html#S
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-237,0-277) == colrv1-01.html#T colrv1-01-ref.html#T

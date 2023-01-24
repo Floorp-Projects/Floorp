@@ -211,19 +211,6 @@ void gfxDWriteFont::UpdateClearTypeVars() {
     gamma = defaultRenderingParams->GetGamma();
     pixelGeometry = defaultRenderingParams->GetPixelGeometry();
     renderingMode = defaultRenderingParams->GetRenderingMode();
-
-    if (RegOpenKeyExW(CONTROL_PANEL_REGISTRY_KEY, 0, KEY_READ, &hKey) ==
-        ERROR_SUCCESS) {
-      DWORD type;
-      DWORD value;
-      DWORD valueSize = sizeof(value);
-      if (RegQueryValueExW(hKey, FONT_SMOOTHING_GAMMA_VALUE, nullptr, &type,
-                           (LPBYTE)&value, &valueSize) == ERROR_SUCCESS &&
-          type == REG_DWORD) {
-        gamma = value / 1000.0f;
-      }
-      RegCloseKey(hKey);
-    }
   } else {
     gfxWarning() << "Failed to create default rendering params";
   }
