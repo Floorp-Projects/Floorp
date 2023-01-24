@@ -68,5 +68,13 @@ config = {
                 "win64-aarch64",
             ],
         },
+        "pkg-latest": {
+            "product-name": "Firefox-nightly-pkg-latest-ssl",
+            "platforms": ["osx"],
+        },
+        "pkg-latest-l10n": {
+            "product-name": "Firefox-nightly-pkg-latest-l10n-ssl",
+            "platforms": ["osx"],
+        },
     },
 }
