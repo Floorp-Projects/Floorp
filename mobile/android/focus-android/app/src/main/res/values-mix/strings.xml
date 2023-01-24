@@ -119,10 +119,6 @@
     <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Nduku Sèè</string>
-
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
 
@@ -337,10 +333,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Katsi buscador va´á:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Snaa tu\'un tava kitsau</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Chikaa tsi ña ndukuku</string>
 
@@ -467,30 +459,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Ni kitsau yoo %1$s!</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Donde el incógnito se encuentra con lo invisible</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s es un navegador que prioriza la privacidad con seguimiento extrafuerte y protección de cookies integrada.</string>
-
-    <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Kuntye tya koo la ni yaa</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Tatu kuku samu ña ntyeu, sama ña kunu ku ntyeu.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Kitsaà Ndaduku</string>
-
-    <!-- First run tour (Default browser): Title -->
+  <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
@@ -528,10 +497,6 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">Va´á</string>
-
-    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection2"></string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -707,19 +672,8 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Nta sa vaà tsi USBWi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Kuna %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Kuna</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Katavi sensor ña huella digital tava kitasu.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Kitsaa tuku</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -864,5 +818,7 @@
 
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Tyika seé</string>
+
+    <!-- Promote SearchWidget Dialog -->
 
     </resources>
