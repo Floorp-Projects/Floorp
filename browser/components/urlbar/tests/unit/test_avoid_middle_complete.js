@@ -145,7 +145,7 @@ add_task(async function test_searchEngine_www_noautofill() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.ham/",
-        title: "http://www.ham/",
+        fallbackTitle: "http://www.ham/",
         displayUrl: "http://www.ham",
         heuristic: true,
       }),
@@ -176,7 +176,7 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://pie/",
-        title: "http://pie/",
+        fallbackTitle: "http://pie/",
         iconUri: "",
         heuristic: true,
       }),

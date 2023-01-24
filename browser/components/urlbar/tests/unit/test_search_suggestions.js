@@ -886,7 +886,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${SEARCH_STRING}/`,
-        title: `http://${SEARCH_STRING}/`,
+        fallbackTitle: `http://${SEARCH_STRING}/`,
         iconUri: "",
         heuristic: true,
       }),
@@ -931,7 +931,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${SEARCH_STRING}/`,
-        title: `http://${SEARCH_STRING}/`,
+        fallbackTitle: `http://${SEARCH_STRING}/`,
         iconUri: "",
         heuristic: true,
       }),
@@ -950,7 +950,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://somethingelse/",
-        title: "http://somethingelse/",
+        fallbackTitle: "http://somethingelse/",
         iconUri: "",
         heuristic: true,
       }),
@@ -985,7 +985,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://1.2.3.4/",
-        title: "http://1.2.3.4/",
+        fallbackTitle: "http://1.2.3.4/",
         iconUri: "page-icon:http://1.2.3.4/",
         heuristic: true,
       }),
@@ -999,7 +999,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://[2001::1]:30/",
-        title: "http://[2001::1]:30/",
+        fallbackTitle: "http://[2001::1]:30/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1013,7 +1013,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://user:pass@test/",
-        title: "http://user:pass@test/",
+        fallbackTitle: "http://user:pass@test/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1027,7 +1027,7 @@ add_task(async function prohibit_suggestions() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "data:text/plain,Content",
-        title: "data:text/plain,Content",
+        fallbackTitle: "data:text/plain,Content",
         iconUri: "",
         heuristic: true,
       }),
@@ -1060,7 +1060,7 @@ add_task(async function uri_like_queries() {
     matches: [
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        title: `http://${query}/`,
+        fallbackTitle: `http://${query}/`,
         uri: `http://${query}/`,
         iconUri: "",
         heuristic: true,
@@ -1312,7 +1312,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "ftp://test/",
-        title: "ftp://test/",
+        fallbackTitle: "ftp://test/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1370,7 +1370,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www/",
-        title: "http://www/",
+        fallbackTitle: "http://www/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1384,7 +1384,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "https://www/",
-        title: "https://www/",
+        fallbackTitle: "https://www/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1398,7 +1398,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://test/",
-        title: "http://test/",
+        fallbackTitle: "http://test/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1412,7 +1412,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "https://test/",
-        title: "https://test/",
+        fallbackTitle: "https://test/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1426,7 +1426,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.test/",
-        title: "http://www.test/",
+        fallbackTitle: "http://www.test/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1440,7 +1440,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.test.com/",
-        title: "http://www.test.com/",
+        fallbackTitle: "http://www.test.com/",
         iconUri: "",
         heuristic: true,
       }),
@@ -1484,7 +1484,7 @@ add_task(async function avoid_remote_url_suggestions_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "file:///Users",
-        title: "file:///Users",
+        fallbackTitle: "file:///Users",
         iconUri: "",
         heuristic: true,
       }),

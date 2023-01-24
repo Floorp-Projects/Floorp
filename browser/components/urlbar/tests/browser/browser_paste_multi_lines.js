@@ -111,6 +111,14 @@ const TEST_DATA = [
     },
   },
   {
+    input: "http://example.com/titled",
+    expected: {
+      urlbar: "http://example.com/titled",
+      autocomplete: "example title",
+      type: UrlbarUtils.RESULT_TYPE.URL,
+    },
+  },
+  {
     input: "127.0.0.1\r",
     expected: {
       urlbar: "127.0.0.1",
@@ -130,7 +138,14 @@ add_setup(async function() {
     ],
   });
 
-  registerCleanupFunction(function() {
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.addVisits({
+    uri: "http://example.com/titled",
+    title: "example title",
+  });
+
+  registerCleanupFunction(async function() {
+    await PlacesUtils.history.clear();
     SpecialPowers.clipboardCopyString("");
   });
 });

@@ -63,7 +63,7 @@ async function assert_feature_works(condition) {
     matches: [
       makeVisitResult(context, {
         uri: gooogleURI,
-        title: gooogleURI.slice(0, -1), // Trim trailing slash.
+        fallbackTitle: gooogleURI.slice(0, -1), // Trim trailing slash.
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: `page-icon:${gooogleURI}`,
         providerName: "PreloadedSites",
@@ -240,7 +240,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -273,7 +273,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "http://www.ooops-http-www.com/",
-        title: "www.ooops-http-www.com",
+        fallbackTitle: "www.ooops-http-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:http://www.ooops-http-www.com/",
         providerName: "PreloadedSites",
@@ -289,7 +289,7 @@ add_task(async function test_scheme_and_www() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "ftp://ooops/",
-        title: "ftp://ooops/",
+        fallbackTitle: "ftp://ooops/",
         providerName: "HeuristicFallback",
         heuristic: true,
       }),
@@ -304,7 +304,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -345,7 +345,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -386,7 +386,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -411,7 +411,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -427,7 +427,7 @@ add_task(async function test_scheme_and_www() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.ooops-https./",
-        title: "http://www.ooops-https./",
+        fallbackTitle: "http://www.ooops-https./",
         providerName: "HeuristicFallback",
         heuristic: true,
       }),
@@ -446,7 +446,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -471,7 +471,7 @@ add_task(async function test_scheme_and_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.ooops-https-www.com/",
-        title: "https://www.ooops-https-www.com",
+        fallbackTitle: "https://www.ooops-https-www.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: "page-icon:https://www.ooops-https-www.com/",
         providerName: "PreloadedSites",
@@ -487,7 +487,7 @@ add_task(async function test_scheme_and_www() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://www.ooops-http./",
-        title: "http://www.ooops-http./",
+        fallbackTitle: "http://www.ooops-http./",
         providerName: "HeuristicFallback",
         heuristic: true,
       }),
@@ -501,7 +501,7 @@ add_task(async function test_scheme_and_www() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://ooops-https/",
-        title: "http://ooops-https/",
+        fallbackTitle: "http://ooops-https/",
         providerName: "HeuristicFallback",
         heuristic: true,
       }),
@@ -540,7 +540,7 @@ add_task(async function test_data_file() {
     matches: [
       makeVisitResult(context, {
         uri: uri.spec,
-        title: uri.spec.slice(0, -1), // Trim trailing slash.
+        fallbackTitle: uri.spec.slice(0, -1), // Trim trailing slash.
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: `page-icon:${uri.spec}`,
         providerName: "PreloadedSites",
@@ -566,7 +566,7 @@ add_task(async function test_partial_scheme() {
     matches: [
       makeVisitResult(context, {
         uri: testUrl,
-        title: "www.ttt.com",
+        fallbackTitle: "www.ttt.com",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         iconUri: `page-icon:${testUrl}`,
         heuristic: true,

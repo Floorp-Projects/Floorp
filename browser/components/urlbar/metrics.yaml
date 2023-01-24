@@ -185,12 +185,12 @@ urlbar:
           The name of the `UrlbarProvider` that provided the selected result.
           The possible values are: `AboutPages`, `AliasEngines`, `Autofill`,
           `BookmarkKeywords`, `calculator`, `UrlbarProviderContextualSearch`,
-          `HeuristicFallback`, `InputHistory`, `UrlbarProviderInterventions`,
-          `Omnibox`, `OpenTabs`, `Places`, `PreloadedSites`, `PrivateSearch`,
-          `quickactions`, `UrlbarProviderQuickSuggest`, `RemoteTabs`,
-          `SearchSuggestions`, `UrlbarProviderSearchTips`, `TabToSearch`,
-          `TokenAliasEngines`, `UrlbarProviderTopSites`, `UnitConversion` and
-          `UnifiedComplete`.
+          `HeuristicFallback`, `HistoryUrlHeuristic`, `InputHistory`,
+          `UrlbarProviderInterventions`, `Omnibox`, `OpenTabs`, `Places`,
+          `PreloadedSites`, `PrivateSearch`, `quickactions`,
+          `UrlbarProviderQuickSuggest`, `RemoteTabs`, `SearchSuggestions`,
+          `UrlbarProviderSearchTips`, `TabToSearch`, `TokenAliasEngines`,
+          `UrlbarProviderTopSites`, `UnitConversion` and `UnifiedComplete`.
         type: string
       engagement_type:
         description: >

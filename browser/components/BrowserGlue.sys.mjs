@@ -3516,7 +3516,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 133;
+    const UI_VERSION = 134;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4333,6 +4333,12 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 133) {
       xulStore.removeValue(BROWSER_DOCURL, "urlbar-container", "width");
+    }
+
+    if (currentUIVersion < 134) {
+      // Update urlbar result groups for the following changes:
+      // 134 (bug 1791657): Add HEURISTIC_HISTORY_URL group
+      lazy.UrlbarPrefs.migrateResultGroups();
     }
 
     // Update the migration version.

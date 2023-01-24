@@ -30,9 +30,9 @@ add_task(async function test_escape() {
     matches: [
       makeVisitResult(context, {
         uri: uri1.spec,
-        title: uri1.spec,
+        title: "title",
         iconUri: `page-icon:${uri1.spec}`,
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         heuristic: true,
       }),
       // Note that uri2 does not appear in results.
@@ -46,7 +46,7 @@ add_task(async function test_escape() {
     matches: [
       makeVisitResult(context, {
         uri: "http://escapeduri/%40",
-        title: "http://escapeduri/%40",
+        fallbackTitle: "http://escapeduri/%40",
         iconUri: "page-icon:http://escapeduri/",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,

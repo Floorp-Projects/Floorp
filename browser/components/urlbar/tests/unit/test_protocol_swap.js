@@ -49,8 +49,8 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        title: "title",
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         heuristic: true,
       }),
       makeVisitResult(context, { uri: uri5.spec, title: "title" }),
@@ -65,8 +65,8 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        title: "title",
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         heuristic: true,
       }),
       makeVisitResult(context, { uri: uri3.spec, title: "title" }),
@@ -83,7 +83,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -99,7 +99,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -117,7 +117,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -133,7 +133,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -151,13 +151,9 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `http://${searchString}/`,
-        title: `http://${searchString}/`,
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        title: "title",
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         heuristic: true,
-      }),
-      makeSearchResult(context, {
-        engineName: SUGGESTIONS_ENGINE_NAME,
-        providerName: "HeuristicFallback",
       }),
       makeVisitResult(context, { uri: uri5.spec, title: "title" }),
     ],
@@ -186,7 +182,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -204,7 +200,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -233,7 +229,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -250,7 +246,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -279,7 +275,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -296,7 +292,7 @@ add_task(async function test_swap_protocol() {
     matches: [
       makeVisitResult(context, {
         uri: `${searchString}/`,
-        title: `${searchString}/`,
+        fallbackTitle: `${searchString}/`,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
