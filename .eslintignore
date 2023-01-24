@@ -8,6 +8,7 @@
 # - build directories and other items that we need to ignore
 
 !.eslintrc*.js
+!.prettierrc.js
 
 # Always ignore node_modules.
 **/node_modules/
