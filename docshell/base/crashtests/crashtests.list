@@ -22,3 +22,4 @@ skip-if(Android) pref(dom.disable_open_during_load,false) load 1667491.html
 pref(dom.disable_open_during_load,false) load 1690169-1.html
 load 1672873.html
 load 1753136.html
+HTTP load 1804803.html
