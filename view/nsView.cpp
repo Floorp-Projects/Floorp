@@ -1058,9 +1058,8 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
 
 bool nsView::RequestWindowClose(nsIWidget* aWidget) {
   if (mFrame && IsPopupWidget(aWidget) && mFrame->IsMenuPopupFrame()) {
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
-      pm->HidePopup(mFrame->GetContent(), false, true, false, false);
+    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+      pm->HidePopup(mFrame->GetContent(), {HidePopupOption::DeselectMenu});
       return true;
     }
   }

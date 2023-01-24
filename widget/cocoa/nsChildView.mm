@@ -2397,56 +2397,57 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   }
 
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  if (rollupWidget) {
-    NSWindow* currentPopup = static_cast<NSWindow*>(rollupWidget->GetNativeData(NS_NATIVE_WINDOW));
-    if (!nsCocoaUtils::IsEventOverWindow(theEvent, currentPopup)) {
-      // event is not over the rollup window, default is to roll up
-      bool shouldRollup = true;
+  if (!rollupWidget) {
+    return consumeEvent;
+  }
 
-      // check to see if scroll/zoom events should roll up the popup
-      if (isWheelTypeEvent) {
-        shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-        // consume scroll events that aren't over the popup
-        // unless the popup is an arrow panel
-        consumeEvent = rollupListener->ShouldConsumeOnMouseWheelEvent();
-      }
+  NSWindow* currentPopup = static_cast<NSWindow*>(rollupWidget->GetNativeData(NS_NATIVE_WINDOW));
+  if (nsCocoaUtils::IsEventOverWindow(theEvent, currentPopup)) {
+    return consumeEvent;
+  }
 
-      // if we're dealing with menus, we probably have submenus and
-      // we don't want to rollup if the click is in a parent menu of
-      // the current submenu
-      uint32_t popupsToRollup = UINT32_MAX;
-      AutoTArray<nsIWidget*, 5> widgetChain;
-      uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
-      for (uint32_t i = 0; i < widgetChain.Length(); i++) {
-        nsIWidget* widget = widgetChain[i];
-        NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-        if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-          // don't roll up if the mouse event occurred within a menu of the
-          // same type. If the mouse event occurred in a menu higher than
-          // that, roll up, but pass the number of popups to Rollup so
-          // that only those of the same type close up.
-          if (i < sameTypeCount) {
-            shouldRollup = false;
-          } else {
-            popupsToRollup = sameTypeCount;
-          }
-          break;
-        }
-      }
-
-      if (shouldRollup) {
-        if ([theEvent type] == NSEventTypeLeftMouseDown) {
-          NSPoint point = [NSEvent mouseLocation];
-          FlipCocoaScreenCoordinate(point);
-          LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(point);
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, &devPoint, nullptr);
-        } else {
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
-        }
-      }
+  // Check to see if scroll/zoom events should roll up the popup
+  if (isWheelTypeEvent) {
+    // consume scroll events that aren't over the popup unless the popup is an
+    // arrow panel.
+    consumeEvent = rollupListener->ShouldConsumeOnMouseWheelEvent();
+    if (!rollupListener->ShouldRollupOnMouseWheelEvent()) {
+      return consumeEvent;
     }
   }
 
+  // if we're dealing with menus, we probably have submenus and
+  // we don't want to rollup if the click is in a parent menu of
+  // the current submenu
+  uint32_t popupsToRollup = UINT32_MAX;
+  AutoTArray<nsIWidget*, 5> widgetChain;
+  uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
+  for (uint32_t i = 0; i < widgetChain.Length(); i++) {
+    nsIWidget* widget = widgetChain[i];
+    NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+    if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
+      // don't roll up if the mouse event occurred within a menu of the
+      // same type. If the mouse event occurred in a menu higher than
+      // that, roll up, but pass the number of popups to Rollup so
+      // that only those of the same type close up.
+      if (i < sameTypeCount) {
+        return consumeEvent;
+      }
+      popupsToRollup = sameTypeCount;
+      break;
+    }
+  }
+
+  LayoutDeviceIntPoint devPoint;
+  nsIRollupListener::RollupOptions rollupOptions{popupsToRollup,
+                                                 nsIRollupListener::FlushViews::Yes};
+  if ([theEvent type] == NSEventTypeLeftMouseDown) {
+    NSPoint point = [NSEvent mouseLocation];
+    FlipCocoaScreenCoordinate(point);
+    devPoint = mGeckoChild->CocoaPointsToDevPixels(point);
+    rollupOptions.mPoint = &devPoint;
+  }
+  consumeEvent = (BOOL)rollupListener->Rollup(rollupOptions);
   return consumeEvent;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NO);

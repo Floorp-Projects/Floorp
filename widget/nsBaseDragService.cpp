@@ -567,7 +567,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->HidePopup(mDragPopup, false, true, false, false);
+      pm->HidePopup(mDragPopup, {HidePopupOption::DeselectMenu});
     }
   }
 

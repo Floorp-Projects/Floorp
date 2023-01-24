@@ -7415,7 +7415,7 @@ void nsWindow::OnDestroy() {
     rollupWidget = rollupListener->GetRollupWidget();
   }
   if (this == rollupWidget) {
-    if (rollupListener) rollupListener->Rollup(0, false, nullptr, nullptr);
+    rollupListener->Rollup({});
     CaptureRollupEvents(false);
   }
 
@@ -8410,6 +8410,11 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
   // Only need to deal with the last rollup for left mouse down events.
   NS_ASSERTION(!nsAutoRollup::GetLastRollup(), "last rollup is null");
 
+  nsIRollupListener::RollupOptions rollupOptions{
+      popupsToRollup,
+      nsIRollupListener::FlushViews::Yes,
+  };
+
   if (nativeMessage == WM_TOUCH || nativeMessage == WM_LBUTTONDOWN ||
       nativeMessage == WM_POINTERDOWN) {
     LayoutDeviceIntPoint pos;
@@ -8427,13 +8432,12 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       pos = LayoutDeviceIntPoint(pt.x, pt.y);
     }
 
-    nsIContent* lastRollup;
-    consumeRollupEvent =
-        rollupListener->Rollup(popupsToRollup, true, &pos, &lastRollup);
+    rollupOptions.mPoint = &pos;
+    nsIContent* lastRollup = nullptr;
+    consumeRollupEvent = rollupListener->Rollup(rollupOptions, &lastRollup);
     nsAutoRollup::SetLastRollup(lastRollup);
   } else {
-    consumeRollupEvent =
-        rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
+    consumeRollupEvent = rollupListener->Rollup(rollupOptions);
   }
 
   // Tell hook to stop processing messages
