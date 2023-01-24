@@ -595,7 +595,7 @@
 }
 
 .urlbarView-row:is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView-row:is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url,
 .urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   color: inherit;
 }
