@@ -7,81 +7,89 @@
 </head>
 <body>
 <div contenteditable></div>
+<iframe srcdoc="<body contenteditable></body>"></iframe>
 <script>
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
-  (function testStyleOfPlaintextMode() {
-    getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+  const iframe = document.querySelector("iframe");
 
-    (function testInDiv() {
-      const editor = document.querySelector("div[contenteditable]");
-      editor.innerHTML = "";
-      editor.focus();
-      getEditorMailSupport().insertTextWithQuotations(
-        "This is Text\n\n> This is a quote."
-      );
-      verify(editor, "TestInDiv");
-    })();
+  function testInDiv() {
+    const inPlaintextMode = getEditor(window).flags & SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    const inReadonlyMode = getEditor(window).flags & SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    const editorDescription = `(readonly=${!!inReadonlyMode}, plaintext=${!!inPlaintextMode})`;
+    const editor = document.querySelector("div[contenteditable]");
+    editor.innerHTML = "";
+    editor.focus();
+    getEditorMailSupport(window).insertTextWithQuotations(
+      "This is Text\n\n> This is a quote."
+    );
+    is(
+      editor.innerHTML,
+      'This is Text<br><br><span style="white-space: pre-wrap;">&gt; This is a quote.</span><br>',
+      `The <div contenteditable> should have the expected innerHTML ${editorDescription}`
+    );
+    is(
+      editor.querySelector("span")?.getAttribute("_moz_quote"),
+      "true",
+      `The <span> element in the <div contenteditable> should have _moz_quote="true" ${editorDescription}`
+    );
+  }
 
-    try {
-      document.body.contentEditable = true;
-      (function testInBody() {
-        getSelection().collapse(document.body, 0);
-        getEditorMailSupport().insertTextWithQuotations(
-          "This is Text\n\n> This is a quote."
-        );
-        verify(document.body, "TestInBody");
-      })();
-    } finally {
-      document.body.contentEditable = false;
+  function testInBody() {
+    const inPlaintextMode = getEditor(iframe.contentWindow).flags & SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    const inReadonlyMode = getEditor(iframe.contentWindow).flags & SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    const editorDescription = `(readonly=${!!inReadonlyMode}, plaintext=${!!inPlaintextMode})`;
+    const editor = iframe.contentDocument.body;
+    editor.innerHTML = "";
+    iframe.contentWindow.getSelection().collapse(document.body, 0);
+    getEditorMailSupport(iframe.contentWindow).insertTextWithQuotations(
+      "This is Text\n\n> This is a quote."
+    );
+    is(
+      editor.innerHTML,
+      'This is Text<br><br><span style="white-space: pre-wrap; display: block; width: 98vw;">&gt; This is a quote.</span><br>',
+      `The <body> should have the expected innerHTML ${editorDescription}`
+    );
+    is(
+      editor.querySelector("span")?.getAttribute("_moz_quote"),
+      "true",
+      `The <span> element in the <body> should have _moz_quote="true" ${editorDescription}`
+    );
+  }
+
+  for (const testReadOnly of [false, true]) {
+    // Even if the HTMLEditor is readonly, XPCOM API should keep working.
+    if (testReadOnly) {
+      getEditor(window).flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+      getEditor(iframe.contentWindow).flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    } else {
+      getEditor(window).flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+      getEditor(iframe.contentWindow).flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
     }
-  })();
+
+    getEditor(window).flags &= ~SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    getEditor(iframe.contentWindow).flags &= ~SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    testInDiv();
+    testInBody();
+
+    getEditor(window).flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    getEditor(iframe.contentWindow).flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+    testInDiv();
+    testInBody();
+  }
 
   SimpleTest.finish();
 });
 
-function getEditor() {
-  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
-  return editingSession.getEditorForWindow(window);
+function getEditor(aWindow) {
+  const editingSession = SpecialPowers.wrap(aWindow).docShell.editingSession;
+  return editingSession.getEditorForWindow(aWindow);
 }
 
-function getEditorMailSupport() {
-  return getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorMailSupport);
-}
-
-function verify(editor, logHint) {
-  is(
-    editor.childNodes[0].textContent,
-    "This is Text",
-    `${logHint}: insertTextWithQuotations should insert the text directly`
-  );
-  is(
-    editor.childNodes[1].tagName,
-    "BR",
-    `${logHint}: insertTextWithQuotations should insert a BR tag`
-  );
-  is(
-    editor.childNodes[2].tagName,
-    "BR",
-    `${logHint}: insertTextWithQuotations should insert a second BR tag`
-  );
-  is(
-    editor.childNodes[3].tagName,
-    "SPAN",
-    `${logHint}: insertTextWithQuotations should insert a SPAN tag`
-  );
-  is(
-    editor.childNodes[3].getAttribute("_moz_quote"),
-    "true",
-    `${logHint}: insertTextWithQuotations should insert SPAN tag with _moz_quote = true`
-  )
-  is(
-    editor.childNodes[3].textContent,
-    "> This is a quote.",
-    `${logHint}: insertTextWithQuotations should insert SPAN tag with the quoted text`
-  )
+function getEditorMailSupport(aWindow) {
+  return getEditor(aWindow).QueryInterface(SpecialPowers.Ci.nsIEditorMailSupport);
 }
 </script>
 </body>

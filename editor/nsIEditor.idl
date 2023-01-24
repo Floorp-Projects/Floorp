@@ -54,9 +54,14 @@ interface nsIEditor  : nsISupports
   // don't specify this for HTML editor.
   const long eEditorPasswordMask        = 0x0004;
   // When the editor should be in readonly mode (currently, same as "disabled"),
-  // you can specify this flag with any editor instances.  Note that setting
-  // this flag does not change the style of editor.  This just changes the
-  // internal editor's readonly state.
+  // you can specify this flag with any editor instances.
+  // NOTE: Setting this flag does not change the style of editor.  This just
+  // changes the internal editor's readonly state.
+  // NOTE: The readonly mode does NOT block XPCOM APIs which modify the editor
+  // content.  This just blocks edit operations from user input and editing
+  // commands (both HTML Document.execCommand and the XUL commands).
+  // FIXME: XPCOM methods of TextEditor may be blocked by this flag.  If you
+  // find it, file a bug.
   const long eEditorReadonlyMask        = 0x0008;
   // If you want an HTML editor to work as an email composer, specify this flag.
   // And you can specify this to text editor too for making spellchecker for

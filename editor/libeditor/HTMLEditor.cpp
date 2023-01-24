@@ -723,14 +723,6 @@ Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
     return GetDocument()->GetRootElement();
   }
 
-  // XXX If we have readonly flag, shouldn't return the element which has
-  // contenteditable="true"?  However, such case isn't there without chrome
-  // permission script.
-  if (IsReadonly()) {
-    // We still want to allow selection in a readonly editor.
-    return GetRoot();
-  }
-
   nsIContent* content = const_cast<nsIContent*>(aNode.AsContent());
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
     // If the content is in read-write state but is not editable itself,
@@ -1900,6 +1892,10 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (IsReadonly()) {
+    return NS_OK;
+  }
+
   AutoEditActionDataSetter editActionData(
       *this, HTMLEditUtils::GetEditActionForInsert(*aElement), aPrincipal);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
@@ -1912,11 +1908,6 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
   DebugOnly<nsresult> rvIgnored = CommitComposition();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "EditorBase::CommitComposition() failed, but ignored");
-
-  // XXX Oh, this should be done before dispatching `beforeinput` event.
-  if (IsReadonly()) {
-    return NS_OK;
-  }
 
   {
     Result<EditActionResult, nsresult> result = CanHandleHTMLEditSubAction();

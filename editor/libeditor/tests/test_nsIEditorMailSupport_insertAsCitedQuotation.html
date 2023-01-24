@@ -12,7 +12,10 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
-  (function testInputEvents() {
+  function testInputEvents() {
+    const inReadonlyMode = getEditor().flags & SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    const editorDescription = `(readonly=${!!inReadonlyMode})`;
+
     const editor = document.querySelector("div[contenteditable]");
     const selection = getSelection();
 
@@ -34,6 +37,7 @@ SimpleTest.waitForFocus(() => {
     editor.addEventListener("beforeinput", onBeforeInput);
     editor.addEventListener("input", onInput);
 
+    editor.innerHTML = "";
     editor.focus();
     selection.collapse(editor, 0);
 
@@ -84,22 +88,45 @@ SimpleTest.waitForFocus(() => {
     inputEvents = [];
     getEditorMailSupport().insertAsCitedQuotation("this is quoted text\nAnd here is second line.", "this is cited text", false);
 
-    ok(selection.isCollapsed,
-      "Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
-    is(selection.focusNode, editor,
-      "focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
-    is(selection.focusOffset, 1,
-      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
-    is(editor.innerHTML, '<span style="white-space: pre-wrap;">&gt; this is quoted text<br>&gt; And here is second line.<br><br></span>',
-      "The quoted text should be inserted as plaintext into the plaintext editor");
-    is(beforeInputEvents.length, 1,
-      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
-    checkInputEvent(beforeInputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
-    is(inputEvents.length, 1,
-      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
-    checkInputEvent(inputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
+    ok(
+      selection.isCollapsed,
+      `Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    is(
+      selection.focusNode,
+      editor,
+      `focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    is(
+      selection.focusOffset,
+      1,
+      `focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    is(
+      editor.innerHTML,
+      '<span style="white-space: pre-wrap;">&gt; this is quoted text<br>&gt; And here is second line.<br><br></span>',
+      `The quoted text should be inserted as plaintext into the plaintext editor ${editorDescription}`
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      `One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "insertText", "this is quoted text\nAnd here is second line.",
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    is(
+      inputEvents.length,
+      1,
+      `One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "insertText", "this is quoted text\nAnd here is second line.",
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor ${editorDescription}`
+    );
 
     // Tests when the editor is in HTML editor mode.
     getEditor().flags &= ~SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
@@ -110,22 +137,47 @@ SimpleTest.waitForFocus(() => {
     inputEvents = [];
     getEditorMailSupport().insertAsCitedQuotation("this is quoted text<br>", "this is cited text", false);
 
-    ok(selection.isCollapsed,
-      "Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
-    is(selection.focusNode, editor,
-      "focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
-    is(selection.focusOffset, 1,
-      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
-    is(editor.innerHTML,
-      '<blockquote type="cite" cite="this is cited text">this is quoted text&lt;br&gt;</blockquote>', "The quoted text should be inserted as plaintext into the HTML editor");
-    is(beforeInputEvents.length, 1,
-      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
-    checkInputEvent(beforeInputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
-    is(inputEvents.length, 1,
-      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
-    checkInputEvent(inputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
+    ok(
+      selection.isCollapsed,
+      `Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
+    is(
+      selection.focusNode,
+      editor,
+      `focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)  ${editorDescription}`
+    );
+    is(
+      selection.focusOffset,
+      1,
+      `focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
+    is(
+      editor.innerHTML,
+      '<blockquote type="cite" cite="this is cited text">this is quoted text&lt;br&gt;</blockquote>',
+      `The quoted text should be inserted as plaintext into the HTML editor ${editorDescription}`
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      `One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "",
+      null,
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
+    is(
+      inputEvents.length,
+      1,
+      `One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "",
+      null,
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext) ${editorDescription}`
+    );
 
     editor.innerHTML = "";
 
@@ -133,28 +185,56 @@ SimpleTest.waitForFocus(() => {
     inputEvents = [];
     getEditorMailSupport().insertAsCitedQuotation("this is quoted text<br>And here is second line.", "this is cited text", true);
 
-    ok(selection.isCollapsed,
-      "Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
-    is(selection.focusNode, editor,
-      "focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
-    is(selection.focusOffset, 1,
-      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
-    is(editor.innerHTML, '<blockquote type="cite" cite="this is cited text">this is quoted text<br>And here is second line.</blockquote>',
-      "The quoted text should be inserted as HTML source into the HTML editor");
-    is(beforeInputEvents.length, 1,
-      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
-    checkInputEvent(beforeInputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
-    is(inputEvents.length, 1,
-      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
-    checkInputEvent(inputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
+    ok(
+      selection.isCollapsed,
+      `Selection should be collapsed after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    is(
+      selection.focusNode,
+      editor,
+      `focus node of Selection should be a child of the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    is(
+      selection.focusOffset,
+      1,
+      `focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    is(
+      editor.innerHTML,
+      '<blockquote type="cite" cite="this is cited text">this is quoted text<br>And here is second line.</blockquote>',
+      `The quoted text should be inserted as HTML source into the HTML editor ${editorDescription}`
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      `One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "",
+      null,
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    is(
+      inputEvents.length,
+      1,
+      `One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "",
+      null,
+      `after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source) ${editorDescription}`
+    );
 
     editor.removeEventListener("beforeinput", onBeforeInput);
     editor.removeEventListener("input", onInput);
-  })();
+  }
 
-  (function testStyleOfPlaintextMode() {
+  function testStyleOfPlaintextMode() {
+    const inReadonlyMode = getEditor().flags & SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    const editorDescription = `(readonly=${!!inReadonlyMode})`;
+
     getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
 
     (function testInDiv() {
@@ -169,18 +249,18 @@ SimpleTest.waitForFocus(() => {
       is(
         editor.firstChild.tagName,
         "SPAN",
-        "testStyleOfPlaintextMode: testInDiv: insertAsCitedQuotation should insert a `<span>` element"
+        `testStyleOfPlaintextMode: testInDiv: insertAsCitedQuotation should insert a <span> element ${editorDescription}`
       );
       const computedSpanStyle = getComputedStyle(editor.firstChild);
       is(
         computedSpanStyle.display,
         "inline",
-        "testStyleOfPlaintextMode: testInDiv: The inserted <span> element should be \"display: inline;\""
+        `testStyleOfPlaintextMode: testInDiv: The inserted <span> element should be "display: inline;" ${editorDescription}`
       );
       is(
         computedSpanStyle.whiteSpace,
         "pre-wrap",
-        "testStyleOfPlaintextMode: testInDiv: The inserted <span> element should be \"white-space: pre-wrap;\""
+        `testStyleOfPlaintextMode: testInDiv: The inserted <span> element should be "white-space: pre-wrap;" ${editorDescription}`
       );
     })();
 
@@ -196,25 +276,33 @@ SimpleTest.waitForFocus(() => {
         is(
           document.body.firstChild.tagName,
           "SPAN",
-          "testStyleOfPlaintextMode: testInBody: insertAsCitedQuotation should insert a `<span>` element in plaintext mode and in a <body> element"
+          `testStyleOfPlaintextMode: testInBody: insertAsCitedQuotation should insert a <span> element in plaintext mode and in a <body> element ${editorDescription}`
         );
         const computedSpanStyle = getComputedStyle(document.body.firstChild);
         is(
           computedSpanStyle.display,
           "block",
-          "testStyleOfPlaintextMode: testInBody: The inserted <span> element should be \"display: block;\" in plaintext mode and in a <body> element"
+          `testStyleOfPlaintextMode: testInBody: The inserted <span> element should be "display: block;" in plaintext mode and in a <body> element ${editorDescription}`
         );
         is(
           computedSpanStyle.whiteSpace,
           "pre-wrap",
-          "testStyleOfPlaintextMode: testInBody: The inserted <span> element should be \"white-space: pre-wrap;\" in plaintext mode and in a <body> element"
+          `testStyleOfPlaintextMode: testInBody: The inserted <span> element should be "white-space: pre-wrap;" in plaintext mode and in a <body> element ${editorDescription}`
         );
         document.body.firstChild.remove();
       })();
     } finally {
       document.body.contentEditable = false;
     }
-  })();
+  }
+
+  testInputEvents();
+  testStyleOfPlaintextMode();
+
+  // Even if the HTMLEditor is readonly, XPCOM API should keep working.
+  getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+  testInputEvents();
+  testStyleOfPlaintextMode();
 
   SimpleTest.finish();
 });
