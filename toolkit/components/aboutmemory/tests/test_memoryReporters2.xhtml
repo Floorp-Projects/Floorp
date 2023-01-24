@@ -22,7 +22,7 @@
     socketProcessRunning = 1;
   }
   let numToOpen = 3;
-  const expectedNumRemotes = numToOpen + socketProcessRunning;
+  const expectedNumRemotes = numToOpen + socketProcessRunning + ChromeUtils.aliveUtilityProcesses;
   let numReady = 0;
 
   // Create some remote processes, and set up message-passing so that
@@ -89,7 +89,7 @@
         } else {
           ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content (") ||
              (processes[i].startsWith("Socket (") && socketProcessRunning)
-             || processes[i].startsWith("web ("),
+             || processes[i].startsWith("web (") || processes[i].startsWith("Utility ("),
              "correct non-empty process name prefix: " + processes[i]);
           numNonEmptyProcesses++;
         }
