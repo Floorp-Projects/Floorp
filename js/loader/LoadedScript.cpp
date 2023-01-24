@@ -18,6 +18,7 @@ namespace JS::loader {
 //////////////////////////////////////////////////////////////
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadedScript)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(LoadedScript)
@@ -30,9 +31,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadedScript)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(LoadedScript)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
@@ -104,8 +102,7 @@ ClassicScript::ClassicScript(ScriptFetchOptions* aFetchOptions,
 // ModuleScript
 //////////////////////////////////////////////////////////////
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleScript)
-NS_INTERFACE_MAP_END_INHERITING(LoadedScript)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ModuleScript, LoadedScript)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleScript)
 
@@ -123,9 +120,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleScript, LoadedScript)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mParseError)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mErrorToRethrow)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_ADDREF_INHERITED(ModuleScript, LoadedScript)
-NS_IMPL_RELEASE_INHERITED(ModuleScript, LoadedScript)
 
 ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
     : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL),
