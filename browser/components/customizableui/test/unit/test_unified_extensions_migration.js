@@ -20,36 +20,38 @@ const CustomizableUIInternal = CustomizableUI.getTestOnlyInternalProp(
   "CustomizableUIInternal"
 );
 
+// Migration 19 was the Unified Extensions migration version introduced
+// in 109, so we'll run tests by artificially setting the migration version
+// to one value earlier.
+const PRIOR_MIGRATION_VERSION = 18;
+
 /**
- * Write customization state into CustomizableUI.
+ * Writes customization state into CustomizableUI and then performs the forward migration
+ * for Unified Extensions.
  *
- * @param {object} stateObj An object that will be structure-cloned and written
- *   into CustomizableUI's internal `gSavedState` state variable.
+ * @param {object|null} stateObj An object that will be structure-cloned and
+ *   written into CustomizableUI's internal `gSavedState` state variable. Should
+ *   not include the currentVersion property, as this will be set automatically by
+ *   function if stateObj is not null.
+ * @returns {object}
+ *   the saved state object (minus the currentVersion property).
  */
-function saveState(stateObj) {
+function migrateForward(stateObj) {
   // We make sure to use structuredClone here so that we don't end up comparing
   // SAVED_STATE against itself.
-  CustomizableUI.setTestOnlyInternalProp(
-    "gSavedState",
-    structuredClone(stateObj)
-  );
-}
+  let stateToSave = structuredClone(stateObj);
+  if (stateToSave) {
+    stateToSave.currentVersion = PRIOR_MIGRATION_VERSION;
+  }
 
-/**
- * Read customization state out from CustomizableUI.
- *
- * @returns {object}
- */
-function loadState() {
-  return CustomizableUI.getTestOnlyInternalProp("gSavedState");
-}
+  CustomizableUI.setTestOnlyInternalProp("gSavedState", stateToSave);
+  CustomizableUIInternal._updateForNewVersion();
 
-/**
- * Enables the Unified Extensions UI pref and calls the function to perform
- * forward migration.
- */
-function migrateForward() {
-  CustomizableUIInternal._updateForUnifiedExtensions();
+  let migratedState = CustomizableUI.getTestOnlyInternalProp("gSavedState");
+  if (migratedState) {
+    delete migratedState.currentVersion;
+  }
+  return migratedState;
 }
 
 /**
@@ -57,9 +59,13 @@ function migrateForward() {
  * state exits safely.
  */
 add_task(async function test_no_saved_state() {
-  saveState(null);
-  migrateForward();
-  Assert.equal(loadState(), null, "gSavedState should not have been modified");
+  let migratedState = migrateForward(null);
+
+  Assert.deepEqual(
+    migratedState,
+    null,
+    "gSavedState should not have been modified"
+  );
 });
 
 /**
@@ -67,10 +73,10 @@ add_task(async function test_no_saved_state() {
  * state exits safely.
  */
 add_task(async function test_no_saved_placements() {
-  saveState({});
-  migrateForward();
+  let migratedState = migrateForward({});
+
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     {},
     "gSavedState should not have been modified"
   );
@@ -112,11 +118,10 @@ add_task(async function test_no_extensions() {
   const EXPECTED_STATE = structuredClone(SAVED_STATE);
   EXPECTED_STATE.placements[CustomizableUI.AREA_ADDONS] = [];
 
-  saveState(SAVED_STATE);
-  migrateForward();
+  let migratedState = migrateForward(SAVED_STATE);
 
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     EXPECTED_STATE,
     "Got the expected state after the migration."
   );
@@ -156,11 +161,10 @@ add_task(async function test_existing_browser_actions_no_movement() {
     },
   };
 
-  saveState(SAVED_STATE);
-  migrateForward();
+  let migratedState = migrateForward(SAVED_STATE);
 
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     SAVED_STATE,
     "The saved state should not have changed after migration."
   );
@@ -214,11 +218,10 @@ add_task(async function test_migrate_extension_buttons() {
     "ext2-browser-action",
   ];
 
-  saveState(SAVED_STATE);
-  migrateForward();
+  let migratedState = migrateForward(SAVED_STATE);
 
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     EXPECTED_STATE,
     "The saved state should not have changed after migration."
   );
@@ -276,11 +279,10 @@ add_task(async function test_migrate_extension_buttons_no_overwrite() {
     "ext4-browser-action",
   ];
 
-  saveState(SAVED_STATE);
-  migrateForward();
+  let migratedState = migrateForward(SAVED_STATE);
 
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     EXPECTED_STATE,
     "The saved state should not have changed after migration."
   );
@@ -353,97 +355,11 @@ add_task(async function test_migrate_extension_buttons_elsewhere() {
     "ext18-browser-action",
   ];
 
-  saveState(SAVED_STATE);
-  migrateForward();
+  let migratedState = migrateForward(SAVED_STATE);
 
   Assert.deepEqual(
-    loadState(),
+    migratedState,
     EXPECTED_STATE,
     "The saved state should not have changed after migration."
   );
-});
-
-/**
- * Test that migrating back appends the items in the addons panel
- * into the overflow panel. This should remove the AREA_ADDONS
- * placements too.
- */
-add_task(async function test_migrating_back_with_items() {
-  const SAVED_STATE = {
-    placements: {
-      "nav-bar": [
-        "back-button",
-        "forward-button",
-        "spring",
-        "urlbar-container",
-        "save-to-pocket-button",
-      ],
-      "toolbar-menubar": [
-        "home-button",
-        "menubar-items",
-        "spring",
-        "downloads-button",
-      ],
-      TabsToolbar: [
-        "firefox-view-button",
-        "tabbrowser-tabs",
-        "new-tab-button",
-        "alltabs-button",
-        "developer-button",
-      ],
-      PersonalToolbar: ["personal-bookmarks", "fxa-toolbar-menu-button"],
-      "widget-overflow-fixed-list": ["privatebrowsing-button", "panic-button"],
-      "unified-extensions-area": ["ext0-browser-action", "ext1-browser-action"],
-    },
-  };
-
-  const EXPECTED_STATE = structuredClone(SAVED_STATE);
-  EXPECTED_STATE.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] = [
-    "privatebrowsing-button",
-    "panic-button",
-    "ext0-browser-action",
-    "ext1-browser-action",
-  ];
-  delete EXPECTED_STATE.placements[CustomizableUI.AREA_ADDONS];
-
-  saveState(SAVED_STATE);
-});
-
-/**
- * Test that migrating back when there are no items in the addons panel
- * should not change any other area.
- */
-add_task(async function test_migrating_back_with_no_items() {
-  const SAVED_STATE = {
-    placements: {
-      "nav-bar": [
-        "back-button",
-        "forward-button",
-        "spring",
-        "urlbar-container",
-        "save-to-pocket-button",
-      ],
-      "toolbar-menubar": [
-        "home-button",
-        "menubar-items",
-        "spring",
-        "downloads-button",
-      ],
-      TabsToolbar: [
-        "firefox-view-button",
-        "tabbrowser-tabs",
-        "new-tab-button",
-        "alltabs-button",
-        "developer-button",
-      ],
-      PersonalToolbar: ["personal-bookmarks", "fxa-toolbar-menu-button"],
-      "widget-overflow-fixed-list": ["privatebrowsing-button", "panic-button"],
-      "unified-extensions-area": [],
-    },
-  };
-
-  const EXPECTED_STATE = structuredClone(SAVED_STATE);
-  delete EXPECTED_STATE.placements[CustomizableUI.AREA_ADDONS];
-
-  saveState(SAVED_STATE);
 });
