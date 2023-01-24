@@ -19,6 +19,7 @@ class ErrorResult;
 namespace dom {
 
 class GlobalObject;
+class HighlightRegistry;
 
 class CSS {
  private:
@@ -32,6 +33,9 @@ class CSS {
 
   static void Escape(const GlobalObject&, const nsAString& aIdent,
                      nsAString& aReturn);
+
+  static HighlightRegistry* GetHighlights(const GlobalObject& aGlobal,
+                                          ErrorResult& aRv);
 };
 
 }  // namespace dom
