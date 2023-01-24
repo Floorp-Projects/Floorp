@@ -27,6 +27,8 @@ class MFMediaEngineAudioStream final : public MFMediaEngineStream {
     return TrackInfo::TrackType::kAudioTrack;
   }
 
+  bool IsEncrypted() const override;
+
  private:
   HRESULT CreateMediaType(const TrackInfo& aInfo,
                           IMFMediaType** aMediaType) override;
