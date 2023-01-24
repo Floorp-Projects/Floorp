@@ -230,7 +230,7 @@
     if (SpecialPowers.Services.io.socketProcessLaunched) {
       socketProcessRunning = 1;
     }
-    is(aAmounts.length, (1 + socketProcessRunning + ChromeUtils.aliveUtilityProcesses),
+    ok(aAmounts.length == (1 + socketProcessRunning),
        aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
     if (!aCanBeUnreasonable) {
