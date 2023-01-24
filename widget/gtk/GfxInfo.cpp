@@ -607,8 +607,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, V(460, 82, 0, 0),
-        "FEATURE_FAILURE_WEBRENDER_OLD_NVIDIA", "460.82.0");
+        DRIVER_LESS_THAN, V(470, 82, 0, 0),
+        "FEATURE_FAILURE_WEBRENDER_OLD_NVIDIA", "470.82.0");
 
     // Older generation NVIDIA devices do not perform well with WebRender.
     APPEND_TO_DRIVER_BLOCKLIST(
