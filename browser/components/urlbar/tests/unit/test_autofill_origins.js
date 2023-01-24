@@ -182,7 +182,7 @@ add_task(async function portNoMatch1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:89/`,
-        title: `http://${origin}:89/`,
+        fallbackTitle: `http://${origin}:89/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -206,7 +206,7 @@ add_task(async function portNoMatch2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:9/`,
-        title: `http://${origin}:9/`,
+        fallbackTitle: `http://${origin}:9/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -230,7 +230,7 @@ add_task(async function trailingSlash_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example/",
-        title: "http://example/",
+        fallbackTitle: "http://example/",
         iconUri: "page-icon:http://example/",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -568,7 +568,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        title: `${search}/`,
+        fallbackTitle: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -588,7 +588,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        title: `${search}/`,
+        fallbackTitle: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -608,7 +608,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        title: `${search}/`,
+        fallbackTitle: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -817,7 +817,7 @@ add_task(async function about() {
         context =>
           makeVisitResult(context, {
             uri: "about:blan",
-            title: "about:blan",
+            fallbackTitle: "about:blan",
             source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
             heuristic: true,
           }),

@@ -254,7 +254,7 @@ add_task(async function test_visitURL() {
   );
 
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("http://example.com");
+  await searchInAwesomebar("http://example.com/a/");
   EventUtils.synthesizeKey("KEY_Enter");
   await p;
 

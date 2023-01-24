@@ -254,7 +254,7 @@ class ProviderPreloadedSites extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+        fallbackTitle: [title, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: UrlbarUtils.getIconForUrl(url),
       })

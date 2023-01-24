@@ -57,6 +57,7 @@ export var UrlbarUtils = {
     HEURISTIC_EXTENSION: "heuristicExtension",
     HEURISTIC_FALLBACK: "heuristicFallback",
     HEURISTIC_BOOKMARK_KEYWORD: "heuristicBookmarkKeyword",
+    HEURISTIC_HISTORY_URL: "heuristicHistoryUrl",
     HEURISTIC_OMNIBOX: "heuristicOmnibox",
     HEURISTIC_PRELOADED: "heuristicPreloaded",
     HEURISTIC_SEARCH_TIP: "heuristicSearchTip",
@@ -526,6 +527,8 @@ export var UrlbarUtils = {
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE;
         case "UrlbarProviderSearchTips":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP;
+        case "HistoryUrlHeuristic":
+          return UrlbarUtils.RESULT_GROUP.HEURISTIC_HISTORY_URL;
         default:
           if (result.providerName.startsWith("TestProvider")) {
             return UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST;
@@ -1927,9 +1930,11 @@ export class UrlbarQueryContext {
           this.trimmedSearchString,
           flags
         );
+
         this._fixupInfo = {
           href: info.fixedURI.spec,
           isSearch: !!info.keywordAsSent,
+          scheme: info.fixedURI.scheme,
         };
       } catch (ex) {
         this._fixupError = ex.result;

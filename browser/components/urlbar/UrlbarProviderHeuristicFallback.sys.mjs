@@ -163,7 +163,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            title: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
+            fallbackTitle: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
             url: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
           })
         );
@@ -221,7 +221,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        title: [displayURL, UrlbarUtils.HIGHLIGHT.NONE],
+        fallbackTitle: [displayURL, UrlbarUtils.HIGHLIGHT.NONE],
         url: [escapedURL, UrlbarUtils.HIGHLIGHT.NONE],
         icon: iconUri,
       })

@@ -200,7 +200,7 @@ add_task(async function test_keyword_search() {
     matches: [
       makeKeywordSearchResult(context, {
         uri: "http://def/?search=",
-        title: "http://def/?search=",
+        fallbackTitle: "http://def/?search=",
         keyword: "key2",
         iconUri: "page-icon:http://def/?search=%s",
         heuristic: true,
@@ -219,7 +219,7 @@ add_task(async function test_keyword_search() {
     matches: [
       makeKeywordSearchResult(context, {
         uri: "http://def/?search=",
-        title: "http://def/?search=",
+        fallbackTitle: "http://def/?search=",
         keyword: "key2",
         iconUri: "page-icon:http://def/?search=%s",
         heuristic: true,
@@ -345,7 +345,7 @@ add_task(async function test_keyword_search() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://key2/",
-        title: "http://key2/",
+        fallbackTitle: "http://key2/",
         heuristic: true,
         providerName: "HeuristicFallback",
       }),

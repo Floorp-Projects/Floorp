@@ -26,7 +26,7 @@ add_task(async function test_not_autofill_ws_1() {
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
-        title: "http://mozilla.org/",
+        fallbackTitle: "http://mozilla.org/",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
       }),
@@ -46,7 +46,7 @@ add_task(async function test_not_autofill_ws_2() {
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
-        title: "http://mozilla.org/",
+        fallbackTitle: "http://mozilla.org/",
         iconUri: "page-icon:http://mozilla.org/",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
@@ -67,7 +67,7 @@ add_task(async function test_not_autofill_ws_3() {
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/link",
-        title: "http://mozilla.org/link",
+        fallbackTitle: "http://mozilla.org/link",
         iconUri: "page-icon:http://mozilla.org/",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
@@ -81,16 +81,18 @@ add_task(async function test_not_autofill_ws_3() {
 });
 
 add_task(async function test_not_autofill_ws_4() {
-  info("Do not autofill whitespaced entry 4");
+  info(
+    "Do not autofill whitespaced entry 4, but UrlbarProviderPlaces provides heuristic result"
+  );
   let context = createContext("mozilla.org/link/ ", { isPrivate: false });
   await check_results({
     context,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/link/",
-        title: "http://mozilla.org/link/",
-        iconUri: "page-icon:http://mozilla.org/",
-        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        title: "test visit for http://mozilla.org/link/",
+        iconUri: "page-icon:http://mozilla.org/link/",
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         heuristic: true,
       }),
     ],

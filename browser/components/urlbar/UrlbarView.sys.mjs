@@ -1546,7 +1546,7 @@ export class UrlbarView {
         isRowSelectable = false;
         break;
       default:
-        if (result.heuristic && (!result.autofill || !result.payload.title)) {
+        if (result.heuristic && !result.payload.title) {
           isVisitAction = true;
         } else if (result.providerName != "UrlbarProviderQuickSuggest") {
           setURL = true;

@@ -32,6 +32,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 
 // List of available local providers, each is implemented in its own jsm module
 // and will track different queries internally by queryContext.
+// When adding new providers please remember to update the list in metrics.yaml.
 var localProviderModules = {
   UrlbarProviderAboutPages:
     "resource:///modules/UrlbarProviderAboutPages.sys.mjs",
@@ -46,6 +47,8 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderContextualSearch.sys.mjs",
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
+  UrlbarProviderHistoryUrlHeuristic:
+    "resource:///modules/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
   UrlbarProviderInputHistory:
     "resource:///modules/UrlbarProviderInputHistory.sys.mjs",
   UrlbarProviderInterventions:

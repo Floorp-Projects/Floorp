@@ -74,7 +74,7 @@ add_task(async function portNoMatch() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example.com:8999/f",
-        title: "http://example.com:8999/f",
+        fallbackTitle: "http://example.com:8999/f",
         iconUri: "page-icon:http://example.com:8999/",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -204,7 +204,7 @@ add_task(async function uriFragmentCaseSensitive() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example.com/#t",
-        title: "http://example.com/#t",
+        fallbackTitle: "http://example.com/#t",
         heuristic: true,
       }),
       makeVisitResult(context, {

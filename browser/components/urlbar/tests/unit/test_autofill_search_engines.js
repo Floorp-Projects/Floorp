@@ -208,7 +208,7 @@ add_task(async function searchEngines() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: otherScheme + "://ex/",
-          title: otherScheme + "://ex/",
+          fallbackTitle: otherScheme + "://ex/",
           heuristic: true,
         }),
       ],
@@ -221,7 +221,7 @@ add_task(async function searchEngines() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: otherScheme + "://www.ex/",
-          title: otherScheme + "://www.ex/",
+          fallbackTitle: otherScheme + "://www.ex/",
           heuristic: true,
         }),
       ],
@@ -234,7 +234,7 @@ add_task(async function searchEngines() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://example/",
-          title: "http://example/",
+          fallbackTitle: "http://example/",
           iconUri: "page-icon:http://example/",
           heuristic: true,
         }),
