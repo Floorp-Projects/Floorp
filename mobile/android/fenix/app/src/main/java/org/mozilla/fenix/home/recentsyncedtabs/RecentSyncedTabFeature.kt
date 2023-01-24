@@ -73,6 +73,7 @@ class RecentSyncedTabFeature(
                     accountManager.withConstellation { refreshDevices() }
                     accountManager.syncNow(
                         reason = SyncReason.User,
+                        debounce = true,
                         customEngineSubset = listOf(SyncEngine.Tabs),
                     )
                 }

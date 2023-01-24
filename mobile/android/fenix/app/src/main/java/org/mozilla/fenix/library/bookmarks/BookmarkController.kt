@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -223,7 +224,11 @@ class DefaultBookmarkController(
     override fun handleRequestSync() {
         scope.launch {
             store.dispatch(BookmarkFragmentAction.StartSync)
-            activity.components.backgroundServices.accountManager.syncNow(SyncReason.User)
+            activity.components.backgroundServices.accountManager.syncNow(
+                reason = SyncReason.User,
+                debounce = true,
+                customEngineSubset = listOf(SyncEngine.Bookmarks),
+            )
             // The current bookmark node we are viewing may be made invalid after syncing so we
             // check if the current node is valid and if it isn't we find the nearest valid ancestor
             // and open it

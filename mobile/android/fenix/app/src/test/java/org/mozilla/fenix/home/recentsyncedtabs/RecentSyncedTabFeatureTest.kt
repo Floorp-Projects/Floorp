@@ -140,7 +140,7 @@ class RecentSyncedTabFeatureTest {
 
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
         coVerify { accountManager.withConstellation { refreshDevices() } }
-        coVerify { accountManager.syncNow(reason = SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs)) }
+        coVerify { accountManager.syncNow(reason = SyncReason.User, debounce = true, customEngineSubset = listOf(SyncEngine.Tabs)) }
     }
 
     @Test
