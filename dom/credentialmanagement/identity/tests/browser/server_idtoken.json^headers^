@@ -1,0 +1,3 @@
+Content-Type: application/json
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
