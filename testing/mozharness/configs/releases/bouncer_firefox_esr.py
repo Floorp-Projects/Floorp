@@ -116,6 +116,18 @@ config = {
                 "win64",
             ],
         },
+        "pkg": {
+            "product-name": "Firefox-%(version)s-pkg-SSL",
+            "platforms": ["osx"],
+        },
+        "pkg-latest": {
+            "product-name": "Firefox-esr-pkg-latest-SSL",
+            "platforms": ["osx"],
+        },
+        "pkg-next-latest": {
+            "product-name": "Firefox-esr-next-pkg-latest-SSL",
+            "platforms": ["osx"],
+        },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
             "platforms": [
