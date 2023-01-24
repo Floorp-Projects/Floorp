@@ -163,7 +163,7 @@ function TagPicker(props) {
               </datalist>
               <button
                 className="stp_tag_picker_button"
-                disabled={!inputValue?.length}
+                disabled={!inputValue?.length && !tags.length}
                 data-l10n-id="pocket-panel-saved-save-tags"
                 onClick={() => submitTags()}
               />
