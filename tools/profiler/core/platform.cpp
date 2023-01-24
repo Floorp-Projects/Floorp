@@ -284,6 +284,9 @@ class GeckoJavaSampler
           result->Complete(jni::ByteArray::New(
               reinterpret_cast<const int8_t*>(compressedProfile.Elements()),
               compressedProfile.Length()));
+
+          // Done with capturing a profile. Stop the profiler.
+          profiler_stop();
         },
         [result](nsresult aRv) {
           char errorString[9];
@@ -291,6 +294,9 @@ class GeckoJavaSampler
           result->CompleteExceptionally(
               mozilla::java::sdk::IllegalStateException::New(errorString)
                   .Cast<jni::Throwable>());
+
+          // Failed to capture a profile. Stop the profiler.
+          profiler_stop();
         });
   }
 };
