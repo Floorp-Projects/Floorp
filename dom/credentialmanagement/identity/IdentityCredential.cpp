@@ -182,7 +182,20 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
             }
           });
 
-  return result.forget();
+  return result->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [browsingContext](
+          const IdentityCredential::GetIPCIdentityCredentialPromise::
+              ResolveOrRejectValue&& value) {
+        if (value.IsReject()) {
+          // We force the close to occur here. It may have already closed, in
+          // which case this will be a no-op. This forces a close in the event
+          // of a user not acting before the timeout.
+          IdentityCredential::CloseUserInterface(browsingContext);
+        }
+        return IdentityCredential::GetIPCIdentityCredentialPromise::
+            CreateAndResolveOrReject(value, __func__);
+      });
 }
 
 // static
