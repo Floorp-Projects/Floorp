@@ -66,6 +66,7 @@ bool ShouldUsePortal(PortalKind);
 // If we can't find a reasonable environment, the empty string is returned.
 const nsCString& GetDesktopEnvironmentIdentifier();
 bool IsGnomeDesktopEnvironment();
+bool IsKdeDesktopEnvironment();
 
 // Parse text/uri-list
 nsTArray<nsCString> ParseTextURIList(const nsACString& data);
