@@ -27,7 +27,7 @@ class DNSServiceBase : public nsIObserver {
   virtual void ReadPrefs(const char* aName);
   bool DNSForbiddenByActiveProxy(const nsACString& aHostname, uint32_t aFlags);
 
-  bool mDisablePrefetch = false;
+  mozilla::Atomic<bool, mozilla::Relaxed> mDisablePrefetch{false};
   mozilla::Atomic<bool, mozilla::Relaxed> mHasSocksProxy{false};
 };
 
