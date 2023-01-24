@@ -476,31 +476,39 @@ let consoleAllowList = [
   // Harness issues.
   'property "localProfileDir" is non-configurable and can\'t be deleted',
   'property "profileDir" is non-configurable and can\'t be deleted',
-  // Can be emitted by `resource://services-settings/Utils.jsm` when remote
-  // settings is fetched (e.g. via IgnoreLists).
+  // These can be emitted by `resource://services-settings/Utils.jsm` when
+  // remote settings is fetched (e.g. via IgnoreLists).
   "NetworkError: Network request failed",
+  // Also remote settings, see bug 1812040.
+  "Unexpected content-type",
 ];
 
-function observe(subject) {
-  let msg = subject.wrappedJSObject;
-  if (msg.level != "error") {
-    return;
-  }
-
-  let messageContents = msg.arguments[0].messageContents;
-  if (!consoleAllowList.some(e => messageContents.includes(e))) {
-    Assert.ok(false, "Unexpected console message: " + messageContents);
-  }
-}
-
-const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
-  Ci.nsIConsoleAPIStorage
-);
-ConsoleAPIStorage.addLogEventListener(
-  observe,
-  Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
-);
+let endConsoleListening = TestUtils.listenForConsoleMessages();
 
 registerCleanupFunction(async () => {
-  ConsoleAPIStorage.removeLogEventListener(observe);
+  let msgs = await endConsoleListening();
+  for (let msg of msgs) {
+    msg = msg.wrappedJSObject;
+    if (msg.level != "error") {
+      continue;
+    }
+
+    if (!msg.arguments?.length) {
+      Assert.ok(
+        false,
+        "Unexpected console message received during test: " + msg
+      );
+    } else {
+      let firstArg = msg.arguments[0];
+      // Use the appropriate message depending on the object supplied to
+      // the first argument.
+      let message = firstArg.messageContents ?? firstArg.message ?? firstArg;
+      if (!consoleAllowList.some(e => message.includes(e))) {
+        Assert.ok(
+          false,
+          "Unexpected console message received during test: " + message
+        );
+      }
+    }
+  }
 });
