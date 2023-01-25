@@ -236,8 +236,8 @@ const tests = [
     info("Selecting a tip's main button, enter.");
     win.gURLBar.search("x");
     await UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     unregisterTipProvider(tipProvider);
     return {
@@ -257,20 +257,13 @@ const tests = [
   },
 
   async function(win) {
-    if (UrlbarPrefs.get("resultMenu")) {
-      todo(
-        false,
-        "telemetry for the result menu to be implemented in bug 1790020"
-      );
-      return null;
-    }
     let tipProvider = registerTipProvider();
     info("Selecting a tip's help button, enter.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     win.gURLBar.search("x");
     await UrlbarTestUtils.promiseSearchComplete(win);
-    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
     EventUtils.synthesizeKey("KEY_Tab", {}, win);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
@@ -1198,10 +1191,6 @@ async function doTest(eventTelemetryEnabled) {
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
     let events = await tests[i](win);
-    if (events === null) {
-      info("Skipping test");
-      continue;
-    }
     if (!Array.isArray(events)) {
       events = [events];
     }
