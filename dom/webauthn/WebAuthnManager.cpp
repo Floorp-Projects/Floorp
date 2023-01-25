@@ -313,8 +313,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       // If current.type does not contain a PublicKeyCredentialType
       // supported by this implementation, then stop processing current and move
       // on to the next element in mPubKeyCredParams.
-      if (aOptions.mPubKeyCredParams[a].mType !=
-          PublicKeyCredentialType::Public_key) {
+      if (!aOptions.mPubKeyCredParams[a].mType.EqualsLiteral("public-key")) {
         continue;
       }
 
@@ -547,7 +546,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   nsTArray<WebAuthnScopedCredential> allowList;
   for (const auto& s : aOptions.mAllowCredentials) {
-    if (s.mType == PublicKeyCredentialType::Public_key) {
+    if (s.mType.EqualsLiteral("public-key")) {
       WebAuthnScopedCredential c;
       CryptoBuffer cb;
       cb.Assign(s.mId);
@@ -739,7 +738,7 @@ void WebAuthnManager::FinishMakeCredential(
   credential->SetResponse(attestation);
 
   // Forward client extension results.
-  for (auto& ext : aResult.Extensions()) {
+  for (const auto& ext : aResult.Extensions()) {
     if (ext.type() ==
         WebAuthnExtensionResult::TWebAuthnExtensionResultHmacSecret) {
       bool hmacCreateSecret =
@@ -818,7 +817,7 @@ void WebAuthnManager::FinishGetAssertion(
   credential->SetResponse(assertion);
 
   // Forward client extension results.
-  for (auto& ext : aResult.Extensions()) {
+  for (const auto& ext : aResult.Extensions()) {
     if (ext.type() == WebAuthnExtensionResult::TWebAuthnExtensionResultAppId) {
       bool appid = ext.get_WebAuthnExtensionResultAppId().AppId();
       credential->SetClientExtensionResultAppId(appid);

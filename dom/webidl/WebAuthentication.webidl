@@ -45,7 +45,7 @@ interface AuthenticatorAssertionResponse : AuthenticatorResponse {
 };
 
 dictionary PublicKeyCredentialParameters {
-    required PublicKeyCredentialType  type;
+    required DOMString                type;
     required COSEAlgorithmIdentifier  alg;
 };
 
@@ -133,12 +133,8 @@ dictionary TokenBinding {
 
 enum TokenBindingStatus { "present", "supported" };
 
-enum PublicKeyCredentialType {
-    "public-key"
-};
-
 dictionary PublicKeyCredentialDescriptor {
-    required PublicKeyCredentialType      type;
+    required DOMString                    type;
     required BufferSource                 id;
     // Transports is a string that is matched against the AuthenticatorTransport
     // enumeration so that we have forward-compatibility for new transports.
