@@ -2685,7 +2685,7 @@ The application update services.
 
     * - Owner(s)
       -
-        | `Kirk Steuber (bytesized) <https://people.mozilla.org/s?query=bytesized>`__
+        | `Robin Steuber (bytesized) <https://people.mozilla.org/s?query=bytesized>`__
     * - Peer(s)
       -
         | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
@@ -2780,8 +2780,7 @@ The downloads UI and service.
     * - Peer(s)
       -
         | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
-    * - Peer(s) Emeritus
-      - Micah Tigley
+        | `Micah Tigley (micah) <https://people.mozilla.org/s?query=micah>`__
     * - Includes
       -
         | `browser/components/downloads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/downloads/\*\*/\*>`__
@@ -3045,12 +3044,11 @@ A component that allows video elements to be pulled out into an always-on-top wi
       -
         | `Molly Howell (mhowell) <https://people.mozilla.org/s?query=mhowell>`__
         | `Mike Conley (mconley) <https://people.mozilla.org/s?query=mconley>`__
+        | `Micah Tigley (micah) <https://people.mozilla.org/s?query=micah>`__
     * - Peer(s)
       -
         | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
         | `kpatenio (kpatenio) <https://people.mozilla.org/s?query=kpatenio>`__
-    * - Owner(s) Emeritus
-      - Micah Tigley
     * - Includes
       -
         | `toolkit/components/pictureinpicture <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/pictureinpicture>`__
