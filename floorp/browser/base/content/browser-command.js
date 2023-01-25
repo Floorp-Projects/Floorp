@@ -175,18 +175,16 @@ function displayBrowserManagerSidebar() {
 
 function setCustomURLFavicon(sbar_id) {
   let sbar_url = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url;
-
+  document.getElementById(`${sbar_id}`).style.removeProperty("--BSMIcon");
   try {
     new URL(sbar_url);
   } catch (e) {
     console.error(e);
-    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
     setUserContextLine(sbar_id.slice(7));
     return;
   }
 
   if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
-    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
 
     let iconProvider = Services.prefs.getStringPref("floorp.browser.sidebar.useIconProvider", null);
     let icon_url;
@@ -231,14 +229,14 @@ function setCustomURLFavicon(sbar_id) {
         }
 
         if (BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url === sbar_url) {  // Check that the URL has not changed after the icon is retrieved.
-          document.getElementById(`${sbar_id}`).style.listStyleImage = `url(${icon_data_url})`;
+          document.getElementById(`${sbar_id}`).style.setProperty("--BSMIcon",`url(${icon_data_url})`);
         }
       })
       .catch(reject => {
         console.error(reject);
       });
   } else if (sbar_url.startsWith("moz-extension://")) {
-    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://mozapps/skin/extensions/extensionGeneric.svg)`;
+    document.getElementById(`${sbar_id}`).style.setProperty("--BSMIcon",`url(chrome://mozapps/skin/extensions/extensionGeneric.svg)`);
 
     let addon_id = (new URL(sbar_url)).hostname;
     let addon_base_url = `moz-extension://${addon_id}`
@@ -260,12 +258,14 @@ function setCustomURLFavicon(sbar_id) {
           `${addon_base_url}/${addon_icon_path}`;
 
         if (BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url === sbar_url) {  // Check that the URL has not changed after the icon is retrieved.
-          document.getElementById(`${sbar_id}`).style.listStyleImage = `url(${addon_icon_url})`;
+          document.getElementById(`${sbar_id}`).style.setProperty("--BSMIcon",`url(${addon_icon_url})`);
         }
       })
       .catch(reject => {
         console.error(reject);
       });
+  } else if (sbar_url.startsWith("file://")) {
+    document.getElementById(`${sbar_id}`).style.setProperty("--BSMIcon",`moz-icon:${sbar_url}?size=128`)	  
   }
 
   setUserContextLine(sbar_id.slice(7));
