@@ -27,12 +27,6 @@
   -moz-box-flex: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *|*:root {
-    --animation-easing-function: step-end;
-  }
-}
-
 :root {
   text-rendering: optimizeLegibility;
   -moz-control-character-visibility: visible;
