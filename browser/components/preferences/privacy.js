@@ -2059,12 +2059,6 @@ var gPrivacyPane = {
     );
     bestMatchLearnMoreLink.setAttribute("href", QuickSuggest.HELP_URL);
 
-    // Set the URL of the Firefox Suggest learn-more links.
-    let links = document.querySelectorAll(".firefoxSuggestLearnMore");
-    for (let link of links) {
-      link.setAttribute("href", QuickSuggest.HELP_URL);
-    }
-
     this._updateFirefoxSuggestSection(true);
     this._initQuickActionsSection();
   },
