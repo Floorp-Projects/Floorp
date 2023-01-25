@@ -161,8 +161,7 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                             java::sdk::Integer::ValueOf(1));
           }
 
-          if (sel.userVerificationRequirement() ==
-              UserVerificationRequirement::Required) {
+          if (sel.userVerificationRequirement().EqualsLiteral("required")) {
             GECKOBUNDLE_PUT(authSelBundle, "requireUserVerification",
                             java::sdk::Integer::ValueOf(1));
           }

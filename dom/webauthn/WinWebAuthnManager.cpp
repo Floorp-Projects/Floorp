@@ -231,24 +231,17 @@ void WinWebAuthnManager::Register(
 
     const auto& sel = extra.AuthenticatorSelection();
 
-    UserVerificationRequirement userVerificationReq =
+    const nsString& userVerificationRequirement =
         sel.userVerificationRequirement();
-    switch (userVerificationReq) {
-      case UserVerificationRequirement::Required:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-        break;
-      case UserVerificationRequirement::Preferred:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-        break;
-      case UserVerificationRequirement::Discouraged:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
-        break;
-      default:
-        winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
-        break;
+    if (userVerificationRequirement.EqualsLiteral("required")) {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+    } else if (userVerificationRequirement.EqualsLiteral("preferred")) {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+    } else if (userVerificationRequirement.EqualsLiteral("discouraged")) {
+      winUserVerificationReq =
+          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+    } else {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
     }
 
     if (sel.authenticatorAttachment().isSome()) {
@@ -565,25 +558,16 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
     rpID = aInfo.RpId().get();
 
     // User Verification Requirement
-    UserVerificationRequirement userVerificationReq =
-        extra.userVerificationRequirement();
-
-    switch (userVerificationReq) {
-      case UserVerificationRequirement::Required:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-        break;
-      case UserVerificationRequirement::Preferred:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-        break;
-      case UserVerificationRequirement::Discouraged:
-        winUserVerificationReq =
-            WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
-        break;
-      default:
-        winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
-        break;
+    const nsString& userVerificationReq = extra.userVerificationRequirement();
+    if (userVerificationReq.EqualsLiteral("required")) {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+    } else if (userVerificationReq.EqualsLiteral("preferred")) {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+    } else if (userVerificationReq.EqualsLiteral("discouraged")) {
+      winUserVerificationReq =
+          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+    } else {
+      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
     }
   } else {
     rpID = aInfo.Origin().get();
