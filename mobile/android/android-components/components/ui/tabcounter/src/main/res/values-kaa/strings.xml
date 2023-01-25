@@ -6,4 +6,6 @@
     <string name="mozac_browser_menu_new_private_tab">Jańa jeke bet</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Betti jabıw</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Betti nusqalaw</string>
     </resources>

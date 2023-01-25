@@ -28,6 +28,8 @@
     <string name="mozac_feature_addons_permissions_management_description">Reen kuutoragol njokkon, njiilaa kettule</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Wostondir mesasuuji e jaaɓnirɗe goɗɗe ko wonaa ngal ɗoo</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Hollat tintine maa</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Yiil teelte proksi wanngorde</string>
     <!-- Description for sessions permission. -->
@@ -65,7 +67,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Aafaama</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Wagginaama</string>
+    <string name="mozac_feature_addons_recommended_section">Basiyaaɗe</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Tammbaaka tawo</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
