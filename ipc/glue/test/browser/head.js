@@ -12,51 +12,14 @@ const utilityProcessTest = () => {
 const kGenericUtilitySandbox = 0;
 const kGenericUtilityActor = "unknown";
 
-// Start a generic utility process with the given array of utility actor names
-// registered.
-async function startUtilityProcess(actors = []) {
+async function startUtilityProcess(actors) {
   info("Start a UtilityProcess");
   return utilityProcessTest().startProcess(actors);
 }
 
-// Returns an array of process infos for utility processes of the given type
-// or all utility processes if actor is not defined.
-async function getUtilityProcesses(actor = undefined) {
-  let procInfos = (await ChromeUtils.requestProcInfo()).children.filter(p => {
-    return (
-      p.type === "utility" &&
-      (actor == undefined ||
-        p.utilityActors.find(a => a.actorName.startsWith(actor)))
-    );
-  });
-
-  info(`Utility process infos = ${JSON.stringify(procInfos)}`);
-  return procInfos;
-}
-
-async function getUtilityPid(actor) {
-  let process = await getUtilityProcesses(actor);
-  is(process.length, 1, `exactly one ${actor} process exists`);
-  return process[0].pid;
-}
-
-async function checkUtilityExists(actor) {
-  info(`Looking for a running ${actor} utility process`);
-  const utilityPid = await getUtilityPid(actor);
-  ok(utilityPid > 0, `Found ${actor} utility process ${utilityPid}`);
-  return utilityPid;
-}
-
-// "Cleanly stop" a utility process.  This will never leave a crash dump file.
-// preferKill will "kill" the process (e.g. SIGABRT) instead of using the
-// UtilityProcessManager.
-// To "crash" -- i.e. shutdown and generate a crash dump -- use
-// crashSomeUtility().
-async function cleanUtilityProcessShutdown(actor, preferKill = false) {
-  info(`${preferKill ? "Kill" : "Clean shutdown"} Utility Process ${actor}`);
-
-  const utilityPid = await getUtilityPid(actor);
-  ok(utilityPid !== undefined, `Must have PID for ${actor} utility process`);
+async function cleanUtilityProcessShutdown(utilityPid, preferKill = false) {
+  info(`CleanShutdown Utility Process ${utilityPid}`);
+  ok(utilityPid !== undefined, "Utility needs to be defined");
 
   const utilityProcessGone = TestUtils.topicObserved(
     "ipc:utility-shutdown",
@@ -71,8 +34,7 @@ async function cleanUtilityProcessShutdown(actor, preferKill = false) {
     );
     ProcessTools.kill(utilityPid);
   } else {
-    info(`Stopping Utility Process ${utilityPid}`);
-    await utilityProcessTest().stopProcess(actor);
+    await utilityProcessTest().stopProcess();
   }
 
   let [subject, data] = await utilityProcessGone;
@@ -89,13 +51,22 @@ async function cleanUtilityProcessShutdown(actor, preferKill = false) {
   ok(!subject.hasKey("dumpID"), "There should be no dumpID");
 }
 
-async function killUtilityProcesses() {
-  let utilityProcesses = await getUtilityProcesses();
-  for (const utilityProcess of utilityProcesses) {
-    for (const actor of utilityProcess.utilityActors) {
-      info(`Stopping ${actor.actorName} utility process`);
-      await cleanUtilityProcessShutdown(actor.actorName, /* preferKill */ true);
-    }
+async function killPendingUtilityProcess() {
+  let audioDecoderProcesses = (
+    await ChromeUtils.requestProcInfo()
+  ).children.filter(p => {
+    return (
+      p.type === "utility" &&
+      p.utilityActors.find(a => a.actorName.startsWith("audioDecoder_Generic"))
+    );
+  });
+  info(`audioDecoderProcesses=${JSON.stringify(audioDecoderProcesses)}`);
+  for (let audioDecoderProcess of audioDecoderProcesses) {
+    info(`Stopping audio decoder PID ${audioDecoderProcess.pid}`);
+    await cleanUtilityProcessShutdown(
+      audioDecoderProcess.pid,
+      /* preferKill */ true
+    );
   }
 }
 
@@ -394,23 +365,4 @@ async function crashSomeUtility(utilityPid, actorsCheck) {
   if (extrafile.exists()) {
     extrafile.remove(false);
   }
-}
-
-// Crash a utility process and generate a crash dump.  To close a utility
-// process (forcefully or not) without a generating a crash, use
-// cleanUtilityProcessShutdown.
-async function crashSomeUtilityActor(
-  actor,
-  actorsCheck = () => {
-    return true;
-  }
-) {
-  // Get PID for utility type
-  const procInfos = await getUtilityProcesses(actor);
-  ok(
-    procInfos.length == 1,
-    `exactly one ${actor} utility process should be found`
-  );
-  const utilityPid = procInfos[0].pid;
-  return crashSomeUtility(utilityPid, actorsCheck);
 }

@@ -55,11 +55,8 @@ nsCString GetUtilityActorName(const UtilityActorName aActorName) {
       return "mf-media-engine"_ns;
     case UtilityActorName::JSOracle:
       return "js-oracle"_ns;
-    case UtilityActorName::WindowsUtils:
-      return "windows-utils"_ns;
-    default:
-      return "unknown"_ns;
   }
+  return "unknown"_ns;
 }
 
 }  // namespace mozilla
