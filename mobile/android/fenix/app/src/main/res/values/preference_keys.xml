@@ -322,6 +322,8 @@
     <string name="pref_key_growth_first_week_series_sent" translatable="false">pref_key_growth_first_week_series_sent</string>
     <string name="pref_key_growth_first_week_days_of_use" translatable="false">pref_key_growth_first_week_days_of_use</string>
     <string name="pref_key_growth_ad_click_sent" translatable="false">pref_key_growth_ad_click_sent</string>
+    <string name="pref_key_growth_usage_time" translatable="false">pref_key_growth_usage_time</string>
+    <string name="pref_key_growth_usage_time_sent" translatable="false">pref_key_growth_usage_time_sent</string>
 
     <!-- Notification Pre Permission Prompt -->
     <string name="pref_key_notification_pre_permission_prompt_enabled">pref_key_notification_pre_permission_prompt_enabled</string>

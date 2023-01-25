@@ -28,6 +28,7 @@ class MetricsMiddleware(
         is AppAction.ResumedMetricsAction -> {
             metrics.track(Event.GrowthData.SetAsDefault)
             metrics.track(Event.GrowthData.FirstWeekSeriesActivity)
+            metrics.track(Event.GrowthData.UsageThreshold)
         }
         else -> Unit
     }

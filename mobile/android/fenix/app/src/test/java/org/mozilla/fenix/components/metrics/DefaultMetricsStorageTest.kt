@@ -4,11 +4,16 @@
 
 package org.mozilla.fenix.components.metrics
 
+import android.app.Activity
+import android.app.Application
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -23,6 +28,7 @@ class DefaultMetricsStorageTest {
     private val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     private val calendarStart = Calendar.getInstance(Locale.US)
     private val dayMillis: Long = 1000 * 60 * 60 * 24
+    private val usageThresholdMillis: Long = 340 * 1000
 
     private var checkDefaultBrowser = false
     private val doCheckDefaultBrowser = { checkDefaultBrowser }
@@ -227,6 +233,89 @@ class DefaultMetricsStorageTest {
         val result = storage.shouldTrack(Event.GrowthData.SerpAdClicked)
 
         assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN usage time has not passed threshold and has not been sent WHEN checking to track THEN event will not be sent`() = runTest(dispatcher) {
+        every { settings.usageTimeGrowthData } returns usageThresholdMillis - 1
+        every { settings.usageTimeGrowthSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.UsageThreshold)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN usage time has passed threshold and has not been sent WHEN checking to track THEN event will be sent`() = runTest(dispatcher) {
+        every { settings.usageTimeGrowthData } returns usageThresholdMillis + 1
+        every { settings.usageTimeGrowthSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.UsageThreshold)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN usage time growth has not been sent and within first day WHEN registering as usage recorder THEN will be registered`() {
+        val application = mockk<Application>()
+        every { settings.usageTimeGrowthSent } returns false
+        every { application.registerActivityLifecycleCallbacks(any()) } returns Unit
+
+        storage.tryRegisterAsUsageRecorder(application)
+
+        verify { application.registerActivityLifecycleCallbacks(any()) }
+    }
+
+    @Test
+    fun `GIVEN usage time growth has not been sent and not within first day WHEN registering as usage recorder THEN will not be registered`() {
+        val application = mockk<Application>()
+        installTime = System.currentTimeMillis() - dayMillis * 2
+        every { settings.usageTimeGrowthSent } returns false
+
+        storage.tryRegisterAsUsageRecorder(application)
+
+        verify(exactly = 0) { application.registerActivityLifecycleCallbacks(any()) }
+    }
+
+    @Test
+    fun `GIVEN usage time growth has been sent WHEN registering as usage recorder THEN will not be registered`() {
+        val application = mockk<Application>()
+        every { settings.usageTimeGrowthSent } returns true
+
+        storage.tryRegisterAsUsageRecorder(application)
+
+        verify(exactly = 0) { application.registerActivityLifecycleCallbacks(any()) }
+    }
+
+    @Test
+    fun `WHEN updating usage state THEN storage will be delegated to settings`() {
+        val initial = 10L
+        val update = 15L
+        val slot = slot<Long>()
+        every { settings.usageTimeGrowthData } returns initial
+        every { settings.usageTimeGrowthData = capture(slot) } returns Unit
+
+        storage.updateUsageState(update)
+
+        assertEquals(slot.captured, initial + update)
+    }
+
+    @Test
+    fun `WHEN usage recorder receives onResume and onPause callbacks THEN it will store usage length`() {
+        val storage = mockk<MetricsStorage>()
+        val activity = mockk<Activity>()
+        val slot = slot<Long>()
+        every { storage.updateUsageState(capture(slot)) } returns Unit
+        every { activity.componentName } returns mock()
+
+        val usageRecorder = DefaultMetricsStorage.UsageRecorder(storage)
+        val startTime = System.currentTimeMillis()
+
+        usageRecorder.onActivityResumed(activity)
+        usageRecorder.onActivityPaused(activity)
+        val stopTime = System.currentTimeMillis()
+
+        assertTrue(slot.captured < stopTime - startTime)
     }
 
     private fun Calendar.copy() = clone() as Calendar

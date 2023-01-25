@@ -4,11 +4,14 @@
 
 package org.mozilla.fenix.components.metrics
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.utils.ext.getPackageInfoCompat
+import org.mozilla.fenix.android.DefaultActivityLifecycleCallbacks
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
@@ -29,6 +32,18 @@ interface MetricsStorage {
      * Updates locally-stored state for an [event] that has just been sent.
      */
     suspend fun updateSentState(event: Event)
+
+    /**
+     * Will try to register this as a recorder of app usage based on whether usage recording is still
+     * needed. It will measure usage by to monitoring lifecycle callbacks from [application]'s
+     * activities and should update local state using [updateUsageState].
+     */
+    fun tryRegisterAsUsageRecorder(application: Application)
+
+    /**
+     * Update local state with a [usageLength] measurement.
+     */
+    fun updateUsageState(usageLength: Long)
 }
 
 internal class DefaultMetricsStorage(
@@ -62,6 +77,10 @@ internal class DefaultMetricsStorage(
                 Event.GrowthData.SerpAdClicked -> {
                     currentTime.duringFirstMonth() && !settings.adClickGrowthSent
                 }
+                Event.GrowthData.UsageThreshold -> {
+                    !settings.usageTimeGrowthSent &&
+                        settings.usageTimeGrowthData > usageThresholdMillis
+                }
             }
         }
 
@@ -76,7 +95,21 @@ internal class DefaultMetricsStorage(
             Event.GrowthData.SerpAdClicked -> {
                 settings.adClickGrowthSent = true
             }
+            Event.GrowthData.UsageThreshold -> {
+                settings.usageTimeGrowthSent = true
+            }
         }
+    }
+
+    override fun tryRegisterAsUsageRecorder(application: Application) {
+        // Currently there is only interest in measuring usage during the first day of install.
+        if (!settings.usageTimeGrowthSent && System.currentTimeMillis().duringFirstDay()) {
+            application.registerActivityLifecycleCallbacks(UsageRecorder(this))
+        }
+    }
+
+    override fun updateUsageState(usageLength: Long) {
+        settings.usageTimeGrowthData += usageLength
     }
 
     private fun updateDaysOfUse() {
@@ -121,12 +154,36 @@ internal class DefaultMetricsStorage(
         calendar.timeInMillis = this
     }
 
+    private fun Long.duringFirstDay() = this < getInstalledTime() + dayMillis
+
     private fun Long.duringFirstWeek() = this < getInstalledTime() + fullWeekMillis
 
     private fun Long.duringFirstMonth() = this < getInstalledTime() + shortestMonthMillis
 
     private fun Calendar.createNextDay() = (this.clone() as Calendar).also { calendar ->
         calendar.add(Calendar.DAY_OF_MONTH, 1)
+    }
+
+    /**
+     * This will store app usage time to disk, based on Resume and Pause lifecycle events. Currently,
+     * there is only interest in usage during the first day after install.
+     */
+    internal class UsageRecorder(
+        private val metricsStorage: MetricsStorage,
+    ) : DefaultActivityLifecycleCallbacks {
+        private val activityStartTimes: MutableMap<String, Long?> = mutableMapOf()
+
+        override fun onActivityResumed(activity: Activity) {
+            super.onActivityResumed(activity)
+            activityStartTimes[activity.componentName.toString()] = System.currentTimeMillis()
+        }
+
+        override fun onActivityPaused(activity: Activity) {
+            super.onActivityPaused(activity)
+            val startTime = activityStartTimes[activity.componentName.toString()] ?: return
+            val elapsedTimeMillis = System.currentTimeMillis() - startTime
+            metricsStorage.updateUsageState(elapsedTimeMillis)
+        }
     }
 
     companion object {
@@ -136,6 +193,9 @@ internal class DefaultMetricsStorage(
         // Note this is 8 so that recording of FirstWeekSeriesActivity happens throughout the length
         // of the 7th day after install
         private const val fullWeekMillis: Long = dayMillis * 8
+
+        // The usage threshold we are interested in is currently 340 seconds.
+        private const val usageThresholdMillis = 1000 * 340
 
         /**
          * Determines whether events should be tracked based on some general criteria:

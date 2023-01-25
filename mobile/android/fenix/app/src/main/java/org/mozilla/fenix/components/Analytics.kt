@@ -25,6 +25,7 @@ import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.DefaultMetricsStorage
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.metrics.MetricsStorage
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
@@ -117,17 +118,21 @@ class Analytics(
         )
     }
 
+    val metricsStorage: MetricsStorage by lazyMonitored {
+        DefaultMetricsStorage(
+            context = context,
+            settings = context.settings(),
+            checkDefaultBrowser = { BrowsersCache.all(context).isDefaultBrowser },
+        )
+    }
+
     val metrics: MetricController by lazyMonitored {
         MetricController.create(
             listOf(
                 GleanMetricsService(context),
                 AdjustMetricsService(
                     application = context as Application,
-                    storage = DefaultMetricsStorage(
-                        context = context,
-                        settings = context.settings(),
-                        checkDefaultBrowser = { BrowsersCache.all(context).isDefaultBrowser },
-                    ),
+                    storage = metricsStorage,
                     crashReporter = crashReporter,
                 ),
             ),

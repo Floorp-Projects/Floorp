@@ -1557,4 +1557,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_growth_ad_click_sent),
         default = false,
     )
+
+    var usageTimeGrowthData by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_usage_time),
+        default = -1,
+    )
+
+    var usageTimeGrowthSent by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_usage_time_sent),
+        default = false,
+    )
 }

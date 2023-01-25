@@ -31,5 +31,10 @@ sealed class Event {
          * Event recording the first time Firefox is used 3 days in a row in the first week of install.
          */
         object FirstWeekSeriesActivity : GrowthData("20ay7u")
+
+        /**
+         * Event recording that usage time has reached a threshold.
+         */
+        object UsageThreshold : GrowthData("m66prt")
     }
 }
