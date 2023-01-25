@@ -685,10 +685,11 @@
               class="tail-with-learn-more"
               data-l10n-id="addressbar-locbar-quickactions-option"
               preference="browser.urlbar.suggest.quickactions" />
-    <label id="quickActionsLink"
-           class="learnMore"
-           is="text-link"
-           data-l10n-id="addressbar-quickactions-learn-more" />
+    <html:a is="moz-support-link"
+            id="quickActionsLink"
+            data-l10n-id="addressbar-quickactions-learn-more"
+            support-page="quick-actions-firefox-search-bar"
+    />
   </hbox>
   <vbox id="firefoxSuggestContainer" hidden="true">
     <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
