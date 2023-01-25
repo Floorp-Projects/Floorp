@@ -17,6 +17,7 @@ export class MigrationWizard extends HTMLElement {
 
   #deck = null;
   #browserProfileSelector = null;
+  #resourceTypeList = null;
   #shadowRoot = null;
 
   static get markup() {
@@ -29,18 +30,18 @@ export class MigrationWizard extends HTMLElement {
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
             <select id="browser-profile-selector">
             </select>
-            <fieldset>
-              <label for="bookmarks">
-                <input type="checkbox" id="bookmarks"/><span data-l10n-id="migration-bookmarks-option-label"></span>
+            <fieldset id="resource-type-list">
+              <label id="bookmarks">
+                <input type="checkbox"/><span data-l10n-id="migration-bookmarks-option-label"></span>
               </label>
-              <label for="logins-and-passwords">
-                <input type="checkbox" id="logins-and-passwords"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
+              <label id="logins-and-passwords">
+                <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
               </label>
-              <label for="history">
-                <input type="checkbox" id="history"/><span data-l10n-id="migration-history-option-label"></span>
+              <label id="history">
+                <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
               </label>
-              <label for="form-autofill">
-                <input type="checkbox" id="form-autofill"/><span data-l10n-id="migration-form-autofill-option-label"></span>
+              <label id="form-autofill">
+                <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
               </label>
             </fieldset>
             <moz-button-group class="buttons">
@@ -128,6 +129,8 @@ export class MigrationWizard extends HTMLElement {
       button.addEventListener("click", this);
     }
 
+    this.#browserProfileSelector.addEventListener("change", this);
+    this.#resourceTypeList = shadow.querySelector("#resource-type-list");
     this.#shadowRoot = shadow;
   }
 
@@ -165,6 +168,30 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * Reacts to changes to the browser / profile selector dropdown. This
+   * should update the list of resource types to match what's supported
+   * by the selected migrator and profile.
+   */
+  #onBrowserProfileSelectionChanged() {
+    let resourceTypes = this.#browserProfileSelector.selectedOptions[0]
+      .resourceTypes;
+    for (let child of this.#resourceTypeList.children) {
+      child.hidden = true;
+    }
+
+    for (let resourceType of resourceTypes) {
+      let resourceID =
+        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES[resourceType];
+      let resourceLabel = this.#resourceTypeList.querySelector(
+        `#${resourceID}`
+      );
+      if (resourceLabel) {
+        resourceLabel.hidden = false;
+      }
+    }
+  }
+
+  /**
    * Called when showing the browser/profile selection page of the wizard.
    *
    * @param {object} state
@@ -176,11 +203,36 @@ export class MigrationWizard extends HTMLElement {
   #onShowingSelection(state) {
     this.#browserProfileSelector.textContent = "";
 
-    for (let migratorKey of state.migrators) {
+    for (let migrator of state.migrators) {
       let opt = document.createElement("option");
-      opt.value = migratorKey;
-      opt.textContent = migratorKey;
+      opt.value = migrator.key;
+      opt.profile = migrator.profile;
+      opt.resourceTypes = migrator.resourceTypes;
+
+      if (migrator.profile) {
+        document.l10n.setAttributes(
+          opt,
+          "migration-wizard-selection-option-with-profile",
+          {
+            sourceBrowser: migrator.displayName,
+            profileName: migrator.profile.name,
+          }
+        );
+      } else {
+        document.l10n.setAttributes(
+          opt,
+          "migration-wizard-selection-option-without-profile",
+          {
+            sourceBrowser: migrator.displayName,
+          }
+        );
+      }
+
       this.#browserProfileSelector.appendChild(opt);
+    }
+
+    if (state.migrators.length) {
+      this.#onBrowserProfileSelectionChanged();
     }
   }
 
@@ -273,13 +325,21 @@ export class MigrationWizard extends HTMLElement {
   }
 
   handleEvent(event) {
-    if (
-      event.type == "click" &&
-      event.target.classList.contains("cancel-close")
-    ) {
-      this.dispatchEvent(
-        new CustomEvent("MigrationWizard:Close", { bubbles: true })
-      );
+    switch (event.type) {
+      case "click": {
+        if (event.target.classList.contains("cancel-close")) {
+          this.dispatchEvent(
+            new CustomEvent("MigrationWizard:Close", { bubbles: true })
+          );
+        }
+        break;
+      }
+      case "change": {
+        if (event.target == this.#browserProfileSelector) {
+          this.#onBrowserProfileSelectionChanged();
+        }
+        break;
+      }
     }
   }
 }

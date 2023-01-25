@@ -355,6 +355,10 @@ export class IEProfileMigrator extends MigratorBase {
     return "ie";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-ie";
+  }
+
   getResources() {
     let resources = [
       MSMigrationUtils.getBookmarksMigrator(),

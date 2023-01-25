@@ -350,6 +350,10 @@ export class SafariProfileMigrator extends MigratorBase {
     return "safari";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-safari";
+  }
+
   getResources() {
     let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
     if (!profileDir.exists()) {
