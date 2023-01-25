@@ -734,10 +734,15 @@
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner">%1$s probearret cookiefersiken ôf te wizen om ferfelende cookiebanners fuort te heljen.\n\nBehear foarkarren foar cookiebanners yn ynstellingen.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s probearret cookiefersiken ôf te wizen om ferfelende cookiebanners fuort te heljen.\n\nBehear foarkarren foar cookiebanners yn ynstellingen.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings">ynstellingen</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s probearret cookiefersiken ôf te wizen om ferfelende cookiebanners fuort te heljen.\n\nBehear foarkarren foar cookiebanners yn %2$s.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ynstellingen</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">ynstellingen</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatysk ôfspylje</string>
@@ -1027,13 +1032,18 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Slute</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Syk-widget</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Navigaasjeskiednis wiske! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
@@ -1043,13 +1053,19 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">Wy litte jo trochgean mei priveenavigaasje, mar krij in folgjende kear in fluggere start mei de %1$s-widget op jo startskerm.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Widget oan startskerm tafoegje</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Widget oan startskerm tafoege</string>
 </resources>
