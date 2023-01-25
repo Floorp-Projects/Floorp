@@ -7,6 +7,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
 );
 
 add_task(async function test() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let uriString = "http://example.com/";
   let cookieBehavior = "network.cookie.cookieBehavior";
 

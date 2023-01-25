@@ -134,6 +134,7 @@ add_task(async function() {
   );
   await loadURI(
     tabs[4],
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/browser/browser/base/content/test/general/browser_tab_dragdrop_embed.html"
   );
   await BrowserTestUtils.switchTab(gBrowser, tabs[3]);

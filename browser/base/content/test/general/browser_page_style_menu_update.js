@@ -1,6 +1,7 @@
 "use strict";
 
 const PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
 
 /**

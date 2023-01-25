@@ -6,6 +6,7 @@ const { TabStateFlusher } = ChromeUtils.importESModule(
 );
 
 const DUMMY =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
 function isBrowserAppTab(browser) {

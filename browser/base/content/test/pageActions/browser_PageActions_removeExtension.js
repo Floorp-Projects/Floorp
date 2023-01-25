@@ -12,6 +12,7 @@ add_setup(async function() {
   // not, so open a new tab first thing, and close it when this test is done.
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     url: "http://example.com/",
   });
 
