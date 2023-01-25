@@ -16,15 +16,18 @@
 
 include protocol PBackground;
 
+using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
 namespace mozilla {
 namespace dom {
 
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
-  nsString userVerificationRequirement;
-  nsString? authenticatorAttachment;
+  UserVerificationRequirement userVerificationRequirement;
+  AuthenticatorAttachment? authenticatorAttachment;
 };
 
 struct WebAuthnScopedCredential {
@@ -81,7 +84,7 @@ struct WebAuthnMakeCredentialExtraInfo {
   CoseAlg[] coseAlgs;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
-  nsString attestationConveyancePreference;
+  AttestationConveyancePreference attestationConveyancePreference;
 };
 
 struct WebAuthnMakeCredentialInfo {
@@ -106,7 +109,7 @@ struct WebAuthnMakeCredentialResult {
 
 struct WebAuthnGetAssertionExtraInfo {
   WebAuthnExtension[] Extensions;
-  nsString userVerificationRequirement;
+  UserVerificationRequirement userVerificationRequirement;
 };
 
 struct WebAuthnGetAssertionInfo {

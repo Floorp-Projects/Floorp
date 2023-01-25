@@ -13,7 +13,6 @@
 #include "JavaExceptions.h"
 #include "mozilla/java/WebAuthnTokenManagerWrappers.h"
 #include "mozilla/jni/Conversions.h"
-#include "WebAuthnEnumStrings.h"
 
 namespace mozilla {
 namespace jni {
@@ -144,16 +143,19 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                           java::sdk::Integer::ValueOf(1));
 
           // Get the attestation preference and override if the user asked
+          AttestationConveyancePreference attestation =
+              extra.attestationConveyancePreference();
+
           if (aForceNoneAttestation) {
             // Add UI support to trigger this, bug 1550164
-            GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
-                            jni::StringParam(u"none"_ns));
-          } else {
-            const nsString& attestation =
-                extra.attestationConveyancePreference();
-            GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
-                            jni::StringParam(attestation));
+            attestation = AttestationConveyancePreference::None;
           }
+
+          nsString attestPref;
+          attestPref.AssignASCII(
+              AttestationConveyancePreferenceValues::GetString(attestation));
+          GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
+                          jni::StringParam(attestPref));
 
           const WebAuthnAuthenticatorSelection& sel =
               extra.AuthenticatorSelection();
@@ -162,22 +164,20 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                             java::sdk::Integer::ValueOf(1));
           }
 
-          if (sel.userVerificationRequirement().EqualsLiteral(
-                  MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+          if (sel.userVerificationRequirement() ==
+              UserVerificationRequirement::Required) {
             GECKOBUNDLE_PUT(authSelBundle, "requireUserVerification",
                             java::sdk::Integer::ValueOf(1));
           }
 
           if (sel.authenticatorAttachment().isSome()) {
-            const nsString& authenticatorAttachment =
+            const AuthenticatorAttachment authenticatorAttachment =
                 sel.authenticatorAttachment().value();
-            if (authenticatorAttachment.EqualsLiteral(
-                    MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
+            if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
               GECKOBUNDLE_PUT(authSelBundle, "requirePlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
-            } else if (
-                authenticatorAttachment.EqualsLiteral(
-                    MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
+            } else if (authenticatorAttachment ==
+                       AuthenticatorAttachment::Cross_platform) {
               GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
             }

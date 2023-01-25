@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebAuthnCoseIdentifiers.h"
-#include "WebAuthnEnumStrings.h"
 #include "mozilla/dom/U2FHIDTokenManager.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -114,12 +113,17 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
     const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
+    UserVerificationRequirement userVerificaitonRequirement =
+        sel.userVerificationRequirement();
+
+    bool requireUserVerification =
+        userVerificaitonRequirement == UserVerificationRequirement::Required;
+
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
-      const nsString& authenticatorAttachment =
+      const AuthenticatorAttachment authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      if (authenticatorAttachment.EqualsLiteral(
-              MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
+      if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
         requirePlatformAttachment = true;
       }
     }
@@ -128,8 +132,7 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
     if (sel.requireResidentKey()) {
       registerFlags |= U2F_FLAG_REQUIRE_RESIDENT_KEY;
     }
-    if (sel.userVerificationRequirement().EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+    if (requireUserVerification) {
       registerFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
     }
     if (requirePlatformAttachment) {
@@ -228,9 +231,11 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
 
+    UserVerificationRequirement userVerificaitonReq =
+        extra.userVerificationRequirement();
+
     // Set flags for credential requests.
-    if (extra.userVerificationRequirement().EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+    if (userVerificaitonReq == UserVerificationRequirement::Required) {
       signFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
     }
 

@@ -9,7 +9,6 @@
 #include "nsIURIMutator.h"
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
-#include "WebAuthnEnumStrings.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
@@ -314,8 +313,8 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       // If current.type does not contain a PublicKeyCredentialType
       // supported by this implementation, then stop processing current and move
       // on to the next element in mPubKeyCredParams.
-      if (!aOptions.mPubKeyCredParams[a].mType.EqualsLiteral(
-              MOZ_WEBAUTHN_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY)) {
+      if (aOptions.mPubKeyCredParams[a].mType !=
+          PublicKeyCredentialType::Public_key) {
         continue;
       }
 
@@ -386,10 +385,10 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
   const auto& selection = aOptions.mAuthenticatorSelection;
   const auto& attachment = selection.mAuthenticatorAttachment;
-  const nsString& attestation = aOptions.mAttestation;
+  const AttestationConveyancePreference& attestation = aOptions.mAttestation;
 
   // Attachment
-  Maybe<nsString> authenticatorAttachment;
+  Maybe<AuthenticatorAttachment> authenticatorAttachment;
   if (attachment.WasPassed()) {
     authenticatorAttachment.emplace(attachment.Value());
   }
@@ -548,8 +547,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   nsTArray<WebAuthnScopedCredential> allowList;
   for (const auto& s : aOptions.mAllowCredentials) {
-    if (s.mType.EqualsLiteral(
-            MOZ_WEBAUTHN_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY)) {
+    if (s.mType == PublicKeyCredentialType::Public_key) {
       WebAuthnScopedCredential c;
       CryptoBuffer cb;
       cb.Assign(s.mId);
@@ -559,21 +557,27 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       if (s.mTransports.WasPassed()) {
         uint8_t transports = 0;
 
-        // We ignore unknown transports for forward-compatibility, but this
-        // needs to be reviewed if values are added to the
-        // AuthenticatorTransport enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        // Transports is a string, but we match it to an enumeration so
+        // that we have forward-compatibility, ignoring unknown transports.
         for (const nsAString& str : s.mTransports.Value()) {
-          if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
+          NS_ConvertUTF16toUTF8 cStr(str);
+          int i = FindEnumStringIndexImpl(
+              cStr.get(), cStr.Length(), AuthenticatorTransportValues::strings);
+          if (i < 0) {
+            continue;  // Unknown enum
+          }
+          AuthenticatorTransport t = static_cast<AuthenticatorTransport>(i);
+
+          if (t == AuthenticatorTransport::Usb) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC)) {
+          }
+          if (t == AuthenticatorTransport::Nfc) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_NFC;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE)) {
+          }
+          if (t == AuthenticatorTransport::Ble) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_BLE;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
+          }
+          if (t == AuthenticatorTransport::Internal) {
             transports |= CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL;
           }
         }
@@ -735,7 +739,7 @@ void WebAuthnManager::FinishMakeCredential(
   credential->SetResponse(attestation);
 
   // Forward client extension results.
-  for (const auto& ext : aResult.Extensions()) {
+  for (auto& ext : aResult.Extensions()) {
     if (ext.type() ==
         WebAuthnExtensionResult::TWebAuthnExtensionResultHmacSecret) {
       bool hmacCreateSecret =
@@ -814,7 +818,7 @@ void WebAuthnManager::FinishGetAssertion(
   credential->SetResponse(assertion);
 
   // Forward client extension results.
-  for (const auto& ext : aResult.Extensions()) {
+  for (auto& ext : aResult.Extensions()) {
     if (ext.type() == WebAuthnExtensionResult::TWebAuthnExtensionResultAppId) {
       bool appid = ext.get_WebAuthnExtensionResultAppId().AppId();
       credential->SetClientExtensionResultAppId(appid);
