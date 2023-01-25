@@ -43,7 +43,7 @@ is available without any additional work).
 
 Typical would be something like:
 
-```lang=js
+```js
 add_task(async function() {
   await BrowserTestUtils.withNewTab("https://example.com/mypage", async (browser) {
     // `browser` will have finished loading the passed URL when this code runs.
@@ -57,7 +57,7 @@ add_task(async function() {
 
 Should be done using `SpecialPowers.spawn`:
 
-```lang=js
+```js
 let result = await SpecialPowers.spawn(browser, [42, 100], async (val, val2) => {
   // Replaces the document body with '42':
   content.document.body.textContent = val;
@@ -76,7 +76,7 @@ to the `window` of the web content in that browser/BrowsingContext.
 For some operations, like mouse clicks, convenience helpers are available on
 `BrowserTestUtils`:
 
-```lang=js
+```js
 await BrowserTestUtils.synthesizeMouseAtCenter("#my.css.selector", {accelKey: true}, browser);
 ```
 
@@ -84,7 +84,7 @@ await BrowserTestUtils.synthesizeMouseAtCenter("#my.css.selector", {accelKey: tr
 
 Use `SpecialPowers.pushPrefEnv`:
 
-```lang=js
+```js
 await SpecialPowers.pushPrefEnv({
   set: [["accessibility.tabfocus", 7]]
 });
@@ -97,13 +97,13 @@ order for your test to pass reliably on macOS if it uses keyboard focus.
 
 Use the utilities for this on [`TestUtils`](../testutils.html#TestUtils.topicObserved):
 
-```lang=js
+```js
 await TestUtils.topicObserved("sync-pane-loaded");
 ```
 
 and [`BrowserTestUtils`](browsertestutils.html#BrowserTestUtils.waitForEvent), respectively:
 
-```lang=js
+```js
 await BrowserTestUtils.waitForEvent(domElement, "click");
 ```
 
@@ -118,7 +118,7 @@ leads to intermittent failures.
 The [`Sinon`](https://sinonjs.org/) mocking framework is available. You can import it
 using something like:
 
-```lang=js
+```js
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 ```
 
@@ -129,7 +129,7 @@ More details on how to do mocking are available on the Sinon website.
 You can use extra files (e.g. webpages to load) by adding them to a `support-files`
 property using the `browser.ini` file:
 
-```lang=ini
+```ini
 [browser_foo.js]
 support-files =
   bar.html
