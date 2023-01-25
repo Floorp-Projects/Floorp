@@ -83,6 +83,7 @@ public class GeckoView extends FrameLayout {
 
   private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
   private Autofill.Delegate mAutofillDelegate;
+  private @Nullable ActivityContextDelegate mActivityDelegate;
 
   private class Display implements SurfaceViewWrapper.Listener {
     private final int[] mOrigin = new int[2];
@@ -1118,5 +1119,43 @@ public class GeckoView extends FrameLayout {
         Log.e(LOGTAG, "Failed to call AutofillManager.cancel: ", e);
       }
     }
+  }
+
+  /**
+   * This delegate is used to provide the GeckoView an Activity context for certain operations such
+   * as retrieving a PrintManager, which requires an Activity context. Using getContext() directly
+   * might retrieve an Activity context or a Fragment context, this delegate ensures an Activity
+   * context.
+   *
+   * <p>Not to be confused with the GeckoRuntime delegate {@link GeckoRuntime.ActivityDelegate}
+   * which is tightly coupled with WebAuthn - see bug 1671988.
+   */
+  @AnyThread
+  public interface ActivityContextDelegate {
+    /**
+     * Method should return an Activity context. May return null if not available.
+     *
+     * @return Activity context
+     */
+    @Nullable
+    Context getActivityContext();
+  }
+
+  /**
+   * Sets the delegate for the GeckoView.
+   *
+   * @param delegate to provide activity context or null
+   */
+  public void setActivityContextDelegate(final @Nullable ActivityContextDelegate delegate) {
+    mActivityDelegate = delegate;
+  }
+
+  /**
+   * Gets the delegate from the GeckoView.
+   *
+   * @return delegate, if set
+   */
+  public @Nullable ActivityContextDelegate getActivityContextDelegate() {
+    return mActivityDelegate;
   }
 }

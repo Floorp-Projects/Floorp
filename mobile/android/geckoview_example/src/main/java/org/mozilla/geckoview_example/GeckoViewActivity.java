@@ -13,6 +13,7 @@ import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -774,7 +775,7 @@ public class GeckoViewActivity extends AppCompatActivity
     createNotificationChannel();
     setContentView(R.layout.geckoview_activity);
     mGeckoView = findViewById(R.id.gecko_view);
-
+    mGeckoView.setActivityContextDelegate(new ExampleActivityDelegate());
     mTabSessionManager = new TabSessionManager();
 
     setSupportActionBar(findViewById(R.id.toolbar));
@@ -2478,6 +2479,12 @@ public class GeckoViewActivity extends AppCompatActivity
     @Override
     public void onStringScalar(final @NonNull RuntimeTelemetry.Metric<String> scalar) {
       Log.d(LOGTAG, "onStringScalar " + scalar);
+    }
+  }
+
+  private class ExampleActivityDelegate implements GeckoView.ActivityContextDelegate {
+    public Context getActivityContext() {
+      return GeckoViewActivity.this;
     }
   }
 }
