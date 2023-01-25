@@ -66,23 +66,12 @@ add_task(async function engagement_type_dismiss() {
 
       const originalResultCount = UrlbarTestUtils.getResultCount(window);
       await selectRowByURL("https://example.com/sponsored");
-      if (UrlbarPrefs.get("resultMenu")) {
-        UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D");
-      } else {
-        doClickSubButton(".urlbarView-button-block");
-      }
+      doClickSubButton(".urlbarView-button-block");
       await BrowserTestUtils.waitForCondition(
         () => originalResultCount != UrlbarTestUtils.getResultCount(window)
       );
 
-      if (UrlbarPrefs.get("resultMenu")) {
-        todo(
-          false,
-          "telemetry for the result menu to be implemented in bug 1790020"
-        );
-      } else {
-        assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
-      }
+      assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
     });
 
     await doTest(async browser => {
@@ -116,22 +105,11 @@ add_task(async function engagement_type_help() {
       await openPopup("sponsored");
       await selectRowByURL("https://example.com/sponsored");
       const onTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
-      if (UrlbarPrefs.get("resultMenu")) {
-        UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L");
-      } else {
-        doClickSubButton(".urlbarView-button-help");
-      }
+      doClickSubButton(".urlbarView-button-help");
       const tab = await onTabOpened;
       BrowserTestUtils.removeTab(tab);
 
-      if (UrlbarPrefs.get("resultMenu")) {
-        todo(
-          false,
-          "telemetry for the result menu to be implemented in bug 1790020"
-        );
-      } else {
-        assertEngagementTelemetry([{ engagement_type: "help" }]);
-      }
+      assertEngagementTelemetry([{ engagement_type: "help" }]);
     });
 
     await SpecialPowers.popPrefEnv();
