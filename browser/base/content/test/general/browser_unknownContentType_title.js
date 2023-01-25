@@ -1,6 +1,7 @@
 const url =
   "data:text/html;charset=utf-8,%3C%21DOCTYPE%20html%3E%3Chtml%3E%3Chead%3E%3Ctitle%3ETest%20Page%3C%2Ftitle%3E%3C%2Fhead%3E%3C%2Fhtml%3E";
 const unknown_url =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/unknownContentType_file.pif";
 
 function waitForNewWindow() {

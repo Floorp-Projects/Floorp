@@ -12,6 +12,7 @@ add_task(async function test_menu_close_tab_count() {
   // Window should have one tab open already, so we
   // just need to add one more to have a total of two
   info("Adding new tabs");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
   info("Selecting all tabs");

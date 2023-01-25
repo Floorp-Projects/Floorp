@@ -6,6 +6,7 @@
 var secureURL =
   "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 var unsecureURL =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 
 add_task(async function test_star_redirect() {
@@ -15,6 +16,7 @@ add_task(async function test_star_redirect() {
       Ci.nsISiteSecurityService
     );
     sss.resetState(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       NetUtil.newURI("http://example.com/"),
       Services.prefs.getBoolPref("privacy.partition.network_state")
         ? { partitionKey: "(http,example.com)" }

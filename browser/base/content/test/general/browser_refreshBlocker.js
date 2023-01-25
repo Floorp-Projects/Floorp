@@ -1,10 +1,13 @@
 "use strict";
 
 const META_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/general/refresh_meta.sjs";
 const HEADER_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/general/refresh_header.sjs";
 const TARGET_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 const PREF = "accessibility.blockautorefresh";
 

@@ -33,6 +33,7 @@ add_task(async function() {
     let span4 = doc.createElement("span");
     let p1 = doc.createElement("p");
     let p2 = doc.createElement("p");
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     span1.textContent = "http://index.";
     span2.textContent = "example.com example.com";
     span3.textContent = " - Test";
@@ -117,6 +118,7 @@ add_task(async function() {
     () => {
       testExpected(false, "The link context menu should show for example.com");
       testLinkExpected(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/",
         "url for example.com selection should not prepend www"
       );
@@ -142,6 +144,7 @@ add_task(async function() {
     () => {
       testExpected(false, "Link options should show for ftp.example.com");
       testLinkExpected(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://ftp.example.com/",
         "ftp.example.com should be preceeded with http://"
       );
@@ -154,12 +157,14 @@ add_task(async function() {
       ),
     () =>
       testLinkExpected(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://www.example.com/",
         "Linkified text should open the correct link"
       ),
     () => {
       testExpected(false, "Link options should show for open-suse.ru");
       testLinkExpected(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://open-suse.ru/",
         "Linkified text should open the correct link"
       );
