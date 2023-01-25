@@ -2569,12 +2569,6 @@ var gPrivacyPane = {
       "browser.safebrowsing.downloads.remote.block_uncommon"
     );
 
-    let learnMoreLink = document.getElementById("enableSafeBrowsingLearnMore");
-    let phishingUrl =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "phishing-malware";
-    learnMoreLink.setAttribute("href", phishingUrl);
-
     enableSafeBrowsing.addEventListener("command", function() {
       safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;

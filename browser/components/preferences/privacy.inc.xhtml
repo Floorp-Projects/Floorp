@@ -1080,8 +1080,12 @@
     <checkbox id="enableSafeBrowsing"
               data-l10n-id="security-enable-safe-browsing"
               class="tail-with-learn-more"/>
-    <label id="enableSafeBrowsingLearnMore"
-           class="learnMore" is="text-link" data-l10n-id="security-enable-safe-browsing-link"/>
+    <html:a is="moz-support-link"
+            id="enableSafeBrowsingLearnMore"
+            class="learnMore"
+            data-l10n-id="security-enable-safe-browsing-link"
+            support-page="phishing-malware"
+    />
   </hbox>
   <vbox class="indent">
     <checkbox id="blockDownloads"
