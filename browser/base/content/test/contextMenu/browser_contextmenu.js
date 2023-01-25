@@ -39,6 +39,7 @@ let hasContainers =
   ContextualIdentityService.getPublicIdentities().length;
 
 const example_base =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/contextMenu/";
 const chrome_base =
   "chrome://mochitests/content/browser/browser/base/content/test/contextMenu/";
@@ -1173,6 +1174,7 @@ add_task(async function test_copylinkcommand() {
         let input = doc.getElementById("test-input");
         Assert.equal(
           input.value,
+          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           "http://mozilla.com/",
           "paste for command cmd_paste"
         );

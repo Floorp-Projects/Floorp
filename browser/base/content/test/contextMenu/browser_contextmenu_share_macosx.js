@@ -6,6 +6,7 @@
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const BASE = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 const TEST_URL = BASE + "browser_contextmenu_shareurl.html";
