@@ -77,6 +77,10 @@ export class ChromeProfileMigrator extends MigratorBase {
     return "chrome";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chrome";
+  }
+
   get _chromeUserDataPathSuffix() {
     return "Chrome";
   }
@@ -615,6 +619,10 @@ export class ChromiumProfileMigrator extends ChromeProfileMigrator {
     return "chromium";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chromium";
+  }
+
   _chromeUserDataPathSuffix = "Chromium";
   _keychainServiceName = "Chromium Safe Storage";
   _keychainAccountName = "Chromium";
@@ -627,6 +635,10 @@ export class ChromiumProfileMigrator extends ChromeProfileMigrator {
 export class CanaryProfileMigrator extends ChromeProfileMigrator {
   static get key() {
     return "canary";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-canary";
   }
 
   get _chromeUserDataPathSuffix() {
@@ -650,6 +662,10 @@ export class ChromeDevMigrator extends ChromeProfileMigrator {
     return "chrome-dev";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chrome-dev";
+  }
+
   _chromeUserDataPathSuffix = "Chrome Dev";
   _keychainServiceName = "Chromium Safe Storage";
   _keychainAccountName = "Chromium";
@@ -661,6 +677,10 @@ export class ChromeDevMigrator extends ChromeProfileMigrator {
 export class ChromeBetaMigrator extends ChromeProfileMigrator {
   static get key() {
     return "chrome-beta";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chrome-beta";
   }
 
   _chromeUserDataPathSuffix = "Chrome Beta";
@@ -676,6 +696,10 @@ export class BraveProfileMigrator extends ChromeProfileMigrator {
     return "brave";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-brave";
+  }
+
   _chromeUserDataPathSuffix = "Brave";
   _keychainServiceName = "Brave Browser Safe Storage";
   _keychainAccountName = "Brave Browser";
@@ -687,6 +711,10 @@ export class BraveProfileMigrator extends ChromeProfileMigrator {
 export class ChromiumEdgeMigrator extends ChromeProfileMigrator {
   static get key() {
     return "chromium-edge";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chromium-edge";
   }
 
   _chromeUserDataPathSuffix = "Edge";
@@ -702,6 +730,10 @@ export class ChromiumEdgeBetaMigrator extends ChromeProfileMigrator {
     return "chromium-edge-beta";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chromium-edge-beta";
+  }
+
   _chromeUserDataPathSuffix = "Edge Beta";
   _keychainServiceName = "Microsoft Edge Safe Storage";
   _keychainAccountName = "Microsoft Edge";
@@ -715,6 +747,10 @@ export class Chromium360seMigrator extends ChromeProfileMigrator {
     return "chromium-360se";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-chromium-360se";
+  }
+
   _chromeUserDataPathSuffix = "360 SE";
   _keychainServiceName = "Microsoft Edge Safe Storage";
   _keychainAccountName = "Microsoft Edge";
@@ -726,6 +762,10 @@ export class Chromium360seMigrator extends ChromeProfileMigrator {
 export class OperaProfileMigrator extends ChromeProfileMigrator {
   static get key() {
     return "opera";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-opera";
   }
 
   _chromeUserDataPathSuffix = "Opera";
@@ -745,6 +785,10 @@ export class OperaGXProfileMigrator extends ChromeProfileMigrator {
     return "opera-gx";
   }
 
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-opera-gx";
+  }
+
   _chromeUserDataPathSuffix = "Opera GX";
   _keychainServiceName = "Opera Safe Storage";
   _keychainAccountName = "Opera";
@@ -760,6 +804,10 @@ export class OperaGXProfileMigrator extends ChromeProfileMigrator {
 export class VivaldiProfileMigrator extends ChromeProfileMigrator {
   static get key() {
     return "vivaldi";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-vivaldi";
   }
 
   _chromeUserDataPathSuffix = "Vivaldi";
