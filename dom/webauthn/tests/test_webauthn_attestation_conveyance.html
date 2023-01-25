@@ -83,6 +83,11 @@
         .then(verifyAnonymizedCertificate)
         .catch(arrivingHereIsBad);
 
+      // Request an unknown attestation type. This should be treated as "none".
+      await requestMakeCredential("unknown")
+        .then(verifyAnonymizedCertificate)
+        .catch(arrivingHereIsBad);
+
       // Request no attestation.
       await requestMakeCredential("none")
         .then(verifyAnonymizedCertificate)
@@ -111,14 +116,6 @@
           }
         })
         .catch(arrivingHereIsBad);
-    });
-
-    // Test failure cases for make credential.
-    add_task(async function test_make_credential_failures() {
-      // Request a platform authenticator.
-      await requestMakeCredential("unknown")
-        .then(arrivingHereIsBad)
-        .catch(expectTypeError);
     });
   </script>
 
