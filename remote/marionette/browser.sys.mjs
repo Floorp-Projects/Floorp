@@ -11,7 +11,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MessageManagerDestroyedPromise:
     "chrome://remote/content/marionette/sync.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
-  WebElementEventTarget: "chrome://remote/content/marionette/dom.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
 });
 
@@ -312,9 +311,11 @@ browser.Context = class {
       await lazy.TabManager.selectTab(this.tab);
     }
 
-    // TODO(ato): Currently tied to curBrowser, but should be moved to
-    // WebReference when introduced by https://bugzil.la/1400256.
-    this.eventObserver = new lazy.WebElementEventTarget(this.messageManager);
+    // By accessing the content browser's message manager a new browsing
+    // context is created for browserless tabs, which is needed to successfully
+    // run the WebDriver's is browsing context open step. This is temporary
+    // until we find a better solution on bug 1812258.
+    this.messageManager;
 
     return this.tab;
   }

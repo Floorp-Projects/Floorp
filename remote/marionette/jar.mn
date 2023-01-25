@@ -17,7 +17,6 @@ remote.jar:
   content/marionette/browser.sys.mjs (browser.sys.mjs)
   content/marionette/cert.sys.mjs (cert.sys.mjs)
   content/marionette/cookie.sys.mjs (cookie.sys.mjs)
-  content/marionette/dom.sys.mjs (dom.sys.mjs)
   content/marionette/driver.sys.mjs (driver.sys.mjs)
   content/marionette/element.sys.mjs (element.sys.mjs)
   content/marionette/evaluate.sys.mjs (evaluate.sys.mjs)
