@@ -462,10 +462,16 @@ add_task(async function test_calendar_button_markup_datetime() {
 });
 
 /**
- * Test that time input field does not include a Calendar button
+ * Test that time input field does not include a Calendar button,
+ * but opens a time picker panel on click within the field (with a pref)
  */
 add_task(async function test_calendar_button_markup_time() {
   info("Test that type=time input field does not include a Calendar button");
+
+  // Toggle a pref to allow a time picker to be shown
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.forms.datetime.timepicker", true]],
+  });
 
   let testTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -483,5 +489,38 @@ add_task(async function test_calendar_button_markup_time() {
     );
   });
 
+  let ready = helper.waitForPickerReady();
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "input",
+    {},
+    gBrowser.selectedBrowser
+  );
+
+  await ready;
+
+  Assert.equal(
+    helper.panel.state,
+    "open",
+    "Time picker panel should be opened on click from anywhere within the time input field"
+  );
+
+  let closed = helper.promisePickerClosed();
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "input",
+    {},
+    gBrowser.selectedBrowser
+  );
+
+  await closed;
+
+  Assert.equal(
+    helper.panel.state,
+    "closed",
+    "Time picker panel should be closed on click from anywhere within the time input field"
+  );
+
   BrowserTestUtils.removeTab(testTab);
+  await SpecialPowers.popPrefEnv();
 });
