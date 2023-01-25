@@ -10,12 +10,13 @@
 #include "nsCOMPtr.h"
 #include "nsIGeolocationProvider.h"
 
-#include <locationapi.h>
-
 class MLSFallback;
 
 namespace mozilla::dom {
 
+// Uses a PWindowsLocation actor to subscribe to geolocation updates from the
+// Windows utility process and falls back to MLS when it is not available or
+// fails.
 class WindowsLocationProvider final : public nsIGeolocationProvider {
  public:
   NS_DECL_ISUPPORTS
@@ -23,25 +24,49 @@ class WindowsLocationProvider final : public nsIGeolocationProvider {
 
   WindowsLocationProvider();
 
+ private:
+  friend class WindowsLocationParent;
+
+  ~WindowsLocationProvider();
+
   nsresult CreateAndWatchMLSProvider(nsIGeolocationUpdate* aCallback);
   void CancelMLSProvider();
 
-  class MLSUpdate : public nsIGeolocationUpdate {
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIGEOLOCATIONUPDATE
-    explicit MLSUpdate(nsIGeolocationUpdate* aCallback);
+  void MaybeCreateLocationActor();
+  void ReleaseUtilityProcess();
 
-   private:
-    nsCOMPtr<nsIGeolocationUpdate> mCallback;
-    virtual ~MLSUpdate() {}
-  };
+  // These methods either send the message on the existing actor or queue
+  // the messages to be sent (in order) once the actor exists.
+  bool SendStartup();
+  bool SendRegisterForReport(nsIGeolocationUpdate* aCallback);
+  bool SendUnregisterForReport();
+  bool SendSetHighAccuracy(bool aEnable);
+  bool Send__delete__();
 
- private:
-  ~WindowsLocationProvider();
+  void RecvUpdate(RefPtr<nsIDOMGeoPosition> aGeoPosition);
+  // See bug 1539864 for MOZ_CAN_RUN_SCRIPT_BOUNDARY justification.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RecvFailed(uint16_t err);
 
-  RefPtr<ILocation> mLocation;
+  // The utility process actor has ended its connection, either successfully
+  // or with an error.
+  void ActorStopped();
+
+  // Run fn once actor is ready to send messages, which may be immediately.
+  template <typename Fn>
+  bool WhenActorIsReady(Fn&& fn);
+
   RefPtr<MLSFallback> mMLSProvider;
+
+  nsCOMPtr<nsIGeolocationUpdate> mCallback;
+
+  using WindowsLocationPromise =
+      MozPromise<RefPtr<WindowsLocationParent>, bool, false>;
+
+  // Before the utility process exists, we have a promise that we will get our
+  // location actor.  mActor and mActorPromise are never both set.
+  RefPtr<WindowsLocationPromise> mActorPromise;
+  RefPtr<WindowsLocationParent> mActor;
+
   bool mWatching = false;
 };
 
