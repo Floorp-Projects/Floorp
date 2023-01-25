@@ -727,12 +727,6 @@ var gPrivacyPane = {
 
     this.initCookieBannerHandling();
 
-    let notificationInfoURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
-    document
-      .getElementById("notificationPermissionsLearnMore")
-      .setAttribute("href", notificationInfoURL);
-
     this.initDataCollection();
 
     if (AppConstants.MOZ_DATA_REPORTING) {
