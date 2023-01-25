@@ -559,24 +559,13 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
         // Transports is a string, but we match it to an enumeration so
         // that we have forward-compatibility, ignoring unknown transports.
         for (const nsAString& str : s.mTransports.Value()) {
-          NS_ConvertUTF16toUTF8 cStr(str);
-          int i = FindEnumStringIndexImpl(
-              cStr.get(), cStr.Length(), AuthenticatorTransportValues::strings);
-          if (i < 0) {
-            continue;  // Unknown enum
-          }
-          AuthenticatorTransport t = static_cast<AuthenticatorTransport>(i);
-
-          if (t == AuthenticatorTransport::Usb) {
+          if (str.EqualsLiteral("usb")) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
-          }
-          if (t == AuthenticatorTransport::Nfc) {
+          } else if (str.EqualsLiteral("nfc")) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_NFC;
-          }
-          if (t == AuthenticatorTransport::Ble) {
+          } else if (str.EqualsLiteral("ble")) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_BLE;
-          }
-          if (t == AuthenticatorTransport::Internal) {
+          } else if (str.EqualsLiteral("internal")) {
             transports |= CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL;
           }
         }

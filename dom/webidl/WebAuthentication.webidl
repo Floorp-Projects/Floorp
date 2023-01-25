@@ -141,13 +141,6 @@ dictionary PublicKeyCredentialDescriptor {
     sequence<DOMString>                   transports;
 };
 
-enum AuthenticatorTransport {
-    "usb",
-    "nfc",
-    "ble",
-    "internal"
-};
-
 typedef long COSEAlgorithmIdentifier;
 
 typedef sequence<AAGUID>      AuthenticatorSelectionList;
