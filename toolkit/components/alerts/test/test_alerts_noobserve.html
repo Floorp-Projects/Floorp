@@ -41,15 +41,19 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 });
 
 function waitForAlertsThenFinish() {
-  chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
-    chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
-    ok(true, "Alert disappeared.");
-    SimpleTest.finish();
+  var resolved = new Promise(resolve => {
+    chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
+      chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
+      ok(true, "Alert disappeared.");
+      resolve();
+    });
   });
   chromeScript.sendAsyncMessage("waitForAlerts");
+
+  return resolved;
 }
 
-function runTest() {
+add_task(async function testNoObserve() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
   } else {
@@ -69,18 +73,22 @@ function runTest() {
         notifier.showAlertNotification(null, "Notification test",
                                        "This notification has no observer");
         ok(true, "showAlertNotification() succeeded");
+
+        await new Promise(resolve => {
+          // Add delay to wait for `alert:alert` window creation in case this is a XUL alert.
+          setTimeout(resolve, 1000);
+        }).then(async () => {
+          await waitForAlertsThenFinish();
+        });
       } catch (ex) {
         todo(false, "showAlertNotification() failed.", ex);
       }
     }
   }
-}
+});
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
-
-runTest();
-setTimeout(waitForAlertsThenFinish, 1000);
+SimpleTest.requestFlakyTimeout("`alert:alert` window creation and deletion " +
+                               "lifetime may not be synchronous with the alert object.");
 </script>
 </pre>
 </body>
