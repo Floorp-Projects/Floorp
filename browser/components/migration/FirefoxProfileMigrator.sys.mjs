@@ -37,10 +37,6 @@ export class FirefoxProfileMigrator extends MigratorBase {
     return "firefox";
   }
 
-  static get displayNameL10nID() {
-    return "migration-wizard-migrator-display-name-firefox";
-  }
-
   _getAllProfiles() {
     let allProfiles = new Map();
     let profileService = Cc[
