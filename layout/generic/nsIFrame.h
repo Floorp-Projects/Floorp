@@ -1145,13 +1145,7 @@ class nsIFrame : public nsQueryFrame {
     SetRect(nsRect(mRect.TopLeft(), aSize), aRebuildDisplayItems);
   }
 
-  void SetPosition(const nsPoint& aPt) {
-    if (mRect.TopLeft() == aPt) {
-      return;
-    }
-    mRect.MoveTo(aPt);
-    MarkNeedsDisplayItemRebuild();
-  }
+  void SetPosition(const nsPoint& aPt);
   void SetPosition(mozilla::WritingMode aWritingMode,
                    const mozilla::LogicalPoint& aPt,
                    const nsSize& aContainerSize) {
