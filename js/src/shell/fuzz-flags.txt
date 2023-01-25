@@ -36,6 +36,8 @@
 --ion-regalloc=testbed
 --ion-scalar-replacement=off
 --ion-scalar-replacement=on
+--ion-iterator-indices=off
+--ion-iterator-indices=on
 --ion-warmup-threshold=0
 --ion-warmup-threshold=10
 --ion-warmup-threshold=100
@@ -51,7 +53,6 @@
 --no-jit-backend
 --enable-watchtower
 --disable-watchtower
---enable-iterator-indices
 
 # GC-related
 # These 2 flags can cause the shell to slow down
