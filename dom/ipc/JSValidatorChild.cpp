@@ -17,7 +17,10 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvIsOpaqueResponseAllowed(
 }
 
 mozilla::ipc::IPCResult JSValidatorChild::RecvOnDataAvailable(Shmem&& aData) {
-  MOZ_ASSERT(mResolver);
+  if (!mResolver) {
+    MOZ_ASSERT(!CanSend());
+    return IPC_OK();
+  }
 
   if (!mSourceBytes.Append(Span(aData.get<char>(), aData.Size<char>()),
                            mozilla::fallible)) {
