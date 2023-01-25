@@ -23,7 +23,7 @@ origin:
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: ea26d7adb1da4c1bd80e99b9d2f6e9ca0b9cde0e
+  revision: b2528b0be934de1918e20c85fc170d809eeb49ab
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/

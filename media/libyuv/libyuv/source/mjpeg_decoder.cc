@@ -79,9 +79,7 @@ MJpegDecoder::MJpegDecoder()
   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
   // Override standard exit()-based error handler.
   error_mgr_->base.error_exit = &ErrorHandler;
-#ifndef DEBUG_MJPEG
   error_mgr_->base.output_message = &OutputHandler;
-#endif
 #endif
   decompress_struct_->client_data = NULL;
   source_mgr_->init_source = &init_source;
@@ -111,7 +109,7 @@ LIBYUV_BOOL MJpegDecoder::LoadFrame(const uint8_t* src, size_t src_len) {
   }
 
   buf_.data = src;
-  buf_.len = static_cast<int>(src_len);
+  buf_.len = (int)src_len;
   buf_vec_.pos = 0;
   decompress_struct_->client_data = &buf_vec_;
 #ifdef HAVE_SETJMP
@@ -430,7 +428,7 @@ boolean fill_input_buffer(j_decompress_ptr cinfo) {
 
 void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {  // NOLINT
   jpeg_source_mgr* src = cinfo->src;
-  size_t bytes = static_cast<size_t>(num_bytes);
+  size_t bytes = (size_t)num_bytes;
   if (bytes > src->bytes_in_buffer) {
     src->next_input_byte = nullptr;
     src->bytes_in_buffer = 0;
@@ -465,12 +463,11 @@ void ErrorHandler(j_common_ptr cinfo) {
   longjmp(mgr->setjmp_buffer, 1);
 }
 
-#ifndef DEBUG_MJPEG
 // Suppress fprintf warnings.
 void OutputHandler(j_common_ptr cinfo) {
   (void)cinfo;
 }
-#endif
+
 #endif  // HAVE_SETJMP
 
 void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {

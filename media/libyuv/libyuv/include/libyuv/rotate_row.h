@@ -215,7 +215,23 @@ void TransposeUVWx16_Any_LSX(const uint8_t* src,
                              uint8_t* dst_b,
                              int dst_stride_b,
                              int width);
+void TransposeWxH_16_C(const uint16_t* src,
+                       int src_stride,
+                       uint16_t* dst,
+                       int dst_stride,
+                       int width,
+                       int height);
 
+void TransposeWx8_16_C(const uint16_t* src,
+                       int src_stride,
+                       uint16_t* dst,
+                       int dst_stride,
+                       int width);
+void TransposeWx1_16_C(const uint16_t* src,
+                       int src_stride,
+                       uint16_t* dst,
+                       int dst_stride,
+                       int width);
 #ifdef __cplusplus
 }  // extern "C"
 }  // namespace libyuv

@@ -48,7 +48,7 @@ TARGET_LINK_LIBRARIES  ( yuvconstants ${ly_lib_static} )
 find_package ( JPEG )
 if (JPEG_FOUND)
   include_directories( ${JPEG_INCLUDE_DIR} )
-  target_link_libraries( yuvconvert ${JPEG_LIBRARY} )
+  target_link_libraries( ${ly_lib_shared} ${JPEG_LIBRARY} )
   add_definitions( -DHAVE_JPEG )
 endif()
 
