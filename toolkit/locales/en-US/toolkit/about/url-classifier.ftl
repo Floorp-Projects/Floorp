@@ -5,7 +5,11 @@
 url-classifier-title = URL Classifier Information
 url-classifier-search-title = Search
 url-classifier-search-result-title = Results
+# Variables:
+#   $uri (string) - URI of blocked page
 url-classifier-search-result-uri = URI: { $uri }
+# Variables:
+#   $list (string) - List of tables where the page is blocked
 url-classifier-search-result-list = List of tables: { $list }
 url-classifier-search-input = URL
 url-classifier-search-error-invalid-url = Invalid URL
@@ -50,5 +54,9 @@ url-classifier-disabled = Disabled
 url-classifier-updating = updating
 url-classifier-cannot-update = cannot update
 url-classifier-success = success
+
+## Variables
+##   $error (string) - Error message
+
 url-classifier-update-error = update error ({ $error })
 url-classifier-download-error = download error ({ $error })

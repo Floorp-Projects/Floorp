@@ -20,6 +20,8 @@ toolbar-context-menu-bookmark-selected-tabs =
 toolbar-context-menu-select-all-tabs =
     .label = Select All Tabs
     .accesskey = S
+# Variables
+#   $tabCount (number) - Number of tabs
 toolbar-context-menu-reopen-closed-tabs =
     .label =
         { $tabCount ->

@@ -11,6 +11,9 @@ search-header =
 search-header-shortcut =
     .key = f
 
+## Variables
+##   $domain - Domain name where add-ons are available (e.g. addons.mozilla.org)
+
 list-empty-get-extensions-message =
     Get extensions and themes on <a data-l10n-name="get-extensions">{ $domain }</a>
 
@@ -19,6 +22,8 @@ list-empty-get-dictionaries-message =
 
 list-empty-get-language-packs-message =
     Get language packs on <a data-l10n-name="get-extensions">{ $domain }</a>
+
+##
 
 list-empty-installed =
     .value = You don’t have any add-ons of this type installed
@@ -199,7 +204,7 @@ addon-category-sitepermission-title =
     .title = Site Permissions
 # String displayed in about:addons in the Site Permissions section
 # Variables:
-#  $host (string): DNS host name for which the webextension enables permissions
+#  $host (string) - DNS host name for which the webextension enables permissions
 addon-sitepermission-host = Site Permissions for { $host }
 
 ## These are global warnings
@@ -286,6 +291,8 @@ shortcuts-duplicate-warning-message = { $shortcut } is being used as a shortcut 
 #   $addon (string) - Name of the add-on
 shortcuts-exists = Already in use by { $addon }
 
+# Variables:
+#   $numberToShow (number) - Number of other elements available to show
 shortcuts-card-expand-button =
     { $numberToShow ->
         *[other] Show { $numberToShow } More
@@ -371,7 +378,7 @@ theme-colorways-button = Try Colorways
 # Refers to the button label for the colorways card when a user has a colorway theme enabled.
 theme-colorways-button-colorway-enabled = Change Colorway
 # Variables:
-#   $expiryDate (string) - date on which the colorway collection expires. When formatting this, you may omit the year, only exposing the month and day, as colorway collections will always expire within a year.
+#   $expiryDate (string) - Date on which the colorway collection expires. When formatting this, you may omit the year, only exposing the month and day, as colorway collections will always expire within a year.
 colorway-collection-expiry-label = Expires { DATETIME($expiryDate, month: "long", day: "numeric") }
 
 plugin-enabled-heading = Enabled
@@ -473,6 +480,8 @@ addon-permissions-learnmore = Learn more about permissions
 recommended-extensions-heading = Recommended Extensions
 recommended-themes-heading = Recommended Themes
 
+# Variables:
+#   $hostname (string) - Host where the permissions are granted
 addon-sitepermissions-required = Grants the following capabilities to <span data-l10n-name="hostname">{ $hostname }</span>:
 
 # A recommendation for the Firefox Color theme shown at the bottom of the theme
@@ -500,10 +509,10 @@ addon-page-options-button =
 
 ## Detail notifications
 ## Variables:
-##   $name (String): name of the add-on.
+##   $name (string) - Name of the add-on.
 
 # Variables:
-#   $version (String): application version.
+#   $version (string) - Application version.
 details-notification-incompatible = { $name } is incompatible with { -brand-short-name } { $version }.
 details-notification-incompatible-link = More Information
 

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
+#   $hostname (string) - Hostname of the website with cert error.
 cert-error-intro = { $hostname } uses an invalid security certificate.
 
 cert-error-mitm-intro = Websites prove their identity via certificates, which are issued by certificate authorities.
@@ -15,7 +15,7 @@ cert-error-mitm-connection = { -brand-short-name } uses the Mozilla CA store to 
 cert-error-trust-unknown-issuer-intro = Someone could be trying to impersonate the site and you should not continue.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
+#   $hostname (string) - Hostname of the website with cert error.
 cert-error-trust-unknown-issuer = Websites prove their identity via certificates. { -brand-short-name } does not trust { $hostname } because its certificate issuer is unknown, the certificate is self-signed, or the server is not sending the correct intermediate certificates.
 
 cert-error-trust-cert-invalid = The certificate is not trusted because it was issued by an invalid CA certificate.
@@ -33,48 +33,49 @@ cert-error-trust-symantec = Certificates issued by GeoTrust, RapidSSL, Symantec,
 cert-error-untrusted-default = The certificate does not come from a trusted source.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
+#   $hostname (string) - Hostname of the website with cert error.
 cert-error-domain-mismatch = Websites prove their identity via certificates. { -brand-short-name } does not trust this site because it uses a certificate that is not valid for { $hostname }.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
-# $alt-name (String) - Alternate domain name for which the cert is valid.
+#   $hostname (string) - Hostname of the website with cert error.
+#   $alt-name (string) - Alternate domain name for which the cert is valid.
 cert-error-domain-mismatch-single = Websites prove their identity via certificates. { -brand-short-name } does not trust this site because it uses a certificate that is not valid for { $hostname }. The certificate is only valid for <a data-l10n-name="domain-mismatch-link">{ $alt-name }</a>.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
-# $alt-name (String) - Alternate domain name for which the cert is valid.
+#   $hostname (string) - Hostname of the website with cert error.
+#   $alt-name (string) - Alternate domain name for which the cert is valid.
 cert-error-domain-mismatch-single-nolink = Websites prove their identity via certificates. { -brand-short-name } does not trust this site because it uses a certificate that is not valid for { $hostname }. The certificate is only valid for { $alt-name }.
 
 # Variables:
-# $subject-alt-names (String) - Alternate domain names for which the cert is valid.
+#   $hostname (string) - Hostname of the website with cert error.
+#   $subject-alt-names (string) - Alternate domain names for which the cert is valid.
 cert-error-domain-mismatch-multiple = Websites prove their identity via certificates. { -brand-short-name } does not trust this site because it uses a certificate that is not valid for { $hostname }. The certificate is only valid for the following names: { $subject-alt-names }
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
-# $not-after-local-time (Date) - Certificate is not valid after this time.
+#   $hostname (string) - Hostname of the website with cert error.
+#   $not-after-local-time (Date) - Certificate is not valid after this time.
 cert-error-expired-now = Websites prove their identity via certificates, which are valid for a set time period. The certificate for { $hostname } expired on { $not-after-local-time }.
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
-# $not-before-local-time (Date) - Certificate is not valid before this time.
+#   $hostname (string) - Hostname of the website with cert error.
+#   $not-before-local-time (Date) - Certificate is not valid before this time.
 cert-error-not-yet-valid-now = Websites prove their identity via certificates, which are valid for a set time period. The certificate for { $hostname } will not be valid until { $not-before-local-time }.
 
 # Variables:
-# $error (string) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
+#   $error (string) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
 cert-error-code-prefix = Error code: { $error }
 
 # Variables:
-# $error (String) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
+#   $error (string) - NSS error code string that specifies type of cert error. e.g. unknown issuer, invalid cert, etc.
 cert-error-code-prefix-link = Error code: <a data-l10n-name="error-code-link">{ $error }</a>
 
 # Variables:
-# $hostname (String) - Hostname of the website with SSL error.
-# $errorMessage (String) - Error message corresponding to the type of error we are experiencing.
+#   $hostname (string) - Hostname of the website with SSL error.
+#   $errorMessage (string) - Error message corresponding to the type of error we are experiencing.
 cert-error-ssl-connection-error = An error occurred during a connection to { $hostname }. { $errorMessage }
 
 # Variables:
-# $hostname (String) - Hostname of the website with cert error.
+#   $hostname (string) - Hostname of the website with cert error.
 cert-error-symantec-distrust-description = Websites prove their identity via certificates, which are issued by certificate authorities. Most browsers no longer trust certificates issued by GeoTrust, RapidSSL, Symantec, Thawte, and VeriSign. { $hostname } uses a certificate from one of these authorities and so the website’s identity cannot be proven.
 
 cert-error-symantec-distrust-admin = You may notify the website’s administrator about this problem.
@@ -82,11 +83,11 @@ cert-error-symantec-distrust-admin = You may notify the website’s administrato
 cert-error-old-tls-version = This website might not support the TLS 1.2 protocol, which is the minimum version supported by { -brand-short-name }.
 
 # Variables:
-# $hasHSTS (Boolean) - Indicates whether HSTS header is present.
+#   $hasHSTS (Boolean) - Indicates whether HSTS header is present.
 cert-error-details-hsts-label = HTTP Strict Transport Security: { $hasHSTS }
 
 # Variables:
-# $hasHPKP (Boolean) - Indicates whether HPKP header is present.
+#   $hasHPKP (Boolean) - Indicates whether HPKP header is present.
 cert-error-details-key-pinning-label = HTTP Public Key Pinning: { $hasHPKP }
 
 cert-error-details-cert-chain-label = Certificate chain:
@@ -94,7 +95,7 @@ cert-error-details-cert-chain-label = Certificate chain:
 open-in-new-window-for-csp-or-xfo-error = Open Site in New Window
 
 # Variables:
-# $hostname (String) - Hostname of the website blocked by csp or xfo error.
+#   $hostname (string) - Hostname of the website blocked by csp or xfo error.
 csp-xfo-blocked-long-desc = To protect your security, { $hostname } will not allow { -brand-short-name } to display the page if another site has embedded it. To see this page, you need to open it in a new window.
 
 ## Messages used for certificate error titles
@@ -106,12 +107,12 @@ deniedPortAccess-title = This address is restricted
 dnsNotFound-title = Hmm. We’re having trouble finding that site.
 
 # Variables:
-#   $hostname (String) - Hostname of the website to which the user was trying to connect.
+#   $hostname (string) - Hostname of the website to which the user was trying to connect.
 dns-not-found-trr-only-title =
   Possible security risk for { $hostname }.
 
 # Variables:
-#   $hostname (String) - Hostname of the website to which the user was trying to connect.
+#   $hostname (string) - Hostname of the website to which the user was trying to connect.
 dns-not-found-native-fallback-title =
   Possible security risk for { $hostname }.
 

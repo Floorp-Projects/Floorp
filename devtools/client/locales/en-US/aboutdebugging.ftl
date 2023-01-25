@@ -10,7 +10,8 @@
 about-debugging-page-title-setup-page = Debugging - Setup
 
 # Page title (ie tab title) for the Runtime page
-# { $selectedRuntimeId } is the id of the current runtime, such as "this-firefox", "localhost:6080", ...
+# Variables:
+#   $selectedRuntimeId - ID of the current runtime, such as "this-firefox", "localhost:6080", etc.
 about-debugging-page-title-runtime-page = Debugging - Runtime / { $selectedRuntimeId }
 
 # Sidebar strings
@@ -69,10 +70,15 @@ about-debugging-sidebar-runtime-item-waiting-for-browser = Waiting for browserâ€
 about-debugging-sidebar-runtime-item-unplugged = Unplugged
 
 # Title for runtime sidebar items that are related to a specific device (USB, WiFi).
+# Variables:
+#   $displayName (string) - Displayed name
+#   $deviceName (string) - Name of the device
 about-debugging-sidebar-runtime-item-name =
   .title = { $displayName } ({ $deviceName })
 # Title for runtime sidebar items where we cannot get device information (network
 # locations).
+# Variables:
+#   $displayName (string) - Displayed name
 about-debugging-sidebar-runtime-item-name-no-device =
   .title = { $displayName }
 
