@@ -3,7 +3,9 @@
 
 add_task(async () => {
   const testPath =
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/browser/browser/base/content/test/favicons/";
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const expectedIcon = "http://example.com/favicon.ico";
 
   await BrowserTestUtils.withNewTab(

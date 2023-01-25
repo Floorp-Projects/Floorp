@@ -54,6 +54,7 @@ add_task(async function() {
       let engine;
       await promiseContentSearchChange(browser, async () => {
         Services.search.addOpenSearchEngine(
+          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           "http://test:80/browser/browser/base/content/test/about/POSTSearchEngine.xml",
           null
         );

@@ -9,6 +9,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
 );
 
 let notificationURL =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 let oldShowFavicons;
 

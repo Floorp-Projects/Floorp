@@ -4,6 +4,7 @@
 
 // Two frames, one with text content, the other an error page
 var invalidPage = "http://127.0.0.1:55555/";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 var validPage = "http://example.com/";
 var testPage =
   'data:text/html,<frameset cols="400,400"><frame src="' +
