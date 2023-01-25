@@ -63,7 +63,10 @@ class SearchSelectorToolbarAction(
                 }
 
                 UnifiedSearch.searchMenuTapped.record(NoExtras())
-                menu.menuController.show(anchor = it, orientation = orientation)
+                menu.menuController.show(
+                    anchor = it.findViewById(R.id.search_selector),
+                    orientation = orientation,
+                )
             }
 
             val topPadding = resources.getDimensionPixelSize(R.dimen.search_engine_engine_icon_top_margin)

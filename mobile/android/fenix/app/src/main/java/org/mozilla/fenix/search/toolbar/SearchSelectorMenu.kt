@@ -9,11 +9,13 @@ import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.browser.menu2.BrowserMenuController
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.menu.MenuController
+import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.MenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 
 typealias MozSearchEngine = SearchEngine
@@ -46,7 +48,17 @@ class SearchSelectorMenu(
         data class SearchEngine(val searchEngine: MozSearchEngine) : Item()
     }
 
-    val menuController: MenuController by lazy { BrowserMenuController() }
+    val menuController: MenuController by lazy {
+        BrowserMenuController(
+            style = MenuStyle(
+                // Adjusting the menu to have 4dp spacing. By default, search_selector has horizontal
+                // spacing of 8dp, and vertical spacing with the container view of 6dp.
+                horizontalOffset = (-4).dpToPx(context.resources.displayMetrics),
+                verticalOffset = (-2).dpToPx(context.resources.displayMetrics),
+                completelyOverlap = true,
+            ),
+        )
+    }
 
     internal fun menuItems(searchEngines: List<MenuCandidate>): List<MenuCandidate> {
         val headerCandidate = DecorativeTextMenuCandidate(

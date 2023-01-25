@@ -146,7 +146,7 @@
                 android:importantForAccessibility="no" />
 
             <org.mozilla.fenix.search.toolbar.SearchSelector
-                android:id="@+id/search_selector"
+                android:id="@+id/search_selector_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|center_vertical"

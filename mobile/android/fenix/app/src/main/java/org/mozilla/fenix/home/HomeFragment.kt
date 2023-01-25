@@ -349,11 +349,11 @@ class HomeFragment : Fragment() {
         }
 
         requireContext().settings().showUnifiedSearchFeature.let {
-            binding.searchSelector.isVisible = it
+            binding.searchSelectorButton.isVisible = it
             binding.searchEngineIcon.isGone = it
         }
 
-        binding.searchSelector.apply {
+        binding.searchSelectorButton.apply {
             setOnClickListener {
                 val orientation = if (context.settings().shouldUseBottomToolbar) {
                     Orientation.UP
@@ -362,7 +362,10 @@ class HomeFragment : Fragment() {
                 }
 
                 UnifiedSearch.searchMenuTapped.record(NoExtras())
-                searchSelectorMenu.menuController.show(anchor = it, orientation = orientation)
+                searchSelectorMenu.menuController.show(
+                    anchor = it.findViewById(R.id.search_selector),
+                    orientation = orientation,
+                )
             }
         }
 
@@ -678,7 +681,7 @@ class HomeFragment : Fragment() {
                     }
 
                     if (requireContext().settings().showUnifiedSearchFeature) {
-                        binding.searchSelector.setIcon(icon, name)
+                        binding.searchSelectorButton.setIcon(icon, name)
                     } else {
                         binding.searchEngineIcon.setImageDrawable(icon)
                     }

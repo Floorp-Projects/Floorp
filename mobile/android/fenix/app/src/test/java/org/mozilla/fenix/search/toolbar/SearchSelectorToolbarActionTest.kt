@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.graphics.applyCanvas
+import com.google.android.material.card.MaterialCardView
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -81,6 +82,7 @@ class SearchSelectorToolbarActionTest {
             ),
         )
         val view = action.createView(LinearLayout(testContext) as ViewGroup) as SearchSelector
+        val selectorIcon = view.findViewById<MaterialCardView>(R.id.search_selector)
         assertNull(UnifiedSearch.searchMenuTapped.testGetValue())
 
         every { settings.shouldUseBottomToolbar } returns false
@@ -88,7 +90,7 @@ class SearchSelectorToolbarActionTest {
 
         assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
-            menu.menuController.show(view, Orientation.DOWN)
+            menu.menuController.show(anchor = selectorIcon, Orientation.DOWN)
         }
 
         every { settings.shouldUseBottomToolbar } returns true
@@ -96,7 +98,7 @@ class SearchSelectorToolbarActionTest {
 
         assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
-            menu.menuController.show(view, Orientation.UP)
+            menu.menuController.show(anchor = selectorIcon, Orientation.UP)
         }
     }
 
