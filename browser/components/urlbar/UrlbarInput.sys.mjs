@@ -3210,11 +3210,24 @@ export class UrlbarInput {
         if (event.target.closest("tab")) {
           break;
         }
+
         // Close the view when clicking on toolbars and other UI pieces that
         // might not automatically remove focus from the input.
         // Respect the autohide preference for easier inspecting/debugging via
         // the browser toolbox.
         if (!lazy.UrlbarPrefs.get("ui.popup.disable_autohide")) {
+          if (this.view.isOpen && !this.hasAttribute("focused")) {
+            // In this case, as blur event never happen from the inputField, we
+            // record abandonment event explicitly.
+            let blurEvent = new FocusEvent("blur", {
+              relatedTarget: this.inputField,
+            });
+            this.controller.engagementEvent.record(blurEvent, {
+              searchString: this._lastSearchString,
+              searchSource: this.getSearchSource(blurEvent),
+            });
+          }
+
           this.view.close();
         }
         break;
