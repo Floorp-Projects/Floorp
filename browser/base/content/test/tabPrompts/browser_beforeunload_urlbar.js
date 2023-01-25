@@ -5,6 +5,7 @@
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 
@@ -21,6 +22,7 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
   const TEST_URL = TEST_ROOT + "file_beforeunload_stop.html";
   await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
     gURLBar.focus();
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     const inputValue = "http://example.org/?q=typed";
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.sendString(inputValue.slice(-1));

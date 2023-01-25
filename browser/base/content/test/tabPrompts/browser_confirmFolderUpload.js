@@ -54,6 +54,7 @@ add_setup(async function() {
  * @returns {Promise} - Resolves once the prompt has been closed.
  */
 async function testUploadPrompt(confirmUpload) {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     // Create file input element
     await ContentTask.spawn(browser, null, () => {
