@@ -207,6 +207,61 @@ add_task(async function test_redirect_https() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
 });
 
+// This test uses a 511 status code to request a captive portal login
+// We check that it triggers a captive portal login
+// See RFC 6585 for details
+add_task(async function test_511_error() {
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
+  equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
+
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
+    response.setStatusLine(
+      metadata.httpVersion,
+      511,
+      "Network Authentication Required"
+    );
+    cpResponse = '<meta http-equiv="refresh" content="0;url=/login">';
+    contentHandler(metadata, response);
+  });
+
+  let notification = observerPromise("captive-portal-login");
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
+
+  await notification;
+  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL);
+});
+
+// Any other 5xx HTTP error, is assumed to be an issue with the
+// canonical web server, and should not trigger a captive portal login
+add_task(async function test_generic_5xx_error() {
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
+  equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
+
+  let requests = 0;
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
+    if (requests++ === 0) {
+      // on first attempt, send 503 error
+      response.setStatusLine(
+        metadata.httpVersion,
+        503,
+        "Internal Server Error"
+      );
+      cpResponse = "<h1>Internal Server Error</h1>";
+    } else {
+      // on retry, send canonical reply
+      cpResponse = SUCCESS_STRING;
+    }
+    contentHandler(metadata, response);
+  });
+
+  let notification = observerPromise("network:captive-portal-connectivity");
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
+
+  await notification;
+  equal(requests, 2);
+  equal(cps.state, Ci.nsICaptivePortalService.NOT_CAPTIVE);
+});
+
 add_task(async function test_changed_notification() {
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);

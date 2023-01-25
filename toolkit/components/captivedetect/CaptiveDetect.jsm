@@ -389,6 +389,9 @@ CaptivePortalDetector.prototype = {
       if (status >= 300 && status <= 399) {
         // The canonical website has been redirected to an unknown location
         self._startLogin();
+      } else if (status === 511) {
+        // Got a RFC 6585 "Network Authentication Required" error page
+        self._startLogin();
       } else {
         mayRetry();
       }
