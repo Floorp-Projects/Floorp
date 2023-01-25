@@ -89,3 +89,6 @@
 
 # Array.fromAsync
 --enable-array-from-async
+
+# Change Array By Copy
+--enable-change-array-by-copy
