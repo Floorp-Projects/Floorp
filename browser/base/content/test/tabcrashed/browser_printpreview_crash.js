@@ -4,6 +4,7 @@
 "use strict";
 
 const TEST_URL =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/tabcrashed/file_contains_emptyiframe.html";
 const DOMAIN = "example.com";
 
@@ -31,6 +32,7 @@ add_task(async function test() {
       );
     });
     iframe.src =
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://test1.example.com/browser/browser/base/content/test/tabcrashed/file_iframe.html";
     await loaded;
   });

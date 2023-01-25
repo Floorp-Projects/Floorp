@@ -10,6 +10,7 @@
 // We use different domains for each test and for navigation within each test
 const HTTP_TEST_ROOT_1 = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 const HTTPS_TEST_ROOT_1 = getRootDirectory(gTestPath).replace(
@@ -18,6 +19,7 @@ const HTTPS_TEST_ROOT_1 = getRootDirectory(gTestPath).replace(
 );
 const HTTP_TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.net"
 );
 const HTTPS_TEST_ROOT_2 = getRootDirectory(gTestPath).replace(

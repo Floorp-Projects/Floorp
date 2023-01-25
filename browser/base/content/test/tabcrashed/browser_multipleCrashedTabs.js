@@ -3,8 +3,11 @@
 
 "use strict";
 
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const PAGE_1 = "http://example.com";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const PAGE_2 = "http://example.org";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const PAGE_3 = "http://example.net";
 
 /**

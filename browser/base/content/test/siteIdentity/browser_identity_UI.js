@@ -8,6 +8,7 @@ var idnDomain =
 var tests = [
   {
     name: "normal domain",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     location: "http://test1.example.org/",
     hostForDisplay: "test1.example.org",
     hasSubview: true,
@@ -15,6 +16,7 @@ var tests = [
   {
     name: "view-source",
     location: "view-source:http://example.com/",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     newURI: "http://example.com/",
     hostForDisplay: "example.com",
     hasSubview: true,
@@ -27,12 +29,14 @@ var tests = [
   },
   {
     name: "IDN subdomain",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     location: "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp/",
     hostForDisplay: "sub1." + idnDomain,
     hasSubview: true,
   },
   {
     name: "subdomain with port",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     location: "http://sub1.test1.example.org:8000/",
     hostForDisplay: "sub1.test1.example.org",
     hasSubview: true,

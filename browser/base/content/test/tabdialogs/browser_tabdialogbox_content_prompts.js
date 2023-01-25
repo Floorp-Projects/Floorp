@@ -31,6 +31,7 @@ const TEST_EXTENSION_DATA = {
     "alert.js": `window.addEventListener("load", () => alert("Hi"));`,
   },
 };
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_ORIGIN = "http://example.com";
 const TEST_PAGE =
   TEST_ROOT_CHROME.replace("chrome://mochitests/content", TEST_ORIGIN) +
@@ -51,6 +52,7 @@ add_setup(async function() {
  * Test that a manager for content prompts is added to tab dialog box.
  */
 add_task(async function test_tabdialog_content_prompts() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async function(
     browser
   ) {
