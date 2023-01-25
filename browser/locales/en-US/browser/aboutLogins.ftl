@@ -36,6 +36,8 @@ about-logins-menu-menuitem-help = Help
 
 login-list =
   .aria-label = Logins matching search query
+# Variables
+#   $count (number) - Number of logins
 login-list-count =
   { $count ->
       [one] { $count } login
@@ -105,6 +107,8 @@ login-item-cancel-button = Cancel
 ## A label is displayed under the date to describe the type of change.
 ## (e.g. updated, created, etc.)
 
+# Variables
+#   $datetime (date) - Event date
 login-item-timeline-point-date = { DATETIME($datetime, day: "numeric", month: "short", year: "numeric") }
 login-item-timeline-action-created = Created
 login-item-timeline-action-updated = Updated
@@ -159,6 +163,9 @@ about-logins-confirm-remove-dialog-title = Remove this login?
 confirm-delete-dialog-message = This action cannot be undone.
 about-logins-confirm-remove-dialog-confirm-button = Remove
 
+## Variables
+##   $count (number) - Number of items
+
 about-logins-confirm-remove-all-dialog-confirm-button-label =
   { $count ->
      [1] Remove
@@ -192,6 +199,8 @@ about-logins-confirm-remove-all-sync-dialog-message=
      [1] This will remove the login you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
     *[other] This will remove all logins you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
   }
+
+##
 
 about-logins-confirm-export-dialog-title = Export logins and passwords
 about-logins-confirm-export-dialog-message = Your passwords will be saved as readable text (e.g., BadP@ssw0rd) so anyone who can open the exported file can view them.

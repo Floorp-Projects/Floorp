@@ -20,12 +20,12 @@ newtab-search-box-search-button =
     .title = Search
     .aria-label = Search
 
-# Variables
-#  $engine (String): the name of the user's default search engine
+# Variables:
+#   $engine (string) - The name of the user's default search engine
 newtab-search-box-handoff-text = Search with { $engine } or enter address
 newtab-search-box-handoff-text-no-engine = Search or enter address
-# Variables
-#  $engine (String): the name of the user's default search engine
+# Variables:
+#   $engine (string) - The name of the user's default search engine
 newtab-search-box-handoff-input =
     .placeholder = Search with { $engine } or enter address
     .title = Search with { $engine } or enter address
@@ -91,7 +91,7 @@ newtab-dismiss-button-tooltip =
 
 # This tooltip is for the context menu of Pocket cards or Topsites
 # Variables:
-#  $title (String): The label or hostname of the site. This is for screen readers when the context menu button is focused/active.
+#   $title (string) - The label or hostname of the site. This is for screen readers when the context menu button is focused/active.
 newtab-menu-content-tooltip =
     .title = Open menu
     .aria-label = Open context menu for { $title }
@@ -164,18 +164,18 @@ newtab-label-download = Downloaded
 
 # This string is used in the story cards to indicate sponsored content
 # Variables:
-#  $sponsorOrSource (String): This is the name of a company or their domain
+#   $sponsorOrSource (string) - The name of a company or their domain
 newtab-label-sponsored = { $sponsorOrSource } · Sponsored
 
 # This string is used at the bottom of story cards to indicate sponsored content
 # Variables:
-#  $sponsor (String): This is the name of a sponsor
+#   $sponsor (string) - The name of a sponsor
 newtab-label-sponsored-by = Sponsored by { $sponsor }
 
 # This string is used under the image of story cards to indicate source and time to read
 # Variables:
-#  $source (String): This is the name of a company or their domain
-#  $timeToRead (Number): This is the estimated number of minutes to read this story
+#   $source (string) - The name of a company or their domain
+#   $timeToRead (number) - The estimated number of minutes to read this story
 newtab-label-source-read-time = { $source } · { $timeToRead } min
 
 ## Section Menu: These strings are displayed in the section context menu and are
@@ -204,7 +204,7 @@ newtab-section-expand-section-label =
 newtab-section-header-topsites = Top Sites
 newtab-section-header-recent-activity = Recent activity
 # Variables:
-#  $provider (String): Name of the corresponding content provider.
+#   $provider (string) - Name of the corresponding content provider.
 newtab-section-header-pocket = Recommended by { $provider }
 
 ## Empty Section States: These show when there are no more items in a section. Ex. When there are no more Pocket story recommendations, in the space where there would have been stories, this is shown instead.
@@ -213,7 +213,7 @@ newtab-empty-section-highlights = Start browsing, and we’ll show some of the g
 
 # Ex. When there are no more Pocket story recommendations, in the space where there would have been stories, this is shown instead.
 # Variables:
-#  $provider (String): Name of the content provider for this section, e.g "Pocket".
+#   $provider (string) - Name of the content provider for this section, e.g "Pocket".
 newtab-empty-section-topstories = You’ve caught up. Check back later for more top stories from { $provider }. Can’t wait? Select a popular topic to find more great stories from around the web.
 
 ## Empty Section (Content Discovery Experience). These show when there are no more stories or when some stories fail to load.
@@ -250,6 +250,8 @@ newtab-error-fallback-refresh-link = Refresh page to try again.
 
 newtab-custom-shortcuts-title = Shortcuts
 newtab-custom-shortcuts-subtitle = Sites you save or visit
+# Variables
+#   $num (number) - Number of rows to display
 newtab-custom-row-selector =
         { $num ->
             [one] { $num } row
