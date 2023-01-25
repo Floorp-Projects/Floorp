@@ -21,7 +21,9 @@ add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(browser, "http://example.com/");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  BrowserTestUtils.loadURI(browser, "http://example.com/");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
   await SpecialPowers.spawn(browser, [], () => {

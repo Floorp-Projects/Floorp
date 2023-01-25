@@ -1,6 +1,7 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_HTTP = "http://example.org/";
 
 // Test for bug 1378377.
