@@ -392,6 +392,24 @@ int I210Copy(const uint16_t* src_y,
              int width,
              int height);
 
+// Copy I410 to I410.
+#define I410ToI410 I410Copy
+LIBYUV_API
+int I410Copy(const uint16_t* src_y,
+             int src_stride_y,
+             const uint16_t* src_u,
+             int src_stride_u,
+             const uint16_t* src_v,
+             int src_stride_v,
+             uint16_t* dst_y,
+             int dst_stride_y,
+             uint16_t* dst_u,
+             int dst_stride_u,
+             uint16_t* dst_v,
+             int dst_stride_v,
+             int width,
+             int height);
+
 // Copy NV12. Supports inverting.
 LIBYUV_API
 int NV12Copy(const uint8_t* src_y,

@@ -561,39 +561,6 @@ void RGB565ToUVRow_LSX(const uint8_t* src_rgb565,
   }
 }
 
-void RGB24ToYRow_LSX(const uint8_t* src_rgb24, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1, dst0;
-  __m128i const_129 = __lsx_vldi(129);
-  __m128i const_br = {0x4219421942194219, 0x4219421942194219};
-  __m128i const_1080 = {0x1080108010801080, 0x1080108010801080};
-  __m128i shuff0 = {0x0B09080605030200, 0x17151412110F0E0C};
-  __m128i shuff1 = {0x0301001E1D1B1A18, 0x0F0D0C0A09070604};
-  __m128i shuff2 = {0x000A000700040001, 0x001600130010000D};
-  __m128i shuff3 = {0x0002001F001C0019, 0x000E000B00080005};
-
-  for (x = 0; x < len; x++) {
-    src0 = __lsx_vld(src_rgb24, 0);
-    src1 = __lsx_vld(src_rgb24, 16);
-    src2 = __lsx_vld(src_rgb24, 32);
-    tmp0 = __lsx_vshuf_b(src1, src0, shuff0);
-    tmp1 = __lsx_vshuf_b(src1, src2, shuff1);
-    tmp2 = __lsx_vshuf_b(src1, src0, shuff2);
-    tmp3 = __lsx_vshuf_b(src1, src2, shuff3);
-    reg0 = __lsx_vmaddwev_h_bu(const_1080, tmp2, const_129);
-    reg1 = __lsx_vmaddwev_h_bu(const_1080, tmp3, const_129);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp1);
-    dst0 = __lsx_vpickod_b(reg1, reg0);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_rgb24 += 48;
-  }
-}
-
 void RGB24ToUVRow_LSX(const uint8_t* src_rgb24,
                       int src_stride_rgb24,
                       uint8_t* dst_u,
@@ -644,39 +611,6 @@ void RGB24ToUVRow_LSX(const uint8_t* src_rgb24,
     dst_v += 8;
     src_rgb24 += 48;
     next_rgb24 += 48;
-  }
-}
-
-void RAWToYRow_LSX(const uint8_t* src_raw, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1, dst0;
-  __m128i const_129 = __lsx_vldi(129);
-  __m128i const_br = {0x1942194219421942, 0x1942194219421942};
-  __m128i const_1080 = {0x1080108010801080, 0x1080108010801080};
-  __m128i shuff0 = {0x0B09080605030200, 0x17151412110F0E0C};
-  __m128i shuff1 = {0x0301001E1D1B1A18, 0x0F0D0C0A09070604};
-  __m128i shuff2 = {0x000A000700040001, 0x001600130010000D};
-  __m128i shuff3 = {0x0002001F001C0019, 0x000E000B00080005};
-
-  for (x = 0; x < len; x++) {
-    src0 = __lsx_vld(src_raw, 0);
-    src1 = __lsx_vld(src_raw, 16);
-    src2 = __lsx_vld(src_raw, 32);
-    tmp0 = __lsx_vshuf_b(src1, src0, shuff0);
-    tmp1 = __lsx_vshuf_b(src1, src2, shuff1);
-    tmp2 = __lsx_vshuf_b(src1, src0, shuff2);
-    tmp3 = __lsx_vshuf_b(src1, src2, shuff3);
-    reg0 = __lsx_vmaddwev_h_bu(const_1080, tmp2, const_129);
-    reg1 = __lsx_vmaddwev_h_bu(const_1080, tmp3, const_129);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp1);
-    dst0 = __lsx_vsrlni_b_h(reg1, reg0, 8);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_raw += 48;
   }
 }
 
@@ -914,62 +848,6 @@ void SobelXYRow_LSX(const uint8_t* src_sobelx,
   }
 }
 
-void ARGBToYJRow_LSX(const uint8_t* src_argb, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2, src3, dst0;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1;
-  __m128i const_128 = __lsx_vldi(0x480);
-  __m128i const_150 = __lsx_vldi(0x96);
-  __m128i const_br = {0x4D1D4D1D4D1D4D1D, 0x4D1D4D1D4D1D4D1D};
-
-  for (x = 0; x < len; x++) {
-    DUP4_ARG2(__lsx_vld, src_argb, 0, src_argb, 16, src_argb, 32, src_argb, 48,
-              src0, src1, src2, src3);
-    tmp0 = __lsx_vpickev_b(src1, src0);
-    tmp1 = __lsx_vpickod_b(src1, src0);
-    tmp2 = __lsx_vpickev_b(src3, src2);
-    tmp3 = __lsx_vpickod_b(src3, src2);
-    reg0 = __lsx_vmaddwev_h_bu(const_128, tmp1, const_150);
-    reg1 = __lsx_vmaddwev_h_bu(const_128, tmp3, const_150);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp2);
-    dst0 = __lsx_vpickod_b(reg1, reg0);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_argb += 64;
-  }
-}
-
-void BGRAToYRow_LSX(const uint8_t* src_bgra, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2, src3, dst0;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1;
-  __m128i const_129 = __lsx_vldi(0x81);
-  __m128i const_br = {0x1942194219421942, 0x1942194219421942};
-  __m128i const_1080 = {0x1080108010801080, 0x1080108010801080};
-
-  for (x = 0; x < len; x++) {
-    DUP4_ARG2(__lsx_vld, src_bgra, 0, src_bgra, 16, src_bgra, 32, src_bgra, 48,
-              src0, src1, src2, src3);
-    tmp0 = __lsx_vpickod_b(src1, src0);
-    tmp1 = __lsx_vpickev_b(src1, src0);
-    tmp2 = __lsx_vpickod_b(src3, src2);
-    tmp3 = __lsx_vpickev_b(src3, src2);
-    reg0 = __lsx_vmaddwod_h_bu(const_1080, tmp1, const_129);
-    reg1 = __lsx_vmaddwod_h_bu(const_1080, tmp3, const_129);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp2);
-    dst0 = __lsx_vsrlni_b_h(reg1, reg0, 8);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_bgra += 64;
-  }
-}
-
 void BGRAToUVRow_LSX(const uint8_t* src_bgra,
                      int src_stride_bgra,
                      uint8_t* dst_u,
@@ -1018,34 +896,6 @@ void BGRAToUVRow_LSX(const uint8_t* src_bgra,
   }
 }
 
-void ABGRToYRow_LSX(const uint8_t* src_abgr, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2, src3, dst0;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1;
-  __m128i const_129 = __lsx_vldi(0x81);
-  __m128i const_br = {0x1942194219421942, 0x1942194219421942};
-  __m128i const_1080 = {0x1080108010801080, 0x1080108010801080};
-
-  for (x = 0; x < len; x++) {
-    DUP4_ARG2(__lsx_vld, src_abgr, 0, src_abgr, 16, src_abgr, 32, src_abgr, 48,
-              src0, src1, src2, src3);
-    tmp0 = __lsx_vpickev_b(src1, src0);
-    tmp1 = __lsx_vpickod_b(src1, src0);
-    tmp2 = __lsx_vpickev_b(src3, src2);
-    tmp3 = __lsx_vpickod_b(src3, src2);
-    reg0 = __lsx_vmaddwev_h_bu(const_1080, tmp1, const_129);
-    reg1 = __lsx_vmaddwev_h_bu(const_1080, tmp3, const_129);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp2);
-    dst0 = __lsx_vsrlni_b_h(reg1, reg0, 8);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_abgr += 64;
-  }
-}
-
 void ABGRToUVRow_LSX(const uint8_t* src_abgr,
                      int src_stride_abgr,
                      uint8_t* dst_u,
@@ -1091,34 +941,6 @@ void ABGRToUVRow_LSX(const uint8_t* src_abgr,
     dst_v += 8;
     src_abgr += 64;
     next_abgr += 64;
-  }
-}
-
-void RGBAToYRow_LSX(const uint8_t* src_rgba, uint8_t* dst_y, int width) {
-  int x;
-  int len = width / 16;
-  __m128i src0, src1, src2, src3, dst0;
-  __m128i tmp0, tmp1, tmp2, tmp3;
-  __m128i reg0, reg1;
-  __m128i const_129 = __lsx_vldi(0x81);
-  __m128i const_br = {0x4219421942194219, 0x4219421942194219};
-  __m128i const_1080 = {0x1080108010801080, 0x1080108010801080};
-
-  for (x = 0; x < len; x++) {
-    DUP4_ARG2(__lsx_vld, src_rgba, 0, src_rgba, 16, src_rgba, 32, src_rgba, 48,
-              src0, src1, src2, src3);
-    tmp0 = __lsx_vpickod_b(src1, src0);
-    tmp1 = __lsx_vpickev_b(src1, src0);
-    tmp2 = __lsx_vpickod_b(src3, src2);
-    tmp3 = __lsx_vpickev_b(src3, src2);
-    reg0 = __lsx_vmaddwod_h_bu(const_1080, tmp1, const_129);
-    reg1 = __lsx_vmaddwod_h_bu(const_1080, tmp3, const_129);
-    reg0 = __lsx_vdp2add_h_bu(reg0, const_br, tmp0);
-    reg1 = __lsx_vdp2add_h_bu(reg1, const_br, tmp2);
-    dst0 = __lsx_vsrlni_b_h(reg1, reg0, 8);
-    __lsx_vst(dst0, dst_y, 0);
-    dst_y += 16;
-    src_rgba += 64;
   }
 }
 
@@ -1819,6 +1641,212 @@ void HalfFloatRow_LSX(const uint16_t* src,
     src += 32;
     dst += 32;
   }
+}
+
+struct RgbConstants {
+  uint8_t kRGBToY[4];
+  uint16_t kAddY;
+  uint16_t pad;
+};
+
+// RGB to JPeg coefficients
+// B * 0.1140 coefficient = 29
+// G * 0.5870 coefficient = 150
+// R * 0.2990 coefficient = 77
+// Add 0.5 = 0x80
+static const struct RgbConstants kRgb24JPEGConstants = {{29, 150, 77, 0},
+                                                        128,
+                                                        0};
+
+static const struct RgbConstants kRawJPEGConstants = {{77, 150, 29, 0}, 128, 0};
+
+// RGB to BT.601 coefficients
+// B * 0.1016 coefficient = 25
+// G * 0.5078 coefficient = 129
+// R * 0.2578 coefficient = 66
+// Add 16.5 = 0x1080
+
+static const struct RgbConstants kRgb24I601Constants = {{25, 129, 66, 0},
+                                                        0x1080,
+                                                        0};
+
+static const struct RgbConstants kRawI601Constants = {{66, 129, 25, 0},
+                                                      0x1080,
+                                                      0};
+
+// ARGB expects first 3 values to contain RGB and 4th value is ignored.
+static void ARGBToYMatrixRow_LSX(const uint8_t* src_argb,
+                                 uint8_t* dst_y,
+                                 int width,
+                                 const struct RgbConstants* rgbconstants) {
+    asm volatile(
+      "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
+      "vldrepl.h      $vr3,  %3,    4             \n\t"  // load rgbconstants
+      "1:                                         \n\t"
+      "vld            $vr4,  %0,    0             \n\t"
+      "vld            $vr5,  %0,    16            \n\t"
+      "vld            $vr6,  %0,    32            \n\t"
+      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of ARGB
+      "vor.v          $vr12, $vr3,  $vr3          \n\t"
+      "vor.v          $vr13, $vr3,  $vr3          \n\t"
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
+      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  //BR
+      "vpickev.b      $vr10, $vr7,  $vr6          \n\t"
+      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  //GA
+      "vpickod.b      $vr11, $vr7,  $vr6          \n\t"
+      "vmaddwev.h.bu  $vr12, $vr8,  $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr13, $vr10, $vr0          \n\t"
+      "vmaddwev.h.bu  $vr12, $vr9,  $vr1          \n\t"  //G
+      "vmaddwev.h.bu  $vr13, $vr11, $vr1          \n\t"
+      "vmaddwod.h.bu  $vr12, $vr8,  $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr13, $vr10, $vr2          \n\t"
+      "addi.d         %0,    %0,    64            \n\t"
+      "vpickod.b      $vr10, $vr13, $vr12         \n\t"
+      "vst            $vr10, %1,    0             \n\t"
+      "addi.d         %1,    %1,    16            \n\t"
+      "bnez           %2,    1b                   \n\t"
+      : "+&r"(src_argb),    // %0
+        "+&r"(dst_y),       // %1
+        "+&r"(width)        // %2
+      : "r"(rgbconstants)
+      : "memory"
+    );
+}
+
+void ARGBToYRow_LSX(const uint8_t* src_argb, uint8_t* dst_y, int width) {
+  ARGBToYMatrixRow_LSX(src_argb, dst_y, width, &kRgb24I601Constants);
+}
+
+void ARGBToYJRow_LSX(const uint8_t* src_argb, uint8_t* dst_yj, int width) {
+  ARGBToYMatrixRow_LSX(src_argb, dst_yj, width, &kRgb24JPEGConstants);
+}
+
+void ABGRToYRow_LSX(const uint8_t* src_abgr, uint8_t* dst_y, int width) {
+  ARGBToYMatrixRow_LSX(src_abgr, dst_y, width, &kRawI601Constants);
+}
+
+void ABGRToYJRow_LSX(const uint8_t* src_abgr, uint8_t* dst_yj, int width) {
+  ARGBToYMatrixRow_LSX(src_abgr, dst_yj, width, &kRawJPEGConstants);
+}
+
+// RGBA expects first value to be A and ignored, then 3 values to contain RGB.
+// Same code as ARGB, except the LD4
+static void RGBAToYMatrixRow_LSX(const uint8_t* src_rgba,
+                                 uint8_t* dst_y,
+                                 int width,
+                                 const struct RgbConstants* rgbconstants) {
+    asm volatile(
+      "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
+      "vldrepl.h      $vr3,  %3,    4             \n\t"  // load rgbconstants
+      "1:                                         \n\t"
+      "vld            $vr4,  %0,    0             \n\t"
+      "vld            $vr5,  %0,    16            \n\t"
+      "vld            $vr6,  %0,    32            \n\t"
+      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of RGBA
+      "vor.v          $vr12, $vr3,  $vr3          \n\t"
+      "vor.v          $vr13, $vr3,  $vr3          \n\t"
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
+      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  //AG
+      "vpickev.b      $vr10, $vr7,  $vr6          \n\t"
+      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  //BR
+      "vpickod.b      $vr11, $vr7,  $vr6          \n\t"
+      "vmaddwev.h.bu  $vr12, $vr9,  $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr13, $vr11, $vr0          \n\t"
+      "vmaddwod.h.bu  $vr12, $vr8,  $vr1          \n\t"  //G
+      "vmaddwod.h.bu  $vr13, $vr10, $vr1          \n\t"
+      "vmaddwod.h.bu  $vr12, $vr9,  $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr13, $vr11, $vr2          \n\t"
+      "addi.d         %0,    %0,    64            \n\t"
+      "vpickod.b      $vr10, $vr13, $vr12         \n\t"
+      "vst            $vr10, %1,    0             \n\t"
+      "addi.d         %1,    %1,    16            \n\t"
+      "bnez           %2,    1b                   \n\t"
+      : "+&r"(src_rgba),    // %0
+        "+&r"(dst_y),       // %1
+        "+&r"(width)        // %2
+      : "r"(rgbconstants)
+      : "memory"
+    );
+}
+
+void RGBAToYRow_LSX(const uint8_t* src_rgba, uint8_t* dst_y, int width) {
+  RGBAToYMatrixRow_LSX(src_rgba, dst_y, width, &kRgb24I601Constants);
+}
+
+void RGBAToYJRow_LSX(const uint8_t* src_rgba, uint8_t* dst_yj, int width) {
+  RGBAToYMatrixRow_LSX(src_rgba, dst_yj, width, &kRgb24JPEGConstants);
+}
+
+void BGRAToYRow_LSX(const uint8_t* src_bgra, uint8_t* dst_y, int width) {
+  RGBAToYMatrixRow_LSX(src_bgra, dst_y, width, &kRawI601Constants);
+}
+
+static void RGBToYMatrixRow_LSX(const uint8_t* src_rgba,
+                                uint8_t* dst_y,
+                                int width,
+                                const struct RgbConstants* rgbconstants) {
+    int8_t shuff[64] = {0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23,
+                        24, 26, 27, 29, 30, 0, 1, 3, 4, 6, 7, 9, 10, 12, 13, 15,
+                        1, 0, 4, 0, 7, 0, 10, 0, 13, 0, 16, 0, 19, 0, 22, 0,
+                        25, 0, 28, 0, 31, 0, 2, 0, 5, 0, 8, 0, 11, 0, 14, 0};
+    asm volatile(
+      "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
+      "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
+      "vldrepl.h      $vr3,  %3,    4             \n\t"  // load rgbconstants
+      "vld            $vr4,  %4,    0             \n\t"  // load shuff
+      "vld            $vr5,  %4,    16            \n\t"
+      "vld            $vr6,  %4,    32            \n\t"
+      "vld            $vr7,  %4,    48            \n\t"
+      "1:                                         \n\t"
+      "vld            $vr8,  %0,    0             \n\t"
+      "vld            $vr9,  %0,    16            \n\t"
+      "vld            $vr10, %0,    32            \n\t"  // load 16 pixels of RGB
+      "vor.v          $vr12, $vr3,  $vr3          \n\t"
+      "vor.v          $vr13, $vr3,  $vr3          \n\t"
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
+      "vshuf.b        $vr14, $vr9,  $vr8,  $vr4   \n\t"
+      "vshuf.b        $vr15, $vr9,  $vr10, $vr5   \n\t"
+      "vshuf.b        $vr16, $vr9,  $vr8,  $vr6   \n\t"
+      "vshuf.b        $vr17, $vr9,  $vr10, $vr7   \n\t"
+      "vmaddwev.h.bu  $vr12, $vr16, $vr1          \n\t"  //G
+      "vmaddwev.h.bu  $vr13, $vr17, $vr1          \n\t"
+      "vmaddwev.h.bu  $vr12, $vr14, $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr13, $vr15, $vr0          \n\t"
+      "vmaddwod.h.bu  $vr12, $vr14, $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr13, $vr15, $vr2          \n\t"
+      "addi.d         %0,    %0,    48            \n\t"
+      "vpickod.b      $vr10, $vr13, $vr12         \n\t"
+      "vst            $vr10, %1,    0             \n\t"
+      "addi.d         %1,    %1,    16            \n\t"
+      "bnez           %2,    1b                   \n\t"
+      : "+&r"(src_rgba),    // %0
+        "+&r"(dst_y),       // %1
+        "+&r"(width)        // %2
+      : "r"(rgbconstants),  // %3
+        "r"(shuff)          // %4
+      : "memory"
+    );
+}
+
+void RGB24ToYJRow_LSX(const uint8_t* src_rgb24, uint8_t* dst_yj, int width) {
+  RGBToYMatrixRow_LSX(src_rgb24, dst_yj, width, &kRgb24JPEGConstants);
+}
+
+void RAWToYJRow_LSX(const uint8_t* src_raw, uint8_t* dst_yj, int width) {
+  RGBToYMatrixRow_LSX(src_raw, dst_yj, width, &kRawJPEGConstants);
+}
+
+void RGB24ToYRow_LSX(const uint8_t* src_rgb24, uint8_t* dst_y, int width) {
+  RGBToYMatrixRow_LSX(src_rgb24, dst_y, width, &kRgb24I601Constants);
+}
+
+void RAWToYRow_LSX(const uint8_t* src_raw, uint8_t* dst_y, int width) {
+  RGBToYMatrixRow_LSX(src_raw, dst_y, width, &kRawI601Constants);
 }
 
 #ifdef __cplusplus

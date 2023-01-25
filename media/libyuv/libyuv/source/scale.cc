@@ -198,6 +198,51 @@ static void ScalePlaneDown2_16(int src_width,
   }
 }
 
+void ScalePlaneDown2_16To8(int src_width,
+                           int src_height,
+                           int dst_width,
+                           int dst_height,
+                           int src_stride,
+                           int dst_stride,
+                           const uint16_t* src_ptr,
+                           uint8_t* dst_ptr,
+                           int scale,
+                           enum FilterMode filtering) {
+  int y;
+  void (*ScaleRowDown2)(const uint16_t* src_ptr, ptrdiff_t src_stride,
+                        uint8_t* dst_ptr, int dst_width, int scale) =
+      (src_width & 1)
+          ? (filtering == kFilterNone
+                 ? ScaleRowDown2_16To8_Odd_C
+                 : (filtering == kFilterLinear ? ScaleRowDown2Linear_16To8_Odd_C
+                                               : ScaleRowDown2Box_16To8_Odd_C))
+          : (filtering == kFilterNone
+                 ? ScaleRowDown2_16To8_C
+                 : (filtering == kFilterLinear ? ScaleRowDown2Linear_16To8_C
+                                               : ScaleRowDown2Box_16To8_C));
+  int row_stride = src_stride * 2;
+  (void)dst_height;
+  if (!filtering) {
+    src_ptr += src_stride;  // Point to odd rows.
+    src_stride = 0;
+  }
+
+  if (filtering == kFilterLinear) {
+    src_stride = 0;
+  }
+  for (y = 0; y < src_height / 2; ++y) {
+    ScaleRowDown2(src_ptr, src_stride, dst_ptr, dst_width, scale);
+    src_ptr += row_stride;
+    dst_ptr += dst_stride;
+  }
+  if (src_height & 1) {
+    if (!filtering) {
+      src_ptr -= src_stride;  // Point to last row.
+    }
+    ScaleRowDown2(src_ptr, 0, dst_ptr, dst_width, scale);
+  }
+}
+
 // Scale plane, 1/4
 // This is an optimized version for scaling down a plane to 1/4 of
 // its original size.
@@ -775,9 +820,9 @@ static void ScaleAddCols2_C(int dst_width,
     int ix = x >> 16;
     x += dx;
     boxwidth = MIN1((x >> 16) - ix);
-    *dst_ptr++ =
-        SumPixels(boxwidth, src_ptr + ix) * scaletbl[boxwidth - minboxwidth] >>
-        16;
+    *dst_ptr++ = (uint8_t)(SumPixels(boxwidth, src_ptr + ix) *
+                               scaletbl[boxwidth - minboxwidth] >>
+                           16);
   }
 }
 
@@ -814,7 +859,7 @@ static void ScaleAddCols0_C(int dst_width,
   (void)dx;
   src_ptr += (x >> 16);
   for (i = 0; i < dst_width; ++i) {
-    *dst_ptr++ = src_ptr[i] * scaleval >> 16;
+    *dst_ptr++ = (uint8_t)(src_ptr[i] * scaleval >> 16);
   }
 }
 
@@ -829,7 +874,7 @@ static void ScaleAddCols1_C(int dst_width,
   int i;
   x >>= 16;
   for (i = 0; i < dst_width; ++i) {
-    *dst_ptr++ = SumPixels(boxwidth, src_ptr + x) * scaleval >> 16;
+    *dst_ptr++ = (uint8_t)(SumPixels(boxwidth, src_ptr + x) * scaleval >> 16);
     x += boxwidth;
   }
 }

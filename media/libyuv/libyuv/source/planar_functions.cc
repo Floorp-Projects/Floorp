@@ -333,6 +333,45 @@ int I210Copy(const uint16_t* src_y,
   return 0;
 }
 
+// Copy I410.
+LIBYUV_API
+int I410Copy(const uint16_t* src_y,
+             int src_stride_y,
+             const uint16_t* src_u,
+             int src_stride_u,
+             const uint16_t* src_v,
+             int src_stride_v,
+             uint16_t* dst_y,
+             int dst_stride_y,
+             uint16_t* dst_u,
+             int dst_stride_u,
+             uint16_t* dst_v,
+             int dst_stride_v,
+             int width,
+             int height) {
+  if ((!src_y && dst_y) || !src_u || !src_v || !dst_u || !dst_v || width <= 0 ||
+      height == 0) {
+    return -1;
+  }
+  // Negative height means invert the image.
+  if (height < 0) {
+    height = -height;
+    src_y = src_y + (height - 1) * src_stride_y;
+    src_u = src_u + (height - 1) * src_stride_u;
+    src_v = src_v + (height - 1) * src_stride_v;
+    src_stride_y = -src_stride_y;
+    src_stride_u = -src_stride_u;
+    src_stride_v = -src_stride_v;
+  }
+
+  if (dst_y) {
+    CopyPlane_16(src_y, src_stride_y, dst_y, dst_stride_y, width, height);
+  }
+  CopyPlane_16(src_u, src_stride_u, dst_u, dst_stride_u, width, height);
+  CopyPlane_16(src_v, src_stride_v, dst_v, dst_stride_v, width, height);
+  return 0;
+}
+
 // Copy I400.
 LIBYUV_API
 int I400ToI400(const uint8_t* src_y,
@@ -3196,6 +3235,7 @@ int RAWToRGB24(const uint8_t* src_raw,
   return 0;
 }
 
+// TODO(fbarchard): Consider uint8_t value
 LIBYUV_API
 void SetPlane(uint8_t* dst_y,
               int dst_stride_y,
@@ -3203,7 +3243,7 @@ void SetPlane(uint8_t* dst_y,
               int height,
               uint32_t value) {
   int y;
-  void (*SetRow)(uint8_t * dst, uint8_t value, int width) = SetRow_C;
+  void (*SetRow)(uint8_t* dst, uint8_t value, int width) = SetRow_C;
 
   if (width <= 0 || height == 0) {
     return;
@@ -3256,7 +3296,7 @@ void SetPlane(uint8_t* dst_y,
 
   // Set plane
   for (y = 0; y < height; ++y) {
-    SetRow(dst_y, value, width);
+    SetRow(dst_y, (uint8_t)value, width);
     dst_y += dst_stride_y;
   }
 }
@@ -3304,7 +3344,7 @@ int ARGBRect(uint8_t* dst_argb,
              int height,
              uint32_t value) {
   int y;
-  void (*ARGBSetRow)(uint8_t * dst_argb, uint32_t value, int width) =
+  void (*ARGBSetRow)(uint8_t* dst_argb, uint32_t value, int width) =
       ARGBSetRow_C;
   if (!dst_argb || width <= 0 || height == 0 || dst_x < 0 || dst_y < 0) {
     return -1;
@@ -3609,7 +3649,7 @@ int ARGBSepia(uint8_t* dst_argb,
               int width,
               int height) {
   int y;
-  void (*ARGBSepiaRow)(uint8_t * dst_argb, int width) = ARGBSepiaRow_C;
+  void (*ARGBSepiaRow)(uint8_t* dst_argb, int width) = ARGBSepiaRow_C;
   uint8_t* dst = dst_argb + dst_y * dst_stride_argb + dst_x * 4;
   if (!dst_argb || width <= 0 || height <= 0 || dst_x < 0 || dst_y < 0) {
     return -1;
@@ -3752,7 +3792,7 @@ int ARGBColorTable(uint8_t* dst_argb,
                    int width,
                    int height) {
   int y;
-  void (*ARGBColorTableRow)(uint8_t * dst_argb, const uint8_t* table_argb,
+  void (*ARGBColorTableRow)(uint8_t* dst_argb, const uint8_t* table_argb,
                             int width) = ARGBColorTableRow_C;
   uint8_t* dst = dst_argb + dst_y * dst_stride_argb + dst_x * 4;
   if (!dst_argb || !table_argb || width <= 0 || height <= 0 || dst_x < 0 ||
@@ -3788,7 +3828,7 @@ int RGBColorTable(uint8_t* dst_argb,
                   int width,
                   int height) {
   int y;
-  void (*RGBColorTableRow)(uint8_t * dst_argb, const uint8_t* table_argb,
+  void (*RGBColorTableRow)(uint8_t* dst_argb, const uint8_t* table_argb,
                            int width) = RGBColorTableRow_C;
   uint8_t* dst = dst_argb + dst_y * dst_stride_argb + dst_x * 4;
   if (!dst_argb || !table_argb || width <= 0 || height <= 0 || dst_x < 0 ||
@@ -3833,7 +3873,7 @@ int ARGBQuantize(uint8_t* dst_argb,
                  int width,
                  int height) {
   int y;
-  void (*ARGBQuantizeRow)(uint8_t * dst_argb, int scale, int interval_size,
+  void (*ARGBQuantizeRow)(uint8_t* dst_argb, int scale, int interval_size,
                           int interval_offset, int width) = ARGBQuantizeRow_C;
   uint8_t* dst = dst_argb + dst_y * dst_stride_argb + dst_x * 4;
   if (!dst_argb || width <= 0 || height <= 0 || dst_x < 0 || dst_y < 0 ||
@@ -4086,7 +4126,7 @@ int InterpolatePlane(const uint8_t* src0,
                      int height,
                      int interpolation) {
   int y;
-  void (*InterpolateRow)(uint8_t * dst_ptr, const uint8_t* src_ptr,
+  void (*InterpolateRow)(uint8_t* dst_ptr, const uint8_t* src_ptr,
                          ptrdiff_t src_stride, int dst_width,
                          int source_y_fraction) = InterpolateRow_C;
   if (!src0 || !src1 || !dst || width <= 0 || height == 0) {
@@ -4166,7 +4206,7 @@ int InterpolatePlane_16(const uint16_t* src0,
                         int height,
                         int interpolation) {
   int y;
-  void (*InterpolateRow_16)(uint16_t * dst_ptr, const uint16_t* src_ptr,
+  void (*InterpolateRow_16)(uint16_t* dst_ptr, const uint16_t* src_ptr,
                             ptrdiff_t src_stride, int dst_width,
                             int source_y_fraction) = InterpolateRow_16_C;
   if (!src0 || !src1 || !dst || width <= 0 || height == 0) {
@@ -5281,7 +5321,7 @@ int UYVYToNV12(const uint8_t* src_uyvy,
   int halfwidth = (width + 1) >> 1;
   void (*SplitUVRow)(const uint8_t* src_uv, uint8_t* dst_u, uint8_t* dst_v,
                      int width) = SplitUVRow_C;
-  void (*InterpolateRow)(uint8_t * dst_ptr, const uint8_t* src_ptr,
+  void (*InterpolateRow)(uint8_t* dst_ptr, const uint8_t* src_ptr,
                          ptrdiff_t src_stride, int dst_width,
                          int source_y_fraction) = InterpolateRow_C;
 
