@@ -250,7 +250,9 @@ class DateTimeTestHelper {
       let listener = () => {
         if (
           this.frame.browsingContext.currentURI.spec !=
-          "chrome://global/content/datepicker.xhtml"
+            "chrome://global/content/datepicker.xhtml" &&
+          this.frame.browsingContext.currentURI.spec !=
+            "chrome://global/content/timepicker.xhtml"
         ) {
           return;
         }
