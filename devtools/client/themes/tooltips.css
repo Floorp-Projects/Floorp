@@ -655,6 +655,10 @@ strong {
   transform: none;
 }
 
+.event-tooltip-listener-toggle-checkbox {
+  flex-shrink: 0;
+}
+
 .event-tooltip-debugger-icon {
   -moz-context-properties: stroke;
   stroke: var(--theme-icon-color);
