@@ -3,6 +3,7 @@
 <head>
   <title>Test for Bug 1202933</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
@@ -20,11 +21,6 @@ const notifier = Cc["@mozilla.org/alerts-service;1"]
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
   /* eslint-env mozilla/chrome-script */
-  addMessageListener("anyXULAlertsVisible", function() {
-    var windows = Services.wm.getEnumerator("alert:alert");
-    return windows.hasMoreElements();
-  });
-
   addMessageListener("getAlertSource", function() {
     var alertWindows = Services.wm.getEnumerator("alert:alert");
     if (!alertWindows) {
@@ -100,13 +96,6 @@ function runTest() {
   }
 
   ok(true, "Alerts service exists in this application");
-
-  // sendSyncMessage returns an array of arrays. See the comments in
-  // test_alerts_noobserve.html and test_SpecialPowersLoadChromeScript.html.
-  add_task(async () => {
-    var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
-    ok(!alertsVisible, "Alerts should not be present at the start of the test.");
-  });
 
   add_task(testNoPrincipal);
   add_task(testSystemPrincipal);

@@ -5,6 +5,7 @@
 <head>
   <title>Test for Alerts Service</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
@@ -30,8 +31,6 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
     return windows.hasMoreElements();
   }
 
-  addMessageListener("anyXULAlertsVisible", anyXULAlertsVisible);
-
   addMessageListener("waitForAlerts", function waitForAlerts() {
     if (anyXULAlertsVisible()) {
       setTimeout(waitForAlerts, 1000);
@@ -50,10 +49,7 @@ function waitForAlertsThenFinish() {
   chromeScript.sendAsyncMessage("waitForAlerts");
 }
 
-async function runTest() {
-  var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
-  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
-
+function runTest() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
   } else {
