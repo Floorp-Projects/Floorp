@@ -9,6 +9,7 @@
 #include "nsIURIMutator.h"
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
+#include "WebAuthnEnumStrings.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
@@ -313,7 +314,8 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       // If current.type does not contain a PublicKeyCredentialType
       // supported by this implementation, then stop processing current and move
       // on to the next element in mPubKeyCredParams.
-      if (!aOptions.mPubKeyCredParams[a].mType.EqualsLiteral("public-key")) {
+      if (!aOptions.mPubKeyCredParams[a].mType.EqualsLiteral(
+              MOZ_WEBAUTHN_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY)) {
         continue;
       }
 
@@ -546,7 +548,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   nsTArray<WebAuthnScopedCredential> allowList;
   for (const auto& s : aOptions.mAllowCredentials) {
-    if (s.mType.EqualsLiteral("public-key")) {
+    if (s.mType.EqualsLiteral(
+            MOZ_WEBAUTHN_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY)) {
       WebAuthnScopedCredential c;
       CryptoBuffer cb;
       cb.Assign(s.mId);
@@ -556,16 +559,21 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       if (s.mTransports.WasPassed()) {
         uint8_t transports = 0;
 
-        // Transports is a string, but we match it to an enumeration so
-        // that we have forward-compatibility, ignoring unknown transports.
+        // We ignore unknown transports for forward-compatibility, but this
+        // needs to be reviewed if values are added to the
+        // AuthenticatorTransport enum.
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
         for (const nsAString& str : s.mTransports.Value()) {
-          if (str.EqualsLiteral("usb")) {
+          if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
-          } else if (str.EqualsLiteral("nfc")) {
+          } else if (str.EqualsLiteral(
+                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC)) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_NFC;
-          } else if (str.EqualsLiteral("ble")) {
+          } else if (str.EqualsLiteral(
+                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE)) {
             transports |= U2F_AUTHENTICATOR_TRANSPORT_BLE;
-          } else if (str.EqualsLiteral("internal")) {
+          } else if (str.EqualsLiteral(
+                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
             transports |= CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL;
           }
         }

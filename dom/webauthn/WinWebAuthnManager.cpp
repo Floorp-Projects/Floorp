@@ -11,6 +11,7 @@
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
 #include "nsWindowsHelpers.h"
+#include "WebAuthnEnumStrings.h"
 #include "winwebauthn/webauthn.h"
 #include "WinWebAuthnManager.h"
 
@@ -233,11 +234,17 @@ void WinWebAuthnManager::Register(
 
     const nsString& userVerificationRequirement =
         sel.userVerificationRequirement();
-    if (userVerificationRequirement.EqualsLiteral("required")) {
+    // This mapping needs to be reviewed if values are added to the
+    // UserVerificationRequirement enum.
+    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+    if (userVerificationRequirement.EqualsLiteral(
+            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
       winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-    } else if (userVerificationRequirement.EqualsLiteral("preferred")) {
+    } else if (userVerificationRequirement.EqualsLiteral(
+                   MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
       winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-    } else if (userVerificationRequirement.EqualsLiteral("discouraged")) {
+    } else if (userVerificationRequirement.EqualsLiteral(
+                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
       winUserVerificationReq =
           WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
     } else {
@@ -247,9 +254,14 @@ void WinWebAuthnManager::Register(
     if (sel.authenticatorAttachment().isSome()) {
       const nsString& authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      if (authenticatorAttachment.EqualsLiteral("platform")) {
+      // This mapping needs to be reviewed if values are added to the
+      // AuthenticatorAttachement enum.
+      static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+      if (authenticatorAttachment.EqualsLiteral(
+              MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
         winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
-      } else if (authenticatorAttachment.EqualsLiteral("cross-platform")) {
+      } else if (authenticatorAttachment.EqualsLiteral(
+                     MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
         winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
       } else {
         winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
@@ -260,11 +272,17 @@ void WinWebAuthnManager::Register(
 
     // AttestationConveyance
     const nsString& attestation = extra.attestationConveyancePreference();
-    if (attestation.EqualsLiteral("none")) {
+    // This mapping needs to be reviewed if values are added to the
+    // AttestationConveyancePreference enum.
+    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+    if (attestation.EqualsLiteral(
+            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE)) {
       winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
-    } else if (attestation.EqualsLiteral("indirect")) {
+    } else if (attestation.EqualsLiteral(
+                   MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT)) {
       winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
-    } else if (attestation.EqualsLiteral("direct")) {
+    } else if (attestation.EqualsLiteral(
+                   MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT)) {
       winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
     } else {
       winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
@@ -559,11 +577,17 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
     // User Verification Requirement
     const nsString& userVerificationReq = extra.userVerificationRequirement();
-    if (userVerificationReq.EqualsLiteral("required")) {
+    // This mapping needs to be reviewed if values are added to the
+    // UserVerificationRequirement enum.
+    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+    if (userVerificationReq.EqualsLiteral(
+            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
       winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-    } else if (userVerificationReq.EqualsLiteral("preferred")) {
+    } else if (userVerificationReq.EqualsLiteral(
+                   MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
       winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-    } else if (userVerificationReq.EqualsLiteral("discouraged")) {
+    } else if (userVerificationReq.EqualsLiteral(
+                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
       winUserVerificationReq =
           WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
     } else {
