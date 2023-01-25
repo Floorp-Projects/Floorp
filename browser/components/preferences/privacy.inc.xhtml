@@ -855,10 +855,12 @@
         <label id="notificationPermissionsLabel"
                class="tail-with-learn-more"
                data-l10n-id="permissions-notification"/>
-        <label id="notificationPermissionsLearnMore"
-               class="learnMore"
-               is="text-link"
-               data-l10n-id="permissions-notification-link"/>
+        <html:a is="moz-support-link"
+                id="notificationPermissionsLearnMore"
+                class="learnMore"
+                data-l10n-id="permissions-notification-link"
+                support-page="push"
+        />
       </description>
       <hbox pack="end">
         <button id="notificationSettingsButton"
