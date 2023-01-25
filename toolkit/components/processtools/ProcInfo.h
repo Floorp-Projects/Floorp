@@ -75,6 +75,7 @@ enum class UtilityActorName {
   AudioDecoder_WMF,
   MfMediaEngineCDM,
   JSOracle,
+  WindowsUtils,
 };
 
 // String that will be used e.g. to annotate crash reports

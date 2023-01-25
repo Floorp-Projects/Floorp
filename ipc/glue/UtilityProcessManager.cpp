@@ -21,6 +21,10 @@
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 
+#ifdef XP_WIN
+#  include "mozilla/dom/WindowsUtilsParent.h"
+#endif
+
 #include "mozilla/GeckoArgs.h"
 
 namespace mozilla::ipc {
@@ -370,6 +374,41 @@ RefPtr<UtilityProcessManager::JSOraclePromise>
 UtilityProcessManager::StartJSOracle(dom::JSOracleParent* aParent) {
   return StartUtility(RefPtr{aParent}, SandboxingKind::GENERIC_UTILITY);
 }
+
+#ifdef XP_WIN
+
+// Windows Utils
+
+RefPtr<UtilityProcessManager::WindowsUtilsPromise>
+UtilityProcessManager::GetWindowsUtilsPromise() {
+  RefPtr<UtilityProcessManager> self = this;
+  if (!mWindowsUtils) {
+    mWindowsUtils = new dom::WindowsUtilsParent();
+  }
+
+  RefPtr<dom::WindowsUtilsParent> wup = mWindowsUtils;
+  MOZ_ASSERT(wup, "Unable to get a singleton for WindowsUtils");
+  return StartUtility(wup, SandboxingKind::WINDOWS_UTILS)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self, wup]() {
+            if (!wup->CanSend()) {
+              MOZ_ASSERT(false, "WindowsUtilsParent can't send");
+              return WindowsUtilsPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                          __func__);
+            }
+            return WindowsUtilsPromise::CreateAndResolve(wup, __func__);
+          },
+          [](nsresult aError) {
+            MOZ_ASSERT_UNREACHABLE(
+                "PWindowsUtils: failure when starting actor");
+            return WindowsUtilsPromise::CreateAndReject(aError, __func__);
+          });
+}
+
+void UtilityProcessManager::ReleaseWindowsUtils() { mWindowsUtils = nullptr; }
+
+#endif  // XP_WIN
 
 bool UtilityProcessManager::IsProcessLaunching(SandboxingKind aSandbox) {
   MOZ_ASSERT(NS_IsMainThread());
