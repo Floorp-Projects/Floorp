@@ -494,7 +494,8 @@ class ProviderSearchTips extends UrlbarProvider {
       let { documentRequest } = window.gBrowser.selectedBrowser.webProgress;
       if (
         documentRequest instanceof Ci.nsIChannel &&
-        documentRequest.originalURI?.spec != originalUri?.spec
+        documentRequest.originalURI?.spec != originalUri?.spec &&
+        (!isNewtab || originalUri)
       ) {
         return;
       }
