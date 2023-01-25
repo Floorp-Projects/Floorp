@@ -463,12 +463,18 @@ void HttpChannelChild::OnStartRequest(
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_EXP_MS,
         cosString, mAsyncOpenTime, aArgs.timing().transactionPending());
+    PerfStats::RecordMeasurement(
+        PerfStats::Metric::HttpChannelAsyncOpenToTransactionPending,
+        aArgs.timing().transactionPending() - mAsyncOpenTime);
   }
 
   if (!aArgs.timing().responseStart().IsNull()) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_RESPONSE_START_PARENT_TO_CONTENT_EXP_MS, cosString,
         aArgs.timing().responseStart(), TimeStamp::Now());
+    PerfStats::RecordMeasurement(
+        PerfStats::Metric::HttpChannelResponseStartParentToContent,
+        TimeStamp::Now() - aArgs.timing().responseStart());
   }
 
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
@@ -918,6 +924,9 @@ void HttpChannelChild::OnStopRequest(
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_RESPONSE_END_PARENT_TO_CONTENT_MS, cosString,
         aTiming.responseEnd(), TimeStamp::Now());
+    PerfStats::RecordMeasurement(
+        PerfStats::Metric::HttpChannelResponseEndParentToContent,
+        TimeStamp::Now() - aTiming.responseEnd());
   }
 
   mResponseTrailers = MakeUnique<nsHttpHeaderArray>(aResponseTrailers);
