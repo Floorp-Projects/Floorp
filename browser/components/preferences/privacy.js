@@ -736,10 +736,6 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showSiteDataSettings
     );
-    let url =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "storage-permissions";
-    document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
 
     this.initCookieBannerHandling();
 
