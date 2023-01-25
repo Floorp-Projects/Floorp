@@ -1927,7 +1927,8 @@ async function initializeTempMirrorEntities(db) {
     /* We record the original level of the removed item in the tree so that we
        can notify children before parents. */
     level INTEGER NOT NULL DEFAULT -1,
-    isUntagging BOOLEAN NOT NULL DEFAULT 0
+    isUntagging BOOLEAN NOT NULL DEFAULT 0,
+    keywordRemoved BOOLEAN NOT NULL DEFAULT 0
   )`);
 
   await db.execute(
@@ -2114,7 +2115,7 @@ class BookmarkObserverRecorder {
     await this.db.execute(
       `SELECT v.itemId AS id, v.parentId, v.parentGuid, v.position, v.type,
               (SELECT h.url FROM moz_places h WHERE h.id = v.placeId) AS url,
-              v.title, v.guid, v.isUntagging
+              v.title, v.guid, v.isUntagging, v.keywordRemoved
        FROM itemsRemoved v
        ${this.orderBy("v.level", "v.parentId", "v.position")}`,
       null,
@@ -2135,6 +2136,9 @@ class BookmarkObserverRecorder {
           isUntagging: row.getResultByName("isUntagging"),
         };
         this.noteItemRemoved(info);
+        if (row.getResultByName("keywordRemoved")) {
+          this.shouldInvalidateKeywords = true;
+        }
       }
     );
     if (this.signal.aborted) {

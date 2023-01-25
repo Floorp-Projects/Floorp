@@ -1473,3 +1473,130 @@ add_task(async function test_newer_move_to_deleted() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_remotely_deleted_also_removes_keyword() {
+  let buf = await openMirror("remotely_deleted_removes_keyword");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [
+      {
+        guid: "bookmarkAAAA",
+        title: "A",
+        url: "http://example.com/a",
+        keyword: "keyworda",
+      },
+      {
+        guid: "bookmarkBBBB",
+        title: "B",
+        url: "http://example.com/b",
+        keyword: "keywordb",
+      },
+    ],
+  });
+  await storeRecords(
+    buf,
+    [
+      {
+        id: "menu",
+        parentid: "places",
+        type: "folder",
+        children: ["bookmarkAAAA", "bookmarkBBBB"],
+      },
+      {
+        id: "bookmarkAAAA",
+        parentid: "menu",
+        type: "bookmark",
+        title: "A",
+        bmkUri: "http://example.com/a",
+        keyword: "keyworda",
+      },
+      {
+        id: "bookmarkBBBB",
+        parentid: "menu",
+        type: "bookmark",
+        title: "B",
+        bmkUri: "http://example.com/b",
+        keyword: "keywordb",
+      },
+    ],
+    { needsMerge: false }
+  );
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  // Validate the keywords exists
+  let has_keyword_a = await PlacesUtils.keywords.fetch({
+    url: "http://example.com/a",
+  });
+  Assert.equal(has_keyword_a.keyword, "keyworda");
+
+  let has_keyword_b = await PlacesUtils.keywords.fetch({
+    url: "http://example.com/b",
+  });
+  Assert.equal(has_keyword_b.keyword, "keywordb");
+
+  info("Make remote changes: delete A & B");
+  await storeRecords(buf, [
+    {
+      id: "menu",
+      parentid: "places",
+      type: "folder",
+      children: [],
+    },
+    {
+      id: "bookmarkAAAA",
+      deleted: true,
+    },
+    {
+      id: "bookmarkBBBB",
+      deleted: true,
+    },
+  ]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+
+  let idsToUpload = inspectChangeRecords(changesToUpload);
+  deepEqual(
+    idsToUpload,
+    {
+      updated: [],
+      deleted: [],
+    },
+    "No local changes done"
+  );
+
+  await assertLocalTree(
+    PlacesUtils.bookmarks.menuGuid,
+    {
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+    },
+    "Should've remove A & B from menu"
+  );
+
+  // Validate the keyword no longer exists after removing the bookmark
+  let no_keyword_a = await PlacesUtils.keywords.fetch({
+    url: "http://example.com/a",
+  });
+  Assert.equal(no_keyword_a, null);
+
+  // Both keywords should've been removed after the sync
+  let no_keyword_b = await PlacesUtils.keywords.fetch({
+    url: "http://example.com/b",
+  });
+  Assert.equal(no_keyword_b, null);
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Should not store local tombstones");
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});

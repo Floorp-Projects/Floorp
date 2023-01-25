@@ -273,6 +273,11 @@ add_bookmark_test(async function test_deleted(engine) {
     let newrec = await store.createRecord(bmk1.guid);
     Assert.equal(null, item);
     Assert.equal(newrec.deleted, true);
+    _("Verify that the keyword has been cleared.");
+    let keyword = await PlacesUtils.keywords.fetch({
+      url: "http://getfirefox.com/",
+    });
+    Assert.equal(null, keyword);
   } finally {
     _("Clean up.");
     await store.wipe();
