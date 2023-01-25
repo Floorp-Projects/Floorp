@@ -140,8 +140,6 @@ document.addEventListener('click', e=>{
     content.document.body.click();
   });
   await waitForPaused(dbg);
-  // TODO: Enable this assertion. At the moment, we pause in the minified source, although
-  // we'd want to pause in the pretty one (see Bug 1070862).
-  // await assertPausedAtSourceAndLine(dbg, prettyNewFunctionSource.id, 3);
+  await assertPausedAtSourceAndLine(dbg, prettyNewFunctionSource.id, 4);
   await resume(dbg);
 });
