@@ -14,9 +14,7 @@ const CAT_PREF = "browser.contentblocking.category";
 
 const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
-  Services.prefs.getStringPref(
-    "privacy.restrict3rdpartystorage.preferences.learnMoreURLSuffix"
-  );
+  "total-cookie-protection";
 
 const {
   BEHAVIOR_REJECT_TRACKER,

@@ -285,16 +285,6 @@ function setUpContentBlockingWarnings() {
 }
 
 function initTCPStandardSection() {
-  document
-    .getElementById("tcp-learn-more-link")
-    .setAttribute(
-      "href",
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        Services.prefs.getStringPref(
-          "privacy.restrict3rdpartystorage.preferences.learnMoreURLSuffix"
-        )
-    );
-
   let cookieBehaviorPref = Preferences.get("network.cookie.cookieBehavior");
   let updateTCPSectionVisibilityState = () => {
     document.getElementById("etpStandardTCPBox").hidden =
