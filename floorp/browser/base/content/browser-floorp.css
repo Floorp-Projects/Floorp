@@ -220,7 +220,7 @@
   }
 
   .webpanel-icon{
-    list-style-image: var(--BSMIcon,url("chrome://devtools/skin/images/globe.svg"));
+    list-style-image: var(--BMSIcon,url("chrome://devtools/skin/images/globe.svg"));
   }
   
   :root[sizemode="fullscreen"] :is(#sidebar-select-box){
