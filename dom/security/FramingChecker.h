@@ -25,8 +25,7 @@ class FramingChecker {
   // Determine if X-Frame-Options allows content to be framed
   // as a subdocument
   static bool CheckFrameOptions(nsIChannel* aChannel,
-                                nsIContentSecurityPolicy* aCSP,
-                                bool& outIsFrameCheckingSkipped);
+                                nsIContentSecurityPolicy* aCSP);
 
  protected:
   enum XFOHeader { eDENY, eSAMEORIGIN };

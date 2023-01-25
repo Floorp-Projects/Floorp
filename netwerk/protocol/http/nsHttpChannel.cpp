@@ -17,7 +17,6 @@
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/StoragePrincipalHelper.h"
 
-#include "nsContentSecurityUtils.h"
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
 #include "nsHttpChannelAuthProvider.h"
@@ -2375,9 +2374,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
         // any cached credentials, nor we want to ask the user.
         // It's up to the consumer to re-try w/o setting a custom
         // auth header if cached credentials should be attempted.
-        rv = NS_ERROR_FAILURE;
-      } else if (!nsContentSecurityUtils::CheckCSPFrameAncestorAndXFO(this)) {
-        // CSP Frame Ancestor and X-Frame-Options check has failed
         rv = NS_ERROR_FAILURE;
       } else {
         rv = mAuthProvider->ProcessAuthentication(
