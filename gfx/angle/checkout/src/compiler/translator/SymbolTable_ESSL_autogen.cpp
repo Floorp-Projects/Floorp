@@ -9,6 +9,8 @@
 // SymbolTable_ESSL_autogen.cpp:
 //   Compile-time initialized built-ins.
 
+#include <cmath>
+
 #include "compiler/translator/SymbolTable.h"
 
 #include "angle_gl.h"

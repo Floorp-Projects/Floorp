@@ -1,4 +1,16 @@
-commit 0bf5781fddeb50d02b703dd89cc77b2c5f07e334 (HEAD -> refs/heads/firefox-111)
+commit d93c05cd2d786f2c624fbf8f4465238b38a771a1 (HEAD -> refs/heads/firefox-111, refs/remotes/mozilla/firefox-111, refs/heads/master)
+Author: Kelsey Gilbert <jgilbert@mozilla.com>
+Date:   Thu Sep 8 17:10:21 2022 -0700
+
+    Import <cmath> in SymbolTable_ESSL_autogen.cpp.
+    
+    Fixes Snap builds of Firefox.
+    
+    Change-Id: I8d71d230d5e4a5a042e6afd4e31342da9a085bed
+    
+    Co-authored-by: Erich Gubler <erichdongubler@gmail.com>
+
+commit 0bf5781fddeb50d02b703dd89cc77b2c5f07e334
 Author: Erich Gubler <erichdongubler@gmail.com>
 Date:   Thu Jan 19 00:20:06 2023 -0500
 
