@@ -183,15 +183,14 @@ FormAutofillPreferences.prototype = {
       let creditCardAutofill = document.createXULElement("hbox");
       let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
       let creditCardAutofillCheckbox = document.createXULElement("checkbox");
-      let creditCardAutofillLearnMore = document.createXULElement("label", {
-        is: "text-link",
+      let creditCardAutofillLearnMore = document.createElement("a", {
+        is: "moz-support-link",
       });
       let savedCreditCardsBtn = document.createXULElement("button", {
         is: "highlightable-button",
       });
       savedCreditCardsBtn.className = "accessory-button";
       creditCardAutofillCheckbox.className = "tail-with-learn-more";
-      creditCardAutofillLearnMore.className = "learnMore";
 
       creditCardAutofill.id = "creditCardAutofill";
       creditCardAutofillLearnMore.id = "creditCardAutofillLearnMore";
@@ -204,9 +203,7 @@ FormAutofillPreferences.prototype = {
         "label",
         this.bundle.GetStringFromName("autofillCreditCardsCheckbox")
       );
-      creditCardAutofillLearnMore.textContent = this.bundle.GetStringFromName(
-        "learnMoreLabel"
-      );
+
       savedCreditCardsBtn.setAttribute(
         "label",
         this.bundle.GetStringFromName("savedCreditCardsBtnLabel")
@@ -215,7 +212,10 @@ FormAutofillPreferences.prototype = {
       // when creditCardAutofillCheckboxGroup's height is changed by a longer l10n string
       savedCreditCardsBtnWrapper.setAttribute("align", "start");
 
-      creditCardAutofillLearnMore.setAttribute("href", creditCardLearnMoreURL);
+      creditCardAutofillLearnMore.setAttribute(
+        "support-page",
+        "credit-card-autofill"
+      );
 
       // Add preferences search support
       savedCreditCardsBtn.setAttribute(
