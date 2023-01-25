@@ -265,7 +265,7 @@ function setCustomURLFavicon(sbar_id) {
         console.error(reject);
       });
   } else if (sbar_url.startsWith("file://")) {
-    document.getElementById(`${sbar_id}`).style.setProperty("--BMSIcon",`moz-icon:${sbar_url}?size=128`)	  
+    document.getElementById(`${sbar_id}`).style.setProperty("--BMSIcon",`url(moz-icon:${sbar_url}?size=128)`)	  
   }
 
   setUserContextLine(sbar_id.slice(7));
