@@ -582,7 +582,14 @@ add_task(async () => {
   let transitionPromise = new Promise(resolve => {
     gHistorySwipeAnimation._prevBox.addEventListener(
       "transitionstart",
-      resolve,
+      event => {
+        if (
+          event.propertyName == "opacity" &&
+          event.target == gHistorySwipeAnimation._prevBox
+        ) {
+          resolve();
+        }
+      },
       { once: true }
     );
   });
@@ -601,6 +608,50 @@ add_task(async () => {
     return (
       gHistorySwipeAnimation._prevBox == null &&
       gHistorySwipeAnimation._nextBox == null
+    );
+  });
+
+  // Navigate forward and check the forward navigation icon box state.
+  startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    secondPage
+  );
+  stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    secondPage
+  );
+
+  await panRightToLeftBegin(tab.linkedBrowser, 100, 100, 100);
+
+  ok(gHistorySwipeAnimation._nextBox != null, "should have nextbox");
+  transitionPromise = new Promise(resolve => {
+    gHistorySwipeAnimation._nextBox.addEventListener(
+      "transitionstart",
+      event => {
+        if (
+          event.propertyName == "opacity" &&
+          event.target == gHistorySwipeAnimation._nextBox
+        ) {
+          resolve();
+        }
+      }
+    );
+  });
+
+  await panRightToLeftUpdate(tab.linkedBrowser, 100, 100, 100);
+  await panRightToLeftEnd(tab.linkedBrowser, 100, 100, 100);
+
+  // Make sure the gesture triggered going forward to the next page.
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(gBrowser.webNavigation.canGoBack);
+
+  await transitionPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return (
+      gHistorySwipeAnimation._nextBox == null &&
+      gHistorySwipeAnimation._prevBox == null
     );
   });
 

@@ -713,16 +713,10 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    let prevOpacity = window
-      .getComputedStyle(this._prevBox)
-      .getPropertyValue("opacity");
-    let nextOpacity = window
-      .getComputedStyle(this._nextBox)
-      .getPropertyValue("opacity");
     let box = null;
-    if (prevOpacity > 0) {
+    if (!this._prevBox.collapsed) {
       box = this._prevBox;
-    } else if (nextOpacity > 0) {
+    } else if (!this._nextBox.collapsed) {
       box = this._nextBox;
     }
     if (box != null) {
