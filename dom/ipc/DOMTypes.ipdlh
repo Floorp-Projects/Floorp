@@ -30,17 +30,17 @@ using struct mozilla::dom::LoadingSessionHistoryInfo
 using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
 
 
-using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
-using LayoutDeviceIntRect from "Units.h";
-using DesktopIntRect from "Units.h";
-using DesktopToLayoutDeviceScale from "Units.h";
-using CSSToLayoutDeviceScale from "Units.h";
-using CSSRect from "Units.h";
-using CSSSize from "Units.h";
-using ScreenIntSize from "Units.h";
+using mozilla::hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
+using mozilla::DesktopIntRect from "Units.h";
+using mozilla::DesktopToLayoutDeviceScale from "Units.h";
+using mozilla::CSSToLayoutDeviceScale from "Units.h";
+using mozilla::CSSRect from "Units.h";
+using mozilla::CSSSize from "Units.h";
+using mozilla::ScreenIntSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
-using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
+using mozilla::ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 [RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";

@@ -24,7 +24,7 @@ include SessionStoreTypes;
 
 include "mozilla/layers/LayersMessageUtils.h";
 
-using JSActorMessageKind from "mozilla/dom/JSActor.h";
+using mozilla::dom::JSActorMessageKind from "mozilla/dom/JSActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 [MoveOnly] using mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";

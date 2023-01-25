@@ -144,8 +144,8 @@ using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/Servi
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
 using mozilla::StorageAccessAPIHelper::StorageAccessPromptChoices from "mozilla/StorageAccessAPIHelper.h";
-using JSActorMessageKind from "mozilla/dom/JSActor.h";
-using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
+using mozilla::dom::JSActorMessageKind from "mozilla/dom/JSActor.h";
+using mozilla::dom::JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateHandler.h";
 [RefCounted] using class nsILayoutHistoryState from "nsILayoutHistoryState.h";
 using class mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
