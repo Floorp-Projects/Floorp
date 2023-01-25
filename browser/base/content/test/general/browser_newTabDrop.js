@@ -41,6 +41,7 @@ add_task(async function single_url3() {
 // Single text/plain item, with multiple links.
 add_task(async function multiple_urls() {
   await dropText("www.mochi.test/1\nmochi.test/2", [
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://www.mochi.test/1",
     "http://mochi.test/2",
   ]);

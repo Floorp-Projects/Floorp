@@ -79,6 +79,7 @@ add_task(async function closeWindowWithMultipleTabsIncludingOneBeforeUnload() {
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
   await promiseTabLoadEvent(
     BrowserTestUtils.addTab(newWin.gBrowser),
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
   );
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);

@@ -223,6 +223,7 @@ function startTest1() {
   gBrowser.addTabsProgressListener(gAllProgressListener);
 
   gFrontNotifications = gAllNotifications;
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   runTest(gForegroundBrowser, "http://example.org" + gTestPage, startTest2);
 }
 
@@ -235,6 +236,7 @@ function startTest2() {
 function startTest3() {
   info("\nTest 3");
   gFrontNotifications = [];
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   runTest(gBackgroundBrowser, "http://example.org" + gTestPage, startTest4);
 }
 
@@ -258,12 +260,14 @@ function startTest5() {
   gBrowser.addProgressListener(gFrontProgressListener);
 
   gFrontNotifications = gAllNotifications;
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   runTest(gForegroundBrowser, "http://example.org" + gTestPage, startTest6);
 }
 
 function startTest6() {
   info("\nTest 6");
   gFrontNotifications = [];
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   runTest(gBackgroundBrowser, "http://example.org" + gTestPage, startTest7);
 }
 
@@ -314,6 +318,7 @@ function startTest9() {
     "onSecurityChange",
     "onStateChange",
   ];
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   runTest(gBackgroundBrowser, "http://example.org" + gTestPage, finishTest);
 }
 
