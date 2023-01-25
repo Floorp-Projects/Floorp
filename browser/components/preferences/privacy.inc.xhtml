@@ -675,10 +675,12 @@
               class="tail-with-learn-more"
               data-l10n-id="addressbar-firefox-suggest-best-match-option"
               preference="browser.urlbar.suggest.bestmatch"/>
-    <label id="firefoxSuggestBestMatchLearnMore"
-           class="learnMore"
-           is="text-link"
-           data-l10n-id="addressbar-best-match-learn-more"/>
+    <html:a is="moz-support-link"
+            id="firefoxSuggestBestMatchLearnMore"
+            class="learnMore"
+            data-l10n-id="addressbar-best-match-learn-more"
+            support-page="firefox-suggest"
+    />
   </hbox>
   <hbox id="quickActionsBox" align="center" hidden="true">
     <checkbox id="enableQuickActions"

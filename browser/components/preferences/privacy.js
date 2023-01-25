@@ -2041,12 +2041,6 @@ var gPrivacyPane = {
       );
     }
 
-    // Set the URL of the learn-more link for Firefox Suggest best match.
-    const bestMatchLearnMoreLink = document.getElementById(
-      "firefoxSuggestBestMatchLearnMore"
-    );
-    bestMatchLearnMoreLink.setAttribute("href", QuickSuggest.HELP_URL);
-
     this._updateFirefoxSuggestSection(true);
     this._initQuickActionsSection();
   },
