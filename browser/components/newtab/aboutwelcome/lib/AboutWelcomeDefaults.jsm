@@ -44,8 +44,7 @@ const DEFAULT_WELCOME_CONTENT = {
     "browser.aboutwelcome.transitions",
     true
   ),
-  backdrop:
-    "#212121 url('chrome://activity-stream/content/data/content/assets/proton-bkg.avif') center/cover no-repeat fixed",
+  backdrop: "#212121",
   screens: [
     {
       id: "AW_PIN_FIREFOX",

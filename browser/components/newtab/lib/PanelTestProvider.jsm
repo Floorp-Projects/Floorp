@@ -454,15 +454,14 @@ const MESSAGES = () => [
         {
           id: "BACKGROUND_IMAGE",
           content: {
-            background:
-              "url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) no-repeat center/cover",
+            background: "#000",
             text_color: "light",
             progress_bar: true,
             logo: {
               imageURL:
                 "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
             },
-            title: "A dialog with a background image",
+            title: "A dialog with a background",
             subtitle:
               "The text color is configurable and a progress bar style step indicator is used",
             primary_button: {

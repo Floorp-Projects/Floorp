@@ -47,7 +47,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
     it("should render secondary section with content background for split positioned screens", () => {
       const BACKGROUND_URL =
-        "chrome://activity-stream/content/data/content/assets/proton-bkg.avif";
+        "chrome://activity-stream/content/data/content/assets/confetti.svg";
       const SCREEN_PROPS = {
         content: {
           position: "split",
@@ -270,7 +270,8 @@ describe("MultiStageAboutWelcomeProton module", () => {
         id: "DEFAULT_ABOUTWELCOME_PROTON",
         template: "multistage",
         transitions: true,
-        background_url: `chrome://activity-stream/content/data/content/assets/proton-bkg.avif`,
+        background_url:
+          "chrome://activity-stream/content/data/content/assets/confetti.svg",
         screens: [
           {
             id: "AW_PIN_FIREFOX",

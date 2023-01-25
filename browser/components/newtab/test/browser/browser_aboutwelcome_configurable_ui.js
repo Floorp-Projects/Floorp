@@ -236,7 +236,7 @@ add_task(async function test_aboutwelcome_with_title_styles() {
  */
 add_task(async function test_aboutwelcome_with_background() {
   const BACKGROUND_URL =
-    "chrome://activity-stream/content/data/content/assets/proton-bkg.avif";
+    "chrome://activity-stream/content/data/content/assets/confetti.svg";
   const TEST_BACKGROUND_CONTENT = makeTestContent("TEST_BACKGROUND_STEP", {
     background: `url(${BACKGROUND_URL}) no-repeat center/cover`,
   });
@@ -330,7 +330,7 @@ add_task(async function test_aboutwelcome_split_position() {
  * Test rendering a screen with a URL value and default color for backdrop
  */
 add_task(async function test_aboutwelcome_with_url_backdrop() {
-  const TEST_BACKDROP_URL = `url("chrome://activity-stream/content/data/content/assets/proton-bkg.avif")`;
+  const TEST_BACKDROP_URL = `url("chrome://activity-stream/content/data/content/assets/confetti.svg")`;
   const TEST_BACKDROP_VALUE = `#212121 ${TEST_BACKDROP_URL} center/cover no-repeat fixed`;
   const TEST_URL_BACKDROP_CONTENT = makeTestContent("TEST_URL_BACKDROP_STEP");
 
