@@ -33,26 +33,31 @@ const fullscreenTarget = "D";
 //  E
 const frameTree = {
   name: "TOP",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   url: `http://example.com${fullscreenPath}`,
   allow_fullscreen: true,
   children: [
     {
       name: "A",
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       url: `http://example.org${fullscreenPath}`,
       allow_fullscreen: true,
       children: [
         {
           name: "C",
+          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           url: `http://example.com${fullscreenPath}`,
           allow_fullscreen: true,
           children: [
             {
               name: "D",
+              // eslint-disable-next-line @microsoft/sdl/no-insecure-url
               url: `http://example.com${fullscreenPath}?different-uri=1`,
               allow_fullscreen: true,
               children: [
                 {
                   name: "E",
+                  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                   url: `http://example.org${fullscreenPath}`,
                   allow_fullscreen: true,
                   children: [],
@@ -65,6 +70,7 @@ const frameTree = {
     },
     {
       name: "B",
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       url: `http://example.net${fullscreenPath}`,
       allow_fullscreen: true,
       children: [],

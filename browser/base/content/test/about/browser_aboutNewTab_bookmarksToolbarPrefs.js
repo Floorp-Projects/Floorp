@@ -58,6 +58,7 @@ add_task(async function test_with_different_pref_states() {
 
       await BrowserTestUtils.openNewForegroundTab({
         gBrowser: win.gBrowser,
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         opening: "http://example.com",
       });
       await waitForBookmarksToolbarVisibility({
