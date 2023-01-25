@@ -168,6 +168,12 @@ ScreenOrientation::LockOrientationTask::Run() {
     return NS_OK;
   }
 
+  nsCOMPtr<nsPIDOMWindowInner> owner = mScreenOrientation->GetOwner();
+  if (!owner || !owner->IsFullyActive()) {
+    mPromise->MaybeRejectWithAbortError("The document is not fully active.");
+    return NS_OK;
+  }
+
   // Step to lock the orientation as defined in the spec.
   if (mDocument->GetOrientationPendingPromise() != mPromise) {
     // The document's pending promise is not associated with this task
@@ -422,21 +428,28 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     hal::ScreenOrientation aOrientation, ErrorResult& aRv) {
   // Steps to apply an orientation lock as defined in spec.
 
+  // Step 1.
+  // Let document be this's relevant global object's associated Document.
+
   Document* doc = GetResponsibleDocument();
   if (NS_WARN_IF(!doc)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
+  // Step 2.
+  // If document is not fully active, return a promise rejected with an
+  // "InvalidStateError" DOMException.
+
   nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
   if (NS_WARN_IF(!owner)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   nsCOMPtr<nsIDocShell> docShell = owner->GetDocShell();
   if (NS_WARN_IF(!docShell)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
@@ -445,6 +458,11 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
   RefPtr<Promise> p = Promise::Create(go, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (!owner->IsFullyActive()) {
+    p->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return p.forget();
   }
 
   // Step 3.
