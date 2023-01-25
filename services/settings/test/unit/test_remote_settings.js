@@ -731,6 +731,24 @@ add_task(async function test_inspect_method() {
 });
 add_task(clear_state);
 
+add_task(async function test_inspect_method_uses_a_random_cache_bust() {
+  const backup = Utils.fetchLatestChanges;
+  const cacheBusts = [];
+  Utils.fetchLatestChanges = (url, options) => {
+    cacheBusts.push(options.expected);
+    return { changes: [] };
+  };
+
+  await RemoteSettings.inspect();
+  await RemoteSettings.inspect();
+  await RemoteSettings.inspect();
+
+  notEqual(cacheBusts[0], cacheBusts[1]);
+  notEqual(cacheBusts[1], cacheBusts[2]);
+  notEqual(cacheBusts[0], cacheBusts[2]);
+  Utils.fetchLatestChanges = backup;
+});
+
 add_task(async function test_clearAll_method() {
   // Make sure we have some local data.
   await client.maybeSync(2000);
