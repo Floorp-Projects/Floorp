@@ -57,7 +57,7 @@ A chrome tests is similar but not equivalent to a Mochitest
 running with chrome privileges, i.e. code and UI are referenced by
 ``chrome://`` URIs. A basic XHTML test file could look like this:
 
-.. code:: eval
+.. code:: xml
 
    <?xml version="1.0"?>
    <?xml-stylesheet href="chrome://global/skin" type="text/css"?>

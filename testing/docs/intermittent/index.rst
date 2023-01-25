@@ -34,7 +34,7 @@ subdocument.
 
 For example, the following code pattern is bad:
 
-.. code:: brush:
+.. code:: html
 
    <html>
      <body>
@@ -50,7 +50,7 @@ For example, the following code pattern is bad:
 
 Instead, write the code like this:
 
-.. code:: brush:
+.. code:: html
 
    <html>
      <body>
@@ -74,7 +74,7 @@ This may be relevant to event handlers, more than anything else.  Let's
 say that you have an `<iframe>` and you want to
 do something after it's been loaded, so you might write code like this:
 
-.. code:: brush:
+.. code:: html
 
    <iframe src="..." onload="onLoad()"></iframe>
    <script>
@@ -92,7 +92,7 @@ may cause your test to time out, for example.  The best way to fix this
 is to move the function definition before where it's used in the DOM,
 like this:
 
-.. code:: brush:
+.. code:: html
 
    <script>
      function onLoad() {
@@ -109,7 +109,7 @@ In general, when you have two asynchronous operations, you cannot assume
 any order between them.  For example, let's say you have two
 `<iframe>`'s like this:
 
-.. code:: brush:
+.. code:: html
 
    <script>
      var f1Doc;
@@ -128,7 +128,7 @@ This code is implicitly assuming that ``f1`` will be loaded before
 detect when all of the asynchronous operations have been finished, and
 then do what you need to do, like this:
 
-.. code:: brush:
+.. code:: html
 
    <script>
      var f1Doc, loadCounter = 0;
@@ -155,7 +155,7 @@ tempting to use a timeout to wait a while, hoping that the operation has
 been finished by then and that it's then safe to continue.  Such code
 uses patterns like this:
 
-::
+.. code:: js
 
    setTimeout(handler, 500);
 
@@ -188,7 +188,7 @@ Using objects without accounting for the possibility of their death
 This is a very common pattern in our test suite, which was recently
 discovered to be responsible for many intermittent failures:
 
-.. code:: brush:
+.. code:: js
 
    function runLater(func) {
      var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -204,7 +204,7 @@ this is to make the ``timer`` object global, so that an outstanding
 reference to the object would still exist by the time that the garbage
 collection code attempts to collect it.
 
-.. code:: brush:
+.. code:: js
 
    var timer;
    function runLater(func) {
@@ -240,7 +240,7 @@ test would fail intermittently on Linux.  You can ensure that by using
 ``SimpleTest.waitForFocus()`` and start what your test does from inside
 the callback for that function, as below:
 
-::
+.. code:: js
 
    SimpleTest.waitForFocus(function() {
      synthesizeKey("x", {});
@@ -326,7 +326,7 @@ intermittently.  You can use the following pattern instead of calling
 ``Math.random()`` if you need values that have to be unique for your
 test:
 
-::
+.. code:: js
 
    var gUniqueCounter = 0;
    function generateUniqueValues() {

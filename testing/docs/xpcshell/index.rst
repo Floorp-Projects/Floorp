@@ -38,7 +38,7 @@ Creating a new test in an existing directory
 If you're creating a new test in an existing directory, you can simply
 run:
 
-.. code:: brush:
+.. code:: bash
 
    $ ./mach addtest path/to/test/test_example.js
    $ hg add path/to/test/test_example.js
@@ -56,7 +56,7 @@ Running tests
 To run the test, execute it by running the ``mach`` command from the
 root of the Gecko source code directory.
 
-::
+.. code:: bash
 
    # Run a single test:
    $ ./mach xpcshell-test path/to/tests/test_example.js
@@ -327,7 +327,7 @@ When creating a new directory and new xpcshell.ini manifest file, the
 following must be added to a moz.build file near that file in the
 directory hierarchy:
 
-::
+.. code:: bash
 
    XPCSHELL_TESTS_MANIFESTS += ['path/to/xpcshell.ini']
 
@@ -335,7 +335,7 @@ Typically, the moz.build containing *XPCSHELL_TESTS_MANIFESTS* is not in
 the same directory as *xpcshell.ini*, but rather in a parent directory.
 Common directory structures look like:
 
-::
+.. code:: bash
 
    feature
    ├──moz.build
@@ -371,7 +371,7 @@ files can then be loaded in using the
 or other loaders. The support files can be located in other directory as
 well, and they will be made available by their filename.
 
-::
+.. code:: bash
 
    # File structure:
 
@@ -382,7 +382,7 @@ well, and they will be made available by their filename.
    ├──test_example.js
    └──xpcshell.ini
 
-::
+.. code:: ini
 
    # xpcshell.ini
    [DEFAULT]
@@ -392,7 +392,7 @@ well, and they will be made available by their filename.
      ../../some/other/file.js
    [test_component_state.js]
 
-.. code:: brush:
+.. code:: js
 
    // head.js
    var globalValue = "A global value.";
@@ -401,7 +401,7 @@ well, and they will be made available by their filename.
    const { foo } = ChromeUtils.import("resource://test/module.jsm");
    const { bar } = ChromeUtils.import("resource://test/file.jsm");
 
-.. code:: brush:
+.. code:: js
 
    // test_example.js
    function run_test() {
@@ -425,7 +425,7 @@ The easiest is using the ``add_task`` helper. ``add_task`` can take an
 asynchronous function as a parameter. ``add_task`` tests are run
 automatically if you don't have a ``run_test`` function.
 
-.. code:: brush:
+.. code:: js
 
    add_task(async function test_foo() {
      let foo = await makeFoo(); // makeFoo() returns a Promise<foo>
@@ -446,7 +446,7 @@ list of asynchronously-run functions. Each function given to
 normally use ``add_task`` instead of ``add_test``, but you may see
 ``add_test`` in existing tests.
 
-.. code:: brush:
+.. code:: js
 
    add_test(function test_foo() {
      makeFoo(function callback(foo) { // makeFoo invokes a callback<foo> once completed
@@ -472,7 +472,7 @@ our callbacks have been called and our test has completed. Newer tests
 prefer the use of ``add_task`` rather than this method. This can be
 achieved with ``do_test_pending()`` and ``do_test_finished()``:
 
-.. code:: brush:
+.. code:: js
 
    function run_test() {
      // Tell the harness to keep spinning the event loop at least
@@ -536,7 +536,7 @@ platforms. Use
 `AppConstants.jsm <https://searchfox.org/mozilla-central/rev/a0333927deabfe980094a14d0549b589f34cbe49/toolkit/modules/AppConstants.jsm#148>`__
 for determining the platform, for example:
 
-.. code:: brush:
+.. code:: js
 
    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
@@ -563,7 +563,7 @@ skipped.
 For example, you can provide a test which only runs on Mac OS X like
 this:
 
-::
+.. code:: js
 
    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
@@ -592,7 +592,7 @@ be skipped in certain configurations, or that a test is known to fail on
 certain platforms. You can do this in xpcshell manifests by adding
 annotations below the test file entry in the manifest, for example:
 
-::
+.. code:: ini
 
    [test_example.js]
    skip-if = os == 'win'
@@ -632,7 +632,7 @@ condition is true. If you add this to a test, make sure you file a bug
 on the failure and include the bug number in a comment in the manifest,
 like:
 
-::
+.. code:: ini
 
    [test_example.js]
    # bug xxxxxx
@@ -649,7 +649,7 @@ some cases where this is imperative, so we made this option available.
 If you add this to a test, make sure you specify a reason and possibly
 even a bug number, like:
 
-::
+.. code:: ini
 
    [test_example.js]
    run-sequentially = Has to launch Firefox binary, bug 123456.
@@ -670,7 +670,7 @@ When working on a specific feature or issue, it is convenient to only
 run a specific task from a whole test suite. Use ``.only()`` for that
 purpose:
 
-.. code:: syntaxbox
+.. code:: js
 
    add_task(async function some_test() {
      // Some test.
@@ -689,7 +689,7 @@ triggered. This sometimes causes issues during shutdown, when code is
 run that expects previously created events to have been already
 processed. In such cases, this code at the end of a test can help:
 
-::
+.. code:: js
 
    let thread = gThreadManager.currentThread;
    while (thread.hasPendingEvents())
@@ -772,7 +772,7 @@ is in your system PATH.
 
 Example:
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach xpcshell-test --debugger gdb --debugger-interactive netwerk/test/unit/test_resumable_channel.js
    # js>_execute_test();
@@ -781,19 +781,19 @@ Example:
 
 On Windows with the VS debugger:
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach xpcshell-test --debugger devenv --debugger-interactive netwerk/test/test_resumable_channel.js
 
 Or with WinDBG:
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach xpcshell-test --debugger windbg --debugger-interactive netwerk/test/test_resumable_channel.js
 
 Or with modern WinDbg (WinDbg Preview as of April 2020):
 
-.. code:: eval
+.. code:: bash
 
    $ ./mach xpcshell-test --debugger WinDbgX --debugger-interactive netwerk/test/test_resumable_channel.js
 
@@ -807,7 +807,7 @@ line) and run the test. You will see the child process emit a printf
 with its process ID, then sleep. Attach a debugger to the child's pid,
 and when it wakes up you can debug it:
 
-::
+.. code:: bash
 
    $ MOZ_DEBUG_CHILD_PROCESS=1 ./mach xpcshell-test test_simple_wrap.js
    CHILDCHILDCHILDCHILD
