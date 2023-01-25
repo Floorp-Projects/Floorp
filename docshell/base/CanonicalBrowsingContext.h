@@ -128,8 +128,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void SetActiveSessionHistoryEntry(SessionHistoryEntry* aEntry);
 
   UniquePtr<LoadingSessionHistoryInfo> CreateLoadingSessionHistoryEntryForLoad(
-      nsDocShellLoadState* aLoadState, SessionHistoryEntry* aExistingEntry,
-      nsIChannel* aChannel);
+      nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
 
   UniquePtr<LoadingSessionHistoryInfo> ReplaceLoadingSessionHistoryEntryForLoad(
       LoadingSessionHistoryInfo* aInfo, nsIChannel* aNewChannel);
@@ -275,14 +274,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                   const NavigationIsolationOptions& aRemotenessOptions);
 
   bool HasHistoryEntry(nsISHEntry* aEntry);
-  bool HasLoadingHistoryEntry(nsISHEntry* aEntry) {
-    for (const LoadingSessionHistoryEntry& loading : mLoadingEntries) {
-      if (loading.mEntry == aEntry) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry);
 
@@ -496,9 +487,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return BrowsingContext::ShouldAddEntryForRefresh(currentURI, aNewURI,
                                                      aHasPostData);
   }
-
-  already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
-      SessionHistoryEntry* aEntry);
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
