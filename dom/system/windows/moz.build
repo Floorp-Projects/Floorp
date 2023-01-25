@@ -4,8 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += ["nsHapticFeedback.cpp", "WindowsLocationProvider.cpp"]
+EXPORTS.mozilla.dom += [
+    "WindowsUtilsChild.h",
+    "WindowsUtilsParent.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsHapticFeedback.cpp",
+    "WindowsLocationProvider.cpp",
+]
+
+IPDL_SOURCES += [
+    "PWindowsUtils.ipdl",
+]
 
 LOCAL_INCLUDES += ["/dom/geolocation"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
