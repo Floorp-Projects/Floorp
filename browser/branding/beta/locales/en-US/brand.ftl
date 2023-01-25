@@ -17,7 +17,8 @@
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
 -brand-shorter-name = Floorp
--brand-short-name = Floorp
+-brand-short-name = Floorp Daylight
+-brand-shortcut-name = Floorp Daylight
 -brand-full-name = Floorp Daylight
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
