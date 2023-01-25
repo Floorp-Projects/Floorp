@@ -33,6 +33,7 @@ module.exports = {
     // Sometimes returning an empty object is enough
     "^resource://devtools/client/shared/link": `${fixturesDir}/empty-module`,
     "^devtools/shared/flags": `${fixturesDir}/empty-module`,
+    "^resource://devtools/shared/indexed-db.js": `${fixturesDir}/indexed-db`,
     "^devtools/shared/layout/utils": `${fixturesDir}/empty-module`,
     "^devtools/client/shared/components/tree/TreeView": `${fixturesDir}/empty-module`,
     // Map all require("devtools/...") to the real devtools root.
