@@ -734,7 +734,7 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
   } while (obj_ != nullptr);
 
 #ifdef DEBUG
-  if (js::SupportDifferentialTesting()) {
+  if (js::SupportDifferentialTesting() && !supportsIndices()) {
     /*
      * In some cases the enumeration order for an object depends on the
      * execution mode (interpreter vs. JIT), especially for native objects
