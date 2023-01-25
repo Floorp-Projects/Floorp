@@ -14,8 +14,9 @@
 
   --urlbarView-action-slide-in-distance: 200px;
 
-  --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
+  --urlbarView-row-gutter: 2px;
 
+  --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
 
@@ -67,7 +68,8 @@
 }
 
 .urlbarView-body-inner {
-  width: 100%;
+  width: calc(100% + 2 * var(--urlbarView-row-gutter));
+  margin-inline: calc(-1 * var(--urlbarView-row-gutter));
 }
 
 #urlbar[open] > .urlbarView > .urlbarView-body-outer > .urlbarView-body-inner {
@@ -89,8 +91,13 @@
   align-items: center;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
-  margin-block: 2px;
-  border-radius: var(--toolbarbutton-border-radius);
+
+  /* Use a transparent border rather than margin such that the view's entire
+     hover area is contiguous and a row is always hovered as the user moves the
+     mouse across rows, even though each row's highlighted area is smaller. */
+  border: var(--urlbarView-row-gutter) solid transparent;
+  border-radius: calc(var(--urlbarView-row-gutter) + var(--toolbarbutton-border-radius));
+  background-clip: padding-box;
 }
 
 :root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
