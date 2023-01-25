@@ -633,31 +633,6 @@ var DiscoveryAPI = {
   },
 };
 
-class SupportLink extends HTMLAnchorElement {
-  static get observedAttributes() {
-    return ["support-page"];
-  }
-
-  connectedCallback() {
-    this.setHref();
-    this.setAttribute("target", "_blank");
-  }
-
-  attributeChangedCallback(name, oldVal, newVal) {
-    if (name === "support-page") {
-      this.setHref();
-    }
-  }
-
-  setHref() {
-    let base = SUPPORT_URL + this.getAttribute("support-page");
-    this.href = this.hasAttribute("utmcontent")
-      ? formatUTMParams(this.getAttribute("utmcontent"), base)
-      : base;
-  }
-}
-customElements.define("support-link", SupportLink, { extends: "a" });
-
 class SearchAddons extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount === 0) {
@@ -1550,7 +1525,7 @@ class SidebarFooter extends HTMLElement {
     let supportItem = this.createItem({
       icon: "chrome://global/skin/icons/help.svg",
       createLinkElement: () => {
-        let link = document.createElement("a", { is: "support-link" });
+        let link = document.createElement("a", { is: "moz-support-link" });
         link.setAttribute("support-page", "addons-help");
         link.id = "help-button";
         return link;
@@ -1653,7 +1628,7 @@ class AddonOptions extends HTMLElement {
           el.hidden = false;
           el.disabled = true;
           if (!el.querySelector('[slot="support-link"]')) {
-            let link = document.createElement("a", { is: "support-link" });
+            let link = document.createElement("a", { is: "moz-support-link" });
             link.setAttribute("data-l10n-name", "link");
             link.setAttribute("support-page", "cant-remove-addon");
             link.setAttribute("slot", "support-link");
