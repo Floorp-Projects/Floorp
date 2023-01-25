@@ -8,6 +8,7 @@
 
 #include "gc/GCLock.h"
 #include "gc/ParallelWork.h"
+#include "vm/HelperThreadState.h"
 
 using namespace js;
 using namespace js::gc;
@@ -17,6 +18,13 @@ ParallelMarker::ParallelMarker(GCRuntime* gc) : gc(gc) {}
 size_t ParallelMarker::workerCount() const { return gc->markers.length(); }
 
 bool ParallelMarker::mark(SliceBudget& sliceBudget) {
+#ifdef DEBUG
+  {
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(workerCount() <= HelperThreadState().maxGCParallelThreads(lock));
+  }
+#endif
+
   if (markOneColor(MarkColor::Black, sliceBudget) == NotFinished) {
     return false;
   }

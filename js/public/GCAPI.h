@@ -470,6 +470,19 @@ typedef enum JSGCParamKey {
    * incremental limit.
    */
   JSGC_URGENT_THRESHOLD_MB = 48,
+
+  /**
+   * Set the number of threads to use for parallel marking, or zero to use the
+   * default.
+   *
+   * The actual number used is capped to the number of available helper threads.
+   *
+   * This is provided for testing purposes.
+   *
+   * Pref: None.
+   * Default: 0 (no effect).
+   */
+  JSGC_MARKING_THREAD_COUNT = 49,
 } JSGCParamKey;
 
 /*

@@ -11894,6 +11894,9 @@ int main(int argc, char** argv) {
       !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC") ||
       !op.addBoolOption('\0', "enable-parallel-marking",
                         "Turn on parallel marking") ||
+      !op.addIntOption(
+          '\0', "marking-threads", "COUNT",
+          "Set the number of threads used for parallel marking to COUNT.", 0) ||
       !op.addStringOption('\0', "nursery-strings", "on/off",
                           "Allocate strings in the nursery") ||
       !op.addStringOption('\0', "nursery-bigints", "on/off",
@@ -12369,6 +12372,10 @@ int main(int argc, char** argv) {
 
   if (op.getBoolOption("enable-parallel-marking")) {
     JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, true);
+  }
+  int32_t markingThreads = op.getIntOption("marking-threads");
+  if (markingThreads > 0) {
+    JS_SetGCParameter(cx, JSGC_MARKING_THREAD_COUNT, markingThreads);
   }
 
   JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 5);
