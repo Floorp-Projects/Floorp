@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 async function addTab_example_com() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
     skipAnimation: true,
   });

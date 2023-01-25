@@ -78,8 +78,11 @@ class TabEventTracker {
 
 add_task(async function test_hidden_muted_lazy_tabs_and_swapping() {
   const params = { createLazyBrowser: true };
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const URL_HIDDEN = "http://example.com/hide";
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const URL_MUTED = "http://example.com/mute";
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const URL_NORMAL = "http://example.com/back";
 
   const lazyTab = BrowserTestUtils.addTab(gBrowser, "", params);
