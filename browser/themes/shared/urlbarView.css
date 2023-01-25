@@ -430,7 +430,7 @@
      selection and hover states. */
   position: absolute;
   /* `top` controls how far the label is from the main part of the row. */
-  top: -1.27em;
+  top: calc(-1.27em - 2px);
   margin-inline-start: var(--urlbarView-item-inline-padding);
   font-size: 0.8em;
   /* The color and opacity of labels is the same as the "This time, search with"
@@ -448,7 +448,7 @@
   position: relative;
   /* `margin-block-start` controls how far the main part of the row is from the
      main part of the previous row. */
-  margin-block-start: 1.46em;
+  margin-block-start: calc(1.46em + 4px);
 }
 
 /* Title */
