@@ -81,9 +81,6 @@ FormAutofillPreferences.prototype = {
    * @param  {HTMLDocument} document
    */
   createPreferenceGroup(document) {
-    let creditCardLearnMoreURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "credit-card-autofill";
     let formAutofillFragment = document.createDocumentFragment();
     let formAutofillGroupBoxLabel = document.createXULElement("label");
     let formAutofillGroupBoxLabelHeading = document.createElementNS(
@@ -245,16 +242,14 @@ FormAutofillPreferences.prototype = {
       this.refs.savedCreditCardsBtn = savedCreditCardsBtn;
 
       if (lazy.OSKeyStore.canReauth()) {
-        let reauthLearnMoreURL = `${creditCardLearnMoreURL}#w_require-authentication-for-autofill`;
         let reauth = document.createXULElement("hbox");
         let reauthCheckboxGroup = document.createXULElement("hbox");
         let reauthCheckbox = document.createXULElement("checkbox");
-        let reauthLearnMore = document.createXULElement("label", {
-          is: "text-link",
+        let reauthLearnMore = document.createElement("a", {
+          is: "moz-support-link",
         });
 
         reauthCheckboxGroup.classList.add("indent");
-        reauthLearnMore.classList.add("learnMore");
         reauthCheckbox.classList.add("tail-with-learn-more");
         reauthCheckbox.setAttribute("flex", "1");
         reauthCheckbox.disabled = !FormAutofill.isAutofillCreditCardsEnabled;
@@ -278,11 +273,11 @@ FormAutofillPreferences.prototype = {
           "label",
           this.bundle.GetStringFromName(autofillReauthCheckboxLabel)
         );
-        reauthLearnMore.textContent = this.bundle.GetStringFromName(
-          "learnMoreLabel"
-        );
 
-        reauthLearnMore.setAttribute("href", reauthLearnMoreURL);
+        reauthLearnMore.setAttribute(
+          "support-page",
+          "credit-card-autofill#w_require-authentication-for-autofill"
+        );
 
         // Manually set the checked state
         if (FormAutofillUtils._reauthEnabledByUser) {
