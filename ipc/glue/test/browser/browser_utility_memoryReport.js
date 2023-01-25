@@ -6,7 +6,7 @@
 // When running full suite, previous audio decoding tests might have left some
 // running and this might interfere with our testing
 add_setup(async function ensureNoExistingProcess() {
-  await utilityProcessTest().stopProcess();
+  await killUtilityProcesses();
 });
 
 add_task(async () => {
@@ -72,5 +72,5 @@ add_task(async () => {
     "Collected some explicit/ report"
   );
 
-  await cleanUtilityProcessShutdown(utilityPid);
+  await cleanUtilityProcessShutdown();
 });
