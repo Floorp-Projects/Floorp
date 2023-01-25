@@ -22,7 +22,12 @@
       <image id="trackingProtectionShield"/>
       <description class="description-with-side-element" flex="1">
         <html:span id="contentBlockingDescription" class="tail-with-learn-more" data-l10n-id="content-blocking-section-top-level-description"></html:span>
-        <label id="contentBlockingLearnMore" class="learnMore" data-l10n-id="content-blocking-learn-more" is="text-link"/>
+        <html:a is="moz-support-link"
+                id="contentBlockingLearnMore"
+                class="learnMore"
+                data-l10n-id="content-blocking-learn-more"
+                support-page="enhanced-tracking-protection"
+        />
       </description>
       <button id="trackingProtectionExceptions"
               is="highlightable-button"
