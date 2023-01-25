@@ -5,7 +5,6 @@
 <head>
   <title>Test for Alerts Service</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
@@ -31,6 +30,8 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
     return windows.hasMoreElements();
   }
 
+  addMessageListener("anyXULAlertsVisible", anyXULAlertsVisible);
+
   addMessageListener("waitForAlerts", function waitForAlerts() {
     if (anyXULAlertsVisible()) {
       setTimeout(waitForAlerts, 1000);
@@ -41,19 +42,18 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 });
 
 function waitForAlertsThenFinish() {
-  var resolved = new Promise(resolve => {
-    chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
-      chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
-      ok(true, "Alert disappeared.");
-      resolve();
-    });
+  chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
+    chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
+    ok(true, "Alert disappeared.");
+    SimpleTest.finish();
   });
   chromeScript.sendAsyncMessage("waitForAlerts");
-
-  return resolved;
 }
 
-add_task(async function testNoObserve() {
+async function runTest() {
+  var alertsVisible = await chromeScript.sendQuery("anyXULAlertsVisible");
+  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
+
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application");
   } else {
@@ -73,22 +73,18 @@ add_task(async function testNoObserve() {
         notifier.showAlertNotification(null, "Notification test",
                                        "This notification has no observer");
         ok(true, "showAlertNotification() succeeded");
-
-        await new Promise(resolve => {
-          // Add delay to wait for `alert:alert` window creation in case this is a XUL alert.
-          setTimeout(resolve, 1000);
-        }).then(async () => {
-          await waitForAlertsThenFinish();
-        });
       } catch (ex) {
         todo(false, "showAlertNotification() failed.", ex);
       }
     }
   }
-});
+}
 
-SimpleTest.requestFlakyTimeout("`alert:alert` window creation and deletion " +
-                               "lifetime may not be synchronous with the alert object.");
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+runTest();
+setTimeout(waitForAlertsThenFinish, 1000);
 </script>
 </pre>
 </body>

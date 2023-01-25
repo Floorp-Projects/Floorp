@@ -5,7 +5,6 @@
 <head>
   <title>Test for Alerts Service</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
@@ -23,48 +22,32 @@
 var notifier;
 var alertName = "fiorello";
 
-function showAlert() {
-  return new Promise((resolve, reject) => {
-    var observer = {
-      alertShow: false,
+var observer = {
+  alertShow: false,
+  observe(aSubject, aTopic, aData) {
+    is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
+    if (aTopic == "alertclickcallback") {
+      todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
+    } else if (aTopic == "alertshow") {
+      ok(!this.alertShow, "Alert should not be shown more than once");
+      this.alertShow = true;
 
-      observe(aSubject, aTopic, aData) {
-        is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
-        if (aTopic == "alertclickcallback") {
-          todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
-          reject();
-        } else if (aTopic == "alertshow") {
-          ok(!this.alertShow, "Alert should not be shown more than once");
-          this.alertShow = true;
-
-          // Notifications are native on OS X 10.8 and later, GNOME Shell with
-          // libnotify (bug 1236036) and Windows >= 8. These notifications persist
-          // in the Notification Center, and only fire the `alertfinished` event
-          // when closed. For platforms where native notifications may be used, we
-          // need to close explicitly to avoid a hang. This also works for XUL
-          // notifications when running this test on OS X < 10.8, or a window
-          // manager like Ubuntu Unity with incomplete libnotify support.
-          notifier.closeAlert(alertName);
-        } else {
-          is(aTopic, "alertfinished", "Checking the topic for a finished notification");
-          resolve();
-        }
-      },
-    };
-
-    try {
-      notifier.showAlertNotification(null, "Notification test",
-                                    "Surprise! I'm here to test notifications!",
-                                    false, "foobarcookie", observer, alertName);
-      ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
-    } catch (ex) {
-      todo(false, "showAlertNotification() failed.", ex);
-      reject();
+      // Notifications are native on OS X 10.8 and later, GNOME Shell with
+      // libnotify (bug 1236036) and Windows >= 8. These notifications persist
+      // in the Notification Center, and only fire the `alertfinished` event
+      // when closed. For platforms where native notifications may be used, we
+      // need to close explicitly to avoid a hang. This also works for XUL
+      // notifications when running this test on OS X < 10.8, or a window
+      // manager like Ubuntu Unity with incomplete libnotify support.
+      notifier.closeAlert(alertName);
+    } else {
+      is(aTopic, "alertfinished", "Checking the topic for a finished notification");
+      SimpleTest.finish();
     }
-  });
-}
+  },
+};
 
-add_task(async function testAlert() {
+function runTest() {
   const Cc = SpecialPowers.Cc;
   const Ci = SpecialPowers.Ci;
 
@@ -85,10 +68,20 @@ add_task(async function testAlert() {
     return;
   }
 
-  await showAlert();
-});
+  try {
+    SimpleTest.waitForExplicitFinish();
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, "foobarcookie", observer, alertName);
+    ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
+  } catch (ex) {
+    todo(false, "showAlertNotification() failed.", ex);
+    SimpleTest.finish();
+  }
+}
 
 SimpleTest.requestCompleteLog(); // Bug 1407296
+runTest();
 
 </script>
 </pre>
