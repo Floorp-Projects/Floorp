@@ -11015,8 +11015,14 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.enableWatchtowerMegamorphic = false;
   }
 
-  if (op.getBoolOption("enable-iterator-indices")) {
-    jit::JitOptions.disableIteratorIndices = false;
+  if (const char* str = op.getStringOption("ion-iterator-indices")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableIteratorIndices = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableIteratorIndices = true;
+    } else {
+      return OptionFailure("ion-iterator-indices", str);
+    }
   }
 
 #if defined(JS_SIMULATOR_ARM)
@@ -11761,6 +11767,9 @@ int main(int argc, char** argv) {
       !op.addStringOption(
           '\0', "ion-optimize-shapeguards", "on/off",
           "Eliminate redundant shape guards (default: on, off to disable)") ||
+      !op.addStringOption('\0', "ion-iterator-indices", "on/off",
+                          "Optimize property access in for-in loops "
+                          "(default: on, off to disable)") ||
       !op.addBoolOption('\0', "ion-check-range-analysis",
                         "Range analysis checking") ||
       !op.addBoolOption('\0', "ion-extra-checks",
@@ -11777,8 +11786,6 @@ int main(int argc, char** argv) {
                         "Enable Watchtower optimizations") ||
       !op.addBoolOption('\0', "disable-watchtower",
                         "Disable Watchtower optimizations") ||
-      !op.addBoolOption('\0', "enable-iterator-indices",
-                        "Enable iterator indices optimization") ||
       !op.addBoolOption('\0', "scalar-replace-arguments",
                         "Use scalar replacement to optimize ArgumentsObject") ||
       !op.addStringOption(
