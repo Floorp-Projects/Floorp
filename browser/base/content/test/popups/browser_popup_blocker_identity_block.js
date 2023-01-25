@@ -13,6 +13,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
 
 const baseURL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 const URL = baseURL + "popup_blocker2.html";

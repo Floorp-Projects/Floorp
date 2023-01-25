@@ -57,6 +57,7 @@ var tests = [
       this.oldSelectedTab = gBrowser.selectedTab;
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
 
@@ -113,6 +114,7 @@ var tests = [
         "geo anchor shouldn't be visible"
       );
 
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
 
       isnot(
@@ -259,6 +261,7 @@ var tests = [
       this.oldSelectedTab = gBrowser.selectedTab;
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
       await hidden;
