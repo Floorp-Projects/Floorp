@@ -95,7 +95,7 @@ class CookieBannerExceptionDetailsPanel(
     private fun bindDescription(hasException: Boolean) {
         val stringID =
             if (hasException) {
-                R.string.cookie_banner_exception_panel_description_state_off_for_site
+                R.string.cookie_banner_exception_panel_description_state_off_for_site2
             } else {
                 R.string.cookie_banner_exception_panel_description_state_on_for_site
             }
