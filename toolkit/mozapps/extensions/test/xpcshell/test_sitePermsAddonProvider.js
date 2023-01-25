@@ -61,8 +61,12 @@ const PRINCIPAL_MULTIPLE_CONTEXTS_USERCONTEXT = ssm.createContentPrincipal(
 );
 
 const BLOCKED_DOMAIN = "malicious.com";
+const BLOCKED_DOMAIN2 = "someothermalicious.com";
 const BLOCKED_PRINCIPAL = ssm.createContentPrincipalFromOrigin(
   `https://${BLOCKED_DOMAIN}`
+);
+const BLOCKED_PRINCIPAL2 = ssm.createContentPrincipalFromOrigin(
+  `https://${BLOCKED_DOMAIN2}`
 );
 
 const GATED_SITE_PERM1 = "test/gatedSitePerm";
@@ -117,7 +121,10 @@ add_task(
   {
     pref_set: [
       [SITEPERMS_ADDON_PROVIDER_PREF, true],
-      [SITEPERMS_ADDON_BLOCKEDLIST_PREF, BLOCKED_DOMAIN],
+      [
+        SITEPERMS_ADDON_BLOCKEDLIST_PREF,
+        `${BLOCKED_DOMAIN},${BLOCKED_DOMAIN2}`,
+      ],
     ],
   },
   async function test_sitepermsaddon_provider_enabled() {
@@ -488,25 +495,31 @@ add_task(
       "installSitePermsAddonFromWebpage with non-gated permission should not add the addon"
     );
 
-    info("Call installSitePermsAddonFromWebpage blocked principal");
-    await Assert.rejects(
-      AddonManager.installSitePermsAddonFromWebpage(
-        null,
-        BLOCKED_PRINCIPAL,
-        GATED_SITE_PERM1
-      ),
-      /SitePermsAddons can\'t be installed/,
-      "installSitePermsAddonFromWebpage rejected when called with blocked domain principal"
-    );
-    await Assert.rejects(
-      AddonManager.installSitePermsAddonFromWebpage(
-        null,
-        ssm.createContentPrincipalFromOrigin(`https://sub.${BLOCKED_DOMAIN}`),
-        GATED_SITE_PERM1
-      ),
-      /SitePermsAddons can\'t be installed/,
-      "installSitePermsAddonFromWebpage rejected when called with blocked subdomain principal "
-    );
+    info("Call installSitePermsAddonFromWebpage blocked principals");
+    const blockedDomainsPrincipals = {
+      [BLOCKED_DOMAIN]: BLOCKED_PRINCIPAL,
+      [BLOCKED_DOMAIN2]: BLOCKED_PRINCIPAL2,
+    };
+    for (const blockedDomain of [BLOCKED_DOMAIN, BLOCKED_DOMAIN2]) {
+      await Assert.rejects(
+        AddonManager.installSitePermsAddonFromWebpage(
+          null,
+          blockedDomainsPrincipals[blockedDomain],
+          GATED_SITE_PERM1
+        ),
+        /SitePermsAddons can\'t be installed/,
+        `installSitePermsAddonFromWebpage rejected when called with blocked domain principal: ${blockedDomainsPrincipals[blockedDomain].URI.spec}`
+      );
+      await Assert.rejects(
+        AddonManager.installSitePermsAddonFromWebpage(
+          null,
+          ssm.createContentPrincipalFromOrigin(`https://sub.${blockedDomain}`),
+          GATED_SITE_PERM1
+        ),
+        /SitePermsAddons can\'t be installed/,
+        `installSitePermsAddonFromWebpage rejected when called with blocked subdomain principal: https://sub.${blockedDomain}`
+      );
+    }
 
     info(
       "Call installSitePermsAddonFromWebpage for authorized principal and gated permission"
