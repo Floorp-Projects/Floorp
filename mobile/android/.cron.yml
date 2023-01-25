@@ -12,3 +12,26 @@ jobs:
       when:
           - {hour: 14, minute: 30}
           - {hour: 19, minute: 0}
+    - name: nightly-test
+      job:
+          type: decision-task
+          treeherder-symbol: Nt
+          target-tasks-method: nightly-test
+      when:
+        - {hour: 5, minute: 0}
+    - name: screenshots
+      job:
+          type: decision-task
+          treeherder-symbol: screenshots-D
+          target-tasks-method: screenshots
+      when: [{weekday: 'Monday', hour: 10, minute: 0}]
+    - name: legacy-api-ui-tests
+      job:
+          type: decision-task
+          treeherder-symbol: legacy-api-ui
+          target-tasks-method: legacy_api_ui_tests
+      when:
+          - {hour: 9, minute: 0}
+          - {hour: 12, minute: 0}
+          - {hour: 18, minute: 0}
+          - {hour: 22, minute: 0}
