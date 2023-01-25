@@ -747,9 +747,12 @@
         <html:span id="firefoxSuggestDataCollectionDescription"
                    class="tail-with-learn-more"
                    data-l10n-id="addressbar-firefox-suggest-data-collection-description"/>
-      <label id="firefoxSuggestDataCollectionLearnMore"
-             class="learnMore firefoxSuggestLearnMore" is="text-link"
-             data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
+        <html:a is="moz-support-link"
+                id="firefoxSuggestDataCollectionLearnMore"
+                class="learnMore firefoxSuggestLearnMore"
+                data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"
+                support-page="firefox-suggest"
+        />
       </description>
     </vbox>
     <hbox id="firefoxSuggestInfoBox" class="info-box-container" align="start"
