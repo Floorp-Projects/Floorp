@@ -480,13 +480,16 @@ const DownloadsIndicatorView = {
           }
           // For arrow type only: Set the % complete on the pie-chart.
           // We use a minimum of 10% to ensure something is always visible
-          this.indicator.style.setProperty(
+          this._progressIcon.style.setProperty(
             "--download-progress-pcent",
             `${Math.max(10, this._percentComplete)}%`
           );
         } else {
           this.indicator.removeAttribute("progress");
-          this.indicator.style.setProperty("--download-progress-pcent", "0%");
+          this._progressIcon.style.setProperty(
+            "--download-progress-pcent",
+            "0%"
+          );
         }
         this._progressRaf = null;
       });
