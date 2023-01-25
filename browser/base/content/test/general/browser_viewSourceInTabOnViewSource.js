@@ -36,6 +36,7 @@ add_task(async function test_regular_page() {
   await with_new_tab_opened(
     {
       gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       url: "http://example.com",
     },
     test_expect_view_source_enabled

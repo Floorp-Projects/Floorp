@@ -27,6 +27,7 @@ add_task(async function test_bad_meta_tags() {
   );
   is(
     pageInfo.previewImageURL.href,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://test.com/twitter-image.jpg",
     "did not collect og:image because of invalid loading principal"
   );

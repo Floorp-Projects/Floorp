@@ -133,6 +133,7 @@ function checkState(expectedStates, contentStates) {
 }
 
 const kPage =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/" +
   "base/content/test/general/dummy_page.html";
 

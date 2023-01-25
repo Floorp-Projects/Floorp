@@ -4,6 +4,7 @@
 
 add_task(async function() {
   let firstLocation =
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
 
