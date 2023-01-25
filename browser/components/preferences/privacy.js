@@ -460,12 +460,6 @@ var gPrivacyPane = {
    * Init HTTPS-Only mode and corresponding prefs
    */
   initHttpsOnly() {
-    let link = document.getElementById("httpsOnlyLearnMore");
-    let httpsOnlyURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "https-only-prefs";
-    link.setAttribute("href", httpsOnlyURL);
-
     // Set radio-value based on the pref value
     this.syncFromHttpsOnlyPref();
 

@@ -1149,7 +1149,12 @@
   <label><html:h2 data-l10n-id="httpsonly-header"/></label>
   <vbox data-subcategory="httpsonly" flex="1">
     <label id="httpsOnlyDescription" data-l10n-id="httpsonly-description"/>
-    <label id="httpsOnlyLearnMore" data-l10n-id="httpsonly-learn-more" class="learnMore" is="text-link"/>
+    <html:a is="moz-support-link"
+            id="httpsOnlyLearnMore"
+            class="learnMore"
+            data-l10n-id="httpsonly-learn-more"
+            support-page="https-only-prefs"
+    />
   </vbox>
   <hbox>
     <radiogroup flex="1" id="httpsOnlyRadioGroup">
