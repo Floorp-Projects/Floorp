@@ -942,7 +942,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
                  (unsigned int)retval->ChildID(),
                  PromiseFlatCString(aRemoteType).get()));
         retval->AssertAlive();
-        retval->StopRecycling();
+        retval->StopRecyclingE10SOnly(true);
         return retval.forget();
       }
     }
@@ -957,7 +957,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
                random.get(), (unsigned int)random->ChildID(),
                PromiseFlatCString(aRemoteType).get()));
       random->AssertAlive();
-      random->StopRecycling();
+      random->StopRecyclingE10SOnly(true);
       return random.forget();
     }
   }
@@ -968,8 +968,7 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     RefPtr<ContentParent> recycled = sRecycledE10SProcess;
     MOZ_DIAGNOSTIC_ASSERT(recycled->GetRemoteType() == DEFAULT_REMOTE_TYPE);
     recycled->AssertAlive();
-    recycled->StopRecycling();
-
+    recycled->StopRecyclingE10SOnly(true);
     if (profiler_thread_is_being_profiled_for_markers()) {
       nsPrintfCString marker("Recycled process %u (%p)",
                              (unsigned int)recycled->ChildID(), recycled.get());
@@ -1068,7 +1067,7 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
               ("GetNewOrUsedProcess: Existing host process %p (launching %d)",
                contentParent.get(), contentParent->IsLaunching()));
       contentParent->AssertAlive();
-      contentParent->StopRecycling();
+      contentParent->StopRecyclingE10SOnly(true);
       return contentParent.forget();
     }
   }
@@ -1110,7 +1109,7 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
   // still launching)
 
   contentParent->AssertAlive();
-  contentParent->StopRecycling();
+  contentParent->StopRecyclingE10SOnly(true);
   if (aGroup) {
     aGroup->EnsureHostProcess(contentParent);
   }
@@ -1722,6 +1721,38 @@ void ContentParent::Init() {
   Unused << SendInitNextGenLocalStorageEnabled(NextGenLocalStorageEnabled());
 }
 
+// Note that for E10S we can get a false here that will be overruled by
+// TryToRecycleE10SOnly as late as MaybeBeginShutdown. We cannot really
+// foresee its result here.
+bool ContentParent::CheckTabDestroyWillKeepAlive(
+    uint32_t aExpectedBrowserCount) {
+  return ManagedPBrowserParent().Count() != aExpectedBrowserCount ||
+         ShouldKeepProcessAlive();
+}
+
+void ContentParent::NotifyTabWillDestroy() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)
+#if !defined(MOZ_WIDGET_ANDROID)
+      /* on Android we keep processes alive more agressively, see
+         NotifyTabDestroying where we omit MaybeBeginShutdown */
+      || (/* we cannot trust CheckTabDestroyWillKeepAlive in E10S mode */
+          mozilla::FissionAutostart() &&
+          !CheckTabDestroyWillKeepAlive(mNumDestroyingTabs + 1))
+#endif
+  ) {
+    // Once we notify the impending shutdown, the content process will stop
+    // to process content JS on interrupt (among other things), so we need to
+    // be sure that the process will not be re-used after this point.
+    // The inverse is harmless, that is if we decide later to shut it down
+    // but did not notify here, it will be just notified later (but in rare
+    // cases too late to avoid a hang).
+    NotifyImpendingShutdown();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mNotifiedImpendingShutdownOnTabWillDestroy = true;
+#endif
+  }
+}
+
 void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
                                        bool aSendShutDown) {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
@@ -1729,8 +1760,11 @@ void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
            ManagedPBrowserParent().Count(), aExpectedBrowserCount));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (ManagedPBrowserParent().Count() != aExpectedBrowserCount ||
-      ShouldKeepProcessAlive() || TryToRecycle()) {
+  // Both CheckTabDestroyWillKeepAlive and TryToRecycleE10SOnly will return
+  // false if IsInOrBeyond(AppShutdownConfirmed), so if the parent shuts
+  // down we will always shutdown the child.
+  if (CheckTabDestroyWillKeepAlive(aExpectedBrowserCount) ||
+      TryToRecycleE10SOnly()) {
     return;
   }
 
@@ -1954,6 +1988,7 @@ void ContentParent::AssertNotInPool() {
 }
 
 void ContentParent::AssertAlive() {
+  MOZ_DIAGNOSTIC_ASSERT(!mNotifiedImpendingShutdownOnTabWillDestroy);
   MOZ_DIAGNOSTIC_ASSERT(!mIsSignaledImpendingShutdown);
   MOZ_DIAGNOSTIC_ASSERT(!IsDead());
 }
@@ -1983,7 +2018,7 @@ void ContentParent::RemoveFromList() {
     group->RemoveHostProcess(this);
   }
 
-  StopRecycling(/* aForeground */ false);
+  StopRecyclingE10SOnly(/* aForeground */ false);
 
   if (sBrowserContentParents) {
     if (auto entry = sBrowserContentParents->Lookup(mRemoteType)) {
@@ -2008,7 +2043,7 @@ void ContentParent::MarkAsDead() {
 
   // Prevent this process from being re-used.
   PreallocatedProcessManager::Erase(this);
-  StopRecycling(false);
+  StopRecyclingE10SOnly(false);
 
 #ifdef MOZ_WIDGET_ANDROID
   if (IsAlive()) {
@@ -2228,7 +2263,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
 void ContentParent::ActorDealloc() { mSelfRef = nullptr; }
 
-bool ContentParent::TryToRecycle() {
+bool ContentParent::TryToRecycleE10SOnly() {
   // Only try to recycle "web" content processes, as other remote types are
   // generally more unique, and cannot be effectively re-used. This is disabled
   // with Fission, as "web" content processes are no longer frequently used.
@@ -2259,7 +2294,7 @@ bool ContentParent::TryToRecycle() {
     // It's possible that the process was already cached, and we're being called
     // from a different path, and we're now past kMaxLifeSpan (or some other).
     // Ensure that if we're going to kill this process we don't recycle it.
-    StopRecycling(/* aForeground */ false);
+    StopRecyclingE10SOnly(/* aForeground */ false);
     return false;
   }
 
@@ -2286,7 +2321,7 @@ bool ContentParent::TryToRecycle() {
   return false;
 }
 
-void ContentParent::StopRecycling(bool aForeground) {
+void ContentParent::StopRecyclingE10SOnly(bool aForeground) {
   if (sRecycledE10SProcess != this) {
     return;
   }
@@ -2328,6 +2363,11 @@ bool ContentParent::ShouldKeepProcessAlive() {
 
   // If we have already been marked as dead, don't prevent shutdown.
   if (IsDead()) {
+    return false;
+  }
+
+  // If everything is going down, there is no need to keep us alive, neither.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return false;
   }
 
@@ -2390,6 +2430,7 @@ void ContentParent::NotifyTabDestroying() {
 }
 
 void ContentParent::AddKeepAlive() {
+  AssertAlive();
   // Something wants to keep this content process alive.
   ++mNumKeepaliveCalls;
 }
@@ -3759,7 +3800,7 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
     // ensure we won't get re-used by GetUsedBrowserProcess as we have not yet
     // done MarkAsDead.
     PreallocatedProcessManager::Erase(this);
-    StopRecycling(false);
+    StopRecyclingE10SOnly(false);
 
     if (sQuitApplicationGrantedClient) {
       Unused << sQuitApplicationGrantedClient->RemoveBlocker(this);
