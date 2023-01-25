@@ -498,10 +498,6 @@ bool WidgetEvent::IsAllowedToDispatchInSystemGroup() const {
 }
 
 bool WidgetEvent::IsBlockedForFingerprintingResistance() const {
-  if (!nsContentUtils::ShouldResistFingerprinting()) {
-    return false;
-  }
-
   switch (mClass) {
     case eKeyboardEventClass: {
       const WidgetKeyboardEvent* keyboardEvent = AsKeyboardEvent();
