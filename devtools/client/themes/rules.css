@@ -63,6 +63,7 @@
   display: flex;
   overflow: hidden;
   flex-wrap: wrap;
+  margin: 2px;
 }
 
 .ruleview-reveal-panel[hidden] {
@@ -77,6 +78,8 @@
 .ruleview-reveal-panel label {
   user-select: none;
   flex-grow: 1;
+  width: 30%;
+  min-width: 100px;
   display: flex;
   align-items: center;
 }
