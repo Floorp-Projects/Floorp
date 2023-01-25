@@ -30,3 +30,36 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true }
 );
+
+/**
+ * Test moving one element by inserting a second element before it such that the
+ * second element doesn't reflow.
+ */
+addAccessibleTask(
+  `
+<div id="reflowContainer">
+  <p>1</p>
+  <p id="reflow2" hidden>2</p>
+  <p id="reflow3">3</p>
+</div>
+<p id="noReflow">noReflow</p>
+  `,
+  async function(browser, docAcc) {
+    for (const id of ["reflowContainer", "reflow3", "noReflow"]) {
+      await testBoundsWithContent(docAcc, id, browser);
+    }
+    // Show p2, which will reflow everything inside "reflowContainer", but just
+    // move "noReflow" down without reflowing it.
+    info("Showing p2");
+    let shown = waitForEvent(EVENT_SHOW, "reflow2");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("reflow2").hidden = false;
+    });
+    await waitForContentPaint(browser);
+    await shown;
+    for (const id of ["reflowContainer", "reflow2", "reflow3", "noReflow"]) {
+      await testBoundsWithContent(docAcc, id, browser);
+    }
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);

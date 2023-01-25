@@ -7731,6 +7731,19 @@ static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   return r;
 }
 
+void nsIFrame::SetPosition(const nsPoint& aPt) {
+  if (mRect.TopLeft() == aPt) {
+    return;
+  }
+  mRect.MoveTo(aPt);
+  MarkNeedsDisplayItemRebuild();
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    accService->NotifyOfPossibleBoundsChange(PresShell(), mContent);
+  }
+#endif
+}
+
 void nsIFrame::MovePositionBy(const nsPoint& aTranslation) {
   nsPoint position = GetNormalPosition() + aTranslation;
 
