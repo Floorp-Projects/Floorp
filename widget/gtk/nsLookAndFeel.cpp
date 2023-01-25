@@ -986,9 +986,21 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::PanelAnimations:
-      // Disabled on systems without CSD, see bug 1385079.
-      // Disabled on wayland, see bug 1800442 and bug 1800368.
-      aResult = sCSDAvailable && !GdkIsWaylandDisplay();
+      aResult = [&]() -> bool {
+        if (!sCSDAvailable) {
+          // Disabled on systems without CSD, see bug 1385079.
+          return false;
+        }
+        if (GdkIsWaylandDisplay()) {
+          // Disabled on wayland, see bug 1800442 and bug 1800368.
+          return false;
+        }
+        if (IsKdeDesktopEnvironment()) {
+          // Disabled on KDE, see bug 1810797.
+          return false;
+        }
+        return true;
+      }();
       break;
     case IntID::UseOverlayScrollbars: {
       aResult = StaticPrefs::widget_gtk_overlay_scrollbars_enabled();
