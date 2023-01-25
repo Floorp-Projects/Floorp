@@ -24,7 +24,7 @@ pull_request_rules:
         name: default
   - name: L10N - Auto Merge
     conditions:
-      - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
+      - author=github-actions[bot]
       - status-success=complete-pr
       - files~=^(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)
       - -files~=^(?!(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)).+$

@@ -10,7 +10,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  update-nimbus-experiments:
+  fenix-update-nimbus-experiments:
     name: "Update Nimbus Experiments"
     runs-on: ubuntu-latest
     steps:
@@ -25,18 +25,18 @@ jobs:
         uses: mozilla-mobile/update-experiments@v3
         with:
           repo-path: fenix
-          output-path: app/src/main/res/raw/initial_experiments.json
+          output-path: fenix/app/src/main/res/raw/initial_experiments.json
           experimenter-url: https://experimenter.services.mozilla.com/api/v6/experiments-first-run/
           app-name: fenix
-          branch: automation/update-nimbus-experiments
+          branch: automation/update-fenix-nimbus-experiments
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch == 1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: fenix
-          branch: automation/update-nimbus-experiments
-          commit-message: "update initial_experiments.json based on the current first-run experiments in experimenter"
-          title: "Update initial experiments JSON for Nimbus"
+          branch: automation/update-fenix-nimbus-experiments
+          commit-message: "Update Fenix initial_experiments.json based on the current first-run experiments in experimenter"
+          title: "Update Fenix initial experiments JSON for Nimbus"
           body: "This (automated) PR updates the initial_experiments.json on the `main` branch"
           delete-branch: true

@@ -40,6 +40,11 @@ jobs:
           python l10n/.github/scripts/import_strings.py l10n
           --toml l10n/mozilla-mobile/android-components/l10n.toml
           --dest source/android-components
+      - name: Copy translated files for fenix
+        run: >
+          python l10n/.github/scripts/import_strings.py l10n
+          --toml l10n/mozilla-mobile/fenix/l10n.toml
+          --dest source/fenix
       - name: Copy translated files for focus-android
         run: >
           python l10n/.github/scripts/import_strings.py l10n
