@@ -896,20 +896,11 @@ dialog > .sync-engines-list + hbox {
   min-height: 16px;
   margin-block: 7px;
   margin-inline-end: 8px;
-}
-
-html|img.update-throbber {
   vertical-align: middle;
 }
 
-image.update-throbber {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .update-throbber {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
+.update-throbber {
+  content: image-set(url("chrome://global/skin/icons/loading.png"), url("chrome://global/skin/icons/loading@2x.png") 2x);
 }
 
 .navigation {
@@ -932,7 +923,7 @@ image.update-throbber {
 }
 
 .face-sad {
-  list-style-image: url("chrome://browser/skin/preferences/face-sad.svg");
+  content: url("chrome://browser/skin/preferences/face-sad.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -940,7 +931,7 @@ image.update-throbber {
 }
 
 .face-smile {
-  list-style-image: url("chrome://browser/skin/preferences/face-smile.svg");
+  content: url("chrome://browser/skin/preferences/face-smile.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -978,7 +969,7 @@ image.update-throbber {
 }
 
 .info-icon {
-  list-style-image: url("chrome://global/skin/icons/info.svg");
+  content: url("chrome://global/skin/icons/info.svg");
   width: 16px;
   height: 16px;
   margin-inline-end: 6px;
