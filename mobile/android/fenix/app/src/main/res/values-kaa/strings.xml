@@ -6,6 +6,21 @@
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Jeke)</string>
 
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Basqa variantlar</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Izlew tariyxı</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Betlerdi izlew</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Ashıq betlerińiz usı jerde kórsetiledi.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Jeke betlerińiz usı jerde kórsetiledi.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d  saylandı</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Jańa toplam qosıw</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Atı</string>
 
@@ -13,6 +28,12 @@
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Toplamdı tańlań</string>
 
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Saylandı</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Jaqında saqlanǵanlar</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">Alıp taslaw</string>
 
@@ -27,6 +48,9 @@
 
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Sazlamalarǵa ótiw</string>
+
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Jabıw</string>
 
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Jabıw</string>
@@ -48,28 +72,60 @@
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Alıp taslaw</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Jaqında kirilgen</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Alıp taslaw</string>
 
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Artqa</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Aldıǵa</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
     <string name="browser_menu_refresh">Jańalaw</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Toqtatıw</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Qosımshalar</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Akkaunt maǵlıwmatı</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Bul jerde qosımshalar joq</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Járdem</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Ne jańalıq</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Sazlamalar</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Kitapxana</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Ornatıw</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Qayta sinxronlaw</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Toplamǵa saqlaw</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bólisiw</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">%1$s de ashıw</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Baǵdarlamada ashıw</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Qosıw</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ózgeris kiritiw</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Tańlanǵan til</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Tillerdi izlew</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -77,6 +133,10 @@
 
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Ruqsat beriw</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Ruqsat etpew</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s izlew</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Izlew sazlamaları</string>
 
@@ -95,6 +155,9 @@
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Izlew</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Dawıslı izlew</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Sazlamalar</string>
@@ -103,6 +166,15 @@
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Qosımsha</string>
 
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Qupıyalıq hám qáwipsizlik</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Siltemelerdi jeke bette ashıw</string>
+
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Qosıwlı</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
 
@@ -115,6 +187,20 @@
 
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Óshirilgen</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Bárshe betlerde qosıwlı</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Jeke betlerde qosıwlı</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Kóbirek úyreniw</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Hámme betlerde iske túsiriw</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Tek ǵana jeke betlerde iske túsiriw</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Akkaunt</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Bas bet</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -130,29 +216,65 @@
     <string name="preferences_show_voice_search">Dawıslı izlewdi kórsetiw</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Akkaunt sazlamaları</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qosımshalar</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Ruqsat etildi</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Ruqsat etilmedi</string>
 
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">YAQSHI</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Biykarlaw</string>
 
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Toplam atı</string>
+
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Kóriw</string>
+
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Qayta urınıp kóriń</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Kóbirek úyreniw</string>
 
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Tariyx</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Saylandılar</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Loginler</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Betlerdi ashıw</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Shıǵıw</string>
 
 
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Qurılma atı</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Qurılma atı bos bolıwı múmkin emes.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Sinxronlaw...</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Mánziller</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Qabıllanǵan betler</string>
+
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Kóbirek úyreniw</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Paydalanıw hám texnikalıq maǵlıwmatlar</string>
+
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Akkaunttı óshiriw</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -169,14 +291,36 @@
     <string name="library_desktop_bookmarks_unfiled">Basqa saylandılar</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Tariyx</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Jańa bet</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Sazlamalar</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Jabıw</string>
 
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Betlerdi ashıw</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Biykarlaw</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Jaqında jawılǵan betler</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Tolıq tariyxın kórsetiw</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d betler</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d bet</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Bul jerde jaqında jawılǵan betler joq</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Betler</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Bet kórinisi</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Dizim</string>
 

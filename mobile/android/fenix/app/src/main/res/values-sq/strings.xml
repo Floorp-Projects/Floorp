@@ -354,6 +354,10 @@
     <string name="preferences_cookie_banner_reduction">Reduktim Banderolash Për Cookie-t</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Redukto banderola për cookie-t</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Off</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">On</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox-i provon automatikisht të hedhë tej kërkesa për “cookie” nga banderola cookie-shbanners. Nëse s’ka mundësi hedhjeje tej, Firefox-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
 
@@ -364,6 +368,8 @@
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Aktivizuar për këtë sajt</string>
 
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sajt aktualisht i pambuluar</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Të aktivizohet Reduktim Banderolash Cookie-sh për %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -373,14 +379,18 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s-i mund të provojë të hedhë tej automatikisht kërkesa për “cookie”. Nëse s’ka mundësi hedhjeje tej, %2$s-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s mund të provojë vetvetiu të hedhë poshtë kërkesa depozitimi cookie-sh.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s mund të provojë vetvetiu të hedhë poshtë kërkesa depozitimi cookie-sh.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s provon të hedhë poshtë automatikisht krejt kërkesat për cookies, në sajtet që e mbulojnë.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Lamtumirë banderola cookie-sh!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Lamtumirë banderola cookie-sh!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur. Përndryshe, prano krejt cookies, që të hiqen qafe banderolat e cookie-ve.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Të lejohet %1$s të hedhë tej vetvetiu kërkesa për depozitim cookie-sh, kur është e mundur?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Jo Tani</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->

@@ -308,6 +308,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Интернетте іздеу</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Дауыстық іздеу</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Баптаулар</string>
@@ -315,6 +318,8 @@
     <string name="preferences_category_general">Жалпы</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Осы туралы</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Негізгі іздеу жүйесі</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Іздеу</string>
 

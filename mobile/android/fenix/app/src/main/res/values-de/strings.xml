@@ -69,11 +69,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Fügen Sie eine Verknüpfung hinzu, um private Tabs vom Startbildschirm aus zu öffnen.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Fügen Sie eine Verknüpfung hinzu, um private Tabs vom Startbildschirm aus zu öffnen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Starten Sie den nächsten privaten Tab mit einem Fingertipp.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Verknüpfung hinzufügen</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Verknüpfung hinzufügen</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Zum Startbildschirm hinzufügen</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -267,7 +267,7 @@
     <string name="search_settings_menu_item">Sucheinstellungen</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Dieses Mal suchen:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Dieses Mal suchen:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Dieses Mal suchen in:</string>
@@ -363,8 +363,12 @@
     <string name="preferences_cookie_banner_reduction">Reduzierung von Cookie-Bannern</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Cookie-Banner reduzieren</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Aus</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Ein</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox versucht automatisch, Cookie-Anfragen auf Cookie-Bannern abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert Firefox möglicherweise alle Cookies, um das Banner zu schließen.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox versucht automatisch, Cookie-Anfragen auf Cookie-Bannern abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert Firefox möglicherweise alle Cookies, um das Banner zu schließen.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s versucht automatisch, Cookie-Anforderungen auf Cookie-Bannern abzulehnen.</string>
@@ -372,6 +376,8 @@
     <string name="reduce_cookie_banner_off_for_site">Für diese Website deaktiviert</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Für diese Website aktiviert</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Website derzeit nicht unterstützt</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Cookie-Banner-Reduzierung für %1$s aktivieren?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -379,16 +385,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s löscht die Cookies dieser Webseite und aktualisiert die Seite. Das Löschen aller Cookies kann Sie abmelden oder Warenkörbe leeren.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert %2$s möglicherweise alle Cookies, um das Banner zu schließen.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert %2$s möglicherweise alle Cookies, um das Banner zu schließen.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kann versuchen, Cookie-Anfragen automatisch abzulehnen.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s versucht, alle Cookie-Anfragen auf unterstützten Websites automatisch abzulehnen.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Weg mit Cookie-Bannern!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Weg mit Cookie-Bannern!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Cookie-Anfragen werden nach Möglichkeit automatisch abgelehnt. Andernfalls werden alle Cookies akzeptiert, um Cookie-Banner zu schließen.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Cookie-Anfragen werden nach Möglichkeit automatisch abgelehnt. Andernfalls werden alle Cookies akzeptiert, um Cookie-Banner zu schließen.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Cookie-Anfragen nach Möglichkeit automatisch ablehnen.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Cookie-Anfragen nach Möglichkeit automatisch ablehnen.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">%1$s erlauben, Cookie-Anfragen nach Möglichkeit automatisch abzulehnen?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Nicht jetzt</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -398,7 +408,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Weniger Cookie-Pop-ups sehen</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen oder alle akzeptieren, wenn dies nicht möglich ist.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen oder alle akzeptieren, wenn dies nicht möglich ist.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Beantworten Sie automatisch Cookie-Popups, um ablenkungsfrei zu Surfen. %1$s wird nach Möglichkeit alle Anfragen ablehnen.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -406,7 +416,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduzierung von Cookie-Bannern</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Webseite nach Möglichkeit abzulehnen, oder den Cookie-Zugriff zu akzeptieren, wenn dies nicht möglich ist?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Webseite nach Möglichkeit abzulehnen, oder den Cookie-Zugriff zu akzeptieren, wenn dies nicht möglich ist?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">%1$s erlauben, die Cookie-Zustimmungsanfrage einer Website nach Möglichkeit abzulehnen?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -415,7 +425,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatisch versuchen, eine Verbindung zu Websites herzustellen, die das HTTPS-Verschlüsselungsprotokoll verwenden, um die Sicherheit zu erhöhen.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Ein</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Ein</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Aus</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1065,7 +1075,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ausnahmen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Ein</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Ein</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Aus</string>
 
@@ -1830,7 +1840,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Zu verwendender Such-String</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Anfrage durch „%s“ ersetzen. Beispiel:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Anfrage durch „%s“ ersetzen. Beispiel:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Details zur benutzerdefinierten Suchmaschine</string>

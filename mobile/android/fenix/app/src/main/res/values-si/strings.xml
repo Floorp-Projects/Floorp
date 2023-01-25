@@ -65,11 +65,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">ඔබගේ මුල් තිරයෙන් පෞද්. පටිති විවෘත කිරීමට කෙටි මඟක් යොදන්න.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">ඔබගේ මුල් තිරයෙන් පෞද්. පටිති විවෘත කිරීමට කෙටි මඟක් යොදන්න.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">එක් තට්ටුවකින් ඊළඟ පෞද්. පටිත්ත අරින්න.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">කෙටිමඟක් යොදන්න</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">කෙටිමඟක් යොදන්න</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">මුල් තිරයට යොදන්න</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -166,6 +166,8 @@
     <string name="browser_menu_stop">නවතන්න</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">එක්කහු</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">ගිණුමේ තොරතුරු</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">මෙහි එක්කහු නැත</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -251,7 +253,7 @@
     <string name="search_settings_menu_item">සෙවුම් සැකසුම්</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">මෙවර සෙවීම:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">මෙවර සෙවීම:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">මෙවර සෙවීම:</string>
@@ -347,7 +349,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">දත්තකඩ කවුළු අවම කරන්න</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">දත්තකඩ කවුළුවල දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට ෆයර්ෆොක්ස් උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">දත්තකඩ කවුළුවල දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට ෆයර්ෆොක්ස් උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">මෙම අඩවියට අක්‍රියයි</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -359,7 +361,7 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, %2$s මගින් කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, %2$s මගින් කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">දත්තකඩ කවුළු ඉවරයි!</string>
@@ -373,7 +375,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">සක්‍රිය</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">සක්‍රිය</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">අක්‍රිය</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
@@ -999,7 +1001,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">හැරදැමීම්</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">සක්‍රිය</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">සක්‍රිය</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">අක්‍රිය</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1736,7 +1738,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">භාවිතයට සෙවුම් තන්තුව</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttps://search.naver.com/search.naver?where=nexearch&amp;sm=top_hty&amp;fbm=0&amp;ie=utf8&amp;query=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttps://search.naver.com/search.naver?where=nexearch&amp;sm=top_hty&amp;fbm=0&amp;ie=utf8&amp;query=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">අභිරුචි සෙවුම් යන්ත්‍රයේ විස්තර</string>
 

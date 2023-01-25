@@ -316,6 +316,9 @@
     <!-- Content description (not visible, for screen readers etc.): Voice search -->
     <string name="search_widget_voice">Recerca vocal</string>
 
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Parametros</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">General</string>
     <!-- Preference category for all links about Fenix -->
@@ -359,6 +362,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducer banners pro le cookie</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Disactivar</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Activar</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox automaticamente proba a rejectar requestas de cookies sur banners pro cookies. Si un option pro rejectar non es disponibile, Firefox pote acceptar tote le cookies pro dimitter le banner.</string>
 
@@ -368,6 +375,8 @@
     <string name="reduce_cookie_banner_off_for_site">Disactivar pro iste sito</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activar pro iste sito</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sito actualmente non supportate</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar le reduction de banner pro cookie pro %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -377,14 +386,18 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s pote probar automaticamente a rejectar requestas de cookies. Si un option pro rejectar non es disponibile, %2$s pote acceptar tote le cookies pro dimitter le banner.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s pote tentar de rejectar automaticamente le requestas de cookies.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s pote tentar de rejectar automaticamente le requestas de cookies.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s tenta rejectar automaticamente tote le requestas de cookies sur le sitos supportate.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Bandieras pro cookies adeo!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Bandieras pro cookies adeo!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rejectar automaticamente requestas de cookies, quando possibile. Alteremente, acceptar tote le cookies pro dimitter le bandieras pro cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Rejectar automaticamente requestas de cookies, quando possibile.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Rejectar automaticamente requestas de cookies, quando possibile.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Permitter a %1$s de rejectar automaticamente requestas de cookies, quando possibile?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Non ora</string>
 
@@ -572,6 +585,9 @@
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Le additivo non es supportate</string>
+
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Additivo jam installate</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

@@ -71,11 +71,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Start het volgende privétabblad met één tik.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Snelkoppeling toevoegen</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Snelkoppeling toevoegen</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Toevoegen aan startscherm</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -176,6 +176,8 @@
     <string name="browser_menu_stop">Stoppen</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Add-ons</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Accountinformatie</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Geen add-ons hier</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -267,7 +269,7 @@
     <string name="search_settings_menu_item">Zoekinstellingen</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Deze keer zoeken met:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Deze keer zoeken met:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Deze keer zoeken in:</string>
@@ -299,14 +301,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Meldingen helpen u meer te doen met %s</string>
+    <string name="onboarding_home_enable_notifications_title">Meldingen helpen u meer te doen met %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Synchroniseer uw tabbladen tussen apparaten, beheer downloads, ontvang tips over het optimaal benutten van de privacybescherming van %s en meer.</string>
+    <string name="onboarding_home_enable_notifications_description">Synchroniseer uw tabbladen tussen apparaten, beheer downloads, ontvang tips over het optimaal benutten van de privacybescherming van %s en meer.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Doorgaan</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Doorgaan</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Niet nu</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Niet nu</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -363,8 +365,10 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Cookiebanners reduceren</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox probeert automatisch cookie-aanvragen op cookiebanners te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert Firefox mogelijk alle cookies om de banner te sluiten.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox probeert automatisch cookie-aanvragen op cookiebanners te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert Firefox mogelijk alle cookies om de banner te sluiten.</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s probeert automatisch cookieverzoeken op cookiebanners te weigeren.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Uit voor deze website</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -376,12 +380,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s wist de cookies voor deze website en vernieuwt de pagina. Als alle cookies worden gewist, wordt u mogelijk afgemeld of worden winkelwagentjes geleegd.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s kan proberen om automatisch cookie-aanvragen te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert %2$s mogelijk alle cookies om de banner te sluiten.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s kan proberen om automatisch cookie-aanvragen te weigeren. Als er geen weigeringsoptie beschikbaar is, accepteert %2$s mogelijk alle cookies om de banner te sluiten.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s kan proberen cookieverzoeken automatisch te weigeren.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Vaarwel cookiebanners!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Weiger automatisch cookieverzoeken, indien mogelijk. Accepteer anders alle cookies om cookiebanners te verwijderen.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Weiger automatisch cookieverzoeken, indien mogelijk. Accepteer anders alle cookies om cookiebanners te verwijderen.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Cookieverzoeken automatisch weigeren, indien mogelijk.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Niet nu</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -391,22 +399,30 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Zie minder cookie-pop-ups</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Beantwoord automatisch cookie-pop-ups voor navigeren zonder afleiding. %1$s wijst indien mogelijk alle verzoeken af, of accepteert ze allemaal als dit niet kan.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Beantwoord automatisch cookie-pop-ups voor navigeren zonder afleiding. %1$s wijst indien mogelijk alle verzoeken af, of accepteert ze allemaal als dit niet kan.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Beantwoord automatisch cookie-pop-ups voor navigeren zonder afleiding. %1$s wijst indien mogelijk alle verzoeken af.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Pop-ups sluiten</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reductie van cookiebanners</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">%1$s toestaan om het toestemmingsverzoek voor cookies van een website indien mogelijk te weigeren of om cookietoegang te accepteren wanneer dit niet mogelijk is?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s toestaan om het toestemmingsverzoek voor cookies van een website indien mogelijk te weigeren of om cookietoegang te accepteren wanneer dit niet mogelijk is?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">%1$s toestaan het verzoek om toestemming voor cookies van een website te weigeren, indien mogelijk?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Toestaan</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Probeert voor een betere beveiliging automatisch middels het HTTPS-versleutelingsprotocol verbinding te maken met websites.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Aan</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Aan</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Uit</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Aan in alle tabbladen</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Aan in privétabbladen</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Meer info</string>
     <!-- Option for the https only setting -->
@@ -485,6 +501,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificaties</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Toegestaan</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Niet toegestaan</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Aangepaste add-oncollectie</string>
@@ -507,8 +528,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Onlangs bezocht</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Verhalen die tot nadenken stemmen</string>
@@ -766,6 +785,13 @@
     <string name="close_tabs_after_one_week_summary">Na een week sluiten</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Na een maand sluiten</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Op startpagina openen</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Op laatste tabblad openen</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Op startpagina openen na vier uur</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1032,10 +1058,16 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Uitzonderingen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Aan</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Aan</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Uit</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Standaard</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Streng</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Aangepast</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Audio en video toestaan</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1774,7 +1806,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Te gebruiken zoekterm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Zoekvraag vervangen door ‘%s’. Bijvoorbeeld: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Zoekvraag vervangen door ‘%s’. Bijvoorbeeld: \nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Details aangepaste zoekmachine</string>
@@ -1975,8 +2007,6 @@
     <string name="pocket_stories_categories_header">Verhalen op onderwerp</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Meer ontdekken</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Mogelijk gemaakt door Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Mogelijk gemaakt door %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->

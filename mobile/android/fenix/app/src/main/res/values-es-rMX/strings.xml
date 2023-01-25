@@ -63,11 +63,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Agregar un acceso directo para abrir pestañas privadas desde su pantalla de inicio.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Agregar un acceso directo para abrir pestañas privadas desde su pantalla de inicio.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Inicia la siguiente pestaña privada con un toque.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Agregar acceso directo</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Agregar acceso directo</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Agregar a la pantalla de inicio</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -259,7 +259,7 @@
     <string name="search_settings_menu_item">Ajustes de búsqueda</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Busca esta vez:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Busca esta vez:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Esta vez buscar en:</string>
@@ -353,7 +353,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducir banners de cookies</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox intenta rechazar automáticamente las solicitudes de cookies en los banners de cookies. Si una opción de rechazo no está disponible, Firefox puede aceptar todas las cookies para descartar el banner.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox intenta rechazar automáticamente las solicitudes de cookies en los banners de cookies. Si una opción de rechazo no está disponible, Firefox puede aceptar todas las cookies para descartar el banner.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Desactivar para este sitio</string>
@@ -367,8 +367,10 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s borrará las cookies de este sitio y actualizará la página. Borrar todas las cookies puede cerrar tu sesión o vaciar los carritos de compras.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s puede intentar rechazar automáticamente las solicitudes de cookies. Si una opción de rechazo no está disponible, %2$s puede aceptar todas las cookies para descartar el banner.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s puede intentar rechazar automáticamente las solicitudes de cookies. Si una opción de rechazo no está disponible, %2$s puede aceptar todas las cookies para descartar el banner.</string>
 
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Rechazar automáticamente las solicitudes de cookies, cuando sea posible.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ahora no</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -383,7 +385,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Intentar conectarse automáticamente a sitios que utilizan el protocolo de encriptación HTTPS para mayor seguridad.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Activado</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Activado</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Desactivado</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
@@ -747,6 +749,13 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Cerrar después de un mes</string>
 
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Abrir en la página de inicio</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Abrir en la última pestaña</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Abrir en la página de inicio después de cuatro horas</string>
+
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Mover pestañas antiguas a inactivas</string>
@@ -1011,7 +1020,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Excepciones</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Activada</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Activada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1757,7 +1766,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Cadena de búsqueda a usar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Reemplazar la consulta con “%s”. Ejemplo:\n https://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Reemplazar la consulta con “%s”. Ejemplo:\n https://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detalles del motor de búsqueda personalizado</string>
 

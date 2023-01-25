@@ -68,11 +68,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">一步进入隐私标签页。</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">添加快捷方式</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">添加快捷方式</string>
 
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">添加到主屏幕</string>
@@ -270,7 +270,7 @@
     <string name="search_settings_menu_item">搜索设置</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">这次搜索：</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">这次搜索：</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">此次搜索：</string>
@@ -367,7 +367,7 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">减少 Cookie 横幅</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox 会自动尝试点击 Cookie 横幅上的“拒绝”按钮。若网站未提供拒绝选项，则可能会接受所有 Cookie 以关闭横幅。</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox 会自动尝试点击 Cookie 横幅上的“拒绝”按钮。若网站未提供拒绝选项，则可能会接受所有 Cookie 以关闭横幅。</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s 会尝试自动拒绝 Cookie 横幅的 Cookie 请求。</string>
@@ -383,14 +383,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 将清除此网站的 Cookie 并刷新页面。清除 Cookie 可能会导致您退出登录，或清空购物车。</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s 会自动尝试拒绝 Cookie 请求。若网站未提供拒绝选项，%2$s 可能会接受所有 Cookie 以关闭横幅。</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s 会自动尝试拒绝 Cookie 请求。若网站未提供拒绝选项，%2$s 可能会接受所有 Cookie 以关闭横幅。</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s 会尝试自动拒绝 Cookie 请求。</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Cookie 横幅，消失不见！</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">尽可能自动拒绝 Cookie 请求，如果无法拒绝则接受所有 Cookie 以关闭 Cookie 横幅。</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">尽可能自动拒绝 Cookie 请求，如果无法拒绝则接受所有 Cookie 以关闭 Cookie 横幅。</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1">尽可能自动拒绝 Cookie 请求。</string>
     <!-- Remind me later text button for the onboarding dialog -->
@@ -402,7 +402,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">减少 Cookie 弹窗</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">自动回应 Cookie 弹窗，实现无干扰浏览。%1$s 将尽可能拒绝所有请求，如果无法拒绝则接受所有请求。</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">自动回应 Cookie 弹窗，实现无干扰浏览。%1$s 将尽可能拒绝所有请求，如果无法拒绝则接受所有请求。</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">自动回应 Cookie 弹窗，实现无干扰浏览。%1$s 将尽可能拒绝所有请求。</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -410,7 +410,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">减少 Cookie 横幅</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">要允许 %1$s 尽可能拒绝网站的 Cookie 请求，并在无法拒绝时接受 Cookie 请求吗？</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">要允许 %1$s 尽可能拒绝网站的 Cookie 请求，并在无法拒绝时接受 Cookie 请求吗？</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">要允许 %1$s 尽可能拒绝网站的 Cookie 请求吗？</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -419,7 +419,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，增强安全性。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">开启</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">开启</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">关闭</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -794,6 +794,13 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">1 个月后关闭</string>
 
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">打开主页</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">打开最近的标签页</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">闲置四小时后打开主页</string>
+
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">将旧标签页切换至休眠状态</string>
@@ -1066,7 +1073,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">例外</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">开启</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">开启</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">关闭</string>
 
@@ -1835,7 +1842,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">搜索字符串</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">用“%s”替换查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">用“%s”替换查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">自定义搜索引擎信息</string>
