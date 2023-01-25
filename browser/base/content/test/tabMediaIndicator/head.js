@@ -11,6 +11,8 @@ const gEMPTY_PAGE_URL = GetTestWebBasedURL("file_empty.html");
  *        if set, then return a url with different origin
  */
 function GetTestWebBasedURL(fileName, cors = false) {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const origin = cors ? "http://example.org" : "http://example.com";
   return (
     getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) +

@@ -3,6 +3,7 @@
 
 "use strict";
 
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_URL = "http://example.com";
 
 /**
