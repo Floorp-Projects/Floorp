@@ -1962,9 +1962,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 180000
-   * **repository**: https://github.com/camillobruni/Speedometer
-   * **repository branch**: 2022-12-08_interactive_runner
-   * **repository revision**: 9e2d82c75a66cae636db1888e916276075a137b8
+   * **repository**: https://github.com/WebKit/Speedometer
+   * **repository revision**: ef8d58c9883d176f672e9862a0c3293253f8607b
    * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
@@ -2305,9 +2304,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 420000
-   * **repository**: https://github.com/camillobruni/Speedometer
-   * **repository branch**: 2022-12-08_interactive_runner
-   * **repository revision**: 9e2d82c75a66cae636db1888e916276075a137b8
+   * **repository**: https://github.com/WebKit/Speedometer
+   * **repository revision**: ef8d58c9883d176f672e9862a0c3293253f8607b
    * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
