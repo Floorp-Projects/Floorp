@@ -43,9 +43,7 @@
     (async function testBody() {
       let frame1 = document.getElementById("frame1");
       let frame2 = document.getElementById("frame2");
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       let uri1 = Services.io.newURI("http://www.example.com/1");
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       let uri2 = Services.io.newURI("http://www.example.com/2");
 
       let errorPageReady = waitForErrorPage(frame1);

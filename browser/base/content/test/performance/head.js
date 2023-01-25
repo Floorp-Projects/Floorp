@@ -382,7 +382,6 @@ async function addDummyHistoryEntries(searchStr = "") {
 
   for (let i = 0; i < NUM_VISITS; ++i) {
     visits.push({
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       uri: `http://example.com/urlbar-reflows-${i}`,
       title: `Reflow test for URL bar entry #${i} - ${searchStr}`,
     });

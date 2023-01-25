@@ -25,16 +25,12 @@ var _referrerTests = [
   // 1. Normal cases - no referrer policy, no special attributes.
   //    We expect a full referrer normally, and no referrer on downgrade.
   {
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     fromScheme: "http://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     result: "http://test1.example.com/browser", // full referrer
   },
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     result: "", // no referrer when downgrade
   },
@@ -42,14 +38,12 @@ var _referrerTests = [
   //    even on downgrade.  But rel=noreferrer trumps this.
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     policy: "origin",
     result: "https://test1.example.com/", // origin, even on downgrade
   },
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     policy: "origin",
     rel: "noreferrer",
@@ -66,7 +60,6 @@ var _referrerTests = [
     result: "", // same origin https://test1.example.com/browser
   },
   {
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     fromScheme: "http://",
     toScheme: "https://",
     policy: "no-referrer",

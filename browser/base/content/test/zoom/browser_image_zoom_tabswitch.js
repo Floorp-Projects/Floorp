@@ -6,7 +6,6 @@
 function test() {
   let tab1, tab2;
   const TEST_IMAGE =
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/browser/browser/base/content/test/general/moz.png";
 
   waitForExplicitFinish();

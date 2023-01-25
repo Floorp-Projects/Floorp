@@ -48,7 +48,6 @@ add_task(async function test_https() {
 
 // Also check that there are conditions where this isn't shown.
 add_task(async function test_http() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async function() {
     let promisePanelOpen = BrowserTestUtils.waitForEvent(
       window,

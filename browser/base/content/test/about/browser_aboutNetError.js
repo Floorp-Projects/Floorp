@@ -162,7 +162,6 @@ add_task(async function checkDomainCorrection() {
   info("Try loading a URI that should result in an error page");
   BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example/example2/",
     false
   );

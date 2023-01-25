@@ -13,7 +13,6 @@
 const TEST_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com"
   ) + "file_mixedContentFramesOnHttp.html";
 

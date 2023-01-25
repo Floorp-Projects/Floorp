@@ -2,7 +2,6 @@
 
 add_task(async function starButtonCtrlClick() {
   // Open a unique page.
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let url = "http://example.com/browser_page_action_star_button";
   await BrowserTestUtils.withNewTab(url, async () => {
     StarUI._createPanelIfNeeded();
@@ -28,7 +27,6 @@ add_task(async function starButtonCtrlClick() {
 
 add_task(async function bookmark() {
   // Open a unique page.
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let url = "http://example.com/browser_page_action_menu";
   await BrowserTestUtils.withNewTab(url, async () => {
     // The bookmark button should read "Bookmark this page ([shortcut])" and not

@@ -6,7 +6,6 @@
 let contextMenu;
 
 const example_base =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/contextMenu/";
 const MAIN_URL = example_base + "subtst_contextmenu_keyword.html";
 

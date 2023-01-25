@@ -4,7 +4,6 @@
 
 const baseURL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 
@@ -118,11 +117,9 @@ async function test_opening_blocked_popups(testURL) {
 }
 
 add_task(async function() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await test_opening_blocked_popups("http://example.com/");
 });
 
 add_task(async function() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await test_opening_blocked_popups("http://w3c-test.org/");
 });
