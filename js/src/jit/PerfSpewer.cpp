@@ -688,6 +688,22 @@ void js::jit::CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg) {
   }
 }
 
+void js::jit::CollectPerfSpewerJitCodeProfile(uintptr_t base, uint64_t size,
+                                              const char* msg) {
+  if (!PerfEnabled()) {
+    return;
+  }
+
+  if (size > 0) {
+    AutoLockPerfSpewer lock;
+
+    JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
+    UniqueChars desc = JS_smprintf("%s", msg);
+    PerfSpewer::CollectJitCodeInfo(desc, reinterpret_cast<void*>(base), size,
+                                   profilerRecord, lock);
+  }
+}
+
 void js::jit::CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
                                        const char* filename,
                                        const char* annotation) {
@@ -716,4 +732,38 @@ void js::jit::CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
       JS_smprintf("%s:%u: Function %s", filename, lineno, funcName);
   PerfSpewer::CollectJitCodeInfo(desc, reinterpret_cast<void*>(base),
                                  uint64_t(size), profilerRecord, lock);
+}
+
+void js::jit::PerfSpewerRangeRecorder::RecordOffset(const char* name) {
+  if (!PerfEnabled()) {
+    return;
+  }
+  if (!ranges.append(
+          std::make_pair(masm.currentOffset(), DuplicateString(name)))) {
+    AutoLockPerfSpewer lock;
+    DisablePerfSpewer(lock);
+    ranges.clear();
+  }
+}
+
+void js::jit::PerfSpewerRangeRecorder::CollectRangesForJitCode(JitCode* code) {
+  if (!PerfEnabled() || ranges.empty()) {
+    return;
+  }
+
+  uintptr_t basePtr = uintptr_t(code->raw());
+  uintptr_t offsetStart = 0;
+
+  for (OffsetPair& pair : ranges) {
+    uint32_t offsetEnd = std::get<0>(pair);
+    uintptr_t rangeSize = uintptr_t(offsetEnd - offsetStart);
+    const char* rangeName = std::get<1>(pair).get();
+
+    CollectPerfSpewerJitCodeProfile(basePtr + offsetStart, rangeSize,
+                                    rangeName);
+    offsetStart = offsetEnd;
+  }
+
+  MOZ_RELEASE_ASSERT(offsetStart < code->instructionsSize());
+  ranges.clear();
 }
