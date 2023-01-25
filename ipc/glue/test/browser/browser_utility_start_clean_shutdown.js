@@ -4,6 +4,6 @@
 "use strict";
 
 add_task(async () => {
-  await startUtilityProcess();
-  await cleanUtilityProcessShutdown();
+  const pid = await startUtilityProcess();
+  await cleanUtilityProcessShutdown(pid);
 });
