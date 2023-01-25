@@ -40,8 +40,8 @@ deb11-valgrind:
     run:
         dist: bullseye
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20220829T032859Z/pool/main/v/valgrind/valgrind_3.19.0-1.dsc
-            sha256: 2a988324ccb0a08cb9805f84549725347f261029f198195040a35da905505376
+            url: http://snapshot.debian.org/archive/debian/20230111T213757Z/pool/main/v/valgrind/valgrind_3.20.0-1.dsc
+            sha256: e32d373bf2d4f0bd0e9673c711d0e4a8eed43c22ca81714ae3e2d85b2f315493
 
 deb11-python-zstandard:
     description: "python-zstandard for Debian bullseye"

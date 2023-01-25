@@ -58,7 +58,7 @@ RUN apt-get update && apt-get install \
     libxrender1-dbgsym \
     libxt6-dbgsym \
     libxxf86vm1-dbg \
-    valgrind-dbg \
+    valgrind-dbgsym \
     xvfb \
     zlib1g-dbgsym
 
