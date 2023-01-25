@@ -1,9 +1,6 @@
 add_task(async function test() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab1 = await addTab("http://example.com/1");
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab2 = await addTab("http://example.com/2");
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab3 = await addTab("http://example.com/3");
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);

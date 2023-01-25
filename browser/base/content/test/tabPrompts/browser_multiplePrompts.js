@@ -132,7 +132,6 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com",
     true
   );

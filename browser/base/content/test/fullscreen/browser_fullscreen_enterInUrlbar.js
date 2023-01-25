@@ -31,7 +31,6 @@ add_task(async function test() {
     // Enter a URL.
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       value: "http://example.com/",
       waitForFocus: SimpleTest.waitForFocus,
       fireInputEvent: true,

@@ -68,7 +68,6 @@ add_task(async function test_default() {
  * attempt to wait for a crash dump for it (which will never come).
  */
 add_task(async function test_restart_required_foreground() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
     await BrowserTestUtils.simulateProcessLaunchFail(
@@ -93,7 +92,6 @@ add_task(async function test_restart_required_foreground() {
  */
 add_task(async function test_launchfail_background() {
   let originalTab = gBrowser.selectedTab;
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     let tab = gBrowser.getTabForBrowser(browser);
     await BrowserTestUtils.switchTab(gBrowser, originalTab);

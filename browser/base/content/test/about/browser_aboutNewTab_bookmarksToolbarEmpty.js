@@ -6,17 +6,14 @@
 const bookmarksInfo = [
   {
     title: "firefox",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     url: "http://example.com",
   },
   {
     title: "rules",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     url: "http://example.com/2",
   },
   {
     title: "yo",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     url: "http://example.com/2",
   },
 ];

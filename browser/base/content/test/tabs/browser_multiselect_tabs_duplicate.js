@@ -14,11 +14,8 @@ async function openTabMenuFor(tab) {
 
 add_task(async function test() {
   let originalTab = gBrowser.selectedTab;
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab1 = await addTab("http://example.com/1");
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab2 = await addTab("http://example.com/2");
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let tab3 = await addTab("http://example.com/3");
 
   let menuItemDuplicateTab = document.getElementById("context_duplicateTab");
@@ -45,7 +42,6 @@ add_task(async function test() {
 
   let newTabOpened = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/3",
     true
   );
@@ -98,9 +94,7 @@ add_task(async function test() {
 
   await TestUtils.waitForCondition(() => {
     return (
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       getUrl(gBrowser.visibleTabs[4]) == "http://example.com/1" &&
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       getUrl(gBrowser.visibleTabs[5]) == "http://example.com/3"
     );
   });

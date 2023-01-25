@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   let newTab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
   waitForExplicitFinish();
   BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(mainPart);
@@ -12,7 +11,6 @@ function test() {
     gBrowser.pinTab(newTab);
     gBrowser.selectedTab = newTab;
 
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     openTrustedLinkIn("http://example.org/", "current", {
       inBackground: true,
     });

@@ -12,7 +12,6 @@
 
 // Choose origin so that all tracking origins used are third-parties.
 const TRACKING_PAGE =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 add_setup(async function() {
@@ -188,7 +187,6 @@ async function runTestForCategoryAndState(category, action) {
       elementId: "socialblock",
     },
     cryptomining: {
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       origin: "http://cryptomining.example.com",
       elementId: "cryptominers",
     },

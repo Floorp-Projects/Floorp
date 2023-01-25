@@ -97,7 +97,6 @@ var tests = [
       this.oldSelectedTab = gBrowser.selectedTab;
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
 
@@ -199,7 +198,6 @@ var tests = [
   {
     id: "Test#6",
     async run() {
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.eventCallback = function(eventName) {
@@ -221,7 +219,6 @@ var tests = [
       let oldSelectedTab = gBrowser.selectedTab;
       let newTab = await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
       gBrowser.selectedTab = oldSelectedTab;
@@ -248,12 +245,10 @@ var tests = [
   {
     id: "Test#8",
     async run() {
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
       let bgTab = await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
       let anchor = document.createXULElement("box");
@@ -309,13 +304,11 @@ var tests = [
 
       await Promise.all([
         BrowserUtils.promiseObserved("window-global-created", wgp =>
-          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           wgp.documentURI.spec.startsWith("http://example.org/")
         ),
         SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
           content.document
             .getElementById("iframe")
-            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
             .setAttribute("src", "http://example.org/");
         }),
       ]);

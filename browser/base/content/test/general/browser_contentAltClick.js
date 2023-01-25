@@ -196,7 +196,6 @@ add_task(async function test_alt_click_in_frame() {
   is(downloads.length, 1, "1 downloads");
   is(
     downloads[0].source.url,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/",
     "Downloaded link in iframe."
   );

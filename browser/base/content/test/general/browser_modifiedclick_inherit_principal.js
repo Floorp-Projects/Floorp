@@ -1,7 +1,6 @@
 "use strict";
 
 const kURL =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 ("data:text/html,<a href=''>Middle-click me</a>");
 
@@ -30,7 +29,6 @@ add_task(async function() {
     let newTab = await newTabPromise;
     is(
       newTab.linkedBrowser.contentPrincipal.origin,
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://example.com",
       "Principal should be for example.com"
     );

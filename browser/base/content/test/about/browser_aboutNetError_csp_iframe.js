@@ -4,7 +4,6 @@
 "use strict";
 
 const BLOCKED_PAGE =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org:8000/browser/browser/base/content/test/about/csp_iframe.sjs";
 
 add_task(async function test_csp() {
@@ -39,7 +38,6 @@ async function setupPage(htmlPageName, blockedPage) {
   let iFramePage =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://example.com"
     ) + htmlPageName;
 

@@ -8,7 +8,6 @@
 const TEST_CASES = [
   {
     type: "http",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     testURL: "http://example.com",
     hidden: false,
   },

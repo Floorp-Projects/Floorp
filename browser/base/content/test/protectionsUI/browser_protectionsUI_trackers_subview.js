@@ -9,7 +9,6 @@ const { PermissionTestUtils } = ChromeUtils.import(
 );
 
 const TRACKING_PAGE =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 const TP_PREF = "privacy.trackingprotection.enabled";
@@ -87,7 +86,6 @@ async function assertSitesListed(blocked) {
   is(listItems.length, 2, "We have 2 trackers in the list");
 
   let listItem = listItems.find(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     item => item.querySelector("label").value == "http://trackertest.org"
   );
   ok(listItem, "Has an item for trackertest.org");

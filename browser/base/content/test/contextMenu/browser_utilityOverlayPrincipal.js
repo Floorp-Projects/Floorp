@@ -22,13 +22,11 @@ function runNextTest() {
 function test_openUILink_checkPrincipal() {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
   )); // remote tab
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(async function() {
     is(
       tab.linkedBrowser.currentURI.spec,
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://example.com/",
       "example.com loaded"
     );
@@ -54,7 +52,6 @@ function test_openUILink_checkPrincipal() {
       );
       is(
         content.document.nodePrincipal.asciiSpec,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/",
         "sanity: correct doc.nodePrincipal URL"
       );
@@ -65,7 +62,6 @@ function test_openUILink_checkPrincipal() {
   });
 
   // Ensure we get the correct default of "allowInheritPrincipal: false" from openUILink
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   openUILink("http://example.com", null, {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal({}),
   }); // defaults to "current"

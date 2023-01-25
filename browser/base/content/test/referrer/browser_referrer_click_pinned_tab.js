@@ -7,24 +7,19 @@
 
 _referrerTests = [
   {
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     fromScheme: "http://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     cross: true,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     result: "http://test1.example.com/", // origin
   },
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     cross: true,
     result: "", // no referrer when downgrade
   },
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     policy: "origin",
     cross: true,
@@ -32,7 +27,6 @@ _referrerTests = [
   },
   {
     fromScheme: "https://",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     toScheme: "http://",
     policy: "origin",
     rel: "noreferrer",
@@ -47,7 +41,6 @@ _referrerTests = [
     result: "", // same origin https://test1.example.com/browser
   },
   {
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     fromScheme: "http://",
     toScheme: "https://",
     policy: "no-referrer",

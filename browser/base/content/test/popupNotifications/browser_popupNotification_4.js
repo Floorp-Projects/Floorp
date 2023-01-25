@@ -117,7 +117,6 @@ var tests = [
     async run() {
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
 
@@ -158,7 +157,6 @@ var tests = [
     async run() {
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com/"
       );
       let notifyObj = new BasicNotification(this.id);
