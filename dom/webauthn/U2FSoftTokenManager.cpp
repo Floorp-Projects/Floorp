@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebAuthnCoseIdentifiers.h"
-#include "WebAuthnEnumStrings.h"
 #include "mozilla/dom/U2FSoftTokenManager.h"
 #include "CryptoBuffer.h"
 #include "mozilla/Base64.h"
@@ -582,16 +581,17 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
+    UserVerificationRequirement userVerificaitonRequirement =
+        sel.userVerificationRequirement();
+
     bool requireUserVerification =
-        sel.userVerificationRequirement().EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED);
+        userVerificaitonRequirement == UserVerificationRequirement::Required;
 
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
-      const nsString& authenticatorAttachment =
+      const AuthenticatorAttachment authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      if (authenticatorAttachment.EqualsLiteral(
-              MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
+      if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
         requirePlatformAttachment = true;
       }
     }
@@ -824,9 +824,11 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
 
+    UserVerificationRequirement userVerificaitonReq =
+        extra.userVerificationRequirement();
+
     // The U2F softtoken doesn't support user verification.
-    if (extra.userVerificationRequirement().EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+    if (userVerificaitonReq == UserVerificationRequirement::Required) {
       return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR,
                                              __func__);
     }

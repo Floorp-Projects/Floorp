@@ -23,7 +23,6 @@
 #include "nsIThread.h"
 #include "nsTextFormatter.h"
 #include "mozilla/Telemetry.h"
-#include "WebAuthnEnumStrings.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
@@ -468,20 +467,11 @@ void U2FTokenManager::Register(
   if (aTransactionInfo.Extra().isSome()) {
     const auto& extra = aTransactionInfo.Extra().ref();
 
-    // The default attestation type is "none", so set
-    // noneAttestationRequested=false only if the RP's preference matches one of
-    // the other known types. This needs to be reviewed if values are added to
-    // the AttestationConveyancePreference enum.
-    const nsString& attestation = extra.attestationConveyancePreference();
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
-        attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT) ||
-        attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
-      noneAttestationRequested = false;
-    }
+    AttestationConveyancePreference attestation =
+        extra.attestationConveyancePreference();
+
+    noneAttestationRequested =
+        attestation == AttestationConveyancePreference::None;
   }
 #endif  // not MOZ_WIDGET_ANDROID
 

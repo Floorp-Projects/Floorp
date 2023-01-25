@@ -45,7 +45,7 @@ interface AuthenticatorAssertionResponse : AuthenticatorResponse {
 };
 
 dictionary PublicKeyCredentialParameters {
-    required DOMString                type;
+    required PublicKeyCredentialType  type;
     required COSEAlgorithmIdentifier  alg;
 };
 
@@ -60,7 +60,7 @@ dictionary PublicKeyCredentialCreationOptions {
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticatorSelectionCriteria               authenticatorSelection = {};
-    DOMString                                    attestation = "none";
+    AttestationConveyancePreference              attestation = "none";
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs         extensions = {};
 };
@@ -80,9 +80,26 @@ dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
 };
 
 dictionary AuthenticatorSelectionCriteria {
-    DOMString                    authenticatorAttachment;
+    AuthenticatorAttachment      authenticatorAttachment;
     boolean                      requireResidentKey = false;
-    DOMString                    userVerification = "preferred";
+    UserVerificationRequirement  userVerification = "preferred";
+};
+
+enum AuthenticatorAttachment {
+    "platform",       // Platform attachment
+    "cross-platform"  // Cross-platform attachment
+};
+
+enum AttestationConveyancePreference {
+    "none",
+    "indirect",
+    "direct"
+};
+
+enum UserVerificationRequirement {
+    "required",
+    "preferred",
+    "discouraged"
 };
 
 dictionary PublicKeyCredentialRequestOptions {
@@ -90,7 +107,7 @@ dictionary PublicKeyCredentialRequestOptions {
     unsigned long                        timeout;
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
-    DOMString                            userVerification = "preferred";
+    UserVerificationRequirement          userVerification = "preferred";
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs extensions = {};
 };
@@ -131,12 +148,25 @@ dictionary TokenBinding {
     DOMString id;
 };
 
+enum TokenBindingStatus { "present", "supported" };
+
+enum PublicKeyCredentialType {
+    "public-key"
+};
+
 dictionary PublicKeyCredentialDescriptor {
-    required DOMString                    type;
+    required PublicKeyCredentialType      type;
     required BufferSource                 id;
     // Transports is a string that is matched against the AuthenticatorTransport
     // enumeration so that we have forward-compatibility for new transports.
     sequence<DOMString>                   transports;
+};
+
+enum AuthenticatorTransport {
+    "usb",
+    "nfc",
+    "ble",
+    "internal"
 };
 
 typedef long COSEAlgorithmIdentifier;
