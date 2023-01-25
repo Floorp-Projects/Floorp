@@ -37,18 +37,22 @@ add_task(async function() {
   let pageLoadPromise = BrowserTestUtils.browserLoaded(
     appTab.linkedBrowser,
     false,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
   );
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   BrowserTestUtils.loadURIString(appTab.linkedBrowser, "http://example.com/");
   info("Started loading example.com");
   await pageLoadPromise;
   info("Loaded example.com");
   let newTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/"
   );
   await SpecialPowers.spawn(browser, [], async function() {
     let link = content.document.createElement("a");
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     link.href = "http://example.org/";
     content.document.body.appendChild(link);
     link.click();
