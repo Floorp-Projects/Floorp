@@ -159,6 +159,7 @@ var tests = [
   {
     id: "Test#4",
     async run() {
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
       isnot(gBrowser.selectedTab, tab, "new tab isn't selected");

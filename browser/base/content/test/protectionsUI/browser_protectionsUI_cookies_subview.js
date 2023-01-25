@@ -6,8 +6,10 @@
 "use strict";
 
 const COOKIE_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 const CONTAINER_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/containerPage.html";
 
 const TPC_PREF = "network.cookie.cookieBehavior";
@@ -117,6 +119,7 @@ async function assertSitesListed(testCase) {
     let trackerTestItem;
     for (let item of listItems) {
       let label = item.querySelector(".protections-popup-list-host-label");
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       if (label.value == "http://trackertest.org") {
         trackerTestItem = item;
         break;
@@ -130,6 +133,7 @@ async function assertSitesListed(testCase) {
     let notTrackingExampleItem;
     for (let item of listItems) {
       let label = item.querySelector(".protections-popup-list-host-label");
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       if (label.value == "http://not-tracking.example.com") {
         notTrackingExampleItem = item;
         break;
@@ -192,6 +196,7 @@ async function assertSitesListed(testCase) {
     let trackerTestItem;
     for (let item of listItems) {
       let label = item.querySelector(".protections-popup-list-host-label");
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       if (label.value == "http://trackertest.org") {
         trackerTestItem = item;
         break;
@@ -237,6 +242,7 @@ async function assertSitesListed(testCase) {
     let notTrackingExampleItem;
     for (let item of listItems) {
       let label = item.querySelector(".protections-popup-list-host-label");
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       if (label.value == "http://not-tracking.example.com") {
         notTrackingExampleItem = item;
         break;
@@ -282,6 +288,7 @@ add_task(async function testCookiesSubViewAllowed() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://trackertest.org/"
   );
   Services.perms.addFromPrincipal(
@@ -320,6 +327,7 @@ add_task(async function testCookiesSubViewAllowed() {
 
   let listItem = listItems[0];
   let label = listItem.querySelector(".protections-popup-list-host-label");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   is(label.value, "http://trackertest.org", "has an item for trackertest.org");
   ok(BrowserTestUtils.is_visible(listItem), "list item is visible");
   ok(
@@ -364,11 +372,13 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://not-tracking.example.com/"
   );
 
   // Pretend that the tracker has already been interacted with
   let trackerPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://trackertest.org/"
   );
   Services.perms.addFromPrincipal(
@@ -434,6 +444,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
 
   let listItem = listItems[0];
   let label = listItem.querySelector(".protections-popup-list-host-label");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   is(label.value, "http://trackertest.org", "has an item for trackertest.org");
   ok(BrowserTestUtils.is_visible(listItem), "list item is visible");
   ok(
@@ -504,6 +515,7 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
 
   let listItem = listItems[0];
   let label = listItem.querySelector(".protections-popup-list-host-label");
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   is(label.value, "http://trackertest.org", "has an item for trackertest.org");
   ok(BrowserTestUtils.is_visible(listItem), "list item is visible");
   ok(

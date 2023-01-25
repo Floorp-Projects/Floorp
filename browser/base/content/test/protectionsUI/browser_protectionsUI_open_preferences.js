@@ -6,8 +6,10 @@
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const TRACKING_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const COOKIE_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 
 async function waitAndAssertPreferencesShown(_spotlight) {

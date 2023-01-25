@@ -24,6 +24,7 @@ onmessage = event => {
       );
       break;
     case "cryptomining":
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       createIframe("http://cryptomining.example.com/");
       break;
     case "fingerprinting":
@@ -45,6 +46,7 @@ onmessage = event => {
       // top-level cookies right now, we just create an iframe with the
       // first party domain...
       createIframe(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"
       );
       break;
@@ -55,11 +57,13 @@ onmessage = event => {
       break;
     case "image":
       createImage(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs?type=image-no-cookie"
       );
       break;
     case "window-open":
       window.win = window.open(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs",
         "_blank",
         "width=100,height=100"

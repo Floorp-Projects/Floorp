@@ -153,6 +153,7 @@ add_task(async function open_10_tabs() {
     tabs.push(
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com",
         true,
         true
@@ -259,14 +260,17 @@ add_task(async function navigate_around() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com",
     true,
     true
   );
 
   let urls = [
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/",
     "https://example.com/",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/",
     "https://example.org/",
   ];
