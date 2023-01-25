@@ -84,15 +84,13 @@ if(urlN == 0)        document.querySelector(".URLBox").value = url;
 
 function encodeObjectURL(text) {
     var remove_whitespace = /^\s+/
-    var match_https = /^https?:\/\//
-    var match_extension = /^moz-extension?:\/\//
         var box_value = text
         box_value = box_value.replace(remove_whitespace, ""); / * Removing whitespace from the beginning of a line * /
         if (box_value == "") {
 
         }
-        else if (!box_value.match(match_https)) { / * Checks if url in the sidebar contains https in the beginning of a line * /
-            if (!box_value.match(match_extension)) { / * Checks if given URL is an extension * /
+        else if (!box_value.startsWith("http://") && !box_value.startsWith("https://")) { / * Checks if url in the sidebar contains https in the beginning of a line * /
+            if (!box_value.startsWith("file://") && !box_value.startsWith("resource://")) { / * Checks if given URL is an extension * /
                 box_value = `https://${box_value}`;
             }
         }
