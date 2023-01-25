@@ -229,8 +229,10 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
 template <typename Actor>
 RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
     RefPtr<Actor> aActor, SandboxingKind aSandbox) {
-  LOGD("[%p] UtilityProcessManager::StartUtility actor=%p "
-       "SandboxingKind=%" PRIu64, this, aActor.get(), aSandbox);
+  LOGD(
+      "[%p] UtilityProcessManager::StartUtility actor=%p "
+      "SandboxingKind=%" PRIu64,
+      this, aActor.get(), aSandbox);
 
   if (!aActor) {
     MOZ_ASSERT(false, "Actor singleton failure");
