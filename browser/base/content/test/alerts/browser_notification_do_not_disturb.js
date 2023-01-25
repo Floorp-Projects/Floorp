@@ -14,6 +14,7 @@ const ALERT_SERVICE = Cc["@mozilla.org/alerts-service;1"]
   .QueryInterface(Ci.nsIAlertsDoNotDisturb);
 
 const PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 
 // The amount of time in seconds that we will wait for a notification

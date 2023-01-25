@@ -52,6 +52,7 @@ add_task(async function test_contentarea_contextmenu_touch() {
 
 // Test the back and forward buttons.
 add_task(async function test_back_forward_button_contextmenu_touch() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async function(
     browser
   ) {
@@ -61,6 +62,7 @@ add_task(async function test_back_forward_button_contextmenu_touch() {
     let notDisabled = TestUtils.waitForCondition(
       () => !backbutton.hasAttribute("disabled")
     );
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     BrowserTestUtils.loadURIString(browser, "http://example.org");
     await notDisabled;
     await openAndCheckContextMenu(contextMenu, backbutton);
