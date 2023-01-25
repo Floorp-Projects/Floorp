@@ -16,3 +16,4 @@ These pages contain documentation for Mozilla's Cross-Platform Component Object 
    writing-xpcom-interface
    hashtables
    hashtables_detailed
+   cc-macros
