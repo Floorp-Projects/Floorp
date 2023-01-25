@@ -8,6 +8,7 @@
   <p>Hello there!</p>
   <script type="application/javascript">
     function test_fetch() {
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       let url = "http://trackertest.org/browser/browser/base/content/test/protectionsUI/file_protectionsUI_fetch.js";
       return fetch(url);
     }

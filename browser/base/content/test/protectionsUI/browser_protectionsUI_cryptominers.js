@@ -4,6 +4,7 @@
 "use strict";
 
 const TRACKING_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
 let cmHistogram;
@@ -164,6 +165,7 @@ async function testSubview(hasException) {
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
   is(
     listItem.querySelector("label").value,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://cryptomining.example.com",
     "Has the correct host"
   );

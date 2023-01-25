@@ -10,9 +10,11 @@ add_task(
     // Our initial tab will be A. Let's open two more tabs B and C, but keep
     // A selected. Then, we'll trigger a PopupNotification in C, and then make
     // it reshow.
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     let tabB = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(tabB.linkedBrowser);
 
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     let tabC = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(tabC.linkedBrowser);
 
