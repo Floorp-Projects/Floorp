@@ -27,6 +27,7 @@ const { FormAutofillUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
@@ -80,9 +81,6 @@ FormAutofillPreferences.prototype = {
    * @param  {HTMLDocument} document
    */
   createPreferenceGroup(document) {
-    let addressLearnMoreURL =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "autofill-card-address";
     let creditCardLearnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "credit-card-autofill";
@@ -120,15 +118,14 @@ FormAutofillPreferences.prototype = {
       let addressAutofill = document.createXULElement("hbox");
       let addressAutofillCheckboxGroup = document.createXULElement("hbox");
       let addressAutofillCheckbox = document.createXULElement("checkbox");
-      let addressAutofillLearnMore = document.createXULElement("label", {
-        is: "text-link",
+      let addressAutofillLearnMore = document.createElement("a", {
+        is: "moz-support-link",
       });
       let savedAddressesBtn = document.createXULElement("button", {
         is: "highlightable-button",
       });
       savedAddressesBtn.className = "accessory-button";
       addressAutofillCheckbox.className = "tail-with-learn-more";
-      addressAutofillLearnMore.className = "learnMore";
 
       formAutofillGroup.id = "formAutofillGroup";
       addressAutofill.id = "addressAutofill";
@@ -139,9 +136,6 @@ FormAutofillPreferences.prototype = {
         "label",
         this.bundle.GetStringFromName("autofillAddressesCheckbox")
       );
-      addressAutofillLearnMore.textContent = this.bundle.GetStringFromName(
-        "learnMoreLabel"
-      );
       savedAddressesBtn.setAttribute(
         "label",
         this.bundle.GetStringFromName("savedAddressesBtnLabel")
@@ -150,7 +144,10 @@ FormAutofillPreferences.prototype = {
       // when addressAutofillCheckboxGroup's height is changed by a longer l10n string
       savedAddressesBtnWrapper.setAttribute("align", "start");
 
-      addressAutofillLearnMore.setAttribute("href", addressLearnMoreURL);
+      addressAutofillLearnMore.setAttribute(
+        "support-page",
+        "autofill-card-address"
+      );
 
       // Add preferences search support
       savedAddressesBtn.setAttribute(
