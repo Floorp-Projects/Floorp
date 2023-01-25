@@ -16,7 +16,6 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Poison.h"
@@ -5977,24 +5976,16 @@ bool XRE_IsE10sParentProcess() {
 #undef GECKO_PROCESS_TYPE
 
 bool XRE_UseNativeEventProcessing() {
-  switch (XRE_GetProcessType()) {
 #if defined(XP_MACOSX) || defined(XP_WIN)
-    case GeckoProcessType_RDD:
-    case GeckoProcessType_Socket:
-      return false;
-    case GeckoProcessType_Utility: {
-      auto upc = mozilla::ipc::UtilityProcessChild::Get();
-      MOZ_ASSERT(upc);
-      // WindowsUtils is for Windows APIs, which typically require a Windows
-      // native event loop.
-      return upc->mSandbox == mozilla::ipc::SandboxingKind::WINDOWS_UTILS;
-    }
-#endif
-    case GeckoProcessType_Content:
-      return StaticPrefs::dom_ipc_useNativeEventProcessing_content();
-    default:
-      return true;
+  if (XRE_IsRDDProcess() || XRE_IsSocketProcess() || XRE_IsUtilityProcess()) {
+    return false;
   }
+#endif
+  if (XRE_IsContentProcess()) {
+    return StaticPrefs::dom_ipc_useNativeEventProcessing_content();
+  }
+
+  return true;
 }
 
 namespace mozilla {
