@@ -25,6 +25,9 @@
 
 namespace mozilla::ipc {
 
+extern LazyLogModule gUtilityProcessLog;
+#define LOGD(...) MOZ_LOG(gUtilityProcessLog, LogLevel::Debug, (__VA_ARGS__))
+
 static StaticRefPtr<UtilityProcessManager> sSingleton;
 
 static bool sXPCOMShutdown = false;
@@ -50,6 +53,8 @@ RefPtr<UtilityProcessManager> UtilityProcessManager::GetIfExists() {
 }
 
 UtilityProcessManager::UtilityProcessManager() : mObserver(new Observer(this)) {
+  LOGD("[%p] UtilityProcessManager::UtilityProcessManager", this);
+
   // Start listening for pref changes so we can
   // forward them to the process once it is running.
   nsContentUtils::RegisterShutdownObserver(mObserver);
@@ -57,6 +62,8 @@ UtilityProcessManager::UtilityProcessManager() : mObserver(new Observer(this)) {
 }
 
 UtilityProcessManager::~UtilityProcessManager() {
+  LOGD("[%p] UtilityProcessManager::~UtilityProcessManager", this);
+
   // The Utility process should ALL have already been shut down.
   MOZ_ASSERT(NoMoreProcesses());
 }
@@ -80,6 +87,8 @@ UtilityProcessManager::Observer::Observe(nsISupports* aSubject,
 }
 
 void UtilityProcessManager::OnXPCOMShutdown() {
+  LOGD("[%p] UtilityProcessManager::OnXPCOMShutdown", this);
+
   MOZ_ASSERT(NS_IsMainThread());
   sXPCOMShutdown = true;
   nsContentUtils::UnregisterShutdownObserver(mObserver);
@@ -124,6 +133,9 @@ RefPtr<UtilityProcessManager::ProcessFields> UtilityProcessManager::GetProcess(
 
 RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
     SandboxingKind aSandbox) {
+  LOGD("[%p] UtilityProcessManager::LaunchProcess SandboxingKind=%" PRIu64,
+       this, aSandbox);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (IsShutdown()) {
@@ -213,6 +225,9 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
 template <typename Actor>
 RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
     RefPtr<Actor> aActor, SandboxingKind aSandbox) {
+  LOGD("[%p] UtilityProcessManager::StartUtility actor=%p "
+       "SandboxingKind=%" PRIu64, this, aActor.get(), aSandbox);
+
   if (!aActor) {
     MOZ_ASSERT(false, "Actor singleton failure");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
@@ -396,6 +411,8 @@ void UtilityProcessManager::OnProcessUnexpectedShutdown(
 }
 
 void UtilityProcessManager::CleanShutdownAllProcesses() {
+  LOGD("[%p] UtilityProcessManager::CleanShutdownAllProcesses", this);
+
   for (auto& it : mProcesses) {
     if (it) {
       DestroyProcess(it->mSandbox);
@@ -404,6 +421,9 @@ void UtilityProcessManager::CleanShutdownAllProcesses() {
 }
 
 void UtilityProcessManager::CleanShutdown(SandboxingKind aSandbox) {
+  LOGD("[%p] UtilityProcessManager::CleanShutdown SandboxingKind=%" PRIu64,
+       this, aSandbox);
+
   DestroyProcess(aSandbox);
 }
 
@@ -420,6 +440,9 @@ uint16_t UtilityProcessManager::AliveProcesses() {
 bool UtilityProcessManager::NoMoreProcesses() { return AliveProcesses() == 0; }
 
 void UtilityProcessManager::DestroyProcess(SandboxingKind aSandbox) {
+  LOGD("[%p] UtilityProcessManager::DestroyProcess SandboxingKind=%" PRIu64,
+       this, aSandbox);
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (AliveProcesses() <= 1) {
