@@ -499,10 +499,14 @@ function remoteSettingsFunction() {
    * known remote settings collections.
    */
   remoteSettings.inspect = async () => {
+    // Make sure we fetch the latest server info, use a random cache bust value.
+    const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
     const {
       changes,
       currentEtag: serverTimestamp,
-    } = await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL);
+    } = await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
+      expected: randomCacheBust,
+    });
 
     const collections = await Promise.all(
       changes.map(async change => {
