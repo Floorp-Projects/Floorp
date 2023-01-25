@@ -274,14 +274,6 @@ function setUpContentBlockingWarnings() {
   document.getElementById(
     "fpiIncompatibilityWarning"
   ).hidden = !gIsFirstPartyIsolated;
-
-  let links = document.querySelectorAll(".contentBlockWarningLink");
-  let contentBlockingWarningUrl =
-    Services.urlFormatter.formatURLPref("app.support.baseURL") +
-    "turn-off-etp-desktop";
-  for (let link of links) {
-    link.setAttribute("href", contentBlockingWarningUrl);
-  }
 }
 
 function initTCPStandardSection() {
