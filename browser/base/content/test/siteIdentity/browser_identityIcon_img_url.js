@@ -19,6 +19,7 @@ const kBaseURILocalhost = getRootDirectory(gTestPath).replace(
 const TEST_CASES = [
   {
     type: "http",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     testURL: "http://example.com",
     img_url: `url("chrome://global/skin/icons/security-broken.svg")`,
   },
