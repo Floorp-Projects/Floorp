@@ -79,9 +79,6 @@ jobs:
         cp ./.github/mozconfig_win_pgo_base mozconfig
         echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
         echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
-        echo 'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
-        echo 'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
-        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
         sudo apt update
         sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
@@ -273,9 +270,6 @@ jobs:
         echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
         echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
         echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
-        echo 'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
-        echo 'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
-        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
         sudo apt update
         sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
@@ -429,9 +423,9 @@ jobs:
         'MOZ_TELEMETRY_REPORTING='
         'ac_add_options --enable-bootstrap'
         'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central'
-        'ac_add_options --with-mozilla-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key'
-        'ac_add_options --with-google-location-service-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key'
-        'ac_add_options --with-google-safebrowsing-api-keyfile=$RUNNER_USERDIR/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key'
+        'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key'
+        'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key'
+        'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key'
         )
         for line in "${mozconfig_file[@]}" ; do echo $line >> mozconfig ; done
         ./mach --no-interactive bootstrap --application-choice browser
