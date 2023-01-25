@@ -639,6 +639,17 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       nsLayoutUtils::TransformRect(frame, boundingFrame, result);
     }
 
+    if (boundingFrame->GetRect().IsEmpty()) {
+      // We would have used the ink overflow rect for our parent Accessible.
+      // However, GetAllInFlowRectsUnion calculates relative to the bounding
+      // frame's main rect, not its ink overflow rect. We need to adjust for
+      // the ink overflow offset to make our result parent relative.
+      nsRect boundingOverflow = boundingFrame->InkOverflowRectRelativeToSelf();
+      if (boundingOverflow.x < 0 || boundingOverflow.y < 0) {
+        result.MoveBy(-boundingOverflow.x, -boundingOverflow.y);
+      }
+    }
+
     if (nsIScrollableFrame* sf =
             mParent == mDoc
                 ? mDoc->PresShellPtr()->GetRootScrollFrameAsScrollable()
