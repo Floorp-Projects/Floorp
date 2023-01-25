@@ -14,19 +14,31 @@ import androidx.annotation.Px
  * @property backgroundColor Custom background color for the menu.
  * @property minWidth Custom minimum width for the menu.
  * @property maxWidth Custom maximum width for the menu.
+ * @property horizontalOffset Custom horizontal offset for the menu.
+ * @property verticalOffset Custom vertical offset for the menu.
+ * @property completelyOverlap Forces menu to overlap the anchor completely.
  */
 data class MenuStyle(
     val backgroundColor: ColorStateList? = null,
     @Px val minWidth: Int? = null,
     @Px val maxWidth: Int? = null,
+    @Px val horizontalOffset: Int? = null,
+    @Px val verticalOffset: Int? = null,
+    val completelyOverlap: Boolean = false,
 ) {
     constructor(
         @ColorInt backgroundColor: Int,
         @Px minWidth: Int? = null,
         @Px maxWidth: Int? = null,
+        @Px horizontalOffset: Int? = null,
+        @Px verticalOffset: Int? = null,
+        completelyOverlap: Boolean = false,
     ) : this(
         backgroundColor = ColorStateList.valueOf(backgroundColor),
         minWidth = minWidth,
         maxWidth = maxWidth,
+        horizontalOffset = horizontalOffset,
+        verticalOffset = verticalOffset,
+        completelyOverlap = completelyOverlap,
     )
 }

@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <dimen name="mozac_browser_menu2_corner_radius">4dp</dimen>
-    <dimen name="mozac_browser_menu2_elevation">8dp</dimen>
+    <dimen name="mozac_browser_menu2_elevation">6dp</dimen>
     <dimen name="mozac_browser_menu2_width">250dp</dimen>
     <dimen name="mozac_browser_menu2_padding_vertical">0dp</dimen>
 
