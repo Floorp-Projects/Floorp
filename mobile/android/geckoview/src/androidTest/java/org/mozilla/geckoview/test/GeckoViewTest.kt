@@ -1,5 +1,6 @@
 package org.mozilla.geckoview.test
 
+import android.content.Context
 import android.graphics.Matrix
 import android.os.Build
 import android.os.Bundle
@@ -17,11 +18,13 @@ import androidx.test.filters.LargeTest
 import androidx.test.filters.SdkSuppress
 import org.hamcrest.Matchers.equalTo
 import org.junit.* // ktlint-disable no-wildcard-imports
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeThat
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.io.File
@@ -304,6 +307,25 @@ class GeckoViewTest : BaseSessionTest() {
                     )
                 }
             }
+        }
+    }
+
+    @Test
+    @NullDelegate(Autofill.Delegate::class)
+    fun activityContextDelegate() {
+        var delegateCalled = false
+        activityRule.scenario.onActivity {
+            class TestActivityDelegate : GeckoView.ActivityContextDelegate {
+                override fun getActivityContext(): Context {
+                    delegateCalled = true
+                    return it
+                }
+            }
+            // Set view delegate
+            it.view.activityContextDelegate = TestActivityDelegate()
+            val context = it.view.activityContextDelegate?.activityContext
+            assertTrue("The activity context delegate was called.", delegateCalled)
+            assertTrue("The activity context delegate provided the expected context.", context == it)
         }
     }
 

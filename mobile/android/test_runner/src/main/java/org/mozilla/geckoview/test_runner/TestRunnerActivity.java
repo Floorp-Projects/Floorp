@@ -4,6 +4,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 package org.mozilla.geckoview.test_runner;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
@@ -303,6 +304,14 @@ public class TestRunnerActivity extends Activity {
         }
       };
 
+  private class TestRunnerActivityDelegate implements GeckoView.ActivityContextDelegate {
+    public Context getActivityContext() {
+      return TestRunnerActivity.this;
+    }
+  }
+
+  private TestRunnerActivityDelegate mActivityDelegate = new TestRunnerActivityDelegate();
+
   /**
    * Creates a session and adds it to the owned sessions deque.
    *
@@ -482,6 +491,8 @@ public class TestRunnerActivity extends Activity {
     mView = new GeckoView(this);
     mView.setSession(mSession);
     setContentView(mView);
+    mView.setActivityContextDelegate(mActivityDelegate);
+
     sRuntime.setServiceWorkerDelegate(
         new GeckoRuntime.ServiceWorkerDelegate() {
           @NonNull

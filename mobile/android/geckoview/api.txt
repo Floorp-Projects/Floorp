@@ -1634,6 +1634,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public GeckoResult<Bitmap> capturePixels();
     method public void coverUntilFirstPaint(int);
     method public void dispatchDraw(@Nullable Canvas);
+    method @Nullable public GeckoView.ActivityContextDelegate getActivityContextDelegate();
     method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
@@ -1641,6 +1642,7 @@ package org.mozilla.geckoview {
     method public void onDetachedFromWindow();
     method @NonNull public GeckoResult<PanZoomController.InputResultDetail> onTouchEventForDetailResult(@NonNull MotionEvent);
     method @Nullable @UiThread public GeckoSession releaseSession();
+    method public void setActivityContextDelegate(@Nullable GeckoView.ActivityContextDelegate);
     method public void setAutofillEnabled(boolean);
     method public void setDynamicToolbarMaxHeight(int);
     method @UiThread public void setSession(@NonNull GeckoSession);
@@ -1651,6 +1653,10 @@ package org.mozilla.geckoview {
     field public static final int BACKEND_TEXTURE_VIEW = 2;
     field @NonNull protected final GeckoView.Display mDisplay;
     field @Nullable protected GeckoSession mSession;
+  }
+
+  @AnyThread public static interface GeckoView.ActivityContextDelegate {
+    method @Nullable public Context getActivityContext();
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoView.ViewBackend {
