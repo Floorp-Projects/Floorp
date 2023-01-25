@@ -737,15 +737,6 @@ var gPrivacyPane = {
       .getElementById("notificationPermissionsLearnMore")
       .setAttribute("href", notificationInfoURL);
 
-    if (AppConstants.platform == "win") {
-      let windowsSSOURL =
-        Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        "windows-sso";
-      document
-        .getElementById("windowsSSOLearnMoreLink")
-        .setAttribute("href", windowsSSOURL);
-    }
-
     this.initDataCollection();
 
     if (AppConstants.MOZ_DATA_REPORTING) {

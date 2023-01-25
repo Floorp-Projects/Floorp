@@ -533,9 +533,11 @@
       <checkbox data-l10n-id="forms-windows-sso"
                 preference="network.http.windows-sso.enabled"
                 class="tail-with-learn-more"/>
-      <label id="windowsSSOLearnMoreLink" class="learnMore" is="text-link"
-             flex="1"
-             data-l10n-id="forms-windows-sso-learn-more-link"/>
+      <html:a is="moz-support-link"
+              id="windowsSSOLearnMoreLink"
+              data-l10n-id="forms-windows-sso-learn-more-link"
+              support-page="windows-sso"
+      />
     </hbox>
     <description id="windows-sso-caption" class="indent tip-caption"
            data-l10n-id="forms-windows-sso-desc"/>
