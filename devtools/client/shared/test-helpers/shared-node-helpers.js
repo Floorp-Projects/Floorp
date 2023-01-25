@@ -46,10 +46,6 @@ function setMocksInGlobal() {
 
   global.loader = {
     lazyGetter: (context, name, fn) => {
-      if (global.hasOwnProperty(name)) {
-        return;
-      }
-
       Object.defineProperty(global, name, {
         get() {
           delete global[name];
@@ -118,15 +114,6 @@ function setMocksInGlobal() {
       }, []);
     };
   }
-
-  const store = {};
-  global.indexedDB = {
-    open: () => ({}),
-    getItem: async key => store[key],
-    setItem: async (key, value) => {
-      store[key] = value;
-    },
-  };
 
   if (typeof global.TextEncoder === "undefined") {
     const { TextEncoder } = require("util");

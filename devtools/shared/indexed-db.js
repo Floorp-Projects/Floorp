@@ -9,46 +9,41 @@
  * a principal dedicated to DevTools.
  */
 
-// When running in jest, we can't use Cu.Sandbox and only expose the native indexedDB object
-if (globalThis.indexedDB) {
-  module.exports = globalThis.indexedDB;
-} else {
-  const PSEUDOURI = "indexeddb://fx-devtools";
-  const principaluri = Services.io.newURI(PSEUDOURI);
-  const principal = Services.scriptSecurityManager.createContentPrincipal(
-    principaluri,
-    {}
-  );
+const PSEUDOURI = "indexeddb://fx-devtools";
+const principaluri = Services.io.newURI(PSEUDOURI);
+const principal = Services.scriptSecurityManager.createContentPrincipal(
+  principaluri,
+  {}
+);
 
-  // indexedDB is only exposed to document globals.
-  // We are retrieving an instance from a Sandbox, which has to be loaded
-  // from the system principal in order to avoid having wrappers around
-  // all indexed DB objects.
-  const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  const sandbox = Cu.Sandbox(systemPrincipal, {
-    wantGlobalProperties: ["indexedDB"],
-  });
-  const { indexedDB } = sandbox;
+// indexedDB is only exposed to document globals.
+// We are retrieving an instance from a Sandbox, which has to be loaded
+// from the system principal in order to avoid having wrappers around
+// all indexed DB objects.
+const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+const sandbox = Cu.Sandbox(systemPrincipal, {
+  wantGlobalProperties: ["indexedDB"],
+});
+const { indexedDB } = sandbox;
 
-  module.exports = Object.freeze({
-    /**
-     * Only the standard version of indexedDB.open is supported.
-     */
-    open(name, version) {
-      const options = {};
-      if (typeof version === "number") {
-        options.version = version;
-      }
-      return indexedDB.openForPrincipal(principal, name, options);
-    },
+module.exports = Object.freeze({
+  /**
+   * Only the standard version of indexedDB.open is supported.
+   */
+  open(name, version) {
+    const options = {};
+    if (typeof version === "number") {
+      options.version = version;
+    }
+    return indexedDB.openForPrincipal(principal, name, options);
+  },
 
-    /**
-     * Only the standard version of indexedDB.deleteDatabase is supported.
-     */
-    deleteDatabase(name) {
-      return indexedDB.deleteForPrincipal(principal, name);
-    },
+  /**
+   * Only the standard version of indexedDB.deleteDatabase is supported.
+   */
+  deleteDatabase(name) {
+    return indexedDB.deleteForPrincipal(principal, name);
+  },
 
-    cmp: indexedDB.cmp.bind(indexedDB),
-  });
-}
+  cmp: indexedDB.cmp.bind(indexedDB),
+});
