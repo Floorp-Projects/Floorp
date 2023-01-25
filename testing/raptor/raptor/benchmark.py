@@ -241,7 +241,24 @@ class Benchmark(object):
             # Locally, we should always do a full clone
             self._full_clone(benchmark_repository, external_repo_path)
         else:
-            self._update_benchmark_repo(external_repo_path)
+            # Make sure that the repo origin wasn't changed
+            url = (
+                subprocess.check_output(
+                    ["git", "config", "--get", "remote.origin.url"],
+                    cwd=external_repo_path,
+                )
+                .decode("utf-8")
+                .strip()
+            )
+
+            if url != benchmark_repository:
+                LOG.info(
+                    "Removing repo with a different remote origin before installing new one"
+                )
+                mozfile.remove(external_repo_path)
+                self._full_clone(benchmark_repository, external_repo_path)
+            else:
+                self._update_benchmark_repo(external_repo_path)
 
         self._verify_benchmark_revision(benchmark_revision, external_repo_path)
         subprocess.check_call(
