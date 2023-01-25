@@ -73,8 +73,6 @@ class PerfSpewer {
 };
 
 void CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg);
-void CollectPerfSpewerJitCodeProfile(uintptr_t base, uintptr_t size,
-                                     const char* msg);
 
 void CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
                               const char* filename, const char* annotation);
@@ -107,18 +105,6 @@ class InlineCachePerfSpewer : public PerfSpewer {
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
   void saveProfile(JitCode* code, const char* name);
-};
-
-class PerfSpewerRangeRecorder {
-  using OffsetPair = std::tuple<uint32_t, UniqueChars>;
-  Vector<OffsetPair, 0, js::SystemAllocPolicy> ranges;
-
-  MacroAssembler& masm;
-
- public:
-  explicit PerfSpewerRangeRecorder(MacroAssembler& masm_) : masm(masm_){};
-  void RecordOffset(const char* name);
-  void CollectRangesForJitCode(JitCode* code);
 };
 
 }  // namespace js::jit

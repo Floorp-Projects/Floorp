@@ -135,7 +135,6 @@ bool JitRuntime::initialize(JSContext* cx) {
 bool JitRuntime::generateTrampolines(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
   StackMacroAssembler masm(cx, temp);
-  PerfSpewerRangeRecorder rangeRecorder(masm);
 
   Label bailoutTail;
   JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
@@ -143,11 +142,9 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
 
   JitSpew(JitSpew_Codegen, "# Emitting bailout handler");
   generateBailoutHandler(masm, &bailoutTail);
-  rangeRecorder.RecordOffset("Trampoline: Bailout");
 
   JitSpew(JitSpew_Codegen, "# Emitting invalidator");
   generateInvalidator(masm, &bailoutTail);
-  rangeRecorder.RecordOffset("Trampoline: Invalidator");
 
   // The arguments rectifier has to use the same frame layout as the function
   // frames it rectifies.
@@ -160,63 +157,48 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
 
   JitSpew(JitSpew_Codegen, "# Emitting arguments rectifier");
   generateArgumentsRectifier(masm, ArgumentsRectifierKind::Normal);
-  rangeRecorder.RecordOffset("Trampoline: Arguments Rectifier");
 
   JitSpew(JitSpew_Codegen, "# Emitting trial inlining arguments rectifier");
   generateArgumentsRectifier(masm, ArgumentsRectifierKind::TrialInlining);
-  rangeRecorder.RecordOffset(
-      "Trampoline: Arguments Rectifier (Trial Inlining)");
 
   JitSpew(JitSpew_Codegen, "# Emitting EnterJIT sequence");
   generateEnterJIT(cx, masm);
-  rangeRecorder.RecordOffset("Trampoline: EnterJIT");
 
   JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Value");
   valuePreBarrierOffset_ = generatePreBarrier(cx, masm, MIRType::Value);
-  rangeRecorder.RecordOffset("Trampoline: PreBarrier Value");
 
   JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for String");
   stringPreBarrierOffset_ = generatePreBarrier(cx, masm, MIRType::String);
-  rangeRecorder.RecordOffset("Trampoline: PreBarrier String");
 
   JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Object");
   objectPreBarrierOffset_ = generatePreBarrier(cx, masm, MIRType::Object);
-  rangeRecorder.RecordOffset("Trampoline: PreBarrier Object");
 
   JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Shape");
   shapePreBarrierOffset_ = generatePreBarrier(cx, masm, MIRType::Shape);
-  rangeRecorder.RecordOffset("Trampoline: PreBarrier Shape");
 
   JitSpew(JitSpew_Codegen, "# Emitting free stub");
   generateFreeStub(masm);
-  rangeRecorder.RecordOffset("Trampoline: FreeStub");
 
   JitSpew(JitSpew_Codegen, "# Emitting lazy link stub");
   generateLazyLinkStub(masm);
-  rangeRecorder.RecordOffset("Trampoline: LazyLinkStub");
 
   JitSpew(JitSpew_Codegen, "# Emitting interpreter stub");
   generateInterpreterStub(masm);
-  rangeRecorder.RecordOffset("Trampoline: Interpreter");
 
   JitSpew(JitSpew_Codegen, "# Emitting double-to-int32-value stub");
   generateDoubleToInt32ValueStub(masm);
-  rangeRecorder.RecordOffset("Trampoline: DoubleToInt32ValueStub");
 
   JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
   if (!generateVMWrappers(cx, masm)) {
     return false;
   }
-  rangeRecorder.RecordOffset("Trampoline: VM Wrapper");
 
   JitSpew(JitSpew_Codegen, "# Emitting profiler exit frame tail stub");
   Label profilerExitTail;
   generateProfilerExitFrameTailStub(masm, &profilerExitTail);
-  rangeRecorder.RecordOffset("Trampoline: ProfilerExitFrameTailStub");
 
   JitSpew(JitSpew_Codegen, "# Emitting exception tail stub");
   generateExceptionTailStub(masm, &profilerExitTail, &bailoutTail);
-  rangeRecorder.RecordOffset("Trampoline: ExceptionTailStub");
 
   Linker linker(masm);
   trampolineCode_ = linker.newCode(cx, CodeKind::Other);
@@ -224,7 +206,7 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
     return false;
   }
 
-  rangeRecorder.CollectRangesForJitCode(trampolineCode_);
+  CollectPerfSpewerJitCodeProfile(trampolineCode_, "Trampolines");
 #ifdef MOZ_VTUNE
   vtune::MarkStub(trampolineCode_, "Trampolines");
 #endif
