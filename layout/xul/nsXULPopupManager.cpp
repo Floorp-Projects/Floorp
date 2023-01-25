@@ -431,10 +431,14 @@ bool nsXULPopupManager::RollupInternal(RollupKind aKind,
   RefPtr<nsViewManager> viewManager =
       presContext->PresShell()->GetViewManager();
 
-  HidePopup(item->Content(),
-            {HidePopupOption::HideChain, HidePopupOption::DeselectMenu,
-             HidePopupOption::IsRollup},
-            lastPopup);
+  HidePopupOptions options{HidePopupOption::HideChain,
+                           HidePopupOption::DeselectMenu,
+                           HidePopupOption::IsRollup};
+  if (aOptions.mAllowAnimations == AllowAnimations::No) {
+    options += HidePopupOption::DisableAnimations;
+  }
+
+  HidePopup(item->Content(), options, lastPopup);
 
   if (aOptions.mFlush == FlushViews::Yes) {
     // The popup's visibility doesn't update until the minimize animation
@@ -1688,12 +1692,17 @@ void nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
 
   const bool shouldAnimate = [&] {
     if (!LookAndFeel::GetInt(LookAndFeel::IntID::PanelAnimations)) {
+      // Animations are not supported by the platform, avoid transitioning.
       return false;
     }
-    // If there is a next popup, indicating that mutliple popups are rolling
-    // up, don't wait and hide the popup right away since the effect would
-    // likely be undesirable.
+    if (aOptions.contains(HidePopupOption::DisableAnimations)) {
+      // Animations are not allowed by our caller.
+      return false;
+    }
     if (aNextPopup) {
+      // If there is a next popup, indicating that mutliple popups are rolling
+      // up, don't wait and hide the popup right away since the effect would
+      // likely be undesirable.
       return false;
     }
     nsAutoString animate;

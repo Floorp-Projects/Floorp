@@ -172,6 +172,8 @@ enum class HidePopupOption : uint8_t {
   Async,
   // If this popup is hiding due to being cancelled.
   IsRollup,
+  // Whether animations should be disabled for rolled-up popups.
+  DisableAnimations,
 };
 
 using HidePopupOptions = mozilla::EnumSet<HidePopupOption>;

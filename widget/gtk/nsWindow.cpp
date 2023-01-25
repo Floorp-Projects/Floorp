@@ -7451,6 +7451,13 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
     }
   }
 
+  if (mSizeMode == nsSizeMode_Minimized) {
+    // When we try to rollup in a minimized window, transitionend events for
+    // panels might not fire and thus we might not hide the popup after all,
+    // see bug 1810797.
+    options.mAllowAnimations = nsIRollupListener::AllowAnimations::No;
+  }
+
   if (rollupListener->Rollup(options)) {
     retVal = true;
   }
