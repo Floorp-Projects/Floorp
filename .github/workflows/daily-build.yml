@@ -331,7 +331,6 @@ jobs:
     - name: Copy 📂
       run: |
         mkdir $RUNNER_USERDIR/output
-        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer-stub.exe $RUNNER_USERDIR/output/
         cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe $RUNNER_USERDIR/output/
         cp obj-x86_64-pc-mingw32/dist/floorp-*.en-US.win64.zip $RUNNER_USERDIR/output/
 
