@@ -218,6 +218,10 @@
   #add-button{
     list-style-image: url("chrome://browser/skin/floorplegacy/newtab.svg");
   }
+
+  .webpanel-icon{
+    list-style-image: var(--BSMIcon,url("chrome://devtools/skin/images/globe.svg"));
+  }
   
   :root[sizemode="fullscreen"] :is(#sidebar-select-box){
     display: none;
