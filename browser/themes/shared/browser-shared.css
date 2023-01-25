@@ -95,12 +95,6 @@
   --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
 }
 
-@media (prefers-reduced-motion) {
-  :root {
-    --panelui-subview-transition-duration: initial;
-  }
-}
-
 @media (prefers-contrast) {
   :root {
     --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 86%, transparent);
