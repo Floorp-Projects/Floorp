@@ -626,14 +626,6 @@ var gPrivacyPane = {
     this._initMasterPasswordUI();
 
     this.initListenersForExtensionControllingPasswordManager();
-    // set up the breach alerts Learn More link with the correct URL
-    const breachAlertsLearnMoreLink = document.getElementById(
-      "breachAlertsLearnMoreLink"
-    );
-    const breachAlertsLearnMoreUrl =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "lockwise-alerts";
-    breachAlertsLearnMoreLink.setAttribute("href", breachAlertsLearnMoreUrl);
 
     this._initSafeBrowsing();
 
