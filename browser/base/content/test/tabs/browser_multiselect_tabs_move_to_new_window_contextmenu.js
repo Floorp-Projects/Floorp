@@ -51,6 +51,7 @@ add_task(async function testLazyTabs() {
   let numTabs = 4;
   for (let i = 0; i < numTabs; ++i) {
     oldTabs.push(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       BrowserTestUtils.addTab(gBrowser, `http://example.com/?${i}`, params)
     );
   }
@@ -107,12 +108,14 @@ add_task(async function testLazyTabs() {
 
   is(
     newTabs[0].linkedBrowser.currentURI.spec,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     `http://example.com/?0`,
     `New tab 0 should have the right URL`
   );
   for (let i = 1; i < numTabs; ++i) {
     is(
       SessionStore.getLazyTabValue(newTabs[i], "url"),
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       `http://example.com/?${i}`,
       `New tab ${i} should have the right lazy URL`
     );

@@ -14,6 +14,7 @@
 // High and Low Privilege
 const TEST_HIGH1 = "https://example.org/";
 const TEST_HIGH2 = "https://test1.example.org/";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_LOW1 = "http://example.org/";
 const TEST_LOW2 = "https://example.com/";
 

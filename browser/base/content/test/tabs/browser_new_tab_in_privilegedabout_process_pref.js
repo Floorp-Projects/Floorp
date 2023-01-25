@@ -15,6 +15,7 @@ const ABOUT_BLANK = "about:blank";
 const ABOUT_HOME = "about:home";
 const ABOUT_NEWTAB = "about:newtab";
 const ABOUT_WELCOME = "about:welcome";
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_HTTP = "http://example.org/";
 
 add_setup(async function() {

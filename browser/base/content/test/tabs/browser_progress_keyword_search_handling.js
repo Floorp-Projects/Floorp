@@ -72,6 +72,7 @@ add_task(async function test_unknown_host_without_search() {
     let searchPromise = BrowserTestUtils.browserLoaded(
       browser,
       false,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       "http://" + kNonExistingHost + "/",
       true /* want an error page */
     );

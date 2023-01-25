@@ -4,7 +4,9 @@
 "use strict";
 
 add_task(async function test_site_specific_global_zoom() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const TEST_PAGE_URL_1 = "http://example.net";
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const TEST_PAGE_URL_2 = "http://example.net";
 
   // Prepare the test tabs
