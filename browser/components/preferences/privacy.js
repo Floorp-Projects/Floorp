@@ -928,12 +928,6 @@ var gPrivacyPane = {
     this.highlightCBCategory();
     this.readBlockCookies();
 
-    let link = document.getElementById("contentBlockingLearnMore");
-    let contentBlockingUrl =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "enhanced-tracking-protection";
-    link.setAttribute("href", contentBlockingUrl);
-
     // Toggles the text "Cross-site and social media trackers" based on the
     // social tracking pref. If the pref is false, the text reads
     // "Cross-site trackers".
