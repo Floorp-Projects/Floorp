@@ -10,6 +10,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGContextPaint.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
@@ -133,6 +134,12 @@ void SVGMarkerFrame::PaintMark(gfxContext& aContext,
   ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
   SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
+  RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
+  contextPaint->Init(aContext.GetDrawTarget(), aContext.CurrentMatrixDouble(),
+                     aMarkedFrame, SVGContextPaint::GetContextPaint(marker),
+                     aImgParams);
+  AutoSetRestoreSVGContextPaint autoSetRestore(contextPaint,
+                                               marker->OwnerDoc());
   SVGUtils::PaintFrameWithEffects(kid, aContext, markTM, aImgParams);
 
   if (StyleDisplay()->IsScrollableOverflow()) aContext.Restore();
