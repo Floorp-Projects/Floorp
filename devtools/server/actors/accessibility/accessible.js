@@ -63,9 +63,19 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
-});
+loader.lazyGetter(
+  lazy,
+  "ContentDOMReference",
+  () =>
+    ChromeUtils.importESModule(
+      "resource://gre/modules/ContentDOMReference.sys.mjs",
+      {
+        // ContentDOMReference needs to be retrieved from the shared global
+        // since it is a shared singleton.
+        loadInDevToolsLoader: false,
+      }
+    ).ContentDOMReference
+);
 
 const RELATIONS_TO_IGNORE = new Set([
   Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
