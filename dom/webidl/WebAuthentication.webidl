@@ -82,13 +82,7 @@ dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
 dictionary AuthenticatorSelectionCriteria {
     DOMString                    authenticatorAttachment;
     boolean                      requireResidentKey = false;
-    UserVerificationRequirement  userVerification = "preferred";
-};
-
-enum UserVerificationRequirement {
-    "required",
-    "preferred",
-    "discouraged"
+    DOMString                    userVerification = "preferred";
 };
 
 dictionary PublicKeyCredentialRequestOptions {
@@ -96,7 +90,7 @@ dictionary PublicKeyCredentialRequestOptions {
     unsigned long                        timeout;
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
-    UserVerificationRequirement          userVerification = "preferred";
+    DOMString                            userVerification = "preferred";
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs extensions = {};
 };
