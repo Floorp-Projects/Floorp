@@ -411,10 +411,6 @@ var gPrivacyPane = {
     };
     showPref.on("change", showQuickActionsGroup);
     showQuickActionsGroup();
-
-    document
-      .getElementById("quickActionsLink")
-      .setAttribute("href", UrlbarProviderQuickActions.helpUrl);
   },
 
   syncFromHttpsOnlyPref() {
