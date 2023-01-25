@@ -33,23 +33,26 @@
 
 // Define a new metric by adding it to this list. It will be created as a class
 // enum value mozilla::PerfStats::Metric::MyMetricName.
-#define FOR_EACH_PERFSTATS_METRIC(MACRO) \
-  MACRO(DisplayListBuilding)             \
-  MACRO(Rasterizing)                     \
-  MACRO(WrDisplayListBuilding)           \
-  MACRO(LayerTransactions)               \
-  MACRO(Compositing)                     \
-  MACRO(Reflowing)                       \
-  MACRO(Styling)                         \
-  MACRO(HttpChannelCompletion)           \
-  MACRO(HttpChannelCompletion_Network)   \
-  MACRO(HttpChannelCompletion_Cache)     \
-  MACRO(JSBC_Compression)                \
-  MACRO(JSBC_Decompression)              \
-  MACRO(JSBC_IO_Read)                    \
-  MACRO(JSBC_IO_Write)                   \
-  MACRO(MinorGC)                         \
-  MACRO(MajorGC)                         \
+#define FOR_EACH_PERFSTATS_METRIC(MACRO)          \
+  MACRO(DisplayListBuilding)                      \
+  MACRO(Rasterizing)                              \
+  MACRO(WrDisplayListBuilding)                    \
+  MACRO(LayerTransactions)                        \
+  MACRO(Compositing)                              \
+  MACRO(Reflowing)                                \
+  MACRO(Styling)                                  \
+  MACRO(HttpChannelCompletion)                    \
+  MACRO(HttpChannelCompletion_Network)            \
+  MACRO(HttpChannelCompletion_Cache)              \
+  MACRO(HttpChannelAsyncOpenToTransactionPending) \
+  MACRO(HttpChannelResponseStartParentToContent)  \
+  MACRO(HttpChannelResponseEndParentToContent)    \
+  MACRO(JSBC_Compression)                         \
+  MACRO(JSBC_Decompression)                       \
+  MACRO(JSBC_IO_Read)                             \
+  MACRO(JSBC_IO_Write)                            \
+  MACRO(MinorGC)                                  \
+  MACRO(MajorGC)                                  \
   MACRO(NonIdleMajorGC)
 
 namespace mozilla {
