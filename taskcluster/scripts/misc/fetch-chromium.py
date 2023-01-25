@@ -66,7 +66,7 @@ def log(msg):
     print("build-chromium: %s" % msg)
 
 
-@retriable(attempts=5, sleeptime=5, sleepscale=2)
+@retriable(attempts=7, sleeptime=5, sleepscale=2)
 def fetch_file(url, filepath):
     """Download a file from the given url to a given file."""
     size = 4096
@@ -85,7 +85,7 @@ def unzip(zippath, target):
     subprocess.check_call(unzip_command)
 
 
-@retriable(attempts=5, sleeptime=5, sleepscale=2)
+@retriable(attempts=7, sleeptime=5, sleepscale=2)
 def fetch_chromium_revision(platform):
     """Get the revision of the latest chromium build."""
     chromium_platform = CHROMIUM_INFO[platform]["platform"]
@@ -113,7 +113,7 @@ def fetch_chromium_build(platform, revision, zippath):
     )
 
     log("Downloading %s chromium build revision %s..." % (download_platform, revision))
-
+    log(download_url)
     fetch_file(download_url, zippath)
     return revision
 
