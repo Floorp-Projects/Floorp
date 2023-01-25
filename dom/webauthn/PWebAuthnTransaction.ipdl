@@ -17,7 +17,6 @@
 include protocol PBackground;
 
 using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
-using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
@@ -27,7 +26,7 @@ namespace dom {
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
   UserVerificationRequirement userVerificationRequirement;
-  AuthenticatorAttachment? authenticatorAttachment;
+  nsString? authenticatorAttachment;
 };
 
 struct WebAuthnScopedCredential {
