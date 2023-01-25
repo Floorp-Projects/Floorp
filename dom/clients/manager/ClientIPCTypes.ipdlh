@@ -13,11 +13,11 @@ include "mozilla/dom/ClientIPCUtils.h";
 include "ipc/ErrorIPCUtils.h";
 
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using ClientType from "mozilla/dom/ClientsBinding.h";
-using FrameType from "mozilla/dom/ClientBinding.h";
+using mozilla::dom::ClientType from "mozilla/dom/ClientsBinding.h";
+using mozilla::dom::FrameType from "mozilla/dom/ClientBinding.h";
 using mozilla::StorageAccess from "mozilla/StorageAccess.h";
-using VisibilityState from "mozilla/dom/DocumentBinding.h";
-using CallerType from "mozilla/dom/BindingDeclarations.h";
+using mozilla::dom::VisibilityState from "mozilla/dom/DocumentBinding.h";
+using mozilla::dom::CallerType from "mozilla/dom/BindingDeclarations.h";
 using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
 
 namespace mozilla {

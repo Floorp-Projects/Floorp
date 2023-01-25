@@ -11,8 +11,6 @@ include NeckoChannelParams;
 include PBackgroundSharedTypes;
 include PerformanceTimingTypes;
 
-using FetchDriverObserver::EndReason from "mozilla/dom/FetchDriver.h";
-
 namespace mozilla {
 namespace dom {
 

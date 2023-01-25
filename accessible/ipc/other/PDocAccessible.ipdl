@@ -11,9 +11,9 @@ include DocAccessibleTypes;
 
 include "mozilla/GfxMessageUtils.h";
 
-using LayoutDeviceIntRect from "Units.h";
-using LayoutDeviceIntPoint from "Units.h";
-using LayoutDeviceIntSize from "Units.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDeviceIntSize from "Units.h";
 using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";

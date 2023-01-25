@@ -29,7 +29,7 @@ using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
 using nsCSSPropertyID from "nsCSSPropertyID.h";
-using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
+using mozilla::hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::CSSPoint from "Units.h";
 using mozilla::CSSRect from "Units.h";
