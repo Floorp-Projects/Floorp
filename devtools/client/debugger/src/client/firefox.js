@@ -177,7 +177,11 @@ function onDocumentEventAvailable(events) {
   for (const event of events) {
     // Only consider top level document, and ignore remote iframes top document
     if (!event.targetFront.isTopLevel) continue;
-
+    // The debugger doesn't support the iframe dropdown.
+    // you will always see all the sources of all targets of your debugging context.
+    if (event.isFrameSwitching) {
+      continue;
+    }
     if (event.name == "will-navigate") {
       actions.willNavigate({ url: event.newURI });
     } else if (event.name == "dom-complete") {
