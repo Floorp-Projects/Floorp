@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebAuthnCoseIdentifiers.h"
+#include "WebAuthnEnumStrings.h"
 #include "mozilla/dom/CTAPHIDTokenManager.h"
 #include "mozilla/dom/U2FHIDTokenManager.h"
 #include "mozilla/dom/WebAuthnUtil.h"
@@ -142,13 +143,15 @@ RefPtr<U2FRegisterPromise> CTAPHIDTokenManager::Register(
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     bool requireUserVerification =
-        sel.userVerificationRequirement().EqualsLiteral("required");
+        sel.userVerificationRequirement().EqualsLiteral(
+            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED);
 
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
       const nsString& authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      if (authenticatorAttachment.EqualsLiteral("platform")) {
+      if (authenticatorAttachment.EqualsLiteral(
+              MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
         requirePlatformAttachment = true;
       }
     }
@@ -270,7 +273,8 @@ RefPtr<U2FSignPromise> CTAPHIDTokenManager::Sign(
     const auto& extra = aInfo.Extra().ref();
 
     // Set flags for credential requests.
-    if (extra.userVerificationRequirement().EqualsLiteral("required")) {
+    if (extra.userVerificationRequirement().EqualsLiteral(
+            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
       signFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
     }
 
