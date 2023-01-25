@@ -131,8 +131,6 @@ dictionary TokenBinding {
     DOMString id;
 };
 
-enum TokenBindingStatus { "present", "supported" };
-
 dictionary PublicKeyCredentialDescriptor {
     required DOMString                    type;
     required BufferSource                 id;
