@@ -512,8 +512,11 @@
       <checkbox id="useMasterPassword"
                 data-l10n-id="forms-primary-pw-use"
                 class="tail-with-learn-more"/>
-      <label id="primaryPasswordLearnMoreLink" class="learnMore" is="text-link"
-             data-l10n-id="forms-primary-pw-learn-more-link"/>
+      <html:a is="moz-support-link"
+              id="primaryPasswordLearnMoreLink"
+              data-l10n-id="forms-primary-pw-learn-more-link"
+              support-page="primary-password-stored-logins"
+      />
       <spacer flex="1"/>
       <button id="changeMasterPassword"
               is="highlightable-button"
