@@ -2130,9 +2130,9 @@ function TypedArrayWith(index, value) {
     return callFunction(
       CallTypedArrayMethodIfWrapped,
       this,
-      "TypedArrayWith",
       index,
-      value
+      value,
+      "TypedArrayWith"
     );
   }
 
