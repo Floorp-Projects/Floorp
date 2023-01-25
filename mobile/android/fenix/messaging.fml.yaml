@@ -47,19 +47,46 @@ features:
     defaults:
       - value:
           triggers:
+            # Using attributes built into the Nimbus SDK
             USER_RECENTLY_INSTALLED: days_since_install < 7
             USER_RECENTLY_UPDATED: days_since_update < 7 && days_since_install != days_since_update
             USER_TIER_ONE_COUNTRY: ('US' in locale || 'GB' in locale || 'CA' in locale || 'DE' in locale || 'FR' in locale)
             USER_EN_SPEAKER: "'en' in locale"
+            USER_ES_SPEAKER: "'es' in locale"
             USER_DE_SPEAKER: "'de' in locale"
             USER_FR_SPEAKER: "'fr' in locale"
             DEVICE_ANDROID: os == 'Android'
             DEVICE_IOS: os == 'iOS'
             ALWAYS: "true"
             NEVER: "false"
+
+            # Using custom attributes for the browser
             I_AM_DEFAULT_BROWSER: "is_default_browser"
             I_AM_NOT_DEFAULT_BROWSER: "is_default_browser == false"
             USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
+
+            FUNNEL_PAID:      "adjust_campaign != ''"
+            FUNNEL_ORGANIC:   "adjust_campaign == ''"
+
+            # Using Glean events, specific to the browser
+            INACTIVE_1_DAY:   "'app_launched'|eventLastSeen('Hours') >= 24"
+            INACTIVE_2_DAYS:  "'app_launched'|eventLastSeen('Days', 0) >= 2"
+            INACTIVE_3_DAYS:  "'app_launched'|eventLastSeen('Days', 0) >= 3"
+            INACTIVE_4_DAYS:  "'app_launched'|eventLastSeen('Days', 0) >= 4"
+            INACTIVE_5_DAYS:  "'app_launched'|eventLastSeen('Days', 0) >= 5"
+
+            # Has the user signed in the last 4 years
+            FXA_SIGNED_IN:     "'sync_auth.sign_in'|eventLastSeen('Years', 0) <= 4"
+            FXA_NOT_SIGNED_IN: "'sync_auth.sign_in'|eventLastSeen('Years', 0) > 4"
+
+            # https://mozilla-hub.atlassian.net/wiki/spaces/FJT/pages/11469471/Core+Active
+            USER_INFREQUENT:  "'app_launched'|eventCountNonZero('Days', 28) >= 1 && 'app_launched'|eventCountNonZero('Days', 28) < 7"
+            USER_CASUAL:      "'app_launched'|eventCountNonZero('Days', 28) >= 7 && 'app_launched'|eventCountNonZero('Days', 28) < 14"
+            USER_REGULAR:     "'app_launched'|eventCountNonZero('Days', 28) >= 14 && 'app_launched'|eventCountNonZero('Days', 28) < 21"
+            USER_CORE_ACTIVE: "'app_launched'|eventCountNonZero('Days', 28) >= 21"
+
+            LAUNCHED_ONCE_THIS_WEEK: "'app_launched'|eventSum('Days', 7) == 1"
+
           actions:
             ENABLE_PRIVATE_BROWSING: ://enable_private_browsing
             INSTALL_SEARCH_WIDGET: ://install_search_widget
