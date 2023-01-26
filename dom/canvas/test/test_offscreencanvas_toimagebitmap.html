@@ -12,10 +12,6 @@
 <canvas id="c_ref" width="64" height="64"></canvas>
 <script>
 
-function todo_bug(bugId, val, text) {
-  todo(val, `[Bug ${bugId}] ${text}`);
-}
-
 function testWorker(onFinished) {
   var worker = new Worker("offscreencanvas.js");
 
@@ -52,7 +48,7 @@ function testWorker(onFinished) {
       } catch (e) {
         didThrow = true;
       }
-      todo_bug(1795506, didThrow, 'transferFromImageBitmap(detached) must throw');
+      ok(didThrow, 'transferFromImageBitmap(detached) must throw');
       ok(c1.toDataURL() == c_ref.toDataURL(),
          "c2.toDataURL MUST NOT return a 64x64 green square");
 
