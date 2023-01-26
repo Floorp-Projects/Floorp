@@ -59,31 +59,12 @@ def test_stale_element(session, get_test_page, as_frame):
 
 @pytest.mark.parametrize("expression, expected_type", [
     ("window.frames[0]", Frame),
-    ("document.getElementById('foo')", Element),
-    ("document.getElementById('checkbox').shadowRoot", ShadowRoot),
+    ("document.querySelector('div')", Element),
+    ("document.querySelector('custom-element').shadowRoot", ShadowRoot),
     ("window", Window),
 ], ids=["frame", "node", "shadow-root", "window"])
-def test_element_reference(session, iframe, inline, expression, expected_type):
-    session.url = inline(f"""
-        <style>
-            custom-checkbox-element {{
-                display:block; width:20px; height:20px;
-            }}
-        </style>
-        <custom-checkbox-element id='checkbox'></custom-checkbox-element>
-        <script>
-            customElements.define('custom-checkbox-element',
-                class extends HTMLElement {{
-                    constructor() {{
-                        super();
-                        this.attachShadow({{mode: 'open'}}).innerHTML = `
-                            <div><input type="checkbox"/></div>
-                        `;
-                    }}
-                }});
-        </script>
-        <div id="foo"/>
-        {iframe("<p>")}""")
+def test_element_reference(session, get_test_page, expression, expected_type):
+    session.url = get_test_page()
 
     result = execute_script(session, f"return {expression}")
     reference = assert_success(result)
