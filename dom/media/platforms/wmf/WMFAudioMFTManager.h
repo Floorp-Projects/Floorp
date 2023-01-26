@@ -56,6 +56,11 @@ class WMFAudioMFTManager : public MFTManager {
   media::TimeUnit mLastOutputDuration = media::TimeUnit::Zero();
 
   bool mFirstFrame = true;
+
+  uint64_t mDecodedFrames = 0;
+  uint64_t mTotalMediaFrames = 0;
+  uint32_t mEncoderDelay = 0;
+  uint32_t mRemainingEncoderDelay = 0;
 };
 
 }  // namespace mozilla
