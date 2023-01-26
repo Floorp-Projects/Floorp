@@ -47,6 +47,8 @@ upload:
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
+        env:
+            MOZ_SOURCE_DOCS_USE_GOOGLE: "1"
         taskcluster-proxy: true
         artifacts:
             - type: file

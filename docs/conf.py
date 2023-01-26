@@ -77,8 +77,15 @@ templates_path = ["_templates"]
 source_suffix = [".rst", ".md"]
 master_doc = "index"
 project = "Firefox Source Docs"
+
 # Override the search box to use Google instead of
-# sphinx search
+# sphinx search on firefox-source-docs.mozilla.org
+if (
+    os.environ.get("MOZ_SOURCE_DOCS_USE_GOOGLE") == "1"
+    and os.environ.get("MOZ_SCM_LEVEL") == "3"
+):
+    templates_path.append("_search_template")
+
 html_sidebars = {
     "**": [
         "searchbox.html",
