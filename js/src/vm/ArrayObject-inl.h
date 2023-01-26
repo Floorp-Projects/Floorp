@@ -63,6 +63,25 @@ namespace js {
   return aobj;
 }
 
+inline DenseElementResult ArrayObject::addDenseElementNoLengthChange(
+    JSContext* cx, uint32_t index, const Value& val) {
+  MOZ_ASSERT(isExtensible());
+
+  // Only support the `index < length` case so that we don't have to increase
+  // the array's .length value below.
+  if (index >= length() || containsDenseElement(index) || isIndexed()) {
+    return DenseElementResult::Incomplete;
+  }
+
+  DenseElementResult res = ensureDenseElements(cx, index, 1);
+  if (MOZ_UNLIKELY(res != DenseElementResult::Success)) {
+    return res;
+  }
+
+  initDenseElement(index, val);
+  return DenseElementResult::Success;
+}
+
 }  // namespace js
 
 #endif  // vm_ArrayObject_inl_h
