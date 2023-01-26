@@ -24,10 +24,13 @@ var subtests = [
 let platform = getPlatform();
 if (platform == "android") {
   subtests.push(
-     {"file": "helper_zoomToFocusedInput_nozoom.html"}
+    {"file": "helper_zoomToFocusedInput_nozoom.html"}
   );
   subtests.push(
-     {"file": "helper_zoomToFocusedInput_zoom.html"}
+    {"file": "helper_zoomToFocusedInput_zoom.html"}
+  );
+  subtests.push(
+    {"file": "helper_zoomToFocusedInput_touch-action.html"}
   );
 }
 

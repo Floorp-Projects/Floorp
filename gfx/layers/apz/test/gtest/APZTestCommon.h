@@ -98,7 +98,7 @@ class ScopedGfxSetting {
 
 static inline constexpr auto kDefaultTouchBehavior =
     AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
-    AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+    AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::ANIMATING_ZOOM;
 
 #define FRESH_PREF_VAR_PASTE(id, line) id##line
 #define FRESH_PREF_VAR_EXPAND(id, line) FRESH_PREF_VAR_PASTE(id, line)

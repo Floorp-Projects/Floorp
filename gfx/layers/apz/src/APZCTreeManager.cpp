@@ -1857,7 +1857,7 @@ static TouchBehaviorFlags ConvertToTouchBehavior(
     result = AllowedTouchBehavior::VERTICAL_PAN |
              AllowedTouchBehavior::HORIZONTAL_PAN |
              AllowedTouchBehavior::PINCH_ZOOM |
-             AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+             AllowedTouchBehavior::ANIMATING_ZOOM;
     if (info.contains(CompositorHitTestFlags::eTouchActionPanXDisabled)) {
       result &= ~AllowedTouchBehavior::HORIZONTAL_PAN;
     }
@@ -1868,8 +1868,8 @@ static TouchBehaviorFlags ConvertToTouchBehavior(
       result &= ~AllowedTouchBehavior::PINCH_ZOOM;
     }
     if (info.contains(
-            CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled)) {
-      result &= ~AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+            CompositorHitTestFlags::eTouchActionAnimatingZoomDisabled)) {
+      result &= ~AllowedTouchBehavior::ANIMATING_ZOOM;
     }
   }
   return result;

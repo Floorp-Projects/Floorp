@@ -36,7 +36,7 @@ void SetDefaultAllowedTouchBehavior(const RefPtr<InputReceiver>& aTarget,
         mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN |
         mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN |
         mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM |
-        mozilla::layers::AllowedTouchBehavior::DOUBLE_TAP_ZOOM);
+        mozilla::layers::AllowedTouchBehavior::ANIMATING_ZOOM);
   }
   aTarget->SetAllowedTouchBehavior(aInputBlockId, defaultBehaviors);
 }

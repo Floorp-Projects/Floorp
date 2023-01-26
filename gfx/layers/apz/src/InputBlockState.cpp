@@ -735,7 +735,7 @@ bool TouchBlockState::TouchActionAllowsPinchZoom() const {
 
 bool TouchBlockState::TouchActionAllowsDoubleTapZoom() const {
   for (auto& behavior : mAllowedTouchBehaviors) {
-    if (!(behavior & AllowedTouchBehavior::DOUBLE_TAP_ZOOM)) {
+    if (!(behavior & AllowedTouchBehavior::ANIMATING_ZOOM)) {
       return false;
     }
   }
