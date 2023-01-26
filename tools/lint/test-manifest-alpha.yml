@@ -1,0 +1,17 @@
+---
+test-manifest-alpha:
+    description: Mochitest manifest tests should be in alphabetical order.
+    exclude:
+        - "**/application.ini"
+        - "**/l10n.ini"
+        - "**/xpcshell.ini"
+        - "**/python.ini"
+        - "**/manifest.ini"
+        - dom/canvas/test/webgl-conf/mochitest-errata.ini
+        - python/mozbuild/mozbuild/test/backend/data
+        - testing/mozbase/manifestparser/tests
+        - testing/web-platform
+        - xpcom/tests/unit/data
+    extensions: ['ini']
+    type: external
+    payload: test-manifest-alpha:lint
