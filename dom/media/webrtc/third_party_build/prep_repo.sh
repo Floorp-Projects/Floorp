@@ -21,6 +21,13 @@ rm -f $STATE_DIR/*.no-op-cherry-pick-msg
 # wipe resume_state for new run
 rm -f $STATE_DIR/resume_state
 
+# If there is no cache file for the branch-head lookups done in
+# update_example_config.sh, go ahead and copy our small pre-warmed
+# version.
+if [ ! -f $STATE_DIR/milestone.cache ]; then
+  cp $SCRIPT_DIR/pre-warmed-milestone.cache $STATE_DIR/milestone.cache
+fi
+
 # read the last line of README.moz-ff-commit to retrieve our current base
 # commit in moz-libwebrtc
 MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
