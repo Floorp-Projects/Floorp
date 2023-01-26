@@ -7,6 +7,7 @@
 #include "gc/Zone-inl.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
 
+#include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
 #include <type_traits>
@@ -488,6 +489,27 @@ void Zone::discardJitCode(JS::GCContext* gcx, const DiscardOptions& options) {
   if (options.discardBaselineCode) {
     jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
     jitZone()->purgeIonCacheIRStubInfo();
+  }
+
+  // Generate a profile marker
+  if (gcx->runtime()->geckoProfiler().enabled()) {
+    char discardingJitScript = options.discardJitScripts ? 'Y' : 'N';
+    char discardingBaseline = options.discardBaselineCode ? 'Y' : 'N';
+    char discardingIon = 'Y';
+
+    char discardingRegExp = 'Y';
+    char discardingNurserySites = options.resetNurseryAllocSites ? 'Y' : 'N';
+    char discardingPretenuredSites =
+        options.resetPretenuredAllocSites ? 'Y' : 'N';
+
+    char buf[100];
+    SprintfLiteral(buf,
+                   "JitScript:%c Baseline:%c Ion:%c "
+                   "RegExp:%c NurserySites:%c PretenuredSites:%c",
+                   discardingJitScript, discardingBaseline, discardingIon,
+                   discardingRegExp, discardingNurserySites,
+                   discardingPretenuredSites);
+    gcx->runtime()->geckoProfiler().markEvent("DiscardJit", buf);
   }
 }
 
