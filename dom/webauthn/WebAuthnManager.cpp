@@ -385,7 +385,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
   const auto& selection = aOptions.mAuthenticatorSelection;
   const auto& attachment = selection.mAuthenticatorAttachment;
-  const AttestationConveyancePreference& attestation = aOptions.mAttestation;
+  const nsString& attestation = aOptions.mAttestation;
 
   // Attachment
   Maybe<nsString> authenticatorAttachment;

@@ -467,11 +467,15 @@ void U2FTokenManager::Register(
   if (aTransactionInfo.Extra().isSome()) {
     const auto& extra = aTransactionInfo.Extra().ref();
 
-    AttestationConveyancePreference attestation =
-        extra.attestationConveyancePreference();
-
-    noneAttestationRequested =
-        attestation == AttestationConveyancePreference::None;
+    // The default attestation type is "none", so set
+    // noneAttestationRequested=false only if the RP's preference matches one of
+    // the other known types.
+    const nsString& attestation = extra.attestationConveyancePreference();
+    if (attestation.EqualsLiteral("direct") ||
+        attestation.EqualsLiteral("indirect") ||
+        attestation.EqualsLiteral("enterprise")) {
+      noneAttestationRequested = false;
+    }
   }
 #endif  // not MOZ_WIDGET_ANDROID
 

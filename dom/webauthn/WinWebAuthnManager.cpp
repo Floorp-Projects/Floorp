@@ -266,21 +266,15 @@ void WinWebAuthnManager::Register(
     winRequireResidentKey = sel.requireResidentKey();
 
     // AttestationConveyance
-    AttestationConveyancePreference attestation =
-        extra.attestationConveyancePreference();
-    switch (attestation) {
-      case AttestationConveyancePreference::Direct:
-        winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
-        break;
-      case AttestationConveyancePreference::Indirect:
-        winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
-        break;
-      case AttestationConveyancePreference::None:
-        winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
-        break;
-      default:
-        winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
-        break;
+    const nsString& attestation = extra.attestationConveyancePreference();
+    if (attestation.EqualsLiteral("none")) {
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
+    } else if (attestation.EqualsLiteral("indirect")) {
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
+    } else if (attestation.EqualsLiteral("direct")) {
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
+    } else {
+      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
     }
 
     if (extra.Extensions().Length() >
