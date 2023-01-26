@@ -3517,7 +3517,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     // Skip initializing storage actors already instanced as Resources
     // by the watcher. This happens when the target is a tab.
     const isAddonTarget = !!this.parentActor.addonId;
-    const isWatcherEnabled = !isAddonTarget && !this.parentActor.isRootActor;
+    const isWatcherEnabled = true;
     const shallUseLegacyActors = Services.prefs.getBoolPref(
       "devtools.storage.test.forceLegacyActors",
       false
