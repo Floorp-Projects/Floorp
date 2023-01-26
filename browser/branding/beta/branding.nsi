@@ -9,7 +9,6 @@
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
 !define BrandFullNameInternal "Floorp Daylight"
-!define BrandShortName        "Floorp Daylight"
 !define BrandFullName         "Floorp Daylight"
 !define CompanyName           "Ablaze"
 !define URLInfoAbout          "https://Ablaze.one"
