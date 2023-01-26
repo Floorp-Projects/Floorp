@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "110.2.0",
+  "version": "110.3.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -126,6 +126,7 @@
     "shims/history.js",
     "shims/iam.js",
     "shims/iaspet.js",
+    "shims/instagram.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
     "shims/maxmind-geoip.js",
