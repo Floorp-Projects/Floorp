@@ -581,11 +581,8 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
-    UserVerificationRequirement userVerificaitonRequirement =
-        sel.userVerificationRequirement();
-
     bool requireUserVerification =
-        userVerificaitonRequirement == UserVerificationRequirement::Required;
+        sel.userVerificationRequirement().EqualsLiteral("required");
 
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
@@ -824,11 +821,8 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
 
-    UserVerificationRequirement userVerificaitonReq =
-        extra.userVerificationRequirement();
-
     // The U2F softtoken doesn't support user verification.
-    if (userVerificaitonReq == UserVerificationRequirement::Required) {
+    if (extra.userVerificationRequirement().EqualsLiteral("required")) {
       return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR,
                                              __func__);
     }

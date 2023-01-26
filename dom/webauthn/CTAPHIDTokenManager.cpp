@@ -141,11 +141,8 @@ RefPtr<U2FRegisterPromise> CTAPHIDTokenManager::Register(
     const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
-    UserVerificationRequirement userVerificationRequirement =
-        sel.userVerificationRequirement();
-
     bool requireUserVerification =
-        userVerificationRequirement == UserVerificationRequirement::Required;
+        sel.userVerificationRequirement().EqualsLiteral("required");
 
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
@@ -272,11 +269,8 @@ RefPtr<U2FSignPromise> CTAPHIDTokenManager::Sign(
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
 
-    UserVerificationRequirement userVerificationReq =
-        extra.userVerificationRequirement();
-
     // Set flags for credential requests.
-    if (userVerificationReq == UserVerificationRequirement::Required) {
+    if (extra.userVerificationRequirement().EqualsLiteral("required")) {
       signFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
     }
 
