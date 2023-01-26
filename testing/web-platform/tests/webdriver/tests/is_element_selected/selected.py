@@ -90,7 +90,7 @@ def test_no_such_element_from_other_frame(session, url, closed):
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
 def test_stale_element_reference(session, stale_element, check_doc, as_frame):
-    element = stale_element(check_doc, "#checked", as_frame=as_frame)
+    element = stale_element("input#checkbox", as_frame=as_frame)
 
     result = is_element_selected(session, element.id)
     assert_error(result, "stale element reference")
