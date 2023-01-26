@@ -10,7 +10,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  update-nimbus-experiments:
+  focus-update-nimbus-experiments:
     name: "Update Nimbus Experiments"
     runs-on: ubuntu-latest
     steps:
@@ -28,7 +28,7 @@ jobs:
           output-path: focus-android/app/src/main/res/raw/initial_experiments.json
           experimenter-url: https://experimenter.services.mozilla.com/api/v6/experiments-first-run/
           app-name: focus_android
-          branch: automation/update-nimbus-experiments
+          branch: automation/update-focus-nimbus-experiments
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch == 1
@@ -36,7 +36,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: focus-android
           branch: automation/update-focus-nimbus-experiments
-          commit-message: "Automated: update initial_experiments.json based on the current first-run experiments in experimenter"
+          commit-message: "Automated: Update Focus initial_experiments.json based on the current first-run experiments in experimenter"
           title: "Update Focus initial experiments JSON for Nimbus"
           body: "This (automated) PR updates the initial_experiments.json on the `main` branch"
           delete-branch: true
