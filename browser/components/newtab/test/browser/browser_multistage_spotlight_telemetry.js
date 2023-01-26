@@ -60,7 +60,7 @@ add_task(async function send_spotlight_as_page_in_telemetry() {
 });
 
 add_task(async function send_dismiss_event_telemetry() {
-  const messageId = "PB_FOCUS_PROMO"; // a multistage spotlight promo with dismiss button
+  const messageId = "MULTISTAGE_SPOTLIGHT_MESSAGE";
   let message = (await PanelTestProvider.getMessages()).find(
     m => m.id === messageId
   );

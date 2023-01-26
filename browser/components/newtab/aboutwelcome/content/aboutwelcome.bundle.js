@@ -560,6 +560,10 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (action.navigate) {
       props.navigate();
     }
+
+    if (action.dismiss) {
+      window.AWFinish();
+    }
   }
 
   render() {

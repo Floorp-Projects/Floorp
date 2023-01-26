@@ -367,7 +367,7 @@ const MESSAGES = () => [
     groups: ["panel-test-provider"],
     template: "spotlight",
     content: {
-      id: "control",
+      id: "MULTISTAGE_SPOTLIGHT_MESSAGE",
       template: "multistage",
       backdrop: "transparent",
       transitions: true,
@@ -412,6 +412,11 @@ const MESSAGES = () => [
               },
               action: {
                 navigate: true,
+              },
+            },
+            dismiss_button: {
+              action: {
+                dismiss: true,
               },
             },
           },
@@ -542,7 +547,7 @@ const MESSAGES = () => [
             },
             dismiss_button: {
               action: {
-                navigate: true,
+                dismiss: true,
               },
             },
             ios: {

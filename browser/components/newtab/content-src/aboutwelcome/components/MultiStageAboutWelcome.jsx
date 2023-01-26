@@ -413,6 +413,10 @@ export class WelcomeScreen extends React.PureComponent {
     if (action.navigate) {
       props.navigate();
     }
+
+    if (action.dismiss) {
+      window.AWFinish();
+    }
   }
 
   render() {
