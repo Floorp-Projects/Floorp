@@ -57,8 +57,8 @@ class ImageBitmapRenderingContext final
   void GetCanvas(
       Nullable<OwningHTMLCanvasElementOrOffscreenCanvas>& retval) const;
 
-  void TransferImageBitmap(ImageBitmap& aImageBitmap);
-  void TransferFromImageBitmap(ImageBitmap* aImageBitmap);
+  void TransferImageBitmap(ImageBitmap& aImageBitmap, ErrorResult& aRv);
+  void TransferFromImageBitmap(ImageBitmap* aImageBitmap, ErrorResult& aRv);
 
   // nsICanvasRenderingContextInternal
   virtual int32_t GetWidth() override { return mWidth; }
