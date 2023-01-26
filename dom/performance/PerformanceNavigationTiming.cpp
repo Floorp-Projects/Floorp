@@ -152,6 +152,5 @@ void PerformanceNavigationTiming::UpdatePropertiesFromHttpChannel(
 }
 
 bool PerformanceNavigationTiming::Enabled(JSContext* aCx, JSObject* aGlobal) {
-  return (StaticPrefs::dom_enable_performance_navigation_timing() &&
-          !StaticPrefs::privacy_resistFingerprinting());
+  return StaticPrefs::dom_enable_performance_navigation_timing();
 }

@@ -112,8 +112,7 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   mInitialized = !!aChannel;
   mZeroTime = aZeroTime;
 
-  if (!StaticPrefs::dom_enable_performance() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance()) {
     mZeroTime = 0;
   }
 
@@ -338,8 +337,7 @@ bool PerformanceTimingData::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
 }
 
 uint8_t PerformanceTimingData::GetRedirectCount() const {
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return 0;
   }
   if (!mAllRedirectsSameOrigin) {
@@ -350,8 +348,7 @@ uint8_t PerformanceTimingData::GetRedirectCount() const {
 
 bool PerformanceTimingData::ShouldReportCrossOriginRedirect(
     bool aEnsureSameOriginAndIgnoreTAO) const {
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return false;
   }
 
