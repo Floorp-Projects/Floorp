@@ -14,6 +14,7 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -1082,48 +1083,8 @@ Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
     } else if ((nsGkAtoms::font == aStyle.mHTMLProperty &&
                 aStyle.mAttribute == nsGkAtoms::color) ||
                aStyle.mAttribute == nsGkAtoms::bgcolor) {
-      if (htmlValueString.IsEmpty()) {
-        isSet = true;
-      } else {
-        nscolor rgba;
-        nsAutoString subStr;
-        htmlValueString.Right(subStr, htmlValueString.Length() - 1);
-        if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
-            NS_HexToRGBA(subStr, nsHexColorType::NoAlpha, &rgba)) {
-          nsAutoString htmlColor, tmpStr;
-
-          if (NS_GET_A(rgba) != 255) {
-            // This should only be hit by the "transparent" keyword, which
-            // currently serializes to "transparent" (not "rgba(0, 0, 0, 0)").
-            MOZ_ASSERT(NS_GET_R(rgba) == 0 && NS_GET_G(rgba) == 0 &&
-                       NS_GET_B(rgba) == 0 && NS_GET_A(rgba) == 0);
-            htmlColor.AppendLiteral(u"transparent");
-          } else {
-            htmlColor.AppendLiteral(u"rgb(");
-
-            constexpr auto comma = u", "_ns;
-
-            tmpStr.AppendInt(NS_GET_R(rgba), 10);
-            htmlColor.Append(tmpStr + comma);
-
-            tmpStr.Truncate();
-            tmpStr.AppendInt(NS_GET_G(rgba), 10);
-            htmlColor.Append(tmpStr + comma);
-
-            tmpStr.Truncate();
-            tmpStr.AppendInt(NS_GET_B(rgba), 10);
-            htmlColor.Append(tmpStr);
-
-            htmlColor.AppendLiteral(u")");
-          }
-
-          isSet =
-              htmlColor.Equals(aInOutValue, nsCaseInsensitiveStringComparator);
-        } else {
-          isSet = htmlValueString.Equals(aInOutValue,
-                                         nsCaseInsensitiveStringComparator);
-        }
-      }
+      isSet = htmlValueString.IsEmpty() ||
+              HTMLEditUtils::IsSameCSSColorValue(htmlValueString, aInOutValue);
     } else if (nsGkAtoms::tt == aStyle.mHTMLProperty) {
       isSet = StringBeginsWith(aInOutValue, u"monospace"_ns);
     } else if (nsGkAtoms::font == aStyle.mHTMLProperty &&
@@ -1328,7 +1289,14 @@ bool CSSEditUtils::DoStyledElementsHaveSameStyle(
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
-    if (!firstValue.Equals(otherValue)) {
+    // FIXME: We need to handle all properties whose values are color.
+    // However, it's too expensive if we keep using string property names.
+    if (propertyNameString.EqualsLiteral("color") ||
+        propertyNameString.EqualsLiteral("background-color")) {
+      if (!HTMLEditUtils::IsSameCSSColorValue(firstValue, otherValue)) {
+        return false;
+      }
+    } else if (!firstValue.Equals(otherValue)) {
       return false;
     }
   }
@@ -1345,7 +1313,14 @@ bool CSSEditUtils::DoStyledElementsHaveSameStyle(
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsICSSDeclaration::GetPropertyValue() failed, but ignored");
-    if (!firstValue.Equals(otherValue)) {
+    // FIXME: We need to handle all properties whose values are color.
+    // However, it's too expensive if we keep using string property names.
+    if (propertyNameString.EqualsLiteral("color") ||
+        propertyNameString.EqualsLiteral("background-color")) {
+      if (!HTMLEditUtils::IsSameCSSColorValue(firstValue, otherValue)) {
+        return false;
+      }
+    } else if (!firstValue.Equals(otherValue)) {
       return false;
     }
   }

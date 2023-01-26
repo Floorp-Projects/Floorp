@@ -55,7 +55,6 @@
 #include "mozilla/PresShell.h"              // for PresShell
 #include "mozilla/RangeBoundary.h"       // for RawRangeBoundary, RangeBoundary
 #include "mozilla/Services.h"            // for GetObserverService
-#include "mozilla/ServoCSSParser.h"      // for ServoCSSParser
 #include "mozilla/StaticPrefs_bidi.h"    // for StaticPrefs::bidi_*
 #include "mozilla/StaticPrefs_dom.h"     // for StaticPrefs::dom_*
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
@@ -123,7 +122,6 @@
 #include "nsStyleConsts.h"             // for StyleDirection::Rtl, etc.
 #include "nsStyleStruct.h"             // for nsStyleDisplay, nsStyleText, etc.
 #include "nsStyleStructFwd.h"          // for nsIFrame::StyleUIReset, etc.
-#include "nsStyleUtil.h"               // for nsStyleUtil
 #include "nsTextNode.h"                // for nsTextNode
 #include "nsThreadUtils.h"             // for nsRunnable
 #include "prtime.h"                    // for PR_Now
@@ -6200,30 +6198,9 @@ void EditorBase::AutoEditActionDataSetter::SetColorData(
     return;
   }
 
-  bool wasCurrentColor = false;
-  nscolor color = NS_RGB(0, 0, 0);
-  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0),
-                                    NS_ConvertUTF16toUTF8(aData), &color,
-                                    &wasCurrentColor)) {
-    // If we cannot parse aData, let's set original value as-is.  It could be
-    // new format defined by newer spec.
-    MOZ_ASSERT(!aData.IsVoid());
-    mData = aData;
-    return;
-  }
-
-  // If it's current color, we cannot resolve actual current color here.
-  // So, let's return "currentcolor" keyword, but let's use it as-is because
-  // there is no agreement between browser vendors.
-  if (wasCurrentColor) {
-    MOZ_ASSERT(!aData.IsVoid());
-    mData = aData;
-    return;
-  }
-
-  // Get serialized color value (i.e., "rgb()" or "rgba()").
-  nsStyleUtil::GetSerializedColorValue(color, mData);
-  MOZ_ASSERT(!mData.IsVoid());
+  DebugOnly<bool> validColorValue = HTMLEditUtils::GetNormalizedCSSColorValue(
+      aData, HTMLEditUtils::ZeroAlphaColor::RGBAValue, mData);
+  MOZ_ASSERT_IF(validColorValue, !mData.IsVoid());
 }
 
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(

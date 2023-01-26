@@ -21,11 +21,13 @@
 #include "mozilla/dom/Element.h"  // for Element, nsINode
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/ServoCSSParser.h"  // for ServoCSSParser
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/Text.h"  // for Text
 
-#include "nsAString.h"  // for nsAString::IsEmpty
-#include "nsAtom.h"     // for nsAtom
+#include "nsAString.h"    // for nsAString::IsEmpty
+#include "nsAtom.h"       // for nsAtom
+#include "nsAttrValue.h"  // nsAttrValue
 #include "nsCaseTreatment.h"
 #include "nsCOMPtr.h"            // for nsCOMPtr, operator==, etc.
 #include "nsComputedDOMStyle.h"  // for nsComputedDOMStyle
@@ -36,8 +38,10 @@
 #include "nsHTMLTags.h"
 #include "nsLiteralString.h"     // for NS_LITERAL_STRING
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
+#include "nsPrintfCString.h"     // nsPringfCString
 #include "nsString.h"            // for nsAutoString
 #include "nsStyledElement.h"
+#include "nsStyleUtil.h"     // for nsStyleUtil
 #include "nsTextFragment.h"  // for nsTextFragment
 #include "nsTextFrame.h"     // for nsTextFrame
 
@@ -127,6 +131,11 @@ HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
 template Result<EditorRawDOMPoint, nsresult>
 HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
     const Element& aElement, const EditorRawDOMPoint& aCurrentPoint);
+
+template bool HTMLEditUtils::IsSameCSSColorValue(const nsAString& aColorA,
+                                                 const nsAString& aColorB);
+template bool HTMLEditUtils::IsSameCSSColorValue(const nsACString& aColorA,
+                                                 const nsACString& aColorB);
 
 bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
                                         const nsIContent& aRightContent,
@@ -2284,6 +2293,101 @@ bool HTMLEditUtils::ElementHasAttributeExcept(const Element& aElement,
   // if we made it through all of them without finding a real attribute
   // other than aAttribute, then return true
   return false;
+}
+
+bool HTMLEditUtils::GetNormalizedHTMLColorValue(const nsAString& aColorValue,
+                                                nsAString& aNormalizedValue) {
+  nsAttrValue value;
+  if (!value.ParseColor(aColorValue)) {
+    aNormalizedValue = aColorValue;
+    return false;
+  }
+  nscolor color = NS_RGB(0, 0, 0);
+  MOZ_ALWAYS_TRUE(value.GetColorValue(color));
+  aNormalizedValue = NS_ConvertASCIItoUTF16(nsPrintfCString(
+      "#%02x%02x%02x", NS_GET_R(color), NS_GET_G(color), NS_GET_B(color)));
+  return true;
+}
+
+bool HTMLEditUtils::IsSameHTMLColorValue(
+    const nsAString& aColorA, const nsAString& aColorB,
+    TransparentKeyword aTransparentKeyword) {
+  if (aTransparentKeyword == TransparentKeyword::Allowed) {
+    const bool isATransparent = aColorA.LowerCaseEqualsLiteral("transparent");
+    const bool isBTransparent = aColorB.LowerCaseEqualsLiteral("transparent");
+    if (isATransparent || isBTransparent) {
+      return isATransparent && isBTransparent;
+    }
+  }
+  nsAttrValue valueA, valueB;
+  if (!valueA.ParseColor(aColorA) || !valueB.ParseColor(aColorB)) {
+    return false;
+  }
+  nscolor colorA = NS_RGB(0, 0, 0), colorB = NS_RGB(0, 0, 0);
+  MOZ_ALWAYS_TRUE(valueA.GetColorValue(colorA));
+  MOZ_ALWAYS_TRUE(valueB.GetColorValue(colorB));
+  return colorA == colorB;
+}
+
+static bool ComputeColor(const nsAString& aColorValue, nscolor* aColor,
+                         bool* aIsCurrentColor) {
+  return ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0),
+                                      NS_ConvertUTF16toUTF8(aColorValue),
+                                      aColor, aIsCurrentColor);
+}
+
+static bool ComputeColor(const nsACString& aColorValue, nscolor* aColor,
+                         bool* aIsCurrentColor) {
+  return ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorValue,
+                                      aColor, aIsCurrentColor);
+}
+
+bool HTMLEditUtils::GetNormalizedCSSColorValue(const nsAString& aColorValue,
+                                               ZeroAlphaColor aZeroAlphaColor,
+                                               nsAString& aNormalizedValue) {
+  bool isCurrentColor = false;
+  nscolor color = NS_RGB(0, 0, 0);
+  if (!ComputeColor(aColorValue, &color, &isCurrentColor)) {
+    aNormalizedValue = aColorValue;
+    return false;
+  }
+
+  // If it's currentcolor, let's return it as-is since we cannot resolve it
+  // without ancestors.
+  if (isCurrentColor) {
+    aNormalizedValue = aColorValue;
+    return true;
+  }
+
+  if (aZeroAlphaColor == ZeroAlphaColor::TransparentKeyword &&
+      NS_GET_A(color) == 0) {
+    aNormalizedValue.AssignLiteral("transparent");
+    return true;
+  }
+
+  // Get serialized color value (i.e., "rgb()" or "rgba()").
+  aNormalizedValue.Truncate();
+  nsStyleUtil::GetSerializedColorValue(color, aNormalizedValue);
+  return true;
+}
+
+template <typename CharType>
+bool HTMLEditUtils::IsSameCSSColorValue(const nsTSubstring<CharType>& aColorA,
+                                        const nsTSubstring<CharType>& aColorB) {
+  bool isACurrentColor = false;
+  nscolor colorA = NS_RGB(0, 0, 0);
+  if (!ComputeColor(aColorA, &colorA, &isACurrentColor)) {
+    return false;
+  }
+  bool isBCurrentColor = false;
+  nscolor colorB = NS_RGB(0, 0, 0);
+  if (!ComputeColor(aColorB, &colorB, &isBCurrentColor)) {
+    return false;
+  }
+  if (isACurrentColor || isBCurrentColor) {
+    return isACurrentColor && isBCurrentColor;
+  }
+  return colorA == colorB;
 }
 
 /******************************************************************************

@@ -2169,6 +2169,60 @@ class HTMLEditUtils final {
     return result;
   }
 
+  /**
+   * Get `#[0-9a-f]{6}` style HTML color value if aColorValue is valid value
+   * for color-specifying attribute. The result is useful to set attributes
+   * of HTML elements which take a color value.
+   *
+   * @param aColorValue         [in] Should be one of `#[0-9a-fA-Z]{3}`,
+   *                            `#[0-9a-fA-Z]{3}` or a color name.
+   * @param aNormalizedValue    [out] Set to `#[0-9a-f]{6}` style color code
+   *                            if this returns true.  Otherwise, returns
+   *                            aColorValue as-is.
+   * @return                    true if aColorValue is valid.  Otherwise, false.
+   */
+  static bool GetNormalizedHTMLColorValue(const nsAString& aColorValue,
+                                          nsAString& aNormalizedValue);
+
+  /**
+   * Get serialized color value (`rgb(...)` or `rgba(...)`) or "currentcolor"
+   * if aColorValue is valid. The result is useful to set CSS color property.
+   *
+   * @param aColorValue         [in] Should be valid CSS color value.
+   * @param aZeroAlphaColor     [in] If TransparentKeyword, aNormalizedValue is
+   *                            set to "transparent" if the alpha value is 0.
+   *                            Otherwise, `rgba(...)` value is set.
+   * @param aNormalizedValue    [out] Serialized color value or "currentcolor".
+   * @return                    true if aColorValue is valid.  Otherwise, false.
+   */
+  enum class ZeroAlphaColor { RGBAValue, TransparentKeyword };
+  static bool GetNormalizedCSSColorValue(const nsAString& aColorValue,
+                                         ZeroAlphaColor aZeroAlphaColor,
+                                         nsAString& aNormalizedValue);
+
+  /**
+   * Check whether aColorA and aColorB are same color.
+   *
+   * @param aTransparentKeyword Whether allow to treat "transparent" keyword
+   *                            as a valid value or an invalid value.
+   * @return                    If aColorA and aColorB are valid values and
+   *                            mean same color, returns true.
+   */
+  enum class TransparentKeyword { Invalid, Allowed };
+  static bool IsSameHTMLColorValue(const nsAString& aColorA,
+                                   const nsAString& aColorB,
+                                   TransparentKeyword aTransparentKeyword);
+
+  /**
+   * Check whether aColorA and aColorB are same color.
+   *
+   * @return                    If aColorA and aColorB are valid values and
+   *                            mean same color, returns true.
+   */
+  template <typename CharType>
+  static bool IsSameCSSColorValue(const nsTSubstring<CharType>& aColorA,
+                                  const nsTSubstring<CharType>& aColorB);
+
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
   static bool IsContainerNode(nsHTMLTag aTagId);
