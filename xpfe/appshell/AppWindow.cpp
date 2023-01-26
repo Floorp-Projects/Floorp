@@ -437,9 +437,7 @@ static LayoutDeviceIntSize GetOuterToInnerSizeDifference(nsIWidget* aWindow) {
   if (!aWindow) {
     return LayoutDeviceIntSize();
   }
-  LayoutDeviceIntSize baseSize(200, 200);
-  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
-  return windowSize - baseSize;
+  return aWindow->ClientToWindowSizeDifference();
 }
 
 static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
