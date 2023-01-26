@@ -128,6 +128,46 @@
         },
         {
           header: (obj) => {
+            if (obj?.hasOwnProperty("objectTagWithNoAttribute")) {
+              // This is invalid because "object" tag should have attributes
+              return ["object"];
+            }
+            return null;
+          },
+        },
+        {
+          header: (obj) => {
+            if (obj?.hasOwnProperty("objectTagWithoutObjectAttribute")) {
+              // This is invalid because "object" tag should have an "object" attribute
+              return [
+                  "object",
+                  { config: "something" }
+                ];
+            }
+            return null;
+          },
+        },
+        {
+          header: (obj) => {
+            if (obj?.hasOwnProperty("infiniteObjectTag")) {
+              // This is invalid because this triggers an infinite loop (object is being
+              // replaced by itself, which will keep triggering the custom formatter hook)
+              return [ "object", { object: obj }];
+            }
+            return null;
+          },
+        },
+        {
+          // the returned value is invalid because the tagName isn't a string
+          header: (obj) => {
+            if (obj?.hasOwnProperty("invalidTag")) {
+              return [ 42 ];
+            }
+            return null;
+          },
+        },
+        {
+          header: (obj) => {
             if (obj.hasOwnProperty("customFormatHeader")) {
               return ["span", {"style": "font-size: 3rem;"}, "custom formatted header"];
             }
@@ -158,6 +198,10 @@
         {bodyNoElementType: true},
         {bodyThrows: true},
         {bodyHasSideEffects: true},
+        {objectTagWithNoAttribute: true},
+        {objectTagWithoutObjectAttribute: true},
+        {infiniteObjectTag: true},
+        {invalidTag: true},
       ].forEach(variable => console.log(variable));
     </script>
   </body>

@@ -15,8 +15,6 @@ define(function(require, exports, module) {
   } = require("devtools/client/shared/vendor/react");
   const {
     cleanupStyle,
-  } = require("devtools/client/shared/components/reps/reps/rep-utils");
-  const {
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
@@ -126,8 +124,55 @@ define(function(require, exports, module) {
         // If the child is an array, it should be a JsonML item, so use this function to
         // render them.
         if (Array.isArray(child)) {
-          childElement = renderJsonMl(child, props, childIndex);
-        } else if (typeof child !== "object") {
+          childElement = renderJsonMl(
+            child,
+            { ...props, object: null },
+            childIndex
+          );
+        } else if (typeof child === "object" && child !== null) {
+          // If we don't have an array, this means that we're probably dealing with
+          // a front or a grip. If the object has a `getGrip` function, call it to get the
+          // actual grip.
+          const gripOrPrimitive =
+            (child.typeName == "obj" || child.typeName == "string") &&
+            typeof child?.getGrip == "function"
+              ? child.getGrip()
+              : child;
+
+          // If the grip represents an object that was custom formatted, we should render
+          // it using this component.
+          if (supportsObject(gripOrPrimitive)) {
+            childElement = createElement(CustomFormatter, {
+              ...props,
+              object: gripOrPrimitive,
+              front: child,
+            });
+          } else {
+            // Here we have a non custom-formatted grip, so we let the ObjectInspector
+            // handles it.
+            const {
+              objectInspector,
+              MODE,
+            } = require("devtools/client/shared/components/reps/index");
+            childElement = createElement(objectInspector.ObjectInspector, {
+              ...props,
+              mode: props.mode == MODE.LONG ? MODE.SHORT : MODE.TINY,
+              roots: [
+                {
+                  path: `${gripOrPrimitive?.actorID ??
+                    gripOrPrimitive?.actor ??
+                    null}`,
+                  contents: {
+                    value: gripOrPrimitive,
+                    front: child,
+                  },
+                },
+              ],
+            });
+          }
+        } else {
+          // Here we have a primitive. We don't want to use Rep to render them as reps come
+          // with their own styling which might clash with the style defined in the JsonMl.
           childElement = child;
         }
         childElements.push(childElement);
