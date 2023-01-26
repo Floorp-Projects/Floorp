@@ -252,17 +252,14 @@ void WinWebAuthnManager::Register(
     }
 
     if (sel.authenticatorAttachment().isSome()) {
-      const AuthenticatorAttachment authenticatorAttachment =
+      const nsString& authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      switch (authenticatorAttachment) {
-        case AuthenticatorAttachment::Platform:
-          winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
-          break;
-        case AuthenticatorAttachment::Cross_platform:
-          winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
-          break;
-        default:
-          break;
+      if (authenticatorAttachment.EqualsLiteral("platform")) {
+        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
+      } else if (authenticatorAttachment.EqualsLiteral("cross-platform")) {
+        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
+      } else {
+        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
       }
     }
 

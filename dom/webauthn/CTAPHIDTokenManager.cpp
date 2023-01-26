@@ -149,9 +149,9 @@ RefPtr<U2FRegisterPromise> CTAPHIDTokenManager::Register(
 
     bool requirePlatformAttachment = false;
     if (sel.authenticatorAttachment().isSome()) {
-      const AuthenticatorAttachment authenticatorAttachment =
+      const nsString& authenticatorAttachment =
           sel.authenticatorAttachment().value();
-      if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
+      if (authenticatorAttachment.EqualsLiteral("platform")) {
         requirePlatformAttachment = true;
       }
     }

@@ -171,13 +171,13 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
           }
 
           if (sel.authenticatorAttachment().isSome()) {
-            const AuthenticatorAttachment authenticatorAttachment =
+            const nsString& authenticatorAttachment =
                 sel.authenticatorAttachment().value();
-            if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
+            if (authenticatorAttachment.EqualsLiteral("platform")) {
               GECKOBUNDLE_PUT(authSelBundle, "requirePlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
-            } else if (authenticatorAttachment ==
-                       AuthenticatorAttachment::Cross_platform) {
+            } else if (authenticatorAttachment.EqualsLiteral(
+                           "cross-platform")) {
               GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
             }
