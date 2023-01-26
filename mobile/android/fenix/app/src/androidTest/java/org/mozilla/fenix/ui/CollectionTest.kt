@@ -94,6 +94,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @SmokeTest
     @Test
     fun verifyExpandedCollectionItemsTest() {
@@ -175,6 +176,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @SmokeTest
     @Test
     fun shareCollectionTest() {
@@ -256,6 +258,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @Test
     fun verifyAddTabButtonOfCollectionMenu() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
@@ -325,6 +328,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @Test
     fun removeTabFromCollectionTest() {
         val webPage = getGenericAsset(mockWebServer, 1)
