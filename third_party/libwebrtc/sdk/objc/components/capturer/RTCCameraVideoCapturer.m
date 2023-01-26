@@ -215,6 +215,11 @@ const int64_t kNanosecondsPerSecond = 1000000000;
                         }
                       });
 #endif
+
+                      // Wait for any pending captureOutput tasks.
+                      dispatch_sync(self.frameQueue, ^{
+                                    });
+
                       self.isRunning = NO;
                       if (completionHandler) {
                         completionHandler();
