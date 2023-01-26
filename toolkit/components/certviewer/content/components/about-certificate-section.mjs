@@ -4,8 +4,8 @@
 
 /* eslint-env mozilla/remote-page */
 
-import { InfoGroupContainer } from "./info-group-container.js";
-import { CertificateTabsSection } from "./certificate-tabs-section.js";
+import { InfoGroupContainer } from "./info-group-container.mjs";
+import { CertificateTabsSection } from "./certificate-tabs-section.mjs";
 
 const TYPE_CA = 1;
 const TYPE_USER = 2;

@@ -73,31 +73,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
+// It would make sense to put this in the above
+// ChromeUtils.defineESModuleGetters, but that doesn't seem to work.
 XPCOMUtils.defineLazyGetter(lazy, "certDecoder", () => {
-  const { asn1js } = ChromeUtils.import(
-    "chrome://global/content/certviewer/asn1js_bundle.jsm"
-  );
-  const { pkijs } = ChromeUtils.import(
-    "chrome://global/content/certviewer/pkijs_bundle.jsm"
-  );
-  const { pvutils } = ChromeUtils.import(
-    "chrome://global/content/certviewer/pvutils_bundle.jsm"
-  );
-
-  const { Integer, fromBER } = asn1js.asn1js;
-  const { Certificate } = pkijs.pkijs;
-  const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
-
-  const { certDecoderInitializer } = ChromeUtils.import(
-    "chrome://global/content/certviewer/certDecoder.jsm"
-  );
-  const { parse, pemToDER } = certDecoderInitializer(
-    Integer,
-    fromBER,
-    Certificate,
-    fromBase64,
-    stringToArrayBuffer,
-    crypto
+  const { parse, pemToDER } = ChromeUtils.importESModule(
+    "chrome://global/content/certviewer/certDecoder.mjs"
   );
   return { parse, pemToDER };
 });

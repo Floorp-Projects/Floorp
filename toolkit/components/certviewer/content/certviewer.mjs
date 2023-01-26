@@ -4,26 +4,11 @@
 
 /* eslint-env mozilla/remote-page */
 
-"use strict";
-
-import { normalizeToKebabCase } from "./components/utils.js";
-
-import "chrome://global/content/certviewer/pvutils_bundle.jsm";
-import "chrome://global/content/certviewer/asn1js_bundle.jsm";
-import "chrome://global/content/certviewer/pkijs_bundle.jsm";
-import "chrome://global/content/certviewer/certDecoder.jsm";
-
-const { Integer, fromBER } = globalThis.asn1js.asn1js;
-const { Certificate } = globalThis.pkijs.pkijs;
-const { fromBase64, stringToArrayBuffer } = globalThis.pvutils.pvutils;
-const { parse, pemToDER } = globalThis.certDecoderInitializer(
-  Integer,
-  fromBER,
-  Certificate,
-  fromBase64,
-  stringToArrayBuffer,
-  crypto
-);
+import { normalizeToKebabCase } from "./components/utils.mjs";
+import {
+  parse,
+  pemToDER,
+} from "chrome://global/content/certviewer/certDecoder.mjs";
 
 document.addEventListener("DOMContentLoaded", async e => {
   let url = new URL(document.URL);
@@ -378,15 +363,18 @@ export const adjustCertInformation = cert => {
           items.push(createEntryItem("value", entry.value));
           if (entry.qualifiers) {
             entry.qualifiers.forEach(qualifier => {
-              if (qualifier.name && qualifier.id) {
+              if (qualifier.qualifierName && qualifier.qualifierId) {
                 items.push(
                   createEntryItem(
                     "qualifier",
-                    qualifier.name + " ( " + qualifier.id + " )"
+                    qualifier.qualifierName +
+                      " ( " +
+                      qualifier.qualifierId +
+                      " )"
                   )
                 );
               }
-              items.push(createEntryItem("value", qualifier.value));
+              items.push(createEntryItem("value", qualifier.qualifierValue));
             });
           }
         });
