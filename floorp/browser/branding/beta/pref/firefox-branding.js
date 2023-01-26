@@ -17,13 +17,13 @@ pref("app.update.promptWaitTime", 691200);
 // update" link supplied in the "An update is available" page of the update
 // wizard.
 #if MOZ_UPDATE_CHANNEL == beta
-  pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/beta");
-  pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/beta/notes");
-  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.update.url.manual", "https://floorp.ablaze.one");
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
 #else
-  pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/");
-  pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes");
+  pref("app.update.url.manual", "https://floorp.ablaze.one");
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
   pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
   pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 #endif
