@@ -53,8 +53,12 @@ dictionary LifecycleCallbacks {
   LifecycleDisconnectedCallback disconnectedCallback;
   LifecycleAdoptedCallback adoptedCallback;
   LifecycleAttributeChangedCallback attributeChangedCallback;
+  [ChromeOnly] LifecycleGetCustomInterfaceCallback getCustomInterfaceCallback;
+};
+
+[GenerateInit, Unsorted]
+dictionary FormAssociatedLifecycleCallbacks {
   LifecycleFormAssociatedCallback formAssociatedCallback;
   LifecycleFormResetCallback formResetCallback;
   LifecycleFormDisabledCallback formDisabledCallback;
-  [ChromeOnly] LifecycleGetCustomInterfaceCallback getCustomInterfaceCallback;
 };
