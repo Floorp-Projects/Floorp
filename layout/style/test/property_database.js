@@ -13665,7 +13665,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "\\2bounce",
       "-\\2bounce",
     ],
-    invalid_values: ["bounce, abc", "abc bounce", "10px", "rgb(1, 2, 3)"],
+    invalid_values: ["abc bounce", "10px", "rgb(1, 2, 3)"],
   };
 
   gCSSProperties["scroll-timeline-axis"] = {
@@ -13682,18 +13682,19 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     inherited: false,
     type: CSS_TYPE_TRUE_SHORTHAND,
     subproperties: ["scroll-timeline-name", "scroll-timeline-axis"],
-    initial_values: ["none block", "block none", "block", "none"],
+    initial_values: ["none block", "none"],
     other_values: [
       "auto inline",
       "bounce inline",
       "bounce vertical",
-      "horizontal bounce",
-      "inline \\32bounce",
-      "block -bounce",
-      "vertical \\32 0bounce",
-      "horizontal -\\32 0bounce",
+      "\\32bounce inline",
+      "-bounce block",
+      "\\32 0bounce vertical",
+      "-\\32 0bounce horizontal",
+      "a, b, c",
+      "a block, b inline, c vertical",
     ],
-    invalid_values: ["", "bounce bounce"],
+    invalid_values: ["", "bounce bounce", "horizontal a", "block abc"],
   };
 
   gCSSProperties["view-timeline-name"] = {
