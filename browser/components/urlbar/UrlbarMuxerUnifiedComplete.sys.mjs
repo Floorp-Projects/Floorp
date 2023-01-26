@@ -135,7 +135,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // an engine, show search suggestions first.
     let rootGroup = context.searchMode?.engineName
       ? lazy.UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
-      : lazy.UrlbarPrefs.get("resultGroups");
+      : lazy.UrlbarPrefs.resultGroups;
     lazy.logger.debug(`Groups: ${rootGroup}`);
 
     // Fill the root group.

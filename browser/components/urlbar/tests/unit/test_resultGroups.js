@@ -7,6 +7,12 @@
 
 "use strict";
 
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.jsm",
+});
+
 // The possible limit-related properties in result groups.
 const LIMIT_KEYS = ["availableSpan", "maxResultCount"];
 
@@ -19,16 +25,22 @@ const LIMIT_KEYS = ["availableSpan", "maxResultCount"];
 // with the actual limit key. This allows us to run checks against each of the
 // limit keys using essentially the same task.
 
-const RESULT_GROUPS_PREF = "browser.urlbar.resultGroups";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 
 // For simplicity, most of the flex tests below assume that this is 10, so
 // you'll need to update them if you change this.
 const MAX_RESULTS = 10;
 
+let sandbox;
+
 add_task(async function setup() {
   // Set a specific maxRichResults for sanity's sake.
   Services.prefs.setIntPref(MAX_RICH_RESULTS_PREF, MAX_RESULTS);
+
+  sandbox = lazy.sinon.createSandbox();
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
 });
 
 add_resultGroupsLimit_tasks({
@@ -1557,12 +1569,8 @@ function makeIndexRange(startIndex, count) {
 }
 
 function setResultGroups(resultGroups) {
+  sandbox.restore();
   if (resultGroups) {
-    Services.prefs.setCharPref(
-      RESULT_GROUPS_PREF,
-      JSON.stringify(resultGroups)
-    );
-  } else {
-    Services.prefs.clearUserPref(RESULT_GROUPS_PREF);
+    sandbox.stub(UrlbarPrefs, "resultGroups").get(() => resultGroups);
   }
 }
