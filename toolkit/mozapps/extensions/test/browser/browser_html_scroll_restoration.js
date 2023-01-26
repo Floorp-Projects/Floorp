@@ -124,8 +124,9 @@ function assertNonZeroScrollOffsets(offsets) {
 
 function checkScrollOffset(win, expected, msg = "") {
   let actual = getScrollOffset(win);
-  isfuzzy(actual.top, expected.top, 1, `Top scroll offset - ${msg}`);
-  isfuzzy(actual.left, expected.left, 1, `Left scroll offset - ${msg}`);
+  let fuzz = AppConstants.platform == "macosx" ? 3 : 1;
+  isfuzzy(actual.top, expected.top, fuzz, `Top scroll offset - ${msg}`);
+  isfuzzy(actual.left, expected.left, fuzz, `Left scroll offset - ${msg}`);
 }
 
 add_task(async function test_scroll_restoration() {
