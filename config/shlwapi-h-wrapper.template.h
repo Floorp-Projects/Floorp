@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_windows_h
-#define mozilla_windows_h
+#ifndef mozilla_shlwapi_h
+#define mozilla_shlwapi_h
 
-// Include the "real" windows.h header.
+// Include the "real" shlwapi.h header.
 //
 // Also turn off deprecation warnings, as we may be wrapping deprecated fns.
 
 #pragma GCC system_header
-#include_next <windows.h>
+#include_next <shlwapi.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -25,9 +25,9 @@
 #  define MOZ_WINDOWS_WRAPPER_DISABLED_REASON "non-C++ source file"
 
 #else
-// We're allowed to wrap in the current context. Define `MOZ_WRAPPED_WINDOWS_H`
+// We're allowed to wrap in the current context. Define `MOZ_WRAPPED_SHLWAPI_H`
 // to note that fact, and perform the wrapping.
-#  define MOZ_WRAPPED_WINDOWS_H
+#  define MOZ_WRAPPED_SHLWAPI_H
 extern "C++" {
 
 // clang-format off
@@ -36,10 +36,8 @@ ${decls}
 
 }  // extern "C++"
 
-#  undef GetCurrentTime // Use GetTickCount() instead.
-
 #endif  // enabled
 
 #pragma GCC diagnostic pop
 
-#endif  // !defined(mozilla_windows_h)
+#endif  // !defined(mozilla_shlwapi_h)
