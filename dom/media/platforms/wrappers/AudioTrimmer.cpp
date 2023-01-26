@@ -100,8 +100,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     // No samples returned, we assume this is due to the latency of the
     // decoder and that the related decoded sample will be returned during
     // the next call to Decode().
-    LOG("No sample returned for sample[%" PRId64 ",%" PRId64 "]", rawStart,
-        rawEnd);
+    LOGV("No sample returned for sample[%" PRId64 ",%" PRId64 "]", rawStart,
+         rawEnd);
   }
   for (uint32_t i = 0; i < results.Length();) {
     const RefPtr<MediaData>& data = results[i];
@@ -110,10 +110,10 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     if (mTrimmers.IsEmpty()) {
       // mTrimmers being empty can only occurs if the decoder returned more
       // frames than we pushed in. We can't handle this case, abort trimming.
-      LOG("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-          "] no trimming information",
-          rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-          sampleInterval.mEnd.ToMicroseconds());
+      LOGV("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
+           "] no trimming information",
+           rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
+           sampleInterval.mEnd.ToMicroseconds());
       i++;
       continue;
     }
@@ -130,19 +130,19 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
       continue;
     }
     if (!trimmer->Intersects(sampleInterval)) {
-      LOG("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-          "] would be empty after trimming, dropping it",
-          rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-          sampleInterval.mEnd.ToMicroseconds());
+      LOGV("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
+           "] would be empty after trimming, dropping it",
+           rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
+           sampleInterval.mEnd.ToMicroseconds());
       results.RemoveElementAt(i);
       continue;
     }
-    LOG("Trimming sample[%" PRId64 ",%" PRId64 "] to [%" PRId64 ",%" PRId64
-        "] (raw "
-        "was:[%" PRId64 ",%" PRId64 "])",
-        sampleInterval.mStart.ToMicroseconds(),
-        sampleInterval.mEnd.ToMicroseconds(), trimmer->mStart.ToMicroseconds(),
-        trimmer->mEnd.ToMicroseconds(), rawStart, rawEnd);
+    LOGV("Trimming sample[%" PRId64 ",%" PRId64 "] to [%" PRId64 ",%" PRId64
+         "] (raw "
+         "was:[%" PRId64 ",%" PRId64 "])",
+         sampleInterval.mStart.ToMicroseconds(),
+         sampleInterval.mEnd.ToMicroseconds(), trimmer->mStart.ToMicroseconds(),
+         trimmer->mEnd.ToMicroseconds(), rawStart, rawEnd);
 
     TimeInterval trim({std::max(trimmer->mStart, sampleInterval.mStart),
                        std::min(trimmer->mEnd, sampleInterval.mEnd)});
@@ -151,9 +151,9 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     NS_ASSERTION(ok, "Trimming of audio sample failed");
     Unused << ok;
     if (sample->Frames() == 0) {
-      LOG("sample[%" PRId64 ",%" PRId64
-          "] is empty after trimming, dropping it",
-          rawStart, rawEnd);
+      LOGV("sample[%" PRId64 ",%" PRId64
+           "] is empty after trimming, dropping it",
+           rawStart, rawEnd);
       results.RemoveElementAt(i);
       continue;
     }
@@ -166,7 +166,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::DecodeBatch(
     nsTArray<RefPtr<MediaRawData>>&& aSamples) {
   MOZ_ASSERT(mThread->IsOnCurrentThread(),
              "We're not on the thread we were first initialized on");
-  LOG("DecodeBatch");
+  LOGV("DecodeBatch");
 
   for (auto&& sample : aSamples) {
     PrepareTrimmers(sample);
@@ -193,11 +193,11 @@ void AudioTrimmer::PrepareTrimmers(MediaRawData* aRaw) {
   // the frame set by the demuxer and mTime and mDuration set to what it
   // should be after trimming.
   if (aRaw->mOriginalPresentationWindow) {
-    LOG("sample[%" PRId64 ",%" PRId64 "] has trimming info ([%" PRId64
-        ",%" PRId64 "]",
-        aRaw->mOriginalPresentationWindow->mStart.ToMicroseconds(),
-        aRaw->mOriginalPresentationWindow->mEnd.ToMicroseconds(),
-        aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
+    LOGV("sample[%" PRId64 ",%" PRId64 "] has trimming info ([%" PRId64
+         ",%" PRId64 "]",
+         aRaw->mOriginalPresentationWindow->mStart.ToMicroseconds(),
+         aRaw->mOriginalPresentationWindow->mEnd.ToMicroseconds(),
+         aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
     mTrimmers.AppendElement(
         Some(TimeInterval(aRaw->mTime, aRaw->GetEndTime())));
     aRaw->mTime = aRaw->mOriginalPresentationWindow->mStart;
