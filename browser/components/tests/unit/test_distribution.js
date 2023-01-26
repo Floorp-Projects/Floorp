@@ -5,19 +5,6 @@
  * Tests that preferences are properly set by distribution.ini
  */
 
-const { PromiseTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PromiseTestUtils.sys.mjs"
-);
-
-// This test causes BrowserGlue to start but not fully initialise, when the
-// AddonManager shuts down BrowserGlue will then try to uninit which will
-// cause AutoComplete.jsm to throw an error.
-// TODO: Fix in https://bugzilla.mozilla.org/show_bug.cgi?id=1543112.
-PromiseTestUtils.allowMatchingRejectionsGlobally(/A request was aborted/);
-PromiseTestUtils.allowMatchingRejectionsGlobally(
-  /The operation failed for reasons unrelated/
-);
-
 const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 
