@@ -100,7 +100,7 @@ class DownloadTest {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
             verifyDownloadNotificationPopup()
-        }.closePrompt { }
+        }
         mDevice.openNotification()
         notificationShade {
             verifySystemNotificationExists("Download completed")

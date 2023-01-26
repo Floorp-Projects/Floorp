@@ -12,7 +12,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -80,6 +79,13 @@ class DownloadRobot {
 
             DownloadRobot().interact()
             return Transition()
+        }
+
+        fun closeCompletedDownloadPrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            closeCompletedDownloadButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
         fun closePrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -183,12 +189,14 @@ private fun assertDownloadNotificationPopup() {
     )
 }
 
+private fun closeCompletedDownloadButton() =
+    onView(withId(R.id.download_dialog_close_button))
+
 private fun closePromptButton() =
-    onView(withContentDescription("Close"))
+    onView(withId(R.id.close_button))
 
 private fun downloadButton() =
     onView(withId(R.id.download_button))
-        .inRoot(isDialog())
         .check(matches(isDisplayed()))
 
 private fun openDownloadButton() =

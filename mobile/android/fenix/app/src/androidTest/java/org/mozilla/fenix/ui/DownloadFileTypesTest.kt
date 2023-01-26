@@ -53,7 +53,7 @@ class DownloadFileTypesTest(fileName: String) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
             verifyDownloadNotificationPopup()
-        }.closePrompt {
+        }.closeCompletedDownloadPrompt {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             waitForDownloadsListToExist()

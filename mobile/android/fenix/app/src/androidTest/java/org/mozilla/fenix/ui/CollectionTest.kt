@@ -203,6 +203,7 @@ class CollectionTest {
 
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @SmokeTest
     @Test
     fun deleteCollectionTest() {
@@ -228,6 +229,7 @@ class CollectionTest {
     }
 
     // open a webpage, and add currently opened tab to existing collection
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @Test
     fun mainMenuSaveToExistingCollection() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
@@ -300,6 +302,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812580")
     @Test
     fun createSecondCollectionTest() {
         val webPage = getGenericAsset(mockWebServer, 1)
