@@ -345,8 +345,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       DebugOnly<bool> trimmed = false;
       if (mEncoderDelay) {
         trimmed = true;
-        int toPop =
-            std::min(mFrame->nb_samples, static_cast<int>(mRemainingEncoderDelay));
+        int toPop = std::min(mFrame->nb_samples,
+                             static_cast<int>(mRemainingEncoderDelay));
         audio.PopFront(toPop * numChannels);
         mFrame->nb_samples -= toPop;
         mRemainingEncoderDelay -= toPop;
