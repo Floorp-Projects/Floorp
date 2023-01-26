@@ -1,0 +1,1 @@
+{"fullyTracked":false,"platform":"darwin","arch":"arm64","nodeVersion":"v16.19.0","command":"rimraf lib/esm/third_party lib/cjs/third_party","extraArgs":[],"clean":true,"files":{},"output":[],"dependencies":{},"env":{}}
