@@ -129,6 +129,9 @@ class Linter(visitor.Visitor):
                     "Missing references: "
                     + ", ".join([f"${m}" for m in missing_references]),
                 )
+
+        # Reset current comment and variable references after reading the
+        # message.
         self.state["comment"] = ""
         self.state["variables"] = []
 
@@ -138,6 +141,10 @@ class Linter(visitor.Visitor):
         self.last_message_id = None
 
         super().generic_visit(node)
+
+        # Reset current comment and variable references after reading the term.
+        self.state["comment"] = ""
+        self.state["variables"] = []
 
     def visit_MessageReference(self, node):
         # We don't recurse into message references, the identifiers are either

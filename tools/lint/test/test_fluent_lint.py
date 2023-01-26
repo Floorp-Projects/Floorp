@@ -146,6 +146,11 @@ def test_comment_variables(lint, paths):
     assert results[3].rule == "VC01"
     assert "$attr" in results[3].message
 
+    results = lint(paths("comment-variables2.ftl"))
+    assert len(results) == 1
+    assert results[0].rule == "VC01"
+    assert "$term-message" in results[0].message
+
 
 if __name__ == "__main__":
     mozunit.main()
