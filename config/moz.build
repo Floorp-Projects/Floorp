@@ -80,6 +80,17 @@ if CONFIG["WRAP_STL_INCLUDES"]:
             ],
             flags=[stl_compiler],
         )
+        GeneratedFile(
+            "/dist/stl_wrappers/shlwapi.h",
+            script="make-windows-h-wrapper.py",
+            entry_point="generate",
+            inputs=[
+                "shlwapi-h-constant.decls.h",
+                "shlwapi-h-unicode.decls.h",
+                "shlwapi-h-wrapper.template.h",
+            ],
+            flags=[stl_compiler],
+        )
 
 if CONFIG["WRAP_SYSTEM_INCLUDES"]:
     include("system-headers.mozbuild")
