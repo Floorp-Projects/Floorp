@@ -2939,11 +2939,13 @@ void gfxPlatform::InitWebGLConfig() {
   gfxVars::SetWebglOopAsyncPresentForceSync(webglOopAsyncPresentForceSync);
 
   if (kIsAndroid) {
-    // Don't enable robust buffer access on Adreno 630 devices.
-    // It causes the linking of some shaders to fail. See bug 1485441.
+    // Don't enable robust buffer access on Adreno 620 and 630 devices.
+    // It causes the linking of some shaders to fail. See bug 1485441 and
+    // bug 1810693.
     nsAutoString renderer;
     gfxInfo->GetAdapterDeviceID(renderer);
-    if (renderer.Find(u"Adreno (TM) 630") != -1) {
+    if ((renderer.Find(u"Adreno (TM) 620") != -1) ||
+        (renderer.Find(u"Adreno (TM) 630") != -1)) {
       gfxVars::SetAllowEglRbab(false);
     }
   }
