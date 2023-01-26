@@ -115,6 +115,19 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsStaticAtom& aProperty,
   nsStaticAtom* property = &aProperty;
   nsStaticAtom* attribute = aAttribute;
   nsString value(aValue);
+  if (attribute == nsGkAtoms::color || attribute == nsGkAtoms::bgcolor) {
+    if (!IsCSSEnabled()) {
+      // We allow "transparent" value even in the HTML mode.  In the case,
+      // we need to apply the style with CSS.  For considering it in the
+      // style setter, we need to keep the keyword as-is.
+      if (!value.LowerCaseEqualsLiteral("transparent")) {
+        HTMLEditUtils::GetNormalizedHTMLColorValue(value, value);
+      }
+    } else {
+      HTMLEditUtils::GetNormalizedCSSColorValue(
+          value, HTMLEditUtils::ZeroAlphaColor::RGBAValue, value);
+    }
+  }
 
   AutoTArray<EditorInlineStyle, 1> stylesToRemove;
   if (&aProperty == nsGkAtoms::sup) {
@@ -626,13 +639,24 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
       nsString attrValue;
       if (aElement.IsHTMLElement(&HTMLPropertyRef()) &&
           !HTMLEditUtils::ElementHasAttributeExcept(aElement, *mAttribute) &&
-          aElement.GetAttr(kNameSpaceID_None, mAttribute, attrValue) &&
-          attrValue.Equals(mAttributeValue,
-                           nsCaseInsensitiveStringComparator)) {
-        // This is not quite correct, because it excludes cases like
-        // <font face=000> being the same as <font face=#000000>.
-        // Property-specific handling is needed (bug 760211).
-        return true;
+          aElement.GetAttr(kNameSpaceID_None, mAttribute, attrValue)) {
+        if (attrValue.Equals(mAttributeValue,
+                             nsCaseInsensitiveStringComparator)) {
+          return true;
+        }
+        if (mAttribute == nsGkAtoms::color ||
+            mAttribute == nsGkAtoms::bgcolor) {
+          if (aHTMLEditor.IsCSSEnabled()) {
+            if (HTMLEditUtils::IsSameCSSColorValue(mAttributeValue,
+                                                   attrValue)) {
+              return true;
+            }
+          } else if (HTMLEditUtils::IsSameHTMLColorValue(
+                         mAttributeValue, attrValue,
+                         HTMLEditUtils::TransparentKeyword::Allowed)) {
+            return true;
+          }
+        }
       }
     }
 
@@ -1123,6 +1147,11 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
             IsCSSSettable(*aContent.GetAsElementOrParentElement())) ||
            // bgcolor is always done using CSS
            mAttribute == nsGkAtoms::bgcolor ||
+           // "transparent" keyword is allowed in both HTML and CSS modes.
+           // However, <font color="..."> cannot accept the value.  Therefore,
+           // we need to use <span style="color:transparent"> in this case.
+           (mAttribute == nsGkAtoms::color &&
+            mAttributeValue.LowerCaseEqualsLiteral("transparent")) ||
            // called for removing parent style, we should use CSS with
            // `<span>` element.
            IsStyleToInvert();
