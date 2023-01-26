@@ -144,6 +144,32 @@ bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
       aRightContent.NodeInfo()->NameAtom()) {
     return false;
   }
+  if (aLeftContent.NodeInfo()->NameAtom() == nsGkAtoms::font) {
+    const nsAttrValue* const leftSize =
+        aLeftContent.AsElement()->GetParsedAttr(nsGkAtoms::size);
+    const nsAttrValue* const rightSize =
+        aRightContent.AsElement()->GetParsedAttr(nsGkAtoms::size);
+    if (!leftSize ^ !rightSize || (leftSize && !leftSize->Equals(*rightSize))) {
+      return false;
+    }
+
+    const nsAttrValue* const leftColor =
+        aLeftContent.AsElement()->GetParsedAttr(nsGkAtoms::color);
+    const nsAttrValue* const rightColor =
+        aRightContent.AsElement()->GetParsedAttr(nsGkAtoms::color);
+    if (!leftColor ^ !rightColor ||
+        (leftColor && !leftColor->Equals(*rightColor))) {
+      return false;
+    }
+
+    const nsAttrValue* const leftFace =
+        aLeftContent.AsElement()->GetParsedAttr(nsGkAtoms::face);
+    const nsAttrValue* const rightFace =
+        aRightContent.AsElement()->GetParsedAttr(nsGkAtoms::face);
+    if (!leftFace ^ !rightFace || (leftFace && !leftFace->Equals(*rightFace))) {
+      return false;
+    }
+  }
   if (aStyleDifference == StyleDifference::Ignore ||
       !aLeftContent.IsElement()) {
     return true;
