@@ -54,6 +54,7 @@ jobs:
                     firefox-beta-msi-latest-ssl: msi
                     firefox-beta-msix-latest-ssl: msix
                     firefox-beta-pkg-latest-ssl: pkg
+                    firefox-beta-langpack-latest-ssl: langpack
                 mozilla-release:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer
@@ -61,6 +62,7 @@ jobs:
                     firefox-msi-latest-ssl: msi
                     firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
+                    firefox-langpack-latest-ssl: langpack
                 mozilla-esr102:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
@@ -70,6 +72,7 @@ jobs:
                     firefox-esr-msi-latest-ssl: msi
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
+                    firefox-esr-langpack-latest-ssl: langpack
                 mozilla-esrXXX:  # XXX - to update when we branch next ESR
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
@@ -77,6 +80,7 @@ jobs:
                     firefox-esr-next-msi-latest-ssl: msi
                     firefox-esr-next-msix-latest-ssl: msix
                     firefox-esr-next-pkg-latest-ssl: pkg
+                    firefox-esr-next-langpack-latest-ssl: langpack
                 birch:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer

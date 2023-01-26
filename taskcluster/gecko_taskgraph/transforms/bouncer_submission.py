@@ -110,6 +110,11 @@ CONFIG_PER_BOUNCER_PRODUCT = {
             "osx": "{pretty_product}%20{version}.pkg",
         },
     },
+    "langpack": {
+        "name_postfix": "-langpack-SSL",
+        "path_template": RELEASES_PATH_TEMPLATE.replace(":lang", "xpi"),
+        "file_names": {"default": ":lang.xpi"},
+    },
 }
 CONFIG_PER_BOUNCER_PRODUCT["installer-ssl"] = copy.deepcopy(
     CONFIG_PER_BOUNCER_PRODUCT["installer"]
