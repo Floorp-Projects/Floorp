@@ -214,6 +214,30 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   }
 
   /**
+   * Get the body of a custom formatted object.
+   */
+  async customFormatterBody(customFormatterIndex) {
+    const result = await super.customFormatterBody(customFormatterIndex);
+
+    if (!result?.customFormatterBody) {
+      return result;
+    }
+
+    const createFrontsInJsonMl = item => {
+      if (Array.isArray(item)) {
+        return item.map(i => createFrontsInJsonMl(i));
+      }
+      return getAdHocFrontOrPrimitiveGrip(item, this);
+    };
+
+    result.customFormatterBody = createFrontsInJsonMl(
+      result.customFormatterBody
+    );
+
+    return result;
+  }
+
+  /**
    * Request the prototype of the object.
    */
   async getPrototype() {
@@ -421,6 +445,18 @@ function createChildFronts(objectFront, packet) {
         }
       }
     }
+  }
+
+  // Handle custom formatters
+  if (packet && packet.useCustomFormatter && Array.isArray(packet.header)) {
+    const createFrontsInJsonMl = item => {
+      if (Array.isArray(item)) {
+        return item.map(i => createFrontsInJsonMl(i));
+      }
+      return getAdHocFrontOrPrimitiveGrip(item, objectFront);
+    };
+
+    packet.header = createFrontsInJsonMl(packet.header);
   }
 }
 

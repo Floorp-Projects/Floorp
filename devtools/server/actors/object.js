@@ -36,13 +36,7 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "customFormatterHeader",
-  "resource://devtools/server/actors/utils/custom-formatters.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "customFormatterBody",
+  ["customFormatterHeader", "customFormatterBody"],
   "resource://devtools/server/actors/utils/custom-formatters.js",
   true
 );
@@ -104,6 +98,8 @@ const proto = {
       getGripDepth,
       incrementGripDepth,
       decrementGripDepth,
+      customFormatterObjectTagDepth,
+      customFormatterConfig,
     },
     conn
   ) {
@@ -122,6 +118,8 @@ const proto = {
       getGripDepth,
       incrementGripDepth,
       decrementGripDepth,
+      customFormatterObjectTagDepth,
+      customFormatterConfig,
     };
   },
 
@@ -170,7 +168,7 @@ const proto = {
 
     // Only process custom formatters if the feature is enabled.
     if (this.thread?._parent?.customFormatters) {
-      const header = customFormatterHeader(this.rawValue());
+      const header = customFormatterHeader(this);
       if (header) {
         return {
           ...g,
@@ -220,7 +218,7 @@ const proto = {
   },
 
   customFormatterBody(customFormatterIndex) {
-    return customFormatterBody(this.rawValue(), customFormatterIndex);
+    return customFormatterBody(this, customFormatterIndex);
   },
 
   _getOwnPropertyLength() {
@@ -792,7 +790,11 @@ const proto = {
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release() {},
+  release() {
+    if (this.hooks) {
+      this.hooks.customFormatterConfig = null;
+    }
+  },
 };
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);

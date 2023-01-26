@@ -15,13 +15,18 @@
         { noFormat: true },
         { customFormatHeader: "header" },
         { customFormatHeaderAndBody: "body" },
+        { customFormatObjectAndConfig: true }
       ];
 
       window.devtoolsFormatters = [
         {
-          header: obj => {
+          header: (obj, config) => {
             if (obj.hasOwnProperty("customFormatHeader")) {
-              return ["span", {"style": "font-size: 3rem;"}, "custom formatted header"];
+              return [
+                "span",
+                {"style": "font-size: 3rem;"},
+                config ? `~${JSON.stringify(config)}~` : "custom formatted header",
+              ];
             }
             return null;
           },
@@ -37,6 +42,68 @@
           hasBody: obj => true,
           body: obj => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
         },
+        {
+          header: (obj, config) => {
+            if (obj.hasOwnProperty("customFormatObjectAndConfig")) {
+              return [
+                "span",
+                {"style": "color: purple;"},
+                `object tag`,
+                [
+                  "object",
+                  {
+                    // This will trigger the "customFormatHeader" custom formatter
+                    object: {customFormatHeader: true},
+                    config: config || [1, "a"]
+                  }
+                ],
+                // This should print the `config` object, not formatted
+                [
+                  "object",
+                  {
+                    object: config || null,
+                  }
+                ],
+                [
+                  "span",
+                  " | serialized: ",
+                  42n,
+                  " ",
+                  undefined,
+                  " ",
+                  null,
+                  " ",
+                  Infinity,
+                  " ",
+                  {foo: "bar"}
+                ]
+              ];
+            }
+            return null;
+          },
+          hasBody: (obj, config) => obj.hasOwnProperty("customFormatObjectAndConfig") || !!config,
+          body: (obj, config) => {
+            if (!config) {
+              config = [1, "a"];
+            }
+            return [
+            "span",
+            {"style": "font-family: serif; font-size: 2rem;"},
+            "body",
+            [
+              "object",
+              {
+                object: {
+                  customFormatObjectAndConfig: true,
+                },
+                config: [
+                  config[0]  + 1,
+                  String.fromCharCode(config[1].charCodeAt(0) + 1)
+                ]
+              }
+            ]
+          ]}
+        }
       ];
 
       variables.forEach(variable => console.log(variable));

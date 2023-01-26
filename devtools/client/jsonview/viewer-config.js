@@ -14,6 +14,10 @@ window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
 // can mock it. The mock should be removed when we un-bundle reps, (i.e. land individual
 // files instead of a big bundle).
 define("ServicesMock", () => ({ appinfo: {} }));
+// custom-formatter is required in the Reps bundle but 1. we don't need in the JSON Viewer,
+// and 2. it causes issues as this requires the ObjectInspector, which can't be loaded
+// via requirejs.
+define("CustomFormatterMock", () => ({}));
 
 /**
  * RequireJS configuration for JSON Viewer.
@@ -32,6 +36,8 @@ require.config({
   map: {
     "*": {
       Services: "ServicesMock",
+      "devtools/client/shared/components/reps/reps/custom-formatter":
+        "CustomFormatterMock",
     },
   },
 });
