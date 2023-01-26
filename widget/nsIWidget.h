@@ -1324,9 +1324,7 @@ class nsIWidget : public nsISupports {
    * sizes (which includes window borders and titlebar).
    * This method should work even when the window is not yet visible.
    */
-  virtual LayoutDeviceIntMargin ClientToWindowMargin() {
-    return {};
-  }
+  virtual LayoutDeviceIntMargin ClientToWindowMargin() { return {}; }
 
   LayoutDeviceIntSize ClientToWindowSizeDifference();
 
