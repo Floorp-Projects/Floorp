@@ -431,7 +431,7 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
 static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
   // We enable pre-spawn CIG only in Nightly for now
   // because it caused a compat issue (bug 1682304 and 1704373).
-#if defined(NIGHTLY)
+#if defined(NIGHTLY_BUILD)
   // The shared section contains a list of dependent modules as a
   // null-delimited string.  We convert it to a string vector and
   // cache it to avoid converting the same data every time.
