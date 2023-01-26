@@ -1562,6 +1562,9 @@ void DocAccessible::SendAccessiblesWillMove() {
     // moved.
     if (!acc->IsDefunct() && acc->IsInDocument()) {
       ids.AppendElement(reinterpret_cast<uintptr_t>(acc->UniqueID()));
+      // acc might have been re-parented. Since we cache bounds relative to the
+      // parent, we need to update the cache.
+      QueueCacheUpdate(acc, CacheDomain::Bounds);
     }
   }
   if (!ids.IsEmpty()) {
