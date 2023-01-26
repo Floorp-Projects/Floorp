@@ -653,8 +653,8 @@ nsresult nsHttpConnection::CreateTunnelStream(
     return NS_ERROR_UNEXPECTED;
   }
 
-  RefPtr<nsHttpConnection> conn =
-      mSpdySession->CreateTunnelStream(httpTransaction, mCallbacks, mRtt);
+  RefPtr<nsHttpConnection> conn = mSpdySession->CreateTunnelStream(
+      httpTransaction, mCallbacks, mRtt, aIsWebSocket);
   // We need to store the refrence of the Http2Session in the tunneled
   // connection, so when nsHttpConnection::DontReuse is called the Http2Session
   // can't be reused.
