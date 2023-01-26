@@ -90,9 +90,9 @@ namespace jit {
 typedef FloatRegister FPURegister;
 #define zero_reg zero
 
-#define DEBUG_PRINTF(...) \
-  if (FLAG_riscv_debug) { \
-    printf(__VA_ARGS__);  \
+#define DEBUG_PRINTF(...)     \
+  if (FLAG_riscv_debug) {     \
+    std::printf(__VA_ARGS__); \
   }
 
 int ToNumber(Register reg);

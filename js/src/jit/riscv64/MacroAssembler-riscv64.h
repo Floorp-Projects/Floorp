@@ -760,6 +760,20 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     ExtractBits(dest, src.valueReg(), 0, JSVAL_TAG_SHIFT - 1);
   }
 
+  // Like unboxGCThingForGCBarrier, but loads the GC thing's chunk base.
+  void getGCThingValueChunk(const Address& src, Register dest) {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(scratch != dest);
+    loadPtr(src, dest);
+    movePtr(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), scratch);
+    and_(dest, dest, scratch);
+  }
+  void getGCThingValueChunk(const ValueOperand& src, Register dest) {
+    MOZ_ASSERT(src.valueReg() != dest);
+    movePtr(ImmWord(JS::detail::ValueGCThingPayloadChunkMask), dest);
+    and_(dest, dest, src.valueReg());
+  }
+
   void unboxInt32(const ValueOperand& operand, Register dest);
   void unboxInt32(Register src, Register dest);
   void unboxInt32(const Address& src, Register dest);
