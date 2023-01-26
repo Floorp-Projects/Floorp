@@ -1234,6 +1234,10 @@ class Code : public HeapObject {
   }
 };
 
+// Only used in function signature of functions we don't implement
+// (NativeRegExpMacroAssembler::CheckStackGuardState)
+class InstructionStream {};
+
 // Origin: https://github.com/v8/v8/blob/master/src/codegen/label.h
 class Label {
  public:
