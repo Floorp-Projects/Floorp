@@ -71,7 +71,7 @@
                             ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
                 ]});
                 var entries = performance.getEntriesByType("navigation");
-                is(entries.length, resistFingerprinting ? 0 : 1, "Checking PerformanceNavigationEntry count");
+                is(entries.length, 1, "Checking PerformanceNavigationEntry count");
 
                 for (let i=0; i<entries.length; i++) {
                     for (let j=0; j<metrics.length; j++) {

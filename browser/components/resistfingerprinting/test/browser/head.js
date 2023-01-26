@@ -76,6 +76,7 @@ let setupPerformanceAPISpoofAndDisableTest = async function(
     [
       {
         list: PERFORMANCE_TIMINGS,
+        resistFingerprinting,
         precision: expectedPrecision,
         isRoundedFunc: isTimeValueRounded.toString(),
         workerCall,
