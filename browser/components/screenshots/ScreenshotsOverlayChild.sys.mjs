@@ -61,8 +61,6 @@ const MIN_DETECT_WIDTH = 100;
 let MAX_DETECT_HEIGHT = 700;
 let MAX_DETECT_WIDTH = 1000;
 
-const SCROLL_BY_EDGE = 20;
-
 const doNotAutoselectTags = {
   H1: true,
   H2: true,
@@ -771,7 +769,6 @@ class StateHandler {
    * @param clientY y coordinate
    */
   draggingDrag(clientX, clientY) {
-    this.scrollIfByEdge(clientX, clientY);
     this.#screenshotsContainer.setSelectionBoxDimensions({
       right: clientX,
       bottom: clientY,
@@ -802,7 +799,6 @@ class StateHandler {
    * @param clientY y coordinate
    */
   resizingDrag(clientX, clientY) {
-    this.scrollIfByEdge(clientX, clientY);
     switch (this.#moverId) {
       case "mover-topLeft": {
         this.#screenshotsContainer.setSelectionBoxDimensions({
@@ -967,41 +963,11 @@ class StateHandler {
 
     if (this.#state === "selected" && eventType === "resize") {
       this.#screenshotsContainer.shiftSelectionLayerBox();
-    } else if (
-      this.#state !== "resizing" &&
-      this.#state !== "dragging" &&
-      eventType === "scroll"
-    ) {
+    } else if (this.#state && eventType === "scroll") {
       this.#screenshotsContainer.drawButtonsLayer();
       if (this.#state === "crosshairs") {
         this.#screenshotsContainer.handleElementScroll();
       }
-    }
-  }
-
-  scrollIfByEdge(pageX, pageY) {
-    let dimensions = this.#screenshotsContainer.getSelectionLayerDimensions();
-
-    if (pageY - dimensions.scrollY <= SCROLL_BY_EDGE) {
-      // Scroll up
-      this.#screenshotsChild.scrollWindow(0, -SCROLL_BY_EDGE);
-    } else if (
-      dimensions.scrollY + dimensions.innerHeight - pageY <=
-      SCROLL_BY_EDGE
-    ) {
-      // Scroll down
-      this.#screenshotsChild.scrollWindow(0, SCROLL_BY_EDGE);
-    }
-
-    if (pageX - dimensions.scrollX <= SCROLL_BY_EDGE) {
-      // Scroll left
-      this.#screenshotsChild.scrollWindow(-SCROLL_BY_EDGE, 0);
-    } else if (
-      dimensions.scrollX + dimensions.innerWidth - pageX <=
-      SCROLL_BY_EDGE
-    ) {
-      // Scroll right
-      this.#screenshotsChild.scrollWindow(SCROLL_BY_EDGE, 0);
     }
   }
 }

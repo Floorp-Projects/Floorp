@@ -104,11 +104,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     return this.document.title;
   }
 
-  scrollWindow(x, y) {
-    this.contentWindow.scrollBy(x, y);
-    this._overlay.updateScreenshotsSize("scroll");
-  }
-
   /**
    * Resolves when the document is ready to have an overlay injected into it.
    *
