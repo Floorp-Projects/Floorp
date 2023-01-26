@@ -202,15 +202,6 @@ class ScreenshotsHelper {
     });
   }
 
-  getWindowPosition() {
-    return ContentTask.spawn(this.browser, [], () => {
-      return {
-        scrollX: content.window.scrollX,
-        scrollY: content.window.scrollY,
-      };
-    });
-  }
-
   clickDownloadButton() {
     mouse.click(this.endX - 60, this.endY + 30);
   }
