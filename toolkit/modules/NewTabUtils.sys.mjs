@@ -58,14 +58,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function() {
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "utf8";
-  return converter;
-});
-
 // Boolean preferences that control newtab content
 const PREF_NEWTAB_ENABLED = "browser.newtabpage.enabled";
 
@@ -103,7 +95,7 @@ const PREF_POCKET_LATEST_SINCE = "extensions.pocket.settings.latestSince";
  * @return The base64 representation of the MD5 hash.
  */
 function toHash(aValue) {
-  let value = lazy.gUnicodeConverter.convertToByteArray(aValue);
+  let value = new TextEncoder().encode(aValue);
   lazy.gCryptoHash.init(lazy.gCryptoHash.MD5);
   lazy.gCryptoHash.update(value, value.length);
   return lazy.gCryptoHash.finish(true);
