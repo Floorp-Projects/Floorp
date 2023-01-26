@@ -4,7 +4,7 @@
 
 /* eslint-env mozilla/remote-page */
 
-import { ListItem } from "./list-item.js";
+import { ListItem } from "./list-item.mjs";
 
 export class AboutCertificateItems extends HTMLElement {
   constructor(id, data) {

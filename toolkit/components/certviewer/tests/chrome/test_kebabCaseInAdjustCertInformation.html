@@ -8,9 +8,6 @@
   </head>
 <body>
   <script type="module">
-    import { adjustCertInformation } from "chrome://global/content/certviewer/certviewer.js";
-    import { parseOutput } from "./parseOutput.js";
-
     function isKebabCase(str) {
       if (str === "") return true;
       return /^([a-z][a-z0-9]*)(-[a-z0-9]+)*$/.test(str);
@@ -79,6 +76,9 @@
     }
 
     async function doTest() {
+      const { adjustCertInformation } = await import("chrome://global/content/certviewer/certviewer.mjs");
+      const { parseOutput } = await import("./parseOutput.mjs");
+
       ok(adjustCertInformation, "adjustCertInformation should be available in this context");
       ok(parseOutput, "parseOutput should be available in this context");
       is(typeof(parseOutput), 'object', "parseOutput must be an object");

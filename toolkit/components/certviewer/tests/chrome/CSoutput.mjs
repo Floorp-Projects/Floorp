@@ -35,9 +35,9 @@ export const certOutputCS = [
             name: "ANSI Organizational Identifier",
             qualifiers: [
               {
-                id: "1.3.6.1.5.5.7.2.1",
-                name: "Practices Statement",
-                value: "https://www.digicert.com/CPS",
+                qualifierId: "1.3.6.1.5.5.7.2.1",
+                qualifierName: "Practices Statement",
+                qualifierValue: "https://www.digicert.com/CPS",
               },
             ],
             value: "2.16.840.1.114412.1.1",
