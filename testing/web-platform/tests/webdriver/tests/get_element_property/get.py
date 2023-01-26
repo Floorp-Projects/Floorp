@@ -160,32 +160,18 @@ def test_primitives_set_by_execute_script(session, inline, js_primitive, py_prim
     ("shadowRoot", ShadowRoot),
     ("window", Window),
 ])
-def test_web_reference(session, inline, js_web_reference, py_web_reference):
-    session.url = inline("""
-        <div id="parent"></div>
-        <p id="element"></p>
-        <iframe id="frame"></iframe>
-        <shadow-element id="custom"></shadow-element>
+def test_web_reference(session, get_test_page, js_web_reference, py_web_reference):
+    session.url = get_test_page()
 
-        <script>
-            customElements.define("shadow-element",
-                class extends HTMLElement {
-                    constructor() {
-                        super();
-                        this.attachShadow({ mode: "open" }).innerHTML = "<p>foo";
-                    }
-                }
-            );
-
-            const parent = document.getElementById("parent");
-            parent.__element = document.getElementById("element");
-            parent.__frame = document.getElementById("frame").contentWindow;
-            parent.__shadowRoot = document.getElementById("custom").shadowRoot;
-            parent.__window = document.defaultView;
-        </script>
+    session.execute_script("""
+        const parent = document.querySelector("body");
+        parent.__element = document.querySelector("div");
+        parent.__frame = document.querySelector("iframe").contentWindow;
+        parent.__shadowRoot = document.querySelector("custom-element").shadowRoot;
+        parent.__window = document.defaultView;
         """)
 
-    elem = session.find.css("#parent", all=False)
+    elem = session.find.css("body", all=False)
     response = get_element_property(session, elem.id, "__{}".format(js_web_reference))
     value = assert_success(response)
 
