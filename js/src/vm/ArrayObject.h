@@ -41,6 +41,15 @@ class ArrayObject : public NativeObject {
     getElementsHeader()->length = length;
   }
 
+  // Try to add a new dense element to this array. The array must be extensible.
+  //
+  // Returns DenseElementResult::Incomplete if `index >= length`, if the array
+  // has sparse elements, if we're adding a sparse element, or if the array
+  // already contains a dense element at this index.
+  inline DenseElementResult addDenseElementNoLengthChange(JSContext* cx,
+                                                          uint32_t index,
+                                                          const Value& val);
+
   // Make an array object with the specified initial state.
   static MOZ_ALWAYS_INLINE ArrayObject* create(
       JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
