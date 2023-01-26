@@ -26,6 +26,13 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     // Ffmpeg expects the DecoderConfigDescriptor blob.
     mExtraData->AppendElements(
         *aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob);
+    mRemainingEncoderDelay = mEncoderDelay =
+        aacCodecSpecificData.mEncoderDelayFrames;
+    mEncoderPaddingOrTotalFrames = aacCodecSpecificData.mMediaFrameCount;
+    FFMPEG_LOG("FFmpegAudioDecoder (aac), found encoder delay (%" PRIu32
+               ") and total frame count (%" PRIu64
+               ") in codec-specific side data",
+               mEncoderDelay, TotalFrames());
     return;
   }
 
@@ -38,11 +45,13 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     if (aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>()) {
       const Mp3CodecSpecificData& mp3CodecSpecificData =
           aConfig.mCodecSpecificConfig.as<Mp3CodecSpecificData>();
-      mEncoderDelay = mp3CodecSpecificData.mEncoderDelayFrames;
-      mEncoderPadding = mp3CodecSpecificData.mEncoderPaddingFrames;
-      FFMPEG_LOG("FFmpegAudioDecoder, found encoder delay (%" PRIu32
-                 ") and padding values (%" PRIu32 ") in extra data",
-                 mEncoderDelay, mEncoderPadding);
+      mEncoderDelay = mRemainingEncoderDelay =
+          mp3CodecSpecificData.mEncoderDelayFrames;
+      mEncoderPaddingOrTotalFrames = mp3CodecSpecificData.mEncoderPaddingFrames;
+      FFMPEG_LOG("FFmpegAudioDecoder (mp3), found encoder delay (%" PRIu32
+                 ")"
+                 "and padding values (%" PRIu64 ") in codec-specific side-data",
+                 mEncoderDelay, Padding());
       return;
     }
   }
@@ -229,7 +238,16 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
   return audio;
 }
 
-typedef AudioConfig::ChannelLayout ChannelLayout;
+using ChannelLayout = AudioConfig::ChannelLayout;
+
+uint64_t FFmpegAudioDecoder<LIBAV_VER>::Padding() const {
+  MOZ_ASSERT(mCodecID == AV_CODEC_ID_MP3);
+  return mEncoderPaddingOrTotalFrames;
+}
+uint64_t FFmpegAudioDecoder<LIBAV_VER>::TotalFrames() const {
+  MOZ_ASSERT(mCodecID == AV_CODEC_ID_AAC);
+  return mEncoderPaddingOrTotalFrames;
+}
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                     uint8_t* aData, int aSize,
@@ -325,19 +343,48 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       DebugOnly<bool> trimmed = false;
       if (mEncoderDelay) {
         trimmed = true;
-        uint32_t toPop = std::min((uint32_t)mFrame->nb_samples, mEncoderDelay);
+        int toPop =
+            std::min(mFrame->nb_samples, static_cast<int>(mRemainingEncoderDelay));
         audio.PopFront(toPop * numChannels);
         mFrame->nb_samples -= toPop;
-        mEncoderDelay -= toPop;
+        mRemainingEncoderDelay -= toPop;
+        FFMPEG_LOG("FFmpegAudioDecoder, dropped %" PRIu32
+                   " audio frames, corresponding to the encoder delay.",
+                   toPop);
       }
 
-      if (aSample->mEOS && mEncoderPadding) {
+      mDecodedFrames += mFrame->nb_samples;
+
+      if (mCodecID == AV_CODEC_ID_MP3 && aSample->mEOS && Padding()) {
         trimmed = true;
         uint32_t toTrim =
-            std::min((uint32_t)mFrame->nb_samples, mEncoderPadding);
-        mEncoderPadding -= toTrim;
+            std::min(static_cast<uint64_t>(mFrame->nb_samples), Padding());
         audio.PopBack(toTrim * numChannels);
-        mFrame->nb_samples = audio.Length() / numChannels;
+        MOZ_ASSERT(audio.Length() / numChannels <= INT32_MAX);
+        mFrame->nb_samples = static_cast<int>(audio.Length() / numChannels);
+        FFMPEG_LOG("FFmpegAudioDecoder (mp3), dropped %" PRIu32
+                   " audio frames, corresponding to the padding.",
+                   toTrim);
+      }
+
+      if (mCodecID == AV_CODEC_ID_AAC && TotalFrames() &&
+          mDecodedFrames > TotalFrames()) {
+        trimmed = true;
+        uint32_t paddingFrames =
+            std::min(mDecodedFrames - TotalFrames(),
+                     static_cast<uint64_t>(mFrame->nb_samples));
+        audio.PopBack(paddingFrames * numChannels);
+        MOZ_ASSERT(audio.Length() / numChannels <= INT32_MAX);
+        mFrame->nb_samples = static_cast<int>(audio.Length() / numChannels);
+        FFMPEG_LOG("FFmpegAudioDecoder (aac), dropped %" PRIu32
+                   " audio frames, corresponding to the padding.",
+                   paddingFrames);
+        // When this decoder is past the "real" end time of the media, reset the
+        // number of decoded frames. If more frames come, it's because this
+        // decoder is being used for looping, in which case encoder delay and
+        // padding need to be trimmed again.
+        mDecodedFrames = 0;
+        mRemainingEncoderDelay = mEncoderDelay;
       }
 
       media::TimeUnit duration =
