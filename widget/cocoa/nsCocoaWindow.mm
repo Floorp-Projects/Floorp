@@ -2226,22 +2226,23 @@ LayoutDeviceIntPoint nsCocoaWindow::GetClientOffset() {
   NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
 
-LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) {
+LayoutDeviceIntMargin nsCocoaWindow::ClientToWindowMargin() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (!mWindow || mWindow.drawsContentsIntoWindowFrame || mWindowType == eWindowType_popup) {
+  if (!mWindow || mWindow.drawsContentsIntoWindowFrame || mWindowType == WindowType::Popup) {
     return {};
   }
 
+  NSRect clientNSRect = mWindow.contentLayoutRect;
+  NSRect frameNSRect = [mWindow frameRectForChildViewRect:clientNSRect];
+
   CGFloat backingScale = BackingScaleFactor();
-  LayoutDeviceIntRect r(0, 0, aClientSize.width, aClientSize.height);
-  NSRect rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, backingScale);
+  const auto clientRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(clientNSRect, backingScale);
+  const auto frameRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frameNSRect, backingScale);
 
-  NSRect maybeInflatedRect = [mWindow frameRectForChildViewRect:rect];
-  r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(maybeInflatedRect, backingScale);
-  return r.Size();
+  return frameRect - clientRect;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize(0, 0));
+  NS_OBJC_END_TRY_BLOCK_RETURN({});
 }
 
 nsMenuBarX* nsCocoaWindow::GetMenuBar() { return mMenuBar; }
