@@ -266,6 +266,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   }
 
   if (!PrepareFrame()) {
+    FFMPEG_LOG("FFmpegAudioDecoder: OOM in PrepareFrame");
     return MediaResult(
         NS_ERROR_OUT_OF_MEMORY,
         RESULT_DETAIL("FFmpeg audio decoder failed to allocate frame"));
@@ -337,6 +338,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       AlignedAudioBuffer audio =
           CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples);
       if (!audio) {
+        FFMPEG_LOG("FFmpegAudioDecoder: OOM");
         return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       }
 
@@ -349,8 +351,9 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
         mFrame->nb_samples -= toPop;
         mRemainingEncoderDelay -= toPop;
         FFMPEG_LOG("FFmpegAudioDecoder, dropped %" PRIu32
-                   " audio frames, corresponding to the encoder delay.",
-                   toPop);
+                   " audio frames, corresponding to the encoder delay "
+                   "(remaining: %" PRIu32 ")",
+                   toPop, mRemainingEncoderDelay);
       }
 
       mDecodedFrames += mFrame->nb_samples;
@@ -390,12 +393,14 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       media::TimeUnit duration =
           FramesToTimeUnit(mFrame->nb_samples, samplingRate);
       if (!duration.IsValid()) {
+        FFMPEG_LOG("FFmpegAudioDecoder: invalid duration");
         return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                            RESULT_DETAIL("Invalid sample duration"));
       }
 
       media::TimeUnit newpts = pts + duration;
       if (!newpts.IsValid()) {
+        FFMPEG_LOG("FFmpegAudioDecoder: invalid PTS.");
         return MediaResult(
             NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
             RESULT_DETAIL("Invalid count of accumulated audio samples"));
