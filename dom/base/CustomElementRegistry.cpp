@@ -166,20 +166,26 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
       break;
 
     case ElementCallbackType::eFormAssociated:
-      if (aDefinition->mCallbacks->mFormAssociatedCallback.WasPassed()) {
-        func = aDefinition->mCallbacks->mFormAssociatedCallback.Value();
+      if (aDefinition->mFormAssociatedCallbacks->mFormAssociatedCallback
+              .WasPassed()) {
+        func = aDefinition->mFormAssociatedCallbacks->mFormAssociatedCallback
+                   .Value();
       }
       break;
 
     case ElementCallbackType::eFormReset:
-      if (aDefinition->mCallbacks->mFormResetCallback.WasPassed()) {
-        func = aDefinition->mCallbacks->mFormResetCallback.Value();
+      if (aDefinition->mFormAssociatedCallbacks->mFormResetCallback
+              .WasPassed()) {
+        func =
+            aDefinition->mFormAssociatedCallbacks->mFormResetCallback.Value();
       }
       break;
 
     case ElementCallbackType::eFormDisabled:
-      if (aDefinition->mCallbacks->mFormDisabledCallback.WasPassed()) {
-        func = aDefinition->mCallbacks->mFormDisabledCallback.Value();
+      if (aDefinition->mFormAssociatedCallbacks->mFormDisabledCallback
+              .WasPassed()) {
+        func = aDefinition->mFormAssociatedCallbacks->mFormDisabledCallback
+                   .Value();
       }
       break;
 
@@ -573,7 +579,7 @@ void CustomElementRegistry::EnqueueLifecycleCallback(
       return;
     }
 
-    if (!definition->mCallbacks) {
+    if (!definition->mCallbacks && !definition->mFormAssociatedCallbacks) {
       // definition has been unlinked.  Don't try to mess with it.
       return;
     }
@@ -907,6 +913,8 @@ void CustomElementRegistry::Define(
   }
 
   auto callbacksHolder = MakeUnique<LifecycleCallbacks>();
+  auto formAssociatedCallbacksHolder =
+      MakeUnique<FormAssociatedLifecycleCallbacks>();
   nsTArray<RefPtr<nsAtom>> observedAttributes;
   AutoTArray<RefPtr<nsAtom>, 2> disabledFeatures;
   bool formAssociated = false;
@@ -1017,6 +1025,22 @@ void CustomElementRegistry::Define(
       aRv.NoteJSContextException(aCx);
       return;
     }
+
+    /**
+     * 14.13. If formAssociated is true, for each of "formAssociatedCallback",
+     *        "formResetCallback", "formDisabledCallback", and
+     *        "formStateRestoreCallback" callbackName:
+     *        1. Let callbackValue be ? Get(prototype, callbackName).
+     *        2. If callbackValue is not undefined, then set the value of the
+     *           entry in lifecycleCallbacks with key callbackName to the result
+     *           of converting callbackValue to the Web IDL Function callback
+     *           type. Rethrow any exceptions from the conversion.
+     */
+    if (formAssociated &&
+        !formAssociatedCallbacksHolder->Init(aCx, prototype)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
   }  // Unset mIsCustomDefinitionRunning
 
   /**
@@ -1038,7 +1062,8 @@ void CustomElementRegistry::Define(
 
   RefPtr<CustomElementDefinition> definition = new CustomElementDefinition(
       nameAtom, localNameAtom, nameSpaceID, &aFunctionConstructor,
-      std::move(observedAttributes), std::move(callbacksHolder), formAssociated,
+      std::move(observedAttributes), std::move(callbacksHolder),
+      std::move(formAssociatedCallbacksHolder), formAssociated,
       disableInternals, disableShadow);
 
   CustomElementDefinition* def = definition.get();
@@ -1539,20 +1564,22 @@ void CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
 // CustomElementDefinition
 
 NS_IMPL_CYCLE_COLLECTION(CustomElementDefinition, mConstructor, mCallbacks,
-                         mConstructionStack)
+                         mFormAssociatedCallbacks, mConstructionStack)
 
 CustomElementDefinition::CustomElementDefinition(
     nsAtom* aType, nsAtom* aLocalName, int32_t aNamespaceID,
     CustomElementConstructor* aConstructor,
     nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-    UniquePtr<LifecycleCallbacks>&& aCallbacks, bool aFormAssociated,
-    bool aDisableInternals, bool aDisableShadow)
+    UniquePtr<LifecycleCallbacks>&& aCallbacks,
+    UniquePtr<FormAssociatedLifecycleCallbacks>&& aFormAssociatedCallbacks,
+    bool aFormAssociated, bool aDisableInternals, bool aDisableShadow)
     : mType(aType),
       mLocalName(aLocalName),
       mNamespaceID(aNamespaceID),
       mConstructor(aConstructor),
       mObservedAttributes(std::move(aObservedAttributes)),
       mCallbacks(std::move(aCallbacks)),
+      mFormAssociatedCallbacks(std::move(aFormAssociatedCallbacks)),
       mFormAssociated(aFormAssociated),
       mDisableInternals(aDisableInternals),
       mDisableShadow(aDisableShadow) {}
