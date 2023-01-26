@@ -1,6 +1,14 @@
 {
   "chrome://devtools-startup/content/DevToolsShim.jsm":
     "devtools/startup/DevToolsShim.jsm",
+  "chrome://global/content/certviewer/asn1js_bundle.jsm":
+    "toolkit/components/certviewer/content/vendor/asn1js_bundle.jsm",
+  "chrome://global/content/certviewer/certDecoder.jsm":
+    "toolkit/components/certviewer/content/certDecoder.jsm",
+  "chrome://global/content/certviewer/pkijs_bundle.jsm":
+    "toolkit/components/certviewer/content/vendor/pkijs_bundle.jsm",
+  "chrome://global/content/certviewer/pvutils_bundle.jsm":
+    "toolkit/components/certviewer/content/vendor/pvutils_bundle.jsm",
   "chrome://global/content/tabprompts.jsm":
     "toolkit/components/prompts/content/tabprompts.jsm",
   "chrome://mochikit/content/ShutdownLeaksCollector.jsm":
