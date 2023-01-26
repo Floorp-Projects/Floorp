@@ -202,7 +202,7 @@ add_task(async function test_h2_ws_with_h2_proxy() {
   let proxy = new NodeHTTP2ProxyServer();
   await proxy.start(); // start and register proxy "filter"
 
-  let wss = new NodeWebSocketServer();
+  let wss = new NodeWebSocketHttp2Server();
   await wss.start(); // init port
 
   registerCleanupFunction(async () => {

@@ -294,7 +294,7 @@ class Http2Session final : public ASpdySession,
 
   already_AddRefed<nsHttpConnection> CreateTunnelStream(
       nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
-      PRIntervalTime aRtt) override;
+      PRIntervalTime aRtt, bool aIsWebSocket = false) override;
 
   void CleanupStream(Http2StreamBase*, nsresult, errorType);
 
@@ -303,7 +303,8 @@ class Http2Session final : public ASpdySession,
                bool attemptingEarlyData);
 
   static Http2StreamTunnel* CreateTunnelStreamFromConnInfo(
-      Http2Session* session, uint64_t bcId, nsHttpConnectionInfo* connInfo);
+      Http2Session* session, uint64_t bcId, nsHttpConnectionInfo* connInfo,
+      bool isWebSocket);
 
   // These internal states do not correspond to the states of the HTTP/2
   // specification

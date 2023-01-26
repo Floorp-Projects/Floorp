@@ -86,7 +86,7 @@ class ASpdySession : public nsAHttpTransaction {
 
   virtual already_AddRefed<mozilla::net::nsHttpConnection> CreateTunnelStream(
       nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
-      PRIntervalTime aRtt) = 0;
+      PRIntervalTime aRtt, bool aIsWebSocket = false) = 0;
 };
 
 using ALPNCallback = bool (*)(nsITLSSocketControl*);
