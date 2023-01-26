@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1812543
+-->
+<window title="Mozilla Bug 1812543"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<!-- test results are displayed in the html:body -->
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+
+<!-- test code goes here -->
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+const clipboard = SpecialPowers.Services.clipboard;
+const clipboardTypes = [
+  clipboard.kSelectionClipboard,
+  clipboard.kFindClipboard,
+];
+
+function GenerateRandomString() {
+  return "random number: " + Math.random();
+}
+
+function writeStringToClipboard(aStr, aFlavor, aClipboardType) {
+  let trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+  trans.init(null);
+  trans.addDataFlavor(aFlavor);
+
+  let supportsStr = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  supportsStr.data =  aStr;
+  trans.setTransferData(aFlavor, supportsStr);
+
+  clipboard.setData(trans, null, aClipboardType);
+}
+
+function CleanupAllClipboard() {
+  clipboard.emptyClipboard(clipboard.kGlobalClipboard);
+  clipboardTypes.forEach(function(type) {
+    if (clipboard.isClipboardTypeSupported(type)) {
+      info(`cleanup clipboard ${type}`);
+      clipboard.emptyClipboard(type);
+    }
+  });
+}
+
+let supportOtherClipboardTypes = false;
+clipboardTypes.forEach(function(type) {
+  if (clipboard.isClipboardTypeSupported(type)) {
+    supportOtherClipboardTypes = true;
+    add_task(function test_clipboard_hasDataMatchingFlavors() {
+      info(`Test write data to clipboard type ${type}`);
+
+      // Write text/unicode data to main clipboard.
+      writeStringToClipboard(GenerateRandomString(), "text/unicode", clipboard.kGlobalClipboard);
+      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
+         "Should have text/unicode flavor");
+      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
+         "Should not have text/html flavor");
+
+      // Write text/html data to other clipboard.
+      writeStringToClipboard(GenerateRandomString(), "text/html", type);
+      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
+         "Should have text/unicode flavor");
+      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
+         "Should not have text/html flavor");
+
+      // Clean clipboard data.
+      CleanupAllClipboard();
+    });
+  }
+});
+
+if (!supportOtherClipboardTypes) {
+  ok(true, "Don't support other clipboard types, skip tests");
+}
+
+]]>
+</script>
+</window>

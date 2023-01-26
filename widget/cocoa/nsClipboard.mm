@@ -350,35 +350,41 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
 
   *outResult = false;
 
-  if (aWhichClipboard != kGlobalClipboard) return NS_OK;
+  if (aWhichClipboard != kGlobalClipboard) {
+    return NS_OK;
+  }
 
-  // first see if we have data for this in our cached transferable
-  if (mTransferable) {
-    nsTArray<nsCString> flavors;
-    nsresult rv = mTransferable->FlavorsTransferableCanImport(flavors);
-    if (NS_SUCCEEDED(rv)) {
-      if (CLIPBOARD_LOG_ENABLED()) {
-        CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n", flavors.Length());
-        for (uint32_t j = 0; j < flavors.Length(); j++) {
-          CLIPBOARD_LOG("        MIME %s\n", flavors[j].get());
+  NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
+  if (mCachedClipboard == aWhichClipboard) {
+    if (mChangeCount != [generalPBoard changeCount]) {
+      // Clear the cached transferable as it is no longer valid.
+      ClearClipboardCache();
+    } else if (mTransferable) {
+      // See if we have data for this in our cached transferable.
+      nsTArray<nsCString> flavors;
+      nsresult rv = mTransferable->FlavorsTransferableCanImport(flavors);
+      if (NS_SUCCEEDED(rv)) {
+        if (CLIPBOARD_LOG_ENABLED()) {
+          CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n", flavors.Length());
+          for (uint32_t j = 0; j < flavors.Length(); j++) {
+            CLIPBOARD_LOG("        MIME %s\n", flavors[j].get());
+          }
         }
-      }
 
-      for (uint32_t j = 0; j < flavors.Length(); j++) {
-        const nsCString& transferableFlavorStr = flavors[j];
+        for (uint32_t j = 0; j < flavors.Length(); j++) {
+          const nsCString& transferableFlavorStr = flavors[j];
 
-        for (uint32_t k = 0; k < aFlavorList.Length(); k++) {
-          if (transferableFlavorStr.Equals(aFlavorList[k])) {
-            CLIPBOARD_LOG("    has %s\n", aFlavorList[k].get());
-            *outResult = true;
-            return NS_OK;
+          for (uint32_t k = 0; k < aFlavorList.Length(); k++) {
+            if (transferableFlavorStr.Equals(aFlavorList[k])) {
+              CLIPBOARD_LOG("    has %s\n", aFlavorList[k].get());
+              *outResult = true;
+              return NS_OK;
+            }
           }
         }
       }
     }
   }
-
-  NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
 
   if (CLIPBOARD_LOG_ENABLED()) {
     NSArray* types = [generalPBoard types];
