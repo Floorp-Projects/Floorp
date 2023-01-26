@@ -65,13 +65,6 @@ nsresult BuildTransactionHashes(const nsCString& aRpId,
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::AuthenticatorAttachment>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::AuthenticatorAttachment,
-          mozilla::dom::AuthenticatorAttachment::Platform,
-          mozilla::dom::AuthenticatorAttachment::EndGuard_> {};
-
-template <>
 struct ParamTraits<mozilla::dom::UserVerificationRequirement>
     : public ContiguousEnumSerializer<
           mozilla::dom::UserVerificationRequirement,

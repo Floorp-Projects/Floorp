@@ -80,14 +80,9 @@ dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
 };
 
 dictionary AuthenticatorSelectionCriteria {
-    AuthenticatorAttachment      authenticatorAttachment;
+    DOMString                    authenticatorAttachment;
     boolean                      requireResidentKey = false;
     UserVerificationRequirement  userVerification = "preferred";
-};
-
-enum AuthenticatorAttachment {
-    "platform",       // Platform attachment
-    "cross-platform"  // Cross-platform attachment
 };
 
 enum AttestationConveyancePreference {
