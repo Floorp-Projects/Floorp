@@ -26,7 +26,7 @@
     let gAssertionChallenge = new Uint8Array(16);
     window.crypto.getRandomValues(gAssertionChallenge);
 
-    let invalidCred = {type: "Magic", id: base64ToBytes("AAA=")};
+    let unknownCredType = {type: "Magic", id: base64ToBytes("AAA=")};
     let unknownCred = {type: "public-key", id: base64ToBytes("AAA=")};
     let validCred = null;
 
@@ -36,10 +36,10 @@
     add_task(test_unexpected_option);
     add_task(test_unexpected_option_with_credential);
     add_task(test_unexpected_transport);
-    add_task(test_invalid_credential);
+    add_task(test_unknown_credential_type);
     add_task(test_unknown_credential);
     add_task(test_too_many_credentials);
-    add_task(test_unexpected_option_invalid_credential);
+    add_task(test_unexpected_option_unknown_credential_type);
     add_task(test_empty_credential_list);
     add_task(() => {
       // Enable USB tokens.
@@ -163,16 +163,16 @@
         .catch(arrivingHereIsBad);
     }
 
-    // Test with an invalid credential
-    async function test_invalid_credential() {
+    // Test with an unknown credential type
+    async function test_unknown_credential_type() {
       let publicKey = {
         challenge: gAssertionChallenge,
-        allowCredentials: [invalidCred]
+        allowCredentials: [unknownCredType]
       };
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectTypeError);
+        .catch(expectInvalidStateError);
     }
 
     // Test with an unknown credential
@@ -200,17 +200,17 @@
         .catch(expectSecurityError);
     }
 
-    // Test with an unexpected option and an invalid credential
-    async function test_unexpected_option_invalid_credential() {
+    // Test with an unexpected option and an unknown credential type
+    async function test_unexpected_option_unknown_credential_type() {
       let publicKey = {
         challenge: gAssertionChallenge,
         unknownValue: "hi",
-        allowCredentials: [invalidCred]
+        allowCredentials: [unknownCredType]
       };
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectTypeError);
+        .catch(expectInvalidStateError);
     }
 
     // Test with an empty credential list
