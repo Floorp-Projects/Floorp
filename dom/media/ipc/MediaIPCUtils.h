@@ -110,11 +110,15 @@ struct ParamTraits<mozilla::AacCodecSpecificData> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, *aParam.mEsDescriptorBinaryBlob);
     WriteParam(aWriter, *aParam.mDecoderConfigDescriptorBinaryBlob);
+    WriteParam(aWriter, aParam.mEncoderDelayFrames);
+    WriteParam(aWriter, aParam.mMediaFrameCount);
   }
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, aResult->mEsDescriptorBinaryBlob.get()) &&
            ReadParam(aReader,
-                     aResult->mDecoderConfigDescriptorBinaryBlob.get());
+                     aResult->mDecoderConfigDescriptorBinaryBlob.get()) &&
+           ReadParam(aReader, &aResult->mEncoderDelayFrames) &&
+           ReadParam(aReader, &aResult->mMediaFrameCount);
   }
 };
 
