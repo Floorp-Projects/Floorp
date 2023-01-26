@@ -14483,7 +14483,7 @@
 
 - name: webgl.use-canvas-render-thread
   type: bool
-  value: @IS_NOT_ANDROID@
+  value: true
   mirror: once
 
 - name: webgl.override-unmasked-renderer
