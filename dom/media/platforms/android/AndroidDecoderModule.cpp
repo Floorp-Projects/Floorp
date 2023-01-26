@@ -29,17 +29,17 @@
           ("%s: " arg, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
-using media::TimeUnit;
 
 namespace mozilla {
 
 mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
 
-const nsCString TranslateMimeType(const nsACString& aMimeType) {
+nsCString TranslateMimeType(const nsACString& aMimeType) {
   if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
     static constexpr auto vp8 = "video/x-vnd.on2.vp8"_ns;
     return vp8;
-  } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
+  }
+  if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
     static constexpr auto vp9 = "video/x-vnd.on2.vp9"_ns;
     return vp9;
   }
