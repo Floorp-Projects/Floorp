@@ -5,11 +5,11 @@ from webdriver import Element
 from tests.support.asserts import assert_error, assert_success
 
 
-def get_element_attribute(session, element, attr):
+def get_element_attribute(session, element_id, attr):
     return session.transport.send(
         "GET", "session/{session_id}/element/{element_id}/attribute/{attr}".format(
             session_id=session.session_id,
-            element_id=element,
+            element_id=element_id,
             attr=attr))
 
 
@@ -34,6 +34,15 @@ def test_no_such_element_with_invalid_value(session):
 
     response = get_element_attribute(session, element.id, "id")
     assert_error(response, "no such element")
+
+
+def test_no_such_element_with_shadow_root(session, get_test_page):
+    session.url = get_test_page()
+
+    element = session.find.css("custom-element", all=False)
+
+    result = get_element_attribute(session, element.shadow_root.id, "id")
+    assert_error(result, "no such element")
 
 
 @pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])

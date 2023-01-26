@@ -19,13 +19,33 @@ PAGE_DATA = """
 
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
-def test_stale_element_reference(session, iframe, inline, as_frame):
+def test_detached_shadow_root(session, get_test_page, as_frame):
+    session.url = get_test_page(as_frame)
+
     if as_frame:
-        session.url = inline(iframe("<div>"))
         frame = session.find.css("iframe", all=False)
         session.switch_frame(frame)
-    else:
-        session.url = inline("<div>")
+
+    element = session.find.css("custom-element", all=False)
+
+    # Retrieve shadow root to add it to the node cache
+    shadow_root = element.shadow_root
+
+    result = execute_script(session, """
+        const [elem, shadowRoot] = arguments;
+        elem.remove();
+        return shadowRoot;
+        """, args=[element, shadow_root])
+    assert_error(result, "detached shadow root")
+
+
+@pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
+def test_stale_element(session, get_test_page, as_frame):
+    session.url = get_test_page(as_frame)
+
+    if as_frame:
+        frame = session.find.css("iframe", all=False)
+        session.switch_frame(frame)
 
     element = session.find.css("div", all=False)
 

@@ -46,6 +46,99 @@ def test_object(session):
     assert actual[1] == value
 
 
+def test_no_such_element_with_invalid_value(session):
+    element = Element("foo", session)
+
+    result = execute_script(session, "return true;", args=[element])
+    assert_error(result, "no such element")
+
+
+@pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
+def test_no_such_element_from_other_window_handle(session, inline, closed):
+    session.url = inline("<div id='parent'><p/>")
+    element = session.find.css("#parent", all=False)
+
+    new_handle = session.new_window()
+
+    if closed:
+        session.window.close()
+
+    session.window_handle = new_handle
+
+    result = execute_script(session, "return true;", args=[element])
+    assert_error(result, "no such element")
+
+
+@pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
+def test_no_such_element_from_other_frame(session, get_test_page, closed):
+    session.url = get_test_page(as_frame=True)
+
+    frame = session.find.css("iframe", all=False)
+    session.switch_frame(frame)
+
+    element = session.find.css("div", all=False)
+
+    session.switch_frame("parent")
+
+    if closed:
+        session.execute_script("arguments[0].remove();", args=[frame])
+
+    result = execute_script(session, "return true;", args=[element])
+    assert_error(result, "no such element")
+
+
+def test_no_such_shadow_root_with_unknown_shadow_root(session):
+    shadow_root = ShadowRoot(session, "foo")
+
+    result = execute_script(session, "return true;", args=[shadow_root])
+    assert_error(result, "no such shadow root")
+
+
+@pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
+def test_no_such_shadow_root_from_other_window_handle(session, get_test_page, closed):
+    session.url = get_test_page()
+
+    element = session.find.css("custom-element", all=False)
+    shadow_root = element.shadow_root
+
+    new_handle = session.new_window()
+
+    if closed:
+        session.window.close()
+
+    session.window_handle = new_handle
+
+    result = execute_script(session, "return true;", args=[shadow_root])
+    assert_error(result, "no such shadow root")
+
+
+@pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
+def test_no_such_shadow_root_from_other_frame(session, get_test_page, closed):
+    session.url = get_test_page(as_frame=True)
+
+    frame = session.find.css("iframe", all=False)
+    session.switch_frame(frame)
+
+    element = session.find.css("custom-element", all=False)
+    shadow_root = element.shadow_root
+
+    session.switch_frame("parent")
+
+    if closed:
+        execute_script(session, "arguments[0].remove();", args=[frame])
+
+    result = execute_script(session, "return true;", args=[shadow_root])
+    assert_error(result, "no such shadow root")
+
+
+@pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
+def test_detached_shadow_root_reference(session, stale_element, as_frame):
+    shadow_root = stale_element("custom-element", as_frame=as_frame, want_shadow_root=True)
+
+    result = execute_script(session, "return 1;", args=[shadow_root])
+    assert_error(result, "detached shadow root")
+
+
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
 def test_stale_element_reference(session, stale_element, as_frame):
     element = stale_element("input#text", as_frame=as_frame)
