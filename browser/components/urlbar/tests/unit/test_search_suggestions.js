@@ -6,6 +6,12 @@
  * UrlbarProviderSearchSuggestions.
  */
 
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.jsm",
+});
+
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const PRIVATE_ENABLED_PREF = "browser.search.suggest.enabled.private";
@@ -16,7 +22,6 @@ const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 const MAX_FORM_HISTORY_PREF = "browser.urlbar.maxHistoricalSearchSuggestions";
 const SHOW_SEARCH_SUGGESTIONS_FIRST_PREF =
   "browser.urlbar.showSearchSuggestionsFirst";
-const RESULT_GROUPS_PREF = "browser.urlbar.resultGroups";
 const SEARCH_STRING = "hello";
 
 const MAX_RESULTS = Services.prefs.getIntPref(MAX_RICH_RESULTS_PREF, 10);
@@ -24,6 +29,7 @@ const MAX_RESULTS = Services.prefs.getIntPref(MAX_RICH_RESULTS_PREF, 10);
 var suggestionsFn;
 var previousSuggestionsFn;
 let port;
+let sandbox;
 
 /**
  * Set the current suggestion funciton.
@@ -47,6 +53,7 @@ async function cleanup() {
   Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
+  sandbox.restore();
 }
 
 async function cleanUpSuggestions() {
@@ -94,9 +101,9 @@ function makeRemoteSuggestionResults(
 }
 
 function setResultGroups(groups) {
-  Services.prefs.setCharPref(
-    RESULT_GROUPS_PREF,
-    JSON.stringify({
+  sandbox.restore();
+  sandbox.stub(UrlbarPrefs, "resultGroups").get(() => {
+    return {
       children: [
         // heuristic
         {
@@ -118,11 +125,13 @@ function setResultGroups(groups) {
         },
         ...groups,
       ],
-    })
-  );
+    };
+  });
 }
 
 add_task(async function setup() {
+  sandbox = lazy.sinon.createSandbox();
+
   let engine = await addTestSuggestionsEngine(searchStr => {
     return suggestionsFn(searchStr);
   });
@@ -143,6 +152,7 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
     Services.prefs.clearUserPref(QUICKACTIONS_PREF);
     Services.prefs.clearUserPref(TAB_TO_SEARCH_PREF);
+    sandbox.restore();
   });
   Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
@@ -844,7 +854,6 @@ add_task(async function mixup_frecency() {
     ],
   });
 
-  Services.prefs.clearUserPref(RESULT_GROUPS_PREF);
   Services.prefs.clearUserPref(MAX_RICH_RESULTS_PREF);
   await cleanUpSuggestions();
 });

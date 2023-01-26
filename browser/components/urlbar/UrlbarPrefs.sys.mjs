@@ -180,16 +180,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
-  // Controls the composition of results.  The default value is computed by
-  // calling:
-  //   makeResultGroups({
-  //     showSearchSuggestionsFirst: UrlbarPrefs.get(
-  //       "showSearchSuggestionsFirst"
-  //     ),
-  //   });
-  // The value of this pref is a JSON string of the root group.  See below.
-  ["resultGroups", ""],
-
   // If true, we show tail suggestions when available.
   ["richSuggestions.tail", true],
 
@@ -676,20 +666,13 @@ class Preferences {
     return makeResultGroups(options);
   }
 
-  /**
-   * Sets the value of the resultGroups pref to the current default groups.
-   * This should be called from BrowserGlue._migrateUI when the default groups
-   * are modified.
-   */
-  migrateResultGroups() {
-    this.set(
-      "resultGroups",
-      JSON.stringify(
-        makeResultGroups({
-          showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
-        })
-      )
-    );
+  get resultGroups() {
+    if (!this.#resultGroups) {
+      this.#resultGroups = makeResultGroups({
+        showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
+      });
+    }
+    return this.#resultGroups;
   }
 
   /**
@@ -1270,12 +1253,7 @@ class Preferences {
         this._map.delete("autoFillAdaptiveHistoryUseCountThreshold");
         return;
       case "showSearchSuggestionsFirst":
-        this.set(
-          "resultGroups",
-          JSON.stringify(
-            makeResultGroups({ showSearchSuggestionsFirst: this.get(pref) })
-          )
-        );
+        this.#resultGroups = null;
         return;
     }
 
@@ -1389,13 +1367,6 @@ class Preferences {
         }
         return val;
       }
-      case "resultGroups":
-        try {
-          return JSON.parse(this._readPref(pref));
-        } catch (ex) {}
-        return makeResultGroups({
-          showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
-        });
       case "shouldHandOffToSearchMode":
         return this.shouldHandOffToSearchModePrefs.some(
           prefName => !this.get(prefName)
@@ -1532,6 +1503,8 @@ class Preferences {
       !this.get("browser.search.widget.inNavBar")
     );
   }
+
+  #resultGroups = null;
 }
 
 export var UrlbarPrefs = new Preferences();

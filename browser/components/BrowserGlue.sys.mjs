@@ -4129,19 +4129,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 117) {
-      // Update urlbar result groups for the following changes:
-      // 110 (bug 1662167): Add INPUT_HISTORY group
-      // 111 (bug 1677126): Add REMOTE_TABS group
-      // 112 (bug 1712352): Add ABOUT_PAGES group
-      // 113 (bug 1714409): Add HEURISTIC_ENGINE_ALIAS group
-      // 114 (bug 1662172): Add HEURISTIC_BOOKMARK_KEYWORD group
-      // 115 (bug 1713322): Move TAIL_SUGGESTION group and rename properties
-      // 116 (bug 1717509): Remove HEURISTIC_UNIFIED_COMPLETE group
-      // 117 (bug 1710518): Add GENERAL_PARENT group
-      lazy.UrlbarPrefs.migrateResultGroups();
-    }
-
     if (currentUIVersion < 120) {
       // Migrate old titlebar bool pref to new int-based one.
       const oldPref = "browser.tabs.drawInTitlebar";
@@ -4333,12 +4320,6 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 133) {
       xulStore.removeValue(BROWSER_DOCURL, "urlbar-container", "width");
-    }
-
-    if (currentUIVersion < 134) {
-      // Update urlbar result groups for the following changes:
-      // 134 (bug 1791657): Add HEURISTIC_HISTORY_URL group
-      lazy.UrlbarPrefs.migrateResultGroups();
     }
 
     // Update the migration version.
