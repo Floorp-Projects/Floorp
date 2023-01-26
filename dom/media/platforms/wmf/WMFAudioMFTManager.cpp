@@ -44,8 +44,7 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
           aacCodecSpecificData.mEncoderDelayFrames;
       mTotalMediaFrames = aacCodecSpecificData.mMediaFrameCount;
       LOG("AudioMFT decoder: Found AAC decoder delay (%" PRIu32
-          "frames) and total media frames (%" PRIu64
-          " frames)\n",
+          "frames) and total media frames (%" PRIu64 " frames)\n",
           mEncoderDelay, mTotalMediaFrames);
     } else {
       // Gracefully handle failure to cover all codec specific cases above. Once
