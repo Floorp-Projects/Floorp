@@ -61,10 +61,14 @@ browsertime-tp6:
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                         - --extra-profiler-run
+                        - --extra-summary-methods=mean
+                        - --extra-summary-methods=geomean
                     default:
                         - --chimera
                         - --conditioned-profile=settled
                         - --extra-profiler-run
+                        - --extra-summary-methods=mean
+                        - --extra-summary-methods=geomean
         run-on-projects:
             by-subtest:
                 netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
@@ -160,21 +164,35 @@ browsertime-tp6-essential:
     <<: &tp6-essential-defaults
         mozharness:
             extra-options:
-                by-test-platform:
-                    windows10-64.*shippable.*-qr.*:
-                        - --chimera
-                        - --browsertime-no-ffwindowrecorder
-                        - --conditioned-profile=settled
-                        - --collect-perfstats
-                        - --extra-profiler-run
-                        - --extra-summary-methods=mean
-                        - --extra-summary-methods=geomean
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            windows10-64.*shippable.*-qr.*:
+                                - --chimera
+                                - --browsertime-no-ffwindowrecorder
+                                - --conditioned-profile=settled
+                                - --collect-perfstats
+                                - --extra-profiler-run
+                                - --extra-summary-methods=mean
+                                - --extra-summary-methods=geomean
+                            default:
+                                - --chimera
+                                - --conditioned-profile=settled
+                                - --extra-profiler-run
+                                - --extra-summary-methods=mean
+                                - --extra-summary-methods=geomean
                     default:
-                        - --chimera
-                        - --conditioned-profile=settled
-                        - --extra-profiler-run
-                        - --extra-summary-methods=mean
-                        - --extra-summary-methods=geomean
+                        by-test-platform:
+                            windows10-64.*shippable.*-qr.*:
+                                - --chimera
+                                - --browsertime-no-ffwindowrecorder
+                                - --conditioned-profile=settled
+                                - --collect-perfstats
+                                - --extra-profiler-run
+                            default:
+                                - --chimera
+                                - --conditioned-profile=settled
+                                - --extra-profiler-run
         raptor:
             apps: [firefox, chrome, chromium]
             test: tp6
