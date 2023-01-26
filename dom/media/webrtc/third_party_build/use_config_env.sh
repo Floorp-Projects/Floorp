@@ -20,23 +20,6 @@ export STATE_DIR=`pwd`/.moz-fast-forward
 export LOG_DIR=$STATE_DIR/logs
 export TMP_DIR=$STATE_DIR/tmp
 
-# Allow user to override default path to config_env
-if [ "x$MOZ_CONFIG_PATH" = "x" ]; then
-  MOZ_CONFIG_PATH=$STATE_DIR/config_env
-  echo "Using default MOZ_CONFIG_PATH=$MOZ_CONFIG_PATH"
-fi
-
-if [ ! -f $MOZ_CONFIG_PATH ]; then
-  echo "Missing $MOZ_CONFIG_PATH"
-  echo "Please copy $SCRIPT_DIR/example_config_env"
-  echo "and edit (at least) MOZ_LIBWEBRTC_SRC to match your environment."
-  echo ""
-  echo "cp $SCRIPT_DIR/example_config_env $MOZ_CONFIG_PATH"
-  echo ""
-  exit 1
-fi
-source $MOZ_CONFIG_PATH
-
 if [ ! -d $STATE_DIR ]; then
   echo "Creating missing $STATE_DIR"
   mkdir -p $STATE_DIR
@@ -66,6 +49,25 @@ if [ ! -d $TMP_DIR ]; then
   fi
 fi
 echo "Using TMP_DIR=$TMP_DIR"
+
+# Allow user to override default path to config_env
+if [ "x$MOZ_CONFIG_PATH" = "x" ]; then
+  MOZ_CONFIG_PATH=$STATE_DIR/config_env
+  echo "Using default MOZ_CONFIG_PATH=$MOZ_CONFIG_PATH"
+fi
+
+if [ ! -f $MOZ_CONFIG_PATH ]; then
+  echo ""
+  echo "Missing $MOZ_CONFIG_PATH"
+  echo "Please copy $SCRIPT_DIR/example_config_env"
+  echo "and edit (at least) MOZ_LIBWEBRTC_SRC to match your environment."
+  echo ""
+  echo "cp $SCRIPT_DIR/example_config_env $MOZ_CONFIG_PATH"
+  echo ""
+  exit 1
+fi
+source $MOZ_CONFIG_PATH
+
 
 function find_base_commit()
 {
