@@ -61,8 +61,8 @@ bool ParallelMarker::markOneColor(MarkColor color, SliceBudget& sliceBudget) {
     //
     // TODO: When supporting more than two markers we will need a more
     // sophisticated approach.
-    if (!marker->hasEntries(color) && gc->marker().hasStealableWork()) {
-      marker->stealWorkFrom(&gc->marker());
+    if (!marker->hasEntries(color) && gc->marker().canDonateWork()) {
+      GCMarker::moveWork(marker, &gc->marker());
     }
   }
 
@@ -137,7 +137,7 @@ void ParallelMarkTask::run(AutoLockHelperThreadState& lock) {
   {
     AutoLockGC gcLock(pm->gc);
 
-    markOrSteal(gcLock);
+    markOrRequestWork(gcLock);
 
     MOZ_ASSERT(!isWaiting);
     if (hasWork()) {
@@ -146,14 +146,14 @@ void ParallelMarkTask::run(AutoLockHelperThreadState& lock) {
   }
 }
 
-void ParallelMarkTask::markOrSteal(AutoLockGC& lock) {
+void ParallelMarkTask::markOrRequestWork(AutoLockGC& lock) {
   for (;;) {
     if (hasWork() && !tryMarking(lock)) {
       return;
     }
 
     while (!hasWork()) {
-      if (!tryStealing(lock)) {
+      if (!requestWork(lock)) {
         return;
       }
     }
@@ -177,7 +177,7 @@ bool ParallelMarkTask::tryMarking(AutoLockGC& lock) {
   return !budget.isOverBudget();
 }
 
-bool ParallelMarkTask::tryStealing(AutoLockGC& lock) {
+bool ParallelMarkTask::requestWork(AutoLockGC& lock) {
   MOZ_ASSERT(!hasWork());
 
   if (!pm->hasActiveTasks(lock)) {
@@ -190,7 +190,7 @@ bool ParallelMarkTask::tryStealing(AutoLockGC& lock) {
   }
 
   // Add ourselves to the waiting list and wait for another task to give us
-  // work. The task with work calls ParallelMarker::stealWorkFrom.
+  // work. The task with work calls ParallelMarker::donateWorkFrom.
   waitUntilResumed(lock);
 
   if (hasWork()) {
@@ -268,7 +268,7 @@ void ParallelMarker::decActiveTasks(ParallelMarkTask* task,
   }
 }
 
-void ParallelMarker::stealWorkFrom(GCMarker* victim) {
+void ParallelMarker::donateWorkFrom(GCMarker* src) {
   AutoLockGC lock(gc);
 
   // Check there are tasks waiting for work while holding the lock.
@@ -277,18 +277,18 @@ void ParallelMarker::stealWorkFrom(GCMarker* victim) {
   }
 
   // Take the first waiting task off the list.
-  ParallelMarkTask* task = waitingTasks.ref().popFront();
+  ParallelMarkTask* waitingTask = waitingTasks.ref().popFront();
   waitingTaskCount--;
 
   // |task| is not running so it's safe to move work to it.
-  MOZ_ASSERT(task->isWaiting);
+  MOZ_ASSERT(waitingTask->isWaiting);
 
   // TODO: When using more than two marking threads it may be better to
-  // release the lock while we steal.
+  // release the lock here.
 
   // Move some work from this thread's mark stack to the waiting task.
-  task->marker->stealWorkFrom(victim);
+  GCMarker::moveWork(waitingTask->marker, src);
 
   // Resume waiting task.
-  task->resume(lock);
+  waitingTask->resume(lock);
 }

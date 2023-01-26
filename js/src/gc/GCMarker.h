@@ -192,8 +192,8 @@ class MarkStack {
 
   [[nodiscard]] bool ensureSpace(size_t count);
 
-  bool hasStealableWork() const;
-  void stealWorkFrom(MarkStack& other);
+  bool canDonateWork() const;
+  static void moveWork(MarkStack& dst, MarkStack& src);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -336,7 +336,7 @@ class GCMarker {
   bool isDrained() const { return stack.isEmpty(); }
 
   bool hasEntries(gc::MarkColor color) const { return stack.hasEntries(color); }
-  bool hasStealableWork() const { return stack.hasStealableWork(); }
+  bool canDonateWork() const { return stack.canDonateWork(); }
 
   void start();
   void stop();
@@ -378,7 +378,7 @@ class GCMarker {
   template <uint32_t markingOptions, gc::MarkColor>
   bool markOneColor(SliceBudget& budget);
 
-  void stealWorkFrom(GCMarker* other);
+  static void moveWork(GCMarker* dst, GCMarker* src);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

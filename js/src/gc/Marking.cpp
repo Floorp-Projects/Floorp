@@ -1250,8 +1250,8 @@ static gcstats::PhaseKind GrayMarkingPhaseForCurrentPhase(
   }
 }
 
-void GCMarker::stealWorkFrom(GCMarker* other) {
-  stack.stealWorkFrom(other->stack);
+void GCMarker::moveWork(GCMarker* dst, GCMarker* src) {
+  MarkStack::moveWork(dst->stack, src->stack);
 }
 
 bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
@@ -1328,8 +1328,8 @@ bool GCMarker::markOneColor(SliceBudget& budget) {
       // TODO: It might be better to only check this occasionally, possibly
       // combined with the slice budget check. Experiments with giving this its
       // own counter resulted in worse performance.
-      if (parallelMarker_->hasWaitingTasks() && stack.hasStealableWork()) {
-        parallelMarker_->stealWorkFrom(this);
+      if (parallelMarker_->hasWaitingTasks() && stack.canDonateWork()) {
+        parallelMarker_->donateWorkFrom(this);
         MOZ_ASSERT(hasEntries(color));
       }
     }
@@ -1728,16 +1728,16 @@ bool MarkStack::hasEntries(MarkColor color) const {
   return color == MarkColor::Black ? hasBlackEntries() : hasGrayEntries();
 }
 
-bool MarkStack::hasStealableWork() const {
-  // It's not worth the overhead of stealing very few entries. For some
+bool MarkStack::canDonateWork() const {
+  // It's not worth the overhead of donating very few entries. For some
   // (non-parallelizable) workloads this can lead to constantly interrupting
   // marking work and makes parallel marking slower than single threaded.
-  constexpr size_t MinStealableWordCount = 12;
+  constexpr size_t MinWordCount = 12;
 
-  static_assert(MinStealableWordCount >= ValueRangeWords,
+  static_assert(MinWordCount >= ValueRangeWords,
                 "We must always leave at least one stack entry.");
 
-  return wordCountForCurrentColor() > MinStealableWordCount;
+  return wordCountForCurrentColor() > MinWordCount;
 }
 
 MOZ_ALWAYS_INLINE bool MarkStack::indexIsEntryBase(size_t index) const {
@@ -1761,51 +1761,54 @@ MOZ_ALWAYS_INLINE bool MarkStack::indexIsEntryBase(size_t index) const {
   return stack()[index].tagUnchecked() != SlotsOrElementsRangeTag;
 }
 
-void MarkStack::stealWorkFrom(MarkStack& other) {
+/* static */
+void MarkStack::moveWork(MarkStack& dst, MarkStack& src) {
+  // Move some work from |src| to |dst|. Assumes |dst| is empty.
+  //
   // When this method runs during parallel marking, we are on the thread that
-  // owns |other|, and the thread that owns |this| is blocked waiting on the
+  // owns |src|, and the thread that owns |dst| is blocked waiting on the
   // ParallelMarkTask::resumed condition variable.
 
-  MOZ_ASSERT(markColor() == other.markColor());
-  MOZ_ASSERT(!hasEntries(markColor()));
-  MOZ_ASSERT(other.hasStealableWork());
+  MOZ_ASSERT(src.markColor() == dst.markColor());
+  MOZ_ASSERT(!dst.hasEntries(dst.markColor()));
+  MOZ_ASSERT(src.canDonateWork());
 
-  size_t base = other.basePositionForCurrentColor();
-  size_t totalWords = other.position() - base;
-  size_t wordsToSteal = totalWords / 2;
+  size_t base = src.basePositionForCurrentColor();
+  size_t totalWords = src.position() - base;
+  size_t wordsToMove = totalWords / 2;
 
-  size_t targetPos = other.position() - wordsToSteal;
-  MOZ_ASSERT(other.position() >= base);
+  size_t targetPos = src.position() - wordsToMove;
+  MOZ_ASSERT(src.position() >= base);
 
   // Adjust the target position in case it points to the middle of a two word
   // entry.
-  if (!other.indexIsEntryBase(targetPos)) {
+  if (!src.indexIsEntryBase(targetPos)) {
     targetPos--;
-    wordsToSteal++;
+    wordsToMove++;
   }
-  MOZ_ASSERT(other.indexIsEntryBase(targetPos));
-  MOZ_ASSERT(targetPos < other.position());
+  MOZ_ASSERT(src.indexIsEntryBase(targetPos));
+  MOZ_ASSERT(targetPos < src.position());
   MOZ_ASSERT(targetPos > base);
-  MOZ_ASSERT(wordsToSteal == other.position() - targetPos);
+  MOZ_ASSERT(wordsToMove == src.position() - targetPos);
 
-  if (!ensureSpace(wordsToSteal)) {
+  if (!dst.ensureSpace(wordsToMove)) {
     return;
   }
 
   // TODO: This doesn't have good cache behaviour when moving work between
   // threads. It might be better if the original thread ended up with the top
-  // part of the stack, in other words if this method stole from the bottom of
+  // part of the stack, in src words if this method stole from the bottom of
   // the stack rather than the top.
 
-  mozilla::PodCopy(topPtr(), other.stack().begin() + targetPos, wordsToSteal);
-  topIndex_ += wordsToSteal;
-  peekPtr().assertValid();
+  mozilla::PodCopy(dst.topPtr(), src.stack().begin() + targetPos, wordsToMove);
+  dst.topIndex_ += wordsToMove;
+  dst.peekPtr().assertValid();
 
-  other.topIndex_ = targetPos;
+  src.topIndex_ = targetPos;
 #ifdef DEBUG
-  other.poisonUnused();
+  src.poisonUnused();
 #endif
-  other.peekPtr().assertValid();
+  src.peekPtr().assertValid();
 }
 
 MOZ_ALWAYS_INLINE size_t MarkStack::basePositionForCurrentColor() const {
