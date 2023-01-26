@@ -13,6 +13,7 @@
 #include "JavaExceptions.h"
 #include "mozilla/java/WebAuthnTokenManagerWrappers.h"
 #include "mozilla/jni/Conversions.h"
+#include "WebAuthnEnumStrings.h"
 
 namespace mozilla {
 namespace jni {
@@ -161,7 +162,8 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                             java::sdk::Integer::ValueOf(1));
           }
 
-          if (sel.userVerificationRequirement().EqualsLiteral("required")) {
+          if (sel.userVerificationRequirement().EqualsLiteral(
+                  MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
             GECKOBUNDLE_PUT(authSelBundle, "requireUserVerification",
                             java::sdk::Integer::ValueOf(1));
           }
@@ -169,11 +171,13 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
           if (sel.authenticatorAttachment().isSome()) {
             const nsString& authenticatorAttachment =
                 sel.authenticatorAttachment().value();
-            if (authenticatorAttachment.EqualsLiteral("platform")) {
+            if (authenticatorAttachment.EqualsLiteral(
+                    MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
               GECKOBUNDLE_PUT(authSelBundle, "requirePlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
-            } else if (authenticatorAttachment.EqualsLiteral(
-                           "cross-platform")) {
+            } else if (
+                authenticatorAttachment.EqualsLiteral(
+                    MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
               GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
             }
