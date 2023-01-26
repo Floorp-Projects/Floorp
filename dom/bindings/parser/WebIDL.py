@@ -2170,8 +2170,10 @@ class IDLDictionary(IDLObjectWithScope):
                 member.complete(scope)
                 assert member.type.isComplete()
 
-        # Members of a dictionary are sorted in lexicographic order
-        self.members.sort(key=lambda x: x.identifier.name)
+        # Members of a dictionary are sorted in lexicographic order,
+        # unless the dictionary opts out.
+        if not self.getExtendedAttribute("Unsorted"):
+            self.members.sort(key=lambda x: x.identifier.name)
 
         inheritedMembers = []
         ancestor = self.parent
@@ -2307,6 +2309,11 @@ class IDLDictionary(IDLObjectWithScope):
                 # implement ToJSON by converting to a JS object and
                 # then using JSON.stringify.
                 self.needsConversionToJS = True
+            elif identifier == "Unsorted":
+                if not attr.noArguments():
+                    raise WebIDLError(
+                        "[Unsorted] must take no arguments", [attr.location]
+                    )
             else:
                 raise WebIDLError(
                     "[%s] extended attribute not allowed on "
