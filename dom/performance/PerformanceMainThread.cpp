@@ -411,8 +411,7 @@ DOMHighResTimeStamp PerformanceMainThread::CreationTime() const {
 void PerformanceMainThread::CreateNavigationTimingEntry() {
   MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
 
-  if (!StaticPrefs::dom_enable_performance_navigation_timing() ||
-      StaticPrefs::privacy_resistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance_navigation_timing()) {
     return;
   }
 
@@ -463,12 +462,6 @@ EventCounts* PerformanceMainThread::EventCounts() {
 
 void PerformanceMainThread::GetEntries(
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
-  // We return an empty list when 'privacy.resistFingerprinting' is on.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
-    aRetval.Clear();
-    return;
-  }
-
   aRetval = mResourceEntries.Clone();
   aRetval.AppendElements(mUserEntries);
 
@@ -484,12 +477,6 @@ void PerformanceMainThread::GetEntries(
 
 void PerformanceMainThread::GetEntriesByType(
     const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
-  // We return an empty list when 'privacy.resistFingerprinting' is on.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
-    aRetval.Clear();
-    return;
-  }
-
   RefPtr<nsAtom> type = NS_Atomize(aEntryType);
   if (type == nsGkAtoms::navigation) {
     aRetval.Clear();
@@ -526,12 +513,6 @@ void PerformanceMainThread::GetEntriesByTypeForObserver(
 void PerformanceMainThread::GetEntriesByName(
     const nsAString& aName, const Optional<nsAString>& aEntryType,
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
-  // We return an empty list when 'privacy.resistFingerprinting' is on.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
-    aRetval.Clear();
-    return;
-  }
-
   Performance::GetEntriesByName(aName, aEntryType, aRetval);
 
   if (mFCPTiming && mFCPTiming->GetName()->Equals(aName) &&
