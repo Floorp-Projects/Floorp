@@ -13,7 +13,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -617,7 +616,6 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
-    @Ignore("This will be re-visited when addressing bug 1810745")
     fun verifyCookieBannerReductionTest() {
         val webSite = "voetbal24.be"
 
@@ -662,7 +660,6 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
-    @Ignore("This will be re-visited when addressing bug 1810745")
     fun verifyCookieBannerReductionInPrivateBrowsingTest() {
         val webSite = "voetbal24.be"
 
