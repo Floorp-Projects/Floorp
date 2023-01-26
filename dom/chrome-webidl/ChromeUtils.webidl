@@ -728,6 +728,7 @@ enum WebIDLUtilityActorName {
   "audioDecoder_WMF",
   "mfMediaEngineCDM",
   "jSOracle",
+  "windowsUtils",
 };
 
 dictionary UtilityActorsDictionary {
