@@ -283,13 +283,30 @@ size_t InterceptorFunction::sNumInstances = 0;
 
 constexpr uint8_t InterceptorFunction::sInterceptorTemplate[];
 
+#ifdef _M_X64
+
+// To check that unwind information propagates from hooked functions to their
+// stubs, we need to find the real address where the detoured code lives.
 class RedirectionResolver : public interceptor::WindowsDllPatcherBase<
                                 interceptor::VMSharingPolicyShared> {
  public:
   uintptr_t ResolveRedirectedAddressForTest(FARPROC aFunc) {
+    bool isWin8 = IsWin8OrLater() && (!IsWin8Point1OrLater());
+
+    bool isDuplicateHandle = (reinterpret_cast<void*>(aFunc) ==
+                              reinterpret_cast<void*>(&::DuplicateHandle));
+
+    // We need to reproduce the behavior of WindowsDllInterceptor::AddDetour
+    // with respect to redirection, including the corner case for bug 1659398.
+    if (isWin8 && isDuplicateHandle) {
+      return reinterpret_cast<uintptr_t>(aFunc);
+    }
+
     return ResolveRedirectedAddress(aFunc).GetAddress();
   }
 };
+
+#endif  // _M_X64
 
 // Hook the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
