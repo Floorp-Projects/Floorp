@@ -56,39 +56,7 @@ let isRounded = (x, expectedPrecision) => {
   return false;
 };
 
-function runRPTests(expectedPrecision) {
-  ok(
-    isRounded(performance.timeOrigin, expectedPrecision),
-    `In a worker, for resistFingerprinting, performance.timeOrigin is not correctly rounded: ` +
-      performance.timeOrigin
-  );
-
-  // Try to add some entries.
-  performance.mark("Test");
-  performance.mark("Test-End");
-  performance.measure("Test-Measure", "Test", "Test-End");
-
-  // Check that no entries for performance.getEntries/getEntriesByType/getEntriesByName.
-  is(
-    performance.getEntries().length,
-    0,
-    "In a worker, for resistFingerprinting: No entries for performance.getEntries() for workers"
-  );
-  is(
-    performance.getEntriesByType("resource").length,
-    0,
-    "In a worker, for resistFingerprinting: No entries for performance.getEntriesByType() for workers"
-  );
-  is(
-    performance.getEntriesByName("Test", "mark").length,
-    0,
-    "In a worker, for resistFingerprinting: No entries for performance.getEntriesByName() for workers"
-  );
-
-  finish();
-}
-
-function runRTPTests(expectedPrecision) {
+function runTimerTests(expectedPrecision) {
   ok(
     isRounded(performance.timeOrigin, expectedPrecision),
     `In a worker, for reduceTimerPrecision, performance.timeOrigin is not correctly rounded: ` +
@@ -146,10 +114,8 @@ function runRTPTests(expectedPrecision) {
 }
 
 self.onmessage = function(e) {
-  if (e.data.type === "runRPTests") {
-    runRPTests(e.data.precision);
-  } else if (e.data.type === "runRTPTests") {
-    runRTPTests(e.data.precision);
+  if (e.data.type === "runTimerTests") {
+    runTimerTests(e.data.precision);
   } else {
     ok(false, "Unknown message type");
   }

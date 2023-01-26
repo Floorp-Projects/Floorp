@@ -24,14 +24,14 @@ let runWorkerTest = async function(data) {
   });
 };
 
-add_task(async function runRPTestsForWorker() {
+add_task(async function runRFPestsForWorker() {
   await setupPerformanceAPISpoofAndDisableTest(
     true,
     true,
     false,
     100,
     runWorkerTest,
-    "runRPTests"
+    "runTimerTests"
   );
   await setupPerformanceAPISpoofAndDisableTest(
     true,
@@ -39,7 +39,7 @@ add_task(async function runRPTestsForWorker() {
     false,
     13,
     runWorkerTest,
-    "runRPTests"
+    "runTimerTests"
   );
   await setupPerformanceAPISpoofAndDisableTest(
     true,
@@ -47,7 +47,7 @@ add_task(async function runRPTestsForWorker() {
     false,
     0.13,
     runWorkerTest,
-    "runRPTests"
+    "runTimerTests"
   );
 });
 
@@ -58,7 +58,7 @@ add_task(async function runRTPTestsForWorker() {
     false,
     100,
     runWorkerTest,
-    "runRTPTests"
+    "runTimerTests"
   );
   await setupPerformanceAPISpoofAndDisableTest(
     false,
@@ -66,7 +66,7 @@ add_task(async function runRTPTestsForWorker() {
     false,
     13,
     runWorkerTest,
-    "runRTPTests"
+    "runTimerTests"
   );
   await setupPerformanceAPISpoofAndDisableTest(
     false,
@@ -74,6 +74,6 @@ add_task(async function runRTPTestsForWorker() {
     false,
     0.13,
     runWorkerTest,
-    "runRTPTests"
+    "runTimerTests"
   );
 });

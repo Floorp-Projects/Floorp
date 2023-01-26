@@ -17,8 +17,8 @@
       var iframe = document.createElement("iframe");
       document.body.append(iframe);
       var p = iframe.contentWindow.PerformanceNavigationTiming;
-      if (resistFingerprinting)
-        is(p, undefined, "window.PerformanceNavigationTiming should not be exposed when"
+      if (enable_performance_navigation_timing && resistFingerprinting)
+        isnot(p, undefined, "window.PerformanceNavigationTiming should be exposed when"
                          + " dom.enable_performance_navigation_timing=" + enable_performance_navigation_timing
                          + " and privacy.resistFingerprinting="+ resistFingerprinting +".");
       if (!enable_performance_navigation_timing)
