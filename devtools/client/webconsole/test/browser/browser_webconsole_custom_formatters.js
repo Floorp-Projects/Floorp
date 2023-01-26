@@ -23,6 +23,7 @@ add_task(async function() {
   await testObjectWithoutFormatting(hud);
   await testObjectWithFormattedHeader(hud);
   await testObjectWithFormattedHeaderAndBody(hud);
+  await testCustomFormatterWithObjectTag(hud);
 });
 
 async function testString(hud) {
@@ -67,6 +68,77 @@ async function testObjectWithFormattedHeaderAndBody(hud) {
     bodyText: "body",
     bodyStyles: "font-size: 2rem; font-family: serif;",
   });
+}
+
+async function testCustomFormatterWithObjectTag(hud) {
+  info(`Test for custom formatted object with "object" tag in the jsonMl`);
+  const node = await waitFor(() => {
+    return findConsoleAPIMessage(hud, "object tag");
+  });
+
+  const headerJsonMlNode = node.querySelector(".objectBox-jsonml");
+  is(
+    headerJsonMlNode.getAttribute("style"),
+    "color: purple;",
+    "The custom formatting of the header is correct"
+  );
+  const [
+    buttonEl,
+    child1,
+    child2,
+    child3,
+    child4,
+  ] = headerJsonMlNode.childNodes;
+  is(child1.textContent, "object tag", "Got expected first item");
+  is(
+    child2.textContent,
+    `~[1,"a"]~`,
+    "Got expected second item, the replaced object, custom formatted"
+  );
+  ok(
+    child3.classList.contains("objectBox-null"),
+    "Got expected third item, an actual NullRep"
+  );
+  is(child3.textContent, `null`, "third item has expected content");
+
+  is(
+    child4.textContent,
+    ` | serialized: 42n undefined null Infinity [object Object]`,
+    "Got expected fourth item, serialized values"
+  );
+
+  buttonEl.click();
+  const bodyLevel1 = await waitFor(() =>
+    node.querySelector(".objectBox-jsonml-body-wrapper .objectBox-jsonml")
+  );
+  const [bodyChild1, bodyChild2] = bodyLevel1.childNodes;
+  is(bodyChild1.textContent, "body");
+
+  const bodyCustomFormattedChild = await waitFor(() =>
+    bodyChild2.querySelector(".objectBox-jsonml")
+  );
+  const [
+    subButtonEl,
+    subChild1,
+    subChild2,
+    subChild3,
+  ] = bodyCustomFormattedChild.childNodes;
+  ok(!!subButtonEl, "The body child can also be expanded");
+  is(subChild1.textContent, "object tag", "Got expected first item");
+  is(
+    subChild2.textContent,
+    `~[2,"b"]~`,
+    "Got expected body second item, the replaced object, custom formatted"
+  );
+  ok(
+    subChild3.classList.contains("object-inspector"),
+    "Got expected body third item, an actual ObjectInspector"
+  );
+  is(
+    subChild3.textContent,
+    `Array [ 2, "b" ]`,
+    "body third item has expected content"
+  );
 }
 
 async function testCustomFormatting(
