@@ -95,6 +95,8 @@ pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/syst
 // 言語設定をシステムに合わせる
 pref("intl.locale.requested", "");
 
+pref("app.feedback.baseURL", "https://support.ablaze.one/");
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
