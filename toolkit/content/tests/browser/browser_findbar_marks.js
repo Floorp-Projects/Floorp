@@ -188,7 +188,7 @@ add_task(async function test_found_resize() {
     "resize",
     true
   );
-  window2.resizeTo(outerWidth - 100, outerHeight - 80);
+  window2.resizeTo(window2.outerWidth - 100, window2.outerHeight - 80);
   await resizePromise;
 
   // Some number of extra scrollbar adjustment and painting events can occur
