@@ -439,7 +439,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * See comment in `watchResources`, this will handle targets which are ignored by Frame and Process
    * target helpers. (and only those which are ignored)
    */
-  _getTargetActorInParentProcess() {
+  getTargetActorInParentProcess() {
     // Note: For browser-element debugging, the WindowGlobalTargetActor returned here is created
     // for a parent process page and lives in the parent process.
     return TargetActorRegistry.getTopLevelTargetActorForContext(
@@ -518,7 +518,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
      * We will eventually get rid of this code once all targets are properly supported by
      * the Watcher Actor and we have target helpers for all of them.
      */
-    const targetActor = this._getTargetActorInParentProcess();
+    const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
       const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
         resourceTypes,
@@ -589,7 +589,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     }
 
     // See comment in watchResources.
-    const targetActor = this._getTargetActorInParentProcess();
+    const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
       const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
         resourceTypes,
@@ -716,7 +716,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     );
 
     // See comment in watchResources
-    const targetActor = this._getTargetActorInParentProcess();
+    const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
       await targetActor.addSessionDataEntry(type, entries);
     }
@@ -752,7 +752,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       });
 
     // See comment in addDataEntry
-    const targetActor = this._getTargetActorInParentProcess();
+    const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
       targetActor.removeSessionDataEntry(type, entries);
     }
