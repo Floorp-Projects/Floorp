@@ -64,6 +64,25 @@ def bootstrap_tasks(config, tasks):
                 "./mach build",
             ]
 
+            os_specific = []
+            if app == "mobile_android":
+                os_specific += ["android*"]
+            for os, filename in (
+                ("debian", "debian.py"),
+                ("ubuntu", "debian.py"),
+                ("fedora", "centosfedora.py"),
+                ("rockylinux", "centosfedora.py"),
+                ("opensuse", "opensuse.py"),
+                ("gentoo", "gentoo.py"),
+                ("archlinux", "archlinux.py"),
+                ("voidlinux", "void.py"),
+            ):
+                if name.startswith(os):
+                    os_specific.append(filename)
+                    break
+            else:
+                raise Exception(f"Missing OS specific bootstrap file for {name}")
+
             taskdesc = {
                 "label": f"{config.kind}-{name}-{app}",
                 "description": f"Bootstrap {app} build on {name}",
@@ -97,8 +116,17 @@ def bootstrap_tasks(config, tasks):
                 "optimization": {
                     "skip-unless-changed": [
                         "python/mozboot/bin/bootstrap.py",
-                        "python/mozboot/mozboot/**",
-                    ],
+                        "python/mozboot/mozboot/base.py",
+                        "python/mozboot/mozboot/bootstrap.py",
+                        "python/mozboot/mozboot/linux_common.py",
+                        "python/mozboot/mozboot/mach_commands.py",
+                        "python/mozboot/mozboot/mozconfig.py",
+                        "python/mozboot/mozboot/rust.py",
+                        "python/mozboot/mozboot/sccache.py",
+                        "python/mozboot/mozboot/static_analysis.py",
+                        "python/mozboot/mozboot/util.py",
+                    ]
+                    + [f"python/mozboot/mozboot/{f}" for f in os_specific]
                 },
             }
 
