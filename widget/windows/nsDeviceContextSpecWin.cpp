@@ -518,11 +518,13 @@ static unsigned GetPrinterInfo4(nsTArray<BYTE>& aBuffer) {
                             &needed,  // Bytes needed in buffer
                             &count);
   if (needed > 0) {
-    aBuffer.SetLength(needed);
+    if (!aBuffer.SetLength(needed, fallible)) {
+      return 0;
+    }
     ok = ::EnumPrintersW(kFlags, nullptr, kLevel, aBuffer.Elements(),
                          aBuffer.Length(), &needed, &count);
   }
-  if (!ok || !count) {
+  if (!ok) {
     return 0;
   }
   return count;
