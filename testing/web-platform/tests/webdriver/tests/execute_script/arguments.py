@@ -48,7 +48,7 @@ def test_object(session):
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
 def test_stale_element_reference(session, stale_element, as_frame):
-    element = stale_element("<div>", "div", as_frame=as_frame)
+    element = stale_element("input#text", as_frame=as_frame)
 
     result = execute_script(session, "return 1;", args=[element])
     assert_error(result, "stale element reference")
@@ -88,4 +88,3 @@ def test_element_reference(session, iframe, inline, expression, expected_type, e
 
     result = execute_script(session, "return arguments[0].constructor.name", [reference])
     assert_success(result, expected_class)
-
