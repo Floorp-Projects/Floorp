@@ -13,11 +13,6 @@ pub struct Url {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct LegacyWebElement {
-    pub id: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Locator {
     pub using: Selector,
     pub value: String,
@@ -172,9 +167,9 @@ pub enum Command {
     #[serde(rename = "WebDriver:DismissAlert")]
     DismissAlert,
     #[serde(rename = "WebDriver:ElementClear")]
-    ElementClear(LegacyWebElement),
+    ElementClear { id: String },
     #[serde(rename = "WebDriver:ElementClick")]
-    ElementClick(LegacyWebElement),
+    ElementClick { id: String },
     #[serde(rename = "WebDriver:ElementSendKeys")]
     ElementSendKeys {
         id: String,
@@ -224,11 +219,11 @@ pub enum Command {
     #[serde(rename = "WebDriver:GetElementProperty")]
     GetElementProperty { id: String, name: String },
     #[serde(rename = "WebDriver:GetElementRect")]
-    GetElementRect(LegacyWebElement),
+    GetElementRect { id: String },
     #[serde(rename = "WebDriver:GetElementTagName")]
-    GetElementTagName(LegacyWebElement),
+    GetElementTagName { id: String },
     #[serde(rename = "WebDriver:GetElementText")]
-    GetElementText(LegacyWebElement),
+    GetElementText { id: String },
     #[serde(rename = "WebDriver:GetPageSource")]
     GetPageSource,
     #[serde(rename = "WebDriver:GetShadowRoot")]
@@ -248,11 +243,11 @@ pub enum Command {
     #[serde(rename = "WebDriver:Forward")]
     GoForward,
     #[serde(rename = "WebDriver:IsElementDisplayed")]
-    IsDisplayed(LegacyWebElement),
+    IsDisplayed { id: String },
     #[serde(rename = "WebDriver:IsElementEnabled")]
-    IsEnabled(LegacyWebElement),
+    IsEnabled { id: String },
     #[serde(rename = "WebDriver:IsElementSelected")]
-    IsSelected(LegacyWebElement),
+    IsSelected { id: String },
     #[serde(rename = "WebDriver:MaximizeWindow")]
     MaximizeWindow,
     #[serde(rename = "WebDriver:MinimizeWindow")]
