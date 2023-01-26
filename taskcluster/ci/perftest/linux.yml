@@ -311,6 +311,7 @@ side-by-side:
     description: Run mozperftest side-by-side
     treeherder:
         symbol: perftest(side-by-side)
+        tier: 2
     run:
         using: run-task
         sparse-profile: perftest
