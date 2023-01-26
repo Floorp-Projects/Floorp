@@ -4,6 +4,9 @@
 
 "use strict";
 
+/* import-globals-from ../../mochitest/role.js */
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
+
 /**
  * Test changing the left/top CSS properties.
  */
@@ -60,6 +63,41 @@ addAccessibleTask(
     for (const id of ["reflowContainer", "reflow2", "reflow3", "noReflow"]) {
       await testBoundsWithContent(docAcc, id, browser);
     }
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);
+
+/**
+ * Test bounds when an Accessible is re-parented.
+ */
+addAccessibleTask(
+  `
+<div id="container">
+  <p style="height: 300px;">1</p>
+  <div class="pParent">
+    <p id="p2">2</p>
+  </div>
+</div>
+  `,
+  async function(browser, docAcc) {
+    const paraTree = { PARAGRAPH: [{ TEXT_LEAF: [] }] };
+    const container = findAccessibleChildByID(docAcc, "container");
+    testAccessibleTree(container, { SECTION: [paraTree, paraTree] });
+    await testBoundsWithContent(docAcc, "p2", browser);
+    // Add a click listener to the div containing p2. This will cause an
+    // Accessible to be created for that div, which didn't have one before.
+    info("Adding click listener to pParent");
+    let reordered = waitForEvent(EVENT_REORDER, container);
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .querySelector(".pParent")
+        .addEventListener("click", function() {});
+    });
+    await reordered;
+    testAccessibleTree(container, {
+      SECTION: [paraTree, { SECTION: [paraTree] }],
+    });
+    await testBoundsWithContent(docAcc, "p2", browser);
   },
   { chrome: true, topLevel: true, remoteIframe: true }
 );
