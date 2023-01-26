@@ -41,7 +41,7 @@ enum class CompositorHitTestFlags : uint8_t {
   eTouchActionPanXDisabled,           // 0x0010
   eTouchActionPanYDisabled,           // 0x0020
   eTouchActionPinchZoomDisabled,      // 0x0040
-  eTouchActionDoubleTapZoomDisabled,  // 0x0080
+  eTouchActionAnimatingZoomDisabled,  // 0x0080
 
   // The frame is a scrollbar or a subframe inside a scrollbar (including
   // scroll thumbs)
@@ -76,7 +76,7 @@ constexpr CompositorHitTestInfo CompositorHitTestTouchActionMask(
     CompositorHitTestFlags::eTouchActionPanXDisabled,
     CompositorHitTestFlags::eTouchActionPanYDisabled,
     CompositorHitTestFlags::eTouchActionPinchZoomDisabled,
-    CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled);
+    CompositorHitTestFlags::eTouchActionAnimatingZoomDisabled);
 
 // Mask to check all the flags that involve APZ waiting for results from the
 // main thread

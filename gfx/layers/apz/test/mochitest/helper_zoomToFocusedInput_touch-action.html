@@ -1,0 +1,67 @@
+<!DOCTYPE>
+<html>
+  <head>
+  <title>Checking zoomToFocusedInput zooms if touch-action allows it</title>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=0.5 minimum-scale=0.5, maximum-scale=1" />
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  </head>
+  <style type="text/css">
+    .touch-none {
+      touch-action: none;
+    }
+    .touch-auto {
+      touch-action: auto;
+    }
+  </style>
+<body>
+  <div class="touch-none">
+    <input id="input1" type="text" style="border: 5px solid black">
+  </div>
+  <br>
+  <div class="touch-auto">
+    <input id="input2" type="text" style="border: 5px solid black">
+  </div>
+<script type="application/javascript">
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  let resolution = await getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  document.getElementById('input1').focus();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await promiseApzFlushedRepaints();
+  let prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution == prev_resolution, "focusing input1 did not change resolution " + resolution);
+
+  let transformEndPromise = promiseTransformEnd();
+  utils.zoomToFocusedInput();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await transformEndPromise;
+  await promiseApzFlushedRepaints();
+  resolution = await getResolution();
+  ok(resolution == prev_resolution, "zoomToFocusedInput input1 did not change resolution " + resolution);
+
+  document.getElementById('input2').focus();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await promiseApzFlushedRepaints();
+  resolution = await getResolution();
+  ok(resolution == prev_resolution, "focusing input2 did not change resolution " + resolution);
+
+  transformEndPromise = promiseTransformEnd();
+  utils.zoomToFocusedInput();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await transformEndPromise;
+  await promiseApzFlushedRepaints();
+  resolution = await getResolution();
+  ok(resolution != prev_resolution, "zoomToFocusedInput input2 changed resolution " + resolution);
+}
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>

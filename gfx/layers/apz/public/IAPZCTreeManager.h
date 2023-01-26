@@ -28,7 +28,7 @@ enum AllowedTouchBehavior {
   VERTICAL_PAN = 1 << 0,
   HORIZONTAL_PAN = 1 << 1,
   PINCH_ZOOM = 1 << 2,
-  DOUBLE_TAP_ZOOM = 1 << 3,
+  ANIMATING_ZOOM = 1 << 3,
   UNKNOWN = 1 << 4
 };
 

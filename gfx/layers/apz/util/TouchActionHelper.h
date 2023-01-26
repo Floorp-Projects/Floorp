@@ -37,6 +37,8 @@ class TouchActionHelper {
   static nsTArray<TouchBehaviorFlags> GetAllowedTouchBehavior(
       nsIWidget* aWidget, dom::Document* aDocument,
       const WidgetTouchEvent& aPoint);
+
+  static TouchBehaviorFlags GetAllowedTouchBehaviorForFrame(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla::layers
