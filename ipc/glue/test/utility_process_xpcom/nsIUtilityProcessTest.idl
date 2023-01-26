@@ -12,16 +12,21 @@ interface nsIUtilityProcessTest : nsISupports
    * ** Test-only Method **
    *
    * Allowing to start Utility Process from JS code.
+   *
+   * actorsToAdd: An array of actor names, taken from WebIDLUtilityActorName.
+   * Unlike normal utility processes, test processes launched this way do not
+   * have any associated actor names unless specified here.  Empty by default.
    */
   [implicit_jscontext]
-  Promise startProcess([optional] in int32_t unknownActors);
+  Promise startProcess([optional] in Array<ACString> actorsToAdd);
 
   /**
    * ** Test-only Method **
    *
    * Allowing to stop Utility Process from JS code.
+   * Default behavior is to stop any utility process.
    */
-  void stopProcess();
+  void stopProcess([optional] in string utilityActorName);
 
   /**
    * ** Test-only Method **

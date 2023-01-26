@@ -137,6 +137,14 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
     return {};
   }
 
+  Span<const UtilityActorName> GetActors(SandboxingKind aSbKind) {
+    auto proc = GetProcess(aSbKind);
+    if (!proc) {
+      return {};
+    }
+    return proc->mActors;
+  }
+
   // Shutdown the Utility process for that sandbox.
   void CleanShutdown(SandboxingKind aSandbox);
 
