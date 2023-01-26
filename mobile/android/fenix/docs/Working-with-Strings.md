@@ -7,7 +7,7 @@ if you want to remove a string that has already shipped prior to **Firefox Night
 
 To keep us safe when you want to remove strings from nightly: 
 
-1. Add these attribute to the target strings `moz:removedIn="<<ACTUAL_NIGHTLY_VERSION>>"` and `tools:ignore="UnusedResources"`.
+1. Add these attributes to the target strings `moz:removedIn="<<ACTUAL_NIGHTLY_VERSION>>"` and `tools:ignore="UnusedResources"`.
 
 ```xml   
     <string name="onboarding_close" moz:removedIn="93" tools:ignore="UnusedResources">Close</string>
@@ -24,4 +24,4 @@ You only need to remove the en-US strings within [values/strings.xml](https://se
 
 ## Future
 
-It would be nice to add some automatization to delete the strings that have the `moz:removedIn` attributes where a full cycle has happen (3 releases versions from the actual release version).
+It would be nice to add some automatization to delete the strings that have the `moz:removedIn` attributes where a full cycle has happened (3 releases versions from the actual release version).
