@@ -10958,7 +10958,7 @@
 
 - name: network.cookie.sameSite.schemeful
   type: bool
-  value: true
+  value: false
   mirror: always
 
 - name: network.cookie.thirdparty.sessionOnly
