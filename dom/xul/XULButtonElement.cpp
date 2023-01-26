@@ -749,11 +749,15 @@ XULMenuParentElement* XULButtonElement::GetMenuParent() const {
 }
 
 XULPopupElement* XULButtonElement::GetMenuPopupContent() const {
-  auto* popup = GetMenuPopupWithoutFlushing();
-  if (!popup) {
+  if (!IsMenu()) {
     return nullptr;
   }
-  return &popup->PopupElement();
+  for (auto* child = GetFirstChild(); child; child = child->GetNextSibling()) {
+    if (auto* popup = XULPopupElement::FromNode(child)) {
+      return popup;
+    }
+  }
+  return nullptr;
 }
 
 nsMenuPopupFrame* XULButtonElement::GetMenuPopupWithoutFlushing() const {
@@ -761,23 +765,11 @@ nsMenuPopupFrame* XULButtonElement::GetMenuPopupWithoutFlushing() const {
 }
 
 nsMenuPopupFrame* XULButtonElement::GetMenuPopup(FlushType aFlushType) {
-  if (!IsMenu()) {
+  RefPtr popup = GetMenuPopupContent();
+  if (!popup) {
     return nullptr;
   }
-  nsIFrame* frame = GetPrimaryFrame(aFlushType);
-  if (!frame) {
-    return nullptr;
-  }
-  for (auto* child : frame->PrincipalChildList()) {
-    if (!child->IsPlaceholderFrame()) {
-      continue;
-    }
-    auto* ph = static_cast<nsPlaceholderFrame*>(child);
-    if (nsMenuPopupFrame* popup = do_QueryFrame(ph->GetOutOfFlowFrame())) {
-      return popup;
-    }
-  }
-  return nullptr;
+  return do_QueryFrame(popup->GetPrimaryFrame(aFlushType));
 }
 
 bool XULButtonElement::OpenedWithKey() {
