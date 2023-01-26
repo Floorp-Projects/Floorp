@@ -1,0 +1,86 @@
+{
+  "author": {
+    "email": "yury@strozhevsky.com",
+    "name": "Yury Strozhevsky"
+  },
+  "description": "Public Key Infrastructure (PKI) is the basis of how identity and key management is performed on the web today. PKIjs is a pure JavaScript library implementing the formats that are used in PKI applications. It is built on WebCrypto and aspires to make it possible to build native web applications that utilize X.509 and the related formats on the web without plug-ins",
+  "contributors": [
+    {
+      "email": "rmh@unmitigatedrisk.com",
+      "name": "Ryan Hurst"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PeculiarVentures/PKI.js.git"
+  },
+  "devDependencies": {
+    "@peculiar/webcrypto": "^1.4.0",
+    "@rollup/plugin-alias": "^3.1.9",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^18.6.3",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "assert": "^2.0.0",
+    "emailjs-mime-builder": "^2.0.5",
+    "emailjs-mime-parser": "^2.0.7",
+    "eslint": "^8.21.0",
+    "eslint-plugin-deprecation": "^1.3.2",
+    "mocha": "^10.0.0",
+    "nyc": "^15.1.0",
+    "rollup": "^2.77.2",
+    "rollup-plugin-dts": "^4.2.2",
+    "rollup-plugin-typescript2": "^0.32.1",
+    "ts-node": "^10.9.1",
+    "typedoc": "^0.23.10",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "asn1js": "^3.0.5",
+    "bytestreamjs": "^2.0.0",
+    "pvtsutils": "^1.3.2",
+    "pvutils": "^1.1.3",
+    "tslib": "^2.4.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "build:examples": "rollup -c examples/rollup.config.js",
+    "build:docs": "typedoc",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint --fix . --ext .ts",
+    "coverage": "nyc npm test",
+    "test": "mocha",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ES6",
+    "ES2015",
+    "WebCrypto",
+    "Web Cryptography API",
+    "X.509",
+    "certificate",
+    "crl",
+    "cms",
+    "encrypted",
+    "enveloped",
+    "OCSP",
+    "timestamp",
+    "PKCS"
+  ],
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "module": "build/index.es.js",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "name": "pkijs",
+  "version": "3.0.11",
+  "license": "BSD-3-Clause"
+}
