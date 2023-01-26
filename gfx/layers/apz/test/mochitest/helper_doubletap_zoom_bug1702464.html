@@ -41,17 +41,6 @@ async function test() {
   // the bug. (half the aspect ratio minus 5 just to be sure)
   let elementWidth = Math.max(12, Math.floor(elementHeight * window.innerWidth / (2 * window.innerHeight)) - 5);
 
-  // These numbers carefully crafted to test the bug (ie fail without the fix).
-  if (getPlatform() == "mac") {
-    if (deviceScale >= 2) {
-      elementWidth = 50;
-      elementHeight = 135;
-    } else {
-      elementWidth = 25;
-      elementHeight = 56;
-    }
-  }
-
   info("element size " + elementWidth + " " + elementHeight);
 
   target2.style.width = elementWidth + "px";
