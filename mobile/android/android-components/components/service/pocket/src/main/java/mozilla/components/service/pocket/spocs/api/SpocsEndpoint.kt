@@ -7,6 +7,7 @@ package mozilla.components.service.pocket.spocs.api
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint.Companion.newInstance
 import mozilla.components.service.pocket.stories.api.PocketEndpoint.Companion.newInstance
 import mozilla.components.service.pocket.stories.api.PocketResponse
@@ -51,9 +52,15 @@ internal class SpocsEndpoint internal constructor(
          * @param client the HTTP client to use for network requests.
          * @param profileId Unique profile identifier which will be presented with sponsored stories.
          * @param appId Unique identifier of the application using this feature.
+         * @param sponsoredStoriesParams Configuration containing parameters used to get the spoc content.
          */
-        fun newInstance(client: Client, profileId: UUID, appId: String): SpocsEndpoint {
-            val rawEndpoint = SpocsEndpointRaw.newInstance(client, profileId, appId)
+        fun newInstance(
+            client: Client,
+            profileId: UUID,
+            appId: String,
+            sponsoredStoriesParams: PocketStoriesRequestConfig,
+        ): SpocsEndpoint {
+            val rawEndpoint = SpocsEndpointRaw.newInstance(client, profileId, appId, sponsoredStoriesParams)
             return SpocsEndpoint(rawEndpoint, SpocsJSONParser)
         }
     }

@@ -7,6 +7,7 @@ package mozilla.components.service.pocket.spocs
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
@@ -21,12 +22,14 @@ import java.util.UUID
  * @param fetchClient the HTTP client to use for network requests.
  * @param profileId Unique profile identifier used for downloading sponsored Pocket stories.
  * @param appId Unique app identifier used for downloading sponsored Pocket stories.
+ * @param sponsoredStoriesParams Configuration containing parameters used to get the spoc content.
  */
 internal class SpocsUseCases(
     private val appContext: Context,
     private val fetchClient: Client,
     private val profileId: UUID,
     private val appId: String,
+    private val sponsoredStoriesParams: PocketStoriesRequestConfig,
 ) {
     /**
      * Download and persist an updated list of sponsored stories.
@@ -61,6 +64,7 @@ internal class SpocsUseCases(
      * @param fetchClient the HTTP client to use for network requests.
      * @param profileId Unique profile identifier when using this feature.
      * @param appId Unique identifier of the application using this feature.
+     * @param sponsoredStoriesParams Configuration containing parameters used to get the spoc content.
      */
     internal inner class RefreshSponsoredStories(
         @get:VisibleForTesting
@@ -71,12 +75,14 @@ internal class SpocsUseCases(
         internal val profileId: UUID = this@SpocsUseCases.profileId,
         @get:VisibleForTesting
         internal val appId: String = this@SpocsUseCases.appId,
+        @get:VisibleForTesting
+        internal val sponsoredStoriesParams: PocketStoriesRequestConfig = this@SpocsUseCases.sponsoredStoriesParams,
     ) {
         /**
          * Do a full download from Pocket -> persist locally cycle for sponsored stories.
          */
         suspend operator fun invoke(): Boolean {
-            val provider = getSpocsProvider(fetchClient, profileId, appId)
+            val provider = getSpocsProvider(fetchClient, profileId, appId, sponsoredStoriesParams)
             val response = provider.getSponsoredStories()
 
             if (response is Success) {
@@ -132,6 +138,7 @@ internal class SpocsUseCases(
      * @param fetchClient the HTTP client to use for network requests.
      * @param profileId Unique profile identifier previously used for downloading sponsored Pocket stories.
      * @param appId Unique app identifier previously used for downloading sponsored Pocket stories.
+     * @param sponsoredStoriesParams Configuration containing parameters used to get the spoc content.
      */
     internal inner class DeleteProfile(
         @get:VisibleForTesting
@@ -142,12 +149,14 @@ internal class SpocsUseCases(
         internal val profileId: UUID = this@SpocsUseCases.profileId,
         @get:VisibleForTesting
         internal val appId: String = this@SpocsUseCases.appId,
+        @get:VisibleForTesting
+        internal val sponsoredStoriesParams: PocketStoriesRequestConfig = this@SpocsUseCases.sponsoredStoriesParams,
     ) {
         /**
          * Delete all stored user data used for downloading personalized sponsored stories.
          */
         suspend operator fun invoke(): Boolean {
-            val provider = getSpocsProvider(fetchClient, profileId, appId)
+            val provider = getSpocsProvider(fetchClient, profileId, appId, sponsoredStoriesParams)
             return when (provider.deleteProfile()) {
                 is Success -> {
                     getSpocsRepository(context).deleteAllSpocs()
@@ -167,6 +176,11 @@ internal class SpocsUseCases(
     internal fun getSpocsRepository(context: Context) = SpocsRepository(context)
 
     @VisibleForTesting
-    internal fun getSpocsProvider(client: Client, profileId: UUID, appId: String) =
-        SpocsEndpoint.newInstance(client, profileId, appId)
+    internal fun getSpocsProvider(
+        client: Client,
+        profileId: UUID,
+        appId: String,
+        sponsoredStoriesParams: PocketStoriesRequestConfig,
+    ) =
+        SpocsEndpoint.newInstance(client, profileId, appId, sponsoredStoriesParams)
 }

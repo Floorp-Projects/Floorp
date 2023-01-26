@@ -46,6 +46,7 @@ class PocketStoriesService(
             fetchClient = pocketStoriesConfig.client,
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId,
+            sponsoredStoriesParams = pocketStoriesConfig.sponsoredStoriesParams,
         )
     }
 
@@ -118,6 +119,13 @@ class PocketStoriesService(
      */
     fun stopPeriodicSponsoredStoriesRefresh() {
         spocsRefreshscheduler.stopPeriodicRefreshes(context)
+    }
+
+    /**
+     * Fetch sponsored Pocket stories and refresh the locally persisted list.
+     */
+    suspend fun refreshSponsoredStories() {
+        spocsUseCases?.refreshStories?.invoke()
     }
 
     /**

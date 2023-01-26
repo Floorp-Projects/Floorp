@@ -128,6 +128,16 @@ class PocketStoriesServiceTest {
     }
 
     @Test
+    fun `WHEN called to refresh locally saved sponsored stories THEN refresh usecase is invoked`() = runTest {
+        val refreshStories: SpocsUseCases.RefreshSponsoredStories = mock()
+        doReturn(refreshStories).`when`(spocsUseCases).refreshStories
+
+        service.refreshSponsoredStories()
+
+        verify(refreshStories).invoke()
+    }
+
+    @Test
     fun `GIVEN PocketStoriesService WHEN getStories THEN stories useCases should return`() = runTest {
         val stories = listOf(mock<PocketRecommendedStory>())
         val getStoriesUseCase: GetPocketStories = mock()

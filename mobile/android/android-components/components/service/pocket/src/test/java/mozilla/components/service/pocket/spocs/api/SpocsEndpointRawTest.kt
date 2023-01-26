@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertRequestParams
@@ -17,6 +18,7 @@ import mozilla.components.service.pocket.stories.api.PocketEndpointRaw
 import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,6 +38,7 @@ import kotlin.reflect.KVisibility
 class SpocsEndpointRawTest {
     private val profileId = UUID.randomUUID()
     private val appId = "test"
+    private val sponsoredStoriesParams: PocketStoriesRequestConfig = mock()
 
     private lateinit var endpoint: SpocsEndpointRaw
     private lateinit var client: Client
@@ -54,7 +57,9 @@ class SpocsEndpointRawTest {
             doReturn(defaultResponse).`when`(it).fetch(any())
         }
 
-        endpoint = SpocsEndpointRaw(client, profileId, appId)
+        whenever(sponsoredStoriesParams.siteId).thenReturn("")
+
+        endpoint = SpocsEndpointRaw(client, profileId, appId, sponsoredStoriesParams)
     }
 
     @Test
@@ -93,9 +98,71 @@ class SpocsEndpointRawTest {
     }
 
     @Test
+    fun `GIVEN a debug build AND a request configuration WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = true
+        val expectedUrl = "https://spocs.getpocket.dev/spocs?site=123"
+        whenever(sponsoredStoriesParams.siteId).thenReturn("123")
+
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.getSponsoredStories()
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.POST, request.method)
+
+                val requestBody = JSONObject(
+                    request.body!!.useStream {
+                        it.bufferedReader().readText()
+                    },
+                )
+                assertEquals(2, requestBody["version"])
+                assertEquals(appId, requestBody["consumer_key"])
+                assertEquals(profileId.toString(), requestBody["pocket_id"])
+
+                request.headers!!.first {
+                    it.name.equals("Content-Type", true)
+                }.value.contains("application/json", true)
+            },
+        )
+    }
+
+    @Test
     fun `GIVEN a release build WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
         SpocsEndpointRaw.isDebugBuild = false
         val expectedUrl = "https://spocs.getpocket.com/spocs"
+
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.getSponsoredStories()
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.POST, request.method)
+
+                val requestBody = JSONObject(
+                    request.body!!.useStream {
+                        it.bufferedReader().readText()
+                    },
+                )
+                assertEquals(2, requestBody["version"])
+                assertEquals(appId, requestBody["consumer_key"])
+                assertEquals(profileId.toString(), requestBody["pocket_id"])
+
+                request.headers!!.first {
+                    it.name.equals("Content-Type", true)
+                }.value.contains("application/json", true)
+            },
+        )
+    }
+
+    @Test
+    fun `GIVEN a release build AND a request configuration WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = false
+        val expectedUrl = "https://spocs.getpocket.com/spocs?site=123"
+        whenever(sponsoredStoriesParams.siteId).thenReturn("123")
 
         assertRequestParams(
             client,

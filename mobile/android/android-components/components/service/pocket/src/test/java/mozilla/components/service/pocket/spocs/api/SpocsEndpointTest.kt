@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertResponseIsFailure
@@ -148,11 +149,13 @@ class SpocsEndpointTest {
     fun `WHEN newInstance is called THEN a new SpocsEndpoint is returned as a wrapper over a configured SpocsEndpointRaw`() {
         val profileId = UUID.randomUUID()
         val appId = "test"
+        val sponsoredStoriesParams = PocketStoriesRequestConfig("123")
 
-        val result = SpocsEndpoint.Companion.newInstance(client, profileId, appId)
+        val result = SpocsEndpoint.Companion.newInstance(client, profileId, appId, sponsoredStoriesParams)
 
         assertSame(client, result.rawEndpoint.client)
         assertSame(profileId, result.rawEndpoint.profileId)
         assertSame(appId, result.rawEndpoint.appId)
+        assertSame(sponsoredStoriesParams, result.rawEndpoint.sponsoredStoriesParams)
     }
 }

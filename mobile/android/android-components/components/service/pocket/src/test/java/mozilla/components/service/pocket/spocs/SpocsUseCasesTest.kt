@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
@@ -41,13 +42,14 @@ class SpocsUseCasesTest {
     private val fetchClient: Client = mock()
     private val profileId = UUID.randomUUID()
     private val appId = "test"
-    private val useCases = spy(SpocsUseCases(testContext, fetchClient, profileId, appId))
+    private val sponsoredStoriesParams = PocketStoriesRequestConfig("123")
+    private val useCases = spy(SpocsUseCases(testContext, fetchClient, profileId, appId, sponsoredStoriesParams))
     private val spocsProvider: SpocsEndpoint = mock()
     private val spocsRepo: SpocsRepository = mock()
 
     @Before
     fun setup() {
-        doReturn(spocsProvider).`when`(useCases).getSpocsProvider(any(), any(), any())
+        doReturn(spocsProvider).`when`(useCases).getSpocsProvider(any(), any(), any(), any())
         doReturn(spocsRepo).`when`(useCases).getSpocsRepository(any())
     }
 
@@ -79,6 +81,7 @@ class SpocsUseCasesTest {
         assertSame(fetchClient, refreshUseCase.fetchClient)
         assertSame(profileId, refreshUseCase.profileId)
         assertSame(appId, refreshUseCase.appId)
+        assertSame(sponsoredStoriesParams, refreshUseCase.sponsoredStoriesParams)
     }
 
     @Test
@@ -89,6 +92,7 @@ class SpocsUseCasesTest {
         assertSame(fetchClient, refreshUseCase.fetchClient)
         assertSame(profileId, refreshUseCase.profileId)
         assertSame(appId, refreshUseCase.appId)
+        assertSame(sponsoredStoriesParams, refreshUseCase.sponsoredStoriesParams)
     }
 
     @Test
@@ -97,13 +101,15 @@ class SpocsUseCasesTest {
         val fetchClient2: Client = mock()
         val profileId2 = UUID.randomUUID()
         val appId2 = "test"
+        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1")
 
-        val refreshUseCase = useCases.RefreshSponsoredStories(context2, fetchClient2, profileId2, appId2)
+        val refreshUseCase = useCases.RefreshSponsoredStories(context2, fetchClient2, profileId2, appId2, sponsoredStoriesParams2)
 
         assertSame(context2, refreshUseCase.appContext)
         assertSame(fetchClient2, refreshUseCase.fetchClient)
         assertSame(profileId2, refreshUseCase.profileId)
         assertSame(appId2, refreshUseCase.appId)
+        assertSame(sponsoredStoriesParams2, refreshUseCase.sponsoredStoriesParams)
     }
 
     @Test
@@ -224,6 +230,7 @@ class SpocsUseCasesTest {
         assertSame(fetchClient, deleteProfileUseCase.fetchClient)
         assertSame(profileId, deleteProfileUseCase.profileId)
         assertSame(appId, deleteProfileUseCase.appId)
+        assertSame(sponsoredStoriesParams, deleteProfileUseCase.sponsoredStoriesParams)
     }
 
     @Test
@@ -234,6 +241,7 @@ class SpocsUseCasesTest {
         assertSame(fetchClient, deleteProfileUseCase.fetchClient)
         assertSame(profileId, deleteProfileUseCase.profileId)
         assertSame(appId, deleteProfileUseCase.appId)
+        assertSame(sponsoredStoriesParams, deleteProfileUseCase.sponsoredStoriesParams)
     }
 
     @Test
@@ -242,13 +250,15 @@ class SpocsUseCasesTest {
         val fetchClient2: Client = mock()
         val profileId2 = UUID.randomUUID()
         val appId2 = "test"
+        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1")
 
-        val deleteProfileUseCase = useCases.DeleteProfile(context2, fetchClient2, profileId2, appId2)
+        val deleteProfileUseCase = useCases.DeleteProfile(context2, fetchClient2, profileId2, appId2, sponsoredStoriesParams2)
 
         assertSame(context2, deleteProfileUseCase.context)
         assertSame(fetchClient2, deleteProfileUseCase.fetchClient)
         assertSame(profileId2, deleteProfileUseCase.profileId)
         assertSame(appId2, deleteProfileUseCase.appId)
+        assertSame(sponsoredStoriesParams2, deleteProfileUseCase.sponsoredStoriesParams)
     }
 
     @Test

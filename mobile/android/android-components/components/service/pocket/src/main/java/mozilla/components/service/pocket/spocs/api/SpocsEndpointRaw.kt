@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket.spocs.api
 
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
@@ -14,6 +15,7 @@ import mozilla.components.concept.fetch.Request.Method
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.service.pocket.BuildConfig
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.spocs.api.SpocsEndpointRaw.Companion.newInstance
@@ -30,6 +32,7 @@ private const val SPOCS_PROXY_VERSION_KEY = "version"
 private const val SPOCS_PROXY_VERSION_VALUE = 2
 private const val SPOCS_PROXY_PROFILE_KEY = "pocket_id"
 private const val SPOCS_PROXY_APP_KEY = "consumer_key"
+private const val SPOCS_PROXY_SITE_KEY = "site"
 
 /**
  * Makes requests to the Pocket endpoint and returns the raw JSON data.
@@ -41,6 +44,7 @@ internal class SpocsEndpointRaw internal constructor(
     @get:VisibleForTesting internal val client: Client,
     @get:VisibleForTesting internal val profileId: UUID,
     @get:VisibleForTesting internal val appId: String,
+    @get:VisibleForTesting internal val sponsoredStoriesParams: PocketStoriesRequestConfig,
 ) {
     /**
      * Gets the current sponsored stories recommendations from the Pocket server.
@@ -49,8 +53,15 @@ internal class SpocsEndpointRaw internal constructor(
      */
     @WorkerThread
     fun getSponsoredStories(): String? {
+        val url = Uri.Builder()
+            .encodedPath(baseUrl + SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH)
+        if (sponsoredStoriesParams.siteId.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_SITE_KEY, sponsoredStoriesParams.siteId)
+        }
+        url.build()
+
         val request = Request(
-            url = baseUrl + SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH,
+            url = url.toString(),
             method = Method.POST,
             headers = getRequestHeaders(),
             body = getDownloadStoriesRequestBody(),
@@ -65,8 +76,15 @@ internal class SpocsEndpointRaw internal constructor(
      */
     @WorkerThread
     fun deleteProfile(): Boolean {
+        val url = Uri.Builder()
+            .encodedPath(baseUrl + SPOCS_ENDPOINT_DELETE_PROFILE_PATH)
+        if (sponsoredStoriesParams.siteId.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_SITE_KEY, sponsoredStoriesParams.siteId)
+        }
+        url.build()
+
         val request = Request(
-            url = baseUrl + SPOCS_ENDPOINT_DELETE_PROFILE_PATH,
+            url = url.toString(),
             method = Method.DELETE,
             headers = getRequestHeaders(),
             body = getDeleteProfileRequestBody(),
@@ -112,9 +130,15 @@ internal class SpocsEndpointRaw internal constructor(
          * @param client HTTP client to use for network requests.
          * @param profileId Unique profile identifier which will be presented with sponsored stories.
          * @param appId Unique identifier of the application using this feature.
+         * @param sponsoredStoriesParams Configuration containing parameters used to get the spoc content.
          */
-        fun newInstance(client: Client, profileId: UUID, appId: String): SpocsEndpointRaw {
-            return SpocsEndpointRaw(client, profileId, appId)
+        fun newInstance(
+            client: Client,
+            profileId: UUID,
+            appId: String,
+            sponsoredStoriesParams: PocketStoriesRequestConfig,
+        ): SpocsEndpointRaw {
+            return SpocsEndpointRaw(client, profileId, appId, sponsoredStoriesParams)
         }
 
         /**
