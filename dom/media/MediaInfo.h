@@ -70,6 +70,17 @@ struct AacCodecSpecificData {
            *mDecoderConfigDescriptorBinaryBlob ==
                *rhs.mDecoderConfigDescriptorBinaryBlob;
   }
+  // An explanation for the necessity of handling the encoder delay and the
+  // padding is available here:
+  // https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
+
+  // The number of frames that should be skipped from the beginning of the
+  // decoded stream.
+  uint32_t mEncoderDelayFrames{0};
+
+  // The total number of frames of the media, that is, excluding the encoder
+  // delay and the padding of the last packet, that must be discarded.
+  uint64_t mMediaFrameCount{0};
 
   // The bytes of the ES_Descriptor field parsed out of esds box. We store
   // this as a blob as some decoders want this.

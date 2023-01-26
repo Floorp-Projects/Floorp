@@ -17,6 +17,7 @@
 
 namespace mozilla {
 
+class IndiceWrapper;
 class MP4Demuxer;
 
 struct PsshInfo {
@@ -53,8 +54,9 @@ class MP4AudioInfo : public mozilla::AudioInfo {
  public:
   MP4AudioInfo() = default;
 
-  MediaResult Update(const Mp4parseTrackInfo* track,
-                     const Mp4parseTrackAudioInfo* audio);
+  MediaResult Update(const Mp4parseTrackInfo* aTrack,
+                     const Mp4parseTrackAudioInfo* aAudio,
+                     const IndiceWrapper* aIndices);
 
   virtual bool IsValid() const override;
 };

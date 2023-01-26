@@ -10,10 +10,14 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "VideoUtils.h"
+#include "MP4Metadata.h"
+#include "mozilla/Logging.h"
 
 // OpusDecoder header is really needed only by MP4 in rust
 #include "OpusDecoder.h"
 #include "mp4parse.h"
+
+#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 using mozilla::media::TimeUnit;
 
@@ -132,16 +136,17 @@ static MediaResult VerifyAudioOrVideoInfoAndRecordTelemetry(
   return NS_OK;
 }
 
-MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
-                                 const Mp4parseTrackAudioInfo* audio) {
-  auto rv = VerifyAudioOrVideoInfoAndRecordTelemetry(audio);
+MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
+                                 const Mp4parseTrackAudioInfo* aAudio,
+                                 const IndiceWrapper* aIndices) {
+  auto rv = VerifyAudioOrVideoInfoAndRecordTelemetry(aAudio);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Mp4parseCodec codecType = audio->sample_info[0].codec_type;
-  for (uint32_t i = 0; i < audio->sample_info_count; i++) {
-    if (audio->sample_info[i].protected_data.is_encrypted) {
-      auto rv =
-          UpdateTrackProtectedInfo(*this, audio->sample_info[i].protected_data);
+  Mp4parseCodec codecType = aAudio->sample_info[0].codec_type;
+  for (uint32_t i = 0; i < aAudio->sample_info_count; i++) {
+    if (aAudio->sample_info[i].protected_data.is_encrypted) {
+      auto rv = UpdateTrackProtectedInfo(*this,
+                                         aAudio->sample_info[i].protected_data);
       NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
@@ -152,8 +157,8 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   // ever not hold. E.g. if we need to handle different codecs in a single
   // track, or if we have different numbers or channels in a single track.
   Mp4parseByteData mp4ParseSampleCodecSpecific =
-      audio->sample_info[0].codec_specific_config;
-  Mp4parseByteData extraData = audio->sample_info[0].extra_data;
+      aAudio->sample_info[0].codec_specific_config;
+  Mp4parseByteData extraData = aAudio->sample_info[0].extra_data;
   MOZ_ASSERT(mCodecSpecificConfig.is<NoCodecSpecificData>(),
              "Should have no codec specific data yet");
   if (codecType == MP4PARSE_CODEC_OPUS) {
@@ -178,7 +183,42 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
         AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
   } else if (codecType == MP4PARSE_CODEC_AAC) {
     mMimeType = "audio/mp4a-latm"_ns;
+    int64_t codecDelayUS = aTrack->media_time;
+    double USECS_PER_S = 1e6;
+    // We can't use mozilla::UsecsToFrames here because we need to round, and it
+    // floors.
+    uint32_t encoderDelayFrameCount = 0;
+    if (codecDelayUS > 0) {
+      encoderDelayFrameCount = static_cast<uint32_t>(
+          std::lround(static_cast<double>(codecDelayUS) *
+                      aAudio->sample_info->sample_rate / USECS_PER_S));
+      LOG("AAC stream in MP4 container, %" PRIu32 " frames of encoder delay.",
+          encoderDelayFrameCount);
+    }
+
+    // Pass the padding number, in frames, to the AAC decoder as well.
+    Index::Indice indice = {0};
+    bool rv = aIndices->GetIndice(aIndices->Length() - 1, indice);
+    uint64_t mediaFrameCount = 0;
+    if (rv) {
+      // The `end_composition` member of the very last index member is the
+      // duration of the media in microseconds, excluding decoder delay and
+      // padding. Convert to frames and give to the decoder so that trimming can
+      // be done properly.
+      mediaFrameCount = static_cast<uint64_t>(indice.end_composition) *
+                        aAudio->sample_info->sample_rate / USECS_PER_S;
+      LOG("AAC stream in MP4 container, total media duration is %" PRIu64
+          " frames",
+          mediaFrameCount);
+    } else {
+      LOG("AAC stream in MP4 container, couldn't determine total media time");
+    }
+
     AacCodecSpecificData aacCodecSpecificData{};
+
+    aacCodecSpecificData.mEncoderDelayFrames = encoderDelayFrameCount;
+    aacCodecSpecificData.mMediaFrameCount = mediaFrameCount;
+
     // codec specific data is used to store the DecoderConfigDescriptor.
     aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob->AppendElements(
         mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
@@ -205,17 +245,17 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
     mCodecSpecificConfig = AudioCodecSpecificVariant{Mp3CodecSpecificData{}};
   }
 
-  mRate = audio->sample_info[0].sample_rate;
-  mChannels = audio->sample_info[0].channels;
-  mBitDepth = audio->sample_info[0].bit_depth;
-  mExtendedProfile = audio->sample_info[0].extended_profile;
-  mDuration = TimeUnit::FromMicroseconds(track->duration);
-  mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
-  mTrackId = track->track_id;
+  mRate = aAudio->sample_info[0].sample_rate;
+  mChannels = aAudio->sample_info[0].channels;
+  mBitDepth = aAudio->sample_info[0].bit_depth;
+  mExtendedProfile = aAudio->sample_info[0].extended_profile;
+  mDuration = TimeUnit::FromMicroseconds(aTrack->duration);
+  mMediaTime = TimeUnit::FromMicroseconds(aTrack->media_time);
+  mTrackId = aTrack->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
-  if (audio->sample_info[0].profile <= 4) {
-    mProfile = audio->sample_info[0].profile;
+  if (aAudio->sample_info[0].profile <= 4) {
+    mProfile = aAudio->sample_info[0].profile;
   }
 
   if (mCodecSpecificConfig.is<NoCodecSpecificData>()) {
@@ -289,3 +329,5 @@ bool MP4VideoInfo::IsValid() const {
 }
 
 }  // namespace mozilla
+
+#undef LOG
