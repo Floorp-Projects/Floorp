@@ -12,8 +12,8 @@
  */
 
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use api::units::{DeviceIntRect, DeviceIntSize, LayoutRect};
-use api::{ColorF, PremultipliedColorF};
+use api::units::{DeviceIntRect, DeviceIntSize, LayoutRect, PictureRect};
+use api::{PremultipliedColorF};
 use crate::device::Texel;
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 
@@ -63,14 +63,14 @@ impl Into<GpuBufferBlock> for LayoutRect {
     }
 }
 
-impl Into<GpuBufferBlock> for ColorF {
+impl Into<GpuBufferBlock> for PictureRect {
     fn into(self) -> GpuBufferBlock {
         GpuBufferBlock {
             data: [
-                self.r,
-                self.g,
-                self.b,
-                self.a,
+                self.min.x,
+                self.min.y,
+                self.max.x,
+                self.max.y,
             ],
         }
     }
@@ -98,6 +98,14 @@ impl Into<GpuBufferBlock> for DeviceIntRect {
                 self.max.x as f32,
                 self.max.y as f32,
             ],
+        }
+    }
+}
+
+impl Into<GpuBufferBlock> for [f32; 4] {
+    fn into(self) -> GpuBufferBlock {
+        GpuBufferBlock {
+            data: self,
         }
     }
 }

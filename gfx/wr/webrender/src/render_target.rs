@@ -64,6 +64,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub globals: &'a FrameGlobalResources,
     pub tile_caches: &'a FastHashMap<SliceId, Box<TileCacheInstance>>,
     pub root_spatial_node_index: SpatialNodeIndex,
+    pub uses_native_antialiasing: bool,
 }
 
 /// Represents a number of rendering operations on a surface.

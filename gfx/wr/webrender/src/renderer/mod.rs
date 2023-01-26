@@ -214,6 +214,10 @@ const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag {
     label: "TextRun",
     color: debug_colors::BLUE,
 };
+const GPU_TAG_PRIMITIVE: GpuProfileTag = GpuProfileTag {
+    label: "Primitive",
+    color: debug_colors::RED,
+};
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag {
     label: "Blur",
     color: debug_colors::VIOLET,
@@ -272,6 +276,7 @@ impl BatchKind {
                 }
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
+            BatchKind::Primitive => GPU_TAG_PRIMITIVE,
         }
     }
 }

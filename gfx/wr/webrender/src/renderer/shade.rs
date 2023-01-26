@@ -626,6 +626,7 @@ pub struct Shaders {
     pub ps_text_run_dual_source: Option<TextShader>,
 
     ps_split_composite: LazilyCompiledShader,
+    pub ps_quad: LazilyCompiledShader,
     pub ps_clear: LazilyCompiledShader,
     pub ps_copy: LazilyCompiledShader,
 
@@ -859,6 +860,16 @@ impl Shaders {
         } else {
             None
         };
+
+        let ps_quad = LazilyCompiledShader::new(
+            ShaderKind::Primitive,
+            "ps_quad",
+            &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+            profile,
+        )?;
 
         let ps_split_composite = LazilyCompiledShader::new(
             ShaderKind::Primitive,
@@ -1094,6 +1105,7 @@ impl Shaders {
             cs_clip_image,
             ps_text_run,
             ps_text_run_dual_source,
+            ps_quad,
             ps_split_composite,
             ps_clear,
             ps_copy,
@@ -1132,6 +1144,9 @@ impl Shaders {
         device: &Device,
     ) -> &mut LazilyCompiledShader {
         match key.kind {
+            BatchKind::Primitive => {
+                &mut self.ps_quad
+            }
             BatchKind::SplitComposite => {
                 &mut self.ps_split_composite
             }
@@ -1259,6 +1274,7 @@ impl Shaders {
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
+        self.ps_quad.deinit(device);
         self.ps_clear.deinit(device);
         self.ps_copy.deinit(device);
         self.composite.deinit(device);

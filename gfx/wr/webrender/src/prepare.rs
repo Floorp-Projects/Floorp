@@ -7,12 +7,12 @@
 //! TODO: document this!
 
 use std::cmp;
-use api::{PremultipliedColorF, PropertyBinding};
+use api::{ColorF, PremultipliedColorF, PropertyBinding};
 use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
 use euclid::Scale;
 use smallvec::SmallVec;
-use crate::command_buffer::PrimitiveCommand;
+use crate::command_buffer::{PrimitiveCommand, QuadFlags};
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};
@@ -32,7 +32,7 @@ use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask};
-use crate::segment::SegmentBuilder;
+use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
 use crate::util::{clamp_to_scale_factor, pack_as_float};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
@@ -67,13 +67,12 @@ pub fn prepare_primitives(
 
         for prim_instance_index in cluster.prim_range() {
             if frame_state.surface_builder.is_prim_visible_and_in_dirty_region(&prim_instances[prim_instance_index].vis) {
-
                 let plane_split_anchor = PlaneSplitAnchor::new(
                     cluster.spatial_node_index,
                     PrimitiveInstanceIndex(prim_instance_index as u32),
                 );
 
-                if let Some(ref prim_cmd) = prepare_prim_for_render(
+                prepare_prim_for_render(
                     store,
                     prim_instance_index,
                     cluster,
@@ -86,13 +85,17 @@ pub fn prepare_primitives(
                     scratch,
                     tile_caches,
                     prim_instances,
-                ) {
-                    frame_state.surface_builder.push_prim(
-                        prim_cmd,
-                        cluster.spatial_node_index,
-                        &prim_instances[prim_instance_index].vis,
-                        frame_state.cmd_buffers,
-                    );
+                );
+
+                if !scratch.prim_cmds.is_empty() {
+                    for prim_cmd in scratch.prim_cmds.drain(..) {
+                        frame_state.surface_builder.push_prim(
+                            &prim_cmd,
+                            cluster.spatial_node_index,
+                            &prim_instances[prim_instance_index].vis,
+                            frame_state.cmd_buffers,
+                        );
+                    }
 
                     frame_state.num_visible_primitives += 1;
                     continue;
@@ -120,8 +123,9 @@ fn prepare_prim_for_render(
     scratch: &mut PrimitiveScratchBuffer,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     prim_instances: &mut Vec<PrimitiveInstance>,
-) -> Option<PrimitiveCommand> {
+) {
     profile_scope!("prepare_prim_for_render");
+    debug_assert!(scratch.prim_cmds.is_empty());
 
     // If we have dependencies, we need to prepare them first, in order
     // to know the actual rect of this primitive.
@@ -171,7 +175,7 @@ fn prepare_prim_for_render(
                     );
             }
             None => {
-                return None;
+                return;
             }
         }
     }
@@ -179,30 +183,61 @@ fn prepare_prim_for_render(
     let prim_instance = &mut prim_instances[prim_instance_index];
 
     if !is_passthrough {
-        let prim_rect = data_stores.get_local_prim_rect(
-            prim_instance,
-            &store.pictures,
-            frame_state.surfaces,
-        );
 
-        if !update_clip_task(
-            prim_instance,
-            &prim_rect.min,
-            cluster.spatial_node_index,
-            pic_context.raster_spatial_node_index,
-            pic_context,
-            pic_state,
-            frame_context,
-            frame_state,
-            store,
-            data_stores,
-            scratch,
-        ) {
-            return None;
+        // In this initial patch, we only support non-masked primitives through the new
+        // quad rendering path. Follow up patches will extend this to support masks, and
+        // then use by other primitives. In the new quad rendering path, we'll still want
+        // to skip the entry point to `update_clip_task` as that does old-style segmenting
+        // and mask generation.
+        let should_update_clip_task = match prim_instance.kind {
+            PrimitiveInstanceKind::Rectangle { ref mut use_legacy_path, .. } => {
+
+                // In this first patch, ensure that we never take the legacy path so
+                // that we can land the bulk of the patch without risking back outs.
+                // The second part of the patch enables the new path and also updates
+                // the test expectations.
+                *use_legacy_path = true;
+                true
+
+                /*
+                if prim_instance.vis.clip_chain.needs_mask {
+                    *use_legacy_path = true;
+                } else {
+                    *use_legacy_path = false;
+                }
+
+                *use_legacy_path
+                */
+            }
+            _ => true,
+        };
+
+        if should_update_clip_task {
+            let prim_rect = data_stores.get_local_prim_rect(
+                prim_instance,
+                &store.pictures,
+                frame_state.surfaces,
+            );
+
+            if !update_clip_task(
+                prim_instance,
+                &prim_rect.min,
+                cluster.spatial_node_index,
+                pic_context.raster_spatial_node_index,
+                pic_context,
+                pic_state,
+                frame_context,
+                frame_state,
+                store,
+                data_stores,
+                scratch,
+            ) {
+                return;
+            }
         }
     }
 
-    Some(prepare_interned_prim_for_render(
+    prepare_interned_prim_for_render(
         store,
         PrimitiveInstanceIndex(prim_instance_index as u32),
         prim_instance,
@@ -213,7 +248,7 @@ fn prepare_prim_for_render(
         frame_state,
         data_stores,
         scratch,
-    ))
+    )
 }
 
 /// Prepare an interned primitive for rendering, by requesting
@@ -230,10 +265,9 @@ fn prepare_interned_prim_for_render(
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-) -> PrimitiveCommand {
+) {
     let prim_spatial_node_index = cluster.spatial_node_index;
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
-    let mut prim_cmd = None;
 
     match &mut prim_instance.kind {
         PrimitiveInstanceKind::LineDecoration { data_handle, ref mut render_task, .. } => {
@@ -493,51 +527,117 @@ fn prepare_interned_prim_for_render(
                 frame_state
             );
         }
-        PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, color_binding_index, .. } => {
+        PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, color_binding_index, use_legacy_path, .. } => {
             profile_scope!("Rectangle");
             let prim_data = &mut data_stores.prim[*data_handle];
             prim_data.common.may_need_repetition = false;
 
-            if *color_binding_index != ColorBindingIndex::INVALID {
-                match store.color_bindings[*color_binding_index] {
-                    PropertyBinding::Binding(..) => {
-                        // We explicitly invalidate the gpu cache
-                        // if the color is animating.
-                        let gpu_cache_handle =
-                            if *segment_instance_index == SegmentInstanceIndex::INVALID {
-                                None
-                            } else if *segment_instance_index == SegmentInstanceIndex::UNUSED {
-                                Some(&prim_data.common.gpu_cache_handle)
-                            } else {
-                                Some(&scratch.segment_instances[*segment_instance_index].gpu_cache_handle)
-                            };
-                        if let Some(gpu_cache_handle) = gpu_cache_handle {
-                            frame_state.gpu_cache.invalidate(gpu_cache_handle);
+            if *use_legacy_path {
+                // TODO(gw): Legacy rect rendering path - remove once we support masks on quad prims
+                if *color_binding_index != ColorBindingIndex::INVALID {
+                    match store.color_bindings[*color_binding_index] {
+                        PropertyBinding::Binding(..) => {
+                            // We explicitly invalidate the gpu cache
+                            // if the color is animating.
+                            let gpu_cache_handle =
+                                if *segment_instance_index == SegmentInstanceIndex::INVALID {
+                                    None
+                                } else if *segment_instance_index == SegmentInstanceIndex::UNUSED {
+                                    Some(&prim_data.common.gpu_cache_handle)
+                                } else {
+                                    Some(&scratch.segment_instances[*segment_instance_index].gpu_cache_handle)
+                                };
+                            if let Some(gpu_cache_handle) = gpu_cache_handle {
+                                frame_state.gpu_cache.invalidate(gpu_cache_handle);
+                            }
                         }
+                        PropertyBinding::Value(..) => {},
                     }
-                    PropertyBinding::Value(..) => {},
                 }
+
+                // Update the template this instane references, which may refresh the GPU
+                // cache with any shared template data.
+                prim_data.update(
+                    frame_state,
+                    frame_context.scene_properties,
+                );
+
+                write_segment(
+                    *segment_instance_index,
+                    frame_state,
+                    &mut scratch.segments,
+                    &mut scratch.segment_instances,
+                    |request| {
+                        prim_data.kind.write_prim_gpu_blocks(
+                            request,
+                            frame_context.scene_properties,
+                        );
+                    }
+                );
+            } else {
+                let (color, is_opaque) = match prim_data.kind {
+                    PrimitiveTemplateKind::Clear => {
+                        // Opaque black with operator dest out
+                        (ColorF::BLACK, false)
+                    }
+                    PrimitiveTemplateKind::Rectangle { ref color, .. } => {
+                        let color = frame_context.scene_properties.resolve_color(color);
+
+                        (color, color.a >= 1.0)
+                    }
+                };
+
+                let color = color.premultiplied();
+
+                let map_prim_to_surface = frame_context.spatial_tree.get_relative_transform(
+                    prim_spatial_node_index,
+                    pic_context.raster_spatial_node_index,
+                );
+                let prim_is_2d_axis_aligned = map_prim_to_surface.is_2d_axis_aligned();
+
+                let mut quad_flags = QuadFlags::empty();
+                if is_opaque {
+                    quad_flags |= QuadFlags::IS_OPAQUE;
+                }
+
+                // TODO(gw): For now, we don't select per-edge AA at all if the primitive
+                //           has a 2d transform, which matches existing behavior. However,
+                //           as a follow up, we can now easily check if we have a 2d-aligned
+                //           primitive on a subpixel boundary, and enable AA along those edge(s).
+                let aa_flags = if prim_is_2d_axis_aligned {
+                    EdgeAaSegmentMask::empty()
+                } else {
+                    EdgeAaSegmentMask::all()
+                };
+
+                // TODO(gw): Perhaps rather than writing untyped data here (we at least do validate
+                //           the written block count) to gpu-buffer, we could add a trait for
+                //           writing typed data?
+                let mut writer = frame_state.frame_gpu_data.write_blocks(4);
+                writer.push_one(prim_data.common.prim_rect);
+                writer.push_one(prim_instance.vis.clip_chain.local_clip_rect);
+                // TODO(gw): For now, we always write an empty UV rect here. In future, we'll
+                //           make use of this for drawing quads that have a pre-applied clip mask
+                writer.push_one([0.0; 4]);
+                writer.push_one(color);
+                let prim_address = writer.finish();
+
+                let transform_id = frame_state.transforms.get_id(
+                    prim_spatial_node_index,
+                    pic_context.raster_spatial_node_index,
+                    frame_context.spatial_tree,
+                );
+
+                scratch.prim_cmds.push(
+                    PrimitiveCommand::quad(
+                        prim_instance_index,
+                        prim_address,
+                        transform_id,
+                        quad_flags,
+                        aa_flags,
+                    )
+                );
             }
-
-            // Update the template this instane references, which may refresh the GPU
-            // cache with any shared template data.
-            prim_data.update(
-                frame_state,
-                frame_context.scene_properties,
-            );
-
-            write_segment(
-                *segment_instance_index,
-                frame_state,
-                &mut scratch.segments,
-                &mut scratch.segment_instances,
-                |request| {
-                    prim_data.kind.write_prim_gpu_blocks(
-                        request,
-                        frame_context.scene_properties,
-                    );
-                }
-            );
         }
         PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
             profile_scope!("YuvImage");
@@ -648,8 +748,7 @@ fn prepare_interned_prim_for_render(
 
             // TODO(gw): Consider whether it's worth doing segment building
             //           for gradient primitives.
-
-            prim_cmd = Some(PrimitiveCommand::instance(prim_instance_index, stops_address));
+            scratch.prim_cmds.push(PrimitiveCommand::instance(prim_instance_index, stops_address));
         }
         PrimitiveInstanceKind::CachedLinearGradient { data_handle, ref mut visible_tiles_range, .. } => {
             profile_scope!("CachedLinearGradient");
@@ -823,7 +922,9 @@ fn prepare_interned_prim_for_render(
         }
     }
 
-    prim_cmd.unwrap_or(PrimitiveCommand::simple(prim_instance_index))
+    if scratch.prim_cmds.is_empty() {
+        scratch.prim_cmds.push(PrimitiveCommand::simple(prim_instance_index));
+    }
 }
 
 
@@ -960,8 +1061,19 @@ fn update_clip_task_for_brush(
             let segment_instance = &segment_instances_store[segment_instance_index];
             &segments_store[segment_instance.segments_range]
         }
-        PrimitiveInstanceKind::YuvImage { segment_instance_index, .. } |
-        PrimitiveInstanceKind::Rectangle { segment_instance_index, .. } => {
+        PrimitiveInstanceKind::YuvImage { segment_instance_index, .. } => {
+            debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
+
+            if segment_instance_index == SegmentInstanceIndex::UNUSED {
+                return None;
+            }
+
+            let segment_instance = &segment_instances_store[segment_instance_index];
+
+            &segments_store[segment_instance.segments_range]
+        }
+        PrimitiveInstanceKind::Rectangle { use_legacy_path, segment_instance_index, .. } => {
+            assert!(use_legacy_path);
             debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
 
             if segment_instance_index == SegmentInstanceIndex::UNUSED {
@@ -1347,7 +1459,10 @@ fn build_segments_if_needed(
     );
 
     let segment_instance_index = match instance.kind {
-        PrimitiveInstanceKind::Rectangle { ref mut segment_instance_index, .. } |
+        PrimitiveInstanceKind::Rectangle { use_legacy_path, ref mut segment_instance_index, .. } => {
+            assert!(use_legacy_path);
+            segment_instance_index
+        }
         PrimitiveInstanceKind::YuvImage { ref mut segment_instance_index, .. } => {
             segment_instance_index
         }
