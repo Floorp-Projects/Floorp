@@ -359,6 +359,10 @@
     <string name="preferences_cookie_banner_reduction">Маҳдудкунии баннери куки</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Маҳдуд кардани баннерҳои куки</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Ғайрифаъол</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Фаъол</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Браузери «Firefox» кӯшиш мекунад, ки дархостҳои кукиро дар баннерҳои куки ба таври худкор рад кунад. Агар имкони радкунӣ дастнорас аст, «Firefox» метавонад барои қатъ кардани баннер ҳамаи кукиҳоро қабул кунад.</string>
 
@@ -368,6 +372,8 @@
     <string name="reduce_cookie_banner_off_for_site">Барои ин сомона хомӯш аст</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Барои ин сомона фаъол аст</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Ин сомона дар айни замон дастгирӣ намешавад</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">«Маҳдудкунии баннери куки»-ро барои %1$s фаъол месозед?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -378,14 +384,18 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s метавонад, ки кӯшиш карда, дархостҳои кукиро ба таври худкор рад намояд. Агар имкони радкунӣ дастнорас бошад, %2$s метавонад барои рад кардани баннер ҳамаи кукиҳоро қабул намояд.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">«%1$s» метавонад кӯшиш кунад, ки дархостҳои кукиҳоро батаври худкор рад кунад.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">«%1$s» метавонад кӯшиш кунад, ки дархостҳои кукиҳоро батаври худкор рад кунад.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">«%1$s» кӯшиш мекунад, ки ҳамаи дархостҳои кукиҳоро дар сомонаҳои дастгиришаванда ба таври худкор рад кунад.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Баннерҳои куки гум шаванд!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Баннерҳои куки гум шаванд!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Ба қадри имкон дархостҳои кукиҳо ба таври худкор рад карда мешаванд. Дар акси ҳол, барои қатъ кардани баннерҳои куки, ҳамаи кукиҳо қабул карда мешаванд.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Ба қадри имкон, дархостҳои кукиҳоро ба таври худкор рад мекунад.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Ба қадри имкон, дархостҳои кукиҳоро ба таври худкор рад мекунад.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Ба «%1$s» иҷозат медиҳед, то он тавонад ба қадри имкон, дархостҳои кукиҳоро ба таври худкор рад кунад?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ҳоло не</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
