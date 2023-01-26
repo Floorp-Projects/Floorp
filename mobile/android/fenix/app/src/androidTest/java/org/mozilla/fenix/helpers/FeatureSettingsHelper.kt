@@ -67,6 +67,11 @@ interface FeatureSettingsHelper {
      */
     var etpPolicy: ETPPolicy
 
+    /**
+     * Enable or disable cookie banner reduction dialog.
+     */
+    var isCookieBannerReductionDialogEnabled: Boolean
+
     fun applyFlagUpdates()
 
     fun resetAllFeatureFlags()

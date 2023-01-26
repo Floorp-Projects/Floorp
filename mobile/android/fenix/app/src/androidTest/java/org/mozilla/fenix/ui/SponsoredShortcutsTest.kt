@@ -13,12 +13,10 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -39,8 +37,8 @@ class SponsoredShortcutsTest {
 
     @Before
     fun setUp() {
-        TestHelper.appContext.settings().userOptOutOfReEngageCookieBannerDialog = true
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

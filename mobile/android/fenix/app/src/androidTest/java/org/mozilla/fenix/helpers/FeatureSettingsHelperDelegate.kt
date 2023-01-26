@@ -33,6 +33,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isTCPCFREnabled = settings.shouldShowTotalCookieProtectionCFR,
         isWallpaperOnboardingEnabled = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions,
+        isCookieBannerReductionDialogEnabled = !settings.userOptOutOfReEngageCookieBannerDialog,
         etpPolicy = getETPPolicy(settings),
     )
 
@@ -58,6 +59,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isRecentlyVisitedFeatureEnabled: Boolean by updatedFeatureFlags::isRecentlyVisitedFeatureEnabled
     override var isPWAsPromptEnabled: Boolean by updatedFeatureFlags::isPWAsPromptEnabled
     override var isTCPCFREnabled: Boolean by updatedFeatureFlags::isTCPCFREnabled
+    override var isCookieBannerReductionDialogEnabled: Boolean by updatedFeatureFlags::isCookieBannerReductionDialogEnabled
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
 
     override fun applyFlagUpdates() {
@@ -67,6 +69,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override fun resetAllFeatureFlags() {
         applyFeatureFlags(initialFeatureFlags)
     }
+
     override var isDeleteSitePermissionsEnabled: Boolean by updatedFeatureFlags::isDeleteSitePermissionsEnabled
 
     private fun applyFeatureFlags(featureFlags: FeatureFlags) {
@@ -80,6 +83,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.shouldShowTotalCookieProtectionCFR = featureFlags.isTCPCFREnabled
         settings.showWallpaperOnboarding = featureFlags.isWallpaperOnboardingEnabled
         settings.deleteSitePermissions = featureFlags.isDeleteSitePermissionsEnabled
+        settings.userOptOutOfReEngageCookieBannerDialog = !featureFlags.isCookieBannerReductionDialogEnabled
         setETPPolicy(featureFlags.etpPolicy)
     }
 }
@@ -95,6 +99,7 @@ private data class FeatureFlags(
     var isTCPCFREnabled: Boolean,
     var isWallpaperOnboardingEnabled: Boolean,
     var isDeleteSitePermissionsEnabled: Boolean,
+    var isCookieBannerReductionDialogEnabled: Boolean,
     var etpPolicy: ETPPolicy,
 )
 

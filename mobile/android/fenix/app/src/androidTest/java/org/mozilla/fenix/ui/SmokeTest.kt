@@ -26,7 +26,6 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
-import org.mozilla.fenix.helpers.FeatureSettingsHelperDelegate
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
@@ -58,11 +57,10 @@ class SmokeTest {
     private lateinit var mockWebServer: MockWebServer
     private val customMenuItem = "TestMenuItem"
     private lateinit var browserStore: BrowserStore
-    private val featureSettingsHelper = FeatureSettingsHelperDelegate()
 
     @get:Rule(order = 0)
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityIntentTestRule(),
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         { it.activity },
     )
 
@@ -83,13 +81,6 @@ class SmokeTest {
         // So we are initializing this here instead of in all related tests.
         browserStore = activityTestRule.activity.components.core.store
 
-        // disabling the new homepage pop-up that interferes with the tests.
-        featureSettingsHelper.apply {
-            isJumpBackInCFREnabled = false
-            isTCPCFREnabled = false
-            isWallpaperOnboardingEnabled = false
-        }.applyFlagUpdates()
-
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
@@ -100,9 +91,6 @@ class SmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-
-        // resetting modified features enabled setting to default
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     /* Verifies the nav bar:
@@ -290,7 +278,7 @@ class SmokeTest {
 
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812279")
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807288")
     @Test
     fun mainMenuOpenInAppTest() {
         val youtubeURL = "https://m.youtube.com/user/mozilla?cbrd=1"

@@ -48,6 +48,7 @@ class HomeActivityTestRule(
         isTCPCFREnabled: Boolean = settings.shouldShowTotalCookieProtectionCFR,
         isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
+        isCookieBannerReductionDialogEnabled: Boolean = !settings.userOptOutOfReEngageCookieBannerDialog,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
@@ -59,6 +60,7 @@ class HomeActivityTestRule(
         this.isTCPCFREnabled = isTCPCFREnabled
         this.isWallpaperOnboardingEnabled = isWallpaperOnboardingEnabled
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
+        this.isCookieBannerReductionDialogEnabled = isCookieBannerReductionDialogEnabled
         this.etpPolicy = etpPolicy
     }
 
@@ -111,6 +113,7 @@ class HomeActivityTestRule(
             isPWAsPromptEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isCookieBannerReductionDialogEnabled = false,
         )
     }
 }
@@ -146,6 +149,7 @@ class HomeActivityIntentTestRule internal constructor(
         isTCPCFREnabled: Boolean = settings.shouldShowTotalCookieProtectionCFR,
         isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
+        isCookieBannerReductionDialogEnabled: Boolean = !settings.userOptOutOfReEngageCookieBannerDialog,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
@@ -157,6 +161,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isTCPCFREnabled = isTCPCFREnabled
         this.isWallpaperOnboardingEnabled = isWallpaperOnboardingEnabled
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
+        this.isCookieBannerReductionDialogEnabled = isCookieBannerReductionDialogEnabled
         this.etpPolicy = etpPolicy
     }
 
@@ -218,6 +223,7 @@ class HomeActivityIntentTestRule internal constructor(
         isTCPCFREnabled = settings.shouldShowTotalCookieProtectionCFR
         isWallpaperOnboardingEnabled = settings.showWallpaperOnboarding
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions
+        isCookieBannerReductionDialogEnabled = !settings.userOptOutOfReEngageCookieBannerDialog
         etpPolicy = getETPPolicy(settings)
     }
 
@@ -244,6 +250,7 @@ class HomeActivityIntentTestRule internal constructor(
             isPWAsPromptEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isCookieBannerReductionDialogEnabled = false,
         )
     }
 }

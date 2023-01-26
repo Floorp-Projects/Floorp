@@ -38,7 +38,7 @@ class CustomTabsTest {
     private val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule()
+    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @get: Rule
     val intentReceiverActivityTestRule = ActivityTestRule(
@@ -56,10 +56,6 @@ class CustomTabsTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        featureSettingsHelper.apply {
-            isTCPCFREnabled = false
-        }.applyFlagUpdates()
     }
 
     @After
