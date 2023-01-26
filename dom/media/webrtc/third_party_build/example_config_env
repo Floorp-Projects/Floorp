@@ -11,6 +11,13 @@ export MOZ_LIBWEBRTC_SRC="{path-to}/moz-libwebrtc"
 # 1800920.
 export MOZ_FASTFORWARD_BUG="1800920"
 
+# MOZ_NEXT_LIBWEBRTC_MILESTONE and MOZ_NEXT_FIREFOX_REL_TARGET are
+# not used during fast-forward processing, but facilitate generating this
+# example config.  To generate an example config for the next update, run
+# bash dom/media/webrtc/third_party_build/update_example_config_env.sh
+export MOZ_NEXT_LIBWEBRTC_MILESTONE=106
+export MOZ_NEXT_FIREFOX_REL_TARGET=110
+
 # The branch name for the most recently completed fast-forward version.
 # The convention is to include which version of Chromium and the target
 # Firefox release in the branch name. We landed the v105 fast-forward in
