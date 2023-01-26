@@ -30,6 +30,7 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
       mOutputFormat(),
       mStream(nullptr),
       mParsedFramesForAACMagicCookie(0),
+      mRemainingEncoderDelay(0),
       mErrored(false) {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
@@ -41,6 +42,16 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
     mFormatID = kAudioFormatMPEGLayer3;
   } else if (mConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     mFormatID = kAudioFormatMPEG4AAC;
+    if (aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
+      const AacCodecSpecificData& aacCodecSpecificData =
+          aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
+      mRemainingEncoderDelay = mEncoderDelay =
+          aacCodecSpecificData.mEncoderDelayFrames;
+      mTotalMediaFrames = aacCodecSpecificData.mMediaFrameCount;
+      LOG("AppleATDecoder (aac), found encoder delay (%" PRIu32
+          ") and total frame count (%" PRIu64 ") in codec-specific side data",
+          mEncoderDelay, mTotalMediaFrames);
+    }
   } else {
     mFormatID = 0;
   }
@@ -161,9 +172,9 @@ static OSStatus _PassthroughInputDataCallback(
 RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mThread->IsOnCurrentThread());
-  LOG("mp4 input sample %p %lld us %lld pts%s %llu bytes audio", aSample,
-      aSample->mDuration.ToMicroseconds(), aSample->mTime.ToMicroseconds(),
-      aSample->mKeyframe ? " keyframe" : "",
+  LOG("mp4 input sample %p duration=%lldus pts=%lld %s %llu bytes audio",
+      aSample, aSample->mDuration.ToMicroseconds(),
+      aSample->mTime.ToMicroseconds(), aSample->mKeyframe ? " keyframe" : "",
       (unsigned long long)aSample->Size());
 
   MediaResult rv = NS_OK;
@@ -199,8 +210,9 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
   nsTArray<AudioDataValue> outputData;
   UInt32 channels = mOutputFormat.mChannelsPerFrame;
   // Pick a multiple of the frame size close to a power of two
-  // for efficient allocation.
-  const uint32_t MAX_AUDIO_FRAMES = 128;
+  // for efficient allocation. We're mainly using this decoder to decode AAC,
+  // that has packets of 1024 audio frames.
+  const uint32_t MAX_AUDIO_FRAMES = 1024;
   const uint32_t maxDecodedSamples = MAX_AUDIO_FRAMES * channels;
 
   // Descriptions for _decompressed_ audio packets. ignored.
@@ -242,7 +254,40 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
     }
 
     if (numFrames) {
-      outputData.AppendElements(decoded.get(), numFrames * channels);
+      AudioDataValue* outputFrames = decoded.get();
+
+      if (mFormatID == kAudioFormatMPEG4AAC) {
+        // Remove decoder delay and padding when decoding AAC
+        if (mRemainingEncoderDelay) {
+          uint64_t toPop = std::min(mRemainingEncoderDelay, numFrames);
+          mRemainingEncoderDelay -= toPop;
+          numFrames -= toPop;
+          LOG("Removing %" PRIu64
+              " frames of audio, corresponding to the decoder delay, remaining "
+              "%" PRIu32 " (remaining in buffer: %u).",
+              toPop, mRemainingEncoderDelay, numFrames);
+          outputFrames += toPop * channels;
+        }
+
+        mDecodedFrames += numFrames;
+
+        if (mTotalMediaFrames && mDecodedFrames > mTotalMediaFrames) {
+          uint64_t toPop = std::min(mDecodedFrames - mTotalMediaFrames,
+                                    static_cast<uint64_t>(numFrames));
+          MOZ_ASSERT(mRemainingEncoderDelay == 0);
+          numFrames -= toPop;
+          LOG("Removing %" PRIu64
+              " frames of audio, corresponding to the decoder padding",
+              toPop);
+          // When this decoder is past the "real" end time of the media, reset
+          // the number of decoded frames. If more frames come, it's because
+          // this decoder is being used for looping, in which case encoder delay
+          // and padding need to be trimmed again.
+          mDecodedFrames = 0;
+          mRemainingEncoderDelay = mEncoderDelay;
+        }
+      }
+      outputData.AppendElements(outputFrames, numFrames * channels);
     }
 
     if (rv == kNoMoreDataErr) {
@@ -285,6 +330,10 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
     data = mAudioConverter->Process(std::move(data));
   }
+
+  // Offset the pts by the encoder delay
+  aSample->mTime -=
+      media::TimeUnit::FromSeconds(static_cast<double>(mEncoderDelay) / rate);
 
   RefPtr<AudioData> audio = new AudioData(
       aSample->mOffset, aSample->mTime, data.Forget(), channels, rate,
