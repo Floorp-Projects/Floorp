@@ -79,6 +79,7 @@ import org.mozilla.geckoview.GeckoSession.HistoryDelegate;
 import org.mozilla.geckoview.GeckoSession.MediaDelegate;
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate;
+import org.mozilla.geckoview.GeckoSession.PrintDelegate;
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate;
 import org.mozilla.geckoview.GeckoSession.ScrollDelegate;
@@ -768,6 +769,7 @@ public class GeckoSessionTestRule implements TestRule {
     DEFAULT_DELEGATES.add(MediaSession.Delegate.class);
     DEFAULT_DELEGATES.add(NavigationDelegate.class);
     DEFAULT_DELEGATES.add(PermissionDelegate.class);
+    DEFAULT_DELEGATES.add(PrintDelegate.class);
     DEFAULT_DELEGATES.add(ProgressDelegate.class);
     DEFAULT_DELEGATES.add(PromptDelegate.class);
     DEFAULT_DELEGATES.add(ScrollDelegate.class);
@@ -799,6 +801,7 @@ public class GeckoSessionTestRule implements TestRule {
           MediaSession.Delegate,
           NavigationDelegate,
           PermissionDelegate,
+          PrintDelegate,
           ProgressDelegate,
           PromptDelegate,
           ScrollDelegate,

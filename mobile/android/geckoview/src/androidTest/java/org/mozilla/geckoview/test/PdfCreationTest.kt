@@ -20,10 +20,10 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
+import org.mozilla.geckoview.GeckoViewPrintDocumentAdapter
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import java.io.File
 import java.io.InputStream
-import java.util.* // ktlint-disable no-wildcard-imports
 import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
@@ -122,6 +122,22 @@ class PdfCreationTest : BaseSessionTest() {
                         bluePixel == Color.BLUE
                     )
                 assertTrue("The PDF generated RGB colors.", doPixelsMatch)
+            }
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun makeTempPdfFileTest() {
+        activityRule.scenario.onActivity { activity ->
+            mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
+            mainSession.waitForPageStop()
+            val pdfInputStream = mainSession.saveAsPdf()
+            sessionRule.waitForResult(pdfInputStream).let { stream ->
+                val file = GeckoViewPrintDocumentAdapter.makeTempPdfFile(stream, activity)!!
+                assertTrue("PDF File exists.", file.exists())
+                assertTrue("PDF File is not empty.", file.length() > 0L)
+                file.delete()
             }
         }
     }

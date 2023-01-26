@@ -51,6 +51,7 @@
     <string name="cancel">Cancel</string>
     <string name="addon_uri">WebExtension xpi URL</string>
     <string name="save_pdf">Save as PDF</string>
+    <string name="print_page">Print Page</string>
 
     # Preferences
     <string name="key_tracking_protection">tracking_protection</string>

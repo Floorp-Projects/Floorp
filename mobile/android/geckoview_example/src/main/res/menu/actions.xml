@@ -14,5 +14,6 @@
     <item android:title="@string/forward" android:id="@+id/action_forward"/>
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
     <item android:title="@string/save_pdf" android:id="@+id/save_pdf"/>
+    <item android:title="@string/print_page" android:id="@+id/print_page"/>
     <item android:title="@string/settings" android:id="@+id/settings" app:showAsAction="never" />
 </menu>
