@@ -6,7 +6,6 @@ package mozilla.components.feature.downloads.manager
 
 import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.INTERNET
-import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
@@ -49,9 +48,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     // Do not require WRITE_EXTERNAL_STORAGE permission on API 29 and above (using scoped storage)
     override val permissions
         @SuppressLint("InlinedApi")
-        get() = if (getSDKVersion() >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(INTERNET, FOREGROUND_SERVICE, POST_NOTIFICATIONS)
-        } else if (getSDKVersion() >= Build.VERSION_CODES.Q) {
+        get() = if (getSDKVersion() >= Build.VERSION_CODES.Q) {
             arrayOf(INTERNET, FOREGROUND_SERVICE)
         } else if (getSDKVersion() >= P) {
             arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE, FOREGROUND_SERVICE)
