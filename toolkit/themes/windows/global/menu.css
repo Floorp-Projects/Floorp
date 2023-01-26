@@ -269,10 +269,6 @@ menulist > menupopup > menu > label {
   padding-block: 0;
 }
 
-menulist:-moz-focusring > menupopup > menuitem[_moz-menuactive="true"] {
-  border: 1px dotted #F5DB95;
-}
-
 menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
