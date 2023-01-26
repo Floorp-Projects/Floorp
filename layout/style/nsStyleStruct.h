@@ -1268,6 +1268,30 @@ struct StyleAnimation {
   StyleAnimationTimeline mTimeline;
 };
 
+struct StyleScrollTimeline {
+  StyleScrollTimeline() = default;
+  explicit StyleScrollTimeline(const StyleScrollTimeline& aCopy) = default;
+
+  // SetInitialValues() are called when ensuring the array length. So basically
+  // we can rely on the default constructor to handle the new constructed
+  // elements.
+  void SetInitialValues() {}
+
+  const nsAtom* GetName() const { return mName._0.AsAtom(); }
+  StyleScrollAxis GetAxis() const { return mAxis; }
+
+  bool operator==(const StyleScrollTimeline& aOther) const {
+    return mName == aOther.mName && mAxis == aOther.mAxis;
+  }
+  bool operator!=(const StyleScrollTimeline& aOther) const {
+    return !(*this == aOther);
+  }
+
+ private:
+  StyleScrollTimelineName mName;
+  StyleScrollAxis mAxis = StyleScrollAxis::Block;
+};
+
 struct StyleViewTimeline {
   StyleViewTimeline() = default;
   explicit StyleViewTimeline(const StyleViewTimeline& aCopy) = default;
@@ -1905,10 +1929,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mAnimationCompositionCount;
   uint32_t mAnimationTimelineCount;
 
-  // FIXME: Bug 1809005: scroll-timeline-{name|axis} should be a coordinated
-  // list property group.
-  mozilla::StyleScrollTimelineName mScrollTimelineName;
-  mozilla::StyleScrollAxis mScrollTimelineAxis;
+  nsStyleAutoArray<mozilla::StyleScrollTimeline> mScrollTimelines;
+  uint32_t mScrollTimelineNameCount;
+  uint32_t mScrollTimelineAxisCount;
 
   nsStyleAutoArray<mozilla::StyleViewTimeline> mViewTimelines;
   uint32_t mViewTimelineNameCount;
