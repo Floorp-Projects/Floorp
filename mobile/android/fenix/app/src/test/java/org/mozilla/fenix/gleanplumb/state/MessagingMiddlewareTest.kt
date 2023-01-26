@@ -14,9 +14,11 @@ import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -82,12 +84,12 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN Restore THEN getNextMessage from the storage and UpdateMessageToShow`() = runTestOnMain {
+    fun `WHEN Evaluate THEN getNextMessage from the storage and UpdateMessageToShow`() = runTestOnMain {
         val message: Message = mockk(relaxed = true)
         val appState: AppState = mockk(relaxed = true)
         val messagingState: MessagingState = mockk(relaxed = true)
 
-        every { messagingState.messages } returns emptyList()
+        every { messagingState.messages } returns listOf(message)
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
         every { messagingStorage.getNextMessage(MessageSurfaceId.HOMESCREEN, any()) } returns message
@@ -269,18 +271,55 @@ class MessagingMiddlewareTest {
         val appState: AppState = mockk(relaxed = true)
         val messagingState: MessagingState = mockk(relaxed = true)
 
+        every { messagingState.messages } returns listOf(oldMessage)
         every { messagingState.messageToShow } returns mapOf(oldMessage.surface to oldMessage)
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
-        every { spiedMiddleware.removeMessage(middlewareContext, oldMessage) } returns emptyList()
 
         val results = spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage)
 
         verify { middlewareContext.dispatch(UpdateMessageToShow(updatedMessage)) }
-        verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
 
         assertTrue(results.size == 1)
         assertTrue(results.first().metadata.pressed)
+    }
+
+    @Test
+    fun `WHEN evaluate THEN update displayCount without altering message order`() = runTestOnMain {
+        val messageMetadata1 = Message.Metadata("same-id", displayCount = 0)
+        val message1 =
+            Message("message1", mockk(relaxed = true), "", StyleData(), emptyList(), messageMetadata1)
+        val message2 = message1.copy(id = "message2", action = "action2")
+        // An updated message1 that has been displayed once.
+        val messageDisplayed1 = message1.copy(metadata = messageMetadata1.copy(displayCount = 1))
+        val messagingStorage: NimbusMessagingStorage = mockk(relaxed = true)
+        val controller = NimbusMessagingController(messagingStorage) { 0 }
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message1,
+                        message2,
+                    ),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
+        )
+
+        every {
+            messagingStorage.getNextMessage(
+                MessageSurfaceId.HOMESCREEN,
+                any(),
+            )
+        } returns message1
+
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.waitUntilIdle()
+
+        assertEquals(messageDisplayed1, store.state.messaging.messages[0])
+        assertEquals(message2, store.state.messaging.messages[1])
     }
 
     @Test

@@ -144,6 +144,9 @@ class MessagingMiddleware(
         if (actualMessageToShow?.id == oldMessage.id) {
             context.dispatch(UpdateMessageToShow(updatedMessage))
         }
-        return removeMessage(context, oldMessage) + updatedMessage
+        val oldMessageIndex = context.state.messaging.messages.indexOfFirst { it.id == updatedMessage.id }
+        val newList = context.state.messaging.messages.toMutableList()
+        newList[oldMessageIndex] = updatedMessage
+        return newList
     }
 }
