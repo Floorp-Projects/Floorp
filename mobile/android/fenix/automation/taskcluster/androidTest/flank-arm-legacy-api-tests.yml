@@ -35,7 +35,6 @@ gcloud:
     - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewPrivateTabTest
     - class org.mozilla.fenix.ui.TopSitesTest#verifyOpenTopSiteNormalTab
     - class org.mozilla.fenix.ui.BookmarksTest#addBookmarkTest
-    - class org.mozilla.fenix.ui.HomeScreenTest#homeScreenItemsTest
 
   device:
     - model: Pixel2.arm
