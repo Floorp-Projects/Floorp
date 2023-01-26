@@ -103,9 +103,15 @@ class WebConsoleUI {
         // - `_attachTargets`, in order to set TargetCommand.watcherFront which is used by ResourceWatcher.watchResources.
         // - `ConsoleCommands`, in order to set TargetCommand.targetFront which is wrapped by hud.currentTarget
         await this.hud.commands.targetCommand.startListening();
+        if (this._destroyed) {
+          return;
+        }
       }
 
       await this.wrapper.init();
+      if (this._destroyed) {
+        return;
+      }
 
       // Bug 1605763: It's important to call _attachTargets once the UI is initialized, as
       // it may overload the Browser Console with many updates.
@@ -113,6 +119,9 @@ class WebConsoleUI {
       // otherwise its `store` will be null while we already call a few dispatch methods
       // from onResourceAvailable
       await this._attachTargets();
+      if (this._destroyed) {
+        return;
+      }
 
       // `_attachTargets` will process resources and throttle some actions
       // Wait for these actions to be dispatched before reporting that the
@@ -134,7 +143,7 @@ class WebConsoleUI {
     this.React = this.ReactDOM = this.FrameView = null;
 
     if (this.wrapper) {
-      this.wrapper.getStore().dispatch(START_IGNORE_ACTION);
+      this.wrapper.getStore()?.dispatch(START_IGNORE_ACTION);
       this.wrapper.destroy();
     }
 
@@ -181,8 +190,10 @@ class WebConsoleUI {
 
     this.stopWatchingNetworkResources();
 
-    this.networkDataProvider.destroy();
-    this.networkDataProvider = null;
+    if (this.networkDataProvider) {
+      this.networkDataProvider.destroy();
+      this.networkDataProvider = null;
+    }
 
     // Nullify `hud` last as it nullify also target which is used on destroy
     this.window = this.hud = this.wrapper = null;
