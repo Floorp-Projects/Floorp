@@ -364,7 +364,13 @@ class WebConsoleWrapper {
     if (!this.throttledDispatchPromise) {
       return Promise.resolve();
     }
-    return this.throttledDispatchPromise;
+    // When closing the console during initialization,
+    // setTimeoutIfNeeded may never resolve its promise
+    // as window.setTimeout will be disabled on document destruction.
+    const onUnload = new Promise(r =>
+      window.addEventListener("unload", r, { once: true })
+    );
+    return Promise.race([this.throttledDispatchPromise, onUnload]);
   }
 
   setTimeoutIfNeeded() {
@@ -379,6 +385,7 @@ class WebConsoleWrapper {
           // The store is not initialized yet, we can call setTimeoutIfNeeded so the
           // messages will be handled in the next timeout when the store is ready.
           this.setTimeoutIfNeeded();
+          done();
           return;
         }
 

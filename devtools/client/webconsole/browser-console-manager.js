@@ -66,7 +66,13 @@ class BrowserConsoleManager {
       return;
     }
 
-    await this._browserConsole.destroy();
+    // Ensure destroying the commands,
+    // even if the console throws during cleanup.
+    try {
+      await this._browserConsole.destroy();
+    } catch (e) {
+      console.error(e);
+    }
     this._browserConsole = null;
 
     await this.commands.destroy();
@@ -94,9 +100,16 @@ class BrowserConsoleManager {
       return browserConsole;
     })();
 
-    const browserConsole = await this._browserConsoleInitializing;
-    this._browserConsoleInitializing = null;
-    return browserConsole;
+    try {
+      const browserConsole = await this._browserConsoleInitializing;
+      this._browserConsoleInitializing = null;
+      return browserConsole;
+    } catch (e) {
+      // Ensure always clearing this field, even in case of exception,
+      // which may happen when closing during initialization.
+      this._browserConsoleInitializing = null;
+      throw e;
+    }
   }
 
   async openWindow() {
