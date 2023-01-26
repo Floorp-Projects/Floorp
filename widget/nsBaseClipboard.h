@@ -42,6 +42,8 @@ class nsBaseClipboard : public nsIClipboard {
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) = 0;
 
+  void ClearClipboardCache();
+
   bool mEmptyingForSetData;
   nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
   nsCOMPtr<nsITransferable> mTransferable;
