@@ -2514,7 +2514,10 @@ export class UrlbarView {
       return this.#resultMenuCommands.get(result);
     }
     let commands = new Map();
-    if (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY) {
+    if (
+      result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
+      !result.autofill
+    ) {
       commands.set(RESULT_MENU_COMMANDS.BLOCK, {
         l10n: { id: "urlbar-result-menu-remove-from-history" },
       });
