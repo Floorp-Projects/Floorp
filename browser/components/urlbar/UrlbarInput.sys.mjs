@@ -84,7 +84,8 @@ export class UrlbarInput {
                         role="listbox"/>
             </html:div>
           </html:div>
-          <menupopup class="urlbarView-result-menu"/>
+          <menupopup class="urlbarView-result-menu"
+                     consumeoutsideclicks="false"/>
           <hbox class="search-one-offs"
                 includecurrentengine="true"
                 disabletab="true"/>
