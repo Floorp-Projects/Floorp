@@ -474,11 +474,11 @@ blocklist:
         This field is documented in more detail in the definition of the blocklist.mlbf_source scalar.
         Possible values are "dump_match", "cache_match", "remote_match", "dump_fallback", "cache_fallback", "unknown".
     notification_emails: ["addons-dev-internal@mozilla.com", "rwu@mozilla.com"]
-    expiry_version: "112"
+    expiry_version: "122"
     products:
       - "firefox"
     record_in_processes: ["main"]
-    bug_numbers: [1662857, 1730037, 1763529]
+    bug_numbers: [1662857, 1730037, 1763529, 1811159]
     release_channel_collection: opt-out
 
 downloads:
