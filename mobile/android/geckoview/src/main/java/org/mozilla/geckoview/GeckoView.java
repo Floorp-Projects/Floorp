@@ -21,6 +21,8 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Build;
 import android.os.Handler;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -48,6 +50,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.core.view.ViewCompat;
+import java.io.InputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
@@ -84,6 +87,7 @@ public class GeckoView extends FrameLayout {
   private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
   private Autofill.Delegate mAutofillDelegate;
   private @Nullable ActivityContextDelegate mActivityDelegate;
+  private GeckoSession.PrintDelegate mPrintDelegate;
 
   private class Display implements SurfaceViewWrapper.Listener {
     private final int[] mOrigin = new int[2];
@@ -296,6 +300,7 @@ public class GeckoView extends FrameLayout {
       // We don't support Autofill on SDK < 26
       mAutofillDelegate = new Autofill.Delegate() {};
     }
+    mPrintDelegate = new GeckoViewPrintDelegate();
   }
 
   /**
@@ -469,6 +474,10 @@ public class GeckoView extends FrameLayout {
       mSession.setAutofillDelegate(null);
     }
 
+    if (mSession.getPrintDelegate() == mPrintDelegate) {
+      session.setPrintDelegate(null);
+    }
+
     if (mSession.getMagnifier().getView() == mSurfaceWrapper.getView()) {
       session.getMagnifier().setView(null);
     }
@@ -573,6 +582,10 @@ public class GeckoView extends FrameLayout {
 
     if (session.getMagnifier().getView() == null) {
       session.getMagnifier().setView(mSurfaceWrapper.getView());
+    }
+
+    if (session.getPrintDelegate() == null && mPrintDelegate != null) {
+      session.setPrintDelegate(mPrintDelegate);
     }
 
     if (isFocused()) {
@@ -1157,5 +1170,51 @@ public class GeckoView extends FrameLayout {
    */
   public @Nullable ActivityContextDelegate getActivityContextDelegate() {
     return mActivityDelegate;
+  }
+
+  /**
+   * Retrieves the GeckoView's print delegate.
+   *
+   * @return The GeckoView's print delegate.
+   */
+  public @Nullable GeckoSession.PrintDelegate getPrintDelegate() {
+    return mPrintDelegate;
+  }
+
+  /**
+   * Sets the GeckoView's print delegate.
+   *
+   * @param delegate for printing
+   */
+  public void getPrintDelegate(@Nullable final GeckoSession.PrintDelegate delegate) {
+    mPrintDelegate = delegate;
+  }
+
+  private class GeckoViewPrintDelegate implements GeckoSession.PrintDelegate {
+    public void onPrint(@NonNull final GeckoSession session) {
+      final GeckoResult<InputStream> geckoResult = session.saveAsPdf();
+      geckoResult.accept(
+          pdfStream -> {
+            onPrint(pdfStream);
+          },
+          exception -> Log.e(LOGTAG, "Could not create a content PDF to print.", exception));
+    }
+
+    public void onPrint(@NonNull final InputStream pdfStream) {
+      if (mActivityDelegate == null) {
+        Log.w(LOGTAG, "Missing an activity context delegate, which is required for printing.");
+        return;
+      }
+      final Context printContext = mActivityDelegate.getActivityContext();
+      if (printContext == null) {
+        Log.w(LOGTAG, "An activity context is required for printing.");
+        return;
+      }
+      final PrintManager printManager =
+          (PrintManager)
+              mActivityDelegate.getActivityContext().getSystemService(Context.PRINT_SERVICE);
+      final PrintDocumentAdapter pda = new GeckoViewPrintDocumentAdapter(pdfStream, getContext());
+      printManager.print("Firefox", pda, null);
+    }
   }
 }

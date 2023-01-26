@@ -1269,6 +1269,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.save_pdf:
         savePdf(session);
         break;
+      case R.id.print_page:
+        printPage(session);
+        break;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -1371,6 +1374,10 @@ public class GeckoViewActivity extends AppCompatActivity
                 Log.d(LOGTAG, e.getMessage());
               }
             });
+  }
+
+  private void printPage(GeckoSession session) {
+    session.printPageContent();
   }
 
   @Override

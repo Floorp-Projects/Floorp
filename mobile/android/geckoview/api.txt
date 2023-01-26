@@ -12,10 +12,15 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
+import android.print.PageRange;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.ActionMode;
@@ -899,6 +904,7 @@ package org.mozilla.geckoview {
     method @UiThread public void getPageToSurfaceMatrix(@NonNull Matrix);
     method @NonNull @UiThread public PanZoomController getPanZoomController();
     method @Nullable @UiThread public GeckoSession.PermissionDelegate getPermissionDelegate();
+    method @AnyThread @Nullable public GeckoSession.PrintDelegate getPrintDelegate();
     method @Nullable @UiThread public GeckoSession.ProgressDelegate getProgressDelegate();
     method @AnyThread @Nullable public GeckoSession.PromptDelegate getPromptDelegate();
     method @Nullable @UiThread public GeckoSession.ScrollDelegate getScrollDelegate();
@@ -917,6 +923,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
     method @AnyThread public void loadUri(@NonNull String);
     method @UiThread public void open(@NonNull GeckoRuntime);
+    method @AnyThread public void printPageContent();
     method @AnyThread public void purgeHistory();
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
@@ -933,6 +940,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void setMediaSessionDelegate(@Nullable MediaSession.Delegate);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
+    method @AnyThread public void setPrintDelegate(@Nullable GeckoSession.PrintDelegate);
     method @AnyThread public void setPriorityHint(int);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);
     method @AnyThread public void setPromptDelegate(@Nullable GeckoSession.PromptDelegate);
@@ -1192,6 +1200,11 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PermissionDelegate.MediaSource.Type {
+  }
+
+  @AnyThread public static interface GeckoSession.PrintDelegate {
+    method default public void onPrint(@NonNull GeckoSession);
+    method default public void onPrint(@NonNull InputStream);
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.Priority {
@@ -1637,6 +1650,8 @@ package org.mozilla.geckoview {
     method @Nullable public GeckoView.ActivityContextDelegate getActivityContextDelegate();
     method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
+    method @Nullable public GeckoSession.PrintDelegate getPrintDelegate();
+    method public void getPrintDelegate(@Nullable GeckoSession.PrintDelegate);
     method @AnyThread @Nullable public GeckoSession getSession();
     method public void onAttachedToWindow();
     method public void onDetachedFromWindow();
@@ -1660,6 +1675,12 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoView.ViewBackend {
+  }
+
+  public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
+    ctor public GeckoViewPrintDocumentAdapter(@NonNull InputStream, @NonNull Context);
+    ctor public GeckoViewPrintDocumentAdapter(@NonNull File);
+    method @AnyThread @Nullable public static File makeTempPdfFile(@NonNull InputStream, @NonNull Context);
   }
 
   @AnyThread public class GeckoWebExecutor {
