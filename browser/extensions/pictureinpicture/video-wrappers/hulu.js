@@ -46,6 +46,9 @@ class PictureInPictureVideoWrapper {
       });
     }
   }
+  getDuration(video) {
+    return this.player.duration;
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;

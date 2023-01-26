@@ -174,14 +174,17 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
 
     if (lazy.IMPROVED_CONTROLS_ENABLED_PREF) {
       timestamp = PictureInPictureChild.videoWrapper.formatTimestamp(
-        video.currentTime,
-        video.duration
+        PictureInPictureChild.videoWrapper.getCurrentTime(video),
+        PictureInPictureChild.videoWrapper.getDuration(video)
       );
 
+      // Scrubber is hidden if undefined, so only set it to something else
+      // if the timestamp is not undefined.
       scrubberPosition =
         timestamp === undefined
           ? undefined
-          : video.currentTime / video.duration;
+          : PictureInPictureChild.videoWrapper.getCurrentTime(video) /
+            PictureInPictureChild.videoWrapper.getDuration(video);
     }
 
     // All other requests to toggle PiP should open a new PiP
@@ -1733,8 +1736,9 @@ export class PictureInPictureChild extends JSWindowActorChild {
       }
       case "timeupdate":
       case "durationchange": {
-        let currentTime = event.target.currentTime;
-        let duration = event.target.duration;
+        let video = this.getWeakVideo();
+        let currentTime = this.videoWrapper.getCurrentTime(video);
+        let duration = this.videoWrapper.getDuration(video);
         let scrubberPosition = currentTime === 0 ? 0 : currentTime / duration;
         let timestamp = this.videoWrapper.formatTimestamp(
           currentTime,
