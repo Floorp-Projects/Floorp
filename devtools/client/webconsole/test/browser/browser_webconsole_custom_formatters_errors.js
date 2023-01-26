@@ -32,8 +32,6 @@ add_task(async function() {
   await testBodyNotReturningElementType(hud);
   await testBodyThrowing(hud);
   await testBodyHavingSideEffects(hud);
-  await testIncorrectObjectTag(hud);
-  await testInvalidTagname(hud);
   await testErrorsLoggedOnce(hud);
 });
 
@@ -150,30 +148,6 @@ async function testErrorsLoggedOnce(hud) {
   });
 }
 
-async function testIncorrectObjectTag(hud) {
-  info(`Test for "object" tag without attribute`);
-  await testCustomFormatting(hud, {
-    messageText: `Custom formatter failed: devtoolsFormatters[14] couldn't be run: "object" tag should have attributes`,
-  });
-
-  info(`Test for "object" tag without "object" attribute`);
-  await testCustomFormatting(hud, {
-    messageText: `Custom formatter failed: devtoolsFormatters[15] couldn't be run: attribute of "object" tag should have an "object" property`,
-  });
-
-  info(`Test for infinite "object" tag`);
-  await testCustomFormatting(hud, {
-    messageText: `Custom formatter failed: Too deep hierarchy of inlined custom previews`,
-  });
-}
-
-async function testInvalidTagname(hud) {
-  info(`Test invalid tagname in the returned JsonML`);
-  await testCustomFormatting(hud, {
-    messageText: `Custom formatter failed: devtoolsFormatters[17] couldn't be run: tagName should be a string, got number`,
-  });
-}
-
 async function testCustomFormatting(hud, { messageText, source, bodyText }) {
   const headerNode = bodyText
     ? await waitFor(() => {
@@ -182,8 +156,6 @@ async function testCustomFormatting(hud, { messageText, source, bodyText }) {
     : await waitFor(() => {
         return findErrorMessage(hud, messageText);
       });
-
-  ok(true, `Got expected message: ${messageText}`);
 
   if (source) {
     const sourceLink = headerNode.querySelector(".message-location");

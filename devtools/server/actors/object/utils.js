@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  DevToolsServer,
-} = require("resource://devtools/server/devtools-server.js");
+const { DevToolsServer } = require("resource://devtools/server/devtools-server.js");
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const { assert } = DevToolsUtils;
 
@@ -470,26 +468,14 @@ function createStringGrip(targetActor, string) {
  * @param Number depth
  *        Depth of the object compared to the top level object,
  *        when we are inspecting nested attributes.
- * @param Object [objectActorAttributes]
- *        An optional object whose properties will be assigned to the ObjectActor if one
- *        is created.
  * @return object
  */
-function createValueGripForTarget(
-  targetActor,
-  value,
-  depth = 0,
-  objectActorAttributes = {}
-) {
-  const makeObjectGrip = (objectActorValue, pool) =>
-    createObjectGrip(
-      targetActor,
-      depth,
-      objectActorValue,
-      pool,
-      objectActorAttributes
-    );
-  return createValueGrip(value, targetActor, makeObjectGrip);
+function createValueGripForTarget(targetActor, value, depth = 0) {
+  return createValueGrip(
+    value,
+    targetActor,
+    createObjectGrip.bind(null, targetActor, depth)
+  );
 }
 
 /**
@@ -533,23 +519,14 @@ function createEnvironmentActor(environment, targetActor) {
  *        The object you want.
  * @param object pool
  *        A Pool where the new actor instance is added.
- * @param object [objectActorAttributes]
- *        An optional object whose properties will be assigned to the ObjectActor being created.
  * @param object
  *        The object grip.
  */
-function createObjectGrip(
-  targetActor,
-  depth,
-  object,
-  pool,
-  objectActorAttributes = {}
-) {
+function createObjectGrip(targetActor, depth, object, pool) {
   let gripDepth = depth;
   const actor = new ObjectActor(
     object,
     {
-      ...objectActorAttributes,
       thread: targetActor.threadActor,
       getGripDepth: () => gripDepth,
       incrementGripDepth: () => gripDepth++,
@@ -560,7 +537,6 @@ function createObjectGrip(
     targetActor.conn
   );
   pool.manage(actor);
-
   return actor.form();
 }
 
