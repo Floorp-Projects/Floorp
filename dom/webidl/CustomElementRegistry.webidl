@@ -46,7 +46,8 @@ callback LifecycleFormDisabledCallback = undefined(boolean disabled);
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback LifecycleGetCustomInterfaceCallback = object?(any iid);
 
-[GenerateInit]
+// Unsorted is necessary until https://github.com/whatwg/html/issues/3580 is resolved.
+[GenerateInit, Unsorted]
 dictionary LifecycleCallbacks {
   LifecycleConnectedCallback connectedCallback;
   LifecycleDisconnectedCallback disconnectedCallback;
