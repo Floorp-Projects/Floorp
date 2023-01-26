@@ -744,6 +744,20 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "Instagram.com",
+    platform: "android",
+    name: "Instagram.com",
+    bug: "1804445",
+    contentScripts: [
+      {
+        js: "instagram.js",
+        matches: ["*://www.instagram.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "MaxMindGeoIP",
     platform: "all",
     name: "MaxMind GeoIP",
