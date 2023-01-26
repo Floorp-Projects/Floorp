@@ -60,7 +60,7 @@ dictionary PublicKeyCredentialCreationOptions {
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticatorSelectionCriteria               authenticatorSelection = {};
-    AttestationConveyancePreference              attestation = "none";
+    DOMString                                    attestation = "none";
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs         extensions = {};
 };
@@ -83,12 +83,6 @@ dictionary AuthenticatorSelectionCriteria {
     DOMString                    authenticatorAttachment;
     boolean                      requireResidentKey = false;
     UserVerificationRequirement  userVerification = "preferred";
-};
-
-enum AttestationConveyancePreference {
-    "none",
-    "indirect",
-    "direct"
 };
 
 enum UserVerificationRequirement {

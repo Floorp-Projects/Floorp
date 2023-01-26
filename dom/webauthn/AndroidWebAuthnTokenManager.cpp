@@ -143,19 +143,16 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                           java::sdk::Integer::ValueOf(1));
 
           // Get the attestation preference and override if the user asked
-          AttestationConveyancePreference attestation =
-              extra.attestationConveyancePreference();
-
           if (aForceNoneAttestation) {
             // Add UI support to trigger this, bug 1550164
-            attestation = AttestationConveyancePreference::None;
+            GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
+                            jni::StringParam(u"none"_ns));
+          } else {
+            const nsString& attestation =
+                extra.attestationConveyancePreference();
+            GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
+                            jni::StringParam(attestation));
           }
-
-          nsString attestPref;
-          attestPref.AssignASCII(
-              AttestationConveyancePreferenceValues::GetString(attestation));
-          GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
-                          jni::StringParam(attestPref));
 
           const WebAuthnAuthenticatorSelection& sel =
               extra.AuthenticatorSelection();
