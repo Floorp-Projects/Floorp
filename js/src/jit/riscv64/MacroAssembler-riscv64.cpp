@@ -2130,20 +2130,23 @@ CodeOffset MacroAssembler::wasmTrapInstruction() {
 size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
   return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
 }
+
 template <typename T>
 void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
                                                   const T& value, Register temp,
                                                   Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  MOZ_ASSERT(temp != InvalidReg);
   Label done;
   branchTestGCThing(Assembler::NotEqual, value,
                     cond == Assembler::Equal ? &done : label);
 
-  unboxGCThingForGCBarrier(value, temp);
-  orPtr(Imm32(gc::ChunkMask), temp);
-  loadPtr(Address(temp, gc::ChunkStoreBufferOffsetFromLastByte), temp);
-  branchPtr(InvertCondition(cond), temp, zero, label);
+  // temp may be InvalidReg, use scratch2 instead.
+  UseScratchRegisterScope temps(this);
+  Register scratch2 = temps.Acquire();
+
+  getGCThingValueChunk(value, scratch2);
+  loadPtr(Address(scratch2, gc::ChunkStoreBufferOffset), scratch2);
+  branchPtr(InvertCondition(cond), scratch2, ImmWord(0), label);
 
   bind(&done);
 }
@@ -2815,10 +2818,9 @@ void MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr,
   MOZ_ASSERT(temp != ScratchRegister);
   MOZ_ASSERT(temp != InvalidReg);
 
-  movePtr(ptr, temp);
-  orPtr(Imm32(gc::ChunkMask), temp);
-  branchPtr(InvertCondition(cond),
-            Address(temp, gc::ChunkStoreBufferOffsetFromLastByte), zero, label);
+  ma_and(temp, ptr, Imm32(int32_t(~gc::ChunkMask)));
+  branchPtr(InvertCondition(cond), Address(temp, gc::ChunkStoreBufferOffset),
+            zero, label);
 }
 void MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                      const Value& rhs, Label* label) {
@@ -3138,11 +3140,8 @@ void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
 }
 void MacroAssembler::flush() {}
 void MacroAssembler::loadStoreBuffer(Register ptr, Register buffer) {
-  if (ptr != buffer) {
-    movePtr(ptr, buffer);
-  }
-  orPtr(Imm32(gc::ChunkMask), buffer);
-  loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+  ma_and(buffer, ptr, Imm32(int32_t(~gc::ChunkMask)));
+  loadPtr(Address(buffer, gc::ChunkStoreBufferOffset), buffer);
 }
 
 void MacroAssembler::moveValue(const TypedOrValueRegister& src,
@@ -3777,7 +3776,7 @@ void MacroAssembler::truncDoubleToInt32(FloatRegister src, Register dest,
     // Check explicitly for -0, bitwise.
     fmv_x_d(dest, src);
     branchTestPtr(Assembler::Signed, dest, dest, fail);
-    movePtr(ImmPtr(0), dest);
+    movePtr(ImmWord(0), dest);
   }
 
   bind(&done);
@@ -3818,7 +3817,7 @@ void MacroAssembler::truncFloat32ToInt32(FloatRegister src, Register dest,
     // Check explicitly for -0, bitwise.
     fmv_x_w(dest, src);
     branchTestPtr(Assembler::Signed, dest, dest, fail);
-    movePtr(ImmPtr(0), dest);
+    movePtr(ImmWord(0), dest);
   }
 
   bind(&done);

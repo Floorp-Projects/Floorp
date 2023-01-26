@@ -87,8 +87,8 @@ MoveOperand CodeGeneratorRiscv64::toMoveOperand(LAllocation a) const {
   if (a.isFloatReg()) {
     return MoveOperand(ToFloatRegister(a));
   }
-  MoveOperand::Kind kind =
-      a.isStackArea() ? MoveOperand::EFFECTIVE_ADDRESS : MoveOperand::MEMORY;
+  MoveOperand::Kind kind = a.isStackArea() ? MoveOperand::Kind::EffectiveAddress
+                                           : MoveOperand::Kind::Memory;
   Address address = ToAddress(a);
   MOZ_ASSERT((address.offset & 3) == 0);
 
