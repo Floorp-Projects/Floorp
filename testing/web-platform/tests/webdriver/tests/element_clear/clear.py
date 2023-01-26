@@ -89,19 +89,20 @@ def test_no_such_element_from_other_window_handle(session, inline, closed):
 
 
 @pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
-def test_no_such_element_from_other_frame(session, url, closed):
-    session.url = url("/webdriver/tests/support/html/subframe.html")
+def test_no_such_element_from_other_frame(session, get_test_page, closed):
+    session.url = get_test_page(as_frame=True)
 
-    frame = session.find.css("#delete-frame", all=False)
+    frame = session.find.css("iframe", all=False)
     session.switch_frame(frame)
 
-    button = session.find.css("#remove-parent", all=False)
-    if closed:
-        button.click()
+    element = session.find.css("div", all=False)
 
     session.switch_frame("parent")
 
-    response = element_clear(session, button)
+    if closed:
+        session.execute_script("arguments[0].remove();", args=[frame])
+
+    response = element_clear(session, element)
     assert_error(response, "no such element")
 
 
