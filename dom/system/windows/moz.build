@@ -5,16 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    "WindowsLocationChild.h",
+    "WindowsLocationParent.h",
     "WindowsUtilsChild.h",
     "WindowsUtilsParent.h",
 ]
 
 UNIFIED_SOURCES += [
     "nsHapticFeedback.cpp",
+    "WindowsLocationParent.cpp",
     "WindowsLocationProvider.cpp",
 ]
 
+SOURCES += [
+    "WindowsLocationChild.cpp",  # includes locationapi.h
+]
+
 IPDL_SOURCES += [
+    "PWindowsLocation.ipdl",
     "PWindowsUtils.ipdl",
 ]
 
