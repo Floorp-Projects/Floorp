@@ -9,6 +9,7 @@ use api::{PrimitiveKeyKind, FillRule, POLYGON_CLIP_VERTEX_MAX};
 use api::units::*;
 use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
+use crate::command_buffer::PrimitiveCommand;
 use crate::clip::ClipLeafId;
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
@@ -654,6 +655,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
                     data_handle,
                     segment_instance_index: SegmentInstanceIndex::INVALID,
                     color_binding_index,
+                    use_legacy_path: false,
                 }
             }
         }
@@ -996,6 +998,7 @@ pub enum PrimitiveInstanceKind {
         data_handle: PrimitiveDataHandle,
         segment_instance_index: SegmentInstanceIndex,
         color_binding_index: ColorBindingIndex,
+        use_legacy_path: bool,
     },
     YuvImage {
         /// Handle to the common interned data for this primitive.
@@ -1211,6 +1214,9 @@ pub struct PrimitiveScratchBuffer {
 
     /// Set of sub-graphs that are required, determined during visibility pass
     pub required_sub_graphs: FastHashSet<PictureIndex>,
+
+    /// Buffer for building primitive command lists during prepare pass
+    pub prim_cmds: Vec<PrimitiveCommand>,
 }
 
 impl Default for PrimitiveScratchBuffer {
@@ -1225,6 +1231,7 @@ impl Default for PrimitiveScratchBuffer {
             debug_items: Vec::new(),
             messages: Vec::new(),
             required_sub_graphs: FastHashSet::default(),
+            prim_cmds: Vec::new(),
         }
     }
 }
@@ -1238,9 +1245,12 @@ impl PrimitiveScratchBuffer {
         self.segment_instances.recycle(recycler);
         self.gradient_tiles.recycle(recycler);
         recycler.recycle_vec(&mut self.debug_items);
+        recycler.recycle_vec(&mut self.prim_cmds);
     }
 
     pub fn begin_frame(&mut self) {
+        assert!(self.prim_cmds.is_empty());
+
         // Clear the clip mask tasks for the beginning of the frame. Append
         // a single kind representing no clip mask, at the ClipTaskIndex::INVALID
         // location.

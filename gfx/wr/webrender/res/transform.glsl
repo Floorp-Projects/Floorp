@@ -22,8 +22,8 @@ struct Transform {
 Transform fetch_transform(int id) {
     Transform transform;
 
-    transform.is_axis_aligned = (id >> 24) == 0;
-    int index = id & 0x00ffffff;
+    transform.is_axis_aligned = (id >> 23) == 0;
+    int index = id & 0x007fffff;
 
     // Create a UV base coord for each 8 texels.
     // This is required because trying to use an offset

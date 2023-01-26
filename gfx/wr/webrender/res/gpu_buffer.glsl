@@ -21,3 +21,22 @@ vec4[2] fetch_from_gpu_buffer_2(HIGHP_FS_ADDRESS int address) {
         TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(1, 0))
     );
 }
+
+vec4[3] fetch_from_gpu_buffer_3(HIGHP_FS_ADDRESS int address) {
+    ivec2 uv = get_gpu_buffer_uv(address);
+    return vec4[3](
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(2, 0))
+    );
+}
+
+vec4[4] fetch_from_gpu_buffer_4(HIGHP_FS_ADDRESS int address) {
+    ivec2 uv = get_gpu_buffer_uv(address);
+    return vec4[4](
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(0, 0)),
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(1, 0)),
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(2, 0)),
+        TEXEL_FETCH(sGpuBuffer, uv, 0, ivec2(3, 0))
+    );
+}
