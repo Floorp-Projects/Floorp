@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script>
+window.addEventListener("message", e => {
+  switch (e.data.type) {
+    case "focus":
+      window.focus();
+      break;
+
+    case "select": {
+      const text = document.body.firstChild;
+      document.getSelection().setBaseAndExtent(text, 0, text, e.data.length);
+      break;
+    }
+
+    case "selectedOffset": {
+      const sel = document.getSelection();
+      const text = document.body.firstChild;
+      if (sel.anchorNode !== text || sel.focusNode !== text) {
+        window.parent.postMessage([-1, -1], "*");
+      } else {
+        window.parent.postMessage([sel.anchorOffset, sel.focusOffset], "*");
+      }
+      break;
+    }
+
+    case "content":
+      window.parent.postMessage(document.body.textContent, "*");
+      break;
+  }
+});
+        </script>
+    </head>
+    <body onload="document.body.textContent = 'elit'"></body>
+</html>
