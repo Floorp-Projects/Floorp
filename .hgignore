@@ -131,9 +131,6 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/utils/mochaRunner/lib/
 ^remote/test/puppeteer/website
 
-^third_party/js/PKI.js/node_modules/
-^third_party/js/PKI.js/package-lock.json
-
 # git checkout of libstagefright
 ^media/libstagefright/android$
 
@@ -245,6 +242,10 @@ tps_result\.json
 gfx/wgpu/target
 gfx/wgpu/.*/build
 gfx/wr/target/
+
+# Ignore this files in certviewer
+toolkit/components/certviewer/content/node_modules/
+toolkit/components/certviewer/content/package-lock.json
 
 # Ignore Rust/Cargo output from running `cargo` directly for image_builder docker image
 ^taskcluster/docker/image_builder/build-image/target
