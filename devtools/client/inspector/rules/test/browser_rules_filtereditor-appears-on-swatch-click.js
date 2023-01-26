@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_filter.html";
 add_task(async function() {
   await addTab(TEST_URL);
 
-  const { view } = await openRuleView();
+  const { toolbox, view } = await openRuleView();
 
   info("Getting the filter swatch element");
   const swatch = getRuleViewProperty(
@@ -33,7 +33,37 @@ add_task(async function() {
     "The inplace editor wasn't shown as a result of the filter swatch click"
   );
 
-  await hideTooltipAndWaitForRuleViewChanged(filterTooltip, view);
+  info("Get the cssfilter widget instance");
+  const widget = filterTooltip.widget;
+  const select = widget.el.querySelector("select");
 
+  // Next we will check that interacting with the select does not close the
+  // filter tooltip.
+  info("Show the filter select");
+  const onSelectPopupShown = BrowserTestUtils.waitForSelectPopupShown(window);
+  EventUtils.synthesizeMouseAtCenter(select, {}, toolbox.win);
+  const selectPopup = await onSelectPopupShown;
+  ok(
+    filterTooltip.tooltip.isVisible(),
+    "The tooltip was not hidden when opening the select"
+  );
+
+  info("Hide the filter select");
+  const onSelectPopupHidden = once(selectPopup, "popuphidden");
+  const blurMenuItem = selectPopup.querySelector("menuitem[label='blur']");
+  EventUtils.synthesizeMouseAtCenter(blurMenuItem, {}, window);
+  await onSelectPopupHidden;
+  await waitFor(() => select.value === "blur");
+  is(
+    select.value,
+    "blur",
+    "The filter select was updated with the correct value"
+  );
+  ok(
+    filterTooltip.tooltip.isVisible(),
+    "The tooltip was not hidden when using the select"
+  );
+
+  await hideTooltipAndWaitForRuleViewChanged(filterTooltip, view);
   await waitForTick();
 });

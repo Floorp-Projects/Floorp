@@ -917,6 +917,13 @@ HTMLTooltip.prototype = {
       return true;
     }
 
+    if (typeof node.closest == "function" && node.closest("menupopup")) {
+      // Ignore events from menupopup elements which will not be children of the
+      // tooltip container even if their owner element is in the tooltip.
+      // See Bug 1811002.
+      return true;
+    }
+
     const tooltipWindow = this.panel.ownerDocument.defaultView;
     let win = node.ownerDocument.defaultView;
 
