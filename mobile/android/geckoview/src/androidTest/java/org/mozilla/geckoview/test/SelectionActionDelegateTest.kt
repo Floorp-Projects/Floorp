@@ -46,7 +46,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     override val rules: RuleChain = RuleChain.outerRule(activityRule).around(sessionRule)
 
     enum class ContentType {
-        DIV, EDITABLE_ELEMENT, IFRAME
+        DIV, EDITABLE_ELEMENT, IFRAME, IFRAME_XORIGIN
     }
 
     companion object {
@@ -59,6 +59,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             arrayOf("#contenteditable", ContentType.DIV, "sit", true),
             arrayOf("#iframe", ContentType.IFRAME, "amet", false),
             arrayOf("#designmode", ContentType.IFRAME, "consectetur", true),
+            arrayOf("#iframe-xorigin", ContentType.IFRAME_XORIGIN, "elit", false),
             arrayOf("#x-input", ContentType.EDITABLE_ELEMENT, "adipisci", true)
         )
     }
@@ -84,6 +85,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             ContentType.DIV -> SelectedDiv(id, initialContent)
             ContentType.EDITABLE_ELEMENT -> SelectedEditableElement(id, initialContent)
             ContentType.IFRAME -> SelectedFrame(id, initialContent)
+            ContentType.IFRAME_XORIGIN -> SelectedFrameXOrigin(id, initialContent)
         }
     }
 
@@ -92,6 +94,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             ContentType.DIV -> CollapsedDiv(id)
             ContentType.EDITABLE_ELEMENT -> CollapsedEditableElement(id)
             ContentType.IFRAME -> CollapsedFrame(id)
+            ContentType.IFRAME_XORIGIN -> CollapsedFrameXOrigin(id)
         }
     }
 
@@ -760,6 +763,54 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     }
 
     inner class CollapsedFrame(id: String) : SelectedFrame(id, "") {
+        override fun select() = selectTo(0)
+    }
+
+    open inner class SelectedFrameXOrigin(
+        val id: String,
+        override val initialContent: String
+    ) : SelectedContent {
+        override fun focus() {
+            mainSession.evaluateJS("document.querySelector('$id').contentWindow.postMessage({ type: 'focus' }, '*')")
+        }
+
+        protected fun selectTo(to: Int) {
+            mainSession.evaluateJS("document.querySelector('$id').contentWindow.postMessage({ type: 'select', length: $to }, '*')")
+        }
+
+        override fun select() = selectTo(initialContent.length)
+
+        override val content: String get() {
+            val promise = mainSession.evaluatePromiseJS(
+                """
+              new Promise(resolve => {
+                  window.addEventListener('message', e => {
+                      resolve(e.data);
+                  }, { once: true });
+                  document.querySelector('$id').contentDocument.postMessage({ type: 'content' }, '*');
+              });
+            """
+            )
+            return promise.value as String
+        }
+
+        override val selectionOffsets: Pair<Int, Int> get() {
+            val promise = mainSession.evaluatePromiseJS(
+                """
+              new Promise(resolve => {
+                  window.addEventListener('message', e => {
+                      resolve(e.data);
+                  }, { once: true });
+                  document.querySelector('$id').contentDocument.postMessage({ type: 'selectedOffset' }, '*');
+              });
+            """
+            )
+            val offsets = promise.value as JSONArray
+            return Pair(offsets[0] as Int, offsets[1] as Int)
+        }
+    }
+
+    inner class CollapsedFrameXOrigin(id: String) : SelectedFrameXOrigin(id, "") {
         override fun select() = selectTo(0)
     }
 
