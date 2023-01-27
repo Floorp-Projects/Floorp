@@ -1,12 +1,11 @@
-import {expectType} from 'tsd';
-import {
+import puppeteer, {
   connect,
   createBrowserFetcher,
   defaultArgs,
   executablePath,
   launch,
-  default as puppeteer,
-} from '../lib/esm/puppeteer/puppeteer.js';
+} from 'puppeteer';
+import {expectType} from 'tsd';
 
 expectType<typeof launch>(puppeteer.launch);
 expectType<typeof connect>(puppeteer.connect);

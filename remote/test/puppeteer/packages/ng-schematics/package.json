@@ -1,0 +1,86 @@
+{
+  "name": "@puppeteer/ng-schematics",
+  "version": "0.1.0",
+  "description": "Puppeteer Angular schematics",
+  "scripts": {
+    "dev": "npm run build --watch",
+    "dev:test": "npm run test --watch",
+    "copy": "wireit",
+    "build": "wireit",
+    "clean": "tsc --build --clean && rimraf lib",
+    "clean:test": "rimraf test/build",
+    "test": "wireit"
+  },
+  "wireit": {
+    "copy": {
+      "clean": "if-file-deleted",
+      "command": "node copySchemaFiles.js",
+      "files": [
+        "src/**/files/**",
+        "src/**/*.json"
+      ],
+      "output": [
+        "lib/**/files/**",
+        "lib/**/*.json"
+      ],
+      "dependencies": [
+        "clean"
+      ]
+    },
+    "build": {
+      "command": "tsc -b",
+      "files": [
+        "src/**/*.ts",
+        "!src/**/files",
+        "!src/**/*.json"
+      ],
+      "output": [
+        "lib/**",
+        "!lib/**/files",
+        "!lib/**/*.json"
+      ],
+      "dependencies": [
+        "copy"
+      ]
+    },
+    "test": {
+      "command": "mocha",
+      "dependencies": [
+        "clean:test",
+        "build"
+      ]
+    }
+  },
+  "keywords": [
+    "angular",
+    "puppeteer",
+    "schematics"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/puppeteer/puppeteer/tree/main/packages/ng-schematics"
+  },
+  "author": "The Chromium Authors",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14.1.0"
+  },
+  "dependencies": {
+    "@angular-devkit/architect": "^0.1501.2",
+    "@angular-devkit/core": "^15.1.2",
+    "@angular-devkit/schematics": "^15.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^14.15.0",
+    "@schematics/angular": "^14.2.8"
+  },
+  "files": [
+    "lib",
+    "!*.tsbuildinfo"
+  ],
+  "ng-add": {
+    "save": "devDependencies"
+  },
+  "schematics": "./lib/schematics/collection.json",
+  "builders": "./lib/builders/builders.json"
+}

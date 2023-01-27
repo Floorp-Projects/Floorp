@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Protocol from 'devtools-protocol';
+import {Protocol} from 'devtools-protocol';
 import expect from 'expect';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import {BrowserFetcher, TimeoutError} from 'puppeteer';
+import {Page} from 'puppeteer-core/internal/api/Page.js';
 import rimraf from 'rimraf';
 import sinon from 'sinon';
 import {TLSSocket} from 'tls';
 import {promisify} from 'util';
-import {Page} from '../../lib/cjs/puppeteer/common/Page.js';
-import {Product} from '../../lib/cjs/puppeteer/common/Product.js';
 import {getTestState, itOnlyRegularInstall} from './mocha-utils.js';
 import utils from './utils.js';
 
@@ -44,10 +44,10 @@ describe('Launcher specs', function () {
   describe('Puppeteer', function () {
     describe('BrowserFetcher', function () {
       it('should download and extract chrome linux binary', async () => {
-        const {server, puppeteer} = getTestState();
+        const {server} = getTestState();
 
         const downloadsFolder = await mkdtempAsync(TMP_FOLDER);
-        const browserFetcher = puppeteer.createBrowserFetcher({
+        const browserFetcher = new BrowserFetcher({
           platform: 'linux',
           path: downloadsFolder,
           host: server.PREFIX,
@@ -85,10 +85,10 @@ describe('Launcher specs', function () {
         await rmAsync(downloadsFolder);
       });
       it('should download and extract firefox linux binary', async () => {
-        const {server, puppeteer} = getTestState();
+        const {server} = getTestState();
 
         const downloadsFolder = await mkdtempAsync(TMP_FOLDER);
-        const browserFetcher = puppeteer.createBrowserFetcher({
+        const browserFetcher = new BrowserFetcher({
           platform: 'linux',
           path: downloadsFolder,
           host: server.PREFIX,
@@ -258,7 +258,8 @@ describe('Launcher specs', function () {
         const testTmpDir = await fs.promises.mkdtemp(
           path.join(os.tmpdir(), 'puppeteer_test_chrome_profile-')
         );
-        process.env['PUPPETEER_TMP_DIR'] = testTmpDir;
+        const oldTmpDir = puppeteer.configuration.temporaryDirectory;
+        puppeteer.configuration.temporaryDirectory = testTmpDir;
 
         // Path should be empty before starting the browser.
         expect(fs.readdirSync(testTmpDir).length).toEqual(0);
@@ -276,8 +277,9 @@ describe('Launcher specs', function () {
         await browser.close();
         // Profile should be deleted after closing the browser
         expect(fs.readdirSync(testTmpDir).length).toEqual(0);
+
         // Restore env var
-        process.env['PUPPETEER_TMP_DIR'] = '';
+        puppeteer.configuration.temporaryDirectory = oldTmpDir;
       });
       it('userDataDir option restores preferences', async () => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
@@ -529,7 +531,7 @@ describe('Launcher specs', function () {
         await puppeteer.launch(options).catch(error_ => {
           return (error = error_);
         });
-        expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
+        expect(error).toBeInstanceOf(TimeoutError);
       });
       it('should work with timeout = 0', async () => {
         const {puppeteer, defaultBrowserOptions} = getTestState();
@@ -623,21 +625,6 @@ describe('Launcher specs', function () {
     });
 
     describe('Puppeteer.launch', function () {
-      let productName!: Product;
-
-      before(async () => {
-        const {puppeteer} = getTestState();
-        productName = puppeteer._productName!;
-      });
-
-      after(async () => {
-        const {puppeteer} = getTestState();
-        // @ts-expect-error launcher is a private property that users can't
-        // touch, but for testing purposes we need to reset it.
-        puppeteer._lazyLauncher = undefined;
-        puppeteer._productName = productName;
-      });
-
       itOnlyRegularInstall('should be able to launch Chrome', async () => {
         const {puppeteer} = getTestState();
         const browser = await puppeteer.launch({product: 'chrome'});
@@ -889,26 +876,29 @@ describe('Launcher specs', function () {
         const executablePath = puppeteer.executablePath('chrome');
         expect(executablePath).toBeTruthy();
       });
-      describe('when PUPPETEER_EXECUTABLE_PATH is set', () => {
+      describe('when executable path is configured', () => {
         const sandbox = sinon.createSandbox();
 
         beforeEach(() => {
-          process.env['PUPPETEER_EXECUTABLE_PATH'] = '';
+          const {puppeteer} = getTestState();
           sandbox
-            .stub(process.env, 'PUPPETEER_EXECUTABLE_PATH')
+            .stub(puppeteer.configuration, 'executablePath')
             .value('SOME_CUSTOM_EXECUTABLE');
         });
 
         afterEach(() => {
-          return sandbox.restore();
+          sandbox.restore();
         });
 
-        it('its value is returned', async () => {
+        it('its value is used', async () => {
           const {puppeteer} = getTestState();
-
-          const executablePath = puppeteer.executablePath();
-
-          expect(executablePath).toEqual('SOME_CUSTOM_EXECUTABLE');
+          try {
+            puppeteer.executablePath();
+          } catch (error) {
+            expect((error as Error).message).toContain(
+              'SOME_CUSTOM_EXECUTABLE'
+            );
+          }
         });
       });
 
@@ -929,26 +919,29 @@ describe('Launcher specs', function () {
             osArchStub.restore();
             fsExistsStub.restore();
           });
-          describe('and PUPPETEER_EXECUTABLE_PATH is set', () => {
+          describe('and the executable path is configured', () => {
             const sandbox = sinon.createSandbox();
 
             beforeEach(() => {
-              process.env['PUPPETEER_EXECUTABLE_PATH'] = '';
+              const {puppeteer} = getTestState();
               sandbox
-                .stub(process.env, 'PUPPETEER_EXECUTABLE_PATH')
+                .stub(puppeteer.configuration, 'executablePath')
                 .value('SOME_CUSTOM_EXECUTABLE');
             });
 
             afterEach(() => {
-              return sandbox.restore();
+              sandbox.restore();
             });
 
-            it('its value is returned', async () => {
+            it('its value is used', async () => {
               const {puppeteer} = getTestState();
-
-              const executablePath = puppeteer.executablePath();
-
-              expect(executablePath).toEqual('SOME_CUSTOM_EXECUTABLE');
+              try {
+                puppeteer.executablePath();
+              } catch (error) {
+                expect((error as Error).message).toContain(
+                  'SOME_CUSTOM_EXECUTABLE'
+                );
+              }
             });
           });
         });
@@ -960,9 +953,9 @@ describe('Launcher specs', function () {
             const fsExistsStub = sinon.stub(fs, 'existsSync');
             fsExistsStub.withArgs('/usr/bin/chromium-browser').returns(false);
 
-            const executablePath = puppeteer.executablePath();
-
-            expect(executablePath).not.toEqual('/usr/bin/chromium-browser');
+            expect(() => {
+              return puppeteer.executablePath();
+            }).toThrowError();
 
             osPlatformStub.restore();
             osArchStub.restore();
