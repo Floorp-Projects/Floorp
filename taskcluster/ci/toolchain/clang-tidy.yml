@@ -68,17 +68,16 @@ macosx64-arch64-clang-tidy:
     treeherder:
         symbol: TM(clang-tidy-aarch64)
     worker-type: b-linux-large-gcp
-    worker:
-        env:
-            OSX_ARCH: arm64
     run:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
     fetches:
         toolchain:
             - linux64-cctools-port
