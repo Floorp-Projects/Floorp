@@ -6,20 +6,13 @@ Bug 1315288: Add input checks for VP9 r=rillian
 diff --git a/vp9/vp9_cx_iface.c b/vp9/vp9_cx_iface.c
 --- a/vp9/vp9_cx_iface.c
 +++ b/vp9/vp9_cx_iface.c
-@@ -1353,21 +1353,30 @@ static vpx_codec_err_t encoder_encode(vp
-     cpi->svc.time_stamp_superframe = dst_time_stamp;
-
-     // Set up internal flags
-     if (ctx->base.init_flags & VPX_CODEC_USE_PSNR) cpi->b_calculate_psnr = 1;
-
-     if (img != NULL) {
+@@ -1372,13 +1372,22 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
+           timebase_units_to_ticks(timestamp_ratio, pts + duration);
        res = image2yuvconfig(img, &sd);
 
 -      // Store the original flags in to the frame buffer. Will extract the
 -      // key frame flag when we actually encode this frame.
 -      if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
--                                dst_time_stamp, dst_end_time_stamp)) {
--        res = update_error_state(ctx, &cpi->common.error);
 +      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
 +        /* from vpx_encoder.h for g_w/g_h:
 +           "Note that the frames passed as input to the encoder must have this
@@ -31,14 +24,13 @@ diff --git a/vp9/vp9_cx_iface.c b/vp9/vp9_cx_iface.c
 +        // Store the original flags in to the frame buffer. Will extract the
 +        // key frame flag when we actually encode this frame.
 +        if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
-+                                  dst_time_stamp, dst_end_time_stamp)) {
+                                 dst_time_stamp, dst_end_time_stamp)) {
+-        res = update_error_state(ctx, &cpi->common.error);
 +          res = update_error_state(ctx, &cpi->common.error);
 +        }
++        ctx->next_frame_flags = 0;
        }
-       ctx->next_frame_flags = 0;
+-      ctx->next_frame_flags = 0;
      }
 
      cx_data = ctx->cx_data;
-     cx_data_sz = ctx->cx_data_sz;
-
-     /* Any pending invisible frames? */
