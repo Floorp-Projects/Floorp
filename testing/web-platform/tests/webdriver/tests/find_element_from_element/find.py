@@ -33,6 +33,15 @@ def test_no_browsing_context(session, closed_frame):
     assert_error(response, "no such window")
 
 
+def test_no_such_element_with_shadow_root(session, get_test_page):
+    session.url = get_test_page()
+
+    element = session.find.css("custom-element", all=False)
+
+    result = find_element(session, element.shadow_root.id, "css selector", "#in-shadow-dom")
+    assert_error(result, "no such element")
+
+
 @pytest.mark.parametrize(
     "selector",
     ["#same1", "#in-frame", "#in-shadow-dom"],

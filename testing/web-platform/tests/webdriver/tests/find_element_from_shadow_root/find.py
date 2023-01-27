@@ -1,4 +1,5 @@
 import pytest
+from webdriver.client import ShadowRoot
 from webdriver.transport import Response
 
 from tests.support.asserts import assert_error, assert_same_element, assert_success
@@ -33,78 +34,82 @@ def test_no_browsing_context(session, closed_frame):
     assert_error(response, "no such window")
 
 
-def test_no_such_element_with_unknown_shadow_root(session, inline, get_shadow_page):
-    session.url = inline(get_shadow_page("<div><input type='checkbox'/></div>"))
-    custom_element = session.find.css("custom-shadow-element", all=False)
-    shadow_root = custom_element.shadow_root
-
-    session.url = inline("<p>")
-
-    result = find_element(session, shadow_root.id, "css selector", "input")
-    assert_error(result, "no such element")
-
-
-@pytest.mark.parametrize(
-    "selector",
-    ["#same1", "#in-frame", "#deep"],
-    ids=["not-existent", "existent-other-frame", "existent-outside-shadow-root"],
-)
-def test_no_such_element_with_unknown_selector(session, get_test_page, selector):
+def test_no_such_shadow_root_with_element(session, get_test_page):
     session.url = get_test_page()
 
-    custom_element = session.find.css("#custom-checkbox", all=False)
-    shadow_root = custom_element.shadow_root
+    element = session.find.css("custom-element", all=False)
 
-    response = find_element(session, shadow_root.id, "css selector", selector)
-    assert_error(response, "no such element")
+    result = find_element(session, element.id, "css selector", "#in-shadow-root")
+    assert_error(result, "no such shadow root")
 
 
-def test_no_such_element_with_shadow_root_from_other_window_handle(
-    session, inline, get_shadow_page
+def test_no_such_shadow_root_with_unknown_shadow_root(session):
+    shadow_root = ShadowRoot(session, "foo")
+
+    result = find_element(session, shadow_root.id, "css selector", "input")
+    assert_error(result, "no such shadow root")
+
+
+def test_no_such_shadow_root_with_shadow_root_from_other_window_handle(
+    session, get_test_page
 ):
-    session.url = inline(get_shadow_page("<div>"))
-    custom_element = session.find.css("custom-shadow-element", all=False)
-    shadow_root = custom_element.shadow_root
+    session.url = get_test_page()
+
+    element = session.find.css("custom-element", all=False)
+    shadow_root = element.shadow_root
 
     new_handle = session.new_window()
     session.window_handle = new_handle
 
     response = find_element(session, shadow_root.id, "css selector", "div")
-    assert_error(response, "no such element")
+    assert_error(response, "no such shadow root")
 
 
-def test_no_such_element_with_shadow_root_from_other_frame(
-    session, iframe, inline, get_shadow_page
+def test_no_such_shadow_root_with_shadow_root_from_other_frame(
+    session, get_test_page
 ):
-    session.url = inline(iframe(get_shadow_page("<div>")))
-
+    session.url = get_test_page(as_frame=True)
     session.switch_frame(0)
-    custom_element = session.find.css("custom-shadow-element", all=False)
-    shadow_root = custom_element.shadow_root
+
+    element = session.find.css("custom-element", all=False)
+    shadow_root = element.shadow_root
+
     session.switch_frame("parent")
 
     response = find_element(session, shadow_root.id, "css selector", "div")
-    assert_error(response, "no such element")
+    assert_error(response, "no such shadow root")
 
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
-def test_detached_shadow_root(session, iframe, inline, get_shadow_page, as_frame):
-    page = get_shadow_page("<div><input type='checkbox'/></div>")
+def test_detached_shadow_root(session, get_test_page, as_frame):
+    session.url = get_test_page(as_frame=as_frame)
 
     if as_frame:
-        session.url = inline(iframe(page))
         frame = session.find.css("iframe", all=False)
         session.switch_frame(frame)
-    else:
-        session.url = inline(page)
 
-    custom_element = session.find.css("custom-shadow-element", all=False)
-    shadow_root = custom_element.shadow_root
+    element = session.find.css("custom-element", all=False)
+    shadow_root = element.shadow_root
 
-    session.execute_script("arguments[0].remove();", args=[custom_element])
+    session.execute_script("arguments[0].remove();", args=[element])
 
     response = find_element(session, shadow_root.id, "css selector", "input")
     assert_error(response, "detached shadow root")
+
+
+@pytest.mark.parametrize(
+    "selector",
+    ["#same1", "#in-frame", "#with-children"],
+    ids=["not-existent", "existent-other-frame", "existent-outside-shadow-root"],
+)
+def test_no_such_element_with_unknown_selector(session, get_test_page, selector):
+    session.url = get_test_page()
+
+    custom_element = session.find.css("custom-element", all=False)
+    shadow_root = custom_element.shadow_root
+
+    response = find_element(session, shadow_root.id, "css selector", selector)
+    assert_error(response, "no such element")
 
 
 @pytest.mark.parametrize("using", ["a", True, None, 1, [], {}])

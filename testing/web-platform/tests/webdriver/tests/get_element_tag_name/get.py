@@ -36,6 +36,15 @@ def test_no_such_element_with_invalid_value(session):
     assert_error(response, "no such element")
 
 
+def test_no_such_element_with_shadow_root(session, get_test_page):
+    session.url = get_test_page()
+
+    element = session.find.css("custom-element", all=False)
+
+    result = get_element_tag_name(session, element.shadow_root.id)
+    assert_error(result, "no such element")
+
+
 @pytest.mark.parametrize("closed", [False, True], ids=["open", "closed"])
 def test_no_such_element_from_other_window_handle(session, inline, closed):
     session.url = inline("<div id='parent'><p/>")
