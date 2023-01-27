@@ -429,6 +429,10 @@ bool DrawTargetWebgl::SharedContext::Initialize() {
 
   mMaxTextureSize = mWebgl->Limits().maxTex2dSize;
 
+  if (kIsMacOS) {
+    mRasterizationTruncates = mWebgl->Vendor() == gl::GLVendor::ATI;
+  }
+
   CachePrefs();
 
   if (!CreateShaders()) {
@@ -2547,7 +2551,7 @@ static Maybe<WGR::VertexBuffer> GeneratePathVertexBuffer(
     WGR::OutputVertex* aBuffer, size_t aBufferCapacity) {
   WGR::VertexBuffer vb = WGR::wgr_path_rasterize_to_tri_list(
       &aPath.mPath, aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height,
-      true, false, aBuffer, aBufferCapacity);
+      true, false, false, aBuffer, aBufferCapacity);
   if (!vb.len || (aBuffer && vb.len > aBufferCapacity)) {
     WGR::wgr_vertex_buffer_release(vb);
     return Nothing();

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "GLDefs.h"
+#include "GLVendor.h"
 #include "ImageContainer.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
@@ -676,6 +677,7 @@ struct InitContextResult final {
   WebGLContextOptions options;
   webgl::Limits limits;
   EnumMask<layers::SurfaceDescriptor::Type> uploadableSdTypes;
+  gl::GLVendor vendor;
 };
 
 // -

@@ -6497,7 +6497,7 @@ dependencies = [
 [[package]]
 name = "wpf-gpu-raster"
 version = "0.1.0"
-source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=e07e3741d1613b1b7ddb85a1120ed4071b3d6a56#e07e3741d1613b1b7ddb85a1120ed4071b3d6a56"
+source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=a6514854d4518b02f2805719ff6cd74dae7dfde6#a6514854d4518b02f2805719ff6cd74dae7dfde6"
 dependencies = [
  "typed-arena-nomut",
 ]
