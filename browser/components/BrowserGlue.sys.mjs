@@ -4322,6 +4322,8 @@ BrowserGlue.prototype = {
       xulStore.removeValue(BROWSER_DOCURL, "urlbar-container", "width");
     }
 
+    // Migration 134 was removed because it was no longer necessary.
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
