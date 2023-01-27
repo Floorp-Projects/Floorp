@@ -3,7 +3,7 @@
     <!-- Text displayed when choosing which app to call with after selecting a phone number-->
     <string name="mozac_support_ktx_menu_call_with">…arqalı qońıraw etiw</string>
     <!-- Text displayed when choosing which app to email with after selecting an email address-->
-    <string name="mozac_support_ktx_menu_email_with">Elektron pochta járdeminde...</string>
+    <string name="mozac_support_ktx_menu_email_with">Elektron pochta járdeminde…</string>
     <string name="mozac_support_ktx_menu_share_with">…járdeminde bólisiw</string>
     <string name="mozac_support_ktx_share_dialog_title">Arqalı bólisiw</string>
 </resources>

@@ -42,6 +42,9 @@
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Jabıw</string>
 
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ashıw múmkin emes</string>
+
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
     <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Jeke júklemelerdi biykarlayıq pa?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->

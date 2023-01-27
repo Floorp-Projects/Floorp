@@ -5,4 +5,6 @@
     <!-- Name for one of the font options available to use -->
     <string name="mozac_feature_readerview_serif_font">Serif</string>
 
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Qara</string>
     </resources>

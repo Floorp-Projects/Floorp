@@ -22,6 +22,9 @@
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Arqaǵa qaytıw (Usınıs etiledi)</string>
 
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Qáwipti qabıllaw hám dawam etiw</string>
+
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Bul veb-sayt qáwipsiz jalǵanıwdı talap etedi.</string>
 
@@ -39,6 +42,14 @@
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Jalǵanbadı</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Sayt waqıtsha islemey qalǵan yamasa júdá bánt bolıwı múmkin. Keyinirek jáne urınıp kórıń.</li>
+        <li>Eger siz birde-bir betti júkley almasańız, qurılmańız mobil internetin yamasa Wi-Fi jalǵanıwın tekseriń.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Serverdan kútilmegen juwap</string>
