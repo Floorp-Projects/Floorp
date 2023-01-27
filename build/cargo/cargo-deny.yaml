@@ -1,0 +1,10 @@
+---
+command: cargo-deny
+continue_on_error: true
+cargo_build_flags:
+  - --frozen
+  - --manifest-path
+  - "{manifest}"
+  - --target={arch}
+  - --features
+  - "{features}"

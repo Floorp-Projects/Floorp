@@ -9,6 +9,7 @@ import json
 import logging
 import operator
 import os
+import os.path
 import platform
 import re
 import shutil
@@ -16,9 +17,11 @@ import subprocess
 import sys
 import tempfile
 import time
+from os import path
 from pathlib import Path
 
 import mozpack.path as mozpath
+import yaml
 from mach.decorators import (
     Command,
     CommandArgument,
@@ -26,6 +29,7 @@ from mach.decorators import (
     SettingsProvider,
     SubCommand,
 )
+from voluptuous import All, Boolean, Required, Schema
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 from mozbuild.base import BinaryNotFoundException, BuildEnvironmentNotFoundException
@@ -100,6 +104,47 @@ def watch(command_context, verbose=False):
         sys.exit(3)
 
 
+CARGO_CONFIG_NOT_FOUND_ERROR_MSG = """\
+The sub-command {subcommand} is not currently configured to be used with ./mach cargo.
+To do so, add the corresponding file in <mozilla-root-dir>/cargo/config, following the template provided in <mozilla-root-dir>/cargo/config/template.yaml """
+
+
+def _cargo_config_yaml_schema():
+    def starts_with_cargo(s):
+        if s.startswith("cargo-"):
+            return s
+        else:
+            raise ValueError
+
+    return Schema(
+        {
+            # The name of the command (not checked for now, but maybe
+            #  later)
+            Required("command"): All(str, starts_with_cargo),
+            # Whether `make` should stop immediately in case
+            # of error returned by the command. Default: False
+            "continue_on_error": Boolean,
+            # Build flags to use.  If this variable is not
+            # defined here, the build flags are generated automatically and are
+            # the same as for `cargo build`. See available substitutions at the
+            # end.
+            "cargo_build_flags": [str],
+            # Extra build flags to use. These flags are added
+            # after the cargo_build_flags both when they are provided or
+            # automatically generated. See available substitutions at the end.
+            "cargo_extra_flags": [str],
+            # Available substitutions for `cargo_*_flags`:
+            # * {arch}: architecture target
+            # * {crate}: current crate name
+            # * {directory}: Directory of the current crate within the source tree
+            # * {features}: Rust features (for `--features`)
+            # * {manifest}: full path of `Cargo.toml` file
+            # * {target}: `--lib` for library, `--bin CRATE` for executables
+            # * {topsrcdir}: Top directory of sources
+        }
+    )
+
+
 @Command(
     "cargo",
     category="build",
@@ -109,15 +154,16 @@ def watch(command_context, verbose=False):
 @CommandArgument(
     "cargo_command",
     default=None,
-    choices=["check", "udeps", "audit", "clippy"],
-    help="The cargo subcommand to run.",
+    help="Target to cargo, must be one of the commands in config/cargo/",
 )
 @CommandArgument(
     "--all-crates",
     action="store_true",
     help="Check all of the crates in the tree.",
 )
-@CommandArgument("crates", default=None, nargs="*", help="The crate name(s) to check.")
+@CommandArgument(
+    "-p", "--package", default=None, help="The specific crate name to check."
+)
 @CommandArgument(
     "--jobs",
     "-j",
@@ -134,7 +180,7 @@ def watch(command_context, verbose=False):
     help="Emit error messages as JSON.",
 )
 @CommandArgument(
-    "--no-errors",
+    "--continue-on-error",
     action="store_true",
     help="Do not return an error exit code if the subcommands errors out.",
 )
@@ -147,11 +193,11 @@ def cargo(
     command_context,
     cargo_command,
     all_crates=None,
-    crates=None,
+    package=None,
     jobs=0,
     verbose=False,
     message_format_json=False,
-    no_errors=False,
+    continue_on_error=False,
     subcommand_args=[],
 ):
 
@@ -159,7 +205,35 @@ def cargo(
 
     command_context.log_manager.enable_all_structured_loggers()
 
-    if cargo_command in ["check", "udeps", "clippy"]:
+    topsrcdir = Path(mozpath.normpath(command_context.topsrcdir))
+    cargodir = Path(topsrcdir / "build" / "cargo")
+
+    cargo_command_basename = "cargo-" + cargo_command + ".yaml"
+    cargo_command_fullname = Path(cargodir / cargo_command_basename)
+    if path.exists(cargo_command_fullname):
+        with open(cargo_command_fullname) as fh:
+            yaml_config = yaml.load(fh, Loader=yaml.FullLoader)
+            schema = _cargo_config_yaml_schema()
+            schema(yaml_config)
+        if not yaml_config:
+            yaml_config = {}
+    else:
+        print(CARGO_CONFIG_NOT_FOUND_ERROR_MSG.format(subcommand=cargo_command))
+        return 1
+
+    # print("yaml_config = ", yaml_config)
+
+    yaml_config.setdefault("continue_on_error", False)
+    continue_on_error = continue_on_error or yaml_config["continue_on_error"] is True
+
+    cargo_build_flags = yaml_config.get("cargo_build_flags")
+    if cargo_build_flags is not None:
+        cargo_build_flags = " ".join(cargo_build_flags)
+    cargo_extra_flags = yaml_config.get("cargo_extra_flags")
+    if cargo_extra_flags is not None:
+        cargo_extra_flags = " ".join(cargo_extra_flags)
+
+    if cargo_build_flags:
         try:
             command_context.config_environment
         except BuildEnvironmentNotFoundException:
@@ -176,19 +250,24 @@ def cargo(
 
     # XXX duplication with `mach vendor rust`
     crates_and_roots = {
-        "gkrust": "toolkit/library/rust",
-        "gkrust-gtest": "toolkit/library/gtest/rust",
-        "geckodriver": "testing/geckodriver",
+        "gkrust": {"directory": "toolkit/library/rust", "library": True},
+        "gkrust-gtest": {"directory": "toolkit/library/gtest/rust", "library": True},
+        "geckodriver": {"directory": "testing/geckodriver", "library": False},
     }
 
     if all_crates:
         crates = crates_and_roots.keys()
-    elif not crates:
+    elif package:
+        crates = [package]
+    else:
         crates = ["gkrust"]
 
+    if subcommand_args:
+        subcommand_args = " ".join(subcommand_args)
+
     for crate in crates:
-        root = crates_and_roots.get(crate, None)
-        if not root:
+        crate_info = crates_and_roots.get(crate, None)
+        if not crate_info:
             print(
                 "Cannot locate crate %s.  Please check your spelling or "
                 "add the crate information to the list." % crate
@@ -202,24 +281,46 @@ def cargo(
             "force-cargo-host-program-%s" % cargo_command,
         ]
 
+        directory = crate_info["directory"]
+        # you can use these variables in 'cargo_build_flags'
+        subst = {
+            "arch": '"$(RUST_TARGET)"',
+            "crate": crate,
+            "directory": directory,
+            "features": '"$(RUST_LIBRARY_FEATURES)"',
+            "manifest": str(Path(topsrcdir / directory / "Cargo.toml")),
+            "target": "--lib" if crate_info["library"] else "--bin " + crate,
+            "topsrcdir": str(topsrcdir),
+        }
+
         if subcommand_args:
-            targets = targets + ["cargo_extra_cli_flags=%s" % " ".join(subcommand_args)]
-        if cargo_command == "audit":
             targets = targets + [
-                "cargo_build_flags=-f %s/Cargo.lock" % command_context.topsrcdir
+                "cargo_extra_cli_flags=%s" % (subcommand_args.format(**subst))
+            ]
+        if cargo_build_flags:
+            targets = targets + [
+                "cargo_build_flags=%s" % (cargo_build_flags.format(**subst))
             ]
 
         append_env = {}
+        if cargo_extra_flags:
+            append_env["CARGO_EXTRA_FLAGS"] = cargo_extra_flags.format(**subst)
         if message_format_json:
             append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
-        if no_errors:
-            append_env["CARGO_NO_ERR"] = "1"
-        if cargo_command == "audit":
+        if continue_on_error:
+            append_env["CARGO_CONTINUE_ON_ERROR"] = "1"
+        if cargo_build_flags:
             append_env["CARGO_NO_AUTO_ARG"] = "1"
+        else:
+            append_env[
+                "ADD_RUST_LTOABLE"
+            ] = "force-cargo-library-{s:s} force-cargo-program-{s:s}".format(
+                s=cargo_command
+            )
 
         ret = command_context._run_make(
             srcdir=False,
-            directory=root,
+            directory=directory,
             ensure_exit_code=0,
             silent=not verbose,
             print_directory=False,
