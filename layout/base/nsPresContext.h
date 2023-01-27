@@ -238,13 +238,13 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   /**
    * Returns the root widget for this.
    */
-  already_AddRefed<nsIWidget> GetRootWidget() const;
+  nsIWidget* GetRootWidget() const;
 
   /**
    * Returns the widget which may have native focus and handles text input
    * like keyboard input, IME, etc.
    */
-  already_AddRefed<nsIWidget> GetTextInputHandlingWidget() const {
+  nsIWidget* GetTextInputHandlingWidget() const {
     // Currently, root widget for each PresContext handles text input.
     return GetRootWidget();
   }

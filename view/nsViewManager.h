@@ -282,7 +282,7 @@ class nsViewManager final {
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  already_AddRefed<nsIWidget> GetRootWidget();
+  nsIWidget* GetRootWidget() const;
 
   /**
    * Indicate whether the viewmanager is currently painting

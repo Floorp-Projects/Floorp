@@ -81,7 +81,10 @@ class TextComposition final {
   TextRangeArray* GetRanges() const { return mRanges; }
   // Returns the widget which is proper to call NotifyIME().
   already_AddRefed<nsIWidget> GetWidget() const {
-    return mPresContext ? mPresContext->GetRootWidget() : nullptr;
+    if (!mPresContext) {
+      return nullptr;
+    }
+    return do_AddRef(mPresContext->GetRootWidget());
   }
   // Returns the tab parent which has this composition in its remote process.
   BrowserParent* GetBrowserParent() const { return mBrowserParent; }

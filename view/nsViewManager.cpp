@@ -895,16 +895,17 @@ void nsViewManager::DecrementDisableRefreshCount() {
   NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
-already_AddRefed<nsIWidget> nsViewManager::GetRootWidget() {
-  nsCOMPtr<nsIWidget> rootWidget;
-  if (mRootView) {
-    if (mRootView->HasWidget()) {
-      rootWidget = mRootView->GetWidget();
-    } else if (mRootView->GetParent()) {
-      rootWidget = mRootView->GetParent()->GetViewManager()->GetRootWidget();
-    }
+nsIWidget* nsViewManager::GetRootWidget() const {
+  if (!mRootView) {
+    return nullptr;
   }
-  return rootWidget.forget();
+  if (mRootView->HasWidget()) {
+    return mRootView->GetWidget();
+  }
+  if (mRootView->GetParent()) {
+    return mRootView->GetParent()->GetViewManager()->GetRootWidget();
+  }
+  return nullptr;
 }
 
 LayoutDeviceIntRect nsViewManager::ViewToWidget(nsView* aView,
