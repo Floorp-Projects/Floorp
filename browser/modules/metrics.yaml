@@ -31,11 +31,12 @@ browser.engagement:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172#c8
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781578
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811152#c5
     data_sensitivity:
       - interaction
     notification_emails:
       - loines@mozilla.com
-    expires: 112
+    expires: never
     send_in_pings:
       - baseline
       - metrics
@@ -59,11 +60,12 @@ browser.engagement:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169#c14
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781578
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811152#c5
     data_sensitivity:
       - interaction
     notification_emails:
       - loines@mozilla.com
-    expires: 112
+    expires: never
     send_in_pings:
       - baseline
       - metrics
