@@ -5,5 +5,5 @@ exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
   -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET:-10.12} \
   -target $TARGET \
   -B $MOZ_FETCHES_DIR/cctools/bin \
-  -isysroot $MOZ_FETCHES_DIR/MacOSX11.3.sdk \
+  -isysroot $MOZ_FETCHES_DIR/MacOSX13.0.sdk \
   "$@"
