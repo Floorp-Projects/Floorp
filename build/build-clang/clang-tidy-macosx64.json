@@ -1,13 +1,6 @@
 {
     "stages": "1",
     "build_clang_tidy": true,
-    "osx_cross_compile": true,
-    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
-    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
-    "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
-    "ar": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ar",
-    "ranlib": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ranlib",
-    "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
         "clang_include_cleaner.patch",
         "clang-tidy-ci.patch"
