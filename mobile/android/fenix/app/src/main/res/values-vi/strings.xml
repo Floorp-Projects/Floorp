@@ -356,6 +356,10 @@
     <string name="preferences_cookie_banner_reduction">Giảm biểu ngữ cookie</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Giảm biểu ngữ cookie</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Tắt</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Bật</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
@@ -365,6 +369,8 @@
     <string name="reduce_cookie_banner_off_for_site">Tắt cho trang web này</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Bật cho trang web này</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Trang web hiện không được hỗ trợ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Bật giảm biểu ngữ cookie cho %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -374,14 +380,18 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s có thể thử tự động từ chối yêu cầu cookie. Nếu không có tùy chọn từ chối, %2$s có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s có thể cố gắng tự động từ chối yêu cầu cookie.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s có thể cố gắng tự động từ chối yêu cầu cookie.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s thử tự động từ chối tất cả các yêu cầu cookie trên các trang web được hỗ trợ.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Biểu ngữ cookie sẽ biến mất!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Biểu ngữ cookie sẽ biến mất!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể. Nếu không, chấp nhận tất cả cookie để loại bỏ biểu ngữ cookie.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Tự động từ chối các yêu cầu cookie khi có thể.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Tự động từ chối các yêu cầu cookie khi có thể.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Cho phép %1$s tự động từ chối yêu cầu cookie khi có thể?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Không phải bây giờ</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->

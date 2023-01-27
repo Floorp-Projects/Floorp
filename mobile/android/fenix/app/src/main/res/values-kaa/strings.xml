@@ -216,6 +216,9 @@
     <string name="preferences_search">Izlew</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Mánzil qatarı</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s haqqında </string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Qosımsha</string>
 
@@ -323,7 +326,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Qurılma atı bos bolıwı múmkin emes.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">Sinxronlaw...</string>
+    <string name="sync_syncing_in_progress">Sinxronlaw…</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Mánziller</string>
 
@@ -347,6 +350,9 @@
     <string name="preference_top_toolbar">Joqarı</string>
     <!-- Preference for using bottom toolbar -->
     <string name="preference_bottom_toolbar">Tómen</string>
+
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Qara</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -374,7 +380,7 @@
     <string name="history_search_group_site">%d sayt</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d saytlar</string>
+    <string name="history_search_group_sites">%d sayt</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Jaqında jawılǵan betler</string>
@@ -627,6 +633,8 @@
     <string name="create_collection_select_tabs">Betlerdi tańlań</string>
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">Toplamdı tańlań</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Toplam atı</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">Jańa toplam qosıw</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
@@ -732,6 +740,9 @@
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Kiriw</string>
 
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Avtomatik</string>
+
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Betler jiberildi!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -774,7 +785,7 @@
     <string name="add_to_homescreen_add">Qosıw</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Loginlar hám paroller</string>
+    <string name="preferences_passwords_logins_and_passwords">Loginler hám paroller</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Login hám parollerdi saqlaw</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -783,9 +794,9 @@
     <string name="preferences_logins_add_login">Login qosıw</string>
 
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Saqlanǵan loginlar</string>
+    <string name="preferences_passwords_saved_logins">Saqlanǵan loginler</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Loginlardı izleń</string>
+    <string name="preferences_passwords_saved_logins_search">Loginlerdı izleń</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sayt</string>
     <!-- The header for the username for a login -->
@@ -801,8 +812,21 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Paroldi jasırıw</string>
 
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Keyinirek</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Házir sazlaw</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Sońǵı qollanılǵan</string>
+
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Mánziller</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Bank kartaları</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Bank kartasın qosıw</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Saqlanǵan kartalardı basqarıw</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Mánzil qosıw</string>
 
@@ -810,6 +834,8 @@
     <string name="credit_cards_add_card">Karta qosıw</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Karta nomeri</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Ámel qılıw múddeti</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Kartanı óshiriw</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -830,6 +856,10 @@
     <string name="credit_cards_warning_dialog_later">Keyinirek</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Mánzil qosıw</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Atı</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Ákesiniń atı</string>
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name">Familiya</string>
     <!-- The header for the street address of an address -->
@@ -886,6 +916,8 @@
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Biykarlaw</string>
 
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Ózgerislerdi loginge saqlaw</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Ózgeris kiritiw</string>
     <!--  The page title for adding new login. -->
@@ -909,6 +941,9 @@
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Sazlamalar</string>
 
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Qáwenderlik etken</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Alıp taslaw</string>
 
@@ -917,6 +952,9 @@
 
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Kóbirek úyreniw</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Qáwenderlik etken</string>
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Sazlamalarǵa ótiw</string>

@@ -172,6 +172,8 @@
     <string name="browser_menu_stop">Arrêter</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Modules complémentaires</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Informations du compte</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Aucun module ici</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -385,12 +387,16 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s peut essayer automatiquement de refuser les demandes de dépôt de cookies.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s peut essayer de refuser automatiquement les demandes de dépôt de cookies sur les sites compatibles.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title">Finies les bannières de cookies !</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rejette automatiquement les demandes de cookies, lorsque cela est possible. Sinon, accepte tous les cookies pour supprimer les bannières de cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Rejette automatiquement les demandes de cookies, lorsque cela est possible.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Autoriser %1$s à rejeter automatiquement les demandes de cookies, lorsque cela est possible ?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Plus tard</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
