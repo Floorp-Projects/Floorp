@@ -78,7 +78,7 @@ function testSelectionRange(
 }
 
 /**
- * Test text selection.
+ * Test text selection via keyboard.
  */
 addAccessibleTask(
   `
@@ -302,6 +302,53 @@ addAccessibleTask(
     await events;
     testSelectionRange(browser, input, input, 0, input, 4);
     testTextGetSelection(input, 0, 4, 0);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test text selection via API.
+ */
+addAccessibleTask(
+  `
+  <p id="paragraph">hello world</p>
+  <ol>
+    <li id="li">Number one</li>
+  </ol>
+  `,
+  async function(browser, docAcc) {
+    const paragraph = findAccessibleChildByID(docAcc, "paragraph", [
+      nsIAccessibleText,
+    ]);
+
+    let selChanged = waitForSelectionChange(paragraph);
+    paragraph.setSelectionBounds(0, 2, 4);
+    await selChanged;
+    testTextGetSelection(paragraph, 2, 4, 0);
+
+    selChanged = waitForSelectionChange(paragraph);
+    paragraph.addSelection(6, 10);
+    await selChanged;
+    testTextGetSelection(paragraph, 6, 10, 1);
+    is(paragraph.selectionCount, 2, "paragraph selectionCount is 2");
+
+    selChanged = waitForSelectionChange(paragraph);
+    paragraph.removeSelection(0);
+    await selChanged;
+    testTextGetSelection(paragraph, 6, 10, 0);
+    is(paragraph.selectionCount, 1, "paragraph selectionCount is 1");
+
+    const li = findAccessibleChildByID(docAcc, "li", [nsIAccessibleText]);
+
+    selChanged = waitForSelectionChange(li);
+    li.setSelectionBounds(0, 1, 8);
+    await selChanged;
+    testTextGetSelection(li, 3, 8, 0);
   },
   {
     chrome: true,
