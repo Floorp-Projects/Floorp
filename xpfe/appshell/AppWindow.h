@@ -20,6 +20,7 @@
 #include "nsDocShell.h"
 #include "nsRect.h"
 #include "Units.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 
 // Interfaces needed
@@ -383,6 +384,10 @@ class AppWindow final : public nsIBaseWindow,
   nsresult SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight);
   void SizeShellToWithLimit(int32_t aDesiredWidth, int32_t aDesiredHeight,
                             int32_t shellItemWidth, int32_t shellItemHeight);
+  nsresult MoveResize(const Maybe<LayoutDeviceIntPoint>& aPosition,
+                      const Maybe<LayoutDeviceIntSize>& aSize, bool aRepaint);
+  nsresult MoveResize(const Maybe<DesktopPoint>& aPosition,
+                      const Maybe<DesktopSize>& aSize, bool aRepaint);
   nsCOMPtr<nsIXULStore> mLocalStore;
 };
 
