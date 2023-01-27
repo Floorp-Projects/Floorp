@@ -410,18 +410,21 @@ NS_IMETHODIMP nsContentTreeOwner::GetPositionAndSize(int32_t* aX, int32_t* aY,
 
 NS_IMETHODIMP
 nsContentTreeOwner::SetDimensions(DimensionRequest&& aRequest) {
-  MOZ_TRY(aRequest.SupplementFrom(this));
+  NS_ENSURE_STATE(mAppWindow);
   if (aRequest.mDimensionKind == DimensionKind::Outer) {
-    return aRequest.ApplyOuterTo(this);
+    return mAppWindow->SetDimensions(std::move(aRequest));
   }
+
+  MOZ_TRY(aRequest.SupplementFrom(this));
   return aRequest.ApplyInnerTo(this, /* aAsRootShell */ false);
 }
 
 NS_IMETHODIMP
 nsContentTreeOwner::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
                                   int32_t* aY, int32_t* aCX, int32_t* aCY) {
+  NS_ENSURE_STATE(mAppWindow);
   if (aDimensionKind == DimensionKind::Outer) {
-    return GetPositionAndSize(aX, aY, aCX, aCY);
+    return mAppWindow->GetDimensions(aDimensionKind, aX, aY, aCX, aCY);
   }
   if (aY || aX) {
     return NS_ERROR_NOT_IMPLEMENTED;
