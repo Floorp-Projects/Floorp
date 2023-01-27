@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef INDEX_H_
-#define INDEX_H_
+#ifndef DOM_MEDIA_MP4_SAMPLE_ITERATOR_H_
+#define DOM_MEDIA_MP4_SAMPLE_ITERATOR_H_
 
 #include "ByteStream.h"
 #include "MediaData.h"
@@ -15,17 +15,17 @@
 #include "TimeUnits.h"
 
 namespace mozilla {
-class IndiceWrapper;
-struct Sample;
-struct CencSampleEncryptionInfoEntry;
 
-class Index;
+struct CencSampleEncryptionInfoEntry;
+class IndiceWrapper;
+class MP4SampleIndex;
+struct Sample;
 
 typedef int64_t Microseconds;
 
 class SampleIterator {
  public:
-  explicit SampleIterator(Index* aIndex);
+  explicit SampleIterator(MP4SampleIndex* aIndex);
   ~SampleIterator();
   already_AddRefed<mozilla::MediaRawData> GetNext();
   void Seek(Microseconds aTime);
@@ -48,15 +48,15 @@ class SampleIterator {
   Result<CryptoScheme, nsCString> GetEncryptionScheme();
 
   void Next();
-  RefPtr<Index> mIndex;
-  friend class Index;
+  RefPtr<MP4SampleIndex> mIndex;
+  friend class MP4SampleIndex;
   size_t mCurrentMoof;
   size_t mCurrentSample;
 };
 
-class Index {
+class MP4SampleIndex {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Index)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MP4SampleIndex)
 
   struct Indice {
     uint64_t start_offset;
@@ -99,8 +99,8 @@ class Index {
     MP4Interval<Microseconds> mTime;
   };
 
-  Index(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
-        uint32_t aTrackId, bool aIsAudio);
+  MP4SampleIndex(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
+                 uint32_t aTrackId, bool aIsAudio);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);
@@ -115,7 +115,7 @@ class Index {
   friend class SampleIterator;
 
  private:
-  ~Index();
+  ~MP4SampleIndex();
   void RegisterIterator(SampleIterator* aIterator);
   void UnregisterIterator(SampleIterator* aIterator);
 
