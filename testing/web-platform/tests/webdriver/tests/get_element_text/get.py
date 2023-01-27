@@ -71,7 +71,7 @@ def test_no_such_element_from_other_frame(session, url, closed):
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
 def test_stale_element_reference(session, stale_element, as_frame):
-    element = stale_element("<input>", "input", as_frame=as_frame)
+    element = stale_element("input#text", as_frame=as_frame)
 
     response = get_element_text(session, element.id)
     assert_error(response, "stale element reference")
