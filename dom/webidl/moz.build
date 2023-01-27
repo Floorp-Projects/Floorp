@@ -1110,6 +1110,7 @@ WEBIDL_FILES += [
 WEBIDL_FILES += [
     "ExtensionAlarms.webidl",
     "ExtensionBrowser.webidl",
+    "ExtensionDns.webidl",
     "ExtensionEventManager.webidl",
     # ExtensionMockAPI is not a real WebExtensions API, and it is only enabled in tests.
     "ExtensionMockAPI.webidl",

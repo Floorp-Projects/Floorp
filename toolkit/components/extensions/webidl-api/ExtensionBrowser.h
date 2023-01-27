@@ -21,6 +21,7 @@ class ErrorResult;
 namespace extensions {
 
 class ExtensionAlarms;
+class ExtensionDns;
 class ExtensionMockAPI;
 class ExtensionPort;
 class ExtensionRuntime;
@@ -103,6 +104,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const;
 
   ExtensionAlarms* GetExtensionAlarms();
+  ExtensionDns* GetExtensionDns();
   ExtensionMockAPI* GetExtensionMockAPI();
   ExtensionRuntime* GetExtensionRuntime();
   ExtensionScripting* GetExtensionScripting();
@@ -118,6 +120,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   JS::Heap<JS::Value> mLastError;
   bool mCheckedLastError;
   RefPtr<ExtensionAlarms> mExtensionAlarms;
+  RefPtr<ExtensionDns> mExtensionDns;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionRuntime> mExtensionRuntime;
   RefPtr<ExtensionScripting> mExtensionScripting;
