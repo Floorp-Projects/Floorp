@@ -45,22 +45,17 @@ def test_no_such_element_with_unknown_shadow_root(session, inline, get_shadow_pa
 
 
 @pytest.mark.parametrize(
-    "value",
-    ["#doesNotExist", "#inner"],
-    ids=["not-existent", "existent-inner-shadow-dom"],
+    "selector",
+    ["#same1", "#in-frame", "#deep"],
+    ids=["not-existent", "existent-other-frame", "existent-outside-shadow-root"],
 )
-def test_no_such_element_with_invalid_value(
-    session, iframe, inline, get_shadow_page, value
-):
-    session.url = inline(get_shadow_page(f"""
-        <div id="outer"/>
-        {get_shadow_page("<div id='inner'>")}
-    """))
+def test_no_such_element_with_unknown_selector(session, get_test_page, selector):
+    session.url = get_test_page()
 
-    custom_element = session.find.css("custom-shadow-element", all=False)
+    custom_element = session.find.css("#custom-checkbox", all=False)
     shadow_root = custom_element.shadow_root
 
-    response = find_element(session, shadow_root.id, "css selector", value)
+    response = find_element(session, shadow_root.id, "css selector", selector)
     assert_error(response, "no such element")
 
 
