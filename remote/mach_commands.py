@@ -395,6 +395,8 @@ class PuppeteerRunner(MozbuildObject):
 
         Possible optional test parameters:
 
+        `bidi`:
+          Boolean to indicate whether to test Firefox with BiDi protocol.
         `binary`:
           Path for the browser binary to use.  Defaults to the local
           build.
@@ -408,6 +410,7 @@ class PuppeteerRunner(MozbuildObject):
         """
         setup()
 
+        with_bidi = params.get("bidi", False)
         binary = params.get("binary") or self.get_binary_path()
         product = params.get("product", "firefox")
 
@@ -452,7 +455,9 @@ class PuppeteerRunner(MozbuildObject):
                 ".cache",
             )
 
-        if env["HEADLESS"] == "True":
+        if with_bidi is True:
+            test_command = test_command + ":bidi"
+        elif env["HEADLESS"] == "True":
             test_command = test_command + ":headless"
         else:
             test_command = test_command + ":headful"
@@ -488,19 +493,17 @@ class PuppeteerRunner(MozbuildObject):
             expected_platform = "win32"
 
         # Filter expectation data for the selected browser,
-        # headless or headful mode, and the operating system.
-        expectations = filter(
-            lambda el: product in el["parameters"]
-            and "webDriverBiDi" not in el["parameters"]
-            and (
-                (env["HEADLESS"] == "False" and "headless" not in el["parameters"])
-                or "headful" not in el["parameters"]
+        # headless or headful mode, the operating system,
+        # run in BiDi mode or not.
+        expectations = [
+            expectation
+            for expectation in expected_data
+            if is_relevant_expectation(
+                expectation, product, with_bidi, env["HEADLESS"], expected_platform
             )
-            and expected_platform in el["platforms"],
-            expected_data,
-        )
+        ]
 
-        output_handler = MochaOutputHandler(logger, list(expectations))
+        output_handler = MochaOutputHandler(logger, expectations)
         proc = npm(
             *command,
             cwd=self.puppeteer_dir,
@@ -530,6 +533,11 @@ def create_parser_puppeteer():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--product", type=str, default="firefox", choices=["chrome", "firefox"]
+    )
+    p.add_argument(
+        "--bidi",
+        action="store_true",
+        help="Flag that indicates whether to test Firefox with BiDi protocol.",
     )
     p.add_argument(
         "--binary",
@@ -584,6 +592,36 @@ def create_parser_puppeteer():
     return p
 
 
+def is_relevant_expectation(
+    expectation, expected_product, with_bidi, is_headless, expected_platform
+):
+    parameters = expectation["parameters"]
+
+    if expected_product == "firefox":
+        is_expected_product = "chrome" not in parameters
+    else:
+        is_expected_product = "firefox" not in parameters
+
+    if with_bidi is True:
+        is_expected_protocol = "webDriverBiDi" in parameters
+    else:
+        is_expected_protocol = "webDriverBiDi" not in parameters
+
+    if is_headless == "True":
+        is_expected_mode = "headful" not in parameters
+    else:
+        is_expected_mode = "headless" not in parameters
+
+    is_expected_platform = expected_platform in expectation["platforms"]
+
+    return (
+        is_expected_product
+        and is_expected_protocol
+        and is_expected_mode
+        and is_expected_platform
+    )
+
+
 @Command(
     "puppeteer-test",
     category="testing",
@@ -599,6 +637,7 @@ def create_parser_puppeteer():
 )
 def puppeteer_test(
     command_context,
+    bidi=None,
     binary=None,
     ci=False,
     disable_fission=False,
@@ -662,6 +701,7 @@ def puppeteer_test(
         install_puppeteer(command_context, product, ci)
 
     params = {
+        "bidi": bidi,
         "binary": binary,
         "headless": headless,
         "enable_webrender": enable_webrender,
