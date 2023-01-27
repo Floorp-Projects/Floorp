@@ -18,7 +18,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_widget.h"
@@ -328,6 +327,9 @@ StaticRefPtr<WinWindowOcclusionTracker> WinWindowOcclusionTracker::sTracker;
 /* static */
 WinWindowOcclusionTracker* WinWindowOcclusionTracker::Get() {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!sTracker || sTracker->mHasAttemptedShutdown) {
+    return nullptr;
+  }
   return sTracker;
 }
 
@@ -336,21 +338,31 @@ void WinWindowOcclusionTracker::Ensure() {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::Ensure()");
 
-  if (sTracker) {
-    return;
-  }
-
-  base::Thread* thread = new base::Thread("WinWindowOcclusionCalc");
-
   base::Thread::Options options;
   options.message_loop_type = MessageLoop::TYPE_UI;
 
+  if (sTracker) {
+    // Try to reuse the thread, which involves stopping and restarting it.
+    sTracker->mThread->Stop();
+    if (sTracker->mThread->StartWithOptions(options)) {
+      // Success!
+      sTracker->mHasAttemptedShutdown = false;
+      return;
+    }
+    // Restart failed, so null out our sTracker and try again with a new
+    // thread. This will cause the old singleton instance to be deallocated,
+    // which will destroy its mThread as well.
+    sTracker = nullptr;
+  }
+
+  UniquePtr<base::Thread> thread =
+      MakeUnique<base::Thread>("WinWindowOcclusionCalc");
+
   if (!thread->StartWithOptions(options)) {
-    delete thread;
     return;
   }
 
-  sTracker = new WinWindowOcclusionTracker(thread);
+  sTracker = new WinWindowOcclusionTracker(std::move(thread));
   WindowOcclusionCalculator::CreateInstance();
 
   RefPtr<Runnable> runnable =
@@ -369,27 +381,50 @@ void WinWindowOcclusionTracker::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::ShutDown()");
 
+  sTracker->mHasAttemptedShutdown = true;
   sTracker->Destroy();
 
-  // Our shutdown task could hang. Since we're shutting down,
-  // that's not a critical problem. We set a reasonable amount
-  // of time to wait for shutdown, and if it succeeds within
-  // that time, we correctly stop our tracker thread. If it
-  // times out, we just leak the memory and proceed.
-  static const PRIntervalTime TIMEOUT = PR_TicksPerSecond() * 2;
-  layers::SynchronousTask task("WinWindowOcclusionTracker");
-  RefPtr<Runnable> runnable =
-      WrapRunnable(RefPtr<WindowOcclusionCalculator>(
-                       WindowOcclusionCalculator::GetInstance()),
-                   &WindowOcclusionCalculator::Shutdown, &task);
-  OcclusionCalculatorLoop()->PostTask(runnable.forget());
-  nsresult rv = task.Wait(TIMEOUT);
-  if (rv == NS_OK) {
-    sTracker->mThread->Stop();
+  // Our thread could hang while we're waiting for it to stop.
+  // Since we're shutting down, that's not a critical problem.
+  // We set a reasonable amount of time to wait for shutdown,
+  // and if it succeeds within that time, we correctly stop
+  // our thread by nulling out the refptr, which will cause it
+  // to be deallocated and join the thread. If it times out,
+  // we do nothing, which means that the thread will not be
+  // joined and sTracker memory will leak.
+  CVStatus status;
+  {
+    // It's important to hold the lock before posting the
+    // runnable. This ensures that the runnable can't begin
+    // until we've started our Wait, which prevents us from
+    // Waiting on a monitor that has already been notified.
+    MonitorAutoLock lock(sTracker->mMonitor);
+
+    static const TimeDuration TIMEOUT = TimeDuration::FromSeconds(2.0);
+    RefPtr<Runnable> runnable =
+        WrapRunnable(RefPtr<WindowOcclusionCalculator>(
+                         WindowOcclusionCalculator::GetInstance()),
+                     &WindowOcclusionCalculator::Shutdown);
+    OcclusionCalculatorLoop()->PostTask(runnable.forget());
+
+    // Monitor uses SleepConditionVariableSRW, which can have
+    // spurious wakeups which are reported as timeouts, so we
+    // check timestamps to ensure that we've waited as long we
+    // intended to. If we wake early, we don't bother calculating
+    // a precise amount for the next wait; we just wait the same
+    // amount of time. This means timeout might happen after as
+    // much as 2x the TIMEOUT time.
+    TimeStamp timeStart = TimeStamp::NowLoRes();
+    do {
+      status = sTracker->mMonitor.Wait(TIMEOUT);
+    } while ((status == CVStatus::Timeout) &&
+             ((TimeStamp::NowLoRes() - timeStart) < TIMEOUT));
   }
 
-  WindowOcclusionCalculator::ClearInstance();
-  sTracker = nullptr;
+  if (status == CVStatus::NoTimeout) {
+    WindowOcclusionCalculator::ClearInstance();
+    sTracker = nullptr;
+  }
 }
 
 void WinWindowOcclusionTracker::Destroy() {
@@ -486,8 +521,9 @@ void WinWindowOcclusionTracker::OnWindowVisibilityChanged(nsBaseWidget* aWindow,
   mSerializedTaskDispatcher->PostTaskToCalculator(runnable.forget());
 }
 
-WinWindowOcclusionTracker::WinWindowOcclusionTracker(base::Thread* aThread)
-    : mThread(aThread) {
+WinWindowOcclusionTracker::WinWindowOcclusionTracker(
+    UniquePtr<base::Thread> aThread)
+    : mThread(std::move(aThread)), mMonitor("WinWindowOcclusionTracker") {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::WinWindowOcclusionTracker()");
 
@@ -506,7 +542,6 @@ WinWindowOcclusionTracker::~WinWindowOcclusionTracker() {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info,
       "WinWindowOcclusionTracker::~WinWindowOcclusionTracker()");
-  delete mThread;
 }
 
 // static
@@ -815,7 +850,8 @@ StaticRefPtr<WinWindowOcclusionTracker::WindowOcclusionCalculator>
     WinWindowOcclusionTracker::WindowOcclusionCalculator::sCalculator;
 
 WinWindowOcclusionTracker::WindowOcclusionCalculator::
-    WindowOcclusionCalculator() {
+    WindowOcclusionCalculator()
+    : mMonitor(WinWindowOcclusionTracker::Get()->mMonitor) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WindowOcclusionCalculator()");
 
@@ -859,12 +895,11 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::Initialize() {
 #endif
 }
 
-void WinWindowOcclusionTracker::WindowOcclusionCalculator::Shutdown(
-    layers::SynchronousTask* aTask) {
+void WinWindowOcclusionTracker::WindowOcclusionCalculator::Shutdown() {
+  MonitorAutoLock lock(mMonitor);
+
   MOZ_ASSERT(IsInWinWindowOcclusionThread());
   CALC_LOG(LogLevel::Info, "Shutdown()");
-
-  layers::AutoCompleteTask complete(aTask);
 
   UnregisterEventHooks();
   if (mOcclusionUpdateRunnable) {
@@ -872,6 +907,8 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::Shutdown(
     mOcclusionUpdateRunnable = nullptr;
   }
   mVirtualDesktopManager = nullptr;
+
+  mMonitor.NotifyAll();
 }
 
 void WinWindowOcclusionTracker::WindowOcclusionCalculator::
