@@ -12,10 +12,10 @@ For firefox's purposes, these patches still work fine, and are necessary
 to make -Zbuild-std work in a vendored environment.
 
 diff --git a/src/bootstrap/dist.rs b/src/bootstrap/dist.rs
-index 6291b204e48..d4c90d29824 100644
+index 3cb0eccd324..a3b8154c024 100644
 --- a/src/bootstrap/dist.rs
 +++ b/src/bootstrap/dist.rs
-@@ -837,6 +837,30 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
+@@ -905,6 +905,30 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
              builder.copy(&builder.src.join(file), &dst_src.join(file));
          }
  
@@ -47,17 +47,17 @@ index 6291b204e48..d4c90d29824 100644
      }
  }
 diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
-index f84de73297a..d584444dfd2 100644
+index 3ed53452309..1fc0d887748 100644
 --- a/src/bootstrap/lib.rs
 +++ b/src/bootstrap/lib.rs
-@@ -1416,6 +1416,27 @@ fn tempdir(&self) -> PathBuf {
-         tmp
+@@ -1437,6 +1437,27 @@ fn read_stamp_file(&self, stamp: &Path) -> Vec<(PathBuf, DependencyType)> {
+         paths
      }
  
 +    /// Copies a file from `src` to `dst` and doesn't use links, so
 +    /// that the copy can be modified without affecting the original.
 +    pub fn really_copy(&self, src: &Path, dst: &Path) {
-+        if self.config.dry_run {
++        if self.config.dry_run() {
 +            return;
 +        }
 +        self.verbose_than(1, &format!("Copy {:?} to {:?}", src, dst));
