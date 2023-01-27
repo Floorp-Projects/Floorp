@@ -306,7 +306,7 @@
       "dismiss_cookie_prompt":  [
         ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"]
       ],
-      "secondary_url": "https://imgur.com/gallery/L13Ci",
+      "secondary_url": "https://imgur.com/gallery/rCXZUil",
       "preferences": {
          "media.autoplay.default": 5,
          "media.autoplay.ask-permission": true,
