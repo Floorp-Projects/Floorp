@@ -6,12 +6,12 @@ use crate::transport::hid::HIDDevice;
 use crate::transport::FidoDevice;
 use crate::transport::{AuthenticatorInfo, ECDHSecret, HIDError};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq)]
 pub struct Device {}
 
 impl Read for Device {
@@ -31,7 +31,7 @@ impl Write for Device {
 }
 
 impl U2FDevice for Device {
-    fn get_cid<'a>(&'a self) -> &'a [u8; 4] {
+    fn get_cid(&self) -> &[u8; 4] {
         panic!("not implemented");
     }
 
@@ -97,12 +97,6 @@ impl HIDDevice for Device {
     }
 
     fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
-        unimplemented!()
-    }
-}
-
-impl Hash for Device {
-    fn hash<H: Hasher>(&self, state: &mut H) {
         unimplemented!()
     }
 }

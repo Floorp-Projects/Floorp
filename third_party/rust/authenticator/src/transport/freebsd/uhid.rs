@@ -75,10 +75,7 @@ fn read_report_descriptor(fd: RawFd) -> io::Result<ReportDescriptor> {
     let mut desc = GenDescriptor::default();
     let _ = unsafe { usb_get_report_desc(fd, &mut desc)? };
     desc.ugd_maxlen = desc.ugd_actlen;
-    let mut value = Vec::with_capacity(desc.ugd_actlen as usize);
-    unsafe {
-        value.set_len(desc.ugd_actlen as usize);
-    }
+    let mut value = vec![0; desc.ugd_actlen as usize];
     desc.ugd_data = value.as_mut_ptr();
     let _ = unsafe { usb_get_report_desc(fd, &mut desc)? };
     Ok(ReportDescriptor { value })

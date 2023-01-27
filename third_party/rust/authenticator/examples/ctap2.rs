@@ -110,7 +110,7 @@ fn main() {
                 PinError::InvalidPin(attempts) => {
                     println!(
                         "Wrong PIN! {}",
-                        attempts.map_or(format!("Try again."), |a| format!(
+                        attempts.map_or("Try again.".to_string(), |a| format!(
                             "You have {} attempts left.",
                             a
                         ))
@@ -152,7 +152,7 @@ fn main() {
             icon: None,
         },
         origin: origin.clone(),
-        user: user.clone(),
+        user,
         pub_cred_params: vec![
             PublicKeyCredentialParameters {
                 alg: COSEAlgorithm::ES256,
@@ -194,7 +194,7 @@ fn main() {
 
         if let Err(e) = manager.register(
             timeout_ms,
-            ctap_args.clone().into(),
+            ctap_args.into(),
             status_tx.clone(),
             callback,
         ) {
@@ -219,7 +219,7 @@ fn main() {
     println!("Register result: {:?}", &attestation_object);
     println!("Collected client data: {:?}", &client_data);
 
-    println!("");
+    println!();
     println!("*********************************************************************");
     println!("Asking a security key to sign now, with the data from the register...");
     println!("*********************************************************************");
@@ -227,7 +227,7 @@ fn main() {
     let allow_list;
     if let Some(cred_data) = attestation_object.auth_data.credential_data {
         allow_list = vec![PublicKeyCredentialDescriptor {
-            id: cred_data.credential_id.clone(),
+            id: cred_data.credential_id,
             transports: vec![Transport::USB],
         }];
     } else {
@@ -266,8 +266,8 @@ fn main() {
 
         if let Err(e) = manager.sign(
             timeout_ms,
-            ctap_args.clone().into(),
-            status_tx.clone(),
+            ctap_args.into(),
+            status_tx,
             callback,
         ) {
             panic!("Couldn't sign: {:?}", e);

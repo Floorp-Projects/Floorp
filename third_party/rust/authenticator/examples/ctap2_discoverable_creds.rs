@@ -30,7 +30,7 @@ fn print_usage(program: &str, opts: Options) {
 }
 
 fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms: u64) {
-    println!("");
+    println!();
     println!("*********************************************************************");
     println!(
         "Asking a security key to register now with user: {}",
@@ -81,7 +81,7 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
                 PinError::InvalidPin(attempts) => {
                     println!(
                         "Wrong PIN! {}",
-                        attempts.map_or(format!("Try again."), |a| format!(
+                        attempts.map_or("Try again.".to_string(), |a| format!(
                             "You have {} attempts left.",
                             a
                         ))
@@ -116,14 +116,14 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
     };
     let origin = "https://example.com".to_string();
     let ctap_args = RegisterArgsCtap2 {
-        challenge: chall_bytes.clone(),
+        challenge: chall_bytes,
         relying_party: RelyingParty {
             id: "example.com".to_string(),
             name: None,
             icon: None,
         },
-        origin: origin.clone(),
-        user: user.clone(),
+        origin,
+        user,
         pub_cred_params: vec![
             PublicKeyCredentialParameters {
                 alg: COSEAlgorithm::ES256,
@@ -154,8 +154,8 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
 
         if let Err(e) = manager.register(
             timeout_ms,
-            ctap_args.clone().into(),
-            status_tx.clone(),
+            ctap_args.into(),
+            status_tx,
             callback,
         ) {
             panic!("Couldn't register: {:?}", e);
@@ -224,11 +224,11 @@ fn main() {
         }
     };
 
-    for username in vec!["A. User", "A. Nother", "Dr. Who"] {
+    for username in &["A. User", "A. Nother", "Dr. Who"] {
         register_user(&mut manager, username, timeout_ms)
     }
 
-    println!("");
+    println!();
     println!("*********************************************************************");
     println!("Asking a security key to sign now, with the data from the register...");
     println!("*********************************************************************");
@@ -270,7 +270,7 @@ fn main() {
                 PinError::InvalidPin(attempts) => {
                     println!(
                         "Wrong PIN! {}",
-                        attempts.map_or(format!("Try again."), |a| format!(
+                        attempts.map_or("Try again.".to_string(), |a| format!(
                             "You have {} attempts left.",
                             a
                         ))
@@ -319,8 +319,8 @@ fn main() {
 
         if let Err(e) = manager.sign(
             timeout_ms,
-            ctap_args.clone().into(),
-            status_tx.clone(),
+            ctap_args.into(),
+            status_tx,
             callback,
         ) {
             panic!("Couldn't sign: {:?}", e);

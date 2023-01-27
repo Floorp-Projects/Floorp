@@ -66,9 +66,9 @@ pub enum HIDCmd {
     Unknown(u8),
 }
 
-impl Into<u8> for HIDCmd {
-    fn into(self) -> u8 {
-        match self {
+impl From<HIDCmd> for u8 {
+    fn from(v: HIDCmd) -> u8 {
+        match v {
             HIDCmd::Ping => CTAPHID_PING,
             HIDCmd::Msg => CTAPHID_MSG,
             HIDCmd::Lock => CTAPHID_LOCK,

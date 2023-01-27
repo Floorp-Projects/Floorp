@@ -11,14 +11,8 @@ use serde_cbor::{de::from_slice, Value};
 use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct GetInfo {}
-
-impl Default for GetInfo {
-    fn default() -> GetInfo {
-        GetInfo {}
-    }
-}
 
 impl RequestCtap2 for GetInfo {
     type Output = AuthenticatorInfo;

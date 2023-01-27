@@ -33,7 +33,7 @@ impl Signed for usize {
     }
 }
 
-#[cfg(any(target_os = "linux"))]
+#[cfg(all(target_os = "linux", not(test)))]
 pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     if rv.is_negative() {
         let errno = unsafe { *libc::__errno_location() };
@@ -43,7 +43,7 @@ pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     }
 }
 
-#[cfg(any(target_os = "freebsd"))]
+#[cfg(all(target_os = "freebsd", not(test)))]
 pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     if rv.is_negative() {
         let errno = unsafe { *libc::__error() };
@@ -53,7 +53,7 @@ pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     }
 }
 
-#[cfg(any(target_os = "openbsd"))]
+#[cfg(all(target_os = "openbsd", not(test)))]
 pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     if rv.is_negative() {
         Err(io::Error::last_os_error())
@@ -66,7 +66,7 @@ pub fn io_err(msg: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, msg)
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "crypto_dummy")))]
 pub fn decode_hex(s: &str) -> Vec<u8> {
     (0..s.len())
         .step_by(2)

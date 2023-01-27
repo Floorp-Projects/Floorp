@@ -291,7 +291,7 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
         let input = self.pin.for_pin_token();
         trace!("pin_hash = {:#04X?}", &input.as_ref());
         let pin_hash_enc = encrypt(self.shared_secret.shared_secret(), input.as_ref())
-            .map_err(|e| CryptoError::Backend(e))?;
+            .map_err(CryptoError::Backend)?;
         trace!("pin_hash_enc = {:#04X?}", &pin_hash_enc);
 
         Ok(ClientPIN {
@@ -315,7 +315,7 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
                     self.shared_secret.shared_secret(),
                     encrypted_pin_token.as_ref(),
                 )
-                .map_err(|e| CryptoError::Backend(e))?;
+                .map_err(CryptoError::Backend)?;
                 let pin_token = PinToken(pin_token);
                 Ok(pin_token)
             }
@@ -362,7 +362,7 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         let input = self.pin.for_pin_token();
         let pin_hash_enc = encrypt(self.shared_secret.shared_secret(), input.as_ref())
-            .map_err(|e| CryptoError::Backend(e))?;
+            .map_err(CryptoError::Backend)?;
 
         Ok(ClientPIN {
             pin_protocol: Some(self.pin_protocol),
@@ -387,7 +387,7 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
                     self.shared_secret.shared_secret(),
                     encrypted_pin_token.as_ref(),
                 )
-                .map_err(|e| CryptoError::Backend(e))?;
+                .map_err(CryptoError::Backend)?;
                 let pin_token = PinToken(pin_token);
                 Ok(pin_token)
             }
@@ -475,8 +475,7 @@ impl<'sc, 'pin> ClientPINSubCommand for SetNewPin<'sc, 'pin> {
 
         let shared_secret = self.shared_secret.shared_secret();
         // AES256-CBC(sharedSecret, IV=0, newPin)
-        let new_pin_enc =
-            encrypt(shared_secret, input.as_ref()).map_err(|e| CryptoError::Backend(e))?;
+        let new_pin_enc = encrypt(shared_secret, input.as_ref()).map_err(CryptoError::Backend)?;
 
         // LEFT(HMAC-SHA-265(sharedSecret, newPinEnc), 16)
         let pin_auth = PinToken(shared_secret.to_vec())
@@ -554,13 +553,12 @@ impl<'sc, 'pin> ClientPINSubCommand for ChangeExistingPin<'sc, 'pin> {
 
         let shared_secret = self.shared_secret.shared_secret();
         // AES256-CBC(sharedSecret, IV=0, newPin)
-        let new_pin_enc =
-            encrypt(shared_secret, input.as_ref()).map_err(|e| CryptoError::Backend(e))?;
+        let new_pin_enc = encrypt(shared_secret, input.as_ref()).map_err(CryptoError::Backend)?;
 
         // AES256-CBC(sharedSecret, IV=0, LEFT(SHA-256(oldPin), 16))
         let input = self.current_pin.for_pin_token();
         let pin_hash_enc = encrypt(self.shared_secret.shared_secret(), input.as_ref())
-            .map_err(|e| CryptoError::Backend(e))?;
+            .map_err(CryptoError::Backend)?;
 
         // LEFT(HMAC-SHA-265(sharedSecret, newPinEnc), 16)
         let pin_auth = PinToken(shared_secret.to_vec())
@@ -628,9 +626,8 @@ where
         let status: StatusCode = input[0].into();
         debug!("response status code: {:?}", status);
         if status.is_ok() {
-            let res = <T as ClientPINSubCommand>::parse_response_payload(self, &input[1..])
-                .map_err(HIDError::Command);
-            res
+            <T as ClientPINSubCommand>::parse_response_payload(self, &input[1..])
+                .map_err(HIDError::Command)
         } else {
             let add_data = if input.len() > 1 {
                 let data: Value = from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
@@ -722,7 +719,7 @@ impl Pin {
 
     pub fn for_pin_token(&self) -> PinAuth {
         let mut hasher = Sha256::new();
-        hasher.update(&self.0.as_bytes());
+        hasher.update(self.0.as_bytes());
 
         let mut output = [0u8; 16];
         let len = output.len();

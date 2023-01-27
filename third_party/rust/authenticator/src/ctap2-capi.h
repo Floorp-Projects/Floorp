@@ -139,6 +139,25 @@ bool rust_ctap2_register_result_attestation_copy(
     const rust_ctap2_register_result* res,
     uint8_t *dst
 );
+
+/// # Safety
+///
+/// This function is used to get the length, prior to calling
+/// rust_ctap2_register_result_credential_id_copy()
+bool rust_ctap2_register_result_credential_id_len(
+    const rust_ctap2_register_result *res,
+    size_t *len
+);
+
+/// # Safety
+///
+/// This method does not ensure anything about dst before copying, so
+/// ensure it is long enough (using rust_ctap2_register_result_credential_id_len)
+bool rust_ctap2_register_result_credential_id_copy(
+    const rust_ctap2_register_result* res,
+    uint8_t *dst
+);
+
 /// # Safety
 ///
 /// This function is used to get the length, prior to calling

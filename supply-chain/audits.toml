@@ -149,7 +149,7 @@ notes = "I maintain this crate and have reviewed every line."
 [[audits.authenticator]]
 who = "John M. Schanck <jschanck@mozilla.com>"
 criteria = "safe-to-deploy"
-version = "0.4.0-alpha.6"
+version = "0.4.0-alpha.7"
 notes = "Maintained by the CryptoEng team at Mozilla."
 
 [[audits.autocfg]]

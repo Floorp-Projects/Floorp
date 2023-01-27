@@ -125,7 +125,7 @@ impl HIDDevice for Device {
             info!("new device {:?}", res.path);
             Ok(res)
         } else {
-            Err((HIDError::DeviceNotSupported, res.path.clone()))
+            Err((HIDError::DeviceNotSupported, res.path))
         }
     }
 

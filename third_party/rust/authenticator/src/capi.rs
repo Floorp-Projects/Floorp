@@ -72,7 +72,7 @@ pub unsafe extern "C" fn rust_u2f_mgr_free(mgr: *mut AuthenticatorService) {
 /// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_app_ids_new() -> *mut U2FAppIds {
-    Box::into_raw(Box::new(vec![]))
+    Box::into_raw(Box::default())
 }
 
 /// # Safety
@@ -103,7 +103,7 @@ pub unsafe extern "C" fn rust_u2f_app_ids_free(ids: *mut U2FAppIds) {
 /// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub unsafe extern "C" fn rust_u2f_khs_new() -> *mut U2FKeyHandles {
-    Box::into_raw(Box::new(vec![]))
+    Box::into_raw(Box::default())
 }
 
 /// # Safety

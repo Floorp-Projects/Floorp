@@ -6,7 +6,7 @@ This is a dummy implementation for CI, to avoid having to install NSS or openSSL
 
 pub type Result<T> = std::result::Result<T, BackendError>;
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum BackendError {}
 
 pub(crate) fn serialize_key(_curve: ECDSACurve, key: &[u8]) -> Result<(ByteBuf, ByteBuf)> {

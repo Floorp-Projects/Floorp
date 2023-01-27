@@ -44,7 +44,7 @@ impl Read for Device {
         let mut input = [0u8; MAX_HID_RPT_SIZE + 1];
         let _ = self.file.read(&mut input)?;
         bytes.clone_from_slice(&input[1..]);
-        Ok(bytes.len() as usize)
+        Ok(bytes.len())
     }
 }
 
@@ -113,7 +113,7 @@ impl HIDDevice for Device {
             info!("new device {:?}", res.path);
             Ok(res)
         } else {
-            Err((HIDError::DeviceNotSupported, res.path.clone()))
+            Err((HIDError::DeviceNotSupported, res.path))
         }
     }
 

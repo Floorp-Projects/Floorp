@@ -3,14 +3,8 @@ use crate::transport::errors::HIDError;
 use crate::u2ftypes::U2FDevice;
 use serde_cbor::{de::from_slice, Value};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Reset {}
-
-impl Default for Reset {
-    fn default() -> Reset {
-        Reset {}
-    }
-}
 
 impl RequestCtap2 for Reset {
     type Output = ();
@@ -92,18 +86,17 @@ pub mod tests {
         // Test, if we can parse the status codes specified by the spec
 
         // Ok()
-        let response = issue_command_and_get_response(0, &vec![]).expect("Unexpected error");
-        assert_eq!(response, ());
+        issue_command_and_get_response(0, &[]).expect("Unexpected error");
 
         // Denied by the user
-        let response = issue_command_and_get_response(0x27, &vec![]).expect_err("Not an error!");
+        let response = issue_command_and_get_response(0x27, &[]).expect_err("Not an error!");
         assert!(matches!(
             response,
             HIDError::Command(CommandError::StatusCode(StatusCode::OperationDenied, None))
         ));
 
         // Timeout
-        let response = issue_command_and_get_response(0x2F, &vec![]).expect_err("Not an error!");
+        let response = issue_command_and_get_response(0x2F, &[]).expect_err("Not an error!");
         assert!(matches!(
             response,
             HIDError::Command(CommandError::StatusCode(

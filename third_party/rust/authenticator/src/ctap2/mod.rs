@@ -2,7 +2,7 @@
 pub mod commands;
 pub use commands::get_assertion::AssertionObject;
 
-pub(crate) mod attestation;
+pub mod attestation;
 
 pub mod client_data;
 pub mod server;

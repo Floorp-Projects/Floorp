@@ -125,7 +125,7 @@ pub(crate) fn encapsulate(key: &COSEKey) -> Result<ECDHSecret> {
         let group = EcGroup::from_curve_name(curve_name)?;
         let my_key = EcKey::generate(&group)?;
 
-        encapsulate_helper(&ec2key, key.alg, group, my_key)
+        encapsulate_helper(ec2key, key.alg, group, my_key)
     } else {
         Err(BackendError::UnsupportedKeyType)
     }
@@ -148,7 +148,7 @@ pub(crate) fn encapsulate_helper(
     let my_public_key = COSEKey {
         alg,
         key: COSEKeyType::EC2(COSEEC2Key {
-            curve: key.curve.clone(),
+            curve: key.curve,
             x: x.to_vec(),
             y: y.to_vec(),
         }),
@@ -274,7 +274,7 @@ pub(crate) fn verify(
     data: &[u8],
 ) -> Result<bool> {
     let _alg = to_openssl_name(sig_alg)?; // TODO(MS): Actually use this to determine the right MessageDigest below
-    let pkey = X509::from_der(&pub_key)?;
+    let pkey = X509::from_der(pub_key)?;
     let pubkey = pkey.public_key()?;
     let mut verifier = Verifier::new(MessageDigest::sha256(), &pubkey)?;
     verifier.update(data)?;

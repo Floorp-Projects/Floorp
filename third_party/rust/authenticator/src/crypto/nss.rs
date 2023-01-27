@@ -235,7 +235,7 @@ pub(crate) fn encapsulate(peer_cose_key: &COSEKey) -> Result<ECDHSecret> {
 }
 
 fn nss_public_key_from_der_spki(spki: &[u8]) -> Result<PublicKey> {
-    let mut spki_item = SECItemBorrowed::wrap(&spki);
+    let mut spki_item = SECItemBorrowed::wrap(spki);
     let spki_item_ptr: *mut SECItem = spki_item.as_mut();
     let nss_spki = unsafe {
         SubjectPublicKeyInfo::from_ptr(SECKEY_DecodeDERSubjectPublicKeyInfo(spki_item_ptr))?
@@ -452,7 +452,7 @@ pub(crate) fn test_encapsulate(
     nss_gk_api::init();
 
     let peer_cose_key = COSEKey {
-        alg: alg,
+        alg,
         key: COSEKeyType::EC2(peer_coseec2_key.clone()),
     };
     let spki = der_spki_from_cose(&peer_cose_key)?;
@@ -464,7 +464,7 @@ pub(crate) fn test_encapsulate(
     let pkcs8_private_key_info_version = &[0x02, 0x01, 0x00];
     let rfc5915_ec_private_key_version = &[0x02, 0x01, 0x01];
 
-    let (curve_oid, seq_len, alg_len, attr_len, ecpriv_len, param_len, spk_len) =
+    let (_curve_oid, seq_len, alg_len, attr_len, ecpriv_len, param_len, spk_len) =
         match peer_coseec2_key.curve {
             ECDSACurve::SECP256R1 => (
                 DER_OID_P256_BYTES,
@@ -508,7 +508,7 @@ pub(crate) fn test_encapsulate(
     pkcs8_priv.push(0x03);
     pkcs8_priv.extend_from_slice(spk_len);
     pkcs8_priv.push(0x0);
-    pkcs8_priv.extend_from_slice(&my_pub_key);
+    pkcs8_priv.extend_from_slice(my_pub_key);
 
     // Now we can import the private key.
     let slot = Slot::internal()?;
