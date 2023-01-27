@@ -523,10 +523,12 @@ ImageTestCase GreenWebPIccSrgbTestCase();
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
 ImageTestCase GreenFirstFrameAnimatedWebPTestCase();
+ImageTestCase GreenFirstFrameAnimatedAVIFTestCase();
 
 ImageTestCase BlendAnimatedGIFTestCase();
 ImageTestCase BlendAnimatedPNGTestCase();
 ImageTestCase BlendAnimatedWebPTestCase();
+ImageTestCase BlendAnimatedAVIFTestCase();
 
 ImageTestCase CorruptTestCase();
 ImageTestCase CorruptBMPWithTruncatedHeader();

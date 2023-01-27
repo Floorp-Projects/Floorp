@@ -46,6 +46,8 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   // Ensure AVIF is enabled to run decoder tests.
   rv = Preferences::SetBool("image.avif.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
+  rv = Preferences::SetBool("image.avif.sequence.enabled", true);
+  EXPECT_TRUE(rv == NS_OK);
 
 #ifdef MOZ_JXL
   // Ensure JXL is enabled to run decoder tests.
@@ -216,11 +218,18 @@ bool RectIsSolidColor(SourceSurface* aSurface, const IntRect& aRect,
             abs(pmColor.mGreen - gotColor.mGreen) > aFuzz ||
             abs(pmColor.mRed - gotColor.mRed) > aFuzz ||
             abs(pmColor.mAlpha - gotColor.mAlpha) > aFuzz) {
-          EXPECT_EQ(pmColor.mBlue, gotColor.mBlue);
-          EXPECT_EQ(pmColor.mGreen, gotColor.mGreen);
-          EXPECT_EQ(pmColor.mRed, gotColor.mRed);
-          EXPECT_EQ(pmColor.mAlpha, gotColor.mAlpha);
-          ASSERT_EQ_OR_RETURN(expectedPixel, gotPixel, false);
+          EXPECT_EQ(expectedPixel, gotPixel)
+              << "Color mismatch for rectangle from " << aRect.TopLeft()
+              << " to " << aRect.BottomRight() << ": "
+              << "got rgba(" << static_cast<int>(gotColor.mRed) << ", "
+              << static_cast<int>(gotColor.mGreen) << ", "
+              << static_cast<int>(gotColor.mBlue) << ", "
+              << static_cast<int>(gotColor.mAlpha) << "), "
+              << "expected rgba(" << static_cast<int>(pmColor.mRed) << ", "
+              << static_cast<int>(pmColor.mGreen) << ", "
+              << static_cast<int>(pmColor.mBlue) << ", "
+              << static_cast<int>(pmColor.mAlpha) << ")";
+          return false;
         }
       }
     }
@@ -747,6 +756,11 @@ ImageTestCase GreenFirstFrameAnimatedWebPTestCase() {
                        IntSize(100, 100), TEST_CASE_IS_ANIMATED);
 }
 
+ImageTestCase GreenFirstFrameAnimatedAVIFTestCase() {
+  return ImageTestCase("first-frame-green.avif", "image/avif",
+                       IntSize(100, 100), TEST_CASE_IS_ANIMATED);
+}
+
 ImageTestCase BlendAnimatedGIFTestCase() {
   return ImageTestCase("blend.gif", "image/gif", IntSize(100, 100),
                        TEST_CASE_IS_ANIMATED);
@@ -759,6 +773,11 @@ ImageTestCase BlendAnimatedPNGTestCase() {
 
 ImageTestCase BlendAnimatedWebPTestCase() {
   return ImageTestCase("blend.webp", "image/webp", IntSize(100, 100),
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
+}
+
+ImageTestCase BlendAnimatedAVIFTestCase() {
+  return ImageTestCase("blend.avif", "image/avif", IntSize(100, 100),
                        TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
 }
 
