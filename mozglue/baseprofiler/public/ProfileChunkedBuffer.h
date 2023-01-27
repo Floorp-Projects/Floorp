@@ -1108,6 +1108,12 @@ class ProfileChunkedBuffer {
           MOZ_ASSERT(maybeEntryWriter->RemainingBytes() == blockBytes);
           mRangeEnd += blockBytes;
           mPushedBlockCount += aBlockCount;
+        } else if (blockBytes >= current->BufferBytes()) {
+          // Currently only two buffer chunks are held at a time and it is not
+          // possible to write an object that takes up more space than this. In
+          // this scenario, silently discard this block of data if it is unable
+          // to fit into the two reserved profiler chunks.
+          mFailedPutBytes += blockBytes;
         } else {
           // Block doesn't fit fully in current chunk, it needs to overflow into
           // the next one.
