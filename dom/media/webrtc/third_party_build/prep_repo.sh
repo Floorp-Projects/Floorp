@@ -35,6 +35,10 @@ MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
 CURRENT_DIR=`pwd`
 cd $MOZ_LIBWEBRTC_SRC
 
+# do a sanity fetch in case this was not a freshly cloned copy of the
+# repo, meaning it may not have all the mozilla branches present.
+git fetch --all
+
 # pull new upstream commits
 if [ "0" == `grep "https://webrtc.googlesource.com/src" .git/config | wc -l | tr -d " " || true` ]; then
   echo "Setting up upstream remote (https://webrtc.googlesource.com/src)."
