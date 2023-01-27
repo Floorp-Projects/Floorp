@@ -252,6 +252,16 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetTextSelection(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvRemoveTextSelection(
+    const uint64_t& aID, const int32_t& aSelectionNum) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->RemoveFromSelection(aSelectionNum);
+  }
+
+  return IPC_OK();
+}
+
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
   if (!aID) return mDoc;

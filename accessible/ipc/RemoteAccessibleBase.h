@@ -215,6 +215,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool RemoveFromSelection(
+      int32_t aSelectionNum) override;
+
   virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const override;
 
   virtual void Language(nsAString& aLocale) override;

@@ -330,9 +330,9 @@ ia2AccessibleText::get_textAtOffset(long aOffset,
 
 STDMETHODIMP
 ia2AccessibleText::removeSelection(long aSelectionIndex) {
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   return textAcc->RemoveFromSelection(aSelectionIndex) ? S_OK : E_INVALIDARG;

@@ -220,12 +220,8 @@ class HyperTextAccessible : public AccessibleWrap,
   virtual bool SelectionBoundsAt(int32_t aSelectionNum, int32_t* aStartOffset,
                                  int32_t* aEndOffset) override;
 
-  /*
-   * Removes the specified selection.
-   * @return true if succeeded
-   */
-  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool RemoveFromSelection(int32_t aSelectionNum);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool RemoveFromSelection(
+      int32_t aSelectionNum) override;
 
   /**
    * Scroll the given text range into view.

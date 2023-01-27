@@ -333,6 +333,11 @@ bool RemoteAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
 }
 
 bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::RemoveFromSelection(
+        aSelectionNum);
+  }
+
   bool retVal = false;
   Unused << mDoc->SendRemoveFromSelection(mID, aSelectionNum, &retVal);
   return retVal;

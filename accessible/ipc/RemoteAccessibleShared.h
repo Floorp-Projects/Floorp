@@ -85,7 +85,7 @@ virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY,
 virtual bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
                                   int32_t aEndOffset) override;
 
-bool RemoveFromSelection(int32_t aSelectionNum);
+virtual bool RemoveFromSelection(int32_t aSelectionNum) override;
 
 void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
                        uint32_t aScrollType);
