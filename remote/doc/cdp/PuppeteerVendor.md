@@ -11,7 +11,7 @@ process interspersed with some tips.
 1. Clone the Puppeteer git repository and checkout the release tag you want
    to vendor into mozilla-central.
 
-    	% git checkout tags/v10.0 -b sync-v10.0
+    	% git checkout tags/puppeteer-v10.0 -b sync-v10.0
 
 2. Apply any recent changes in `remote/test/puppeteer` to the Puppeteer branch
    created above.

@@ -1,0 +1,22 @@
+{
+  "title": "Puppeteer",
+  "description": "Options for Puppeteer Angular Schematics",
+  "type": "object",
+  "properties": {
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "item": {
+          "type": "string"
+        }
+      },
+      "description": "Commands to execute in the repo. Commands prefixed with `./node_modules/bin` (Exception: 'node')."
+    },
+    "devServerTarget": {
+      "type": "string",
+      "description": "Angular target that spawns the server."
+    }
+  },
+  "additionalProperties": true
+}

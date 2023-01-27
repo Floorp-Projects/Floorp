@@ -15,6 +15,7 @@
  */
 
 import expect from 'expect';
+import {TimeoutError} from 'puppeteer';
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
 import {waitEvent} from './utils.js';
 
@@ -96,7 +97,7 @@ describe('BrowserContext', function () {
     await context.close();
   });
   it('should wait for a target', async () => {
-    const {browser, puppeteer, server} = getTestState();
+    const {browser, server} = getTestState();
 
     const context = await browser.createIncognitoBrowserContext();
     let resolved = false;
@@ -110,7 +111,7 @@ describe('BrowserContext', function () {
       })
       .catch(error => {
         resolved = true;
-        if (error instanceof puppeteer.errors.TimeoutError) {
+        if (error instanceof TimeoutError) {
           console.error(error);
         } else {
           throw error;
@@ -123,7 +124,7 @@ describe('BrowserContext', function () {
       const target = await targetPromise;
       expect(await target.page()).toBe(page);
     } catch (error) {
-      if (error instanceof puppeteer.errors.TimeoutError) {
+      if (error instanceof TimeoutError) {
         console.error(error);
       } else {
         throw error;
@@ -133,7 +134,7 @@ describe('BrowserContext', function () {
   });
 
   it('should timeout waiting for a non-existent target', async () => {
-    const {browser, puppeteer, server} = getTestState();
+    const {browser, server} = getTestState();
 
     const context = await browser.createIncognitoBrowserContext();
     const error = await context
@@ -148,7 +149,7 @@ describe('BrowserContext', function () {
       .catch(error_ => {
         return error_;
       });
-    expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
+    expect(error).toBeInstanceOf(TimeoutError);
     await context.close();
   });
 
@@ -224,6 +225,18 @@ describe('BrowserContext', function () {
     const contexts = remoteBrowser.browserContexts();
     expect(contexts.length).toBe(2);
     remoteBrowser.disconnect();
+    await context.close();
+  });
+
+  it('should provide a context id', async () => {
+    const {browser} = getTestState();
+
+    expect(browser.browserContexts().length).toBe(1);
+    expect(browser.browserContexts()[0]!.id).toBeUndefined();
+
+    const context = await browser.createIncognitoBrowserContext();
+    expect(browser.browserContexts().length).toBe(2);
+    expect(browser.browserContexts()[1]!.id).toBeDefined();
     await context.close();
   });
 });

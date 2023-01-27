@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "tsconfig",
+    "lib": ["ES2018"],
+    "module": "CommonJS",
+    "noEmitOnError": true,
+    "rootDir": "src/",
+    "outDir": "lib/",
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "types": ["node"],
+    "target": "ES6"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/files/**/*"],
+  "references": [{"path": "./tsconfig.spec.json"}]
+}

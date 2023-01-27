@@ -15,24 +15,19 @@
  */
 
 import expect from 'expect';
-import {Device} from '../../lib/cjs/puppeteer/common/DeviceDescriptors.js';
+import {KnownDevices, PredefinedNetworkConditions} from 'puppeteer';
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
 
+const iPhone = KnownDevices['iPhone 6'];
+const iPhoneLandscape = KnownDevices['iPhone 6 landscape'];
+
 describe('Emulation', () => {
   setupTestBrowserHooks();
   setupTestPageAndContextHooks();
-  let iPhone!: Device;
-  let iPhoneLandscape!: Device;
-
-  before(() => {
-    const {puppeteer} = getTestState();
-    iPhone = puppeteer.devices['iPhone 6']!;
-    iPhoneLandscape = puppeteer.devices['iPhone 6 landscape']!;
-  });
 
   describe('Page.viewport', function () {
     it('should get the proper viewport size', async () => {
@@ -478,7 +473,7 @@ describe('Emulation', () => {
 
       let error!: Error;
       await page
-        // @ts-expect-error deliberately passign invalid deficiency
+        // @ts-expect-error deliberately passing invalid deficiency
         .emulateVisionDeficiency('invalid')
         .catch(error_ => {
           return (error = error_);
@@ -489,10 +484,10 @@ describe('Emulation', () => {
 
   describe('Page.emulateNetworkConditions', function () {
     it('should change navigator.connection.effectiveType', async () => {
-      const {page, puppeteer} = getTestState();
+      const {page} = getTestState();
 
-      const slow3G = puppeteer.networkConditions['Slow 3G']!;
-      const fast3G = puppeteer.networkConditions['Fast 3G']!;
+      const slow3G = PredefinedNetworkConditions['Slow 3G']!;
+      const fast3G = PredefinedNetworkConditions['Fast 3G']!;
 
       expect(
         await page.evaluate('window.navigator.connection.effectiveType')
