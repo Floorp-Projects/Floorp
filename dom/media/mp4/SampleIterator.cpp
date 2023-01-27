@@ -78,6 +78,8 @@ SampleIterator::SampleIterator(MP4SampleIndex* aIndex)
 
 SampleIterator::~SampleIterator() { mIndex->UnregisterIterator(this); }
 
+bool SampleIterator::HasNext() { return !!Get(); }
+
 already_AddRefed<MediaRawData> SampleIterator::GetNext() {
   Sample* s(Get());
   if (!s) {
