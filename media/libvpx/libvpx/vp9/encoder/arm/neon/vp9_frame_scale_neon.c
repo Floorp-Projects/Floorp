@@ -14,6 +14,7 @@
 #include "./vpx_dsp_rtcd.h"
 #include "./vpx_scale_rtcd.h"
 #include "vp9/common/vp9_blockd.h"
+#include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/arm/vpx_convolve8_neon.h"
 #include "vpx_dsp/vpx_filter.h"

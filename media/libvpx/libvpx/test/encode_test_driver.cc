@@ -52,7 +52,8 @@ void Encoder::InitEncoder(VideoSource *video) {
   }
 }
 
-void Encoder::EncodeFrame(VideoSource *video, const unsigned long frame_flags) {
+void Encoder::EncodeFrame(VideoSource *video,
+                          const vpx_enc_frame_flags_t frame_flags) {
   if (video->img()) {
     EncodeFrameInternal(*video, frame_flags);
   } else {
@@ -70,7 +71,7 @@ void Encoder::EncodeFrame(VideoSource *video, const unsigned long frame_flags) {
 }
 
 void Encoder::EncodeFrameInternal(const VideoSource &video,
-                                  const unsigned long frame_flags) {
+                                  const vpx_enc_frame_flags_t frame_flags) {
   vpx_codec_err_t res;
   const vpx_image_t *img = video.img();
 

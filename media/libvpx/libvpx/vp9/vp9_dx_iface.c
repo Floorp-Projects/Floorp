@@ -334,7 +334,6 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
                                       const uint8_t *data, unsigned int data_sz,
                                       void *user_priv, long deadline) {
   const uint8_t *data_start = data;
-  const uint8_t *const data_end = data + data_sz;
   vpx_codec_err_t res;
   uint32_t frame_sizes[8];
   int frame_count;
@@ -362,6 +361,7 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
 
   // Decode in serial mode.
   if (frame_count > 0) {
+    const uint8_t *const data_end = data + data_sz;
     int i;
 
     for (i = 0; i < frame_count; ++i) {
@@ -379,6 +379,7 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
       data_start += frame_size;
     }
   } else {
+    const uint8_t *const data_end = data + data_sz;
     while (data_start < data_end) {
       const uint32_t frame_size = (uint32_t)(data_end - data_start);
       const vpx_codec_err_t res =

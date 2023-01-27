@@ -25,20 +25,26 @@ extern "C" {
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures.
  */
-#define VPX_EXT_RATECTRL_ABI_VERSION (5)
+#define VPX_EXT_RATECTRL_ABI_VERSION (6)
 
 /*!\brief The control type of the inference API.
  * In VPX_RC_QP mode, the external rate control model determines the
  * quantization parameter (QP) for each frame.
  * In VPX_RC_GOP mode, the external rate control model determines the
  * group of picture (GOP) of the video sequence.
+ * In VPX_RC_RDMULT mode, the external rate control model determines the
+ * rate-distortion multiplier (rdmult) for the current frame.
  * In VPX_RC_GOP_QP mode, the external rate control model determines
  * both the QP and the GOP.
+ * In VPX_RC_GOP_QP_RDMULT mode, the external rate control model determines
+ * the QP, GOP and the rdmult.
  */
 typedef enum vpx_rc_type {
   VPX_RC_QP = 1 << 0,
   VPX_RC_GOP = 1 << 1,
-  VPX_RC_GOP_QP = VPX_RC_QP | VPX_RC_GOP
+  VPX_RC_RDMULT = 1 << 2,
+  VPX_RC_GOP_QP = VPX_RC_QP | VPX_RC_GOP,
+  VPX_RC_GOP_QP_RDMULT = VPX_RC_QP | VPX_RC_GOP | VPX_RC_RDMULT
 } vpx_rc_type_t;
 
 /*!\brief Abstract rate control model handler
@@ -54,6 +60,13 @@ typedef void *vpx_rc_model_t;
  * system.
  */
 #define VPX_DEFAULT_Q -1
+
+/*!\brief A reserved value for the rdmult.
+ * If the external rate control model returns this value,
+ * the encoder will use the default rdmult selected by libvpx's rate control
+ * system.
+ */
+#define VPX_DEFAULT_RDMULT -1
 
 /*!\brief Encode frame decision made by the external rate control model
  *
@@ -100,6 +113,14 @@ typedef struct vpx_rc_encodeframe_info {
    * 1: Valid
    */
   int ref_frame_valid_list[3];
+  /*!
+   * The length of the current GOP.
+   */
+  int gop_size;
+  /*!
+   * Whether the current GOP uses an alt ref.
+   */
+  int use_alt_ref;
 } vpx_rc_encodeframe_info_t;
 
 /*!\brief Frame coding result
@@ -308,7 +329,9 @@ typedef struct vpx_rc_gop_info {
    */
   int active_max_gf_interval;
   /*!
-   * Whether to allow the use of alt ref, can be changed per gop.
+   * Whether to allow the use of alt ref, determined by the encoder.
+   * It is fixed for the entire encode.
+   * See function "is_altref_enabled" in vp9_encoder.h.
    */
   int allow_alt_ref;
   /*!
@@ -422,6 +445,19 @@ typedef vpx_rc_status_t (*vpx_rc_get_gop_decision_cb_fn_t)(
     vpx_rc_model_t rate_ctrl_model, const vpx_rc_gop_info_t *gop_info,
     vpx_rc_gop_decision_t *gop_decision);
 
+/*!\brief Get the frame rdmult from the external rate control model.
+ *
+ * This callback is invoked by the encoder to get rdmult from
+ * the external rate control model.
+ *
+ * \param[in]  rate_ctrl_model  rate control model
+ * \param[in]  frame_info       information collected from the encoder
+ * \param[out] rdmult           frame rate-distortion multiplier from the model
+ */
+typedef vpx_rc_status_t (*vpx_rc_get_frame_rdmult_cb_fn_t)(
+    vpx_rc_model_t rate_ctrl_model, const vpx_rc_encodeframe_info_t *frame_info,
+    int *rdmult);
+
 /*!\brief Delete the external rate control model callback prototype
  *
  * This callback is invoked by the encoder to delete the external rate control
@@ -463,6 +499,10 @@ typedef struct vpx_rc_funcs {
    * Get GOP decisions from the external rate control model.
    */
   vpx_rc_get_gop_decision_cb_fn_t get_gop_decision;
+  /*!
+   * Get rdmult for the frame from the external rate control model.
+   */
+  vpx_rc_get_frame_rdmult_cb_fn_t get_frame_rdmult;
   /*!
    * Delete the external rate control model.
    */

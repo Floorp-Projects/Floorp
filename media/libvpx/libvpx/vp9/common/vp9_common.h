@@ -49,6 +49,7 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
 #if CONFIG_DEBUG
 #define CHECK_MEM_ERROR(cm, lval, expr)                                     \
   do {                                                                      \
+    assert(&(cm)->error.setjmp);                                            \
     (lval) = (expr);                                                        \
     if (!(lval))                                                            \
       vpx_internal_error(&(cm)->error, VPX_CODEC_MEM_ERROR,                 \
@@ -58,6 +59,7 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
 #else
 #define CHECK_MEM_ERROR(cm, lval, expr)                     \
   do {                                                      \
+    assert(&(cm)->error.setjmp);                            \
     (lval) = (expr);                                        \
     if (!(lval))                                            \
       vpx_internal_error(&(cm)->error, VPX_CODEC_MEM_ERROR, \

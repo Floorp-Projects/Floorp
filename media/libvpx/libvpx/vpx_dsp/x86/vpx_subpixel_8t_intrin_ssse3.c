@@ -580,7 +580,7 @@ static void vpx_filter_block1d4_h4_ssse3(const uint8_t *src_ptr,
 
     // Pack to 8-bits
     dst_first = _mm_packus_epi16(dst_first, _mm_setzero_si128());
-    *((uint32_t *)(dst_ptr)) = _mm_cvtsi128_si32(dst_first);
+    *((int *)(dst_ptr)) = _mm_cvtsi128_si32(dst_first);
 
     src_ptr += src_stride;
     dst_ptr += dst_stride;
@@ -666,8 +666,8 @@ static void vpx_filter_block1d4_v4_ssse3(const uint8_t *src_ptr,
     reg_1 = _mm_packus_epi16(reg_1, reg_1);
 
     // Save the result
-    *((uint32_t *)(dst_ptr)) = _mm_cvtsi128_si32(reg_0);
-    *((uint32_t *)(dst_ptr + dst_stride)) = _mm_cvtsi128_si32(reg_1);
+    *((int *)(dst_ptr)) = _mm_cvtsi128_si32(reg_0);
+    *((int *)(dst_ptr + dst_stride)) = _mm_cvtsi128_si32(reg_1);
 
     // Update the source by two rows
     src_ptr += src_stride_unrolled;

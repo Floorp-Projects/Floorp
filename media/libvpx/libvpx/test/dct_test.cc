@@ -539,6 +539,18 @@ INSTANTIATE_TEST_SUITE_P(AVX2, TransDCT,
 #endif  // HAVE_AVX2 && !CONFIG_VP9_HIGHBITDEPTH
 
 #if HAVE_NEON
+#if CONFIG_VP9_HIGHBITDEPTH
+static const FuncInfo dct_neon_func_info[] = {
+  { &fdct_wrapper<vpx_highbd_fdct4x4_neon>,
+    &highbd_idct_wrapper<vpx_highbd_idct4x4_16_add_neon>, 4, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct8x8_neon>,
+    &highbd_idct_wrapper<vpx_highbd_idct8x8_64_add_neon>, 8, 2 },
+  { &fdct_wrapper<vpx_highbd_fdct16x16_neon>,
+    &highbd_idct_wrapper<vpx_highbd_idct16x16_256_add_neon>, 16, 2 },
+  /* { &fdct_wrapper<vpx_highbd_fdct32x32_neon>,
+       &highbd_idct_wrapper<vpx_highbd_idct32x32_1024_add_neon>, 32, 2 },*/
+};
+#else
 static const FuncInfo dct_neon_func_info[4] = {
   { &fdct_wrapper<vpx_fdct4x4_neon>, &idct_wrapper<vpx_idct4x4_16_add_neon>, 4,
     1 },
@@ -549,12 +561,15 @@ static const FuncInfo dct_neon_func_info[4] = {
   { &fdct_wrapper<vpx_fdct32x32_neon>,
     &idct_wrapper<vpx_idct32x32_1024_add_neon>, 32, 1 }
 };
+#endif  // CONFIG_VP9_HIGHBITDEPTH
 
 INSTANTIATE_TEST_SUITE_P(
     NEON, TransDCT,
-    ::testing::Combine(::testing::Range(0, 4),
-                       ::testing::Values(dct_neon_func_info),
-                       ::testing::Values(0), ::testing::Values(VPX_BITS_8)));
+    ::testing::Combine(
+        ::testing::Range(0, static_cast<int>(sizeof(dct_neon_func_info) /
+                                             sizeof(dct_neon_func_info[0]))),
+        ::testing::Values(dct_neon_func_info), ::testing::Values(0),
+        ::testing::Values(VPX_BITS_8, VPX_BITS_10, VPX_BITS_12)));
 #endif  // HAVE_NEON
 
 #if HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH
@@ -652,9 +667,15 @@ static const FuncInfo ht_neon_func_info[] = {
 #if CONFIG_VP9_HIGHBITDEPTH
   { &vp9_highbd_fht4x4_c, &highbd_iht_wrapper<vp9_highbd_iht4x4_16_add_neon>, 4,
     2 },
+  { &vp9_highbd_fht4x4_neon, &highbd_iht_wrapper<vp9_highbd_iht4x4_16_add_neon>,
+    4, 2 },
   { &vp9_highbd_fht8x8_c, &highbd_iht_wrapper<vp9_highbd_iht8x8_64_add_neon>, 8,
     2 },
+  { &vp9_highbd_fht8x8_neon, &highbd_iht_wrapper<vp9_highbd_iht8x8_64_add_neon>,
+    8, 2 },
   { &vp9_highbd_fht16x16_c,
+    &highbd_iht_wrapper<vp9_highbd_iht16x16_256_add_neon>, 16, 2 },
+  { &vp9_highbd_fht16x16_neon,
     &highbd_iht_wrapper<vp9_highbd_iht16x16_256_add_neon>, 16, 2 },
 #endif
   { &vp9_fht4x4_c, &iht_wrapper<vp9_iht4x4_16_add_neon>, 4, 1 },

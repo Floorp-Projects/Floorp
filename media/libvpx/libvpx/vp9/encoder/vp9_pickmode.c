@@ -268,6 +268,7 @@ static void block_variance(const uint8_t *src, int src_stride,
 #endif
                            uint32_t *sse8x8, int *sum8x8, uint32_t *var8x8) {
   int i, j, k = 0;
+  uint32_t k_sqr = 0;
 
   *sse = 0;
   *sum = 0;
@@ -305,7 +306,8 @@ static void block_variance(const uint8_t *src, int src_stride,
 #endif
       *sse += sse8x8[k];
       *sum += sum8x8[k];
-      var8x8[k] = sse8x8[k] - (uint32_t)(((int64_t)sum8x8[k] * sum8x8[k]) >> 6);
+      k_sqr = (uint32_t)(((int64_t)sum8x8[k] * sum8x8[k]) >> 6);
+      var8x8[k] = sse8x8[k] > k_sqr ? sse8x8[k] - k_sqr : k_sqr - sse8x8[k];
       k++;
     }
   }
@@ -319,6 +321,7 @@ static void calculate_variance(int bw, int bh, TX_SIZE tx_size,
   const int nw = 1 << (bw - b_width_log2_lookup[unit_size]);
   const int nh = 1 << (bh - b_height_log2_lookup[unit_size]);
   int i, j, k = 0;
+  uint32_t k_sqr = 0;
 
   for (i = 0; i < nh; i += 2) {
     for (j = 0; j < nw; j += 2) {
@@ -326,9 +329,10 @@ static void calculate_variance(int bw, int bh, TX_SIZE tx_size,
                  sse_i[(i + 1) * nw + j] + sse_i[(i + 1) * nw + j + 1];
       sum_o[k] = sum_i[i * nw + j] + sum_i[i * nw + j + 1] +
                  sum_i[(i + 1) * nw + j] + sum_i[(i + 1) * nw + j + 1];
-      var_o[k] = sse_o[k] - (uint32_t)(((int64_t)sum_o[k] * sum_o[k]) >>
-                                       (b_width_log2_lookup[unit_size] +
-                                        b_height_log2_lookup[unit_size] + 6));
+      k_sqr = (uint32_t)(((int64_t)sum_o[k] * sum_o[k]) >>
+                         (b_width_log2_lookup[unit_size] +
+                          b_height_log2_lookup[unit_size] + 6));
+      var_o[k] = sse_o[k] > k_sqr ? sse_o[k] - k_sqr : k_sqr - sse_o[k];
       k++;
     }
   }
@@ -452,6 +456,7 @@ static void model_rd_for_sb_y_large(VP9_COMP *cpi, BLOCK_SIZE bsize,
   unsigned int var8x8[64] = { 0 };
   TX_SIZE tx_size;
   int i, k;
+  uint32_t sum_sqr;
 #if CONFIG_VP9_HIGHBITDEPTH
   const vpx_bit_depth_t bd = cpi->common.bit_depth;
 #endif
@@ -463,7 +468,8 @@ static void model_rd_for_sb_y_large(VP9_COMP *cpi, BLOCK_SIZE bsize,
                  cpi->common.use_highbitdepth, bd,
 #endif
                  sse8x8, sum8x8, var8x8);
-  var = sse - (unsigned int)(((int64_t)sum * sum) >> (bw + bh + 4));
+  sum_sqr = (uint32_t)((int64_t)sum * sum) >> (bw + bh + 4);
+  var = sse > sum_sqr ? sse - sum_sqr : sum_sqr - sse;
 
   *var_y = var;
   *sse_y = sse;
@@ -1112,7 +1118,7 @@ static INLINE int rd_less_than_thresh_row_mt(int64_t best_rd, int thresh,
 }
 
 static INLINE void update_thresh_freq_fact_row_mt(
-    VP9_COMP *cpi, TileDataEnc *tile_data, int source_variance,
+    VP9_COMP *cpi, TileDataEnc *tile_data, unsigned int source_variance,
     int thresh_freq_fact_idx, MV_REFERENCE_FRAME ref_frame,
     THR_MODES best_mode_idx, PREDICTION_MODE mode) {
   THR_MODES thr_mode_idx = mode_idx[ref_frame][mode_offset(mode)];
@@ -1627,9 +1633,9 @@ static int search_new_mv(VP9_COMP *cpi, MACROBLOCK *x,
         return -1;
 
       // Exit NEWMV search if base_mv_sse is large.
-      if (sf->base_mv_aggressive && base_mv_sse > (best_sse_sofar << scale))
+      if (sf->base_mv_aggressive && (base_mv_sse >> scale) > best_sse_sofar)
         return -1;
-      if (base_mv_sse < (best_sse_sofar << 1)) {
+      if ((base_mv_sse >> 1) < best_sse_sofar) {
         // Base layer mv is good.
         // Exit NEWMV search if the base_mv is (0, 0) and sse is low, since
         // (0, 0) mode is already tested.

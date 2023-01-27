@@ -744,10 +744,12 @@ static void UpdateGroupOfPicture(const VP9_COMP *cpi, int start_coding_index,
 }
 
 #define SET_STRUCT_VALUE(config, structure, ret, field) \
-  if (strcmp(config.name, #field) == 0) {               \
-    structure->field = atoi(config.value);              \
-    ret = 1;                                            \
-  }
+  do {                                                  \
+    if (strcmp(config.name, #field) == 0) {             \
+      structure->field = atoi(config.value);            \
+      ret = 1;                                          \
+    }                                                   \
+  } while (false)
 
 static void UpdateEncodeConfig(const EncodeConfig &config,
                                VP9EncoderConfig *oxcf) {

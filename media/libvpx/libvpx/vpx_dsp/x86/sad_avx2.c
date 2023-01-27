@@ -14,7 +14,7 @@
 #define FSAD64_H(h)                                                           \
   unsigned int vpx_sad64x##h##_avx2(const uint8_t *src_ptr, int src_stride,   \
                                     const uint8_t *ref_ptr, int ref_stride) { \
-    int i, res;                                                               \
+    int i;                                                                    \
     __m256i sad1_reg, sad2_reg, ref1_reg, ref2_reg;                           \
     __m256i sum_sad = _mm256_setzero_si256();                                 \
     __m256i sum_sad_h;                                                        \
@@ -35,8 +35,7 @@
     sum_sad = _mm256_add_epi32(sum_sad, sum_sad_h);                           \
     sum_sad128 = _mm256_extracti128_si256(sum_sad, 1);                        \
     sum_sad128 = _mm_add_epi32(_mm256_castsi256_si128(sum_sad), sum_sad128);  \
-    res = _mm_cvtsi128_si32(sum_sad128);                                      \
-    return res;                                                               \
+    return (unsigned int)_mm_cvtsi128_si32(sum_sad128);                       \
   }
 
 #define FSAD32_H(h)                                                           \
@@ -92,7 +91,7 @@ FSAD32
   unsigned int vpx_sad64x##h##_avg_avx2(                                      \
       const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,         \
       int ref_stride, const uint8_t *second_pred) {                           \
-    int i, res;                                                               \
+    int i;                                                                    \
     __m256i sad1_reg, sad2_reg, ref1_reg, ref2_reg;                           \
     __m256i sum_sad = _mm256_setzero_si256();                                 \
     __m256i sum_sad_h;                                                        \
@@ -118,15 +117,14 @@ FSAD32
     sum_sad = _mm256_add_epi32(sum_sad, sum_sad_h);                           \
     sum_sad128 = _mm256_extracti128_si256(sum_sad, 1);                        \
     sum_sad128 = _mm_add_epi32(_mm256_castsi256_si128(sum_sad), sum_sad128);  \
-    res = _mm_cvtsi128_si32(sum_sad128);                                      \
-    return res;                                                               \
+    return (unsigned int)_mm_cvtsi128_si32(sum_sad128);                       \
   }
 
 #define FSADAVG32_H(h)                                                        \
   unsigned int vpx_sad32x##h##_avg_avx2(                                      \
       const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,         \
       int ref_stride, const uint8_t *second_pred) {                           \
-    int i, res;                                                               \
+    int i;                                                                    \
     __m256i sad1_reg, sad2_reg, ref1_reg, ref2_reg;                           \
     __m256i sum_sad = _mm256_setzero_si256();                                 \
     __m256i sum_sad_h;                                                        \
@@ -156,8 +154,7 @@ FSAD32
     sum_sad = _mm256_add_epi32(sum_sad, sum_sad_h);                           \
     sum_sad128 = _mm256_extracti128_si256(sum_sad, 1);                        \
     sum_sad128 = _mm_add_epi32(_mm256_castsi256_si128(sum_sad), sum_sad128);  \
-    res = _mm_cvtsi128_si32(sum_sad128);                                      \
-    return res;                                                               \
+    return (unsigned int)_mm_cvtsi128_si32(sum_sad128);                       \
   }
 
 #define FSADAVG64 \

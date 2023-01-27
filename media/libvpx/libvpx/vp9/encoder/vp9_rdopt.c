@@ -1108,6 +1108,8 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
 
   xd->mi[0]->tx_size = TX_4X4;
 
+  assert(!x->skip_block);
+
 #if CONFIG_VP9_HIGHBITDEPTH
   if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
     for (mode = DC_PRED; mode <= TM_PRED; ++mode) {
@@ -1135,7 +1137,10 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
           uint16_t *const dst16 = CONVERT_TO_SHORTPTR(dst);
           int16_t *const src_diff =
               vp9_raster_block_offset_int16(BLOCK_8X8, block, p->src_diff);
-          tran_low_t *const coeff = BLOCK_OFFSET(x->plane[0].coeff, block);
+          tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
+          tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+          tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+          uint16_t *const eob = &p->eobs[block];
           xd->mi[0]->bmi[block].as_mode = mode;
           vp9_predict_intra_block(xd, 1, TX_4X4, mode,
                                   x->skip_encode ? src : dst,
@@ -1148,7 +1153,9 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
             const int coeff_ctx =
                 combine_entropy_contexts(tempa[idx], templ[idy]);
             vp9_highbd_fwht4x4(src_diff, coeff, 8);
-            vp9_regular_quantize_b_4x4(x, 0, block, so->scan, so->iscan);
+            vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
+                                  p->quant_shift, qcoeff, dqcoeff, pd->dequant,
+                                  eob, so->scan, so->iscan);
             ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                  so->neighbors, cpi->sf.use_fast_coef_costing);
             tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0 ? 1 : 0);
@@ -1166,7 +1173,9 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
               vpx_highbd_fdct4x4(src_diff, coeff, 8);
             else
               vp9_highbd_fht4x4(src_diff, coeff, 8, tx_type);
-            vp9_regular_quantize_b_4x4(x, 0, block, so->scan, so->iscan);
+            vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
+                                  p->quant_shift, qcoeff, dqcoeff, pd->dequant,
+                                  eob, so->scan, so->iscan);
             ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                  so->neighbors, cpi->sf.use_fast_coef_costing);
             distortion += vp9_highbd_block_error_dispatch(
@@ -1236,7 +1245,10 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
         uint8_t *const dst = &dst_init[idx * 4 + idy * 4 * dst_stride];
         int16_t *const src_diff =
             vp9_raster_block_offset_int16(BLOCK_8X8, block, p->src_diff);
-        tran_low_t *const coeff = BLOCK_OFFSET(x->plane[0].coeff, block);
+        tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
+        tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
+        tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);
+        uint16_t *const eob = &p->eobs[block];
         xd->mi[0]->bmi[block].as_mode = mode;
         vp9_predict_intra_block(xd, 1, TX_4X4, mode, x->skip_encode ? src : dst,
                                 x->skip_encode ? src_stride : dst_stride, dst,
@@ -1248,7 +1260,9 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
           const int coeff_ctx =
               combine_entropy_contexts(tempa[idx], templ[idy]);
           vp9_fwht4x4(src_diff, coeff, 8);
-          vp9_regular_quantize_b_4x4(x, 0, block, so->scan, so->iscan);
+          vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
+                         p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                         so->scan, so->iscan);
           ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                so->neighbors, cpi->sf.use_fast_coef_costing);
           tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0) ? 1 : 0;
@@ -1263,7 +1277,9 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
           const int coeff_ctx =
               combine_entropy_contexts(tempa[idx], templ[idy]);
           vp9_fht4x4(src_diff, coeff, 8, tx_type);
-          vp9_regular_quantize_b_4x4(x, 0, block, so->scan, so->iscan);
+          vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
+                         p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                         so->scan, so->iscan);
           ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                so->neighbors, cpi->sf.use_fast_coef_costing);
           tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0) ? 1 : 0;
@@ -1640,6 +1656,8 @@ static int64_t encode_inter_mb_segment(VP9_COMP *cpi, MACROBLOCK *x,
   const int is_compound = has_second_ref(mi);
   const InterpKernel *kernel = vp9_filter_kernels[mi->interp_filter];
 
+  assert(!x->skip_block);
+
   for (ref = 0; ref < 1 + is_compound; ++ref) {
     const int bw = b_width_log2_lookup[BLOCK_8X8];
     const int h = 4 * (i >> bw);
@@ -1701,18 +1719,27 @@ static int64_t encode_inter_mb_segment(VP9_COMP *cpi, MACROBLOCK *x,
       const int bd = (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) ? xd->bd : 8;
 #endif
       int64_t ssz, rd, rd1, rd2;
-      tran_low_t *coeff;
+      tran_low_t *coeff, *qcoeff, *dqcoeff;
+      uint16_t *eob;
       int coeff_ctx;
       k += (idy * 2 + idx);
       coeff_ctx = combine_entropy_contexts(ta[k & 1], tl[k >> 1]);
       coeff = BLOCK_OFFSET(p->coeff, k);
+      qcoeff = BLOCK_OFFSET(p->qcoeff, k);
+      dqcoeff = BLOCK_OFFSET(pd->dqcoeff, k);
+      eob = &p->eobs[k];
+
       x->fwd_txfm4x4(vp9_raster_block_offset_int16(BLOCK_8X8, k, p->src_diff),
                      coeff, 8);
-      vp9_regular_quantize_b_4x4(x, 0, k, so->scan, so->iscan);
 #if CONFIG_VP9_HIGHBITDEPTH
+      vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
+                            p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                            so->scan, so->iscan);
       thisdistortion += vp9_highbd_block_error_dispatch(
           coeff, BLOCK_OFFSET(pd->dqcoeff, k), 16, &ssz, bd);
 #else
+      vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant, p->quant_shift,
+                     qcoeff, dqcoeff, pd->dequant, eob, so->scan, so->iscan);
       thisdistortion +=
           vp9_block_error(coeff, BLOCK_OFFSET(pd->dqcoeff, k), 16, &ssz);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
@@ -3242,6 +3269,7 @@ int vp9_active_h_edge(VP9_COMP *cpi, int mi_row, int mi_step) {
   // For two pass account for any formatting bars detected.
   if (cpi->oxcf.pass == 2) {
     TWO_PASS *twopass = &cpi->twopass;
+    vpx_clear_system_state();
 
     // The inactive region is specified in MBs not mi units.
     // The image edge is in the following MB row.
@@ -3269,6 +3297,7 @@ int vp9_active_v_edge(VP9_COMP *cpi, int mi_col, int mi_step) {
   // For two pass account for any formatting bars detected.
   if (cpi->oxcf.pass == 2) {
     TWO_PASS *twopass = &cpi->twopass;
+    vpx_clear_system_state();
 
     // The inactive region is specified in MBs not mi units.
     // The image edge is in the following MB row.

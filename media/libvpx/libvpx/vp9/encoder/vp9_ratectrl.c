@@ -327,7 +327,7 @@ static void update_buffer_level_postencode(VP9_COMP *cpi,
 
   rc->buffer_level = rc->bits_off_target;
 
-  if (is_one_pass_cbr_svc(cpi)) {
+  if (is_one_pass_svc(cpi)) {
     update_layer_buffer_level_postencode(&cpi->svc, encoded_frame_size);
   }
 }
@@ -910,7 +910,7 @@ static int calc_active_worst_quality_one_pass_vbr(const VP9_COMP *cpi) {
     active_worst_quality =
         curr_frame == 0 ? rc->worst_quality : rc->last_q[KEY_FRAME] << 1;
   } else {
-    if (!rc->is_src_frame_alt_ref &&
+    if (!rc->is_src_frame_alt_ref && !cpi->use_svc &&
         (cpi->refresh_golden_frame || cpi->refresh_alt_ref_frame)) {
       active_worst_quality =
           curr_frame == 1
@@ -1871,7 +1871,7 @@ void vp9_rc_postencode_update(VP9_COMP *cpi, uint64_t bytes_used) {
       }
     }
   } else {
-    if ((cpi->use_svc && oxcf->rc_mode == VPX_CBR) ||
+    if ((cpi->use_svc) ||
         (!rc->is_src_frame_alt_ref &&
          !(cpi->refresh_golden_frame || cpi->refresh_alt_ref_frame))) {
       rc->last_q[INTER_FRAME] = qindex;
@@ -2021,6 +2021,11 @@ int vp9_calc_pframe_target_size_one_pass_vbr(const VP9_COMP *cpi) {
                 (rc->baseline_gf_interval + af_ratio - 1)
           : ((int64_t)rc->avg_frame_bandwidth * rc->baseline_gf_interval) /
                 (rc->baseline_gf_interval + af_ratio - 1);
+  // For SVC: refresh flags are used to define the pattern, so we can't
+  // use that for boosting the target size here.
+  // TODO(marpan): Consider adding internal boost on TL0 for VBR-SVC.
+  // For now just use the CBR logic for setting target size.
+  if (cpi->use_svc) target = vp9_calc_pframe_target_size_one_pass_cbr(cpi);
   if (target > INT_MAX) target = INT_MAX;
   return vp9_rc_clamp_pframe_target_size(cpi, (int)target);
 }
@@ -2147,7 +2152,7 @@ int vp9_calc_pframe_target_size_one_pass_cbr(const VP9_COMP *cpi) {
   } else {
     target = rc->avg_frame_bandwidth;
   }
-  if (is_one_pass_cbr_svc(cpi)) {
+  if (is_one_pass_svc(cpi)) {
     // Note that for layers, avg_frame_bandwidth is the cumulative
     // per-frame-bandwidth. For the target size of this frame, use the
     // layer average frame size (i.e., non-cumulative per-frame-bw).
@@ -2282,7 +2287,7 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
       (svc->spatial_layer_sync[0] == 1 && svc->spatial_layer_id == 0)) {
     cm->frame_type = KEY_FRAME;
     rc->source_alt_ref_active = 0;
-    if (is_one_pass_cbr_svc(cpi)) {
+    if (is_one_pass_svc(cpi)) {
       if (cm->current_video_frame > 0) vp9_svc_reset_temporal_layers(cpi, 1);
       layer = LAYER_IDS_TO_IDX(svc->spatial_layer_id, svc->temporal_layer_id,
                                svc->number_temporal_layers);
@@ -2290,11 +2295,14 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
       cpi->ref_frame_flags &= (~VP9_LAST_FLAG & ~VP9_GOLD_FLAG & ~VP9_ALT_FLAG);
       // Assumption here is that LAST_FRAME is being updated for a keyframe.
       // Thus no change in update flags.
-      target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+      if (cpi->oxcf.rc_mode == VPX_CBR)
+        target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+      else
+        target = vp9_calc_iframe_target_size_one_pass_vbr(cpi);
     }
   } else {
     cm->frame_type = INTER_FRAME;
-    if (is_one_pass_cbr_svc(cpi)) {
+    if (is_one_pass_svc(cpi)) {
       LAYER_CONTEXT *lc = &svc->layer_context[layer];
       // Add condition current_video_frame > 0 for the case where first frame
       // is intra only followed by overlay/copy frame. In this case we don't
@@ -2303,7 +2311,23 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
           (svc->spatial_layer_id == 0 && cm->current_video_frame > 0)
               ? 0
               : svc->layer_context[svc->temporal_layer_id].is_key_frame;
-      target = vp9_calc_pframe_target_size_one_pass_cbr(cpi);
+      if (cpi->oxcf.rc_mode == VPX_CBR) {
+        target = vp9_calc_pframe_target_size_one_pass_cbr(cpi);
+      } else {
+        double rate_err = 0.0;
+        rc->fac_active_worst_inter = 140;
+        rc->fac_active_worst_gf = 100;
+        if (rc->rolling_target_bits > 0) {
+          rate_err =
+              (double)rc->rolling_actual_bits / (double)rc->rolling_target_bits;
+          if (rate_err < 1.0)
+            rc->fac_active_worst_inter = 120;
+          else if (rate_err > 2.0)
+            // Increase active_worst faster if rate fluctuation is high.
+            rc->fac_active_worst_inter = 160;
+        }
+        target = vp9_calc_pframe_target_size_one_pass_vbr(cpi);
+      }
     }
   }
 
@@ -2312,7 +2336,10 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
         svc->layer_context[layer].is_key_frame == 1) {
       cm->frame_type = KEY_FRAME;
       cpi->ref_frame_flags &= (~VP9_LAST_FLAG & ~VP9_GOLD_FLAG & ~VP9_ALT_FLAG);
-      target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+      if (cpi->oxcf.rc_mode == VPX_CBR)
+        target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+      else
+        target = vp9_calc_iframe_target_size_one_pass_vbr(cpi);
     }
     // Set the buffer idx and refresh flags for key frames in simulcast mode.
     // Note the buffer slot for long-term reference is set below (line 2255),
@@ -2397,7 +2424,10 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
   }
   if (svc->set_intra_only_frame) {
     set_intra_only_frame(cpi);
-    target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+    if (cpi->oxcf.rc_mode == VPX_CBR)
+      target = vp9_calc_iframe_target_size_one_pass_cbr(cpi);
+    else
+      target = vp9_calc_iframe_target_size_one_pass_vbr(cpi);
   }
   // Overlay frame predicts from LAST (intra-only)
   if (svc->previous_frame_is_intra_only) cpi->ref_frame_flags |= VP9_LAST_FLAG;
@@ -2584,13 +2614,12 @@ void vp9_rc_set_gf_interval_range(const VP9_COMP *const cpi,
       const uint32_t pic_breadth =
           VPXMAX(cpi->common.width, cpi->common.height);
       int i;
-      for (i = LEVEL_1; i < LEVEL_MAX; ++i) {
+      for (i = 0; i < VP9_LEVELS; ++i) {
         if (vp9_level_defs[i].max_luma_picture_size >= pic_size &&
             vp9_level_defs[i].max_luma_picture_breadth >= pic_breadth) {
           if (rc->min_gf_interval <=
               (int)vp9_level_defs[i].min_altref_distance) {
-            rc->min_gf_interval =
-                (int)vp9_level_defs[i].min_altref_distance + 1;
+            rc->min_gf_interval = (int)vp9_level_defs[i].min_altref_distance;
             rc->max_gf_interval =
                 VPXMAX(rc->max_gf_interval, rc->min_gf_interval);
           }

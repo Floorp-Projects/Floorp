@@ -115,14 +115,14 @@ typedef int64_t vpx_codec_pts_t;
  * support frame types that are codec specific (MPEG-1 D-frames for example)
  */
 typedef uint32_t vpx_codec_frame_flags_t;
-#define VPX_FRAME_IS_KEY 0x1 /**< frame is the start of a GOP */
+#define VPX_FRAME_IS_KEY 0x1u /**< frame is the start of a GOP */
 /*!\brief frame can be dropped without affecting the stream (no future frame
  * depends on this one) */
-#define VPX_FRAME_IS_DROPPABLE 0x2
+#define VPX_FRAME_IS_DROPPABLE 0x2u
 /*!\brief frame should be decoded but will not be shown */
-#define VPX_FRAME_IS_INVISIBLE 0x4
+#define VPX_FRAME_IS_INVISIBLE 0x4u
 /*!\brief this is a fragment of the encoded frame */
-#define VPX_FRAME_IS_FRAGMENT 0x8
+#define VPX_FRAME_IS_FRAGMENT 0x8u
 
 /*!\brief Error Resilient flags
  *
@@ -132,12 +132,13 @@ typedef uint32_t vpx_codec_frame_flags_t;
  */
 typedef uint32_t vpx_codec_er_flags_t;
 /*!\brief Improve resiliency against losses of whole frames */
-#define VPX_ERROR_RESILIENT_DEFAULT 0x1
+#define VPX_ERROR_RESILIENT_DEFAULT 0x1u
 /*!\brief The frame partitions are independently decodable by the bool decoder,
  * meaning that partitions can be decoded even though earlier partitions have
  * been lost. Note that intra prediction is still done over the partition
- * boundary. */
-#define VPX_ERROR_RESILIENT_PARTITIONS 0x2
+ * boundary.
+ * \note This is only supported by VP8.*/
+#define VPX_ERROR_RESILIENT_PARTITIONS 0x2u
 
 /*!\brief Encoder output packet variants
  *

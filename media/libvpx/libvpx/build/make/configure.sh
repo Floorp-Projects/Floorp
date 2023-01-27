@@ -791,7 +791,7 @@ process_common_toolchain() {
         tgt_isa=x86_64
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin1[0-9]\).*/\1/'`
         ;;
-      *darwin2[0-1]*)
+      *darwin2[0-2]*)
         tgt_isa=`uname -m`
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin2[0-9]\).*/\1/'`
         ;;
@@ -940,7 +940,7 @@ process_common_toolchain() {
       add_cflags  "-mmacosx-version-min=10.15"
       add_ldflags "-mmacosx-version-min=10.15"
       ;;
-    *-darwin2[0-1]-*)
+    *-darwin2[0-2]-*)
       add_cflags  "-arch ${toolchain%%-*}"
       add_ldflags "-arch ${toolchain%%-*}"
       ;;
@@ -1511,7 +1511,7 @@ EOF
 
     # Try to find which inline keywords are supported
     check_cc <<EOF && INLINE="inline"
-static inline function() {}
+static inline int function(void) {}
 EOF
 
   # Almost every platform uses pthreads.

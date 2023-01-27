@@ -571,7 +571,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
     }
   }
 
-  virtual void EndPassHook(void) {
+  virtual void EndPassHook() {
     if (change_bitrate_) last_pts_ = last_pts_ - last_pts_ref_;
     duration_ = (last_pts_ + 1) * timebase_;
     for (int sl = 0; sl < number_spatial_layers_; ++sl) {
@@ -1196,6 +1196,37 @@ TEST_P(DatarateOnePassCbrSvcMultiBR, OnePassCbrSvc2SL3TL) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
   CheckLayerRateTargeting(number_spatial_layers_, number_temporal_layers_, 0.75,
                           1.2);
+#if CONFIG_VP9_DECODER
+  // The non-reference frames are expected to be mismatched frames as the
+  // encoder will avoid loopfilter on these frames.
+  EXPECT_EQ(GetNonRefFrames(), GetMismatchFrames());
+#endif
+}
+
+// Check basic rate targeting for 1 pass VBR SVC: 2 spatial layers and
+// 3 temporal layers. Run VGA clip with 1 thread.
+TEST_P(DatarateOnePassCbrSvcMultiBR, OnePassVbrSvc2SL3TL) {
+  SetSvcConfig(2, 3);
+  cfg_.rc_buf_initial_sz = 500;
+  cfg_.rc_buf_optimal_sz = 500;
+  cfg_.rc_buf_sz = 1000;
+  cfg_.rc_min_quantizer = 2;
+  cfg_.rc_max_quantizer = 56;
+  cfg_.g_threads = 1;
+  cfg_.rc_dropframe_thresh = 30;
+  cfg_.kf_max_dist = 9999;
+  cfg_.rc_end_usage = VPX_VBR;
+  ::libvpx_test::I420VideoSource video("niklas_640_480_30.yuv", 640, 480, 30, 1,
+                                       0, 400);
+  top_sl_width_ = 640;
+  top_sl_height_ = 480;
+  const int bitrates[3] = { 200, 400, 600 };
+  cfg_.rc_target_bitrate = bitrates[GET_PARAM(2)];
+  ResetModel();
+  AssignLayerBitrates();
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  CheckLayerRateTargeting(number_spatial_layers_, number_temporal_layers_, 0.70,
+                          1.3);
 #if CONFIG_VP9_DECODER
   // The non-reference frames are expected to be mismatched frames as the
   // encoder will avoid loopfilter on these frames.

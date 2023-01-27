@@ -19,7 +19,7 @@
 static INLINE unsigned int add32x4_sse2(__m128i val) {
   val = _mm_add_epi32(val, _mm_srli_si128(val, 8));
   val = _mm_add_epi32(val, _mm_srli_si128(val, 4));
-  return _mm_cvtsi128_si32(val);
+  return (unsigned int)_mm_cvtsi128_si32(val);
 }
 
 unsigned int vpx_get_mb_ss_sse2(const int16_t *src_ptr) {
@@ -85,7 +85,7 @@ static INLINE void variance_final_512_pel_sse2(__m128i vsse, __m128i vsum,
   vsum = _mm_add_epi16(vsum, _mm_srli_si128(vsum, 8));
   vsum = _mm_unpacklo_epi16(vsum, vsum);
   vsum = _mm_srai_epi32(vsum, 16);
-  *sum = add32x4_sse2(vsum);
+  *sum = (int)add32x4_sse2(vsum);
 }
 
 static INLINE __m128i sum_to_32bit_sse2(const __m128i sum) {
@@ -97,7 +97,7 @@ static INLINE __m128i sum_to_32bit_sse2(const __m128i sum) {
 // Can handle 1024 pixels' diff sum (such as 32x32)
 static INLINE int sum_final_sse2(const __m128i sum) {
   const __m128i t = sum_to_32bit_sse2(sum);
-  return add32x4_sse2(t);
+  return (int)add32x4_sse2(t);
 }
 
 static INLINE void variance4_sse2(const uint8_t *src_ptr, const int src_stride,
@@ -349,7 +349,7 @@ unsigned int vpx_variance32x64_sse2(const uint8_t *src_ptr, int src_stride,
     vsum = _mm_add_epi32(vsum, sum_to_32bit_sse2(vsum16));
   }
   *sse = add32x4_sse2(vsse);
-  sum = add32x4_sse2(vsum);
+  sum = (int)add32x4_sse2(vsum);
   return *sse - (unsigned int)(((int64_t)sum * sum) >> 11);
 }
 
@@ -369,7 +369,7 @@ unsigned int vpx_variance64x32_sse2(const uint8_t *src_ptr, int src_stride,
     vsum = _mm_add_epi32(vsum, sum_to_32bit_sse2(vsum16));
   }
   *sse = add32x4_sse2(vsse);
-  sum = add32x4_sse2(vsum);
+  sum = (int)add32x4_sse2(vsum);
   return *sse - (unsigned int)(((int64_t)sum * sum) >> 11);
 }
 
@@ -389,7 +389,7 @@ unsigned int vpx_variance64x64_sse2(const uint8_t *src_ptr, int src_stride,
     vsum = _mm_add_epi32(vsum, sum_to_32bit_sse2(vsum16));
   }
   *sse = add32x4_sse2(vsse);
-  sum = add32x4_sse2(vsum);
+  sum = (int)add32x4_sse2(vsum);
   return *sse - (unsigned int)(((int64_t)sum * sum) >> 12);
 }
 

@@ -26,7 +26,11 @@ namespace {
 
 const size_t kNumFrames = 300;
 
-const int kTemporalId[4] = { 0, 2, 1, 2 };
+const int kTemporalId3Layer[4] = { 0, 2, 1, 2 };
+const int kTemporalId2Layer[2] = { 0, 1 };
+const int kTemporalRateAllocation3Layer[3] = { 50, 70, 100 };
+const int kTemporalRateAllocation2Layer[2] = { 60, 100 };
+const int kSpatialLayerBitrate[3] = { 200, 400, 1000 };
 
 class RcInterfaceTest
     : public ::libvpx_test::EncoderTest,
@@ -179,28 +183,73 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
       encoder->Control(VP9E_SET_SVC, 1);
       encoder->Control(VP9E_SET_SVC_PARAMETERS, &svc_params_);
     }
-
-    frame_params_.frame_type = video->frame() == 0 ? KEY_FRAME : INTER_FRAME;
-    if (rc_cfg_.rc_mode == VPX_CBR && frame_params_.frame_type == INTER_FRAME) {
-      // Disable golden frame update.
-      frame_flags_ |= VP8_EFLAG_NO_UPD_GF;
-      frame_flags_ |= VP8_EFLAG_NO_UPD_ARF;
-    }
+    frame_params_.frame_type =
+        video->frame() % key_interval_ == 0 ? KEY_FRAME : INTER_FRAME;
     encoder_exit_ = video->frame() == kNumFrames;
     current_superframe_ = video->frame();
+    if (dynamic_spatial_layers_ == 1) {
+      if (video->frame() == 100) {
+        // Go down to 2 spatial layers: set top SL to 0 bitrate.
+        // Update the encoder config.
+        cfg_.rc_target_bitrate -= cfg_.layer_target_bitrate[8];
+        cfg_.layer_target_bitrate[6] = 0;
+        cfg_.layer_target_bitrate[7] = 0;
+        cfg_.layer_target_bitrate[8] = 0;
+        encoder->Config(&cfg_);
+        // Update the RC config.
+        rc_cfg_.target_bandwidth -= rc_cfg_.layer_target_bitrate[8];
+        rc_cfg_.layer_target_bitrate[6] = 0;
+        rc_cfg_.layer_target_bitrate[7] = 0;
+        rc_cfg_.layer_target_bitrate[8] = 0;
+        rc_api_->UpdateRateControl(rc_cfg_);
+      } else if (video->frame() == 200) {
+        // Go down to 1 spatial layer.
+        // Update the encoder config.
+        cfg_.rc_target_bitrate -= cfg_.layer_target_bitrate[5];
+        cfg_.layer_target_bitrate[3] = 0;
+        cfg_.layer_target_bitrate[4] = 0;
+        cfg_.layer_target_bitrate[5] = 0;
+        encoder->Config(&cfg_);
+        // Update the RC config.
+        rc_cfg_.target_bandwidth -= rc_cfg_.layer_target_bitrate[5];
+        rc_cfg_.layer_target_bitrate[3] = 0;
+        rc_cfg_.layer_target_bitrate[4] = 0;
+        rc_cfg_.layer_target_bitrate[5] = 0;
+        rc_api_->UpdateRateControl(rc_cfg_);
+      } else if (0 && video->frame() == 280) {
+        // TODO(marpan): Re-enable this going back up when issue is fixed.
+        // Go back up to 3 spatial layers.
+        // Update the encoder config: use the original bitrates.
+        SetEncoderConfigSvc(3, 3);
+        encoder->Config(&cfg_);
+        // Update the RC config.
+        SetRCConfigSvc(3, 3);
+        rc_api_->UpdateRateControl(rc_cfg_);
+      }
+    }
   }
 
   virtual void PostEncodeFrameHook(::libvpx_test::Encoder *encoder) {
     ::libvpx_test::CxDataIterator iter = encoder->GetCxData();
+    for (int sl = 0; sl < rc_cfg_.ss_number_layers; sl++) sizes_[sl] = 0;
     while (const vpx_codec_cx_pkt_t *pkt = iter.Next()) {
       ParseSuperframeSizes(static_cast<const uint8_t *>(pkt->data.frame.buf),
                            pkt->data.frame.sz);
       for (int sl = 0; sl < rc_cfg_.ss_number_layers; sl++) {
-        frame_params_.spatial_layer_id = sl;
-        frame_params_.temporal_layer_id = kTemporalId[current_superframe_ % 4];
-        rc_api_->ComputeQP(frame_params_);
-        frame_params_.frame_type = INTER_FRAME;
-        rc_api_->PostEncodeUpdate(sizes_[sl]);
+        if (sizes_[sl] > 0) {
+          frame_params_.spatial_layer_id = sl;
+          if (rc_cfg_.ts_number_layers == 3)
+            frame_params_.temporal_layer_id =
+                kTemporalId3Layer[current_superframe_ % 4];
+          else if (rc_cfg_.ts_number_layers == 2)
+            frame_params_.temporal_layer_id =
+                kTemporalId2Layer[current_superframe_ % 2];
+          else
+            frame_params_.temporal_layer_id = 0;
+          rc_api_->ComputeQP(frame_params_);
+          frame_params_.frame_type = INTER_FRAME;
+          rc_api_->PostEncodeUpdate(sizes_[sl]);
+        }
       }
     }
     if (!encoder_exit_) {
@@ -218,9 +267,37 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
                             const vpx_image_t * /*img2*/) {}
 
   void RunSvc() {
-    SetConfigSvc();
+    dynamic_spatial_layers_ = 0;
+    SetRCConfigSvc(3, 3);
+    key_interval_ = 10000;
     rc_api_ = libvpx::VP9RateControlRTC::Create(rc_cfg_);
-    SetEncoderSvc();
+    SetEncoderConfigSvc(3, 3);
+
+    ::libvpx_test::I420VideoSource video("desktop_office1.1280_720-020.yuv",
+                                         1280, 720, 30, 1, 0, kNumFrames);
+
+    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  }
+
+  void RunSvcPeriodicKey() {
+    dynamic_spatial_layers_ = 0;
+    SetRCConfigSvc(3, 3);
+    key_interval_ = 100;
+    rc_api_ = libvpx::VP9RateControlRTC::Create(rc_cfg_);
+    SetEncoderConfigSvc(3, 3);
+
+    ::libvpx_test::I420VideoSource video("desktop_office1.1280_720-020.yuv",
+                                         1280, 720, 30, 1, 0, kNumFrames);
+
+    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  }
+
+  void RunSvcDynamicSpatial() {
+    dynamic_spatial_layers_ = 1;
+    SetRCConfigSvc(3, 3);
+    key_interval_ = 10000;
+    rc_api_ = libvpx::VP9RateControlRTC::Create(rc_cfg_);
+    SetEncoderConfigSvc(3, 3);
 
     ::libvpx_test::I420VideoSource video("desktop_office1.1280_720-020.yuv",
                                          1280, 720, 30, 1, 0, kNumFrames);
@@ -256,30 +333,54 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
     return VPX_CODEC_OK;
   }
 
-  void SetEncoderSvc() {
-    cfg_.ss_number_layers = 3;
-    cfg_.ts_number_layers = 3;
+  void SetEncoderConfigSvc(int number_spatial_layers,
+                           int number_temporal_layers) {
+    cfg_.g_w = 1280;
+    cfg_.g_h = 720;
+    cfg_.ss_number_layers = number_spatial_layers;
+    cfg_.ts_number_layers = number_temporal_layers;
     cfg_.g_timebase.num = 1;
     cfg_.g_timebase.den = 30;
-    svc_params_.scaling_factor_num[0] = 72;
-    svc_params_.scaling_factor_den[0] = 288;
-    svc_params_.scaling_factor_num[1] = 144;
-    svc_params_.scaling_factor_den[1] = 288;
-    svc_params_.scaling_factor_num[2] = 288;
-    svc_params_.scaling_factor_den[2] = 288;
+    if (number_spatial_layers == 3) {
+      svc_params_.scaling_factor_num[0] = 1;
+      svc_params_.scaling_factor_den[0] = 4;
+      svc_params_.scaling_factor_num[1] = 2;
+      svc_params_.scaling_factor_den[1] = 4;
+      svc_params_.scaling_factor_num[2] = 4;
+      svc_params_.scaling_factor_den[2] = 4;
+    } else if (number_spatial_layers == 2) {
+      svc_params_.scaling_factor_num[0] = 1;
+      svc_params_.scaling_factor_den[0] = 2;
+      svc_params_.scaling_factor_num[1] = 2;
+      svc_params_.scaling_factor_den[1] = 2;
+    } else if (number_spatial_layers == 1) {
+      svc_params_.scaling_factor_num[0] = 1;
+      svc_params_.scaling_factor_den[0] = 1;
+    }
+
     for (int i = 0; i < VPX_MAX_LAYERS; ++i) {
       svc_params_.max_quantizers[i] = 56;
       svc_params_.min_quantizers[i] = 2;
       svc_params_.speed_per_layer[i] = 7;
+      svc_params_.loopfilter_ctrl[i] = LOOPFILTER_ALL;
     }
     cfg_.rc_end_usage = VPX_CBR;
     cfg_.g_lag_in_frames = 0;
     cfg_.g_error_resilient = 0;
-    // 3 temporal layers
-    cfg_.ts_rate_decimator[0] = 4;
-    cfg_.ts_rate_decimator[1] = 2;
-    cfg_.ts_rate_decimator[2] = 1;
-    cfg_.temporal_layering_mode = 3;
+
+    if (number_temporal_layers == 3) {
+      cfg_.ts_rate_decimator[0] = 4;
+      cfg_.ts_rate_decimator[1] = 2;
+      cfg_.ts_rate_decimator[2] = 1;
+      cfg_.temporal_layering_mode = 3;
+    } else if (number_temporal_layers == 2) {
+      cfg_.ts_rate_decimator[0] = 2;
+      cfg_.ts_rate_decimator[1] = 1;
+      cfg_.temporal_layering_mode = 2;
+    } else if (number_temporal_layers == 1) {
+      cfg_.ts_rate_decimator[0] = 1;
+      cfg_.temporal_layering_mode = 0;
+    }
 
     cfg_.rc_buf_initial_sz = 500;
     cfg_.rc_buf_optimal_sz = 600;
@@ -288,27 +389,39 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
     cfg_.rc_max_quantizer = 56;
     cfg_.g_threads = 1;
     cfg_.kf_max_dist = 9999;
-    cfg_.rc_target_bitrate = 1600;
     cfg_.rc_overshoot_pct = 50;
     cfg_.rc_undershoot_pct = 50;
 
-    cfg_.layer_target_bitrate[0] = 100;
-    cfg_.layer_target_bitrate[1] = 140;
-    cfg_.layer_target_bitrate[2] = 200;
-    cfg_.layer_target_bitrate[3] = 250;
-    cfg_.layer_target_bitrate[4] = 350;
-    cfg_.layer_target_bitrate[5] = 500;
-    cfg_.layer_target_bitrate[6] = 450;
-    cfg_.layer_target_bitrate[7] = 630;
-    cfg_.layer_target_bitrate[8] = 900;
+    cfg_.rc_target_bitrate = 0;
+    for (int sl = 0; sl < number_spatial_layers; sl++) {
+      int spatial_bitrate = 0;
+      if (number_spatial_layers <= 3)
+        spatial_bitrate = kSpatialLayerBitrate[sl];
+      for (int tl = 0; tl < number_temporal_layers; tl++) {
+        int layer = sl * number_temporal_layers + tl;
+        if (number_temporal_layers == 3)
+          cfg_.layer_target_bitrate[layer] =
+              kTemporalRateAllocation3Layer[tl] * spatial_bitrate / 100;
+        else if (number_temporal_layers == 2)
+          cfg_.layer_target_bitrate[layer] =
+              kTemporalRateAllocation2Layer[tl] * spatial_bitrate / 100;
+        else if (number_temporal_layers == 1)
+          cfg_.layer_target_bitrate[layer] = spatial_bitrate;
+      }
+      cfg_.rc_target_bitrate += spatial_bitrate;
+    }
+
+    cfg_.kf_min_dist = key_interval_;
+    cfg_.kf_max_dist = key_interval_;
   }
 
-  void SetConfigSvc() {
+  void SetRCConfigSvc(int number_spatial_layers, int number_temporal_layers) {
     rc_cfg_.width = 1280;
     rc_cfg_.height = 720;
+    rc_cfg_.ss_number_layers = number_spatial_layers;
+    rc_cfg_.ts_number_layers = number_temporal_layers;
     rc_cfg_.max_quantizer = 56;
     rc_cfg_.min_quantizer = 2;
-    rc_cfg_.target_bandwidth = 1600;
     rc_cfg_.buf_initial_sz = 500;
     rc_cfg_.buf_optimal_sz = 600;
     rc_cfg_.buf_sz = 1000;
@@ -316,31 +429,55 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
     rc_cfg_.overshoot_pct = 50;
     rc_cfg_.max_intra_bitrate_pct = 900;
     rc_cfg_.framerate = 30.0;
-    rc_cfg_.ss_number_layers = 3;
-    rc_cfg_.ts_number_layers = 3;
     rc_cfg_.rc_mode = VPX_CBR;
     rc_cfg_.aq_mode = aq_mode_;
 
-    rc_cfg_.scaling_factor_num[0] = 1;
-    rc_cfg_.scaling_factor_den[0] = 4;
-    rc_cfg_.scaling_factor_num[1] = 2;
-    rc_cfg_.scaling_factor_den[1] = 4;
-    rc_cfg_.scaling_factor_num[2] = 4;
-    rc_cfg_.scaling_factor_den[2] = 4;
+    if (number_spatial_layers == 3) {
+      rc_cfg_.scaling_factor_num[0] = 1;
+      rc_cfg_.scaling_factor_den[0] = 4;
+      rc_cfg_.scaling_factor_num[1] = 2;
+      rc_cfg_.scaling_factor_den[1] = 4;
+      rc_cfg_.scaling_factor_num[2] = 4;
+      rc_cfg_.scaling_factor_den[2] = 4;
+    } else if (number_spatial_layers == 2) {
+      rc_cfg_.scaling_factor_num[0] = 1;
+      rc_cfg_.scaling_factor_den[0] = 2;
+      rc_cfg_.scaling_factor_num[1] = 2;
+      rc_cfg_.scaling_factor_den[1] = 2;
+    } else if (number_spatial_layers == 1) {
+      rc_cfg_.scaling_factor_num[0] = 1;
+      rc_cfg_.scaling_factor_den[0] = 1;
+    }
 
-    rc_cfg_.ts_rate_decimator[0] = 4;
-    rc_cfg_.ts_rate_decimator[1] = 2;
-    rc_cfg_.ts_rate_decimator[2] = 1;
+    if (number_temporal_layers == 3) {
+      rc_cfg_.ts_rate_decimator[0] = 4;
+      rc_cfg_.ts_rate_decimator[1] = 2;
+      rc_cfg_.ts_rate_decimator[2] = 1;
+    } else if (number_temporal_layers == 2) {
+      rc_cfg_.ts_rate_decimator[0] = 2;
+      rc_cfg_.ts_rate_decimator[1] = 1;
+    } else if (number_temporal_layers == 1) {
+      rc_cfg_.ts_rate_decimator[0] = 1;
+    }
 
-    rc_cfg_.layer_target_bitrate[0] = 100;
-    rc_cfg_.layer_target_bitrate[1] = 140;
-    rc_cfg_.layer_target_bitrate[2] = 200;
-    rc_cfg_.layer_target_bitrate[3] = 250;
-    rc_cfg_.layer_target_bitrate[4] = 350;
-    rc_cfg_.layer_target_bitrate[5] = 500;
-    rc_cfg_.layer_target_bitrate[6] = 450;
-    rc_cfg_.layer_target_bitrate[7] = 630;
-    rc_cfg_.layer_target_bitrate[8] = 900;
+    rc_cfg_.target_bandwidth = 0;
+    for (int sl = 0; sl < number_spatial_layers; sl++) {
+      int spatial_bitrate = 0;
+      if (number_spatial_layers <= 3)
+        spatial_bitrate = kSpatialLayerBitrate[sl];
+      for (int tl = 0; tl < number_temporal_layers; tl++) {
+        int layer = sl * number_temporal_layers + tl;
+        if (number_temporal_layers == 3)
+          rc_cfg_.layer_target_bitrate[layer] =
+              kTemporalRateAllocation3Layer[tl] * spatial_bitrate / 100;
+        else if (number_temporal_layers == 2)
+          rc_cfg_.layer_target_bitrate[layer] =
+              kTemporalRateAllocation2Layer[tl] * spatial_bitrate / 100;
+        else if (number_temporal_layers == 1)
+          rc_cfg_.layer_target_bitrate[layer] = spatial_bitrate;
+      }
+      rc_cfg_.target_bandwidth += spatial_bitrate;
+    }
 
     for (int sl = 0; sl < rc_cfg_.ss_number_layers; ++sl) {
       for (int tl = 0; tl < rc_cfg_.ts_number_layers; ++tl) {
@@ -359,6 +496,8 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
   bool encoder_exit_;
   int current_superframe_;
   uint32_t sizes_[8];
+  int key_interval_;
+  int dynamic_spatial_layers_;
 };
 
 TEST_P(RcInterfaceTest, OneLayer) { RunOneLayer(); }
@@ -366,6 +505,10 @@ TEST_P(RcInterfaceTest, OneLayer) { RunOneLayer(); }
 TEST_P(RcInterfaceTest, OneLayerVBRPeriodicKey) { RunOneLayerVBRPeriodicKey(); }
 
 TEST_P(RcInterfaceSvcTest, Svc) { RunSvc(); }
+
+TEST_P(RcInterfaceSvcTest, SvcPeriodicKey) { RunSvcPeriodicKey(); }
+
+TEST_P(RcInterfaceSvcTest, SvcDynamicSpatial) { RunSvcDynamicSpatial(); }
 
 VP9_INSTANTIATE_TEST_SUITE(RcInterfaceTest, ::testing::Values(0, 3),
                            ::testing::Values(VPX_CBR, VPX_VBR));

@@ -328,8 +328,8 @@ void vp8_init_temporal_layer_context(VP8_COMP *cpi, VP8_CONFIG *oxcf,
 // for any "new" layers. For "existing" layers, let them inherit the parameters
 // from the previous layer state (at the same layer #). In future we may want
 // to better map the previous layer state(s) to the "new" ones.
-static void reset_temporal_layer_change(VP8_COMP *cpi, VP8_CONFIG *oxcf,
-                                        const int prev_num_layers) {
+void vp8_reset_temporal_layer_change(VP8_COMP *cpi, VP8_CONFIG *oxcf,
+                                     const int prev_num_layers) {
   int i;
   double prev_layer_framerate = 0;
   const int curr_num_layers = cpi->oxcf.number_of_layers;
@@ -1643,7 +1643,7 @@ void vp8_change_config(VP8_COMP *cpi, VP8_CONFIG *oxcf) {
       cpi->temporal_layer_id = 0;
     }
     cpi->temporal_pattern_counter = 0;
-    reset_temporal_layer_change(cpi, oxcf, prev_number_of_layers);
+    vp8_reset_temporal_layer_change(cpi, oxcf, prev_number_of_layers);
   }
 
   if (!cpi->initial_width) {
@@ -4202,11 +4202,10 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
       }
 
       /* Clamp cpi->zbin_over_quant */
-      cpi->mb.zbin_over_quant = (cpi->mb.zbin_over_quant < zbin_oq_low)
-                                    ? zbin_oq_low
-                                    : (cpi->mb.zbin_over_quant > zbin_oq_high)
-                                          ? zbin_oq_high
-                                          : cpi->mb.zbin_over_quant;
+      cpi->mb.zbin_over_quant =
+          (cpi->mb.zbin_over_quant < zbin_oq_low)    ? zbin_oq_low
+          : (cpi->mb.zbin_over_quant > zbin_oq_high) ? zbin_oq_high
+                                                     : cpi->mb.zbin_over_quant;
 
       Loop = Q != last_q;
     } else {

@@ -19,6 +19,7 @@
 #include <limits.h>
 #include "vpx/vpx_encoder.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/compiler_attributes.h"
 #include "vpx_ports/system_state.h"
 #include "bitstream.h"
 
@@ -117,7 +118,9 @@ static void write_split(vp8_writer *bc, int x) {
                   vp8_mbsplit_encodings + x);
 }
 
-void vp8_pack_tokens(vp8_writer *w, const TOKENEXTRA *p, int xcount) {
+void VPX_NO_UNSIGNED_SHIFT_CHECK vp8_pack_tokens(vp8_writer *w,
+                                                 const TOKENEXTRA *p,
+                                                 int xcount) {
   const TOKENEXTRA *stop = p + xcount;
   unsigned int split;
   int shift;

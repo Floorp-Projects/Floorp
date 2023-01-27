@@ -2113,11 +2113,10 @@ static int64_t calculate_total_gf_group_bits(VP9_COMP *cpi,
   }
 
   // Clamp odd edge cases.
-  total_group_bits = (total_group_bits < 0)
-                         ? 0
-                         : (total_group_bits > twopass->kf_group_bits)
-                               ? twopass->kf_group_bits
-                               : total_group_bits;
+  total_group_bits = (total_group_bits < 0) ? 0
+                     : (total_group_bits > twopass->kf_group_bits)
+                         ? twopass->kf_group_bits
+                         : total_group_bits;
 
   // Clip based on user supplied data rate variability limit.
   if (total_group_bits > (int64_t)max_bits * gop_frames)

@@ -170,8 +170,8 @@ static vpx_codec_err_t update_error_state(
 static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
                                        const vpx_codec_enc_cfg_t *cfg,
                                        const struct vp9_extracfg *extra_cfg) {
-  RANGE_CHECK(cfg, g_w, 1, 65535);  // 16 bits available
-  RANGE_CHECK(cfg, g_h, 1, 65535);  // 16 bits available
+  RANGE_CHECK(cfg, g_w, 1, 65536);  // 16 bits available
+  RANGE_CHECK(cfg, g_h, 1, 65536);  // 16 bits available
   RANGE_CHECK(cfg, g_timebase.den, 1, 1000000000);
   RANGE_CHECK(cfg, g_timebase.num, 1, 1000000000);
   RANGE_CHECK_HI(cfg, g_profile, 3);
@@ -1014,6 +1014,7 @@ static vpx_codec_err_t ctrl_set_aq_mode(vpx_codec_alg_priv_t *ctx,
                                         va_list args) {
   struct vp9_extracfg extra_cfg = ctx->extra_cfg;
   extra_cfg.aq_mode = CAST(VP9E_SET_AQ_MODE, args);
+  if (ctx->cpi->fixed_qp_onepass) extra_cfg.aq_mode = 0;
   return update_extra_cfg(ctx, &extra_cfg);
 }
 
@@ -1357,8 +1358,6 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
     unsigned int lib_flags = 0;
     YV12_BUFFER_CONFIG sd;
     int64_t dst_time_stamp = timebase_units_to_ticks(timestamp_ratio, pts);
-    int64_t dst_end_time_stamp =
-        timebase_units_to_ticks(timestamp_ratio, pts + duration);
     size_t size, cx_data_sz;
     unsigned char *cx_data;
 
@@ -1369,22 +1368,15 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
     if (ctx->base.init_flags & VPX_CODEC_USE_PSNR) cpi->b_calculate_psnr = 1;
 
     if (img != NULL) {
+      const int64_t dst_end_time_stamp =
+          timebase_units_to_ticks(timestamp_ratio, pts + duration);
       res = image2yuvconfig(img, &sd);
 
-      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-        /* from vpx_encoder.h for g_w/g_h:
-           "Note that the frames passed as input to the encoder must have this
-           resolution"
-        */
-        ctx->base.err_detail = "Invalid input frame resolution";
-        res = VPX_CODEC_INVALID_PARAM;
-      } else {
-        // Store the original flags in to the frame buffer. Will extract the
-        // key frame flag when we actually encode this frame.
-        if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
-                                  dst_time_stamp, dst_end_time_stamp)) {
-          res = update_error_state(ctx, &cpi->common.error);
-        }
+      // Store the original flags in to the frame buffer. Will extract the
+      // key frame flag when we actually encode this frame.
+      if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
+                                dst_time_stamp, dst_end_time_stamp)) {
+        res = update_error_state(ctx, &cpi->common.error);
       }
       ctx->next_frame_flags = 0;
     }
@@ -1414,6 +1406,7 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
       // compute first pass stats
       if (img) {
         int ret;
+        int64_t dst_end_time_stamp;
         vpx_codec_cx_pkt_t fps_pkt;
         ENCODE_FRAME_RESULT encode_frame_result;
         vp9_init_encode_frame_result(&encode_frame_result);
@@ -1439,6 +1432,7 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
 #endif  // !CONFIG_REALTIME_ONLY
     } else {
       ENCODE_FRAME_RESULT encode_frame_result;
+      int64_t dst_end_time_stamp;
       vp9_init_encode_frame_result(&encode_frame_result);
       while (cx_data_sz >= ctx->cx_data_sz / 2 &&
              -1 != vp9_get_compressed_data(cpi, &lib_flags, &size, cx_data,
@@ -1534,9 +1528,8 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
 
           cx_data += size;
           cx_data_sz -= size;
-          if (is_one_pass_cbr_svc(cpi) &&
-              (cpi->svc.spatial_layer_id ==
-               cpi->svc.number_spatial_layers - 1)) {
+          if (is_one_pass_svc(cpi) && (cpi->svc.spatial_layer_id ==
+                                       cpi->svc.number_spatial_layers - 1)) {
             // Encoded all spatial layers; exit loop.
             break;
           }
@@ -1959,6 +1952,24 @@ static vpx_codec_err_t ctrl_set_external_rate_control(vpx_codec_alg_priv_t *ctx,
   return VPX_CODEC_OK;
 }
 
+static vpx_codec_err_t ctrl_set_quantizer_one_pass(vpx_codec_alg_priv_t *ctx,
+                                                   va_list args) {
+  VP9_COMP *const cpi = ctx->cpi;
+  const int qp = va_arg(args, int);
+  vpx_codec_enc_cfg_t *cfg = &ctx->cfg;
+  struct vp9_extracfg extra_cfg = ctx->extra_cfg;
+  vpx_codec_err_t res;
+
+  if (qp < 0 || qp > 63) return VPX_CODEC_INVALID_PARAM;
+
+  cfg->rc_min_quantizer = cfg->rc_max_quantizer = qp;
+  extra_cfg.aq_mode = 0;
+  cpi->fixed_qp_onepass = 1;
+
+  res = update_extra_cfg(ctx, &extra_cfg);
+  return res;
+}
+
 static vpx_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   { VP8_COPY_REFERENCE, ctrl_copy_reference },
 
@@ -2013,6 +2024,7 @@ static vpx_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   { VP9E_SET_DISABLE_LOOPFILTER, ctrl_set_disable_loopfilter },
   { VP9E_SET_RTC_EXTERNAL_RATECTRL, ctrl_set_rtc_external_ratectrl },
   { VP9E_SET_EXTERNAL_RATE_CONTROL, ctrl_set_external_rate_control },
+  { VP9E_SET_QUANTIZER_ONE_PASS, ctrl_set_quantizer_one_pass },
 
   // Getters
   { VP8E_GET_LAST_QUANTIZER, ctrl_get_quantizer },

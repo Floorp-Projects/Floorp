@@ -92,6 +92,7 @@ void VP8RateControlRTC::UpdateRateControl(
     const VP8RateControlRtcConfig &rc_cfg) {
   VP8_COMMON *cm = &cpi_->common;
   VP8_CONFIG *oxcf = &cpi_->oxcf;
+  const unsigned int prev_number_of_layers = oxcf->number_of_layers;
   vpx_clear_system_state();
   cm->Width = rc_cfg.width;
   cm->Height = rc_cfg.height;
@@ -124,17 +125,33 @@ void VP8RateControlRTC::UpdateRateControl(
         static_cast<int>(cpi_->output_framerate);
   }
 
-  if (oxcf->number_of_layers > 1) {
+  if (oxcf->number_of_layers > 1 || prev_number_of_layers > 1) {
     memcpy(oxcf->target_bitrate, rc_cfg.layer_target_bitrate,
            sizeof(rc_cfg.layer_target_bitrate));
     memcpy(oxcf->rate_decimator, rc_cfg.ts_rate_decimator,
            sizeof(rc_cfg.ts_rate_decimator));
-    oxcf->periodicity = 2;
+    if (cm->current_video_frame == 0) {
+      double prev_layer_framerate = 0;
+      for (unsigned int i = 0; i < oxcf->number_of_layers; ++i) {
+        vp8_init_temporal_layer_context(cpi_, oxcf, i, prev_layer_framerate);
+        prev_layer_framerate = cpi_->output_framerate / oxcf->rate_decimator[i];
+      }
+    } else if (oxcf->number_of_layers != prev_number_of_layers) {
+      // The number of temporal layers has changed, so reset/initialize the
+      // temporal layer context for the new layer configuration: this means
+      // calling vp8_reset_temporal_layer_change() below.
 
-    double prev_layer_framerate = 0;
-    for (unsigned int i = 0; i < oxcf->number_of_layers; ++i) {
-      vp8_init_temporal_layer_context(cpi_, oxcf, i, prev_layer_framerate);
-      prev_layer_framerate = cpi_->output_framerate / oxcf->rate_decimator[i];
+      // Start at the base of the pattern cycle, so set the layer id to 0 and
+      // reset the temporal pattern counter.
+      // TODO(marpan/jianj): don't think lines 148-151 are needed (user controls
+      // the layer_id) so remove.
+      if (cpi_->temporal_layer_id > 0) {
+        cpi_->temporal_layer_id = 0;
+      }
+      cpi_->temporal_pattern_counter = 0;
+
+      vp8_reset_temporal_layer_change(cpi_, oxcf,
+                                      static_cast<int>(prev_number_of_layers));
     }
   }
 
@@ -146,20 +163,24 @@ void VP8RateControlRTC::UpdateRateControl(
   cm->MBs = cm->mb_rows * cm->mb_cols;
   cm->mode_info_stride = cm->mb_cols + 1;
 
-  oxcf->starting_buffer_level =
-      rescale((int)oxcf->starting_buffer_level, oxcf->target_bandwidth, 1000);
-  /* Set or reset optimal and maximum buffer levels. */
-  if (oxcf->optimal_buffer_level == 0) {
-    oxcf->optimal_buffer_level = oxcf->target_bandwidth / 8;
-  } else {
-    oxcf->optimal_buffer_level =
-        rescale((int)oxcf->optimal_buffer_level, oxcf->target_bandwidth, 1000);
-  }
-  if (oxcf->maximum_buffer_size == 0) {
-    oxcf->maximum_buffer_size = oxcf->target_bandwidth / 8;
-  } else {
-    oxcf->maximum_buffer_size =
-        rescale((int)oxcf->maximum_buffer_size, oxcf->target_bandwidth, 1000);
+  // For temporal layers: starting/maximum/optimal_buffer_level is already set
+  // via vp8_init_temporal_layer_context() or vp8_reset_temporal_layer_change().
+  if (oxcf->number_of_layers <= 1 && prev_number_of_layers <= 1) {
+    oxcf->starting_buffer_level =
+        rescale((int)oxcf->starting_buffer_level, oxcf->target_bandwidth, 1000);
+    /* Set or reset optimal and maximum buffer levels. */
+    if (oxcf->optimal_buffer_level == 0) {
+      oxcf->optimal_buffer_level = oxcf->target_bandwidth / 8;
+    } else {
+      oxcf->optimal_buffer_level = rescale((int)oxcf->optimal_buffer_level,
+                                           oxcf->target_bandwidth, 1000);
+    }
+    if (oxcf->maximum_buffer_size == 0) {
+      oxcf->maximum_buffer_size = oxcf->target_bandwidth / 8;
+    } else {
+      oxcf->maximum_buffer_size =
+          rescale((int)oxcf->maximum_buffer_size, oxcf->target_bandwidth, 1000);
+    }
   }
 
   if (cpi_->bits_off_target > oxcf->maximum_buffer_size) {

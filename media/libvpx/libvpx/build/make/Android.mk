@@ -8,6 +8,8 @@
 ##  be found in the AUTHORS file in the root of the source tree.
 ##
 
+# Ignore this file during non-NDK builds.
+ifdef NDK_ROOT
 #
 # This file is to be used for compiling libvpx for Android using the NDK.
 # In an Android project place a libvpx checkout in the jni directory.
@@ -212,3 +214,4 @@ endif
 ifeq ($(CONFIG_RUNTIME_CPU_DETECT),yes)
 $(call import-module,android/cpufeatures)
 endif
+endif  # NDK_ROOT

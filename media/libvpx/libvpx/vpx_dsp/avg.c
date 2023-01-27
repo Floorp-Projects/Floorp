@@ -7,6 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+
+#include <assert.h>
 #include <stdlib.h>
 
 #include "./vpx_dsp_rtcd.h"
@@ -344,6 +346,7 @@ void vpx_int_pro_row_c(int16_t hbuf[16], const uint8_t *ref,
                        const int ref_stride, const int height) {
   int idx;
   const int norm_factor = height >> 1;
+  assert(height >= 2);
   for (idx = 0; idx < 16; ++idx) {
     int i;
     hbuf[idx] = 0;

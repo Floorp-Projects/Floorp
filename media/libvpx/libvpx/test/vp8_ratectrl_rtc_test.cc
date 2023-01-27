@@ -127,8 +127,7 @@ class Vp8RcInterfaceTest
         encoder->Control(VP8E_SET_CPUUSED, -6);
         encoder->Control(VP8E_SET_RTC_EXTERNAL_RATECTRL, 1);
         encoder->Control(VP8E_SET_MAX_INTRA_BITRATE_PCT, 1000);
-      }
-      if (frame_params_.frame_type == INTER_FRAME) {
+      } else if (frame_params_.frame_type == INTER_FRAME) {
         // Disable golden frame update.
         frame_flags_ |= VP8_EFLAG_NO_UPD_GF;
         frame_flags_ |= VP8_EFLAG_NO_UPD_ARF;

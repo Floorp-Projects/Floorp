@@ -31,17 +31,15 @@ static void encode_mvcomponent(vp8_writer *const w, const int v,
 
     vp8_write(w, 1, p[mvpis_short]);
 
-    do
+    do {
       vp8_write(w, (x >> i) & 1, p[MVPbits + i]);
-
-    while (++i < 3);
+    } while (++i < 3);
 
     i = mvlong_width - 1; /* Skip bit 3, which is sometimes implicit */
 
-    do
+    do {
       vp8_write(w, (x >> i) & 1, p[MVPbits + i]);
-
-    while (--i > 3);
+    } while (--i > 3);
 
     if (x & 0xFFF0) vp8_write(w, (x >> 3) & 1, p[MVPbits + 3]);
   }
