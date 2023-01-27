@@ -56,7 +56,7 @@ def test_object(session):
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
 def test_stale_element_reference(session, stale_element, as_frame):
-    element = stale_element("<div>", "div", as_frame=as_frame)
+    element = stale_element("input#text", as_frame=as_frame)
 
     result = execute_async_script(session, "arguments[1](1);", args=[element])
     assert_error(result, "stale element reference")
