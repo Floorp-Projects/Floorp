@@ -15,14 +15,14 @@ this in your .mozconfig
 
 .. code::
 
-   --disable-optimize
-   --enable-debug-symbols
+   ac_add_options --disable-optimize
+   ac_add_options --enable-debug-symbols
 
 you can also add this flag if you want assertions etc. compiled in
 
 .. code::
 
-   --enable-debug
+   ac_add_options --enable-debug
 
 See :ref:`Building Firefox for macOS <Building Firefox On MacOS>`
 if you need help creating your own build.
