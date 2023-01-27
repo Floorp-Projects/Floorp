@@ -4,7 +4,6 @@
 
 use dtoa_short::{self, Notation};
 use itoa;
-use matches::matches;
 use std::fmt::{self, Write};
 use std::str;
 

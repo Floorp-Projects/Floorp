@@ -6,7 +6,6 @@
 extern crate test;
 
 use encoding_rs;
-use matches::matches;
 use serde_json::{self, json, Map, Value};
 
 #[cfg(feature = "bench")]
@@ -413,6 +412,33 @@ fn color4_lab_lch_oklab_oklch() {
                 .unwrap_or(Value::Null)
         },
     )
+}
+
+#[test]
+fn color4_color_function() {
+    run_color_tests(
+        include_str!("css-parsing-tests/color4_color_function.json"),
+        |c| {
+            c.ok()
+                .map(|v| v.to_css_string().to_json())
+                .unwrap_or(Value::Null)
+        },
+    )
+}
+
+macro_rules! parse_single_color {
+    ($i:expr) => {{
+        let input = $i;
+        let mut input = ParserInput::new(input);
+        let mut input = Parser::new(&mut input);
+        Color::parse(&mut input).map_err(Into::<ParseError<()>>::into)
+    }};
+}
+
+#[test]
+fn color4_invalid_color_space() {
+    let result = parse_single_color!("color(invalid 1 1 1)");
+    assert!(result.is_err());
 }
 
 #[test]
@@ -877,6 +903,9 @@ impl ToJson for Color {
                 AbsoluteColor::Lch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
                 AbsoluteColor::Oklab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
                 AbsoluteColor::Oklch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
+                AbsoluteColor::ColorFunction(ref c) => {
+                    json!([c.color_space.as_str(), c.c1, c.c2, c.c3, c.alpha])
+                }
             },
         }
     }
