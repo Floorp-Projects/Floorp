@@ -52,8 +52,10 @@ macosx64-clang-tidy:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-tidy-macosx64.json'
+            - 'build/build-clang/macosx64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
+            - 'build/build-clang/macosx64.json'
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -73,8 +75,10 @@ macosx64-arch64-clang-tidy:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-tidy-macosx64.json'
+            - 'build/build-clang/macosx64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
+            - 'build/build-clang/macosx64.json'
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -95,8 +99,10 @@ win64-clang-tidy:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-tidy-win64.json'
+            - 'build/build-clang/win64.json'
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
+            - 'build/build-clang/win64.json'
     fetches:
         fetch:
             - cmake
