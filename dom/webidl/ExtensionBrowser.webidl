@@ -35,6 +35,11 @@ interface ExtensionBrowser {
    Func="mozilla::extensions::ExtensionAlarms::IsAllowed"]
   readonly attribute ExtensionAlarms alarms;
 
+  // `browser.dns` API namespace
+  [Replaceable, SameObject, BinaryName="GetExtensionDns",
+   Func="mozilla::extensions::ExtensionDns::IsAllowed"]
+  readonly attribute ExtensionDns dns;
+
   // `browser.runtime` API namespace
   [Replaceable, SameObject, BinaryName="GetExtensionRuntime",
    Func="mozilla::extensions::ExtensionRuntime::IsAllowed"]

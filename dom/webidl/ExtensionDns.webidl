@@ -5,7 +5,7 @@
  *  JSONSchema using the following command:
  *
  *  export SCRIPT_DIR="toolkit/components/extensions/webidl-api"
- *  mach python $SCRIPT_DIR/GenerateWebIDLBindings.py -- {{ api_namespace }}
+ *  mach python $SCRIPT_DIR/GenerateWebIDLBindings.py -- dns
  *
  *  More info about generating webidl API bindings for WebExtensions API at:
  *
@@ -19,10 +19,12 @@
  * You are granted a license to use, reproduce and create derivative works of
  * this document.
  */
-{%+ if webidl_description_comment %}
-{{ webidl_description_comment }}
-{%- endif %}
-[Exposed=({{ webidl_exposed_attr }}), LegacyNoInterfaceObject]
-interface {{ webidl_name }} {
-{{- webidl_definition_body }}
+
+// WebIDL definition for the "dns" WebExtensions API
+[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
+interface ExtensionDns {
+  // API methods.
+
+  [Throws, WebExtensionStub="AsyncAmbiguous"]
+  any resolve(any... args);
 };

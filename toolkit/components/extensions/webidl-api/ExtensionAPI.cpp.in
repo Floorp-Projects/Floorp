@@ -9,8 +9,7 @@
 #include "mozilla/dom/{{ webidl_name }}Binding.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace extensions {
+namespace mozilla::extensions {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF({{ webidl_name }});
 NS_IMPL_CYCLE_COLLECTING_RELEASE({{ webidl_name }})
@@ -51,5 +50,4 @@ ExtensionEventManager* {{ webidl_name}}::OnEVENTNAME() {
 }
 */
 
-}  // namespace extensions
-}  // namespace mozilla
+}  // namespace mozilla::extensions
