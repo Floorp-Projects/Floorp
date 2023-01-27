@@ -6402,7 +6402,7 @@ class ChildCommandDispatcher : public Runnable {
         mAction(aAction) {}
 
   NS_IMETHOD Run() override {
-    nsTArray<nsCString> enabledCommands, disabledCommands;
+    AutoTArray<nsCString, 70> enabledCommands, disabledCommands;
     mRoot->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
     if (enabledCommands.Length() || disabledCommands.Length()) {
       BrowserChild* bc = static_cast<BrowserChild*>(mBrowserChild.get());
