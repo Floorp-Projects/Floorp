@@ -10,6 +10,7 @@ yamllint:
         - taskcluster
         - testing/mozharness
         - tools
+        - build/cargo
     extensions: ['yml', 'yaml']
     support-files:
         - '**/.yamllint'

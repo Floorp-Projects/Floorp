@@ -1,0 +1,6 @@
+---
+command: cargo-audit
+continue_on_error: false
+cargo_build_flags:
+  - -f
+  - "{topsrcdir}/Cargo.lock"

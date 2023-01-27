@@ -254,8 +254,8 @@ endif
 export RUSTC_BOOTSTRAP
 endif
 
-target_rust_ltoable := force-cargo-library-build force-cargo-library-udeps force-cargo-library-clippy
-target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
+target_rust_ltoable := force-cargo-library-build $(ADD_RUST_LTOABLE)
+target_rust_nonltoable := force-cargo-test-run force-cargo-program-build
 
 ifdef MOZ_PGO_RUST
 ifdef MOZ_PROFILE_GENERATE
@@ -301,10 +301,10 @@ endif
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO_INNER
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags) $(cargo_extra_cli_flags)
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags) $(CARGO_EXTRA_FLAGS) $(cargo_extra_cli_flags)
 endef
 
-ifdef CARGO_NO_ERR
+ifdef CARGO_CONTINUE_ON_ERROR
 define RUN_CARGO
 -$(RUN_CARGO_INNER)
 endef
@@ -525,7 +525,7 @@ force-cargo-program-%:
 	$(call RUN_CARGO,$*) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 else
 force-cargo-program-%:
-	$(call RUN_CARGO,$*) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
+	$(call RUN_CARGO,$*)
 endif
 
 else

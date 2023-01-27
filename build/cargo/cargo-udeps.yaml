@@ -1,0 +1,4 @@
+---
+command: cargo-udeps
+continue_on_error: true
+# cargo_build_flags: []
