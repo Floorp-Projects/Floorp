@@ -442,12 +442,13 @@
   font-size: 0.8em;
   /* The color and opacity of labels is the same as the "This time, search with"
      text in the search shortcuts. See `.search-panel-header > label` in
-     searchbar.inc.css. */
+     searchbar.css. */
+  color: var(--toolbar-field-focus-color);
   opacity: 0.6;
   pointer-events: none;
 }
 :root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[label]::before {
-  /* Same as `.search-panel-header > label` in searchbar.inc.css */
+  /* Same as `.search-panel-header > label` in searchbar.css */
   opacity: 1;
 }
 
