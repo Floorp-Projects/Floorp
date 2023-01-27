@@ -89,4 +89,10 @@ object MatcherHelper {
             assertTrue(appItem.waitForExists(waitingTime))
         }
     }
+
+    fun assertItemIsEnabledAndVisible(vararg appItems: UiObject) {
+        for (appItem in appItems) {
+            assertTrue(appItem.waitForExists(waitingTime) && appItem.isEnabled)
+        }
+    }
 }

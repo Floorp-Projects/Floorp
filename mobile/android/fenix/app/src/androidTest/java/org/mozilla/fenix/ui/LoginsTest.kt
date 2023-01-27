@@ -561,11 +561,13 @@ class LoginsTest {
             enterSiteCredential("mozilla")
             verifyHostnameErrorMessage()
             enterSiteCredential(loginPage)
+            verifyHostnameClearButtonEnabled()
             setNewUserName("mozilla")
             setNewPassword("firefox")
             clickClearPasswordButton()
             verifyPasswordErrorMessage()
             setNewPassword("firefox")
+            verifyPasswordClearButtonEnabled()
             saveEditedLogin()
         }
 

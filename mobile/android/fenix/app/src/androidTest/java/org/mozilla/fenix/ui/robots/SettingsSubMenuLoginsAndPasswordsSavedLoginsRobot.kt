@@ -26,6 +26,7 @@ import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemIsEnabledAndVisible
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -76,6 +77,12 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun verifyPasswordErrorMessage() =
         assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
+
+    fun verifyPasswordClearButtonEnabled() =
+        assertItemIsEnabledAndVisible(itemWithResId("$packageName:id/clearPasswordTextButton"))
+
+    fun verifyHostnameClearButtonEnabled() =
+        assertItemIsEnabledAndVisible(itemWithResId("$packageName:id/clearHostnameTextButton"))
 
     fun clickSearchLoginButton() = itemWithResId("$packageName:id/search").click()
 
