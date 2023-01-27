@@ -356,7 +356,7 @@ already_AddRefed<nsPIDOMWindowOuter> BrowserParent::GetParentWindowOuter() {
 already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
   if (RefPtr<Element> element = mFrameElement) {
     if (PresShell* presShell = element->OwnerDoc()->GetPresShell()) {
-      return presShell->GetViewManager()->GetRootWidget();
+      return do_AddRef(presShell->GetViewManager()->GetRootWidget());
     }
   }
   return nullptr;
