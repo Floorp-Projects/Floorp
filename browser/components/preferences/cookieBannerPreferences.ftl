@@ -5,7 +5,7 @@
 ## Privacy Section - Cookie Banner Handling
 
 cookie-banner-handling-header = Cookie Banner Reduction
-cookie-banner-reject-accept = { -brand-short-name } automatically tries to reject cookie requests on cookie banners. If a reject option isn’t available, { -brand-short-name } may accept all cookies to dismiss the banner.
+cookie-banner-handling-description = { -brand-short-name } automatically tries to reject cookie requests on cookie banners on supported sites.
 cookie-banner-learn-more = Learn More
 forms-handle-cookie-banners =
     .label = Reduce Cookie Banners
