@@ -1,0 +1,9 @@
+<svg viewBox="0 0 100 100" height="250" width="250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path id="p1" d="M50 10 a 40 40 1 1 0 1 0" pathLength="2"/>
+  </defs>
+  <text font-size="16" font-family="monospace" text-anchor="middle">
+    <!-- do not change the whitespace on the next line -->
+    <textPath href="#p1" startOffset="1">ATUL</textPath>    <!-- see above -->
+  </text>
+</svg>
