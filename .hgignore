@@ -131,6 +131,9 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/utils/mochaRunner/lib/
 ^remote/test/puppeteer/website
 
+^third_party/js/PKI.js/node_modules/
+^third_party/js/PKI.js/package-lock.json
+
 # git checkout of libstagefright
 ^media/libstagefright/android$
 

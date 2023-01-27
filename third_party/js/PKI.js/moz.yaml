@@ -1,0 +1,85 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Firefox
+  component: Security
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: PKIjs
+
+  description: TypeScript library for interacting with public key infrastructure types.
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://pkijs.org/
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: 72d175c9edbc8e00c550dee610a8dac6204f4383 (2023-01-15T09:12:35Z).
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 72d175c9edbc8e00c550dee610a8dac6204f4383
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: BSD-3-Clause
+
+  # If the package's license is specified in a particular file,
+  # this is the name of the file.
+  # optional
+  license-file: LICENSE
+
+# Configuration for the automated vendoring system.
+# optional
+vendoring:
+
+  # Repository URL to vendor from
+  # eg. https://github.com/kinetiknz/nestegg
+  # Any repository host can be specified here, however initially we'll only
+  # support automated vendoring from selected sources.
+  url: https://github.com/PeculiarVentures/PKI.js
+
+  # Type of hosting for the upstream repository
+  # Valid values are 'gitlab', 'github', googlesource
+  source-hosting: github
+
+  # Files/paths that will not be vendored from the upstream repository
+  # Implicitly contains ".git", and ".gitignore"
+  # optional
+  exclude:
+    - .eslintrc.json
+    - .github/
+    - .gitignore
+    - .mocharc.yaml
+    - .nycrc
+    - CNAME
+    - FEATURES.md
+    - MAPPING.md
+    - README.md
+    - examples/
+    - test/
+    - typedoc.json
+
+  keep:
+    - make_bundle.sh
+    - make-esmodule-bundle.patch
+
+  update-actions:
+    - action: run-script
+      script: 'make_bundle.sh'
+      cwd: '{yaml_dir}'
+
+    - action: move-file
+      from: 'build/index.es.js'
+      to: '../../../toolkit/components/certviewer/content/vendor/pkijs.js'
+
+    - action: delete-path
+      path: 'build'
