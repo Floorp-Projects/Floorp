@@ -224,6 +224,10 @@ child:
   [Nested=inside_sync] sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
     returns(bool aSucceeded);
 
+  async SetTextSelection(uint64_t aStartID, int32_t aStartOffset,
+                     uint64_t aEndID, int32_t aEndOffset,
+                     int32_t aSelectionNum);
+
   async ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
                           uint32_t aScrollType);
   async ScrollSubstringToPoint(uint64_t aID,

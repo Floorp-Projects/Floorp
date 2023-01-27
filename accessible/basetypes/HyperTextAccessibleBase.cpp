@@ -758,4 +758,17 @@ bool HyperTextAccessibleBase::SelectionBoundsAt(int32_t aSelectionNum,
   return true;
 }
 
+bool HyperTextAccessibleBase::SetSelectionBoundsAt(int32_t aSelectionNum,
+                                                         int32_t aStartOffset,
+                                                         int32_t aEndOffset) {
+  TextLeafRange range(ToTextLeafPoint(aStartOffset),
+                      ToTextLeafPoint(aEndOffset, true));
+  if (!range) {
+    NS_ERROR("Wrong in offset");
+    return false;
+  }
+
+  return range.SetSelection(aSelectionNum);
+}
+
 }  // namespace mozilla::a11y

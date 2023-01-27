@@ -221,21 +221,6 @@ class HyperTextAccessible : public AccessibleWrap,
                                  int32_t* aEndOffset) override;
 
   /*
-   * Changes the start and end offset of the specified selection.
-   * @return true if succeeded
-   */
-  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool SetSelectionBoundsAt(int32_t aSelectionNum,
-                                                        int32_t aStartOffset,
-                                                        int32_t aEndOffset);
-
-  /**
-   * Adds a selection bounded by the specified offsets.
-   * @return true if succeeded
-   */
-  bool AddToSelection(int32_t aStartOffset, int32_t aEndOffset);
-
-  /*
    * Removes the specified selection.
    * @return true if succeeded
    */

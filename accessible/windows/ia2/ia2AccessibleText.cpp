@@ -46,9 +46,9 @@ std::pair<HyperTextAccessibleWrap*, HRESULT> ia2AccessibleText::LocalTextAcc() {
 
 STDMETHODIMP
 ia2AccessibleText::addSelection(long aStartOffset, long aEndOffset) {
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   return textAcc->AddToSelection(aStartOffset, aEndOffset) ? S_OK
@@ -354,9 +354,9 @@ ia2AccessibleText::setCaretOffset(long aOffset) {
 STDMETHODIMP
 ia2AccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
                                 long aEndOffset) {
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   return textAcc->SetSelectionBoundsAt(aSelectionIndex, aStartOffset,

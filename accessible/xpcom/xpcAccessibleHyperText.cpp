@@ -342,21 +342,14 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
 
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
-  if (mIntl->IsLocal()) {
-    if (!IntlLocal()->SetSelectionBoundsAt(aSelectionNum, aStartOffset,
-                                           aEndOffset)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    if (!mIntl->AsRemote()->SetSelectionBoundsAt(aSelectionNum, aStartOffset,
-                                                 aEndOffset)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-#endif
   }
+#endif
+
+  Intl()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   return NS_OK;
 }
 
@@ -364,11 +357,14 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->AddToSelection(aStartOffset, aEndOffset);
-  } else {
-    mIntl->AsRemote()->AddToSelection(aStartOffset, aEndOffset);
+#if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
+#endif
+
+  Intl()->AddToSelection(aStartOffset, aEndOffset);
   return NS_OK;
 }
 

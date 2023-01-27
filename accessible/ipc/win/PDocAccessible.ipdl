@@ -139,6 +139,10 @@ child:
   async SetSelected(uint64_t aID, bool aSelected);
   async ScrollTo(uint64_t aID, uint32_t aScrollType);
 
+  async SetTextSelection(uint64_t aStartID, int32_t aStartOffset,
+                     uint64_t aEndID, int32_t aEndOffset,
+                     int32_t aSelectionNum);
+
   /*
    * Verify the cache. Used for testing purposes.
    */

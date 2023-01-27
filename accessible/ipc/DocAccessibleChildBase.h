@@ -78,6 +78,12 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   virtual mozilla::ipc::IPCResult RecvSetCaretOffset(
       const uint64_t& aID, const int32_t& aOffset) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual mozilla::ipc::IPCResult RecvSetTextSelection(
+      const uint64_t& aStartID, const int32_t& aStartOffset,
+      const uint64_t& aEndID, const int32_t& aEndOffset,
+      const int32_t& aSelectionNum) override;
+
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);

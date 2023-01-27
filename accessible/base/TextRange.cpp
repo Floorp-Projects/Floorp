@@ -263,51 +263,6 @@ bool TextRange::Crop(Accessible* aContainer) {
   return true;
 }
 
-bool TextRange::SetSelectionAt(int32_t aSelectionNum) const {
-  HyperTextAccessible* root = mRoot->AsLocal()->AsHyperText();
-  if (!root) {
-    MOZ_ASSERT_UNREACHABLE("Not supported for RemoteAccessible");
-    return false;
-  }
-  RefPtr<dom::Selection> domSel = root->DOMSelection();
-  if (!domSel) {
-    return false;
-  }
-
-  RefPtr<nsRange> range = nsRange::Create(root->GetContent());
-  uint32_t rangeCount = domSel->RangeCount();
-  if (aSelectionNum == static_cast<int32_t>(rangeCount)) {
-    range = nsRange::Create(root->GetContent());
-  } else {
-    range = domSel->GetRangeAt(AssertedCast<uint32_t>(aSelectionNum));
-  }
-
-  if (!range) {
-    return false;
-  }
-
-  bool reversed;
-  AssignDOMRange(range, &reversed);
-
-  // If this is not a new range, notify selection listeners that the existing
-  // selection range has changed. Otherwise, just add the new range.
-  if (aSelectionNum != static_cast<int32_t>(rangeCount)) {
-    domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(*range,
-                                                           IgnoreErrors());
-  }
-
-  IgnoredErrorResult err;
-  domSel->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
-  if (!err.Failed()) {
-    // Changing the direction of the selection assures that the caret
-    // will be at the logical end of the selection.
-    domSel->SetDirection(reversed ? eDirPrevious : eDirNext);
-    return true;
-  }
-
-  return false;
-}
-
 void TextRange::ScrollIntoView(uint32_t aScrollType) const {
   LocalAccessible* root = mRoot->AsLocal();
   if (!root) {

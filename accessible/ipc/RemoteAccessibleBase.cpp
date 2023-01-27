@@ -26,6 +26,7 @@
 #include "Pivot.h"
 #include "Relation.h"
 #include "RelationType.h"
+#include "TextLeafRange.h"
 #include "xpcAccessibleDocument.h"
 
 #ifdef A11Y_LOG
