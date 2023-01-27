@@ -468,7 +468,7 @@ DOMHighResTimeStamp PerformanceTimingData::DomainLookupStartHighRes(
     return mZeroTime;
   }
   // Bug 1637985 - DomainLookup information may be useful for fingerprinting.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
+  if (aPerformance->ShouldResistFingerprinting()) {
     return FetchStartHighRes(aPerformance);
   }
   return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
@@ -488,7 +488,7 @@ DOMHighResTimeStamp PerformanceTimingData::DomainLookupEndHighRes(
     return mZeroTime;
   }
   // Bug 1637985 - DomainLookup information may be useful for fingerprinting.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
+  if (aPerformance->ShouldResistFingerprinting()) {
     return FetchStartHighRes(aPerformance);
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return DomainLookupStart when null

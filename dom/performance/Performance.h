@@ -122,6 +122,11 @@ class Performance : public DOMEventTargetHelper {
 
   RTPCallerType GetRTPCallerType() const { return mRTPCallerType; }
 
+  bool CrossOriginIsolated() const { return mCrossOriginIsolated; }
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
+
   DOMHighResTimeStamp TimeStampToDOMHighResForRendering(TimeStamp) const;
 
   virtual uint64_t GetRandomTimelineSeed() = 0;
@@ -146,8 +151,6 @@ class Performance : public DOMEventTargetHelper {
   virtual void QueueNavigationTimingEntry() = 0;
 
   virtual void UpdateNavigationTimingEntry() = 0;
-
-  virtual bool CrossOriginIsolated() const = 0;
 
   virtual void DispatchPendingEventTimingEntries() = 0;
 
@@ -205,7 +208,9 @@ class Performance : public DOMEventTargetHelper {
 
   RefPtr<PerformanceService> mPerformanceService;
 
-  enum RTPCallerType mRTPCallerType;
+  const RTPCallerType mRTPCallerType;
+  const bool mCrossOriginIsolated;
+  const bool mShouldResistFingerprinting;
 
  private:
   MOZ_ALWAYS_INLINE bool CanAddResourceTimingEntry();
