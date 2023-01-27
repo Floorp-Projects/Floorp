@@ -86,12 +86,12 @@ fn main() {
 
     let (status_tx, status_rx) = channel::<StatusUpdate>();
     let (reset_tx, reset_rx) = channel();
-    let rs_tx = reset_tx.clone();
+    let rs_tx = reset_tx;
     let callback = StateCallback::new(Box::new(move |rv| {
         let _ = rs_tx.send(rv);
     }));
 
-    if let Err(e) = manager.reset(timeout_ms, status_tx.clone(), callback) {
+    if let Err(e) = manager.reset(timeout_ms, status_tx, callback) {
         panic!("Couldn't register: {:?}", e);
     };
 

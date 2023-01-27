@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::bool_to_int_with_if)]
+
 #[macro_use]
 mod util;
 
@@ -84,11 +88,13 @@ pub struct KeyHandle {
 
 pub type AppId = Vec<u8>;
 
+#[derive(Debug)]
 pub enum RegisterResult {
     CTAP1(Vec<u8>, u2ftypes::U2FDeviceInfo),
     CTAP2(AttestationObject, CollectedClientDataWrapper),
 }
 
+#[derive(Debug)]
 pub enum SignResult {
     CTAP1(AppId, Vec<u8>, Vec<u8>, u2ftypes::U2FDeviceInfo),
     CTAP2(AssertionObject, CollectedClientDataWrapper),

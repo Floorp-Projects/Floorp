@@ -484,9 +484,8 @@ impl AuthenticatorService {
 #[cfg(test)]
 mod tests {
     use super::{
-        AuthenticatorService, AuthenticatorTransport, CtapVersion, Pin,
-        PublicKeyCredentialDescriptor, RegisterArgs, RegisterArgsCtap1, RegisterArgsCtap2,
-        SignArgs, SignArgsCtap1, SignArgsCtap2, User,
+        AuthenticatorService, AuthenticatorTransport, CtapVersion, Pin, RegisterArgs,
+        RegisterArgsCtap1, RegisterArgsCtap2, SignArgs, SignArgsCtap1, SignArgsCtap2, User,
     };
     use crate::consts::Capability;
     use crate::consts::PARAMETER_SIZE;
@@ -932,9 +931,9 @@ mod tests {
             .is_ok());
         callback.wait();
 
-        assert_eq!(was_cancelled_one.load(Ordering::SeqCst), false);
-        assert_eq!(was_cancelled_two.load(Ordering::SeqCst), true);
-        assert_eq!(was_cancelled_three.load(Ordering::SeqCst), true);
+        assert!(!was_cancelled_one.load(Ordering::SeqCst));
+        assert!(was_cancelled_two.load(Ordering::SeqCst));
+        assert!(was_cancelled_three.load(Ordering::SeqCst));
     }
 
     #[test]
@@ -972,9 +971,9 @@ mod tests {
             .is_ok());
         callback.wait();
 
-        assert_eq!(was_cancelled_one.load(Ordering::SeqCst), false);
-        assert_eq!(was_cancelled_two.load(Ordering::SeqCst), true);
-        assert_eq!(was_cancelled_three.load(Ordering::SeqCst), true);
+        assert!(!was_cancelled_one.load(Ordering::SeqCst));
+        assert!(was_cancelled_two.load(Ordering::SeqCst));
+        assert!(was_cancelled_three.load(Ordering::SeqCst));
     }
 
     #[test]
@@ -1012,9 +1011,8 @@ mod tests {
 
         let one = was_cancelled_one.load(Ordering::SeqCst);
         let two = was_cancelled_two.load(Ordering::SeqCst);
-        assert_eq!(
+        assert!(
             one ^ two,
-            true,
             "asserting that one={} xor two={} is true",
             one,
             two

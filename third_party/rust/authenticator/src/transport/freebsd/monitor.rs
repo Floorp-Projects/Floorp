@@ -9,8 +9,6 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::ffi::OsString;
 use std::sync::{mpsc::Sender, Arc};
-use std::thread;
-use std::time::Duration;
 use std::{fs, io};
 
 const POLL_TIMEOUT: usize = 100;
@@ -78,15 +76,13 @@ where
 
         let mut initial_devs = Vec::new();
         // Iterate all existing devices.
-        for dev in fs::read_dir("/dev")? {
-            if let Ok(dev) = dev {
-                let filename_ = dev.file_name();
-                let filename = filename_.to_str().unwrap_or("");
-                if filename.starts_with("uhid") {
-                    let path = OsString::from("/dev/".to_owned() + filename);
-                    initial_devs.push(path.clone());
-                    self.add_device(path);
-                }
+        for dev in (fs::read_dir("/dev")?).flatten() {
+            let filename_ = dev.file_name();
+            let filename = filename_.to_str().unwrap_or("");
+            if filename.starts_with("uhid") {
+                let path = OsString::from("/dev/".to_owned() + filename);
+                initial_devs.push(path.clone());
+                self.add_device(path);
             }
         }
         let _ = self

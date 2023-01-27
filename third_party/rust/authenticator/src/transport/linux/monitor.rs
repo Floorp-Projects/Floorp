@@ -20,7 +20,7 @@ const POLL_TIMEOUT: c_int = 100;
 fn poll(fds: &mut Vec<::libc::pollfd>) -> io::Result<()> {
     let nfds = fds.len() as c_ulong;
 
-    let rv = unsafe { ::libc::poll((&mut fds[..]).as_mut_ptr(), nfds, POLL_TIMEOUT) };
+    let rv = unsafe { ::libc::poll((fds[..]).as_mut_ptr(), nfds, POLL_TIMEOUT) };
 
     if rv < 0 {
         Err(io::Error::from_raw_os_error(rv))

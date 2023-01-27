@@ -154,7 +154,7 @@ fn main() {
 
     println!("Register result: {}", base64::encode(&register_data));
     println!("Device info: {}", &device_info);
-    println!("");
+    println!();
     println!("*********************************************************************");
     println!("Asking a security key to sign now, with the data from the register...");
     println!("*********************************************************************");
@@ -193,8 +193,8 @@ fn main() {
     if let SignResult::CTAP1(_, handle_used, sign_data, device_info) =
         sign_result.expect("Sign failed")
     {
-        println!("Sign result: {}", base64::encode(&sign_data));
-        println!("Key handle used: {}", base64::encode(&handle_used));
+        println!("Sign result: {}", base64::encode(sign_data));
+        println!("Key handle used: {}", base64::encode(handle_used));
         println!("Device info: {}", &device_info);
         println!("Done.");
     } else {

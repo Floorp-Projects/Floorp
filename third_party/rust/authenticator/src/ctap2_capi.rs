@@ -17,7 +17,6 @@ use crate::{AttestationObject, CollectedClientDataWrapper, Pin, StatusUpdate};
 use crate::{RegisterResult, SignResult};
 use libc::size_t;
 use rand::{thread_rng, Rng};
-use serde_cbor;
 use std::convert::TryFrom;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -90,7 +89,7 @@ pub unsafe extern "C" fn rust_ctap2_mgr_free(mgr: *mut AuthenticatorService) {
 /// The handle returned by this method must be freed by the caller.
 #[no_mangle]
 pub unsafe extern "C" fn rust_ctap2_pkcd_new() -> *mut Ctap2PubKeyCredDescriptors {
-    Box::into_raw(Box::new(vec![]))
+    Box::into_raw(Box::default())
 }
 
 /// # Safety
@@ -139,7 +138,7 @@ pub extern "C" fn rust_ctap2_mgr_new() -> *mut AuthenticatorService {
 fn rewrap_client_data(
     client_data: CollectedClientDataWrapper,
 ) -> Result<CString, AuthenticatorError> {
-    let s = CString::new(client_data.serialized_data.clone()).map_err(|_| {
+    let s = CString::new(client_data.serialized_data).map_err(|_| {
         AuthenticatorError::Custom("Failed to transform client_data to C String".to_string())
     })?;
     Ok(s)
@@ -276,8 +275,8 @@ pub unsafe extern "C" fn rust_ctap2_mgr_register(
         pub_cred_params,
         exclude_list,
         options: MakeCredentialsOptions {
-            resident_key: options.resident_key.then(|| true),
-            user_verification: options.user_verification.then(|| true),
+            resident_key: options.resident_key.then_some(true),
+            user_verification: options.user_verification.then_some(true),
         },
         extensions: Default::default(),
         pin,
@@ -370,7 +369,7 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
                 // The token can omit sending back credentials, if the allow_list had only one
                 // entry. Thus we re-add that here now for all found assertions before handing it out.
                 assertion_object.0.iter_mut().for_each(|x| {
-                    x.credentials = x.credentials.clone().or(single_key_handle.clone());
+                    x.credentials = x.credentials.clone().or_else(|| single_key_handle.clone());
                 });
                 rewrap_sign_result(assertion_object, client_data)
             }
@@ -385,8 +384,8 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
         relying_party_id: rpid,
         allow_list,
         options: GetAssertionOptions {
-            user_presence: options.user_presence.then(|| true),
-            user_verification: options.user_verification.then(|| true),
+            user_presence: options.user_presence.then_some(true),
+            user_verification: options.user_verification.then_some(true),
         },
         extensions: Default::default(),
         pin,
@@ -401,9 +400,9 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
     }
 }
 
-// /// # Safety
-// ///
-// /// This method must be used on an actual U2FResult handle
+/// # Safety
+///
+/// This method must be used on an actual Ctap2RegisterResult-handle
 #[no_mangle]
 pub unsafe extern "C" fn rust_ctap2_register_result_error(res: *const Ctap2RegisterResult) -> u8 {
     if res.is_null() {
@@ -416,6 +415,9 @@ pub unsafe extern "C" fn rust_ctap2_register_result_error(res: *const Ctap2Regis
     }
 }
 
+/// # Safety
+///
+/// This method must be used on an actual Ctap2SignResult-handle
 #[no_mangle]
 pub unsafe extern "C" fn rust_ctap2_sign_result_error(res: *const Ctap2SignResult) -> u8 {
     if res.is_null() {
@@ -479,6 +481,8 @@ unsafe fn client_data_len<T>(
     }
 }
 
+/// # Safety
+///
 /// This function is used to get the length, prior to calling
 /// rust_ctap2_register_result_client_data_copy()
 #[no_mangle]
@@ -489,6 +493,8 @@ pub unsafe extern "C" fn rust_ctap2_register_result_client_data_len(
     client_data_len(res, len)
 }
 
+/// # Safety
+///
 /// This function is used to get the length, prior to calling
 /// rust_ctap2_sign_result_client_data_copy()
 #[no_mangle]
@@ -510,7 +516,7 @@ unsafe fn client_data_copy<T>(
     match &*res {
         Ok((_, client_data)) => {
             ptr::copy_nonoverlapping(client_data.as_ptr(), dst, client_data.as_bytes().len());
-            return true;
+            true
         }
         Err(_) => false,
     }
@@ -583,6 +589,55 @@ pub unsafe extern "C" fn rust_ctap2_register_result_attestation_copy(
     false
 }
 
+/// # Safety
+///
+/// This function is used to get the length of the credential ID
+#[no_mangle]
+pub unsafe extern "C" fn rust_ctap2_register_result_credential_id_len(
+    res: *const Ctap2RegisterResult,
+    len: *mut size_t,
+) -> bool {
+    if res.is_null() || len.is_null() {
+        return false;
+    }
+
+    if let Ok((att_obj, _)) = &*res {
+        if let Some(credential_data) = &att_obj.auth_data.credential_data {
+            *len = credential_data.credential_id.len();
+            return true;
+        }
+    }
+
+    false
+}
+
+/// # Safety
+///
+/// This method does not ensure anything about dst before copying, so
+/// ensure it is long enough (using rust_ctap2_register_result_credential_id_len)
+#[no_mangle]
+pub unsafe extern "C" fn rust_ctap2_register_result_credential_id_copy(
+    res: *const Ctap2RegisterResult,
+    dst: *mut u8,
+) -> bool {
+    if res.is_null() || dst.is_null() {
+        return false;
+    }
+
+    if let Ok((att_obj, _)) = &*res {
+        if let Some(credential_data) = &att_obj.auth_data.credential_data {
+            let id = &credential_data.credential_id;
+            ptr::copy_nonoverlapping(id.as_ptr(), dst, id.len());
+            return true;
+        }
+    }
+
+    false
+}
+
+/// # Safety
+///
+/// This function must be used on an existing Ctap2SignResult.
 /// This function is used to get how many assertions there are in total
 /// The returned number can be used as index-maximum to access individual
 /// fields
@@ -598,7 +653,7 @@ pub unsafe extern "C" fn rust_ctap2_sign_result_assertions_len(
     match &*res {
         Ok((assertions, _)) => {
             *len = assertions.0.len();
-            return true;
+            true
         }
         Err(_) => false,
     }
@@ -611,20 +666,19 @@ fn sign_result_item_len(assertion: &Assertion, item_idx: u8) -> Option<usize> {
         SIGN_RESULT_AUTH_DATA => assertion.auth_data.to_vec().ok().map(|x| x.len()),
         SIGN_RESULT_SIGNATURE => Some(assertion.signature.len()),
         SIGN_RESULT_USER_ID => assertion.user.as_ref().map(|u| u.id.len()),
-        SIGN_RESULT_USER_NAME => assertion
-            .user
-            .as_ref()
-            .map(|u| {
-                u.display_name
-                    .as_ref()
-                    .or(u.name.as_ref())
-                    .map(|n| n.as_bytes().len())
-            })
-            .flatten(),
+        SIGN_RESULT_USER_NAME => assertion.user.as_ref().and_then(|u| {
+            u.display_name
+                .as_ref()
+                .or(u.name.as_ref())
+                .map(|n| n.as_bytes().len())
+        }),
         _ => None,
     }
 }
 
+/// # Safety
+///
+/// This function must be used on an existing Ctap2SignResult.
 #[no_mangle]
 pub unsafe extern "C" fn rust_ctap2_sign_result_item_contains(
     res: *const Ctap2SignResult,
@@ -696,16 +750,12 @@ unsafe fn sign_result_item_copy(assertion: &Assertion, item_idx: u8, dst: *mut u
         }
         SIGN_RESULT_SIGNATURE => Some(assertion.signature.as_ref()),
         SIGN_RESULT_USER_ID => assertion.user.as_ref().map(|u| u.id.as_ref()),
-        SIGN_RESULT_USER_NAME => assertion
-            .user
-            .as_ref()
-            .map(|u| {
-                u.display_name
-                    .as_ref()
-                    .or(u.name.as_ref())
-                    .map(|n| n.as_bytes().as_ref())
-            })
-            .flatten(),
+        SIGN_RESULT_USER_NAME => assertion.user.as_ref().and_then(|u| {
+            u.display_name
+                .as_ref()
+                .or(u.name.as_ref())
+                .map(|n| n.as_bytes())
+        }),
         _ => None,
     };
 
@@ -744,6 +794,11 @@ pub unsafe extern "C" fn rust_ctap2_sign_result_item_copy(
     }
 }
 
+/// # Safety
+///
+/// This function needs to be called with an existing Ctap2SignResult
+/// and assertion_idx has to be a valid index for the assertion-list
+/// (to be determined with rust_ctap2_sign_result_item_len() )
 #[no_mangle]
 pub unsafe extern "C" fn rust_ctap2_sign_result_contains_username(
     res: *const Ctap2SignResult,
@@ -790,8 +845,7 @@ pub unsafe extern "C" fn rust_ctap2_sign_result_username_len(
             if let Some(name_len) = assertions.0[assertion_idx]
                 .user
                 .as_ref()
-                .map(|u| u.display_name.as_ref().or(u.name.as_ref()))
-                .flatten()
+                .and_then(|u| u.display_name.as_ref().or(u.name.as_ref()))
                 .map(|x| x.as_bytes().len())
             {
                 *len = name_len;
@@ -827,10 +881,8 @@ pub unsafe extern "C" fn rust_ctap2_sign_result_username_copy(
             if let Some(name) = assertions.0[assertion_idx]
                 .user
                 .as_ref()
-                .map(|u| u.display_name.as_ref().or(u.name.as_ref()))
-                .flatten()
-                .map(|u| CString::new(u.clone()).ok())
-                .flatten()
+                .and_then(|u| u.display_name.as_ref().or(u.name.as_ref()))
+                .and_then(|u| CString::new(u.clone()).ok())
             {
                 ptr::copy_nonoverlapping(name.as_ptr(), dst, name.as_bytes().len());
                 true

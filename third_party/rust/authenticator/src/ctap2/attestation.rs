@@ -36,7 +36,7 @@ impl Serialize for HmacSecretResponse {
     {
         match self {
             HmacSecretResponse::Confirmed(x) => serializer.serialize_bool(*x),
-            HmacSecretResponse::Secret(x) => serializer.serialize_bytes(&x),
+            HmacSecretResponse::Secret(x) => serializer.serialize_bytes(x),
         }
     }
 }
@@ -80,7 +80,7 @@ pub struct Extension {
     pub hmac_secret: Option<HmacSecretResponse>,
 }
 
-fn parse_extensions<'a>(input: &'a [u8]) -> IResult<&'a [u8], Extension, NomError<&'a [u8]>> {
+fn parse_extensions(input: &[u8]) -> IResult<&[u8], Extension, NomError<&[u8]>> {
     serde_to_nom(input)
 }
 
@@ -88,10 +88,12 @@ fn parse_extensions<'a>(input: &'a [u8]) -> IResult<&'a [u8], Extension, NomErro
 pub struct AAGuid(pub [u8; 16]);
 
 impl AAGuid {
-    pub fn from(src: &[u8]) -> Result<AAGuid, ()> {
+    pub fn from(src: &[u8]) -> Result<AAGuid, AuthenticatorError> {
         let mut payload = [0u8; 16];
         if src.len() != payload.len() {
-            Err(())
+            Err(AuthenticatorError::InternalError(String::from(
+                "Failed to parse AAGuid",
+            )))
         } else {
             payload.copy_from_slice(src);
             Ok(AAGuid(payload))
@@ -175,9 +177,9 @@ where
     //         .map_err(|_| NomErr::Error(Context::Code(input, ErrorKind::Custom(42))))
 }
 
-fn parse_attested_cred_data<'a>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], AttestedCredentialData, NomError<&'a [u8]>> {
+fn parse_attested_cred_data(
+    input: &[u8],
+) -> IResult<&[u8], AttestedCredentialData, NomError<&[u8]>> {
     let (rest, aaguid_res) = map(take(16u8), AAGuid::from)(input)?;
     // // We can unwrap here, since we _know_ the input will be 16 bytes error out before calling from()
     let aaguid = aaguid_res.unwrap();
@@ -189,7 +191,7 @@ fn parse_attested_cred_data<'a>(
         (AttestedCredentialData {
             aaguid,
             credential_id,
-            credential_public_key: credential_public_key,
+            credential_public_key,
         }),
     ))
 }
@@ -212,7 +214,7 @@ pub struct AuthenticatorData {
     pub extensions: Extension,
 }
 
-fn parse_ad<'a>(input: &'a [u8]) -> IResult<&'a [u8], AuthenticatorData, NomError<&'a [u8]>> {
+fn parse_ad(input: &[u8]) -> IResult<&[u8], AuthenticatorData, NomError<&[u8]>> {
     let (rest, rp_id_hash_res) = map(take(32u8), RpIdHash::from)(input)?;
     // We can unwrap here, since we _know_ the input to from() will be 32 bytes or error out before calling from()
     let rp_id_hash = rp_id_hash_res.unwrap();
@@ -284,15 +286,15 @@ impl<'de> Deserialize<'de> for AuthenticatorData {
 impl AuthenticatorData {
     pub fn to_vec(&self) -> Result<Vec<u8>, AuthenticatorError> {
         let mut data = Vec::new();
-        data.extend(&self.rp_id_hash.0);
-        data.extend(&[self.flags.bits()]);
-        data.extend(&self.counter.to_be_bytes());
+        data.extend(self.rp_id_hash.0);
+        data.extend([self.flags.bits()]);
+        data.extend(self.counter.to_be_bytes());
 
         // TODO(baloo): need to yield credential_data and extensions, but that dependends on flags,
         //              should we consider another type system?
         if let Some(cred) = &self.credential_data {
-            data.extend(&cred.aaguid.0);
-            data.extend(&(cred.credential_id.len() as u16).to_be_bytes());
+            data.extend(cred.aaguid.0);
+            data.extend((cred.credential_id.len() as u16).to_be_bytes());
             data.extend(&cred.credential_id);
             data.extend(
                 &serde_cbor::to_vec(&cred.credential_public_key)
@@ -524,7 +526,7 @@ impl Serialize for AttestationObject {
         let auth_data = self
             .auth_data
             .to_vec()
-            .map(|v| serde_cbor::Value::Bytes(v))
+            .map(serde_cbor::Value::Bytes)
             .map_err(|_| SerError::custom("Failed to serialize auth_data"))?;
 
         map.serialize_entry(&"authData", &auth_data)?;

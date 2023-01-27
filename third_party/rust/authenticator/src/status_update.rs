@@ -26,7 +26,7 @@ impl Serialize for StatusUpdate {
         S: serde::Serializer,
     {
         let mut map = serializer.serialize_struct("StatusUpdate", 1)?;
-        match &*self {
+        match self {
             StatusUpdate::DeviceAvailable { dev_info } => {
                 map.serialize_field("DeviceAvailable", &dev_info)?
             }
@@ -53,8 +53,6 @@ pub(crate) fn send_status(status: &Sender<StatusUpdate>, msg: StatusUpdate) {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::consts::U2F_AUTHENTICATE;
-
     use super::*;
     use crate::consts::Capability;
     use serde_json::to_string;

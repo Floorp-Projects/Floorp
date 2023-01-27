@@ -75,7 +75,7 @@ pub enum Nonce {
 // TODO(MS): This is the lazy way: FidoDevice currently only extends HIDDevice by more functions,
 //           but the goal is to remove U2FDevice entirely and copy over the trait-definition here
 pub trait FidoDevice: HIDDevice {
-    fn send_msg<'msg, Out, Req: Request<Out>>(&mut self, msg: &'msg Req) -> Result<Out, HIDError> {
+    fn send_msg<Out, Req: Request<Out>>(&mut self, msg: &Req) -> Result<Out, HIDError> {
         if !self.initialized() {
             return Err(HIDError::DeviceNotInitialized);
         }
@@ -87,10 +87,7 @@ pub trait FidoDevice: HIDDevice {
         }
     }
 
-    fn send_cbor<'msg, Req: RequestCtap2>(
-        &mut self,
-        msg: &'msg Req,
-    ) -> Result<Req::Output, HIDError> {
+    fn send_cbor<Req: RequestCtap2>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
 
         let mut data = msg.wire_format(self)?;
@@ -115,12 +112,9 @@ pub trait FidoDevice: HIDDevice {
         }
     }
 
-    fn send_ctap1<'msg, Req: RequestCtap1>(
-        &mut self,
-        msg: &'msg Req,
-    ) -> Result<Req::Output, HIDError> {
+    fn send_ctap1<Req: RequestCtap1>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
-        let data = msg.ctap1_format(self)?;
+        let (data, add_info) = msg.ctap1_format(self)?;
 
         loop {
             let (cmd, mut data) = self.sendrecv(HIDCmd::Msg, &data)?;
@@ -139,7 +133,7 @@ pub trait FidoDevice: HIDDevice {
                 // This will bubble up error if status != no error
                 let status = ApduErrorStatus::from([status[0], status[1]]);
 
-                match msg.handle_response_ctap1(status, &data) {
+                match msg.handle_response_ctap1(status, &data, &add_info) {
                     Ok(out) => return Ok(out),
                     Err(Retryable::Retry) => {
                         // sleep 100ms then loop again
@@ -156,7 +150,7 @@ pub trait FidoDevice: HIDDevice {
 
     // This is ugly as we have 2 init-functions now, but the fastest way currently.
     fn init(&mut self, nonce: Nonce) -> Result<(), HIDError> {
-        let resp = <Self as HIDDevice>::initialize(self, nonce)?;
+        <Self as HIDDevice>::initialize(self, nonce)?;
         // TODO(baloo): this logic should be moved to
         //              transport/mod.rs::Device trait
         if self.supports_ctap2() {
@@ -171,17 +165,16 @@ pub trait FidoDevice: HIDDevice {
             // We don't really use the result here
             self.send_ctap1(&command)?;
         }
-        Ok(resp)
+        Ok(())
     }
 
     fn block_and_blink(&mut self) -> BlinkResult {
-        let resp;
         let supports_select_cmd = self
             .get_authenticator_info()
             .map_or(false, |i| i.versions.contains(&String::from("FIDO_2_1")));
-        if supports_select_cmd {
+        let resp = if supports_select_cmd {
             let msg = Selection {};
-            resp = self.send_cbor(&msg);
+            self.send_cbor(&msg)
         } else {
             // We need to fake a blink-request, because FIDO2.0 forgot to specify one
             // See: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#using-pinToken-in-authenticatorMakeCredential
@@ -197,8 +190,9 @@ pub trait FidoDevice: HIDDevice {
             msg.set_pin_auth(Some(PinAuth::empty_pin_auth()), None);
             info!("Trying to blink: {:?}", &msg);
             // We don't care about the Ok-value, just if it is Ok or not
-            resp = self.send_msg(&msg).map(|_| ());
-        }
+            self.send_msg(&msg).map(|_| ())
+        };
+
         match resp {
             // Spec only says PinInvalid or PinNotSet should be returned on the fake touch-request,
             // but Yubikeys for example return PinAuthInvalid. A successful return is also possible

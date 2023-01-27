@@ -95,7 +95,7 @@ fn main() {
                 PinError::InvalidPin(attempts) => {
                     println!(
                         "Wrong PIN! {}",
-                        attempts.map_or(format!("Try again."), |a| format!(
+                        attempts.map_or("Try again.".to_string(), |a| format!(
                             "You have {} attempts left.",
                             a
                         ))
@@ -123,12 +123,12 @@ fn main() {
     });
 
     let (reset_tx, reset_rx) = channel();
-    let rs_tx = reset_tx.clone();
+    let rs_tx = reset_tx;
     let callback = StateCallback::new(Box::new(move |rv| {
         let _ = rs_tx.send(rv);
     }));
 
-    if let Err(e) = manager.set_pin(timeout_ms, Pin::new(&new_pin), status_tx.clone(), callback) {
+    if let Err(e) = manager.set_pin(timeout_ms, Pin::new(&new_pin), status_tx, callback) {
         panic!("Couldn't call set_pin: {:?}", e);
     };
 

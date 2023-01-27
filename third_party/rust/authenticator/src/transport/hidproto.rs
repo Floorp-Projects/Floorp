@@ -9,10 +9,13 @@
     allow(clippy::cast_lossless, clippy::needless_lifetimes)
 )]
 
+#[cfg(any(target_os = "linux"))]
 use std::io;
 use std::mem;
 
-use crate::consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID, INIT_HEADER_SIZE, MAX_HID_RPT_SIZE};
+use crate::consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
+#[cfg(any(target_os = "linux"))]
+use crate::consts::{INIT_HEADER_SIZE, MAX_HID_RPT_SIZE};
 
 // The 4 MSBs (the tag) are set when it's a long item.
 const HID_MASK_LONG_ITEM_TAG: u8 = 0b1111_0000;
@@ -178,6 +181,7 @@ pub fn has_fido_usage(desc: ReportDescriptor) -> bool {
     false
 }
 
+#[cfg(any(target_os = "linux"))]
 pub fn read_hid_rpt_sizes(desc: ReportDescriptor) -> io::Result<(usize, usize)> {
     let mut in_rpt_count = None;
     let mut out_rpt_count = None;
@@ -186,7 +190,7 @@ pub fn read_hid_rpt_sizes(desc: ReportDescriptor) -> io::Result<(usize, usize)> 
     for data in desc.iter() {
         match data {
             Data::ReportCount { data } => {
-                if last_rpt_count != None {
+                if last_rpt_count.is_some() {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidInput,
                         "Duplicate HID_ReportCount",

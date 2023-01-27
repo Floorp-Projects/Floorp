@@ -106,7 +106,7 @@ fn main() {
                 PinError::InvalidPin(attempts) => {
                     println!(
                         "Wrong PIN! {}",
-                        attempts.map_or(format!("Try again."), |a| format!(
+                        attempts.map_or("Try again.".to_string(), |a| format!(
                             "You have {} attempts left.",
                             a
                         ))
@@ -141,14 +141,14 @@ fn main() {
     };
     let origin = "https://example.com".to_string();
     let mut ctap_args = RegisterArgsCtap2 {
-        challenge: chall_bytes.clone(),
+        challenge: chall_bytes,
         relying_party: RelyingParty {
             id: "example.com".to_string(),
             name: None,
             icon: None,
         },
-        origin: origin.clone(),
-        user: user.clone(),
+        origin,
+        user,
         pub_cred_params: vec![
             PublicKeyCredentialParameters {
                 alg: COSEAlgorithm::ES256,

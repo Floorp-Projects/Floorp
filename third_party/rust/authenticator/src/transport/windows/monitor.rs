@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::transport::device_selector::DeviceSelectorEvent;
+use crate::transport::device_selector::{DeviceID, DeviceSelectorEvent};
 use crate::transport::platform::winapi::DeviceInfoSet;
 use runloop::RunLoop;
 use std::collections::{HashMap, HashSet};
@@ -76,7 +76,7 @@ where
         Ok(())
     }
 
-    fn add_device(&mut self, path: &String) {
+    fn add_device(&mut self, path: &DeviceID) {
         let f = self.new_device_cb.clone();
         let path = path.clone();
         let key = path.clone();
@@ -95,7 +95,7 @@ where
         }
     }
 
-    fn remove_device(&mut self, path: &String) {
+    fn remove_device(&mut self, path: &DeviceID) {
         let _ = self
             .selector_sender
             .send(DeviceSelectorEvent::DeviceRemoved(path.clone()));

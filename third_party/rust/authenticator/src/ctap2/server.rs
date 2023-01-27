@@ -16,7 +16,7 @@ pub struct RpIdHash(pub [u8; 32]);
 
 impl fmt::Debug for RpIdHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let value = base64::encode_config(&self.0, base64::URL_SAFE_NO_PAD);
+        let value = base64::encode_config(self.0, base64::URL_SAFE_NO_PAD);
         write!(f, "RpIdHash({})", value)
     }
 }
@@ -70,7 +70,7 @@ impl RelyingPartyWrapper {
                 hasher.update(&d.id);
 
                 let mut output = [0u8; 32];
-                output.copy_from_slice(&hasher.finalize().as_slice());
+                output.copy_from_slice(hasher.finalize().as_slice());
 
                 RpIdHash(output)
             }
@@ -165,7 +165,7 @@ impl<'de> Deserialize<'de> for PublicKeyCredentialParameters {
                     return Err(SerdeError::missing_field("type"));
                 }
 
-                let alg = alg.ok_or(SerdeError::missing_field("alg"))?;
+                let alg = alg.ok_or_else(|| SerdeError::missing_field("alg"))?;
 
                 Ok(PublicKeyCredentialParameters { alg })
             }
@@ -280,8 +280,8 @@ impl<'de> Deserialize<'de> for PublicKeyCredentialDescriptor {
                     return Err(SerdeError::missing_field("type"));
                 }
 
-                let id = id.ok_or(SerdeError::missing_field("id"))?;
-                let transports = transports.unwrap_or(Vec::new());
+                let id = id.ok_or_else(|| SerdeError::missing_field("id"))?;
+                let transports = transports.unwrap_or_default();
 
                 Ok(PublicKeyCredentialDescriptor { id, transports })
             }

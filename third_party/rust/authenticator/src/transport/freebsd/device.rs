@@ -41,7 +41,7 @@ impl Device {
             buf[6] = 0;
             buf[7] = 1; // one byte
 
-            self.write(&buf[..])?;
+            self.write_all(&buf)?;
 
             // Wait for response
             let mut pfd: libc::pollfd = unsafe { mem::zeroed() };
@@ -57,7 +57,7 @@ impl Device {
             }
 
             // Read response
-            self.read(&mut buf[..])?;
+            self.read_exact(&mut buf)?;
 
             return Ok(());
         }
@@ -183,7 +183,7 @@ impl HIDDevice for Device {
         if !uhid::is_u2f_device(self.fd) {
             return false;
         }
-        if let Err(_) = self.ping() {
+        if self.ping().is_err() {
             return false;
         }
         true

@@ -47,7 +47,7 @@ pub enum MakeCredentialsResult {
     CTAP2(AttestationObject, CollectedClientDataWrapper),
 }
 
-#[derive(Copy, Clone, Debug, Serialize)]
+#[derive(Copy, Clone, Debug, Default, Serialize)]
 #[cfg_attr(test, derive(Deserialize))]
 pub struct MakeCredentialsOptions {
     #[serde(rename = "rk", skip_serializing_if = "Option::is_none")]
@@ -56,15 +56,6 @@ pub struct MakeCredentialsOptions {
     pub user_verification: Option<bool>,
     // TODO(MS): ctap2.1 supports user_presence, but ctap2.0 does not and tokens will error out
     //           Commands need a version-flag to know what to de/serialize and what to ignore.
-}
-
-impl Default for MakeCredentialsOptions {
-    fn default() -> Self {
-        Self {
-            resident_key: None,
-            user_verification: None,
-        }
-    }
 }
 
 impl MakeCredentialsOptions {
@@ -252,8 +243,9 @@ impl Request<MakeCredentialsResult> for MakeCredentials {
 
 impl RequestCtap1 for MakeCredentials {
     type Output = MakeCredentialsResult;
+    type AdditionalInfo = ();
 
-    fn ctap1_format<Dev>(&self, dev: &mut Dev) -> Result<Vec<u8>, HIDError>
+    fn ctap1_format<Dev>(&self, dev: &mut Dev) -> Result<(Vec<u8>, ()), HIDError>
     where
         Dev: io::Read + io::Write + fmt::Debug + FidoDevice,
     {
@@ -280,7 +272,7 @@ impl RequestCtap1 for MakeCredentials {
                 let res = dev.send_ctap1(&check_command);
                 res.is_ok()
             })
-            .any(|x| x == true);
+            .any(|x| x);
 
         if is_already_registered {
             // Now we need to send a dummy registration request, to make the token blink
@@ -315,13 +307,14 @@ impl RequestCtap1 for MakeCredentials {
         let cmd = U2F_REGISTER;
         let apdu = CTAP1RequestAPDU::serialize(cmd, flags, &register_data)?;
 
-        Ok(apdu)
+        Ok((apdu, ()))
     }
 
     fn handle_response_ctap1(
         &self,
         status: Result<(), ApduErrorStatus>,
         input: &[u8],
+        _add_info: &(),
     ) -> Result<Self::Output, Retryable<HIDError>> {
         if Err(ApduErrorStatus::ConditionsNotSatisfied) == status {
             return Err(Retryable::Retry);
@@ -683,7 +676,7 @@ pub mod test {
         .expect("Failed to create MakeCredentials");
 
         let mut device = Device::new("commands/make_credentials").unwrap(); // not really used (all functions ignore it)
-        let req_serialized = req
+        let (req_serialized, _) = req
             .ctap1_format(&mut device)
             .expect("Failed to serialize MakeCredentials request");
         assert_eq!(
@@ -692,7 +685,7 @@ pub mod test {
             req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1
         );
         let (attestation_object, _collected_client_data) = match req
-            .handle_response_ctap1(Ok(()), &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1)
+            .handle_response_ctap1(Ok(()), &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1, &())
             .expect("Failed to handle CTAP1 response")
         {
             MakeCredentialsResult::CTAP2(attestation_object, _collected_client_data) => {

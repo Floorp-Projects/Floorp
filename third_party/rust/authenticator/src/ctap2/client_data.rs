@@ -107,12 +107,7 @@ impl<'de> Deserialize<'de> for TokenBinding {
                             }
                         }
                         "supported" => Ok(TokenBinding::Supported),
-                        k => {
-                            return Err(M::Error::custom(format!(
-                                "unexpected status key: {:?}",
-                                k
-                            )));
-                        }
+                        k => Err(M::Error::custom(format!("unexpected status key: {:?}", k))),
                     }
                 } else {
                     Err(SerdeError::missing_field("status"))
@@ -144,8 +139,8 @@ impl Serialize for WebauthnType {
         S: Serializer,
     {
         match *self {
-            WebauthnType::Create => serializer.serialize_str(&"webauthn.create"),
-            WebauthnType::Get => serializer.serialize_str(&"webauthn.get"),
+            WebauthnType::Create => serializer.serialize_str("webauthn.create"),
+            WebauthnType::Get => serializer.serialize_str("webauthn.get"),
         }
     }
 }
@@ -185,7 +180,7 @@ pub struct Challenge(pub String);
 
 impl Challenge {
     pub fn new(input: Vec<u8>) -> Self {
-        let value = base64::encode_config(&input, base64::URL_SAFE_NO_PAD);
+        let value = base64::encode_config(input, base64::URL_SAFE_NO_PAD);
         Challenge(value)
     }
 }
@@ -341,7 +336,7 @@ mod test {
     #[test]
     fn test_collected_client_data_parsing() {
         let original_str = "{\"type\":\"webauthn.create\",\"challenge\":\"AAECAw\",\"origin\":\"example.com\",\"crossOrigin\":false,\"tokenBinding\":{\"status\":\"present\",\"id\":\"AAECAw\"}}";
-        let parsed: CollectedClientData = serde_json::from_str(&original_str).unwrap();
+        let parsed: CollectedClientData = serde_json::from_str(original_str).unwrap();
         let expected = CollectedClientData {
             webauthn_type: WebauthnType::Create,
             challenge: Challenge::new(vec![0x00, 0x01, 0x02, 0x03]),
@@ -359,7 +354,7 @@ mod test {
     fn test_collected_client_data_defaults() {
         let cross_origin_str = "{\"type\":\"webauthn.create\",\"challenge\":\"AAECAw\",\"origin\":\"example.com\",\"crossOrigin\":false,\"tokenBinding\":{\"status\":\"present\",\"id\":\"AAECAw\"}}";
         let no_cross_origin_str = "{\"type\":\"webauthn.create\",\"challenge\":\"AAECAw\",\"origin\":\"example.com\",\"tokenBinding\":{\"status\":\"present\",\"id\":\"AAECAw\"}}";
-        let parsed: CollectedClientData = serde_json::from_str(&no_cross_origin_str).unwrap();
+        let parsed: CollectedClientData = serde_json::from_str(no_cross_origin_str).unwrap();
         let expected = CollectedClientData {
             webauthn_type: WebauthnType::Create,
             challenge: Challenge::new(vec![0x00, 0x01, 0x02, 0x03]),
@@ -387,13 +382,11 @@ mod test {
         assert_eq!(
             c.hash(),
             //  echo -n '{"type":"webauthn.create","challenge":"AAECAw","origin":"example.com","crossOrigin":false,"tokenBinding":{"status":"present","id":"AAECAw"}}' | sha256sum -t
-            ClientDataHash {
-                0: [
-                    0x75, 0x35, 0x35, 0x7d, 0x49, 0x6e, 0x33, 0xc8, 0x18, 0x7f, 0xea, 0x8d, 0x11,
-                    0x32, 0x64, 0xaa, 0xa4, 0x52, 0x3e, 0x13, 0x40, 0x14, 0x9f, 0xbe, 0x00, 0x3f,
-                    0x10, 0x87, 0x54, 0xc3, 0x2d, 0x80
-                ]
-            }
+            ClientDataHash([
+                0x75, 0x35, 0x35, 0x7d, 0x49, 0x6e, 0x33, 0xc8, 0x18, 0x7f, 0xea, 0x8d, 0x11, 0x32,
+                0x64, 0xaa, 0xa4, 0x52, 0x3e, 0x13, 0x40, 0x14, 0x9f, 0xbe, 0x00, 0x3f, 0x10, 0x87,
+                0x54, 0xc3, 0x2d, 0x80
+            ])
         );
     }
 }

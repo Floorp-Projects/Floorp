@@ -496,7 +496,8 @@ impl<'de> Deserialize<'de> for COSEKey {
                             // key_type = Some(map.next_value()?);
                         }
                         -1 => {
-                            let key_type = key_type.ok_or(SerdeError::missing_field("key_type"))?;
+                            let key_type =
+                                key_type.ok_or_else(|| SerdeError::missing_field("key_type"))?;
                             if key_type == COSEKeyTypeId::RSA {
                                 if y.is_some() {
                                     return Err(SerdeError::duplicate_field("y"));
@@ -551,22 +552,22 @@ impl<'de> Deserialize<'de> for COSEKey {
                     };
                 }
 
-                let key_type = key_type.ok_or(SerdeError::missing_field("key_type"))?;
-                let x = x.ok_or(SerdeError::missing_field("x"))?;
-                let alg = alg.ok_or(SerdeError::missing_field("alg"))?;
+                let key_type = key_type.ok_or_else(|| SerdeError::missing_field("key_type"))?;
+                let x = x.ok_or_else(|| SerdeError::missing_field("x"))?;
+                let alg = alg.ok_or_else(|| SerdeError::missing_field("alg"))?;
 
                 let res = match key_type {
                     COSEKeyTypeId::OKP => {
-                        let curve = curve.ok_or(SerdeError::missing_field("curve"))?;
+                        let curve = curve.ok_or_else(|| SerdeError::missing_field("curve"))?;
                         COSEKeyType::OKP(COSEOKPKey { curve, x })
                     }
                     COSEKeyTypeId::EC2 => {
-                        let curve = curve.ok_or(SerdeError::missing_field("curve"))?;
-                        let y = y.ok_or(SerdeError::missing_field("y"))?;
+                        let curve = curve.ok_or_else(|| SerdeError::missing_field("curve"))?;
+                        let y = y.ok_or_else(|| SerdeError::missing_field("y"))?;
                         COSEKeyType::EC2(COSEEC2Key { curve, x, y })
                     }
                     COSEKeyTypeId::RSA => {
-                        let e = y.ok_or(SerdeError::missing_field("y"))?;
+                        let e = y.ok_or_else(|| SerdeError::missing_field("y"))?;
                         COSEKeyType::RSA(COSERSAKey { e, n: x })
                     }
                     COSEKeyTypeId::Symmetric => COSEKeyType::Symmetric(COSESymmetricKey { key: x }),
@@ -852,15 +853,15 @@ mod test {
             test_encapsulate(&peer_key, COSEAlgorithm::ES256, &my_pub_key_data, &EC_PRIV).unwrap();
         assert_eq!(shared_secret.shared_secret, SHARED);
 
-        let token_enc = encrypt(&shared_secret.shared_secret(), &TOKEN).unwrap();
+        let token_enc = encrypt(shared_secret.shared_secret(), &TOKEN).unwrap();
         assert_eq!(token_enc, TOKEN_ENC);
 
-        let token = decrypt(&shared_secret.shared_secret(), &TOKEN_ENC).unwrap();
+        let token = decrypt(shared_secret.shared_secret(), &TOKEN_ENC).unwrap();
         assert_eq!(token, TOKEN);
 
         let pin = Pin::new("1234");
         let pin_hash_enc =
-            encrypt(&shared_secret.shared_secret(), pin.for_pin_token().as_ref()).unwrap();
+            encrypt(shared_secret.shared_secret(), pin.for_pin_token().as_ref()).unwrap();
         assert_eq!(pin_hash_enc, PIN_HASH_ENC);
     }
 

@@ -157,12 +157,7 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
             return None; // An error occurred.
         }
 
-        let detail = DeviceInterfaceDetailData::new(required_size as usize);
-        if detail.is_none() {
-            return None; // malloc() failed.
-        }
-
-        let detail = detail.unwrap();
+        let detail = DeviceInterfaceDetailData::new(required_size as usize)?;
         let rv = unsafe {
             SetupDiGetDeviceInterfaceDetailW(
                 self.set.get(),
