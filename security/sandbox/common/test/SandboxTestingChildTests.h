@@ -67,6 +67,13 @@ namespace ApplicationServices {
 #  include "mozilla/WindowsProcessMitigations.h"
 #endif
 
+#ifdef XP_LINUX
+// Defined in <linux/watch_queue.h> which was added in 5.8
+#  ifndef O_NOTIFICATION_PIPE
+#    define O_NOTIFICATION_PIPE O_EXCL
+#  endif
+#endif
+
 constexpr bool kIsDebug =
 #ifdef DEBUG
     true;
@@ -467,6 +474,23 @@ void RunTestsContent(SandboxTestingChild* child) {
   child->ErrnoTest("statfs"_ns, true, [] {
     struct statfs sf;
     return statfs("/usr/share", &sf);
+  });
+
+  child->ErrnoTest("pipe2"_ns, true, [] {
+    int fds[2];
+    int rv = pipe2(fds, O_CLOEXEC);
+    int savedErrno = errno;
+    if (rv == 0) {
+      close(fds[0]);
+      close(fds[1]);
+    }
+    errno = savedErrno;
+    return rv;
+  });
+
+  child->ErrnoValueTest("pipe2_notif"_ns, ENOSYS, [] {
+    int fds[2];
+    return pipe2(fds, O_NOTIFICATION_PIPE);
   });
 
 #    ifdef MOZ_X11
