@@ -13,3 +13,4 @@ These linked pages contain design documents for the DOM implementation in Gecko.
    workersAndStorage/index
    webIdlBindings/index
    ioutils_migration
+   fedcm

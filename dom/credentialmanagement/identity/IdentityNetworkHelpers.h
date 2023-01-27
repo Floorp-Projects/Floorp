@@ -14,6 +14,9 @@
 
 namespace mozilla::dom {
 
+// Helper to get a JSON structure via a Fetch.
+// The Request must already be built and T should be a webidl type with
+// annotation GenerateConversionToJS so it has an Init method.
 template <typename T, typename TPromise = MozPromise<T, nsresult, true>>
 RefPtr<TPromise> FetchJSONStructure(Request* aRequest) {
   MOZ_ASSERT(XRE_IsParentProcess());
