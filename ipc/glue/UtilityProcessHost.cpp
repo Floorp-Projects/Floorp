@@ -28,9 +28,6 @@
 
 namespace mozilla::ipc {
 
-LazyLogModule gUtilityProcessLog("utilityproc");
-#define LOGD(...) MOZ_LOG(gUtilityProcessLog, LogLevel::Debug, (__VA_ARGS__))
-
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 bool UtilityProcessHost::sLaunchWithMacSandbox = false;
 #endif
@@ -41,9 +38,6 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
       mListener(std::move(aListener)),
       mLiveToken(new media::Refcountable<bool>(true)) {
   MOZ_COUNT_CTOR(UtilityProcessHost);
-  LOGD("[%p] UtilityProcessHost::UtilityProcessHost sandboxingKind=%" PRIu64,
-       this, aSandbox);
-
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   if (!sLaunchWithMacSandbox) {
     sLaunchWithMacSandbox =
@@ -58,12 +52,6 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
 
 UtilityProcessHost::~UtilityProcessHost() {
   MOZ_COUNT_DTOR(UtilityProcessHost);
-#if defined(MOZ_SANDBOX)
-  LOGD("[%p] UtilityProcessHost::~UtilityProcessHost sandboxingKind=%" PRIu64,
-       this, mSandbox);
-#else
-  LOGD("[%p] UtilityProcessHost::~UtilityProcessHost", this);
-#endif
 }
 
 bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
@@ -71,8 +59,6 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mUtilityProcessParent);
-
-  LOGD("[%p] UtilityProcessHost::Launch", this);
 
   mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
   if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_Utility,
@@ -121,7 +107,6 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
     mPrefSerializer = nullptr;
     return false;
   }
-  LOGD("[%p] UtilityProcessHost::Launch launching async", this);
   return true;
 }
 
@@ -158,7 +143,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
 
 void UtilityProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::OnChannelConnected", this);
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
 
@@ -173,7 +157,6 @@ void UtilityProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
 
 void UtilityProcessHost::OnChannelError() {
   MOZ_ASSERT(!NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::OnChannelError", this);
 
   GeckoChildProcessHost::OnChannelError();
 
@@ -238,8 +221,6 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   Unused << GetActor()->SendInitProfiler(
       ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
 
-  LOGD("[%p] UtilityProcessHost::InitAfterConnect succeeded", this);
-
   // Promise will be resolved later, from UtilityProcessParent when the child
   // will send the InitCompleted message.
 }
@@ -247,14 +228,10 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
 void UtilityProcessHost::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShutdownRequested);
-  LOGD("[%p] UtilityProcessHost::Shutdown", this);
 
   RejectPromise();
 
   if (mUtilityProcessParent) {
-    LOGD("[%p] UtilityProcessHost::Shutdown not destroying utility process.",
-         this);
-
     // OnChannelClosed uses this to check if the shutdown was expected or
     // unexpected.
     mShutdownRequested = true;
@@ -284,7 +261,6 @@ void UtilityProcessHost::Shutdown() {
 
 void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::OnChannelClosed", this);
 
   RejectPromise();
 
@@ -301,7 +277,6 @@ void UtilityProcessHost::OnChannelClosed() {
 
 void UtilityProcessHost::KillHard(const char* aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::KillHard", this);
 
   ProcessHandle handle = GetChildProcessHandle();
   if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER)) {
@@ -313,8 +288,6 @@ void UtilityProcessHost::KillHard(const char* aReason) {
 
 void UtilityProcessHost::DestroyProcess() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::DestroyProcess", this);
-
   RejectPromise();
 
   // Any pending tasks will be cancelled from now on.
@@ -326,7 +299,6 @@ void UtilityProcessHost::DestroyProcess() {
 
 void UtilityProcessHost::ResolvePromise() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost connected - resolving launch promise", this);
 
   if (!mLaunchPromiseSettled) {
     mLaunchPromise->Resolve(true, __func__);
@@ -339,8 +311,6 @@ void UtilityProcessHost::ResolvePromise() {
 
 void UtilityProcessHost::RejectPromise() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost connection failed - rejecting launch promise",
-       this);
 
   if (!mLaunchPromiseSettled) {
     mLaunchPromise->Reject(NS_ERROR_FAILURE, __func__);

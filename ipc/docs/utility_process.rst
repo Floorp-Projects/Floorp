@@ -42,6 +42,10 @@ implementing the trivial example visible in `EmptyUtil
 
     + Add member within `enum WebIDLUtilityActorName in <https://searchfox.org/mozilla-central/rev/fb511723f821ceabeea23b123f1c50c9e93bde9d/dom/chrome-webidl/ChromeUtils.webidl#686-689>`_
 
+    + Add member within `enum class UtilityActorName of <https://searchfox.org/mozilla-central/rev/fb511723f821ceabeea23b123f1c50c9e93bde9d/toolkit/components/processtools/ProcInfo.h#71-74>`_
+
+    + Update mapping in `switch case <https://searchfox.org/mozilla-central/rev/fb511723f821ceabeea23b123f1c50c9e93bde9d/dom/base/ChromeUtils.cpp#916-919>`_ and update the `static assert <https://searchfox.org/mozilla-central/rev/fb511723f821ceabeea23b123f1c50c9e93bde9d/dom/base/ChromeUtils.cpp#910-911>`_
+
   - Handle reception of ``StartEmptyUtilService`` on the child side of
     ``UtilityProcess`` within ``RecvStartEmptyUtilService()``
 

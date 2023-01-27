@@ -63,11 +63,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvStartJSOracleService(
       Endpoint<dom::PJSOracleChild>&& aEndpoint);
 
-#ifdef XP_WIN
-  mozilla::ipc::IPCResult RecvStartWindowsUtilsService(
-      Endpoint<PWindowsUtilsChild>&& aEndpoint);
-#endif
-
   AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -85,10 +80,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   RefPtr<ChildProfilerController> mProfilerController;
   RefPtr<UtilityAudioDecoderParent> mUtilityAudioDecoderInstance{};
   RefPtr<dom::JSOracleChild> mJSOracleInstance{};
-#ifdef XP_WIN
-  RefPtr<PWindowsUtilsChild> mWindowsUtilsInstance;
-#endif
-
   AsyncBlockers mShutdownBlockers;
 };
 
