@@ -6725,7 +6725,7 @@ class nsDisplayDestination : public nsPaintedDisplayItem {
   nsPoint mPosition;
 };
 
-class FlattenedDisplayListIterator {
+class MOZ_STACK_CLASS FlattenedDisplayListIterator {
  public:
   FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
                                nsDisplayList* aList)
@@ -6818,7 +6818,8 @@ class FlattenedDisplayListIterator {
   nsDisplayListBuilder* mBuilder;
   nsDisplayList::iterator mStart;
   nsDisplayList::iterator mEnd;
-  nsTArray<std::pair<nsDisplayList::iterator, nsDisplayList::iterator>> mStack;
+  AutoTArray<std::pair<nsDisplayList::iterator, nsDisplayList::iterator>, 3>
+      mStack;
 };
 
 class PaintTelemetry {
