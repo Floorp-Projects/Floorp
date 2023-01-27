@@ -34,8 +34,8 @@ struct BasePoint {
   constexpr BasePoint() : x(0), y(0) {}
   constexpr BasePoint(Coord aX, Coord aY) : x(aX), y(aY) {}
 
-  MOZ_ALWAYS_INLINE T X() const { return x; }
-  MOZ_ALWAYS_INLINE T Y() const { return y; }
+  MOZ_ALWAYS_INLINE Coord X() const { return x; }
+  MOZ_ALWAYS_INLINE Coord Y() const { return y; }
 
   void MoveTo(T aX, T aY) {
     x = aX;
