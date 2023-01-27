@@ -1926,11 +1926,13 @@ bool SnapshotIterator::initInstructionResults(MaybeReadFallback& fallback) {
   if (!results) {
     AutoRealm ar(cx, fallback.frame->script());
 
-    // We do not have the result yet, which means that an observable stack
-    // slot is requested.  As we do not want to bailout every time for the
-    // same reason, we need to recompile without optimizing away the
-    // observable stack slots.  The script would later be recompiled to have
-    // support for Argument objects.
+    // We are going to run recover instructions. To avoid problems where recover
+    // instructions are not idempotent (for example, if we allocate an object,
+    // object identity may be observable), we should not execute code in the
+    // Ion stack frame afterwards. To avoid doing so, we invalidate the script.
+    // This is not necessary for bailouts or other cases where we are leaving
+    // the frame anyway. We only need it for niche cases like debugger
+    // introspection or Function.arguments.
     if (fallback.consequence == MaybeReadFallback::Fallback_Invalidate) {
       ionScript_->invalidate(cx, fallback.frame->script(),
                              /* resetUses = */ false,
