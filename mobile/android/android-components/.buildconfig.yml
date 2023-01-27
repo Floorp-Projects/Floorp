@@ -348,6 +348,7 @@ projects:
     upstream_dependencies:
     - browser-icons
     - browser-state
+    - browser-storage-sync
     - concept-awesomebar
     - concept-engine
     - concept-fetch
