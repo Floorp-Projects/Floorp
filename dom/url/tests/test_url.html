@@ -17,7 +17,7 @@
 </div>
 <pre id="test">
 </pre>
-  <script type="application/javascript">
+  <script>
 
   /** Test for Bug 887364 **/
   ok("URL" in window, "window.URL exists");
@@ -291,6 +291,12 @@
     if ("pathname" in test) is(url.pathname, test.pathname, "pathname");
     if ("search" in test) is(url.search, test.search, "search");
     if ("hash" in test) is(url.hash, test.hash, "hash");
+
+    {
+      let uri = SpecialPowers.wrap(url).URI;
+      is(url.href, uri.spec, "Conversion to nsIURI");
+      is(SpecialPowers.wrap(URL).fromURI(uri).href, uri.spec, "Conversion from nsIURI");
+    }
 
     if ("skip_setters" in test && test.skip_setters === false) {
       info("Skip setter methods for URL: " + test);

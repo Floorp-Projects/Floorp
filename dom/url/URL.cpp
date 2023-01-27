@@ -9,6 +9,7 @@
 #include "URLWorker.h"
 
 #include "MainThreadUtils.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsContentUtils.h"
@@ -86,9 +87,11 @@ already_AddRefed<URL> URL::Constructor(nsISupports* aParent,
     return nullptr;
   }
 
-  RefPtr<URL> url = new URL(aParent);
-  url->SetURI(uri.forget());
-  return url.forget();
+  return MakeAndAddRef<URL>(aParent, std::move(uri));
+}
+
+already_AddRefed<URL> URL::FromURI(GlobalObject& aGlobal, nsIURI* aURI) {
+  return MakeAndAddRef<URL>(aGlobal.GetAsSupports(), aURI);
 }
 
 void URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
@@ -188,7 +191,7 @@ void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
 }
 
 void URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const {
-  nsresult rv = nsContentUtils::GetUTFOrigin(GetURI(), aOrigin);
+  nsresult rv = nsContentUtils::GetUTFOrigin(URI(), aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aOrigin.Truncate();
   }
@@ -213,7 +216,7 @@ void URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) {
   // implementation. In order to do this properly, we have to serialize the
   // existing URL and reparse it in a new object.
   nsCOMPtr<nsIURI> clone;
-  nsresult rv = NS_MutateURI(GetURI())
+  nsresult rv = NS_MutateURI(URI())
                     .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
                     .Finalize(clone);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -395,7 +398,7 @@ void URL::UpdateURLSearchParams() {
   }
 
   nsAutoCString search;
-  nsresult rv = GetURI()->GetQuery(search);
+  nsresult rv = URI()->GetQuery(search);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     search.Truncate();
   }
@@ -403,12 +406,7 @@ void URL::UpdateURLSearchParams() {
   mSearchParams->ParseInput(search);
 }
 
-void URL::SetURI(already_AddRefed<nsIURI> aURI) {
-  mURI = std::move(aURI);
-  MOZ_ASSERT(mURI);
-}
-
-nsIURI* URL::GetURI() const {
+nsIURI* URL::URI() const {
   MOZ_ASSERT(mURI);
   return mURI;
 }

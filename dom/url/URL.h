@@ -32,7 +32,10 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(URL)
 
-  explicit URL(nsISupports* aParent) : mParent(aParent) {}
+  explicit URL(nsISupports* aParent, nsCOMPtr<nsIURI> aURI)
+      : mParent(aParent), mURI(std::move(aURI)) {
+    MOZ_ASSERT(mURI);
+  }
 
   // WebIDL methods
   nsISupports* GetParentObject() const { return mParent; }
@@ -115,12 +118,11 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   // URLSearchParamsObserver
   void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
 
+  nsIURI* URI() const;
+  static already_AddRefed<URL> FromURI(GlobalObject&, nsIURI*);
+
  private:
   ~URL() = default;
-
-  void SetURI(already_AddRefed<nsIURI> aURI);
-
-  nsIURI* GetURI() const;
 
   void UpdateURLSearchParams();
 
