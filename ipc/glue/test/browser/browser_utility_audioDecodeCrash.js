@@ -24,7 +24,9 @@ async function crashDecoder(expectation) {
   const audioPid = await getAudioDecoderPid(expectation);
   ok(audioPid > 0, `Found an audio decoder ${audioPid}`);
   const actorIsAudioDecoder = actorNames => {
-    return actorNames.startsWith("audio-decoder-");
+    return actorNames
+      .split(",")
+      .some(actorName => actorName.trim().startsWith("audio-decoder-"));
   };
   info(`Crashing audio decoder ${audioPid}`);
   await crashSomeUtility(audioPid, actorIsAudioDecoder);
