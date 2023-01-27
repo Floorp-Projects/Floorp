@@ -18,8 +18,6 @@ function getTelemetryForScalar(aName) {
 function cleanupTelemetry() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  Services.telemetry.getHistogramById("WEBAUTHN_CREATE_CREDENTIAL_MS").clear();
-  Services.telemetry.getHistogramById("WEBAUTHN_GET_ASSERTION_MS").clear();
 }
 
 function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
@@ -112,28 +110,25 @@ add_task(async function test() {
     "Scalar keys are set: " + Object.keys(webauthn_used).join(", ")
   );
   is(
-    webauthn_used.U2FRegisterFinish,
+    webauthn_used.CTAPRegisterFinish,
     1,
-    "webauthn_used U2FRegisterFinish scalar should be 1"
+    "webauthn_used CTAPRegisterFinish scalar should be 1"
   );
   is(
-    webauthn_used.U2FSignFinish,
+    webauthn_used.CTAPSignFinish,
     1,
-    "webauthn_used U2FSignFinish scalar should be 1"
+    "webauthn_used CTAPSignFinish scalar should be 1"
   );
   is(
-    webauthn_used.U2FSignAbort,
+    webauthn_used.CTAPSignAbort,
     undefined,
-    "webauthn_used U2FSignAbort scalar must be unset"
+    "webauthn_used CTAPSignAbort scalar must be unset"
   );
   is(
-    webauthn_used.U2FRegisterAbort,
+    webauthn_used.CTAPRegisterAbort,
     undefined,
-    "webauthn_used U2FRegisterAbort scalar must be unset"
+    "webauthn_used CTAPRegisterAbort scalar must be unset"
   );
-
-  validateHistogramEntryCount("WEBAUTHN_CREATE_CREDENTIAL_MS", 1);
-  validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 1);
 
   BrowserTestUtils.removeTab(tab);
 

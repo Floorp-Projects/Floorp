@@ -18,8 +18,6 @@ function getTelemetryForScalar(aName) {
 function cleanupTelemetry() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  Services.telemetry.getHistogramById("WEBAUTHN_CREATE_CREDENTIAL_MS").clear();
-  Services.telemetry.getHistogramById("WEBAUTHN_GET_ASSERTION_MS").clear();
 }
 
 function validateHistogramEntryCount(aHistogramName, aExpectedCount) {
@@ -131,9 +129,6 @@ add_task(async function test() {
     undefined,
     "webauthn_used U2FRegisterAbort scalar must be unset"
   );
-
-  validateHistogramEntryCount("WEBAUTHN_CREATE_CREDENTIAL_MS", 1);
-  validateHistogramEntryCount("WEBAUTHN_GET_ASSERTION_MS", 1);
 
   BrowserTestUtils.removeTab(tab);
 
