@@ -9,12 +9,12 @@
 
 #include "mozilla/UniquePtr.h"
 #include "DecoderData.h"
-#include "Index.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaResult.h"
 #include "ByteStream.h"
 #include "mp4parse.h"
+#include "SampleIterator.h"
 
 namespace mozilla {
 
@@ -26,7 +26,7 @@ class IndiceWrapper {
  public:
   size_t Length() const;
 
-  bool GetIndice(size_t aIndex, Index::Indice& aIndice) const;
+  bool GetIndice(size_t aIndex, MP4SampleIndex::Indice& aIndice) const;
 
   explicit IndiceWrapper(Mp4parseByteData& aRustIndice);
 
