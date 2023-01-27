@@ -205,6 +205,7 @@ to match the object passed into the ``delegate*`` calls to the proxy delegates.
 For example, when calling
 
 .. code:: java
+
   sessionRule.delegateUntilTestEnd(object : NavigationDelegate, ProgressDelegate {})
 
 ``GeckoSessionTestRule`` will know to redirect all ``NavigationDelegate`` and

@@ -45,15 +45,14 @@ small and easy to identify using GC-based leak detection.)
 
 ## What leak tools do we have?
 
-  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ --------------------------------------------------------------------- ---------------------- -------------------------------------------------------
-  Tool                                                                                                                                                                                                                                                   Finds                                                                 Platforms              Requires
-  Leak tools for large object graphs
-  [Leak Gauge](leak_gauge.md)                                                                                                                                                 Windows, documents, and docshells only                                All platforms          Any build
-  [GC and CC logs](gc_and_cc_logs.md)                                                                                                                                        JS objects, DOM objects, many other kinds of objects                  All platforms          Any build
-  Leak tools for medium-size object graphs
-  [BloatView](bloatview.md), [refcount tracing and balancing](refcount_tracing_and_balancing.md)   Objects that implement `nsISupports` or use `MOZ_COUNT_{CTOR,DTOR}`   All tier 1 platforms   Debug build (or build opt with `--enable-logrefcnt`)
-  Leak tools for debugging memory growth that is cleaned up on shutdown
-  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ --------------------------------------------------------------------- ---------------------- -------------------------------------------------------
+| Tool                                     | Finds                                                | Platforms           | Requires     |
+|------------------------------------------|------------------------------------------------------|---------------------|--------------|
+| Leak tools for large object graphs       |                                                      |                     |              |
+| [Leak Gauge](leak_gauge.md)              | Windows, documents, and docshells only               | All platforms       | Any build    |
+| [GC and CC logs](gc_and_cc_logs.md)      | JS objects, DOM objects, many other kinds of objects | All platforms       | Any build    |
+| Leak tools for medium-size object graphs |                                                      |                     |              |
+| [BloatView](bloatview.md), [refcount tracing and balancing](refcount_tracing_and_balancing.md)  | Objects that implement `nsISupports` or use `MOZ_COUNT_{CTOR,DTOR}` | All tier 1 platforms | Debug build (or build opt with `--enable-logrefcnt`)|
+| Leak tools for debugging memory growth that is cleaned up on shutdown                           |                     |              |
 
 ## Common leak patterns
 
