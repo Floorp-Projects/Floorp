@@ -78,18 +78,21 @@ def test_stale_element_reference(session, stale_element, as_frame):
     assert_error(result, "stale element reference")
 
 
-def test_get_shadow_root(session, inline, checkbox_dom):
-    session.url = inline(checkbox_dom)
+def test_get_shadow_root(session, get_test_page):
+    session.url = get_test_page()
 
-    expected = session.execute_script(
-        "return document.querySelector('custom-checkbox-element').shadowRoot.host")
+    host_element = session.find.css("custom-element", all=False)
 
-    custom_element = session.find.css("custom-checkbox-element", all=False)
-    response = get_shadow_root(session, custom_element.id)
+    response = get_shadow_root(session, host_element.id)
     value = assert_success(response)
     assert isinstance(value, dict)
     assert "shadow-6066-11e4-a52e-4f735466cecf" in value
-    assert_same_element(session, custom_element, expected)
+
+    expected_host = session.execute_script("""
+        return arguments[0].shadowRoot.host
+        """, args=(host_element,))
+
+    assert_same_element(session, host_element, expected_host)
 
 
 def test_no_shadow_root(session, inline):
