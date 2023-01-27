@@ -34,6 +34,9 @@ with Files('js/d3/**'):
 with Files('js/cfworker/**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
+with Files('js/PKI.js/**'):
+    BUG_COMPONENT = ('Firefox', 'Security')
+
 with Files('rust/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
