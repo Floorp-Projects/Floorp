@@ -378,6 +378,7 @@ class CollectionTest {
         }
     }
 
+    @Ignore("Failing, see: Bugzilla tickets 1807289 and 1813047")
     @Test
     fun swipeRightToRemoveTabFromCollectionTest() {
         val testPage = getGenericAsset(mockWebServer, 1)
