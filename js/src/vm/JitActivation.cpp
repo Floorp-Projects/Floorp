@@ -95,7 +95,8 @@ void js::jit::JitActivation::clearRematerializedFrames() {
 }
 
 js::jit::RematerializedFrame* js::jit::JitActivation::getRematerializedFrame(
-    JSContext* cx, const JSJitFrameIter& iter, size_t inlineDepth) {
+    JSContext* cx, const JSJitFrameIter& iter, size_t inlineDepth,
+    MaybeReadFallback::FallbackConsequence consequence) {
   MOZ_ASSERT(iter.activation() == this);
   MOZ_ASSERT(iter.isIonScripted());
 
@@ -117,7 +118,7 @@ js::jit::RematerializedFrame* js::jit::JitActivation::getRematerializedFrame(
     // preserve identity. Therefore, we always rematerialize an uninlined
     // frame and all its inlined frames at once.
     InlineFrameIterator inlineIter(cx, &iter);
-    MaybeReadFallback recover(cx, this, &iter);
+    MaybeReadFallback recover(cx, this, &iter, consequence);
 
     // Frames are often rematerialized with the cx inside a Debugger's
     // realm. To recover slots and to create CallObjects, we need to

@@ -205,8 +205,13 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   RematerializedFrame* rematFrame = nullptr;
   {
     JS::AutoSaveExceptionState savedExc(cx);
-    rematFrame =
-        act->getRematerializedFrame(cx, frame.frame(), frame.frameNo());
+
+    // We can run recover instructions without invalidating because we're
+    // already leaving the frame.
+    MaybeReadFallback::FallbackConsequence consequence =
+        MaybeReadFallback::Fallback_DoNothing;
+    rematFrame = act->getRematerializedFrame(cx, frame.frame(), frame.frameNo(),
+                                             consequence);
     if (!rematFrame) {
       return;
     }
