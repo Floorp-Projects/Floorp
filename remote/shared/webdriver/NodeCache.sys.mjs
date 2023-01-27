@@ -16,6 +16,7 @@ const ELEMENT_NODE = 1;
 
 /**
  * The class provides a mapping between DOM nodes and a unique node references.
+ * Supported types of nodes are Element and ShadowRoot.
  */
 export class NodeCache {
   #nodeIdMap;
@@ -41,16 +42,22 @@ export class NodeCache {
   }
 
   /**
-   * Get or if not yet existent create a unique reference for a DOM node.
+   * Get or if not yet existent create a unique reference for an Element or
+   * ShadowRoot node.
    *
    * @param {Node} node
-   *    The DOM node to be added.
+   *    The node to be added.
    *
    * @return {string}
    *     The unique node reference for the DOM node.
    */
   getOrCreateNodeReference(node) {
-    if (![DOCUMENT_FRAGMENT_NODE, ELEMENT_NODE].includes(node?.nodeType)) {
+    if (
+      !node ||
+      ![DOCUMENT_FRAGMENT_NODE, ELEMENT_NODE].includes(node.nodeType) ||
+      (node.nodeType === DOCUMENT_FRAGMENT_NODE &&
+        node.containingShadowRoot !== node)
+    ) {
       throw new TypeError(`Failed to create node reference for ${node}`);
     }
 
