@@ -2,10 +2,10 @@
 
 In multi-process environments, most devtools actors are created and initialized in the child content process, to be able to access the resources they are exposing to the toolbox. But sometimes, these actors need to access things in the parent process too. Here's why and how.
 
-```warning::
-  | This documentation page is **deprecated**. setupInParent relies on the message manager which is being deprecated. Furthermore, communications between parent and content processes should be avoided for security reasons. If possible, the client should be responsible for calling actors both on the parent and content process.
-  |
-  | This page will be removed when all actors relying on this API are removed.
+```{warning}
+  This documentation page is **deprecated**. setupInParent relies on the message manager which is being deprecated. Furthermore, communications between parent and content processes should be avoided for security reasons. If possible, the client should be responsible for calling actors both on the parent and content process.
+
+  This page will be removed when all actors relying on this API are removed.
 ```
 
 ## Use case and examples
@@ -18,7 +18,7 @@ When the actor is loaded for the first time in the `DevToolsServer` running in t
 
 Example code for the actor running in the child process:
 
-```
+```js
   const {DevToolsServer} = require("devtools/server/devtools-server");
 
   // Setup the child<->parent communication only if the actor module
@@ -46,7 +46,7 @@ The `setupParentProcess` function will receive a parameter that contains a refer
 
 See below an example implementation of a `setupParent` function in the parent process:
 
-```
+```js
 exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
   // Start listening for messages from the actor in the child process.
   setMessageManager(mm);

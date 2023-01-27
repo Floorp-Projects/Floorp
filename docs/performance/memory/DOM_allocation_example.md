@@ -8,7 +8,7 @@ You can try out the site at
 
 It just contains a script that creates a large number of DOM nodes:
 
-``` {.brush: .js}
+```js
 var toolbarButtonCount = 20;
 var toolbarCount = 200;
 

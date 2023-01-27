@@ -17,7 +17,7 @@ In any case, the steps to release geckodriver are as follows:
 geckodriver depends on a number of Rust crates that also live in
 central by using relative paths. Here an excerpt from its `Cargo.toml`:
 
-```cargo
+```ini
 [dependencies]
 …
 marionette = { path = "./marionette" }

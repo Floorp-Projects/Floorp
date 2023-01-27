@@ -23,7 +23,7 @@ stored as serialised JSON in the pref `{feed_pref_name}.options`, or the empty
 object if this doesn't exist. The generator returns a section configuration
 object which may have the following properties:
 
-```eval_rst
+```{eval-rst}
 +--------------------+---------------------+-------------------------------------------------------------------------------------------------------------------+
 | Property           | Type                | Description                                                                                                       |
 +====================+=====================+===================================================================================================================+

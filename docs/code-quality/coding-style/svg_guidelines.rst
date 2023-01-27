@@ -92,25 +92,25 @@ Whitespace examples
 
 This path:
 
-.. code:: svg
+.. code:: html
 
    <path d=" M5,5    L1,1z ">
 
 can be cut down to this:
 
-.. code:: svg
+.. code:: html
 
    <path d="M5,5 L1,1z">
 
 Similarly, this polygon:
 
-.. code:: svg
+.. code:: html
 
    <polygon points="  0,0   4,4  4,0  "/>
 
 can be cut down to this:
 
-.. code:: svg
+.. code:: html
 
    <polygon points="0,0 4,4 4,0"/>
 
@@ -297,13 +297,13 @@ Nested transforms
 Some editors use ``<g>`` tags to do nested transforms, which is usually
 not needed. You can avoid this by doing basic algebra, for example:
 
-.. code:: svg
+.. code:: xml
 
    <g transform="translate(-62, -310)"><shape transform="translate(60, 308)"/></g>
 
 can be cut down to:
 
-.. code:: svg
+.. code:: xml
 
    <shape transform="translate(-2,-2)"/>
 
