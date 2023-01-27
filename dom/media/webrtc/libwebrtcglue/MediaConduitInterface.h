@@ -15,7 +15,6 @@
 #include "MediaConduitErrors.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/MozPromise.h"
-#include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
