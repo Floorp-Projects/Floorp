@@ -104,9 +104,6 @@ memmap2 = { path = "build/rust/memmap2" }
 # Patch getrandom 0.7 to 0.8
 rand = { path = "build/rust/rand" }
 
-# Patch env_logger 0.8 to 0.9
-env_logger = { path = "build/rust/env_logger" }
-
 # Patch parking_lot 0.12 down to 0.11, which is compatible for most crates that use it, to avoid
 # dependencies on windows-sys.
 parking_lot = { path = "build/rust/parking_lot" }

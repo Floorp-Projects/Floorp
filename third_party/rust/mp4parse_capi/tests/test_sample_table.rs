@@ -1,5 +1,3 @@
-extern crate mp4parse;
-extern crate mp4parse_capi;
 use mp4parse::unstable::Indice;
 use mp4parse_capi::*;
 use std::io::Read;
