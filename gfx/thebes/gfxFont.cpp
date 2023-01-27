@@ -818,7 +818,7 @@ float gfxFont::AngleForSyntheticOblique() const {
   // If the style doesn't call for italic/oblique, or if the face already
   // provides it, no synthetic style should be added.
   if (mStyle.style == FontSlantStyle::NORMAL || !mStyle.allowSyntheticStyle ||
-      !mFontEntry->IsUpright()) {
+      !mFontEntry->IsUpright() || mFontEntry->HasSlantVariation()) {
     return 0.0f;
   }
 
