@@ -32,8 +32,7 @@ IndiceWrapper::IndiceWrapper(Mp4parseByteData& aIndice) {
 
 size_t IndiceWrapper::Length() const { return mIndice.length; }
 
-bool IndiceWrapper::GetIndice(size_t aIndex,
-                              MP4SampleIndex::Indice& aIndice) const {
+bool IndiceWrapper::GetIndice(size_t aIndex, Index::Indice& aIndice) const {
   if (aIndex >= mIndice.length) {
     MOZ_LOG(gMP4MetadataLog, LogLevel::Error, ("Index overflow in indice"));
     return false;
