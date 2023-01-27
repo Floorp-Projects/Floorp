@@ -387,7 +387,6 @@ win64-clang-15-stage1:
     description: "Clang-cl 15 toolchain build stage 1"
     treeherder:
         symbol: TW64(clang-15-stage1)
-    worker-type: b-win2012
     run:
         script: build-clang.sh
         arguments:
@@ -406,9 +405,8 @@ win64-clang-15-stage1:
     fetches:
         fetch:
             - clang-15
-            - cmake
-            - ninja
         toolchain:
+            - linux64-clang-15-stage1
             - win64-vs2019
 
 win64-clang-15-raw:
@@ -781,7 +779,6 @@ win64-clang-trunk-stage1:
         cached_task: false
     treeherder:
         symbol: TW64(clang-trunk-stage1)
-    worker-type: b-win2012
     run:
         script: build-clang.sh
         arguments:
@@ -800,9 +797,8 @@ win64-clang-trunk-stage1:
     fetches:
         fetch:
             - clang-trunk
-            - cmake
-            - ninja
         toolchain:
+            - linux64-clang-trunk-stage1
             - win64-vs2019
 
 win64-clang-trunk-raw:

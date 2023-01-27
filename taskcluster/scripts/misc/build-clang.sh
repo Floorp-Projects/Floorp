@@ -30,16 +30,23 @@ case "$CONFIGS" in
   export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin:$ORIGPWD/bin
   ;;
 *win64*)
-  export UPLOAD_DIR=$ORIGPWD/public/build
-  # Set up all the Visual Studio paths.
-  . taskcluster/scripts/misc/vs-setup.sh
+  case "$(uname -s)" in
+  MINGW*|MSYS*)
+    export UPLOAD_DIR=$ORIGPWD/public/build
+    # Set up all the Visual Studio paths.
+    . taskcluster/scripts/misc/vs-setup.sh
 
-  # LLVM_ENABLE_DIA_SDK is set if the directory "$ENV{VSINSTALLDIR}DIA SDK"
-  # exists.
-  export VSINSTALLDIR="${VSPATH}/"
+    # LLVM_ENABLE_DIA_SDK is set if the directory "$ENV{VSINSTALLDIR}DIA SDK"
+    # exists.
+    export VSINSTALLDIR="${VSPATH}/"
 
-  export PATH="$(cd $MOZ_FETCHES_DIR/cmake && pwd)/bin:${PATH}"
-  export PATH="$(cd $MOZ_FETCHES_DIR/ninja && pwd)/bin:${PATH}"
+    export PATH="$(cd $MOZ_FETCHES_DIR/cmake && pwd)/bin:${PATH}"
+    export PATH="$(cd $MOZ_FETCHES_DIR/ninja && pwd)/bin:${PATH}"
+    ;;
+  *)
+    export VSINSTALLDIR="$MOZ_FETCHES_DIR/vs"
+    ;;
+  esac
   ;;
 *linux64*|*android*)
   ;;

@@ -91,7 +91,6 @@ win64-clang-tidy:
     treeherder:
         symbol: TW64(clang-tidy)
         tier: 2
-    worker-type: b-win2012
     worker:
         max-run-time: 7200
     run:
@@ -103,10 +102,8 @@ win64-clang-tidy:
             - 'build/build-clang/clang-tidy-win64.json'
             - 'build/build-clang/win64.json'
     fetches:
-        fetch:
-            - cmake
-            - ninja
         toolchain:
+            - linux64-clang-15
             - win64-vs2019
 
 linux64-clang-tidy-external:
