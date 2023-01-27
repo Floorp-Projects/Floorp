@@ -216,6 +216,11 @@ child:
 
   [Nested=inside_sync] sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
     returns(bool aSucceeded, nsString aData, int32_t aStartOffset, int32_t aEndOffset);
+
+  /*
+   * Text selection setters. The sync ones will be ultimately replaced
+   * with the async ones below.
+   */
   [Nested=inside_sync] sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
                                        int32_t aStartOffset, int32_t aEndOffset)
     returns(bool aSucceeded);
@@ -227,6 +232,7 @@ child:
   async SetTextSelection(uint64_t aStartID, int32_t aStartOffset,
                      uint64_t aEndID, int32_t aEndOffset,
                      int32_t aSelectionNum);
+  async RemoveTextSelection(uint64_t aID, int32_t aSelectionNum);
 
   async ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
                           uint32_t aScrollType);

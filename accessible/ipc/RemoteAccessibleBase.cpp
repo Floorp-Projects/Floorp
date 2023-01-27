@@ -1452,6 +1452,18 @@ void RemoteAccessibleBase<Derived>::SelectionRanges(
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::RemoveFromSelection(int32_t aSelectionNum) {
+  MOZ_ASSERT(IsHyperText());
+  if (SelectionCount() <= aSelectionNum) {
+    return false;
+  }
+
+  Unused << mDoc->SendRemoveTextSelection(mID, aSelectionNum);
+
+  return true;
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
     int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
   if (!mCachedFields) {

@@ -219,6 +219,14 @@ class HyperTextAccessibleBase {
     return SetSelectionBoundsAt(-1, aStartOffset, aEndOffset);
   }
 
+  /**
+   * Removes the specified selection.
+   * @return true if succeeded
+   */
+  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool RemoveFromSelection(
+      int32_t aSelectionNum) = 0;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

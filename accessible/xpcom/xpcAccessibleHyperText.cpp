@@ -372,11 +372,14 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->RemoveFromSelection(aSelectionNum);
-  } else {
-    mIntl->AsRemote()->RemoveFromSelection(aSelectionNum);
+#if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
+#endif
+
+  Intl()->RemoveFromSelection(aSelectionNum);
   return NS_OK;
 }
 
