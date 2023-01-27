@@ -31,7 +31,6 @@ const ENABLED_PREF = "contextualSearch.enabled";
 
 const VIEW_TEMPLATE = {
   attributes: {
-    role: "group",
     selectable: true,
   },
   children: [

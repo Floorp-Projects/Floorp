@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Query selector for selectable elements in tip and dynamic results.
-const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable=true]";
+const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
 
 const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
 const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
@@ -164,12 +164,12 @@ export class UrlbarView {
       throw new Error(`UrlbarView: Index ${val} is out of bounds.`);
     }
 
-    // If the row itself isn't selectable, select the first element inside it
-    // that is. If it doesn't contain a selectable element, clear the selection.
-    let element = items[val];
-    if (!this.#isSelectableElement(element)) {
-      let next = this.#getNextSelectableElement(element);
-      element = this.#getRowFromElement(next) == element ? next : null;
+    // Select the first selectable element inside the row. If it doesn't
+    // contain a selectable element, clear the selection.
+    let row = items[val];
+    let element = this.#getNextSelectableElement(row);
+    if (this.#getRowFromElement(element) != row) {
+      element = null;
     }
 
     this.#selectElement(element);
@@ -329,8 +329,9 @@ export class UrlbarView {
     // aria-activedescendant so the user doesn't think they have to press
     // Enter to enter search mode. See bug 1647929.
     const isSkippableTabToSearchAnnounce = selectedElt => {
+      let result = this.getResultFromElement(selectedElt);
       let skipAnnouncement =
-        selectedElt?.result?.providerName == "TabToSearch" &&
+        result?.providerName == "TabToSearch" &&
         !this.#announceTabToSearchOnSelection &&
         lazy.UrlbarPrefs.get("accessibility.tabToSearch.announceResults");
       if (skipAnnouncement) {
@@ -1109,6 +1110,21 @@ export class UrlbarView {
     item.className = "urlbarView-row";
     item._elements = new Map();
     item._buttons = new Map();
+
+    // A note about row selection. Any element in a row that can be selected
+    // will have the `selectable` attribute set on it. For typical rows, the
+    // selectable element is not the `.urlbarView-row` itself but rather the
+    // `.urlbarView-row-inner` inside it. That's because the `.urlbarView-row`
+    // also contains the row's buttons, which should not be selected when the
+    // main part of the row -- `.urlbarView-row-inner` -- is selected.
+    //
+    // Since it's the row itself and not the row-inner that is a child of the
+    // `role=listbox` element (the rows container, `this.#rows`), screen readers
+    // will not automatically recognize the row-inner as a listbox option. To
+    // compensate, we set `role=option` on the row-inner and `role=presentation`
+    // on the row itself so that screen readers ignore it.
+    item.setAttribute("role", "presentation");
+
     return item;
   }
 
@@ -1187,6 +1203,7 @@ export class UrlbarView {
       item._elements,
       viewTemplate
     );
+    this.#setRowSelectable(item, item._content.hasAttribute("selectable"));
   }
 
   #buildViewForDynamicType(type, parentNode, elementsByName, template) {
@@ -1220,6 +1237,8 @@ export class UrlbarView {
   }
 
   #createRowContentForBestMatch(item, result) {
+    item._content.toggleAttribute("selectable", true);
+
     let favicon = this.#createElement("img");
     favicon.className = "urlbarView-favicon";
     item._content.appendChild(favicon);
@@ -1304,27 +1323,6 @@ export class UrlbarView {
   }
 
   #addRowButton(item, { name, l10n, url }) {
-    if (!item._buttons.size) {
-      // If the content is marked as selectable, the screen reader will not be
-      // able to read the text directly child of the "urlbarView-row". As the
-      // group label is shown as pseudo element of urlbarView-row now, it isn't
-      // readable. To avoid it, we add an element for aria-label explictly,
-      // and set group label that should be read into it in #updateIndices().
-      const groupAriaLabel = this.#createElement("span");
-      groupAriaLabel.className = "urlbarView-group-aria-label";
-      item._content.insertBefore(groupAriaLabel, item._content.firstChild);
-      item._elements.set("groupAriaLabel", groupAriaLabel);
-
-      // When the row has buttons we set role=option on row-inner since the
-      // latter is the selectable logical row element when buttons are present.
-      // Since row-inner is not a child of the role=listbox element (the row
-      // container, this.#rows), screen readers will not automatically recognize
-      // it as a listbox option. To compensate, set role=presentation on the row
-      // so that screen readers ignore it.
-      item.setAttribute("role", "presentation");
-      item._content.setAttribute("role", "option");
-    }
-
     let button = this.#createElement("span");
     button.id = `${item.id}-button-${name}`;
     button.classList.add("urlbarView-button", "urlbarView-button-" + name);
@@ -1373,7 +1371,6 @@ export class UrlbarView {
       while (item.lastChild) {
         item.lastChild.remove();
       }
-      item.setAttribute("role", "option");
       item._elements.clear();
       item._buttons.clear();
       item._content = this.#createElement("span");
@@ -1556,13 +1553,7 @@ export class UrlbarView {
         break;
     }
 
-    if (isRowSelectable) {
-      let selectableElement = item._buttons.size ? item._content : item;
-      selectableElement.setAttribute("selectable", "true");
-    } else {
-      item.removeAttribute("selectable");
-      item._content.removeAttribute("selectable");
-    }
+    this.#setRowSelectable(item, isRowSelectable);
 
     if (result.providerName == "TabToSearch") {
       action.toggleAttribute("slide-in", true);
@@ -1648,6 +1639,16 @@ export class UrlbarView {
     }
   }
 
+  #setRowSelectable(item, isRowSelectable) {
+    item.toggleAttribute("row-selectable", isRowSelectable);
+    item._content.toggleAttribute("selectable", isRowSelectable);
+    if (isRowSelectable) {
+      item._content.setAttribute("role", "option");
+    } else {
+      item._content.removeAttribute("role");
+    }
+  }
+
   #iconForResult(result, iconUrlOverride = null) {
     return (
       (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
@@ -1728,8 +1729,7 @@ export class UrlbarView {
   }
 
   #updateRowForBestMatch(item, result) {
-    let selectableElement = item._buttons.size ? item._content : item;
-    selectableElement.setAttribute("selectable", "true");
+    this.#setRowSelectable(item, true);
 
     let favicon = item._elements.get("favicon");
     favicon.src = this.#iconForResult(result);
@@ -1781,39 +1781,18 @@ export class UrlbarView {
     // label in between.) Each row's label is determined by `#rowLabel()`.
     let currentLabel;
 
-    let visibleRowsExist = false;
     for (let i = 0; i < this.#rows.children.length; i++) {
       let item = this.#rows.children[i];
       item.result.rowIndex = i;
 
       let visible = this.#isElementVisible(item);
-      visibleRowsExist = visibleRowsExist || visible;
-
-      let label;
       if (visible) {
         this.visibleResults.push(item.result);
-        label = this.#rowLabel(item, currentLabel);
-        if (label) {
-          if (lazy.ObjectUtils.deepEqual(label, currentLabel)) {
-            label = null;
-          } else {
-            currentLabel = label;
-          }
-        }
       }
 
-      const groupAriaLabel = item._elements.get("groupAriaLabel");
-
-      if (label) {
-        this.#setElementL10n(item, {
-          attribute: "label",
-          id: label.id,
-          args: label.args,
-        });
-        groupAriaLabel?.setAttribute("aria-label", item.getAttribute("label"));
-      } else {
-        this.#removeElementL10n(item, { attribute: "label" });
-        groupAriaLabel?.removeAttribute("aria-label");
+      let newLabel = this.#updateRowLabel(item, visible, currentLabel);
+      if (newLabel) {
+        currentLabel = newLabel;
       }
     }
 
@@ -1823,11 +1802,77 @@ export class UrlbarView {
       selectableElement.elementIndex = uiIndex++;
       selectableElement = this.#getNextSelectableElement(selectableElement);
     }
-    if (visibleRowsExist) {
+
+    if (this.visibleResults.length) {
       this.panel.removeAttribute("noresults");
     } else {
       this.panel.setAttribute("noresults", "true");
     }
+  }
+
+  /**
+   * Sets or removes the group label from a row. Designed to be called
+   * iteratively over each row.
+   *
+   * @param {Element} item
+   *   A row in the view.
+   * @param {boolean} isVisible
+   *   Whether the row is visible. This can be computed by the method itself,
+   *   but it's a parameter as an optimization since the caller is expected to
+   *   know it.
+   * @param {object} currentLabel
+   *   The current group label during row iteration.
+   * @returns {object}
+   *   If the given row should not have a label, returns null. Otherwise returns
+   *   an l10n object for the label's l10n string: `{ id, args }`
+   */
+  #updateRowLabel(item, isVisible, currentLabel) {
+    let label;
+    if (isVisible) {
+      label = this.#rowLabel(item, currentLabel);
+      if (label && lazy.ObjectUtils.deepEqual(label, currentLabel)) {
+        label = null;
+      }
+    }
+
+    // When the row-inner is selected, screen readers won't naturally read the
+    // label because it's a pseudo-element of the row, not the row-inner. To
+    // compensate, for rows that have labels we add an element to the row-inner
+    // with `aria-label` and no text content. Rows that don't have labels won't
+    // have this element.
+    let groupAriaLabel = item._elements.get("groupAriaLabel");
+
+    if (!label) {
+      this.#removeElementL10n(item, { attribute: "label" });
+      if (groupAriaLabel) {
+        groupAriaLabel.remove();
+        item._elements.delete("groupAriaLabel");
+      }
+      return null;
+    }
+
+    this.#setElementL10n(item, {
+      attribute: "label",
+      id: label.id,
+      args: label.args,
+    });
+
+    if (!groupAriaLabel) {
+      groupAriaLabel = this.#createElement("span");
+      groupAriaLabel.className = "urlbarView-group-aria-label";
+      item._content.insertBefore(groupAriaLabel, item._content.firstChild);
+      item._elements.set("groupAriaLabel", groupAriaLabel);
+    }
+
+    // `aria-label` must be a string, not an l10n ID, so first fetch the
+    // localized value and then set it as the attribute. There's no relevant
+    // aria attribute that uses l10n IDs.
+    this.#l10nCache.ensure(label).then(() => {
+      let message = this.#l10nCache.get(label);
+      groupAriaLabel.setAttribute("aria-label", message?.attributes.label);
+    });
+
+    return label;
   }
 
   /**
@@ -1967,7 +2012,9 @@ export class UrlbarView {
     if (element) {
       element.toggleAttribute("selected", true);
       element.setAttribute("aria-selected", "true");
-      row?.toggleAttribute("selected", true);
+      if (row?.hasAttribute("row-selectable")) {
+        row?.toggleAttribute("selected", true);
+      }
     }
     this.#setAccessibleFocus(setAccessibleFocus && element);
     this.#selectedElement = element;

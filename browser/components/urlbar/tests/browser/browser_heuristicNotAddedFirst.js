@@ -51,10 +51,6 @@ add_task(async function slowHeuristicSelected() {
   // The first result should be the heuristic and it should be selected.
   let actualHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
   Assert.equal(actualHeuristic.type, UrlbarUtils.RESULT_TYPE.SEARCH);
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElement(win),
-    actualHeuristic.element.row
-  );
   Assert.equal(UrlbarTestUtils.getSelectedElementIndex(win), 0);
 
   // Check the second result for good measure.

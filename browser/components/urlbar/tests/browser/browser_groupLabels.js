@@ -447,7 +447,7 @@ add_task(async function ariaLabel() {
 
   const expectedRows = [
     { hasGroupAriaLabel: true, ariaLabel: FIREFOX_SUGGEST_LABEL },
-    { hasGroupAriaLabel: true, ariaLabel: null },
+    { hasGroupAriaLabel: false },
     { hasGroupAriaLabel: false },
   ];
   await checkGroupAriaLabels(expectedRows);

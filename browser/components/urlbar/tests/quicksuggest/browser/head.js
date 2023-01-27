@@ -360,8 +360,7 @@ async function doImpressionOnlyTest({
         (r.result.payload.url ||
           (r.result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
             (r.result.payload.query || r.result.payload.suggestion))) &&
-        (r.hasAttribute("selectable") ||
-          r.querySelector("urlbarView-row-inner[selectable]"))
+        r.hasAttribute("row-selectable")
       ) {
         otherRow = r;
       }

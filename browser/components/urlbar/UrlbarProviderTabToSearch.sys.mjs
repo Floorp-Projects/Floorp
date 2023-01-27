@@ -26,7 +26,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";
 const VIEW_TEMPLATE = {
   attributes: {
-    role: "group",
     selectable: "true",
   },
   children: [
