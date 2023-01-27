@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Index.h"
+#include "SampleIterator.h"
 
 #include <algorithm>
 #include <limits>
@@ -71,7 +71,7 @@ bool RangeFinder::Contains(MediaByteRange aByteRange) {
   return false;
 }
 
-SampleIterator::SampleIterator(Index* aIndex)
+SampleIterator::SampleIterator(MP4SampleIndex* aIndex)
     : mIndex(aIndex), mCurrentMoof(0), mCurrentSample(0) {
   mIndex->RegisterIterator(this);
 }
@@ -413,8 +413,9 @@ Microseconds SampleIterator::GetNextKeyframeTime() {
   return -1;
 }
 
-Index::Index(const IndiceWrapper& aIndices, ByteStream* aSource,
-             uint32_t aTrackId, bool aIsAudio)
+MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
+                               ByteStream* aSource, uint32_t aTrackId,
+                               bool aIsAudio)
     : mSource(aSource), mIsAudio(aIsAudio) {
   if (!aIndices.Length()) {
     mMoofParser =
@@ -495,14 +496,14 @@ Index::Index(const IndiceWrapper& aIndices, ByteStream* aSource,
   }
 }
 
-Index::~Index() = default;
+MP4SampleIndex::~MP4SampleIndex() = default;
 
-void Index::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges) {
+void MP4SampleIndex::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges) {
   UpdateMoofIndex(aByteRanges, false);
 }
 
-void Index::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges,
-                            bool aCanEvict) {
+void MP4SampleIndex::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges,
+                                     bool aCanEvict) {
   if (!mMoofParser) {
     return;
   }
@@ -529,7 +530,7 @@ void Index::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges,
   }
 }
 
-Microseconds Index::GetEndCompositionIfBuffered(
+Microseconds MP4SampleIndex::GetEndCompositionIfBuffered(
     const MediaByteRangeSet& aByteRanges) {
   FallibleTArray<Sample>* index;
   if (mMoofParser) {
@@ -556,7 +557,7 @@ Microseconds Index::GetEndCompositionIfBuffered(
   return 0;
 }
 
-TimeIntervals Index::ConvertByteRangesToTimeRanges(
+TimeIntervals MP4SampleIndex::ConvertByteRangesToTimeRanges(
     const MediaByteRangeSet& aByteRanges) {
   if (aByteRanges == mLastCachedRanges) {
     return mLastBufferedRanges;
@@ -670,7 +671,7 @@ TimeIntervals Index::ConvertByteRangesToTimeRanges(
   return ranges;
 }
 
-uint64_t Index::GetEvictionOffset(Microseconds aTime) {
+uint64_t MP4SampleIndex::GetEvictionOffset(Microseconds aTime) {
   uint64_t offset = std::numeric_limits<uint64_t>::max();
   if (mMoofParser) {
     // We need to keep the whole moof if we're keeping any of it because the
@@ -696,11 +697,11 @@ uint64_t Index::GetEvictionOffset(Microseconds aTime) {
   return offset;
 }
 
-void Index::RegisterIterator(SampleIterator* aIterator) {
+void MP4SampleIndex::RegisterIterator(SampleIterator* aIterator) {
   mIterators.AppendElement(aIterator);
 }
 
-void Index::UnregisterIterator(SampleIterator* aIterator) {
+void MP4SampleIndex::UnregisterIterator(SampleIterator* aIterator) {
   mIterators.RemoveElement(aIterator);
 }
 

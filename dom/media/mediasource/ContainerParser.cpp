@@ -19,9 +19,9 @@
 #ifdef MOZ_FMP4
 #  include "AtomType.h"
 #  include "BufferReader.h"
-#  include "Index.h"
-#  include "MP4Interval.h"
 #  include "ByteStream.h"
+#  include "MP4Interval.h"
+#  include "SampleIterator.h"
 #endif
 #include "SourceBufferResource.h"
 #include <algorithm>
