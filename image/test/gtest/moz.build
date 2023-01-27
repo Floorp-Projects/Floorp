@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
 
 TEST_HARNESS_FILES.gtest += [
     "animated-with-extra-image-sub-blocks.gif",
+    "blend.avif",
     "blend.gif",
     "blend.png",
     "blend.webp",
@@ -57,6 +58,7 @@ TEST_HARNESS_FILES.gtest += [
     "downscaled.png",
     "downscaled.webp",
     "exif_resolution.jpg",
+    "first-frame-green.avif",
     "first-frame-green.gif",
     "first-frame-green.png",
     "first-frame-green.webp",
