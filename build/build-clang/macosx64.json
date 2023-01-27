@@ -5,6 +5,5 @@
     "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "ar": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ar",
     "ranlib": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ranlib",
-    "libtool": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-libtool",
     "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang"
 }
