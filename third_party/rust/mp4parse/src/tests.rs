@@ -6,16 +6,17 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use super::read_mp4;
+use super::Error;
 use super::ParseStrictness;
-use super::{Error, Status};
 use fallible_collections::TryRead as _;
 
 use std::convert::TryInto as _;
 use std::io::Cursor;
 use std::io::Read as _;
-use test_assembler::*;
+extern crate test_assembler;
+use self::test_assembler::*;
 
-use crate::boxes::BoxType;
+use boxes::BoxType;
 
 enum BoxSize {
     Short(u32),
@@ -121,7 +122,7 @@ fn read_box_header_short_unknown_size() {
 fn read_box_header_short_invalid_size() {
     let mut stream = make_box(BoxSize::UncheckedShort(2), b"test", |s| s);
     match super::read_box_header(&mut stream) {
-        Err(Error::InvalidData(s)) => assert_eq!(s, Status::BoxBadSize),
+        Err(Error::InvalidData(s)) => assert_eq!(s, "malformed size"),
         _ => panic!("unexpected result reading box with invalid size"),
     };
 }
@@ -130,7 +131,7 @@ fn read_box_header_short_invalid_size() {
 fn read_box_header_long_invalid_size() {
     let mut stream = make_box(BoxSize::UncheckedLong(2), b"test", |s| s);
     match super::read_box_header(&mut stream) {
-        Err(Error::InvalidData(s)) => assert_eq!(s, Status::BoxBadWideSize),
+        Err(Error::InvalidData(s)) => assert_eq!(s, "malformed wide size"),
         _ => panic!("unexpected result reading box with invalid size"),
     };
 }
@@ -489,10 +490,7 @@ fn read_hdlr_multiple_nul_in_name() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 45);
-    assert_eq!(
-        super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Strict)),
-        super::Status::HdlrNameMultipleNul,
-    );
+    assert!(super::read_hdlr(&mut stream, ParseStrictness::Strict).is_err());
 }
 
 #[test]
@@ -517,10 +515,13 @@ fn read_hdlr_unsupported_version() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    assert_eq!(
-        super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Normal)),
-        super::Status::HdlrUnsupportedVersion,
-    );
+    match super::read_hdlr(&mut stream, ParseStrictness::Normal) {
+        Err(Error::Unsupported(msg)) => assert_eq!("hdlr version", msg),
+        result => {
+            eprintln!("{:?}", result);
+            panic!("expected Error::Unsupported")
+        }
+    }
 }
 
 #[test]
@@ -532,10 +533,17 @@ fn read_hdlr_invalid_pre_defined_field() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    assert_eq!(
-        super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Strict)),
-        super::Status::HdlrPredefinedNonzero,
-    );
+    match super::read_hdlr(&mut stream, ParseStrictness::Strict) {
+        Err(Error::InvalidData(msg)) => assert_eq!(
+            "The HandlerBox 'pre_defined' field shall be 0 \
+             per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2",
+            msg
+        ),
+        result => {
+            eprintln!("{:?}", result);
+            panic!("expected Error::InvalidData")
+        }
+    }
 }
 
 #[test]
@@ -547,10 +555,17 @@ fn read_hdlr_invalid_reserved_field() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    assert_eq!(
-        super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Strict)),
-        super::Status::HdlrReservedNonzero,
-    );
+    match super::read_hdlr(&mut stream, ParseStrictness::Strict) {
+        Err(Error::InvalidData(msg)) => assert_eq!(
+            "The HandlerBox 'reserved' fields shall be 0 \
+             per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2",
+            msg
+        ),
+        result => {
+            eprintln!("{:?}", result);
+            panic!("expected Error::InvalidData")
+        }
+    }
 }
 
 #[test]
@@ -562,10 +577,17 @@ fn read_hdlr_zero_length_name() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    assert_eq!(
-        super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Normal)),
-        super::Status::HdlrNameNoNul,
-    );
+    match super::read_hdlr(&mut stream, ParseStrictness::Normal) {
+        Err(Error::InvalidData(msg)) => assert_eq!(
+            "The HandlerBox 'name' field shall be null-terminated \
+             per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2",
+            msg
+        ),
+        result => {
+            eprintln!("{:?}", result);
+            panic!("expected Error::InvalidData")
+        }
+    }
 }
 
 #[test]
@@ -1256,7 +1278,7 @@ fn read_esds_invalid_descriptor() {
     let mut stream = iter.next_box().unwrap().unwrap();
 
     match super::read_esds(&mut stream) {
-        Err(Error::InvalidData(s)) => assert_eq!(s, Status::EsdsBadDescriptor),
+        Err(Error::InvalidData(s)) => assert_eq!(s, "Invalid descriptor."),
         _ => panic!("unexpected result with invalid descriptor"),
     }
 }

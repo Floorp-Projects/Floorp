@@ -16,14 +16,13 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 static void CheckFrameAnimatorBlendResults(const ImageTestCase& aTestCase,
-                                           RasterImage* aImage, uint8_t aFuzz) {
+                                           RasterImage* aImage) {
   // Allow the animation to actually begin.
   aImage->IncrementAnimationConsumers();
 
   // Initialize for the first frame so we can advance.
   TimeStamp now = TimeStamp::Now();
   aImage->RequestRefresh(now);
-  EXPECT_EQ(aImage->GetFrameIndex(imgIContainer::FRAME_CURRENT), 0);
 
   RefPtr<SourceSurface> surface =
       aImage->GetFrame(imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_NONE);
@@ -31,19 +30,18 @@ static void CheckFrameAnimatorBlendResults(const ImageTestCase& aTestCase,
 
   CheckGeneratedSurface(surface, IntRect(0, 0, 50, 50),
                         BGRAColor::Transparent(),
-                        aTestCase.ChooseColor(BGRAColor::Red()), aFuzz);
+                        aTestCase.ChooseColor(BGRAColor::Red()));
 
   // Advance to the next/final frame.
   now = TimeStamp::Now() + TimeDuration::FromMilliseconds(500);
   aImage->RequestRefresh(now);
-  EXPECT_EQ(aImage->GetFrameIndex(imgIContainer::FRAME_CURRENT), 1);
 
   surface =
       aImage->GetFrame(imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_NONE);
   ASSERT_TRUE(surface != nullptr);
   CheckGeneratedSurface(surface, IntRect(0, 0, 50, 50),
                         aTestCase.ChooseColor(BGRAColor::Green()),
-                        aTestCase.ChooseColor(BGRAColor::Red()), aFuzz);
+                        aTestCase.ChooseColor(BGRAColor::Red()));
 }
 
 template <typename Func>
@@ -100,10 +98,9 @@ static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
   aResultChecker(rasterImage.get());
 }
 
-static void CheckFrameAnimatorBlend(const ImageTestCase& aTestCase,
-                                    uint8_t aFuzz = 0) {
+static void CheckFrameAnimatorBlend(const ImageTestCase& aTestCase) {
   WithFrameAnimatorDecode(aTestCase, [&](RasterImage* aImage) {
-    CheckFrameAnimatorBlendResults(aTestCase, aImage, aFuzz);
+    CheckFrameAnimatorBlendResults(aTestCase, aImage);
   });
 }
 
@@ -122,8 +119,4 @@ TEST_F(ImageFrameAnimator, BlendPNGWithFilter) {
 
 TEST_F(ImageFrameAnimator, BlendWebPWithFilter) {
   CheckFrameAnimatorBlend(BlendAnimatedWebPTestCase());
-}
-
-TEST_F(ImageFrameAnimator, BlendAVIFWithFilter) {
-  CheckFrameAnimatorBlend(BlendAnimatedAVIFTestCase(), 1);
 }

@@ -316,7 +316,7 @@ TEST(MP4Metadata, test_case_mp4)
           << tests[test].mFilename;
       if (tests[test].mHasVideoIndice) {
         for (size_t i = 0; i < indices.Ref()->Length(); i++) {
-          MP4SampleIndex::Indice data;
+          Index::Indice data;
           EXPECT_TRUE(indices.Ref()->GetIndice(i, data))
               << tests[test].mFilename;
           EXPECT_TRUE(data.start_offset <= data.end_offset)
@@ -349,7 +349,7 @@ TEST(MP4Metadata, test_case_mp4)
           metadata.GetTrackIndice(audioInfo->mTrackId);
       EXPECT_TRUE(!!indices.Ref()) << tests[test].mFilename;
       for (size_t i = 0; i < indices.Ref()->Length(); i++) {
-        MP4SampleIndex::Indice data;
+        Index::Indice data;
         EXPECT_TRUE(indices.Ref()->GetIndice(i, data)) << tests[test].mFilename;
         EXPECT_TRUE(data.start_offset <= data.end_offset)
             << tests[test].mFilename;
