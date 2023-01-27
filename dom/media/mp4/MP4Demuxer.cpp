@@ -13,7 +13,6 @@
 #include "AnnexB.h"
 #include "BufferStream.h"
 #include "H264.h"
-#include "Index.h"
 #include "MP4Decoder.h"
 #include "MP4Metadata.h"
 #include "MoofParser.h"
@@ -23,6 +22,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "SampleIterator.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 mozilla::LogModule* GetDemuxerLog() { return gMediaDemuxerLog; }
@@ -66,7 +66,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
   RefPtr<MediaResource> mResource;
   RefPtr<ResourceStream> mStream;
   UniquePtr<TrackInfo> mInfo;
-  RefPtr<Index> mIndex;
+  RefPtr<MP4SampleIndex> mIndex;
   UniquePtr<SampleIterator> mIterator;
   Maybe<media::TimeUnit> mNextKeyframeTime;
   // Queued samples extracted by the demuxer, but not yet returned.
@@ -309,7 +309,8 @@ MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
     : mResource(aResource),
       mStream(new ResourceStream(aResource)),
       mInfo(std::move(aInfo)),
-      mIndex(new Index(aIndices, mStream, mInfo->mTrackId, mInfo->IsAudio())),
+      mIndex(new MP4SampleIndex(aIndices, mStream, mInfo->mTrackId,
+                                mInfo->IsAudio())),
       mIterator(MakeUnique<SampleIterator>(mIndex)),
       mNeedReIndex(true) {
   EnsureUpToDateIndex();  // Force update of index
