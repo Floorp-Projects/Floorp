@@ -14,7 +14,6 @@ PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
     : Performance(aWorkerPrivate->GlobalScope()),
       mWorkerPrivate(aWorkerPrivate) {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  mRTPCallerType = aWorkerPrivate->GlobalScope()->GetRTPCallerType();
 }
 
 PerformanceWorker::~PerformanceWorker() {
@@ -58,14 +57,6 @@ uint64_t PerformanceWorker::GetRandomTimelineSeed() {
     return mWorkerPrivate->GetRandomTimelineSeed();
   }
   return 0;
-}
-
-bool PerformanceWorker::CrossOriginIsolated() const {
-  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  if (mWorkerPrivate) {
-    return mWorkerPrivate->CrossOriginIsolated();
-  }
-  return false;
 }
 
 void PerformanceWorker::NoteShuttingDown() { mWorkerPrivate = nullptr; }

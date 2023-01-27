@@ -98,20 +98,9 @@ Performance::Performance(nsIGlobalObject* aGlobal)
       mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
-      mRTPCallerType(
-          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
-  MOZ_ASSERT(!NS_IsMainThread());
-}
-
-Performance::Performance(nsPIDOMWindowInner* aWindow)
-    : DOMEventTargetHelper(aWindow),
-      mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
-      mPendingNotificationObserversTask(false),
-      mPendingResourceTimingBufferFullEvent(false),
-      mRTPCallerType(
-          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
-  MOZ_ASSERT(NS_IsMainThread());
-}
+      mRTPCallerType(aGlobal->GetRTPCallerType()),
+      mCrossOriginIsolated(aGlobal->CrossOriginIsolated()),
+      mShouldResistFingerprinting(aGlobal->ShouldResistFingerprinting()) {}
 
 Performance::~Performance() = default;
 

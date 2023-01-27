@@ -91,12 +91,10 @@ NS_INTERFACE_MAP_END_INHERITING(Performance)
 PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                                              nsDOMNavigationTiming* aDOMTiming,
                                              nsITimedChannel* aChannel)
-    : Performance(aWindow),
+    : Performance(aWindow->AsGlobal()),
       mDOMTiming(aDOMTiming),
-      mChannel(aChannel),
-      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()) {
+      mChannel(aChannel) {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
-  mRTPCallerType = aWindow->AsGlobal()->GetRTPCallerType();
   if (StaticPrefs::dom_enable_event_timing()) {
     mEventCounts = new class EventCounts(GetParentObject());
   }
@@ -449,10 +447,6 @@ void PerformanceMainThread::QueueNavigationTimingEntry() {
   UpdateNavigationTimingEntry();
 
   QueueEntry(mDocEntry);
-}
-
-bool PerformanceMainThread::CrossOriginIsolated() const {
-  return mCrossOriginIsolated;
 }
 
 EventCounts* PerformanceMainThread::EventCounts() {

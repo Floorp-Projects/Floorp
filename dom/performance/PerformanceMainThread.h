@@ -88,8 +88,6 @@ class PerformanceMainThread final : public Performance,
   void UpdateNavigationTimingEntry() override;
   void QueueNavigationTimingEntry() override;
 
-  bool CrossOriginIsolated() const override;
-
   size_t SizeOfEventEntries(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   static constexpr uint32_t kDefaultEventTimingBufferSize = 150;
@@ -119,8 +117,6 @@ class PerformanceMainThread final : public Performance,
   RefPtr<PerformanceNavigation> mNavigation;
   RefPtr<PerformancePaintTiming> mFCPTiming;
   JS::Heap<JSObject*> mMozMemory;
-
-  const bool mCrossOriginIsolated;
 
   nsTArray<RefPtr<PerformanceEventTiming>> mEventTimingEntries;
 
