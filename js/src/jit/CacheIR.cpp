@@ -5310,23 +5310,68 @@ AttachDecision GetIteratorIRGenerator::tryAttachStub() {
 
   ValOperandId valId(writer.setInputOperandId(0));
 
-  TRY_ATTACH(tryAttachObject(valId));
+  if (mode_ == ICState::Mode::Megamorphic) {
+    TRY_ATTACH(tryAttachMegamorphic(valId));
+    return AttachDecision::NoAction;
+  }
+
+  TRY_ATTACH(tryAttachNativeIterator(valId));
   TRY_ATTACH(tryAttachNullOrUndefined(valId));
-  TRY_ATTACH(tryAttachGeneric(valId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
 }
 
-AttachDecision GetIteratorIRGenerator::tryAttachObject(ValOperandId valId) {
+AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
+    ValOperandId valId) {
+  MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
+
   if (!val_.isObject()) {
     return AttachDecision::NoAction;
   }
+
+  RootedObject obj(cx_, &val_.toObject());
   ObjOperandId objId = writer.guardToObject(valId);
-  writer.objectToIteratorResult(objId, cx_->compartment()->enumeratorsAddr());
+
+  if (!obj->shape()->cache().isIterator() ||
+      obj->shape()->cache().toIterator() != iterObj_) {
+    return AttachDecision::NoAction;
+  }
+  auto* nobj = &obj->as<NativeObject>();
+
+  // Guard on the receiver's shape.
+  TestMatchingNativeReceiver(writer, nobj, objId);
+
+  // Ensure the receiver has no dense elements.
+  writer.guardNoDenseElements(objId);
+
+  // Do the same for the objects on the proto chain.
+  GeneratePrototypeHoleGuards(writer, nobj, objId,
+                              /* alwaysGuardFirstProto = */ false);
+
+  ObjOperandId iterId = writer.guardAndGetIterator(
+      objId, iterObj_, cx_->compartment()->enumeratorsAddr());
+  writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
-  trackAttached("Object");
+  trackAttached("NativeIterator");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetIteratorIRGenerator::tryAttachMegamorphic(
+    ValOperandId valId) {
+  MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
+
+  if (val_.isObject()) {
+    ObjOperandId objId = writer.guardToObject(valId);
+    writer.objectToIteratorResult(objId, cx_->compartment()->enumeratorsAddr());
+    trackAttached("MegamorphicObject");
+  } else {
+    writer.valueToIteratorResult(valId);
+    trackAttached("MegamorphicValue");
+  }
+  writer.returnFromIC();
+
   return AttachDecision::Attach;
 }
 
@@ -5353,14 +5398,6 @@ AttachDecision GetIteratorIRGenerator::tryAttachNullOrUndefined(
   writer.returnFromIC();
 
   trackAttached("NullOrUndefined");
-  return AttachDecision::Attach;
-}
-
-AttachDecision GetIteratorIRGenerator::tryAttachGeneric(ValOperandId valId) {
-  writer.valueToIteratorResult(valId);
-  writer.returnFromIC();
-
-  trackAttached("Generic");
   return AttachDecision::Attach;
 }
 

@@ -4613,6 +4613,40 @@ void CacheIRCompiler::emitActivateIterator(Register objBeingIterated,
   masm.registerIterator(scratch, nativeIter, scratch2);
 }
 
+bool CacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
+                                              uint32_t iterOffset,
+                                              uint32_t enumeratorsAddrOffset,
+                                              ObjOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister niScratch(allocator, masm);
+
+  StubFieldOffset iterField(iterOffset, StubField::Type::JSObject);
+
+  Register output = allocator.defineRegister(masm, resultId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Load our PropertyIteratorObject* and its NativeIterator.
+  emitLoadStubField(iterField, output);
+
+  Address slotAddr(output, PropertyIteratorObject::offsetOfIteratorSlot());
+  masm.loadPrivate(slotAddr, niScratch);
+
+  // Ensure the iterator is reusable: see NativeIterator::isReusable.
+  masm.branchIfNativeIteratorNotReusable(niScratch, failure->label());
+
+  emitActivateIterator(obj, output, niScratch, scratch1, scratch2,
+                       enumeratorsAddrOffset);
+  return true;
+}
+
 bool CacheIRCompiler::emitObjectToIteratorResult(
     ObjOperandId objId, uint32_t enumeratorsAddrOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
