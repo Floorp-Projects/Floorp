@@ -324,18 +324,18 @@ macosx64-aarch64-clang-15-raw:
         symbol: TM(clang-15-aarch64-raw)
     worker-type: b-linux-large-gcp
     worker:
-        env:
-            OSX_ARCH: arm64
         max-run-time: 3600
     run:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
             - 'build/build-clang/clang-15.json'
             - 'build/build-clang/skip-3-stages.json'
             - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
             - 'build/build-clang/clang-15.json'
             - 'build/build-clang/skip-3-stages.json'
             - 'build/build-clang/4stages-pgo.json'
@@ -716,18 +716,18 @@ macosx64-aarch64-clang-trunk-raw:
         symbol: TM(clang-trunk-aarch64-raw)
     worker-type: b-linux-large-gcp
     worker:
-        env:
-            OSX_ARCH: arm64
         max-run-time: 3600
     run:
         script: build-clang.sh
         arguments:
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
             - 'build/build-clang/clang-trunk.json'
             - 'build/build-clang/skip-3-stages.json'
             - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/macosx64-aarch64.json'
             - 'build/build-clang/clang-trunk.json'
             - 'build/build-clang/skip-3-stages.json'
             - 'build/build-clang/4stages-pgo.json'
