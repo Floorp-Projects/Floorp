@@ -39,6 +39,31 @@ const kTests = [
     computed: `${kInitialFamily}, Courier, something-else`,
     description: "Generic is prepended to the font-family if none is found",
   },
+  {
+    specified: "Material Icons, Material Symbols Outlined, something-else, sans-serif",
+    computed: "Material Icons, Material Symbols Outlined, sans-serif, something-else",
+    description: "Known ligature-icon fonts remain ahead of the generic",
+  },
+  {
+    specified: "Material Icons, something-else, Material Symbols Outlined, sans-serif",
+    computed: "Material Icons, sans-serif, something-else, Material Symbols Outlined",
+    description: "Generic is moved ahead of the first non-allowlisted font",
+  },
+  {
+    specified: "Material Icons, something-else, Material Symbols Outlined",
+    computed: `Material Icons, ${kInitialFamily}, something-else, Material Symbols Outlined`,
+    description: "Default generic is inserted ahead of the first non-allowlisted font",
+  },
+  {
+    specified: "Material Icons, cursive, Material Symbols Outlined, serif",
+    computed: "Material Icons, serif, cursive, Material Symbols Outlined",
+    description: "cursive is not treated as a generic to be prioritized",
+  },
+  {
+    specified: "Material Icons, fantasy, Material Symbols Outlined",
+    computed: `Material Icons, ${kInitialFamily}, fantasy, Material Symbols Outlined`,
+    description: "fantasy is not treated as a generic to be prioritized",
+  },
 ];
 
 let systemFont;

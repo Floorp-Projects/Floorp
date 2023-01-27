@@ -1718,6 +1718,10 @@ bool Gecko_IsFontTechSupported(StyleFontFaceSourceTechFlags aFlag) {
       StyleFontFaceSourceFormatKeyword::None, aFlag);
 }
 
+bool Gecko_IsKnownIconFontFamily(const nsAtom* aFamilyName) {
+  return gfxPlatform::GetPlatform()->IsKnownIconFontFamily(aFamilyName);
+}
+
 bool Gecko_IsInServoTraversal() { return ServoStyleSet::IsInServoTraversal(); }
 
 bool Gecko_IsMainThread() { return NS_IsMainThread(); }

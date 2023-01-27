@@ -490,6 +490,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
       mozilla::StyleFontFaceSourceFormatKeyword aFormatHint,
       mozilla::StyleFontFaceSourceTechFlags aTechFlags);
 
+  bool IsKnownIconFontFamily(const nsAtom* aFamilyName) const;
+
   virtual bool DidRenderingDeviceReset(
       DeviceResetReason* aResetReason = nullptr) {
     return false;
