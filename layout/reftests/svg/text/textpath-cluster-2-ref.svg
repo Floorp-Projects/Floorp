@@ -1,0 +1,8 @@
+<svg height="250" width="250" xmlns="http://www.w3.org/2000/svg">
+  <defs> 
+    <path id="path" d="M 10 50 H 200" />
+  </defs>
+  <text font-size="36">
+    <textPath href="#path">abcd</textPath>
+  </text>
+</svg>
