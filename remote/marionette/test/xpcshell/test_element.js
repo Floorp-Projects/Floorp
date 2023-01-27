@@ -19,7 +19,7 @@ const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
   Ci.nsIMemoryReporterManager
 );
 
-class MockElement {
+class Element {
   constructor(tagName, attrs = {}) {
     this.tagName = tagName;
     this.localName = tagName;
@@ -54,7 +54,58 @@ class MockElement {
   }
 }
 
-class MockXULElement extends MockElement {
+class DOMElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+
+    this.isConnected = true;
+
+    if (typeof this.namespaceURI == "undefined") {
+      this.namespaceURI = XHTML_NS;
+    }
+
+    if (typeof this.ownerDocument == "undefined") {
+      this.ownerDocument = { designMode: "off" };
+    }
+
+    if (typeof this.ownerDocument.documentElement == "undefined") {
+      this.ownerDocument.documentElement = { namespaceURI: XHTML_NS };
+    }
+
+    if (typeof this.type == "undefined") {
+      this.type = "text";
+    }
+
+    if (this.localName == "option") {
+      this.selected = false;
+    }
+
+    if (
+      this.localName == "input" &&
+      ["checkbox", "radio"].includes(this.type)
+    ) {
+      this.checked = false;
+    }
+  }
+
+  getBoundingClientRect() {
+    return {
+      top: 0,
+      left: 0,
+      width: 100,
+      height: 100,
+    };
+  }
+}
+
+class SVGElement extends Element {
+  constructor(tagName, attrs = {}) {
+    super(tagName, attrs);
+    this.namespaceURI = SVG_NS;
+  }
+}
+
+class XULElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
     this.namespaceURI = XUL_NS;
@@ -68,66 +119,48 @@ class MockXULElement extends MockElement {
   }
 }
 
-const xulEl = new MockXULElement("text");
+const domEl = new DOMElement("p");
+const svgEl = new SVGElement("rect");
+const xulEl = new XULElement("text");
 
-const domElInPrivilegedDocument = new MockElement("input", {
+const domElInPrivilegedDocument = new Element("input", {
   nodePrincipal: { isSystemPrincipal: true },
 });
-const xulElInPrivilegedDocument = new MockXULElement("text", {
+const xulElInPrivilegedDocument = new XULElement("text", {
   nodePrincipal: { isSystemPrincipal: true },
 });
 
-function setupTest() {
-  const browser = Services.appShell.createWindowlessBrowser(false);
-
-  browser.document.body.innerHTML = `
-    <div id="foo" style="margin: 50px">
-      <iframe></iframe>
-      <video></video>
-      <svg xmlns="http://www.w3.org/2000/svg"></svg>
-      <textarea></textarea>
-    </div>
-  `;
-
-  const divEl = browser.document.querySelector("div");
-  const svgEl = browser.document.querySelector("svg");
-  const textareaEl = browser.document.querySelector("textarea");
-  const videoEl = browser.document.querySelector("video");
-
-  const iframeEl = browser.document.querySelector("iframe");
-  const childEl = iframeEl.contentDocument.createElement("div");
-  iframeEl.contentDocument.body.appendChild(childEl);
-
-  const shadowRoot = videoEl.openOrClosedShadowRoot;
-
-  return {
-    browser,
-    nodeCache: new NodeCache(),
-    childEl,
-    divEl,
-    iframeEl,
-    shadowRoot,
-    svgEl,
-    textareaEl,
-    videoEl,
-  };
+class WindowProxy {
+  get parent() {
+    return this;
+  }
+  get self() {
+    return this;
+  }
+  toString() {
+    return "[object Window]";
+  }
 }
+const domWin = new WindowProxy();
+const domFrame = new (class extends WindowProxy {
+  get parent() {
+    return domWin;
+  }
+})();
 
 add_test(function test_findClosest() {
-  const { divEl, videoEl } = setupTest();
+  equal(element.findClosest(domEl, "foo"), null);
 
-  equal(element.findClosest(divEl, "foo"), null);
-  equal(element.findClosest(videoEl, "div"), divEl);
+  let foo = new DOMElement("foo");
+  let bar = new DOMElement("bar");
+  bar.parentNode = foo;
+  equal(element.findClosest(bar, "foo"), foo);
 
   run_next_test();
 });
 
 add_test(function test_isSelected() {
-  const { browser, divEl } = setupTest();
-
-  const checkbox = browser.document.createElement("input");
-  checkbox.setAttribute("type", "checkbox");
-
+  let checkbox = new DOMElement("input", { type: "checkbox" });
   ok(!element.isSelected(checkbox));
   checkbox.checked = true;
   ok(element.isSelected(checkbox));
@@ -137,8 +170,7 @@ add_test(function test_isSelected() {
   checkbox.checked = false;
   ok(!element.isSelected(checkbox));
 
-  const option = browser.document.createElement("option");
-
+  let option = new DOMElement("option");
   ok(!element.isSelected(option));
   option.selected = true;
   ok(element.isSelected(option));
@@ -149,191 +181,121 @@ add_test(function test_isSelected() {
   ok(!element.isSelected(option));
 
   // anything else should not be selected
-  for (const type of [undefined, null, "foo", true, [], {}, divEl]) {
-    ok(!element.isSelected(type));
+  for (let typ of [domEl, undefined, null, "foo", true, [], {}]) {
+    ok(!element.isSelected(typ));
   }
 
   run_next_test();
 });
 
 add_test(function test_isElement() {
-  const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
-
-  ok(element.isElement(divEl));
+  ok(element.isElement(domEl));
   ok(element.isElement(svgEl));
   ok(element.isElement(xulEl));
-  ok(element.isElement(domElInPrivilegedDocument));
-  ok(element.isElement(xulElInPrivilegedDocument));
-
-  ok(!element.isElement(shadowRoot));
-  ok(!element.isElement(divEl.ownerGlobal));
-  ok(!element.isElement(iframeEl.contentWindow));
-
-  for (const type of [true, 42, {}, [], undefined, null]) {
-    ok(!element.isElement(type));
+  ok(!element.isElement(domWin));
+  ok(!element.isElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isElement(typ));
   }
 
   run_next_test();
 });
 
 add_test(function test_isDOMElement() {
-  const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
-
-  ok(element.isDOMElement(divEl));
-  ok(element.isDOMElement(svgEl));
+  ok(element.isDOMElement(domEl));
   ok(element.isDOMElement(domElInPrivilegedDocument));
-
-  ok(!element.isDOMElement(shadowRoot));
-  ok(!element.isDOMElement(divEl.ownerGlobal));
-  ok(!element.isDOMElement(iframeEl.contentWindow));
+  ok(element.isDOMElement(svgEl));
   ok(!element.isDOMElement(xulEl));
   ok(!element.isDOMElement(xulElInPrivilegedDocument));
-
-  for (const type of [true, 42, "foo", {}, [], undefined, null]) {
-    ok(!element.isDOMElement(type));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMElement(typ));
   }
 
   run_next_test();
 });
 
 add_test(function test_isXULElement() {
-  const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
-
   ok(element.isXULElement(xulEl));
   ok(element.isXULElement(xulElInPrivilegedDocument));
-
-  ok(!element.isXULElement(divEl));
   ok(!element.isXULElement(domElInPrivilegedDocument));
+  ok(!element.isXULElement(domEl));
   ok(!element.isXULElement(svgEl));
-  ok(!element.isXULElement(shadowRoot));
-  ok(!element.isXULElement(divEl.ownerGlobal));
-  ok(!element.isXULElement(iframeEl.contentWindow));
-
-  for (const type of [true, 42, "foo", {}, [], undefined, null]) {
-    ok(!element.isXULElement(type));
+  ok(!element.isXULElement(domWin));
+  ok(!element.isXULElement(domFrame));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isXULElement(typ));
   }
 
   run_next_test();
 });
 
 add_test(function test_isDOMWindow() {
-  const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
-
-  ok(element.isDOMWindow(divEl.ownerGlobal));
-  ok(element.isDOMWindow(iframeEl.contentWindow));
-
-  ok(!element.isDOMWindow(divEl));
-  ok(!element.isDOMWindow(svgEl));
-  ok(!element.isDOMWindow(shadowRoot));
+  ok(element.isDOMWindow(domWin));
+  ok(element.isDOMWindow(domFrame));
+  ok(!element.isDOMWindow(domEl));
   ok(!element.isDOMWindow(domElInPrivilegedDocument));
+  ok(!element.isDOMWindow(svgEl));
   ok(!element.isDOMWindow(xulEl));
-  ok(!element.isDOMWindow(xulElInPrivilegedDocument));
-
-  for (const type of [true, 42, {}, [], undefined, null]) {
-    ok(!element.isDOMWindow(type));
+  for (let typ of [true, 42, {}, [], undefined, null]) {
+    ok(!element.isDOMWindow(typ));
   }
-
-  run_next_test();
-});
-
-add_test(function test_isShadowRoot() {
-  const { browser, divEl, iframeEl, shadowRoot, svgEl } = setupTest();
-
-  ok(element.isShadowRoot(shadowRoot));
-
-  ok(!element.isShadowRoot(divEl));
-  ok(!element.isShadowRoot(svgEl));
-  ok(!element.isShadowRoot(divEl.ownerGlobal));
-  ok(!element.isShadowRoot(iframeEl.contentWindow));
-  ok(!element.isShadowRoot(xulEl));
-  ok(!element.isShadowRoot(domElInPrivilegedDocument));
-  ok(!element.isShadowRoot(xulElInPrivilegedDocument));
-
-  for (const type of [true, 42, "foo", {}, [], undefined, null]) {
-    ok(!element.isShadowRoot(type));
-  }
-
-  const documentFragment = browser.document.createDocumentFragment();
-  ok(!element.isShadowRoot(documentFragment));
 
   run_next_test();
 });
 
 add_test(function test_isReadOnly() {
-  const { browser, divEl, textareaEl } = setupTest();
-
-  const input = browser.document.createElement("input");
-  input.readOnly = true;
-  ok(element.isReadOnly(input));
-
-  textareaEl.readOnly = true;
-  ok(element.isReadOnly(textareaEl));
-
-  ok(!element.isReadOnly(divEl));
-  divEl.readOnly = true;
-  ok(!element.isReadOnly(divEl));
-
   ok(!element.isReadOnly(null));
+  ok(!element.isReadOnly(domEl));
+  ok(!element.isReadOnly(new DOMElement("p", { readOnly: true })));
+  ok(element.isReadOnly(new DOMElement("input", { readOnly: true })));
+  ok(element.isReadOnly(new DOMElement("textarea", { readOnly: true })));
 
   run_next_test();
 });
 
 add_test(function test_isDisabled() {
-  const { browser, divEl, svgEl } = setupTest();
+  ok(!element.isDisabled(new DOMElement("p")));
+  ok(!element.isDisabled(new SVGElement("rect", { disabled: true })));
+  ok(!element.isDisabled(new XULElement("browser", { disabled: true })));
 
-  const select = browser.document.createElement("select");
-  const option = browser.document.createElement("option");
-  select.appendChild(option);
-  select.disabled = true;
+  let select = new DOMElement("select", { disabled: true });
+  let option = new DOMElement("option");
+  option.parentNode = select;
   ok(element.isDisabled(option));
 
-  const optgroup = browser.document.createElement("optgroup");
+  let optgroup = new DOMElement("optgroup", { disabled: true });
   option.parentNode = optgroup;
-  ok(element.isDisabled(option));
-
   optgroup.parentNode = select;
+  select.disabled = false;
   ok(element.isDisabled(option));
 
-  select.disabled = false;
-  ok(!element.isDisabled(option));
-
-  for (const type of ["button", "input", "select", "textarea"]) {
-    const elem = browser.document.createElement(type);
-    ok(!element.isDisabled(elem));
-    elem.disabled = true;
-    ok(element.isDisabled(elem));
-  }
-
-  ok(!element.isDisabled(divEl));
-
-  svgEl.disabled = true;
-  ok(!element.isDisabled(svgEl));
-
-  ok(!element.isDisabled(new MockXULElement("browser", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("button", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("input", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("select", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("textarea", { disabled: true })));
 
   run_next_test();
 });
 
 add_test(function test_isEditingHost() {
-  const { browser, divEl, svgEl } = setupTest();
-
   ok(!element.isEditingHost(null));
-
-  ok(!element.isEditingHost(divEl));
-  divEl.contentEditable = true;
-  ok(element.isEditingHost(divEl));
-
-  ok(!element.isEditingHost(svgEl));
-  browser.document.designMode = "on";
-  ok(element.isEditingHost(svgEl));
+  ok(element.isEditingHost(new DOMElement("p", { isContentEditable: true })));
+  ok(
+    element.isEditingHost(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
 
   run_next_test();
 });
 
 add_test(function test_isEditable() {
-  const { browser, divEl, svgEl, textareaEl } = setupTest();
-
   ok(!element.isEditable(null));
+  ok(!element.isEditable(domEl));
+  ok(!element.isEditable(new DOMElement("textarea", { readOnly: true })));
+  ok(!element.isEditable(new DOMElement("textarea", { disabled: true })));
 
   for (let type of [
     "checkbox",
@@ -343,52 +305,34 @@ add_test(function test_isEditable() {
     "button",
     "image",
   ]) {
-    const input = browser.document.createElement("input");
-    input.setAttribute("type", type);
-
-    ok(!element.isEditable(input));
+    ok(!element.isEditable(new DOMElement("input", { type })));
   }
+  ok(element.isEditable(new DOMElement("input", { type: "text" })));
+  ok(element.isEditable(new DOMElement("input")));
 
-  const input = browser.document.createElement("input");
-  ok(element.isEditable(input));
-  input.setAttribute("type", "text");
-  ok(element.isEditable(input));
-
-  ok(element.isEditable(textareaEl));
-
-  const textareaDisabled = browser.document.createElement("textarea");
-  textareaDisabled.disabled = true;
-  ok(!element.isEditable(textareaDisabled));
-
-  const textareaReadOnly = browser.document.createElement("textarea");
-  textareaReadOnly.readOnly = true;
-  ok(!element.isEditable(textareaReadOnly));
-
-  ok(!element.isEditable(divEl));
-  divEl.contentEditable = true;
-  ok(element.isEditable(divEl));
-
-  ok(!element.isEditable(svgEl));
-  browser.document.designMode = "on";
-  ok(element.isEditable(svgEl));
+  ok(element.isEditable(new DOMElement("textarea")));
+  ok(
+    element.isEditable(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
+  ok(element.isEditable(new DOMElement("p", { isContentEditable: true })));
 
   run_next_test();
 });
 
 add_test(function test_isMutableFormControlElement() {
-  const { browser, divEl, textareaEl } = setupTest();
-
   ok(!element.isMutableFormControl(null));
-
-  ok(element.isMutableFormControl(textareaEl));
-
-  const textareaDisabled = browser.document.createElement("textarea");
-  textareaDisabled.disabled = true;
-  ok(!element.isMutableFormControl(textareaDisabled));
-
-  const textareaReadOnly = browser.document.createElement("textarea");
-  textareaReadOnly.readOnly = true;
-  ok(!element.isMutableFormControl(textareaReadOnly));
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("textarea", { readOnly: true })
+    )
+  );
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("textarea", { disabled: true })
+    )
+  );
 
   const mutableStates = new Set([
     "color",
@@ -406,74 +350,76 @@ add_test(function test_isMutableFormControlElement() {
     "url",
     "week",
   ]);
-  for (const type of mutableStates) {
-    const input = browser.document.createElement("input");
-    input.setAttribute("type", type);
-    ok(element.isMutableFormControl(input));
+  for (let type of mutableStates) {
+    ok(element.isMutableFormControl(new DOMElement("input", { type })));
   }
+  ok(element.isMutableFormControl(new DOMElement("textarea")));
 
-  const inputHidden = browser.document.createElement("input");
-  inputHidden.setAttribute("type", "hidden");
-  ok(!element.isMutableFormControl(inputHidden));
-
-  ok(!element.isMutableFormControl(divEl));
-  divEl.contentEditable = true;
-  ok(!element.isMutableFormControl(divEl));
-  browser.document.designMode = "on";
-  ok(!element.isMutableFormControl(divEl));
+  ok(
+    !element.isMutableFormControl(new DOMElement("input", { type: "hidden" }))
+  );
+  ok(!element.isMutableFormControl(new DOMElement("p")));
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("p", { isContentEditable: true })
+    )
+  );
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
 
   run_next_test();
 });
 
 add_test(function test_coordinates() {
-  const { divEl } = setupTest();
+  let p = element.coordinates(domEl);
+  ok(p.hasOwnProperty("x"));
+  ok(p.hasOwnProperty("y"));
+  equal("number", typeof p.x);
+  equal("number", typeof p.y);
 
-  let coords = element.coordinates(divEl);
-  ok(coords.hasOwnProperty("x"));
-  ok(coords.hasOwnProperty("y"));
-  equal(typeof coords.x, "number");
-  equal(typeof coords.y, "number");
-
-  deepEqual(element.coordinates(divEl), { x: 0, y: 0 });
-  deepEqual(element.coordinates(divEl, 10, 10), { x: 10, y: 10 });
-  deepEqual(element.coordinates(divEl, -5, -5), { x: -5, y: -5 });
+  deepEqual({ x: 50, y: 50 }, element.coordinates(domEl));
+  deepEqual({ x: 10, y: 10 }, element.coordinates(domEl, 10, 10));
+  deepEqual({ x: -5, y: -5 }, element.coordinates(domEl, -5, -5));
 
   Assert.throws(() => element.coordinates(null), /node is null/);
 
   Assert.throws(
-    () => element.coordinates(divEl, "string", undefined),
+    () => element.coordinates(domEl, "string", undefined),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, undefined, "string"),
+    () => element.coordinates(domEl, undefined, "string"),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, "string", "string"),
+    () => element.coordinates(domEl, "string", "string"),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, {}, undefined),
+    () => element.coordinates(domEl, {}, undefined),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, undefined, {}),
+    () => element.coordinates(domEl, undefined, {}),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, {}, {}),
+    () => element.coordinates(domEl, {}, {}),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, [], undefined),
+    () => element.coordinates(domEl, [], undefined),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, undefined, []),
+    () => element.coordinates(domEl, undefined, []),
     /Offset must be a number/
   );
   Assert.throws(
-    () => element.coordinates(divEl, [], []),
+    () => element.coordinates(domEl, [], []),
     /Offset must be a number/
   );
 
@@ -481,28 +427,25 @@ add_test(function test_coordinates() {
 });
 
 add_test(function test_isNodeReferenceKnown() {
-  const { browser, nodeCache, childEl, iframeEl, videoEl } = setupTest();
+  const browser = Services.appShell.createWindowlessBrowser(false);
+  const nodeCache = new NodeCache();
 
   // Unknown node reference
   ok(!element.isNodeReferenceKnown(browser.browsingContext, "foo", nodeCache));
 
   // Known node reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-  ok(
-    element.isNodeReferenceKnown(browser.browsingContext, videoElRef, nodeCache)
-  );
+  const el = browser.document.createElement("video");
+  const elRef = nodeCache.getOrCreateNodeReference(el);
+  ok(element.isNodeReferenceKnown(browser.browsingContext, elRef, nodeCache));
 
   // Different top-level browsing context
   const browser2 = Services.appShell.createWindowlessBrowser(false);
-  ok(
-    !element.isNodeReferenceKnown(
-      browser2.browsingContext,
-      videoElRef,
-      nodeCache
-    )
-  );
+  ok(!element.isNodeReferenceKnown(browser2.browsingContext, elRef, nodeCache));
 
   // Different child browsing context
+  const iframeEl = browser.document.createElement("iframe");
+  browser.document.body.appendChild(iframeEl);
+  const childEl = iframeEl.contentDocument.createElement("div");
   const childElRef = nodeCache.getOrCreateNodeReference(childEl);
   const childBrowsingContext = iframeEl.contentWindow.browsingContext;
   ok(element.isNodeReferenceKnown(childBrowsingContext, childElRef, nodeCache));
@@ -518,150 +461,64 @@ add_test(function test_isNodeReferenceKnown() {
 });
 
 add_test(function test_getKnownElement() {
-  const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
+  const browser = Services.appShell.createWindowlessBrowser(false);
+  const nodeCache = new NodeCache();
 
   // Unknown element reference
   Assert.throws(() => {
     element.getKnownElement(browser.browsingContext, "foo", nodeCache);
   }, /NoSuchElementError/);
 
-  // With a ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
-  Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, shadowRootRef, nodeCache);
-  }, /NoSuchElementError/);
-
   // Deleted element (eg. garbage collected)
-  let detachedEl = browser.document.createElement("div");
-  const detachedElRef = nodeCache.getOrCreateNodeReference(detachedEl);
+  let divEl = browser.document.createElement("div");
+  const divElRef = nodeCache.getOrCreateNodeReference(divEl);
 
-  // ... not connected to the DOM
-  Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, detachedElRef, nodeCache);
-  }, /StaleElementReferenceError/);
-
-  // ... element garbage collected
-  detachedEl = null;
+  divEl = null;
   MemoryReporter.minimizeMemoryUsage(() => {
     Assert.throws(() => {
-      element.getKnownElement(
-        browser.browsingContext,
-        detachedElRef,
-        nodeCache
-      );
+      element.getKnownElement(browser.browsingContext, divElRef, nodeCache);
     }, /StaleElementReferenceError/);
 
     run_next_test();
   });
 
   // Known element reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
+  let imgEl = browser.document.createElement("img");
+  browser.document.body.appendChild(imgEl);
+  const imgElRef = nodeCache.getOrCreateNodeReference(imgEl);
   equal(
-    element.getKnownElement(browser.browsingContext, videoElRef, nodeCache),
-    videoEl
+    element.getKnownElement(browser.browsingContext, imgElRef, nodeCache),
+    imgEl
   );
-});
-
-add_test(function test_getKnownShadowRoot() {
-  const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
-
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-
-  // Unknown ShadowRoot reference
-  Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, "foo", nodeCache);
-  }, /NoSuchShadowRootError/);
-
-  // With a HTMLElement reference
-  Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, videoElRef, nodeCache);
-  }, /NoSuchShadowRootError/);
-
-  // Known ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
-  equal(
-    element.getKnownShadowRoot(
-      browser.browsingContext,
-      shadowRootRef,
-      nodeCache
-    ),
-    shadowRoot
-  );
-
-  // Detached ShadowRoot host
-  let el = browser.document.createElement("div");
-  let detachedShadowRoot = el.attachShadow({ mode: "open" });
-  detachedShadowRoot.innerHTML = "<input></input>";
-
-  const detachedShadowRootRef = nodeCache.getOrCreateNodeReference(
-    detachedShadowRoot
-  );
-
-  // ... not connected to the DOM
-  Assert.throws(() => {
-    element.getKnownShadowRoot(
-      browser.browsingContext,
-      detachedShadowRootRef,
-      nodeCache
-    );
-  }, /DetachedShadowRootError/);
-
-  // ... host and shadow root garbage collected
-  el = null;
-  detachedShadowRoot = null;
-  MemoryReporter.minimizeMemoryUsage(() => {
-    Assert.throws(() => {
-      element.getKnownShadowRoot(
-        browser.browsingContext,
-        detachedShadowRootRef,
-        nodeCache
-      );
-    }, /DetachedShadowRootError/);
-
-    run_next_test();
-  });
-});
-
-add_test(function test_isDetached() {
-  const { childEl, iframeEl } = setupTest();
-
-  let detachedShadowRoot = childEl.attachShadow({ mode: "open" });
-  detachedShadowRoot.innerHTML = "<input></input>";
-
-  // Connected to the DOM
-  ok(!element.isDetached(detachedShadowRoot));
-
-  // Node document (ownerDocument) is not the active document
-  iframeEl.remove();
-  ok(element.isDetached(detachedShadowRoot));
-
-  // host element is stale (eg. not connected)
-  detachedShadowRoot.host.remove();
-  equal(childEl.isConnected, false);
-  ok(element.isDetached(detachedShadowRoot));
-
-  run_next_test();
 });
 
 add_test(function test_isStale() {
-  const { childEl, iframeEl } = setupTest();
+  // Not connected to the DOM
+  ok(element.isStale(new Element("div")));
 
   // Connected to the DOM
-  ok(!element.isStale(childEl));
+  const domDivEl = new DOMElement("div");
+  ok(!element.isStale(domDivEl));
 
   // Not part of the active document
-  iframeEl.remove();
-  ok(element.isStale(childEl));
+  domDivEl.ownerGlobal = {
+    document: {
+      isActive() {
+        return false;
+      },
+    },
+  };
+  ok(element.isStale(domDivEl));
 
-  // Not connected to the DOM
-  childEl.remove();
-  ok(element.isStale(childEl));
+  // Without ownerGlobal
+  delete domDivEl.ownerGlobal;
+  ok(element.isStale(domDivEl));
 
   run_next_test();
 });
 
 add_test(function test_WebReference_ctor() {
-  const el = new WebReference("foo");
+  let el = new WebReference("foo");
   equal(el.uuid, "foo");
 
   for (let t of [42, true, [], {}, null, undefined]) {
@@ -672,8 +529,8 @@ add_test(function test_WebReference_ctor() {
 });
 
 add_test(function test_WebElemenet_is() {
-  const a = new WebReference("a");
-  const b = new WebReference("b");
+  let a = new WebReference("a");
+  let b = new WebReference("b");
 
   ok(a.is(a));
   ok(b.is(b));
@@ -686,12 +543,10 @@ add_test(function test_WebElemenet_is() {
 });
 
 add_test(function test_WebReference_from() {
-  const { divEl, iframeEl } = setupTest();
-
-  ok(WebReference.from(divEl) instanceof WebElement);
+  ok(WebReference.from(domEl) instanceof WebElement);
   ok(WebReference.from(xulEl) instanceof WebElement);
-  ok(WebReference.from(divEl.ownerGlobal) instanceof WebWindow);
-  ok(WebReference.from(iframeEl.contentWindow) instanceof WebFrame);
+  ok(WebReference.from(domWin) instanceof WebWindow);
+  ok(WebReference.from(domFrame) instanceof WebFrame);
   ok(WebReference.from(domElInPrivilegedDocument) instanceof WebElement);
   ok(WebReference.from(xulElInPrivilegedDocument) instanceof WebElement);
 
@@ -703,15 +558,15 @@ add_test(function test_WebReference_from() {
 add_test(function test_WebReference_fromJSON_WebElement() {
   const { Identifier } = WebElement;
 
-  const ref = { [Identifier]: "foo" };
-  const webEl = WebReference.fromJSON(ref);
+  let ref = { [Identifier]: "foo" };
+  let webEl = WebReference.fromJSON(ref);
   ok(webEl instanceof WebElement);
   equal(webEl.uuid, "foo");
 
   let identifierPrecedence = {
     [Identifier]: "identifier-uuid",
   };
-  const precedenceEl = WebReference.fromJSON(identifierPrecedence);
+  let precedenceEl = WebReference.fromJSON(identifierPrecedence);
   ok(precedenceEl instanceof WebElement);
   equal(precedenceEl.uuid, "identifier-uuid");
 
@@ -719,9 +574,8 @@ add_test(function test_WebReference_fromJSON_WebElement() {
 });
 
 add_test(function test_WebReference_fromJSON_WebWindow() {
-  const ref = { [WebWindow.Identifier]: "foo" };
-  const win = WebReference.fromJSON(ref);
-
+  let ref = { [WebWindow.Identifier]: "foo" };
+  let win = WebReference.fromJSON(ref);
   ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
 
@@ -729,8 +583,8 @@ add_test(function test_WebReference_fromJSON_WebWindow() {
 });
 
 add_test(function test_WebReference_fromJSON_WebFrame() {
-  const ref = { [WebFrame.Identifier]: "foo" };
-  const frame = WebReference.fromJSON(ref);
+  let ref = { [WebFrame.Identifier]: "foo" };
+  let frame = WebReference.fromJSON(ref);
   ok(frame instanceof WebFrame);
   equal(frame.uuid, "foo");
 
@@ -740,13 +594,11 @@ add_test(function test_WebReference_fromJSON_WebFrame() {
 add_test(function test_WebReference_fromJSON_malformed() {
   Assert.throws(() => WebReference.fromJSON({}), /InvalidArgumentError/);
   Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
-
   run_next_test();
 });
 
 add_test(function test_WebReference_fromUUID() {
-  const domWebEl = WebReference.fromUUID("bar");
-
+  let domWebEl = WebReference.fromUUID("bar");
   ok(domWebEl instanceof WebElement);
   equal(domWebEl.uuid, "bar");
 
@@ -773,8 +625,8 @@ add_test(function test_generateUUID() {
 add_test(function test_WebElement_toJSON() {
   const { Identifier } = WebElement;
 
-  const el = new WebElement("foo");
-  const json = el.toJSON();
+  let el = new WebElement("foo");
+  let json = el.toJSON();
 
   ok(Identifier in json);
   equal(json[Identifier], "foo");
@@ -785,7 +637,7 @@ add_test(function test_WebElement_toJSON() {
 add_test(function test_WebElement_fromJSON() {
   const { Identifier } = WebElement;
 
-  const el = WebElement.fromJSON({ [Identifier]: "foo" });
+  let el = WebElement.fromJSON({ [Identifier]: "foo" });
   ok(el instanceof WebElement);
   equal(el.uuid, "foo");
 
@@ -795,9 +647,8 @@ add_test(function test_WebElement_fromJSON() {
 });
 
 add_test(function test_WebWindow_toJSON() {
-  const win = new WebWindow("foo");
-  const json = win.toJSON();
-
+  let win = new WebWindow("foo");
+  let json = win.toJSON();
   ok(WebWindow.Identifier in json);
   equal(json[WebWindow.Identifier], "foo");
 
@@ -805,9 +656,8 @@ add_test(function test_WebWindow_toJSON() {
 });
 
 add_test(function test_WebWindow_fromJSON() {
-  const ref = { [WebWindow.Identifier]: "foo" };
-  const win = WebWindow.fromJSON(ref);
-
+  let ref = { [WebWindow.Identifier]: "foo" };
+  let win = WebWindow.fromJSON(ref);
   ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
 
@@ -815,9 +665,8 @@ add_test(function test_WebWindow_fromJSON() {
 });
 
 add_test(function test_WebFrame_toJSON() {
-  const frame = new WebFrame("foo");
-  const json = frame.toJSON();
-
+  let frame = new WebFrame("foo");
+  let json = frame.toJSON();
   ok(WebFrame.Identifier in json);
   equal(json[WebFrame.Identifier], "foo");
 
@@ -825,9 +674,8 @@ add_test(function test_WebFrame_toJSON() {
 });
 
 add_test(function test_WebFrame_fromJSON() {
-  const ref = { [WebFrame.Identifier]: "foo" };
-  const win = WebFrame.fromJSON(ref);
-
+  let ref = { [WebFrame.Identifier]: "foo" };
+  let win = WebFrame.fromJSON(ref);
   ok(win instanceof WebFrame);
   equal(win.uuid, "foo");
 

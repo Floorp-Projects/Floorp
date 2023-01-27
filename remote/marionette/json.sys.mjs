@@ -125,35 +125,22 @@ json.clone = function(value, nodeCache) {
     // Evaluation of code might take place in mutable sandboxes, which are
     // created to waive XRays by default. As such DOM nodes would have to be
     // unwaived before accessing properties like "ownerGlobal" is possible.
-    //
-    // Until bug 1743788 is fixed there might be the possibility that more
-    // objects might need to be unwaived as well.
     const isNode = Node.isInstance(value);
     if (isNode) {
       value = Cu.unwaiveXrays(value);
     }
 
-    if (isNode && lazy.element.isElement(value)) {
-      // Convert DOM elements to WebReference instances.
+    if (
+      isNode &&
+      (lazy.element.isElement(value) || lazy.element.isShadowRoot(value))
+    ) {
+      // Convert DOM elements (eg. HTMLElement, XULElement, et al) and
+      // ShadowRoot instances to WebReference references.
 
+      // Don't create a reference for stale elements.
       if (lazy.element.isStale(value)) {
-        // Don't create a reference for stale elements.
         throw new lazy.error.StaleElementReferenceError(
           lazy.pprint`The element ${value} is no longer attached to the DOM`
-        );
-      }
-
-      const nodeRef = nodeCache.getOrCreateNodeReference(value);
-      return lazy.WebReference.from(value, nodeRef).toJSON();
-    }
-
-    if (isNode && lazy.element.isShadowRoot(value)) {
-      // Convert ShadowRoot instances to WebReference references.
-
-      if (lazy.element.isDetached(value)) {
-        // Don't create a reference for detached shadow roots.
-        throw new lazy.error.DetachedShadowRootError(
-          lazy.pprint`The ShadowRoot ${value} is no longer attached to the DOM`
         );
       }
 
@@ -221,15 +208,10 @@ json.deserialize = function(value, nodeCache, win) {
           // Create a WebReference based on the WebElement identifier.
           const webRef = lazy.WebReference.fromJSON(value);
 
-          if (webRef instanceof lazy.ShadowRoot) {
-            return lazy.element.getKnownShadowRoot(
-              win.browsingContext,
-              webRef.uuid,
-              nodeCache
-            );
-          }
-
-          if (webRef instanceof lazy.WebElement) {
+          if (
+            webRef instanceof lazy.WebElement ||
+            webRef instanceof lazy.ShadowRoot
+          ) {
             return lazy.element.getKnownElement(
               win.browsingContext,
               webRef.uuid,
