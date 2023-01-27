@@ -725,19 +725,27 @@ NS_IMETHODIMP AppWindow::GetPositionAndSize(int32_t* x, int32_t* y, int32_t* cx,
 
 NS_IMETHODIMP
 AppWindow::SetDimensions(DimensionRequest&& aRequest) {
-  // For the chrome the inner size is the root shell size, and for the content
-  // it's the primary content size. We lack an indicator here that would allow
-  // us to distinguish between the two.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aRequest.mDimensionKind == DimensionKind::Inner) {
+    // For the chrome the inner size is the root shell size, and for the
+    // content it's the primary content size. We lack an indicator here that
+    // would allow us to distinguish between the two.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  MOZ_TRY(aRequest.SupplementFrom(this));
+  return aRequest.ApplyOuterTo(this);
 }
 
 NS_IMETHODIMP
 AppWindow::GetDimensions(DimensionKind aDimensionKind, int32_t* aX, int32_t* aY,
                          int32_t* aCX, int32_t* aCY) {
-  // For the chrome the inner size is the root shell size, and for the content
-  // it's the primary content size. We lack an indicator here that would allow
-  // us to distinguish between the two.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aDimensionKind == DimensionKind::Inner) {
+    // For the chrome the inner size is the root shell size, and for the
+    // content it's the primary content size. We lack an indicator here that
+    // would allow us to distinguish between the two.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return GetPositionAndSize(aX, aY, aCX, aCY);
 }
 
 nsresult AppWindow::MoveResize(const Maybe<LayoutDeviceIntPoint>& aPosition,
