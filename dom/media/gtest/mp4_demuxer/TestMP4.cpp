@@ -92,12 +92,12 @@ TEST(rust, MP4MetadataEmpty)
   io = {vector_reader, &buf};
   rv = mp4parse_new(&io, &parser);
   ASSERT_EQ(parser, nullptr);
-  EXPECT_EQ(rv, MP4PARSE_STATUS_NO_MOOV);
+  EXPECT_EQ(rv, MP4PARSE_STATUS_MOOV_MISSING);
 
   buf.buffer.reserve(4097);
   rv = mp4parse_new(&io, &parser);
   ASSERT_EQ(parser, nullptr);
-  EXPECT_EQ(rv, MP4PARSE_STATUS_NO_MOOV);
+  EXPECT_EQ(rv, MP4PARSE_STATUS_MOOV_MISSING);
 
   // Empty buffers should fail.
   buf.buffer.resize(4097, 0);
