@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
     <img id="infinitepng" src="infinite-apng.png">
     <img id="infinitegif" src="animated1.gif">
     <img id="infinitewebp" src="infinite.webp">
+    <img id="infiniteavif" src="infinite.avif">
     <img id="finitepng" src="restore-previous.png">
     <img id="finitegif" src="animated-gif.gif">
     <img id="finitewebp" src="keep.webp">
@@ -38,11 +39,12 @@ window.onload = function() {
   // Enable discarding for the test.
   SpecialPowers.pushPrefEnv({
     'set':[['image.mem.discardable',true],
-           ['image.webp.enabled',true]]
+           ['image.webp.enabled',true],
+           ['image.avif.sequence.enabled',true]]
   }, runTest);
 }
 
-var gImgs = ['infinitepng', 'infinitegif', 'infinitewebp',
+var gImgs = ['infinitepng', 'infinitegif', 'infinitewebp', 'infiniteavif',
              'finitepng',   'finitegif',   'finitewebp'];
 // If we are currently counting frame updates.
 var gCountingFrameUpdates = false;
