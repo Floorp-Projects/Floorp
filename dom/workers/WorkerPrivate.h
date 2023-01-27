@@ -1137,6 +1137,10 @@ class WorkerPrivate final
 
   void SetGCTimerMode(GCTimerMode aMode);
 
+ public:
+  void CancelGCTimers() { SetGCTimerMode(NoTimer); }
+
+ private:
   void ShutdownGCTimers();
 
   friend class WorkerRef;
@@ -1341,7 +1345,8 @@ class WorkerPrivate final
     nsCOMPtr<nsITimer> mTimer;
     nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
-    nsCOMPtr<nsITimer> mGCTimer;
+    nsCOMPtr<nsITimer> mPeriodicGCTimer;
+    nsCOMPtr<nsITimer> mIdleGCTimer;
 
     RefPtr<MemoryReporter> mMemoryReporter;
 
