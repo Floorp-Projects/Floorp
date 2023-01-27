@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
     "nsIHandlerService",
   ],
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
-  gXulStore: ["@mozilla.org/xul/xulstore;1", "nsIXULStore"],
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -890,7 +889,7 @@ export var Policies = {
         // If this policy was already applied and the user chose to re-hide the
         // menu bar, do not show it again.
         runOncePerModification("displayMenuBar", value, () => {
-          lazy.gXulStore.setValue(
+          Services.xulStore.setValue(
             BROWSER_DOCUMENT_URL,
             "toolbar-menubar",
             "autohide",
@@ -908,7 +907,7 @@ export var Policies = {
             value = "true";
             break;
         }
-        lazy.gXulStore.setValue(
+        Services.xulStore.setValue(
           BROWSER_DOCUMENT_URL,
           "toolbar-menubar",
           "autohide",
