@@ -420,9 +420,9 @@ function assertButtonSelected(expectedSelectedElementIndex) {
  *   A string to include in the assertion message.
  */
 function assertOtherResultSelected(expectedSelectedElementIndex, msg) {
-  assertSelection(
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
     expectedSelectedElementIndex,
-    UrlbarPrefs.get("resultMenu") ? "urlbarView-row-inner" : "urlbarView-row",
-    msg
+    "Expected other selected element index: " + msg
   );
 }

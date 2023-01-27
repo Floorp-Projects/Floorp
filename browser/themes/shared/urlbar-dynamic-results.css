@@ -15,13 +15,7 @@
   align-items: center;
 }
 
-.urlbarView-row[dynamicType=onboardTabToSearch]:hover > .urlbarView-row-inner {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] {
-  background: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
+.urlbarView-row[dynamicType=onboardTabToSearch][selected] {
   fill-opacity: 1;
 }
 
@@ -81,23 +75,13 @@
 }
 
 /* CSS for Calculator */
-.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
-}
-
-.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner:hover {
-  background: var(--arrowpanel-dimmed);
-}
-
 .urlbarView-dynamic-calculator-action {
   font-size: .85em;
   font-weight: normal;
   visibility: collapse;
 }
 
-.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner:hover .urlbarView-dynamic-calculator-action,
-.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner[selected] .urlbarView-dynamic-calculator-action {
+.urlbarView-row[dynamicType=calculator]:is(:hover, [selected]) .urlbarView-dynamic-calculator-action {
   visibility: visible;
 }
 
@@ -108,13 +92,8 @@
 }
 
 /** UrlbarProviderUnitConversion **/
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover {
-  background: var(--autocomplete-popup-hover-background);
-}
 
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] {
-  background: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
+.urlbarView-row[dynamicType=unitConversion][selected] {
   fill-opacity: 1;
 }
 
@@ -130,16 +109,15 @@
 	opacity: 0.6;
 }
 
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover .urlbarView-dynamic-unitConversion-action,
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] .urlbarView-dynamic-unitConversion-action {
+.urlbarView-row[dynamicType=unitConversion]:is(:hover, [selected]) .urlbarView-dynamic-unitConversion-action {
 	visibility: visible;
 }
 
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner:hover .urlbarView-dynamic-unitConversion-action {
+.urlbarView-row[dynamicType=unitConversion]:hover .urlbarView-dynamic-unitConversion-action {
 	color: var(--urlbar-popup-action-color);
 }
 
-.urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] .urlbarView-dynamic-unitConversion-action {
+.urlbarView-row[dynamicType=unitConversion][selected] .urlbarView-dynamic-unitConversion-action {
   color: var(--autocomplete-popup-highlight-color);
 }
 

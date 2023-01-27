@@ -57,7 +57,6 @@ const TELEMETRY_SCALARS = {
 const WEATHER_DYNAMIC_TYPE = "weather";
 const WEATHER_VIEW_TEMPLATE = {
   attributes: {
-    role: "group",
     selectable: true,
   },
   children: [

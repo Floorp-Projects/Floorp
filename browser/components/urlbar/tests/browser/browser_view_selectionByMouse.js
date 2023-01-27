@@ -47,13 +47,13 @@ add_task(async function basic() {
   const testData = [
     {
       description: "Normal result to quick action button",
-      mousedown: ".urlbarView-row:nth-child(1)",
+      mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
       mouseup: ".urlbarView-quickaction-row[data-key=test-downloads]",
       expected: "about:downloads",
     },
     {
       description: "Normal result to out of result",
-      mousedown: ".urlbarView-row:nth-child(1)",
+      mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
       mouseup: "body",
       expected: false,
     },
@@ -124,11 +124,11 @@ add_task(async function outOfBrowser() {
   const testData = [
     {
       description: "Normal result to out of browser",
-      mousedown: ".urlbarView-row:nth-child(1)",
+      mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
     },
     {
       description: "Normal result to out of result",
-      mousedown: ".urlbarView-row:nth-child(1)",
+      mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
       expected: false,
     },
     {
@@ -175,9 +175,10 @@ add_task(async function withSelectionByKeyboard() {
       mousedown: "body",
       mouseup: "body",
       expected: {
-        selectedElementByKey: "#urlbar-results .urlbarView-row[selected]",
+        selectedElementByKey:
+          "#urlbar-results .urlbarView-row > .urlbarView-row-inner[selected]",
         selectedElementAfterMouseDown:
-          "#urlbar-results .urlbarView-row[selected]",
+          "#urlbar-results .urlbarView-row > .urlbarView-row-inner[selected]",
         actionedPage: false,
       },
     },
@@ -199,7 +200,8 @@ add_task(async function withSelectionByKeyboard() {
       mousedown: ".urlbarView-quickaction-row[data-key=test-downloads]",
       mouseup: ".urlbarView-quickaction-row[data-key=test-downloads]",
       expected: {
-        selectedElementByKey: "#urlbar-results .urlbarView-row[selected]",
+        selectedElementByKey:
+          "#urlbar-results .urlbarView-row > .urlbarView-row-inner[selected]",
         selectedElementAfterMouseDown:
           ".urlbarView-quickaction-row[data-key=test-downloads]",
         actionedPage: "about:downloads",
