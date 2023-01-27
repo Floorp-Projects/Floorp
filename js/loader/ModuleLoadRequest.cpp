@@ -175,6 +175,11 @@ void ModuleLoadRequest::LoadFailed() {
 
   LOG(("ScriptLoadRequest (%p): Module load failed", this));
 
+  if (IsCanceled()) {
+    return;
+  }
+
+  MOZ_ASSERT(!IsReadyToRun());
   MOZ_ASSERT(!mModuleScript);
 
   Cancel();
