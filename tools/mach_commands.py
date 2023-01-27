@@ -429,7 +429,7 @@ def mozregression_create_parser():
 @Command(
     "mozregression",
     category="misc",
-    description=("Regression range finder for nightly and inbound builds."),
+    description="Regression range finder for nightly and inbound builds.",
     parser=mozregression_create_parser,
 )
 def run(command_context, **options):
@@ -511,7 +511,7 @@ from functools import partial
 @Command(
     "logspam",
     category="misc",
-    description=("Warning categorizer for treeherder test runs."),
+    description="Warning categorizer for treeherder test runs.",
 )
 def logspam(command_context):
     pass
@@ -536,3 +536,56 @@ def create(command_context, **options):
     command_context.activate_virtualenv()
     logspam = PypiBasedTool("logspam")
     logspam.run(command="file", **options)
+
+
+# mots_loader will be used when running commands and subcommands, as well as
+# when creating the parsers.
+mots_loader = PypiBasedTool("mots")
+
+
+def mots_create_parser(subcommand=None):
+    return mots_loader.create_parser(subcommand)
+
+
+def mots_run_subcommand(command, command_context, **options):
+    command_context.activate_virtualenv()
+    mots_loader.run(command=command, **options)
+
+
+class motsSubCommand(SubCommand):
+    """A helper subclass that reduces repitition when defining subcommands."""
+
+    def __init__(self, subcommand):
+        super().__init__(
+            "mots",
+            subcommand,
+            parser=partial(mots_create_parser, subcommand),
+        )
+
+
+@Command(
+    "mots",
+    category="misc",
+    description="Manage module information in-tree using the mots CLI.",
+    parser=mots_create_parser,
+)
+def mots(command_context, **options):
+    """The main mots command call."""
+    command_context.activate_virtualenv()
+    mots_loader.run(**options)
+
+
+# Define subcommands that will be proxied through mach.
+for sc in (
+    "clean",
+    "check-hashes",
+    "export",
+    "export-and-clean",
+    "module",
+    "query",
+    "settings",
+    "user",
+    "validate",
+):
+    # Pass through args and kwargs, but add the subcommand string as the first argument.
+    motsSubCommand(sc)(lambda *a, **kw: mots_run_subcommand(sc, *a, **kw))
