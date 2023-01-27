@@ -1272,6 +1272,28 @@
   mirror: always
   rust: true
 
+# font-family names for which we'll override use_document_fonts=0, and always
+# use the specified font.
+# This is to support ligature-icon fonts, which render literal strings like
+# "arrow_drop_down" with an icon, even when use_document_fonts is disabled.
+# If an author provides & uses such a font, and we decline to use it, we'll end
+# up rendering these literal strings where the author intended an icon, which
+# can cause all sorts of overlapping/unreadable content.
+- name: browser.display.use_document_fonts.icon_font_allowlist
+  type: String
+  value: >-
+    Material Icons,
+    Material Icons Outlined,
+    Material Icons Round,
+    Material Icons Sharp,
+    Material Icons Two Tone,
+    Google Material Icons,
+    Material Symbols Outlined,
+    Material Symbols Round,
+    Material Symbols Rounded,
+    Material Symbols Sharp
+  mirror: never
+
 - name: browser.display.use_focus_colors
   type: bool
   value: false

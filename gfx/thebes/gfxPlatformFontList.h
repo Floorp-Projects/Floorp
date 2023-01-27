@@ -636,6 +636,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     return PR_GetCurrentThread() == sInitFontListThread;
   }
 
+  bool IsKnownIconFontFamily(const nsAtom* aFamilyName) const;
+  void LoadIconFontOverrideList();
+
   void Lock() MOZ_CAPABILITY_ACQUIRE(mLock) { mLock.Lock(); }
   void Unlock() MOZ_CAPABILITY_RELEASE(mLock) { mLock.Unlock(); }
 
@@ -1032,6 +1035,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       MOZ_GUARDED_BY(mLock);
 
   nsTArray<nsCString> mEnabledFontsList;
+  nsTHashSet<nsCString> mIconFontsSet;
 
   mozilla::UniquePtr<mozilla::fontlist::FontList> mSharedFontList;
 

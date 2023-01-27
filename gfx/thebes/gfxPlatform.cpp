@@ -1844,6 +1844,11 @@ bool gfxPlatform::IsFontFormatSupported(
   return true;
 }
 
+bool gfxPlatform::IsKnownIconFontFamily(const nsAtom* aFamilyName) const {
+  return gfxPlatformFontList::PlatformFontList()->IsKnownIconFontFamily(
+      aFamilyName);
+}
+
 gfxFontEntry* gfxPlatform::LookupLocalFont(nsPresContext* aPresContext,
                                            const nsACString& aFontName,
                                            WeightRange aWeightForEntry,

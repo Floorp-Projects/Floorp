@@ -134,13 +134,19 @@ const gfxFontEntry::ScriptRange gfxPlatformFontList::sComplexScriptRanges[] = {
     {0, 0, 0, {0, 0, 0}}  // terminator
 };
 
-static const char* kObservedPrefs[] = {"font.", "font.name-list.",
-                                       "intl.accept_languages",  // hmmmm...
-                                       nullptr};
+static const char* kObservedPrefs[] = {
+    "font.", "font.name-list.", "intl.accept_languages",  // hmmmm...
+    "browser.display.use_document_fonts.icon_font_allowlist", nullptr};
 
 static const char kFontSystemWhitelistPref[] = "font.system.whitelist";
 
 static const char kCJKFallbackOrderPref[] = "font.cjk_pref_fallback_order";
+
+// Pref for the list of icon font families that still get to override the
+// default font from prefs, even when use_document_fonts is disabled.
+// (This is to enable ligature-based icon fonts to keep working.)
+static const char kIconFontsPref[] =
+    "browser.display.use_document_fonts.icon_font_allowlist";
 
 // xxx - this can probably be eliminated by reworking pref font handling code
 static const char* gPrefLangNames[] = {
@@ -164,6 +170,7 @@ static void FontListPrefChanged(const char* aPref, void* aData = nullptr) {
   // XXX this could be made to only clear out the cache for the prefs that were
   // changed but it probably isn't that big a deal.
   gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
+  gfxPlatformFontList::PlatformFontList()->LoadIconFontOverrideList();
   gfxFontCache::GetCache()->Flush();
 }
 
@@ -275,6 +282,7 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
   mLangService = nsLanguageAtomService::GetService();
 
   LoadBadUnderlineList();
+  LoadIconFontOverrideList();
 
   mFontPrefs = MakeUnique<FontPrefs>();
 
@@ -515,6 +523,7 @@ bool gfxPlatformFontList::InitFontList() {
 
     mAliasTable.Clear();
     mLocalNameTable.Clear();
+    mIconFontsSet.Clear();
 
     CancelLoadCmapsTask();
     mStartedLoadingCmapsFrom = 0xffffffffu;
@@ -539,6 +548,8 @@ bool gfxPlatformFontList::InitFontList() {
 
     gfxFontUtils::GetPrefsFontList(kFontSystemWhitelistPref, mEnabledFontsList);
     mFontFamilyWhitelistActive = !mEnabledFontsList.IsEmpty();
+
+    LoadIconFontOverrideList();
   }
 
   // From here, gfxPlatformFontList::IsInitialized will return true,
@@ -610,6 +621,16 @@ bool gfxPlatformFontList::InitFontList() {
   mDefaultFontEntry = fe;
 
   return true;
+}
+
+void gfxPlatformFontList::LoadIconFontOverrideList() {
+  mIconFontsSet.Clear();
+  AutoTArray<nsCString, 20> iconFontsList;
+  gfxFontUtils::GetPrefsFontList(kIconFontsPref, iconFontsList);
+  for (auto& name : iconFontsList) {
+    ToLowerCase(name);
+    mIconFontsSet.Insert(name);
+  }
 }
 
 void gfxPlatformFontList::InitializeCodepointsWithNoFonts() {
@@ -3078,6 +3099,13 @@ bool gfxPlatformFontList::FontPrefs::LookupNameList(const nsACString& aPref,
     return true;
   }
   return false;
+}
+
+bool gfxPlatformFontList::IsKnownIconFontFamily(
+    const nsAtom* aFamilyName) const {
+  nsAtomCString fam(aFamilyName);
+  ToLowerCase(fam);
+  return mIconFontsSet.Contains(fam);
 }
 
 #undef LOG
