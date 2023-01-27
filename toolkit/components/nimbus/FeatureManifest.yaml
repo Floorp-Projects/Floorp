@@ -633,8 +633,45 @@ spotlight:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
+# currently in use by 107+ exp/rollout pair of Import Bookmarks Infrequent
+# Existing Users with 5 bookmarks:
+# https://experimenter.services.mozilla.com/nimbus/import-infrequent-rollout-make-yourself-at-home/summary
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-1:
   description: "A Firefox Messaging System message"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
+
+# next planned use: 110+ exp/rollout pair of Fox Doodle: Pin experiment winner
+# (Existing Users)
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+fxms-message-2:
+  description: "Firefox Messaging System message 2"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
+
+# next planned use: 110+ exp/rollout pair of Fox Doodle: Set Default (Existing
+# Users)
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+fxms-message-3:
+  description: "Firefox Messaging System message 3"
   owner: omc@mozilla.com
   hasExposure: true
   exposureDescription: >-
