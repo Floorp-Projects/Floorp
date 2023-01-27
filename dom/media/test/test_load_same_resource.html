@@ -95,7 +95,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {"set": [
     ["logging.MediaDecoder", "Debug"],
-    ["logging.nsMediaElement", "Debug"],
+    ["logging.HTMLMediaElement", "Debug"],
     ["logging.MediaCache", "Debug"],
   ]},
   manager.runTests.bind(manager, gCloneTests, initTest));
