@@ -1,7 +1,13 @@
 #!/bin/bash
 
+function show_error_msg()
+{
+  echo "*** ERROR *** $? line $1 $0 did not complete successfully!"
+  echo "$ERROR_HELP"
+}
+
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
-trap 'echo "*** ERROR *** $? $LINENO $0 did not complete successfully!"' ERR
+trap 'show_error_msg $LINENO' ERR
 
 source dom/media/webrtc/third_party_build/use_config_env.sh
 
@@ -9,6 +15,8 @@ echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 echo "MOZ_LIBWEBRTC_BRANCH: $MOZ_LIBWEBRTC_BRANCH"
 echo "MOZ_FASTFORWARD_BUG: $MOZ_FASTFORWARD_BUG"
 echo "MOZ_PRIOR_LIBWEBRTC_BRANCH: $MOZ_PRIOR_LIBWEBRTC_BRANCH"
+
+ERROR_HELP=""
 
 # After this point:
 # * eE: All commands should succeed.
@@ -71,7 +79,19 @@ CHERRY_PICK_BASE=`git merge-base $MOZ_PRIOR_LIBWEBRTC_BRANCH master`
 echo "common commit: $CHERRY_PICK_BASE"
 
 # create a new branch at the common commit and checkout the new branch
+ERROR_HELP=$"
+Unable to create branch '$MOZ_LIBWEBRTC_BRANCH'.  This probably means
+that prep_repo.sh is being called on a repo that already has a patch
+stack in progress.  If you're sure you want to do this, the following
+commands will allow the process to continue:
+  ( cd $MOZ_LIBWEBRTC_SRC && \\
+    git checkout $MOZ_LIBWEBRTC_BRANCH && \\
+    git checkout -b $MOZ_LIBWEBRTC_BRANCH-old && \\
+    git branch -D $MOZ_LIBWEBRTC_BRANCH ) && \\
+  bash $0
+"
 git branch $MOZ_LIBWEBRTC_BRANCH $CHERRY_PICK_BASE
+ERROR_HELP=""
 git checkout $MOZ_LIBWEBRTC_BRANCH
 
 # grab the patches for all the commits in chrome's release branch for libwebrtc
