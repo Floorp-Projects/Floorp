@@ -2742,6 +2742,13 @@ TEST(GeckoProfiler, Markers)
                                   geckoprofiler::markers::TextMarker{},
                                   "Text text"));
 
+  // Ensure that we evaluate to false for markers with very long texts by
+  // testing against a ~3mb string. A string of this size should exceed the
+  // available buffer chunks (max: 2) that are available and be discarded.
+  EXPECT_FALSE(profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
+                                   geckoprofiler::markers::TextMarker{},
+                                   std::string(3 * 1024 * 1024, 'x')));
+
   EXPECT_TRUE(profiler_add_marker(
       "MediaSample", geckoprofiler::category::OTHER, {},
       geckoprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
