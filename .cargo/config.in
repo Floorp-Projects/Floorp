@@ -122,7 +122,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/servo/rust-cssparser"]
 git = "https://github.com/servo/rust-cssparser"
-rev = "722b30d2f1634714befab967ecae627813fa4cf0"
+rev = "d3670a89bae26ba3a8db4758eb7976616113987d"
 replace-with = "vendored-sources"
 
 [source."https://github.com/smol-rs/async-task"]

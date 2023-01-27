@@ -24,7 +24,6 @@ encoding_rs = "0.8"
 cssparser-macros = {path = "./macros", version = "0.6"}
 dtoa-short = "0.3"
 itoa = "1.0"
-matches = "0.1"
 phf = {version = ">=0.8,<=0.11", features = ["macros"]}
 serde = {version = "1.0", optional = true}
 smallvec = "1.0"
