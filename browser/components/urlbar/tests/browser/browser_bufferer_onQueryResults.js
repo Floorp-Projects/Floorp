@@ -72,10 +72,10 @@ add_task(async function test() {
   defer.resolve();
   await promiseLoaded;
 
-  Assert.equal(
-    gBrowser.selectedBrowser.currentURI.spec,
-    "http://mochi.test:8888/?terms=" + gURLBar.value
-  );
+  let expectedURL = UrlbarPrefs.isPersistedSearchTermsEnabled()
+    ? "http://mochi.test:8888/?terms=" + gURLBar.value
+    : gURLBar.untrimmedValue;
+  Assert.equal(gBrowser.selectedBrowser.currentURI.spec, expectedURL);
 
   BrowserTestUtils.removeTab(tab);
   sandbox.restore();
