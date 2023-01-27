@@ -1522,8 +1522,17 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 #endif
 
 #ifdef DESKTOP
-      case __NR_pipe2:
-        return Allow();
+      case __NR_pipe2: {
+        // Restrict the flags; O_NOTIFICATION_PIPE in particular
+        // exposes enough attack surface to be a cause for concern
+        // (bug 1808320).  O_DIRECT isn't known to be used currently
+        // (Try passes with it blocked), but should be low-risk, and
+        // Chromium allows it.
+        static constexpr int allowed_flags = O_CLOEXEC | O_NONBLOCK | O_DIRECT;
+        Arg<int> flags(1);
+        return If((flags & ~allowed_flags) == 0, Allow())
+            .Else(InvalidSyscall());
+      }
 
       CASES_FOR_getrlimit:
       CASES_FOR_getresuid:
