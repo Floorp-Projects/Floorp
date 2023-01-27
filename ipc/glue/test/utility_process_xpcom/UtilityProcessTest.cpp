@@ -12,51 +12,8 @@
 
 namespace mozilla::ipc {
 
-static UtilityActorName UtilityActorNameFromString(
-    const nsACString& aStringName) {
-  using namespace mozilla::dom;
-
-  // We use WebIDLUtilityActorNames because UtilityActorNames is not designed
-  // for iteration.
-  for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
-    auto idlName = static_cast<UtilityActorName>(i);
-    const nsDependentCSubstring idlNameString(
-        WebIDLUtilityActorNameValues::GetString(idlName));
-    if (idlNameString.Equals(aStringName)) {
-      return idlName;
-    }
-  }
-  MOZ_CRASH("Unknown utility actor name");
-}
-
-// Find the utility process with the given actor or any utility process if
-// the actor is UtilityActorName::EndGuard_.
-static SandboxingKind FindUtilityProcessWithActor(UtilityActorName aActorName) {
-  RefPtr<UtilityProcessManager> utilityProc =
-      UtilityProcessManager::GetSingleton();
-  MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
-
-  for (size_t i = 0; i < SandboxingKind::COUNT; ++i) {
-    auto sbKind = static_cast<SandboxingKind>(i);
-    if (!utilityProc->Process(sbKind)) {
-      continue;
-    }
-    if (aActorName == UtilityActorName::EndGuard_) {
-      return sbKind;
-    }
-    for (auto actor : utilityProc->GetActors(sbKind)) {
-      if (actor == aActorName) {
-        return sbKind;
-      }
-    }
-  }
-
-  return SandboxingKind::COUNT;
-}
-
 NS_IMETHODIMP
-UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
-                                 JSContext* aCx,
+UtilityProcessTest::StartProcess(int32_t aUnknownActors, JSContext* aCx,
                                  mozilla::dom::Promise** aOutPromise) {
   NS_ENSURE_ARG(aOutPromise);
   *aOutPromise = nullptr;
@@ -75,19 +32,20 @@ UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
       UtilityProcessManager::GetSingleton();
   MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
 
-  auto actors = aActorsToRegister.Clone();
-
   utilityProc->LaunchProcess(SandboxingKind::GENERIC_UTILITY)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [promise, utilityProc, actors = std::move(actors)] {
-            RefPtr<UtilityProcessParent> utilityParent =
-                utilityProc->GetProcessParent(SandboxingKind::GENERIC_UTILITY);
+          [promise, utilityProc, aUnknownActors]() {
             Maybe<int32_t> utilityPid =
                 utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
-            for (size_t i = 0; i < actors.Length(); ++i) {
-              auto uan = UtilityActorNameFromString(actors[i]);
-              utilityProc->RegisterActor(utilityParent, uan);
+            if (aUnknownActors > 0) {
+              RefPtr<UtilityProcessParent> utilityParent =
+                  utilityProc->GetProcessParent(
+                      SandboxingKind::GENERIC_UTILITY);
+              for (int32_t i = 0; i < aUnknownActors; i++) {
+                utilityProc->RegisterActor(utilityParent,
+                                           UtilityActorName::Unknown);
+              }
             }
             if (utilityPid.isSome()) {
               promise->MaybeResolve(*utilityPid);
@@ -106,31 +64,14 @@ UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
 }
 
 NS_IMETHODIMP
-UtilityProcessTest::StopProcess(const char* aActorName) {
-  using namespace mozilla::dom;
-
-  SandboxingKind sbKind;
-  if (aActorName) {
-    const nsDependentCString actorStringName(aActorName);
-    UtilityActorName actorName = UtilityActorNameFromString(actorStringName);
-    sbKind = FindUtilityProcessWithActor(actorName);
-  } else {
-    sbKind = FindUtilityProcessWithActor(UtilityActorName::EndGuard_);
-  }
-
-  if (sbKind == SandboxingKind::COUNT) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Attempted to stop process for actor when no "
-        "such process exists");
-    return NS_ERROR_FAILURE;
-  }
-
+UtilityProcessTest::StopProcess() {
   RefPtr<UtilityProcessManager> utilityProc =
       UtilityProcessManager::GetSingleton();
   MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
 
-  utilityProc->CleanShutdown(sbKind);
-  Maybe<int32_t> utilityPid = utilityProc->ProcessPid(sbKind);
+  utilityProc->CleanShutdown(SandboxingKind::GENERIC_UTILITY);
+  Maybe<int32_t> utilityPid =
+      utilityProc->ProcessPid(SandboxingKind::GENERIC_UTILITY);
   MOZ_RELEASE_ASSERT(utilityPid.isNothing(),
                      "Should not have a utility process PID anymore");
 
