@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_MP4_SAMPLE_ITERATOR_H_
-#define DOM_MEDIA_MP4_SAMPLE_ITERATOR_H_
+#ifndef INDEX_H_
+#define INDEX_H_
 
 #include "ByteStream.h"
 #include "MediaData.h"
@@ -15,19 +15,18 @@
 #include "TimeUnits.h"
 
 namespace mozilla {
-
-struct CencSampleEncryptionInfoEntry;
 class IndiceWrapper;
-class MP4SampleIndex;
 struct Sample;
+struct CencSampleEncryptionInfoEntry;
+
+class Index;
 
 typedef int64_t Microseconds;
 
 class SampleIterator {
  public:
-  explicit SampleIterator(MP4SampleIndex* aIndex);
+  explicit SampleIterator(Index* aIndex);
   ~SampleIterator();
-  bool HasNext();
   already_AddRefed<mozilla::MediaRawData> GetNext();
   void Seek(Microseconds aTime);
   Microseconds GetNextKeyframeTime();
@@ -49,15 +48,15 @@ class SampleIterator {
   Result<CryptoScheme, nsCString> GetEncryptionScheme();
 
   void Next();
-  RefPtr<MP4SampleIndex> mIndex;
-  friend class MP4SampleIndex;
+  RefPtr<Index> mIndex;
+  friend class Index;
   size_t mCurrentMoof;
   size_t mCurrentSample;
 };
 
-class MP4SampleIndex {
+class Index {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MP4SampleIndex)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Index)
 
   struct Indice {
     uint64_t start_offset;
@@ -100,8 +99,8 @@ class MP4SampleIndex {
     MP4Interval<Microseconds> mTime;
   };
 
-  MP4SampleIndex(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
-                 uint32_t aTrackId, bool aIsAudio);
+  Index(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
+        uint32_t aTrackId, bool aIsAudio);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);
@@ -116,7 +115,7 @@ class MP4SampleIndex {
   friend class SampleIterator;
 
  private:
-  ~MP4SampleIndex();
+  ~Index();
   void RegisterIterator(SampleIterator* aIterator);
   void UnregisterIterator(SampleIterator* aIterator);
 
