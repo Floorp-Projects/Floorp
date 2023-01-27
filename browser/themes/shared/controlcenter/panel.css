@@ -106,8 +106,6 @@
 }
 
 #identity-popup-security-httpsonlymode-menulist {
-  text-overflow: ellipsis;
-  overflow: hidden;
   width: 11em;
   margin: 0.5em 0;
 }
