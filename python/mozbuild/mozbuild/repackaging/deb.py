@@ -110,6 +110,21 @@ def repackage_deb(infile, output, template_dir, arch):
         ) as f:
             f.write("This is a packaged app.\n")
 
+        distro_dir_checkout = mozpath.join(tmpdir, "deb")
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "https://github.com/mozilla-partners/deb.git",
+                distro_dir_checkout,
+            ],
+            check=True,
+        )
+        shutil.copytree(
+            mozpath.join(distro_dir_checkout, "desktop/deb/distribution"),
+            mozpath.join(extract_dir, app_name.lower(), "distribution"),
+        )
+
         if os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}"):
             subprocess.check_call(
                 [
