@@ -82,10 +82,8 @@ char16_t CharAt(int32_t aOffset);
 virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY,
                               uint32_t aCoordType) override;
 
-bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
-                          int32_t aEndOffset);
-
-bool AddToSelection(int32_t aStartOffset, int32_t aEndOffset);
+virtual bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
+                                  int32_t aEndOffset) override;
 
 bool RemoveFromSelection(int32_t aSelectionNum);
 

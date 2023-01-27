@@ -25,13 +25,6 @@ inline void HyperTextAccessible::SetCaretOffset(int32_t aOffset) {
   SelectionMgr()->UpdateCaretOffset(this, aOffset);
 }
 
-inline bool HyperTextAccessible::AddToSelection(int32_t aStartOffset,
-                                                int32_t aEndOffset) {
-  dom::Selection* domSel = DOMSelection();
-  return domSel &&
-         SetSelectionBoundsAt(domSel->RangeCount(), aStartOffset, aEndOffset);
-}
-
 inline void HyperTextAccessible::ReplaceText(const nsAString& aText) {
   if (aText.Length() == 0) {
     DeleteText(0, CharacterCount());

@@ -14,6 +14,7 @@
 #ifdef A11Y_LOG
 #  include "Logging.h"
 #endif
+#include "TextLeafRange.h"
 
 namespace mozilla {
 namespace a11y {
@@ -235,6 +236,19 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetCaretOffset(
   if (acc && acc->IsTextRole() && acc->IsValidOffset(aOffset)) {
     acc->SetCaretOffset(aOffset);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetTextSelection(
+    const uint64_t& aStartID, const int32_t& aStartOffset,
+    const uint64_t& aEndID, const int32_t& aEndOffset,
+    const int32_t& aSelectionNum) {
+  TextLeafRange range(TextLeafPoint(IdToAccessible(aStartID), aStartOffset),
+                      TextLeafPoint(IdToAccessible(aEndID), aEndOffset));
+  if (range) {
+    range.SetSelection(aSelectionNum);
+  }
+
   return IPC_OK();
 }
 

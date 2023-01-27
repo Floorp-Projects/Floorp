@@ -676,21 +676,6 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
   *aEndOffset = end;
 }
 
-bool RemoteAccessible::AddToSelection(int32_t aStartOffset,
-                                      int32_t aEndOffset) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
-    return false;
-  }
-  RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
-  if (!acc) {
-    return false;
-  }
-
-  return SUCCEEDED(acc->addSelection(static_cast<long>(aStartOffset),
-                                     static_cast<long>(aEndOffset)));
-}
-
 bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     // Not yet supported by the cache.
@@ -935,6 +920,17 @@ GroupPos RemoteAccessible::GroupPosition() {
 
   // This is only supported when cache is enabled.
   return GroupPos();
+}
+
+bool RemoteAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
+                                            int32_t aStartOffset,
+                                            int32_t aEndOffset) {
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return false;
+  }
+
+  return RemoteAccessibleBase<RemoteAccessible>::SetSelectionBoundsAt(
+      aSelectionNum, aStartOffset, aEndOffset);
 }
 
 }  // namespace a11y

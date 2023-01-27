@@ -11,7 +11,7 @@
 #include "HTMLListAccessible.h"
 #include "nsAccUtils.h"
 #include "nsFrameSelection.h"
-#include "TextRange.h"
+#include "TextLeafRange.h"
 #include "TreeWalker.h"
 
 using namespace mozilla;
@@ -634,8 +634,15 @@ LocalAccessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
 void HyperTextAccessibleWrap::SelectRange(int32_t aStartOffset,
                                           HyperTextAccessible* aEndContainer,
                                           int32_t aEndOffset) {
-  TextRange range(this, this, aStartOffset, aEndContainer, aEndOffset);
-  range.SetSelectionAt(0);
+  TextLeafPoint start = ToTextLeafPoint(aStartOffset);
+  TextLeafPoint end = aEndContainer ? aEndContainer->ToTextLeafPoint(aEndOffset)
+                                    : TextLeafPoint();
+
+  TextLeafRange range(start, end);
+
+  if (range) {
+    range.SetSelection(0);
+  }
 }
 
 TextPoint HyperTextAccessibleWrap::FindTextPoint(

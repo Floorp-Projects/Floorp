@@ -256,6 +256,14 @@ class TextLeafRange final {
    */
   LayoutDeviceIntRect Bounds() const;
 
+  /**
+   * Set range as DOM selection.
+   * aSelectionNum is the selection index to use. If aSelectionNum is
+   * out of bounds for current selection ranges, or is -1, a new selection
+   * range is created.
+   */
+  MOZ_CAN_RUN_SCRIPT bool SetSelection(int32_t aSelectionNum) const;
+
  private:
   TextLeafPoint mStart;
   TextLeafPoint mEnd;

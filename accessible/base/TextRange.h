@@ -111,8 +111,6 @@ class TextRange final {
    */
   bool Crop(Accessible* aContainer);
 
-  MOZ_CAN_RUN_SCRIPT bool SetSelectionAt(int32_t aSelectionNum) const;
-
   /**
    * Scroll the text range into view.
    */

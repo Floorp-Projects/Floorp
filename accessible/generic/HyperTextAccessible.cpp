@@ -1905,21 +1905,6 @@ bool HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
   return true;
 }
 
-bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
-                                               int32_t aStartOffset,
-                                               int32_t aEndOffset) {
-  index_t startOffset = ConvertMagicOffset(aStartOffset);
-  index_t endOffset = ConvertMagicOffset(aEndOffset);
-  if (!startOffset.IsValid() || !endOffset.IsValid() ||
-      std::max(startOffset, endOffset) > CharacterCount()) {
-    NS_ERROR("Wrong in offset");
-    return false;
-  }
-
-  TextRange range(this, this, startOffset, this, endOffset);
-  return range.SetSelectionAt(aSelectionNum);
-}
-
 bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   RefPtr<dom::Selection> domSel = DOMSelection();
   if (!domSel) return false;
