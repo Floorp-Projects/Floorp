@@ -1,0 +1,27 @@
+From 795606a89337752f6d096a30d5bf803e214a27f7 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Subject: Revert "[ProfileData] Fix msan -fsanitize-memory-param-retval after D135929"
+
+This reverts commit 484f69bae731fff42ede9f5c4f59b833bf73e3b8, which is a
+preliminary to revert 1ae7d83803e45f6053ec6a606f259653846926b8.
+
+---
+ llvm/include/llvm/ProfileData/InstrProfReader.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/llvm/include/llvm/ProfileData/InstrProfReader.h b/llvm/include/llvm/ProfileData/InstrProfReader.h
+index 9c216e57d005..8beba947c863 100644
+--- a/llvm/include/llvm/ProfileData/InstrProfReader.h
++++ b/llvm/include/llvm/ProfileData/InstrProfReader.h
+@@ -609,7 +609,7 @@ private:
+   /// Total size of binary ids.
+   uint64_t BinaryIdsSize{0};
+   /// Start address of binary id length and data pairs.
+-  const uint8_t *BinaryIdsStart = nullptr;
++  const uint8_t *BinaryIdsStart;
+ 
+   // Index to the current record in the record array.
+   unsigned RecordIndex;
+-- 
+2.39.0.1.g6739ec1790
+
