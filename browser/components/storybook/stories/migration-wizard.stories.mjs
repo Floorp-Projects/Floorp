@@ -86,7 +86,7 @@ const Template = ({ state, dialogMode }) => {
   style.textContent = `
     @media (prefers-reduced-motion: no-preference) {
       migration-wizard::part(progress-spinner) {
-        mask: url(/migration/progress-mask.svg);
+        mask: url(./migration/progress-mask.svg);
       }
     }
   `;
