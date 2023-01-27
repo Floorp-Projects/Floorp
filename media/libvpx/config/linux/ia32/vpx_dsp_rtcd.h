@@ -490,6 +490,7 @@ RTCD_EXTERN void (*vpx_quantize_b)(const tran_low_t *coeff_ptr, intptr_t n_coeff
 void vpx_quantize_b_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 void vpx_quantize_b_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 void vpx_quantize_b_32x32_avx(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vpx_quantize_b_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 RTCD_EXTERN void (*vpx_quantize_b_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 
 unsigned int vpx_sad16x16_c(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
@@ -820,6 +821,7 @@ RTCD_EXTERN uint32_t (*vpx_sub_pixel_variance8x8)(const uint8_t *src_ptr, int sr
 
 void vpx_subtract_block_c(int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride);
 void vpx_subtract_block_sse2(int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride);
+void vpx_subtract_block_avx2(int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride);
 RTCD_EXTERN void (*vpx_subtract_block)(int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride);
 
 uint64_t vpx_sum_squares_2d_i16_c(const int16_t *src, int stride, int size);
@@ -1165,6 +1167,7 @@ static void setup_rtcd_internal(void)
     vpx_quantize_b_32x32 = vpx_quantize_b_32x32_c;
     if (flags & HAS_SSSE3) vpx_quantize_b_32x32 = vpx_quantize_b_32x32_ssse3;
     if (flags & HAS_AVX) vpx_quantize_b_32x32 = vpx_quantize_b_32x32_avx;
+    if (flags & HAS_AVX2) vpx_quantize_b_32x32 = vpx_quantize_b_32x32_avx2;
     vpx_sad16x16 = vpx_sad16x16_c;
     if (flags & HAS_SSE2) vpx_sad16x16 = vpx_sad16x16_sse2;
     vpx_sad16x16_avg = vpx_sad16x16_avg_c;
@@ -1344,6 +1347,7 @@ static void setup_rtcd_internal(void)
     if (flags & HAS_SSSE3) vpx_sub_pixel_variance8x8 = vpx_sub_pixel_variance8x8_ssse3;
     vpx_subtract_block = vpx_subtract_block_c;
     if (flags & HAS_SSE2) vpx_subtract_block = vpx_subtract_block_sse2;
+    if (flags & HAS_AVX2) vpx_subtract_block = vpx_subtract_block_avx2;
     vpx_sum_squares_2d_i16 = vpx_sum_squares_2d_i16_c;
     if (flags & HAS_SSE2) vpx_sum_squares_2d_i16 = vpx_sum_squares_2d_i16_sse2;
     vpx_tm_predictor_16x16 = vpx_tm_predictor_16x16_c;

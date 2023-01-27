@@ -11,7 +11,9 @@
 #ifndef VPX_VP8_ENCODER_ONYX_INT_H_
 #define VPX_VP8_ENCODER_ONYX_INT_H_
 
+#include <assert.h>
 #include <stdio.h>
+
 #include "vpx_config.h"
 #include "vp8/common/onyx.h"
 #include "treewriter.h"
@@ -483,7 +485,7 @@ typedef struct VP8_COMP {
 
   unsigned char *segmentation_map;
   signed char segment_feature_data[MB_LVL_MAX][MAX_MB_SEGMENTS];
-  int segment_encode_breakout[MAX_MB_SEGMENTS];
+  unsigned int segment_encode_breakout[MAX_MB_SEGMENTS];
 
   unsigned char *active_map;
   unsigned int active_map_enabled;
@@ -711,6 +713,8 @@ void vp8_initialize_enc(void);
 
 void vp8_alloc_compressor_data(VP8_COMP *cpi);
 int vp8_reverse_trans(int x);
+void vp8_reset_temporal_layer_change(VP8_COMP *cpi, VP8_CONFIG *oxcf,
+                                     const int prev_num_layers);
 void vp8_init_temporal_layer_context(VP8_COMP *cpi, VP8_CONFIG *oxcf,
                                      const int layer,
                                      double prev_layer_framerate);
@@ -730,6 +734,7 @@ void vp8_set_speed_features(VP8_COMP *cpi);
 #if CONFIG_DEBUG
 #define CHECK_MEM_ERROR(lval, expr)                                         \
   do {                                                                      \
+    assert(cpi->common.error.setjmp);                                       \
     (lval) = (expr);                                                        \
     if (!(lval))                                                            \
       vpx_internal_error(&cpi->common.error, VPX_CODEC_MEM_ERROR,           \
@@ -739,6 +744,7 @@ void vp8_set_speed_features(VP8_COMP *cpi);
 #else
 #define CHECK_MEM_ERROR(lval, expr)                               \
   do {                                                            \
+    assert(cpi->common.error.setjmp);                             \
     (lval) = (expr);                                              \
     if (!(lval))                                                  \
       vpx_internal_error(&cpi->common.error, VPX_CODEC_MEM_ERROR, \

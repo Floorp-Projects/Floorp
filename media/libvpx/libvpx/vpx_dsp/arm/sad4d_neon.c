@@ -20,9 +20,9 @@
 static INLINE uint8x8_t load_unaligned_2_buffers(const void *const buf0,
                                                  const void *const buf1) {
   uint32_t a;
-  uint32x2_t aa = vdup_n_u32(0);
+  uint32x2_t aa;
   memcpy(&a, buf0, 4);
-  aa = vset_lane_u32(a, aa, 0);
+  aa = vdup_n_u32(a);
   memcpy(&a, buf1, 4);
   aa = vset_lane_u32(a, aa, 1);
   return vreinterpret_u8_u32(aa);
@@ -237,8 +237,7 @@ void vpx_sad8x16x4d_neon(const uint8_t *src_ptr, int src_stride,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD) && \
-    (__ARM_FEATURE_DOTPROD == 1)
+#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
 
 static INLINE void sad16_neon(const uint8_t *ref_ptr, const uint8x16_t src_ptr,
                               uint32x4_t *const sum) {
@@ -270,7 +269,7 @@ static INLINE void sad16x_4d(const uint8_t *src_ptr, int src_stride,
   vst1q_u32(sad_array, vpaddq_u32(r0, r1));
 }
 
-#else
+#else  // !(defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD))
 
 static INLINE void sad16_neon(const uint8_t *ref_ptr, const uint8x16_t src_ptr,
                               uint16x8_t *const sum) {
@@ -305,7 +304,7 @@ static INLINE void sad16x_4d(const uint8_t *src_ptr, int src_stride,
   sad_512_pel_final_neon(sum, sad_array);
 }
 
-#endif
+#endif  // defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
 
 void vpx_sad16x8x4d_neon(const uint8_t *src_ptr, int src_stride,
                          const uint8_t *const ref_array[4], int ref_stride,
@@ -327,8 +326,7 @@ void vpx_sad16x32x4d_neon(const uint8_t *src_ptr, int src_stride,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD) && \
-    (__ARM_FEATURE_DOTPROD == 1)
+#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
 
 static INLINE void sad32x_4d(const uint8_t *src_ptr, int src_stride,
                              const uint8_t *const ref_array[4], int ref_stride,
@@ -386,7 +384,7 @@ void vpx_sad32x64x4d_neon(const uint8_t *src_ptr, int src_stride,
   sad32x_4d(src_ptr, src_stride, ref_array, ref_stride, sad_array, 64);
 }
 
-#else
+#else  // !(defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD))
 
 static INLINE void sad32x_4d(const uint8_t *src_ptr, int src_stride,
                              const uint8_t *const ref_array[4], int ref_stride,
@@ -444,12 +442,11 @@ void vpx_sad32x64x4d_neon(const uint8_t *src_ptr, int src_stride,
   sad_2048_pel_final_neon(sum, sad_array);
 }
 
-#endif
+#endif  // defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD) && \
-    (__ARM_FEATURE_DOTPROD == 1)
+#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
 
 void vpx_sad64x32x4d_neon(const uint8_t *src_ptr, int src_stride,
                           const uint8_t *const ref_array[4], int ref_stride,
@@ -554,7 +551,7 @@ void vpx_sad64x64x4d_neon(const uint8_t *src_ptr, int src_stride,
   vst1q_u32(sad_array, vpaddq_u32(r0, r1));
 }
 
-#else
+#else  // !(defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD))
 
 void vpx_sad64x32x4d_neon(const uint8_t *src_ptr, int src_stride,
                           const uint8_t *const ref_array[4], int ref_stride,
@@ -649,4 +646,4 @@ void vpx_sad64x64x4d_neon(const uint8_t *src_ptr, int src_stride,
   sad_4096_pel_final_neon(sum, sad_array);
 }
 
-#endif
+#endif  // defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)

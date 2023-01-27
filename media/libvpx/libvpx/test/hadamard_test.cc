@@ -264,7 +264,8 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     NEON, HadamardLowbdTest,
     ::testing::Values(HadamardFuncWithSize(&vpx_hadamard_8x8_neon, 8),
-                      HadamardFuncWithSize(&vpx_hadamard_16x16_neon, 16)));
+                      HadamardFuncWithSize(&vpx_hadamard_16x16_neon, 16),
+                      HadamardFuncWithSize(&vpx_hadamard_32x32_neon, 32)));
 #endif  // HAVE_NEON
 
 // TODO(jingning): Remove highbitdepth flag when the SIMD functions are

@@ -590,17 +590,20 @@ static INLINE int sub_pix_var32xh(const uint8_t *src, int src_stride,
   return sum;
 }
 
-static unsigned int sub_pixel_variance32xh_avx2(
-    const uint8_t *src, int src_stride, int x_offset, int y_offset,
-    const uint8_t *dst, int dst_stride, int height, unsigned int *sse) {
+static int sub_pixel_variance32xh_avx2(const uint8_t *src, int src_stride,
+                                       int x_offset, int y_offset,
+                                       const uint8_t *dst, int dst_stride,
+                                       int height, unsigned int *sse) {
   return sub_pix_var32xh(src, src_stride, x_offset, y_offset, dst, dst_stride,
                          NULL, 0, 0, height, sse);
 }
 
-static unsigned int sub_pixel_avg_variance32xh_avx2(
-    const uint8_t *src, int src_stride, int x_offset, int y_offset,
-    const uint8_t *dst, int dst_stride, const uint8_t *second_pred,
-    int second_stride, int height, unsigned int *sse) {
+static int sub_pixel_avg_variance32xh_avx2(const uint8_t *src, int src_stride,
+                                           int x_offset, int y_offset,
+                                           const uint8_t *dst, int dst_stride,
+                                           const uint8_t *second_pred,
+                                           int second_stride, int height,
+                                           unsigned int *sse) {
   return sub_pix_var32xh(src, src_stride, x_offset, y_offset, dst, dst_stride,
                          second_pred, second_stride, 1, height, sse);
 }

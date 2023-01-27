@@ -10,6 +10,9 @@
 # The test app itself runs on the command line through adb shell
 # The paths are really messed up as the libvpx make file
 # expects to be made from a parent directory.
+
+# Ignore this file during non-NDK builds.
+ifdef NDK_ROOT
 CUR_WD := $(call my-dir)
 BINDINGS_DIR := $(CUR_WD)/../../..
 LOCAL_PATH := $(CUR_WD)/../../..
@@ -61,3 +64,4 @@ LOCAL_SRC_FILES := $(addprefix ./test/, $(FILTERED_SRC))
 # some test files depend on *_rtcd.h, ensure they're generated first.
 $(eval $(call rtcd_dep_template))
 include $(BUILD_EXECUTABLE)
+endif  # NDK_ROOT

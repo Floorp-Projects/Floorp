@@ -1608,7 +1608,7 @@ static int evaluate_inter_mode_rd(int mdcounts[4], RATE_DISTORTION *rd,
       unsigned int q2dc = xd->block[24].dequant[0];
       /* If theres is no codeable 2nd order dc
          or a very small uniform pixel change change */
-      if ((sse - var<q2dc * q2dc>> 4) || (sse / 2 > var && sse - var < 64)) {
+      if ((sse - var < q2dc * q2dc >> 4) || (sse / 2 > var && sse - var < 64)) {
         /* Check u and v to make sure skip is ok */
         unsigned int sse2 = VP8_UVSSE(x);
         if (sse2 * 2 < threshold) {

@@ -485,7 +485,7 @@ static void vpx_filter_block1d4_h4_sse2(const uint8_t *src_ptr,
     // Saturate and convert to 8-bit words
     dst_first = _mm_packus_epi16(dst_first, _mm_setzero_si128());
 
-    *((uint32_t *)(dst_ptr)) = _mm_cvtsi128_si32(dst_first);
+    *((int *)(dst_ptr)) = _mm_cvtsi128_si32(dst_first);
 
     src_ptr += src_stride;
     dst_ptr += dst_stride;
@@ -589,8 +589,8 @@ static void vpx_filter_block1d4_v4_sse2(const uint8_t *src_ptr,
     res_reg_0123 = _mm_packus_epi16(res_reg_0123_lo, reg_zero);
 
     // Save only half of the register (8 words)
-    *((uint32_t *)(dst_ptr)) = _mm_cvtsi128_si32(res_reg_m1012);
-    *((uint32_t *)(dst_ptr + dst_stride)) = _mm_cvtsi128_si32(res_reg_0123);
+    *((int *)(dst_ptr)) = _mm_cvtsi128_si32(res_reg_m1012);
+    *((int *)(dst_ptr + dst_stride)) = _mm_cvtsi128_si32(res_reg_0123);
 
     // Update the source by two rows
     src_ptr += src_stride_unrolled;

@@ -1299,7 +1299,7 @@ static int choose_partitioning(VP9_COMP *cpi, const TileInfo *const tile,
   // the reference (base layer frame) is key frame (i.e., is_key_frame == 1).
   int is_key_frame =
       (frame_is_intra_only(cm) ||
-       (is_one_pass_cbr_svc(cpi) &&
+       (is_one_pass_svc(cpi) &&
         cpi->svc.layer_context[cpi->svc.temporal_layer_id].is_key_frame));
   // Always use 4x4 partition for key frame.
   const int use_4x4_partition = frame_is_intra_only(cm);
@@ -1406,7 +1406,7 @@ static int choose_partitioning(VP9_COMP *cpi, const TileInfo *const tile,
 
     assert(yv12 != NULL);
 
-    if (!(is_one_pass_cbr_svc(cpi) && cpi->svc.spatial_layer_id) ||
+    if (!(is_one_pass_svc(cpi) && cpi->svc.spatial_layer_id) ||
         cpi->svc.use_gf_temporal_ref_current_layer) {
       // For now, GOLDEN will not be used for non-zero spatial layers, since
       // it may not be a temporal reference.
@@ -3413,7 +3413,8 @@ static void simple_motion_search(const VP9_COMP *const cpi, MACROBLOCK *const x,
   const VP9_COMMON *const cm = &cpi->common;
   MACROBLOCKD *const xd = &x->e_mbd;
   MODE_INFO *const mi = xd->mi[0];
-  const YV12_BUFFER_CONFIG *const yv12 = get_ref_frame_buffer(cpi, ref);
+  YV12_BUFFER_CONFIG *yv12;
+  YV12_BUFFER_CONFIG *scaled_ref_frame = vp9_get_scaled_ref_frame(cpi, ref);
   const int step_param = 1;
   const MvLimits tmp_mv_limits = x->mv_limits;
   const SEARCH_METHODS search_method = NSTEP;
@@ -3421,6 +3422,11 @@ static void simple_motion_search(const VP9_COMP *const cpi, MACROBLOCK *const x,
   MV ref_mv_full = { ref_mv.row >> 3, ref_mv.col >> 3 };
   MV best_mv = { 0, 0 };
   int cost_list[5];
+
+  if (scaled_ref_frame)
+    yv12 = scaled_ref_frame;
+  else
+    yv12 = get_ref_frame_buffer(cpi, ref);
 
   assert(yv12 != NULL);
   if (!yv12) return;
@@ -5381,7 +5387,7 @@ static void get_estimated_pred(VP9_COMP *cpi, const TileInfo *const tile,
 
     assert(yv12 != NULL);
 
-    if (!(is_one_pass_cbr_svc(cpi) && cpi->svc.spatial_layer_id) ||
+    if (!(is_one_pass_svc(cpi) && cpi->svc.spatial_layer_id) ||
         cpi->svc.use_gf_temporal_ref_current_layer) {
       // For now, GOLDEN will not be used for non-zero spatial layers, since
       // it may not be a temporal reference.

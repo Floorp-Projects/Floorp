@@ -1146,7 +1146,9 @@ int main(int argc, const char **argv) {
                       cx_pkt->data.twopass_stats.sz);
           break;
         }
-        default: { break; }
+        default: {
+          break;
+        }
       }
 
 #if CONFIG_VP9_DECODER && !SIMULCAST_MODE

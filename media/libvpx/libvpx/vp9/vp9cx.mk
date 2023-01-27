@@ -111,6 +111,7 @@ VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/temporal_filter_sse4.c
 VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/temporal_filter_constants.h
 
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_quantize_sse2.c
+VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_quantize_ssse3.c
 VP9_CX_SRCS-$(HAVE_AVX2) += encoder/x86/vp9_quantize_avx2.c
 VP9_CX_SRCS-$(HAVE_AVX) += encoder/x86/vp9_diamond_search_sad_avx.c
 VP9_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/vp9_diamond_search_sad_neon.c
@@ -121,10 +122,6 @@ endif
 
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_dct_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_error_sse2.asm
-
-ifeq ($(VPX_ARCH_X86_64),yes)
-VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_quantize_ssse3_x86_64.asm
-endif
 
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_dct_intrin_sse2.c
 VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_frame_scale_ssse3.c

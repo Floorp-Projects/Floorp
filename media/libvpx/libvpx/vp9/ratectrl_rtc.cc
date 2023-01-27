@@ -158,6 +158,8 @@ void VP9RateControlRTC::ComputeQP(const VP9FrameParamsQpRTC &frame_params) {
   }
   vp9_set_mb_mi(cm, cm->width, cm->height);
   cm->frame_type = frame_params.frame_type;
+  // This is needed to ensure key frame does not get unset in rc_get_svc_params.
+  cpi_->frame_flags = (cm->frame_type == KEY_FRAME) ? FRAMEFLAGS_KEY : 0;
   cpi_->refresh_golden_frame = (cm->frame_type == KEY_FRAME) ? 1 : 0;
   cpi_->sf.use_nonrd_pick_mode = 1;
   if (cpi_->svc.number_spatial_layers == 1 &&
@@ -205,12 +207,16 @@ int VP9RateControlRTC::GetLoopfilterLevel() const {
   return lf->filter_level;
 }
 
-signed char *VP9RateControlRTC::GetCyclicRefreshMap() const {
-  return cpi_->cyclic_refresh->map;
-}
+bool VP9RateControlRTC::GetSegmentationData(
+    VP9SegmentationData *segmentation_data) const {
+  if (!cpi_->cyclic_refresh->apply_cyclic_refresh) return false;
 
-int *VP9RateControlRTC::GetDeltaQ() const {
-  return cpi_->cyclic_refresh->qindex_delta;
+  segmentation_data->segmentation_map = cpi_->segmentation_map;
+  segmentation_data->segmentation_map_size =
+      cpi_->common.mi_cols * cpi_->common.mi_rows;
+  segmentation_data->delta_q = cpi_->cyclic_refresh->qindex_delta;
+  segmentation_data->delta_q_size = 3u;
+  return true;
 }
 
 void VP9RateControlRTC::PostEncodeUpdate(uint64_t encoded_frame_size) {

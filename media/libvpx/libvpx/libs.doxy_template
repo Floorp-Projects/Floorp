@@ -1097,15 +1097,6 @@ EXTERNAL_GROUPS        = YES
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
 
-# If the CLASS_DIAGRAMS tag is set to YES (the default) Doxygen will
-# generate a inheritance diagram (in HTML, RTF and la_te_x) for classes with base
-# or super classes. Setting the tag to NO turns the diagrams off. Note that
-# this option is superseded by the HAVE_DOT option below. This is only a
-# fallback. It is recommended to install and use dot, since it yields more
-# powerful graphs.
-
-CLASS_DIAGRAMS         = YES
-
 # If set to YES, the inheritance and collaboration graphs will hide
 # inheritance and usage relations if the target is undocumented
 # or is not a class.
@@ -1119,10 +1110,14 @@ HIDE_UNDOC_RELATIONS   = YES
 
 HAVE_DOT               = NO
 
-# If the CLASS_GRAPH and HAVE_DOT tags are set to YES then doxygen
-# will generate a graph for each documented class showing the direct and
-# indirect inheritance relations. Setting this tag to YES will force the
-# the CLASS_DIAGRAMS tag to NO.
+# If the CLASS_GRAPH tag is set to YES (or GRAPH) then doxygen will generate a
+# graph for each documented class showing the direct and indirect inheritance
+# relations. In case HAVE_DOT is set as well dot will be used to draw the graph,
+# otherwise the built-in generator will be used. If the CLASS_GRAPH tag is set
+# to TEXT the direct and indirect inheritance relations will be shown as texts /
+# links.
+# Possible values are: NO, YES, TEXT and GRAPH.
+# The default value is: YES.
 
 CLASS_GRAPH            = YES
 

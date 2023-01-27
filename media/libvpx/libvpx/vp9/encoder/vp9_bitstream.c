@@ -134,9 +134,9 @@ static void pack_mb_tokens(vpx_writer *w, TOKENEXTRA **tp,
   const TOKENEXTRA *p;
   const vp9_extra_bit *const extra_bits =
 #if CONFIG_VP9_HIGHBITDEPTH
-      (bit_depth == VPX_BITS_12)
-          ? vp9_extra_bits_high12
-          : (bit_depth == VPX_BITS_10) ? vp9_extra_bits_high10 : vp9_extra_bits;
+      (bit_depth == VPX_BITS_12)   ? vp9_extra_bits_high12
+      : (bit_depth == VPX_BITS_10) ? vp9_extra_bits_high10
+                                   : vp9_extra_bits;
 #else
       vp9_extra_bits;
   (void)bit_depth;

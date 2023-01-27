@@ -903,9 +903,9 @@ static double calc_correction_factor(double err_per_mb, double err_devisor,
   correction_factor = pow(error_term, power_term);
 
   /* Clip range */
-  correction_factor = (correction_factor < 0.05)
-                          ? 0.05
-                          : (correction_factor > 5.0) ? 5.0 : correction_factor;
+  correction_factor = (correction_factor < 0.05)  ? 0.05
+                      : (correction_factor > 5.0) ? 5.0
+                                                  : correction_factor;
 
   return correction_factor;
 }
@@ -947,11 +947,10 @@ static int estimate_max_q(VP8_COMP *cpi, FIRSTPASS_STATS *fpstats,
     }
 
     cpi->twopass.est_max_qcorrection_factor =
-        (cpi->twopass.est_max_qcorrection_factor < 0.1)
-            ? 0.1
-            : (cpi->twopass.est_max_qcorrection_factor > 10.0)
-                  ? 10.0
-                  : cpi->twopass.est_max_qcorrection_factor;
+        (cpi->twopass.est_max_qcorrection_factor < 0.1) ? 0.1
+        : (cpi->twopass.est_max_qcorrection_factor > 10.0)
+            ? 10.0
+            : cpi->twopass.est_max_qcorrection_factor;
   }
 
   /* Corrections for higher compression speed settings
@@ -1178,10 +1177,9 @@ static int estimate_kf_group_q(VP8_COMP *cpi, double section_err,
   } else {
     current_spend_ratio = (double)cpi->long_rolling_actual_bits /
                           (double)cpi->long_rolling_target_bits;
-    current_spend_ratio =
-        (current_spend_ratio > 10.0)
-            ? 10.0
-            : (current_spend_ratio < 0.1) ? 0.1 : current_spend_ratio;
+    current_spend_ratio = (current_spend_ratio > 10.0)  ? 10.0
+                          : (current_spend_ratio < 0.1) ? 0.1
+                                                        : current_spend_ratio;
   }
 
   /* Calculate a correction factor based on the quality of prediction in
@@ -1968,11 +1966,10 @@ static void define_gf_group(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   }
 
   cpi->twopass.gf_group_bits =
-      (cpi->twopass.gf_group_bits < 0)
-          ? 0
-          : (cpi->twopass.gf_group_bits > cpi->twopass.kf_group_bits)
-                ? cpi->twopass.kf_group_bits
-                : cpi->twopass.gf_group_bits;
+      (cpi->twopass.gf_group_bits < 0) ? 0
+      : (cpi->twopass.gf_group_bits > cpi->twopass.kf_group_bits)
+          ? cpi->twopass.kf_group_bits
+          : cpi->twopass.gf_group_bits;
 
   /* Clip cpi->twopass.gf_group_bits based on user supplied data rate
    * variability limit (cpi->oxcf.two_pass_vbrmax_section)

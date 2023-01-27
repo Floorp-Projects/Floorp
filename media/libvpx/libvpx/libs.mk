@@ -446,13 +446,13 @@ ifeq ($(VPX_ARCH_X86)$(VPX_ARCH_X86_64),yes)
 # YASM
 $(BUILD_PFX)vpx_config.asm: $(BUILD_PFX)vpx_config.h
 	@echo "    [CREATE] $@"
-	@LC_ALL=C egrep "#define [A-Z0-9_]+ [01]" $< \
+	@LC_ALL=C grep -E "#define [A-Z0-9_]+ [01]" $< \
 	    | awk '{print $$2 " equ " $$3}' > $@
 else
 ADS2GAS=$(if $(filter yes,$(CONFIG_GCC)),| $(ASM_CONVERSION))
 $(BUILD_PFX)vpx_config.asm: $(BUILD_PFX)vpx_config.h
 	@echo "    [CREATE] $@"
-	@LC_ALL=C egrep "#define [A-Z0-9_]+ [01]" $< \
+	@LC_ALL=C grep -E "#define [A-Z0-9_]+ [01]" $< \
 	    | awk '{print $$2 " EQU " $$3}' $(ADS2GAS) > $@
 	@echo "        END" $(ADS2GAS) >> $@
 CLEAN-OBJS += $(BUILD_PFX)vpx_config.asm

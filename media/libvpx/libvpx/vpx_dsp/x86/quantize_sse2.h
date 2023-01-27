@@ -29,6 +29,15 @@ static INLINE void load_b_values(const int16_t *zbin_ptr, __m128i *zbin,
   *shift = _mm_load_si128((const __m128i *)shift_ptr);
 }
 
+static INLINE void load_fp_values(const int16_t *round_ptr, __m128i *round,
+                                  const int16_t *quant_ptr, __m128i *quant,
+                                  const int16_t *dequant_ptr,
+                                  __m128i *dequant) {
+  *round = _mm_load_si128((const __m128i *)round_ptr);
+  *quant = _mm_load_si128((const __m128i *)quant_ptr);
+  *dequant = _mm_load_si128((const __m128i *)dequant_ptr);
+}
+
 // With ssse3 and later abs() and sign() are preferred.
 static INLINE __m128i invert_sign_sse2(__m128i a, __m128i sign) {
   a = _mm_xor_si128(a, sign);
@@ -62,11 +71,8 @@ static INLINE void calculate_dqcoeff_and_store(__m128i qcoeff, __m128i dequant,
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 }
 
-// Scan 16 values for eob reference in scan. Use masks (-1) from comparing to
-// zbin to add 1 to the index in 'scan'.
+// Scan 16 values for eob reference in scan.
 static INLINE __m128i scan_for_eob(__m128i *coeff0, __m128i *coeff1,
-                                   const __m128i zbin_mask0,
-                                   const __m128i zbin_mask1,
                                    const int16_t *scan, const int index,
                                    const __m128i zero) {
   const __m128i zero_coeff0 = _mm_cmpeq_epi16(*coeff0, zero);
@@ -74,9 +80,6 @@ static INLINE __m128i scan_for_eob(__m128i *coeff0, __m128i *coeff1,
   __m128i scan0 = _mm_load_si128((const __m128i *)(scan + index));
   __m128i scan1 = _mm_load_si128((const __m128i *)(scan + index + 8));
   __m128i eob0, eob1;
-  // Add one to convert from indices to counts
-  scan0 = _mm_sub_epi16(scan0, zbin_mask0);
-  scan1 = _mm_sub_epi16(scan1, zbin_mask1);
   eob0 = _mm_andnot_si128(zero_coeff0, scan0);
   eob1 = _mm_andnot_si128(zero_coeff1, scan1);
   return _mm_max_epi16(eob0, eob1);

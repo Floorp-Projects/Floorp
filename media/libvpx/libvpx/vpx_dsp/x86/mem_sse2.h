@@ -27,13 +27,13 @@ static INLINE int32_t loadu_int32(const void *src) {
 }
 
 static INLINE __m128i load_unaligned_u32(const void *a) {
-  uint32_t val;
+  int val;
   memcpy(&val, a, sizeof(val));
   return _mm_cvtsi32_si128(val);
 }
 
 static INLINE void store_unaligned_u32(void *const a, const __m128i v) {
-  const uint32_t val = _mm_cvtsi128_si32(v);
+  const int val = _mm_cvtsi128_si32(v);
   memcpy(a, &val, sizeof(val));
 }
 

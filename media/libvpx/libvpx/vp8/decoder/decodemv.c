@@ -372,9 +372,9 @@ static void read_mb_modes_mv(VP8D_COMP *pbi, MODE_INFO *mi,
         tmp = cnt[CNT_NEAREST];
         cnt[CNT_NEAREST] = cnt[CNT_NEAR];
         cnt[CNT_NEAR] = tmp;
-        tmp = near_mvs[CNT_NEAREST].as_int;
+        tmp = (int)near_mvs[CNT_NEAREST].as_int;
         near_mvs[CNT_NEAREST].as_int = near_mvs[CNT_NEAR].as_int;
-        near_mvs[CNT_NEAR].as_int = tmp;
+        near_mvs[CNT_NEAR].as_int = (uint32_t)tmp;
       }
 
       if (vp8_read(bc, vp8_mode_contexts[cnt[CNT_NEAREST]][1])) {

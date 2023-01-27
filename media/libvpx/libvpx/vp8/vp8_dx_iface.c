@@ -275,7 +275,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
                                   void *user_priv, long deadline) {
   volatile vpx_codec_err_t res;
   volatile unsigned int resolution_change = 0;
-  unsigned int w, h;
+  volatile unsigned int w, h;
 
   if (!ctx->fragments.enabled && (data == NULL && data_sz == 0)) {
     return 0;

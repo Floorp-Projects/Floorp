@@ -777,16 +777,16 @@ void vp9_temporal_filter_iterate_row_c(VP9_COMP *cpi, ThreadData *td,
           // Assign higher weight to matching MB if it's error
           // score is lower. If not applying MC default behavior
           // is to weight all MBs equal.
-          blk_fw[0] = err < (thresh_low << THR_SHIFT)
-                          ? 2
-                          : err < (thresh_high << THR_SHIFT) ? 1 : 0;
+          blk_fw[0] = err < (thresh_low << THR_SHIFT)    ? 2
+                      : err < (thresh_high << THR_SHIFT) ? 1
+                                                         : 0;
           blk_fw[1] = blk_fw[2] = blk_fw[3] = blk_fw[0];
         } else {
           use_32x32 = 0;
           for (k = 0; k < 4; k++)
-            blk_fw[k] = blk_bestsme[k] < thresh_low
-                            ? 2
-                            : blk_bestsme[k] < thresh_high ? 1 : 0;
+            blk_fw[k] = blk_bestsme[k] < thresh_low    ? 2
+                        : blk_bestsme[k] < thresh_high ? 1
+                                                       : 0;
         }
 
         for (k = 0; k < 4; k++) {

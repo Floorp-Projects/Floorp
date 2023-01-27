@@ -21,12 +21,13 @@
 // Reads 'size' bytes from 'file' into 'buf' with some fault tolerance.
 // Returns true on success.
 static int file_read(void *buf, size_t size, FILE *file) {
-  const int kMaxRetries = 5;
-  int retry_count = 0;
-  int file_error;
+  const int kMaxTries = 5;
+  int try_count = 0;
+  int file_error = 0;
   size_t len = 0;
-  do {
+  while (!feof(file) && len < size && try_count < kMaxTries) {
     const size_t n = fread((uint8_t *)buf + len, 1, size - len, file);
+    ++try_count;
     len += n;
     file_error = ferror(file);
     if (file_error) {
@@ -39,13 +40,13 @@ static int file_read(void *buf, size_t size, FILE *file) {
         return 0;
       }
     }
-  } while (!feof(file) && len < size && ++retry_count < kMaxRetries);
+  }
 
   if (!feof(file) && len != size) {
     fprintf(stderr,
             "Error reading file: %u of %u bytes read,"
-            " error: %d, retries: %d, %d: %s\n",
-            (uint32_t)len, (uint32_t)size, file_error, retry_count, errno,
+            " error: %d, tries: %d, %d: %s\n",
+            (uint32_t)len, (uint32_t)size, file_error, try_count, errno,
             strerror(errno));
   }
   return len == size;

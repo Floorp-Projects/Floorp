@@ -244,6 +244,12 @@ int vp9_compute_rd_mult_based_on_qindex(const VP9_COMP *cpi, int qindex) {
   // largest dc_quant is 21387, therefore rdmult should fit in int32_t
   int rdmult = q * q;
 
+  if (cpi->ext_ratectrl.ready &&
+      (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_RDMULT) != 0 &&
+      cpi->ext_ratectrl.ext_rdmult != VPX_DEFAULT_RDMULT) {
+    return cpi->ext_ratectrl.ext_rdmult;
+  }
+
   // Make sure this function is floating point safe.
   vpx_clear_system_state();
 
@@ -287,6 +293,11 @@ static int modulate_rdmult(const VP9_COMP *cpi, int rdmult) {
 
 int vp9_compute_rd_mult(const VP9_COMP *cpi, int qindex) {
   int rdmult = vp9_compute_rd_mult_based_on_qindex(cpi, qindex);
+  if (cpi->ext_ratectrl.ready &&
+      (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_RDMULT) != 0 &&
+      cpi->ext_ratectrl.ext_rdmult != VPX_DEFAULT_RDMULT) {
+    return cpi->ext_ratectrl.ext_rdmult;
+  }
   return modulate_rdmult(cpi, rdmult);
 }
 
@@ -567,6 +578,12 @@ void vp9_model_rd_from_var_lapndz_vec(unsigned int var[MAX_MB_PLANE],
   }
 }
 
+// Disable gcc 12.2 false positive warning.
+// warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
 void vp9_get_entropy_contexts(BLOCK_SIZE bsize, TX_SIZE tx_size,
                               const struct macroblockd_plane *pd,
                               ENTROPY_CONTEXT t_above[16],
@@ -604,6 +621,9 @@ void vp9_get_entropy_contexts(BLOCK_SIZE bsize, TX_SIZE tx_size,
       break;
   }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 void vp9_mv_pred(VP9_COMP *cpi, MACROBLOCK *x, uint8_t *ref_y_buffer,
                  int ref_y_stride, int ref_frame, BLOCK_SIZE block_size) {
