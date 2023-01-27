@@ -54,7 +54,7 @@ build_gcc() {
   fi
   ../gcc-source/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/ $EXTRA_CONFIGURE_FLAGS
   make $make_flags
-  make $make_flags install DESTDIR=$root_dir
+  make $make_flags install-strip DESTDIR=$root_dir
 
   cd $root_dir/tools
   ln -s gcc gcc/bin/cc
