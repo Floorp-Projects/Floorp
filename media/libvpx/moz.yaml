@@ -35,8 +35,8 @@ origin:
   license-file: LICENSE
 
 updatebot:
-    maintainer-phab: bryce
-    maintainer-bz: bvandyk@mozilla.com
+    maintainer-phab: chunmin
+    maintainer-bz: cchang@mozilla.com
     tasks:
       - type: vendoring
         enabled: true
