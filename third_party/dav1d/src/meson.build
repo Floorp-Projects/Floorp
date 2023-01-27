@@ -37,6 +37,7 @@ libdav1d_sources = files(
     'intra_edge.c',
     'itx_1d.c',
     'lf_mask.c',
+    'lib.c',
     'log.c',
     'mem.c',
     'msac.c',
@@ -47,6 +48,7 @@ libdav1d_sources = files(
     'refmvs.c',
     'scan.c',
     'tables.c',
+    'thread_task.c',
     'warpmv.c',
     'wedge.c',
 )
@@ -73,14 +75,6 @@ libdav1d_tmpl_sources = files(
 libdav1d_arch_tmpl_sources = []
 
 libdav1d_bitdepth_objs = []
-
-# libdav1d entrypoint source files
-# These source files contain library entry points and are
-# built with the stack-realign flag set, where necessary.
-libdav1d_entrypoints_sources = files(
-    'lib.c',
-    'thread_task.c'
-)
 
 # ASM specific sources
 libdav1d_asm_objs = []
@@ -245,7 +239,7 @@ endif
 
 
 libdav1d_rc_obj = []
-libdav1d_flags = [stackalign_flag]
+libdav1d_flags = []
 api_export_flags = []
 
 #
@@ -279,18 +273,6 @@ endif
 #
 # Library definitions
 #
-
-# Helper library for dav1d entrypoints
-libdav1d_entrypoints_objs = static_library('dav1d_entrypoint',
-    libdav1d_entrypoints_sources,
-    rev_target, config_h_target,
-
-    include_directories : dav1d_inc_dirs,
-    dependencies: [stdatomic_dependencies],
-    c_args : [libdav1d_flags, stackrealign_flag, api_export_flags],
-    install : false,
-    build_by_default : false,
-).extract_all_objects(recursive: true)
 
 # Helper library for each bitdepth
 libdav1d_bitdepth_objs = []
@@ -330,10 +312,11 @@ libdav1d = library('dav1d',
     libdav1d_sources,
     libdav1d_asm_objs,
     libdav1d_rc_obj,
+    rev_target,
+    config_h_target,
 
     objects : [
         libdav1d_bitdepth_objs,
-        libdav1d_entrypoints_objs
         ],
 
     include_directories : dav1d_inc_dirs,

@@ -48,7 +48,7 @@ static void check_splat_mv(const Dav1dRefmvsDSPContext *const c) {
             const int h_max = imin(w * 4, 32);
             const int w_uint32 = w * sizeof(refmvs_block) / sizeof(uint32_t);
             for (int h = h_min; h <= h_max; h *= 2) {
-                const int offset = (w * rnd()) & 31;
+                const int offset = (int) ((unsigned) w * rnd()) & 31;
                 union {
                     refmvs_block rmv;
                     uint32_t u32[3];

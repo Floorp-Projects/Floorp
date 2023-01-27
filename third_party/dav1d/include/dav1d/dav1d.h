@@ -68,6 +68,13 @@ enum Dav1dInloopFilterType {
                              DAV1D_INLOOPFILTER_RESTORATION,
 };
 
+enum Dav1dDecodeFrameType {
+    DAV1D_DECODEFRAMETYPE_ALL   = 0, ///< decode and return all frames
+    DAV1D_DECODEFRAMETYPE_REFERENCE = 1,///< decode and return frames referenced by other frames only
+    DAV1D_DECODEFRAMETYPE_INTRA = 2, ///< decode and return intra frames only (includes keyframes)
+    DAV1D_DECODEFRAMETYPE_KEY   = 3, ///< decode and return keyframes only
+};
+
 typedef struct Dav1dSettings {
     int n_threads; ///< number of threads (0 = number of logical cores in host system, default 0)
     int max_frame_delay; ///< Set to 1 for low-latency decoding (0 = ceil(sqrt(n_threads)), default 0)
@@ -86,7 +93,9 @@ typedef struct Dav1dSettings {
                                  ///< once when shown, default 0)
     enum Dav1dInloopFilterType inloop_filters; ///< postfilters to enable during decoding (default
                                                ///< DAV1D_INLOOPFILTER_ALL)
-    uint8_t reserved[20]; ///< reserved for future use
+    enum Dav1dDecodeFrameType decode_frame_type; ///< frame types to decode (default
+                                                 ///< DAV1D_DECODEFRAMETYPE_ALL)
+    uint8_t reserved[16]; ///< reserved for future use
 } Dav1dSettings;
 
 /**

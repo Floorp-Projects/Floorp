@@ -54,7 +54,7 @@ if is_asm_enabled
             'checkasm_bitdepth_@0@'.format(bitdepth),
             checkasm_tmpl_sources,
             include_directories: dav1d_inc_dirs,
-            c_args: ['-DBITDEPTH=@0@'.format(bitdepth), stackalign_flag],
+            c_args: ['-DBITDEPTH=@0@'.format(bitdepth)],
             install: false,
             build_by_default: false,
         )
@@ -87,7 +87,6 @@ if is_asm_enabled
             ],
 
         include_directories: dav1d_inc_dirs,
-        c_args: [stackalign_flag, stackrealign_flag],
         build_by_default: false,
         dependencies : [
             thread_dependency,

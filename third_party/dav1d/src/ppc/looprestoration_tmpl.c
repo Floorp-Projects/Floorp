@@ -50,12 +50,12 @@ static void wiener_filter_h_vsx(int32_t *hor_ptr,
                                 const int16_t filterh[8],
                                 const int w, const int h)
 {
-    static const i32x4 zerov = vec_splats(0);
-    static const i32x4 seven_vec = vec_splats(7);
-    static const i32x4 bitdepth_added_vec = vec_splats(1 << 14);
-    static const i32x4 round_bits_vec = vec_splats(3);
-    static const i32x4 rounding_off_vec = vec_splats(1<<2);
-    static const i32x4 clip_limit_v = vec_splats((1 << 13) - 1);
+    const i32x4 zerov = vec_splats(0);
+    const i32x4 seven_vec = vec_splats(7);
+    const i32x4 bitdepth_added_vec = vec_splats(1 << 14);
+    const i32x4 round_bits_vec = vec_splats(3);
+    const i32x4 rounding_off_vec = vec_splats(1<<2);
+    const i32x4 clip_limit_v = vec_splats((1 << 13) - 1);
 
     i16x8 filterhvall = vec_vsx_ld(0, filterh);
     i16x8 filterhv0 =  vec_splat( filterhvall, 0);
@@ -128,8 +128,8 @@ static void wiener_filter_h_vsx(int32_t *hor_ptr,
 }
 
 static inline i16x8 iclip_u8_vec(i16x8 v) {
-    static const i16x8 zerov = vec_splats((int16_t)0);
-    static const i16x8 maxv = vec_splats((int16_t)255);
+    const i16x8 zerov = vec_splats((int16_t)0);
+    const i16x8 maxv = vec_splats((int16_t)255);
     v = vec_max(zerov, v);
     v = vec_min(maxv, v);
     return v;
@@ -175,8 +175,8 @@ static inline void wiener_filter_v_vsx(uint8_t *p,
                                        const int16_t filterv[8],
                                        const int w, const int h)
 {
-    static const i32x4 round_bits_vec = vec_splats(11);
-    static const i32x4 round_vec = vec_splats((1 << 10) - (1 << 18));
+    const i32x4 round_bits_vec = vec_splats(11);
+    const i32x4 round_vec = vec_splats((1 << 10) - (1 << 18));
 
     i32x4 filterv0 =  vec_splats((int32_t) filterv[0]);
     i32x4 filterv1 =  vec_splats((int32_t) filterv[1]);

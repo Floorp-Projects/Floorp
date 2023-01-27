@@ -233,13 +233,13 @@ void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
     if (src->ref) {
         validate_input(src->data[0] != NULL);
         dav1d_ref_inc(src->ref);
-        if (src->frame_hdr_ref) dav1d_ref_inc(src->frame_hdr_ref);
-        if (src->seq_hdr_ref) dav1d_ref_inc(src->seq_hdr_ref);
-        if (src->m.user_data.ref) dav1d_ref_inc(src->m.user_data.ref);
-        if (src->content_light_ref) dav1d_ref_inc(src->content_light_ref);
-        if (src->mastering_display_ref) dav1d_ref_inc(src->mastering_display_ref);
-        if (src->itut_t35_ref) dav1d_ref_inc(src->itut_t35_ref);
     }
+    if (src->frame_hdr_ref) dav1d_ref_inc(src->frame_hdr_ref);
+    if (src->seq_hdr_ref) dav1d_ref_inc(src->seq_hdr_ref);
+    if (src->m.user_data.ref) dav1d_ref_inc(src->m.user_data.ref);
+    if (src->content_light_ref) dav1d_ref_inc(src->content_light_ref);
+    if (src->mastering_display_ref) dav1d_ref_inc(src->mastering_display_ref);
+    if (src->itut_t35_ref) dav1d_ref_inc(src->itut_t35_ref);
     *dst = *src;
 }
 
@@ -282,13 +282,13 @@ void dav1d_picture_unref_internal(Dav1dPicture *const p) {
     if (p->ref) {
         validate_input(p->data[0] != NULL);
         dav1d_ref_dec(&p->ref);
-        dav1d_ref_dec(&p->seq_hdr_ref);
-        dav1d_ref_dec(&p->frame_hdr_ref);
-        dav1d_ref_dec(&p->m.user_data.ref);
-        dav1d_ref_dec(&p->content_light_ref);
-        dav1d_ref_dec(&p->mastering_display_ref);
-        dav1d_ref_dec(&p->itut_t35_ref);
     }
+    dav1d_ref_dec(&p->seq_hdr_ref);
+    dav1d_ref_dec(&p->frame_hdr_ref);
+    dav1d_ref_dec(&p->m.user_data.ref);
+    dav1d_ref_dec(&p->content_light_ref);
+    dav1d_ref_dec(&p->mastering_display_ref);
+    dav1d_ref_dec(&p->itut_t35_ref);
     memset(p, 0, sizeof(*p));
     dav1d_data_props_set_defaults(&p->m);
 }

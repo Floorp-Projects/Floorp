@@ -30,7 +30,7 @@ project('dav1d', ['c'],
                       'b_ndebug=if-release'],
     meson_version: '>= 0.49.0')
 
-dav1d_soname_version       = '6.7.0'
+dav1d_soname_version       = '6.8.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -319,45 +319,17 @@ if fuzzing_engine == 'libfuzzer'
     add_project_arguments(cc.first_supported_argument(fuzzer_args), language : 'c')
 endif
 
-# Stack alignments flags
-
-stackalign_flag = []
-stackrealign_flag = []
-
 cdata.set10('ENDIANNESS_BIG', host_machine.endian() == 'big')
 
 if host_machine.cpu_family().startswith('x86')
     if get_option('stack_alignment') > 0
         stack_alignment = get_option('stack_alignment')
-    elif host_machine.cpu_family() == 'x86_64'
-        if cc.has_argument('-mpreferred-stack-boundary=6')
-            stackalign_flag = ['-mpreferred-stack-boundary=6']
-            stackrealign_flag = ['-mincoming-stack-boundary=4']
-            stack_alignment = 32
-        elif cc.has_argument('-mstack-alignment=64')
-            stackalign_flag = ['-mstack-alignment=64']
-            stackrealign_flag = ['-mstackrealign']
-            stack_alignment = 32
-        else
-            stack_alignment = 16
-        endif
+    elif host_machine.cpu_family() == 'x86_64' or host_machine.system() in ['linux', 'darwin', 'ios', 'tvos']
+        stack_alignment = 16
     else
-        if host_machine.system() == 'linux' or host_machine.system() in ['darwin', 'ios', 'tvos']
-            stack_alignment = 16
-        elif cc.has_argument('-mpreferred-stack-boundary=4')
-            stackalign_flag = ['-mpreferred-stack-boundary=4']
-            stackrealign_flag = ['-mincoming-stack-boundary=2']
-            stack_alignment = 16
-        elif cc.has_argument('-mstack-alignment=16')
-            stackalign_flag = ['-mstack-alignment=16']
-            stackrealign_flag = ['-mstackrealign']
-            stack_alignment = 16
-        else
-            stack_alignment = 4
-        endif
+        stack_alignment = 4
     endif
     cdata_asm.set('STACK_ALIGNMENT', stack_alignment)
-    cdata.set('STACK_ALIGNMENT', stack_alignment)
 endif
 
 cdata.set10('ARCH_AARCH64', host_machine.cpu_family() == 'aarch64' or host_machine.cpu() == 'arm64')
