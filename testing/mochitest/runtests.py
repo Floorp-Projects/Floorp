@@ -427,7 +427,6 @@ if mozinfo.isWin:
         finally:
             ctypes.windll.kernel32.CloseHandle(pHandle)
 
-
 else:
     import errno
 
@@ -3575,6 +3574,12 @@ toolbar#nav-bar {
         if options.crashAsPass:
             ignoreMissingLeaks.append("tab")
             ignoreMissingLeaks.append("socket")
+
+        # Provide a floor for Windows chrome leak detection, because we know
+        # we have some Windows-specific shutdown hangs that we avoid by timing
+        # out and leaking memory.
+        if options.flavor == "chrome" and mozinfo.isWin:
+            leakThresholds["default"] += 1296
 
         # Stop leak detection if m-bc code coverage is enabled
         # by maxing out the leak threshold for all processes.
