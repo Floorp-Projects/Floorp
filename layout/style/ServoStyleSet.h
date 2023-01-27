@@ -7,6 +7,7 @@
 #ifndef mozilla_ServoStyleSet_h
 #define mozilla_ServoStyleSet_h
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AnonymousContentKey.h"
 #include "mozilla/AtomArray.h"
 #include "mozilla/EnumeratedArray.h"
@@ -219,6 +220,18 @@ class ServoStyleSet {
     return ResolvePseudoElementStyle(aOriginatingElement, aType, aParentStyle,
                                      IsProbe::Yes);
   }
+
+  /**
+   * @brief Get a style for a highlight pseudo element.
+   *
+   * The highlight is identified by its name `aHighlightName`.
+   *
+   * Returns null if there are no rules matching for the highlight pseudo
+   * element.
+   */
+  already_AddRefed<ComputedStyle> ProbeHighlightPseudoElementStyle(
+      const dom::Element& aOriginatingElement, const nsAtom* aHighlightName,
+      ComputedStyle* aParentStyle);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style

@@ -1697,6 +1697,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     newHead->mStart = AssertedCast<int32_t>(*start);
     newHead->mEnd = AssertedCast<int32_t>(*end);
     newHead->mSelectionType = aSelectionType;
+    newHead->mHighlightName = mHighlightName;
     StyledRange* rd = mStyledRanges.FindRangeData(range);
     if (rd) {
       newHead->mTextRangeStyle = rd->mTextRangeStyle;
@@ -3700,6 +3701,11 @@ void Selection::SetColors(const nsAString& aForegroundColor,
 }
 
 void Selection::ResetColors(ErrorResult& aRv) { mCustomColors = nullptr; }
+
+void Selection::SetHighlightName(const nsAtom* aHighlightName) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
+  mHighlightName = aHighlightName;
+}
 
 JSObject* Selection::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
