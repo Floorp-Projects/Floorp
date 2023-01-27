@@ -37,6 +37,7 @@
 #include "GLConsts.h"
 #include "GLDefs.h"
 #include "GLTypes.h"
+#include "GLVendor.h"
 #include "nsRegionFwd.h"
 #include "nsString.h"
 #include "GLContextTypes.h"
@@ -149,19 +150,6 @@ enum class ContextProfile : uint8_t {
   OpenGLCore,
   OpenGLCompatibility,
   OpenGLES
-};
-
-enum class GLVendor {
-  Intel,
-  NVIDIA,
-  ATI,
-  Qualcomm,
-  Imagination,
-  Nouveau,
-  Vivante,
-  VMware,
-  ARM,
-  Other
 };
 
 enum class GLRenderer {
