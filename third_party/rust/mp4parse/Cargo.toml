@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse"
-version = "0.13.0"
+version = "0.16.0"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -13,7 +13,7 @@ description = "Parser for ISO base media file format (mp4)"
 documentation = "https://docs.rs/mp4parse/"
 license = "MPL-2.0"
 categories = ["multimedia::video"]
-
+edition = "2018"
 repository = "https://github.com/mozilla/mp4parse-rust"
 
 # Avoid complaints about trying to package test files.
@@ -28,7 +28,6 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 [dependencies]
 byteorder = "1.2.1"
 bitreader = { version = "0.3.2" }
-env_logger = "0.8"
 fallible_collections = { version = "0.4", features = ["std_io"] }
 num-traits = "0.2.14"
 log = "0.4"
