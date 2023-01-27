@@ -420,10 +420,13 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
     if (win) {
       if (Document* doc = win->GetExtantDoc()) {
-        AutoTArray<nsString, 1> params;
-        GetType(*params.AppendElement());
-        doc->WarnOnceAbout(Document::ePreventDefaultFromPassiveListener, false,
-                           params);
+        if (!doc->HasWarnedAbout(
+                Document::ePreventDefaultFromPassiveListener)) {
+          AutoTArray<nsString, 1> params;
+          GetType(*params.AppendElement());
+          doc->WarnOnceAbout(Document::ePreventDefaultFromPassiveListener,
+                             false, params);
+        }
       }
     }
     return;
