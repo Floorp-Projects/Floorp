@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { normalizeToKebabCase } from "./utils.js";
-import { updateSelectedItem } from "../certviewer.js";
+import { normalizeToKebabCase } from "./utils.mjs";
+import { updateSelectedItem } from "../certviewer.mjs";
 
 export class CertificateTabsSection extends HTMLElement {
   constructor(isAboutCertificate) {
@@ -59,7 +59,7 @@ export class CertificateTabsSection extends HTMLElement {
 
     // If it is the first tab, allow it to be tabbable by the user.
     // If it isn't the first tab, do not allow tab functionality,
-    // as arrow functionality is implemented in certviewer.js.
+    // as arrow functionality is implemented in certviewer.mjs.
     if (i === 0) {
       tab.classList.add("selected");
       tab.setAttribute("tabindex", 0);

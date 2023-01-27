@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ErrorSection } from "./error-section.js";
-import { InfoGroupContainer } from "./info-group-container.js";
-import { CertificateTabsSection } from "./certificate-tabs-section.js";
+import { ErrorSection } from "./error-section.mjs";
+import { InfoGroupContainer } from "./info-group-container.mjs";
+import { CertificateTabsSection } from "./certificate-tabs-section.mjs";
 
 class CertificateSection extends HTMLElement {
   constructor(certs, error) {

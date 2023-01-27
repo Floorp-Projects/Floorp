@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { InfoItem } from "./info-item.js";
-import { updateSelectedItem } from "../certviewer.js";
-import { normalizeToKebabCase } from "./utils.js";
+import { InfoItem } from "./info-item.mjs";
+import { updateSelectedItem } from "../certviewer.mjs";
+import { normalizeToKebabCase } from "./utils.mjs";
 
 export class InfoGroup extends HTMLElement {
   constructor(item, final) {
