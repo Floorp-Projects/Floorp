@@ -1479,6 +1479,18 @@ export class SearchService {
         : this._searchDefault
     );
 
+    if (Services.policies?.status == Ci.nsIEnterprisePolicies.ACTIVE) {
+      let activePolicies = Services.policies.getActivePolicies();
+      if (activePolicies.SearchEngines) {
+        if (activePolicies.SearchEngines.Default) {
+          return this.#getEngineByName(activePolicies.SearchEngines.Default);
+        }
+        if (activePolicies.SearchEngines.Remove?.includes(defaultEngine.name)) {
+          defaultEngine = null;
+        }
+      }
+    }
+
     if (defaultEngine) {
       return defaultEngine;
     }
@@ -1490,8 +1502,12 @@ export class SearchService {
     }
 
     // Something unexpected has happened. In order to recover the app default
-    // engine, use the first visible engine which is the best we can do.
-    return this.#sortedVisibleEngines[0];
+    // engine, use the first visible engine that is also a general purpose engine.
+    // Worst case, we just use the first visible engine.
+    defaultEngine = this.#sortedVisibleEngines.find(
+      e => e.isGeneralPurposeEngine
+    );
+    return defaultEngine ? defaultEngine : this.#sortedVisibleEngines[0];
   }
 
   /**
@@ -1616,9 +1632,11 @@ export class SearchService {
 
     // Don't show the notification if the previous engine was an enterprise engine -
     // the text doesn't quite make sense.
-    if (prevCurrentEngineId) {
+    // let checkPolicyEngineId = prevCurrentEngineId ? prevCurrentEngineId : prevAppDefaultEngineId;
+    let checkPolicyEngineId = prevCurrentEngineId || prevAppDefaultEngineId;
+    if (checkPolicyEngineId) {
       let engineSettings = settings.engines.find(
-        e => e.id == prevCurrentEngineId
+        e => e.id == checkPolicyEngineId
       );
       if (engineSettings?._loadPath?.startsWith("[policy]")) {
         return false;
