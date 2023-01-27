@@ -7,7 +7,7 @@ You can try the site at
 <https://mdn.github.io/performance-scenarios/js-allocs/alloc.html>.
 Heres the code:
 
-``` {.brush: .js}
+```js
 var MONSTER_COUNT = 5000;
 var MIN_NAME_LENGTH = 2;
 var MAX_NAME_LENGTH = 48;

@@ -12,14 +12,14 @@ of this document easier to understand.
 
 `turbostat` must be invoked as the super-user:
 
-``` {.brush: .bash}
+```bash
 sudo turbostat
 ```
 
 If you get an error saying `"turbostat: no /dev/cpu/0/msr"`, you need to
 run the following command:
 
-```
+```bash
 sudo modprobe msr
 ```
 

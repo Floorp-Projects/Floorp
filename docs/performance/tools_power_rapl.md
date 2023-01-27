@@ -18,7 +18,7 @@ First, do a [standard build of Firefox](/setup/index.rst).
 
 On Mac, `rapl` can be run as follows.
 
-``` {.brush: .bash}
+```bash
 $OBJDIR/dist/bin/rapl
 ```
 
@@ -49,7 +49,7 @@ the relevant model-specific registers.
 The following is 10 seconds of output from a default invocation of
 `rapl`.
 
-``` {.brush: .bash}
+```bash
     total W = _pkg_ (cores + _gpu_ + other) + _ram_ W
 #01  5.17 W =  1.78 ( 0.12 +  0.10 +  1.56) +  3.39 W
 #02  9.43 W =  5.44 ( 1.44 +  1.20 +  2.80) +  3.98 W
@@ -81,7 +81,7 @@ Once sampling is finished --- either because the user interrupted it, or
 because the requested number of samples has been taken --- the following
 summary data is shown:
 
-``` {.brush: .bash}
+```bash
 10 samples taken over a period of 10.000 seconds
 
 Distribution of 'total' values:

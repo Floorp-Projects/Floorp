@@ -61,7 +61,7 @@ equivalent. You can read more on [React documentation](https://reactjs.org/docs/
 There's only one way to start a React application and trigger a first render:
 calling `ReactDOM.render`:
 
-```jsx
+```javascript
 ReactDOM.render(
   <Application content='Hello World!'/>,
   document.getElementById('root')
@@ -185,7 +185,7 @@ method with 2 parameters: the new props, and the new
 state. If this method returns false, then React will skip the render process for this
 component, **and its whole subtree**.
 
-```jsx
+```javascript
 class ComplexPanel extends React.Component {
   // Note: this syntax, new but supported by Babel, automatically binds the
   // method with the object instance.
@@ -230,7 +230,7 @@ A very common implementation of `shouldComponentUpdate` is provided by React's
 [`PureComponent`](https://reactjs.org/docs/react-api.html#reactpurecomponent):
 it will shallowly check the new props and states for reference equality.
 
-```jsx
+```javascript
 class ComplexPanel extends React.PureComponent {
   // Note: this syntax, new but supported by Babel, automatically binds the
   // method with the object instance.
