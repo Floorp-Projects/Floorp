@@ -4,6 +4,7 @@ projects:
     path: components/browser/domains
     publish: true
     upstream_dependencies:
+    - concept-toolbar
     - support-test
   browser-engine-gecko:
     description: Engine implementation based on GeckoView.
@@ -105,6 +106,7 @@ projects:
     upstream_dependencies:
     - concept-storage
     - concept-sync
+    - concept-toolbar
     - support-sync-telemetry
     - support-test
     - support-utils
@@ -596,6 +598,7 @@ projects:
     - browser-state
     - concept-engine
     - concept-storage
+    - concept-toolbar
     - support-ktx
     - support-test
     - support-test-fakes
@@ -631,11 +634,13 @@ projects:
     - browser-storage-sync
     - concept-awesomebar
     - concept-engine
+    - concept-toolbar
     - feature-session
     - service-firefox-accounts
     - support-base
     - support-ktx
     - support-test
+    - support-utils
   feature-tab-collections:
     description: Feature implementation for saving, restoring and organizing collections
       of tabs.
@@ -693,6 +698,7 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-storage-sync
+    - concept-toolbar
     - support-base
     - support-ktx
     - support-test
@@ -959,6 +965,7 @@ projects:
     upstream_dependencies:
     - browser-storage-sync
     - concept-storage
+    - concept-toolbar
     - lib-dataprotect
     - lib-fetch-httpurlconnection
     - service-firefox-accounts
