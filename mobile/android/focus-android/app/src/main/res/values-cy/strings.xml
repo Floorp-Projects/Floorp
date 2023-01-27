@@ -731,7 +731,10 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %1$s dderbyn pob cwci er mwyn cau’r faner.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %1$s dderbyn pob cwci er mwyn cau’r faner.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->

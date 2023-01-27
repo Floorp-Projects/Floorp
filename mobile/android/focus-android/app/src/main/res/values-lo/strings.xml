@@ -729,7 +729,10 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ. ຖ້າຕົວເລືອກການປະຕິເສດບໍ່ສາມາດໃຊ້ໄດ້, %1$s ອາດຈະຍອມຮັບ cookies ທັງໝົດເພື່ອປິດປ້າຍໂຄສະນາ.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ. ຖ້າຕົວເລືອກການປະຕິເສດບໍ່ສາມາດໃຊ້ໄດ້, %1$s ອາດຈະຍອມຮັບ cookies ທັງໝົດເພື່ອປິດປ້າຍໂຄສະນາ.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->

@@ -723,16 +723,19 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s ਆਪਣੇ-ਆਪ ਕੁਕੀਆਂ ਦੀਆਂ ਬੇਨਤੀਆਂ ਨੂੰ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ। ਜੇ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਚੋਣ ਮੌਜੂਦ ਨਹੀਂ ਹੁੰਦੀ ਤਾਂ ਝੰਡੀ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ %1$s ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਮੰਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ਆਪਣੇ-ਆਪ ਕੁਕੀਆਂ ਦੀਆਂ ਬੇਨਤੀਆਂ ਨੂੰ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ। ਜੇ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਚੋਣ ਮੌਜੂਦ ਨਹੀਂ ਹੁੰਦੀ ਤਾਂ ਝੰਡੀ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ %1$s ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਮੰਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ।</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner" tools:ignore="UnusedResources">%1$s ਨੇ ਖਿਝਾਊ ਕੂਕੀ ਬੈਨਰ ਖਾਰਜ ਕਰਨ ਲਈ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕੀਤੀ ਹੈ।\n\nਸੈਟਿੰਗਾਂ ਵਿੱਚੋਂ ਕੂਕੀ ਬੈਨਰ ਪਸੰਦਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ।</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ਨੇ ਖਿਝਾਊ ਕੂਕੀ ਬੈਨਰ ਖਾਰਜ ਕਰਨ ਲਈ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕੀਤੀ ਹੈ।\n\nਸੈਟਿੰਗਾਂ ਵਿੱਚੋਂ ਕੂਕੀ ਬੈਨਰ ਪਸੰਦਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ।</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s ਨੇ ਖਿਝਾਊ ਕੂਕੀ ਬੈਨਰ ਖਾਰਜ ਕਰਨ ਲਈ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕੀਤੀ ਹੈ।\n\%2$s ਵਿੱਚੋਂ ਕੂਕੀ ਬੈਨਰ ਪਸੰਦਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ।</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner_underline_settings" tools:ignore="UnusedResources">ਸੈਟਿੰਗਾਂ</string>
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ਸੈਟਿੰਗਾਂ</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">ਸੈਟਿੰਗਾਂ</string>
