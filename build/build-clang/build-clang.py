@@ -177,7 +177,6 @@ def build_one_stage(
     asm,
     ar,
     ranlib,
-    libtool,
     ldflags,
     src_dir,
     stage_dir,
@@ -199,7 +198,7 @@ def build_one_stage(
     def slashify_path(path):
         return path.replace("\\", "/")
 
-    def cmake_base_args(cc, cxx, asm, ar, ranlib, libtool, ldflags, inst_dir):
+    def cmake_base_args(cc, cxx, asm, ar, ranlib, ldflags, inst_dir):
         machine_targets = targets if is_final_stage and targets else "X86"
 
         cmake_args = [
@@ -259,8 +258,6 @@ def build_one_stage(
             cmake_args += ["-DLLVM_LINK_LLVM_DYLIB=ON"]
         if ranlib is not None:
             cmake_args += ["-DCMAKE_RANLIB=%s" % slashify_path(ranlib)]
-        if libtool is not None:
-            cmake_args += ["-DCMAKE_LIBTOOL=%s" % slashify_path(libtool)]
         if osx_cross_compile:
             arch = "arm64" if os.environ.get("OSX_ARCH") == "arm64" else "x86_64"
             target_cpu = (
@@ -313,7 +310,7 @@ def build_one_stage(
         return cmake_args
 
     cmake_args = []
-    cmake_args += cmake_base_args(cc, cxx, asm, ar, ranlib, libtool, ldflags, inst_dir)
+    cmake_args += cmake_base_args(cc, cxx, asm, ar, ranlib, ldflags, inst_dir)
     cmake_args += [src_dir]
     build_package(build_dir, cmake_args)
 
@@ -606,9 +603,6 @@ def main():
     # knows how to find it when they are installed alongside each others.
     ar = get_tool(config, "lib" if is_windows() else "ar")
     ranlib = None if is_windows() else get_tool(config, "ranlib")
-    libtool = None
-    if "libtool" in config:
-        libtool = get_tool(config, "libtool")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -725,7 +719,6 @@ def main():
             [asm] + extra_asmflags,
             ar,
             ranlib,
-            libtool,
             extra_ldflags,
             llvm_source_dir,
             stage1_dir,
@@ -751,7 +744,6 @@ def main():
             [asm] + extra_asmflags,
             ar,
             ranlib,
-            libtool,
             extra_ldflags,
             llvm_source_dir,
             stage2_dir,
@@ -778,7 +770,6 @@ def main():
             [asm] + extra_asmflags,
             ar,
             ranlib,
-            libtool,
             extra_ldflags,
             llvm_source_dir,
             stage3_dir,
@@ -821,7 +812,6 @@ def main():
             [asm] + extra_asmflags,
             ar,
             ranlib,
-            libtool,
             extra_ldflags,
             llvm_source_dir,
             stage4_dir,
