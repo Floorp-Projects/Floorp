@@ -35,11 +35,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @Composable
 fun ProfilerDialogueCard(content: @Composable () -> Unit) {
-    Card(
-        elevation = 8.dp,
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        content()
+    FirefoxTheme {
+        Card(
+            elevation = 8.dp,
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            content()
+        }
     }
 }
 
