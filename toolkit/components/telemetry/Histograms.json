@@ -1791,6 +1791,7 @@
       "alpha_y_bpc_mismatch",
       "ispe_mismatch",
       "invalid_cicp",
+      "no_samples",
       "invalid_parse_status",
       "missing_brand",
       "ftyp_not_first",
@@ -1805,7 +1806,8 @@
       "item_type_missing",
       "construction_method",
       "item_loc_not_found",
-      "no_item_data_box"
+      "no_item_data_box",
+      "uncategorized"
     ],
     "description": "Decode result of AVIF image",
     "bug_numbers": [1670827]
