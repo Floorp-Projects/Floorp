@@ -1274,6 +1274,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
          Operand(ARMRegister(src, 64)));
   }
 
+  void negs32(Register reg) {
+    Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
+  }
+
   void ret() {
     pop(lr);
     abiret();

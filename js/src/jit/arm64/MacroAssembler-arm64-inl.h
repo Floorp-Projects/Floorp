@@ -560,13 +560,13 @@ void MacroAssembler::inc64(AbsoluteAddress dest) {
 }
 
 void MacroAssembler::neg32(Register reg) {
-  Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
+  Neg(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
 }
 
 void MacroAssembler::neg64(Register64 reg) { negPtr(reg.reg); }
 
 void MacroAssembler::negPtr(Register reg) {
-  Negs(ARMRegister(reg, 64), Operand(ARMRegister(reg, 64)));
+  Neg(ARMRegister(reg, 64), Operand(ARMRegister(reg, 64)));
 }
 
 void MacroAssembler::negateFloat(FloatRegister reg) {
@@ -1475,7 +1475,7 @@ void MacroAssembler::branchRshift32(Condition cond, T src, Register dest,
 
 void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   MOZ_ASSERT(cond == Overflow);
-  neg32(reg);
+  negs32(reg);
   B(label, cond);
 }
 

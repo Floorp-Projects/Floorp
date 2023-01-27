@@ -1062,6 +1062,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ===============================================================
   // Arithmetic functions
 
+  // Condition flags aren't guaranteed to be set by these functions, for example
+  // x86 will always set condition flags, but ARM64 won't do it unless
+  // explicitly requested. Instead use branch(Add|Sub|Mul|Neg) to test for
+  // condition flags after performing arithmetic operations.
+
   inline void add32(Register src, Register dest) PER_SHARED_ARCH;
   inline void add32(Imm32 imm, Register dest) PER_SHARED_ARCH;
   inline void add32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
