@@ -67,7 +67,7 @@ add_task(async function navigation() {
       ok(
         !document.documentElement.hasAttribute("inFullscreen"),
         "The chrome window should not be in fullscreen"
-      );      
+      );
       ok(
         !document.documentElement.hasAttribute("inDOMFullscreen"),
         "The chrome document should not be in fullscreen"
