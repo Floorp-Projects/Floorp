@@ -759,8 +759,8 @@ bool HyperTextAccessibleBase::SelectionBoundsAt(int32_t aSelectionNum,
 }
 
 bool HyperTextAccessibleBase::SetSelectionBoundsAt(int32_t aSelectionNum,
-                                                         int32_t aStartOffset,
-                                                         int32_t aEndOffset) {
+                                                   int32_t aStartOffset,
+                                                   int32_t aEndOffset) {
   TextLeafRange range(ToTextLeafPoint(aStartOffset),
                       ToTextLeafPoint(aEndOffset, true));
   if (!range) {
