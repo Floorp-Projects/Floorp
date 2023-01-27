@@ -679,7 +679,7 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
 bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::RemoveFromSelection(
-      aSelectionNum);
+        aSelectionNum);
   }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
