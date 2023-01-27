@@ -62,6 +62,17 @@
       //       we count their internal selections.
       testTextAddSelection("div7", 7, 8, 5); // Test ad|d|ing...
 
+      // Test attempt to selected generated content.
+      // range's start is clipped to end of generated content.
+      testTextAddSelection("div8", 1, 8, 1);
+      testTextGetSelection("div8", 6, 8, 0);
+      // range's end is expanded to end of container hypertext.
+      testTextAddSelection("div8", 10, 15, 2);
+      testTextGetSelection("div8", 10, 23, 1);
+
+      testTextAddSelection("li", 0, 8, 1);
+      testTextGetSelection("li", 3, 8, 0);
+
       SimpleTest.finish();
     }
 
@@ -90,6 +101,18 @@
     <div id="div71">Test adding selections to inner element1 </div>
     <div id="div72">Test adding selections to inner element2 </div>
   </div>
+  <style>
+    #div8:before {
+      content: 'hello ';
+    }
+    #div8:after {
+      content: ', i love you';
+    }
+  </style>
+  <div id="div8">world</div>
+  <ol>
+    <li id="li">Number one</li>
+  </ol>
 
 </body>
 
