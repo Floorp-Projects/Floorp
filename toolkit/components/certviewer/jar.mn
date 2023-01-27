@@ -3,12 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-  content/global/certviewer/certviewer.html           (content/certviewer.html)
-  content/global/certviewer/certviewer.css            (content/certviewer.css)
-  content/global/certviewer/certviewer.js             (content/certviewer.js)
-  content/global/certviewer/components/               (content/components/*.js)
-  content/global/certviewer/components/               (content/components/*.css)
-  content/global/certviewer/certDecoder.jsm           (content/certDecoder.jsm)
-  content/global/certviewer/pvutils_bundle.jsm        (content/vendor/pvutils_bundle.jsm)
-  content/global/certviewer/asn1js_bundle.jsm         (content/vendor/asn1js_bundle.jsm)
-  content/global/certviewer/pkijs_bundle.jsm          (content/vendor/pkijs_bundle.jsm)
+  content/global/certviewer/certviewer.html  (content/certviewer.html)
+  content/global/certviewer/certviewer.css   (content/certviewer.css)
+  content/global/certviewer/certviewer.mjs   (content/certviewer.mjs)
+  content/global/certviewer/components/      (content/components/*.mjs)
+  content/global/certviewer/components/      (content/components/*.css)
+  content/global/certviewer/certDecoder.mjs  (content/certDecoder.mjs)
+  content/global/certviewer/vendor/pkijs.js  (content/vendor/pkijs.js)

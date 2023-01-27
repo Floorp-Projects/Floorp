@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { InfoGroup } from "./info-group.js";
-import { AboutCertificateItems } from "./about-certificate-items.js";
+import { InfoGroup } from "./info-group.mjs";
+import { AboutCertificateItems } from "./about-certificate-items.mjs";
 
 export class InfoGroupContainer extends HTMLElement {
   constructor(isAboutCertificate = false) {
