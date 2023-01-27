@@ -638,12 +638,19 @@ protected:
     #[cfg(debug_assertions)]
     // In debug make a note if we add a triangle strip that doesn't have 6 vertices
     // so that we can ensure that we only waffle 6-vertex tri strips.
-    m_fDbgNonLineSegmentTriangleStrip: bool
+    m_fDbgNonLineSegmentTriangleStrip: bool,
+    subpixel_bias: f32,
 }
 
 impl<'z, TVertex: Default> CHwTVertexBuffer<'z, TVertex> {
-    pub fn new(output_buffer: Option<&'z mut [TVertex]>) -> Self {
+    pub fn new(rasterization_truncates: bool, output_buffer: Option<&'z mut [TVertex]>) -> Self {
         CHwTVertexBuffer::<TVertex> {
+            subpixel_bias: if rasterization_truncates {
+                // 1/512 is 0.5 of a subpixel when using 8 bits of subpixel precision.
+                1./512.
+            } else {
+                0.
+            },
             m_rgVerticesBuffer: output_buffer,
             m_rgVerticesBufferOffset: 0,
             ..Default::default()
@@ -715,6 +722,7 @@ public:
 
 */
     m_vStatic: TVertex,
+    subpixel_bias: f32,
 }
 
 impl<TVertex> CHwTVertexBuffer<'_, TVertex> {
@@ -2315,11 +2323,21 @@ impl CHwVertexBuffer<'_> {
     // Add the vertices
     //
 
+    // OpenGL doesn't specify how vertex positions are converted to fixed point prior to rasterization. On macOS, with AMD GPUs,
+    // the GPU appears to truncate to fixed point instead of rounding. This behaviour is controlled by PA_SU_VTX_CNTL
+    // register. To handle this we'll add a 1./512. subpixel bias to the center vertex to cause the coordinates to round instead
+    // of truncate.
+    //
+    // D3D11 requires the fixed point integer result to be within 0.6ULP which implicitly disallows the truncate behaviour above.
+    // This means that D2D doesn't need to deal with this problem.
+    let subpixel_bias = self.subpixel_bias;
+
+
     // Use a single triangle to cover the entire line
     self.AddTriVertices(
         OutputVertex{ x: x0, y: y - 0.5, coverage: dwDiffuse },
         OutputVertex{ x: x0, y: y + 0.5, coverage: dwDiffuse },
-        OutputVertex{ x: x1, y, coverage: dwDiffuse },
+        OutputVertex{ x: x1, y: y + subpixel_bias, coverage: dwDiffuse },
     );
 
     self.AddedNonLineSegment();
