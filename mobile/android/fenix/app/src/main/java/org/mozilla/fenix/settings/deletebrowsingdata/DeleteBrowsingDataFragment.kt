@@ -114,8 +114,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         updateItemCounts()
     }
 
-    private fun updateDeleteButton() {
-        val enabled = getCheckboxes().any { it.isChecked }
+    private fun updateDeleteButton(deleteInProgress: Boolean = false) {
+        val enabled = getCheckboxes().any { it.isChecked } && !deleteInProgress
 
         binding.deleteData.isEnabled = enabled
         binding.deleteData.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
@@ -167,6 +167,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun startDeletion() {
+        updateDeleteButton(deleteInProgress = true)
         binding.progressBar.visibility = View.VISIBLE
         binding.deleteBrowsingDataWrapper.isEnabled = false
         binding.deleteBrowsingDataWrapper.isClickable = false
@@ -174,6 +175,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun finishDeletion() {
+        updateDeleteButton(deleteInProgress = false)
         val popAfter = binding.openTabsItem.isChecked
         binding.progressBar.visibility = View.GONE
         binding.deleteBrowsingDataWrapper.isEnabled = true
