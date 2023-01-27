@@ -1,5 +1,4 @@
 import pytest
-from webdriver.client import ShadowRoot
 from webdriver.transport import Response
 
 from tests.support.asserts import assert_error, assert_same_element, assert_success
@@ -13,11 +12,10 @@ def find_element(session, shadow_id, using, value):
         {"using": using, "value": value})
 
 
-def test_null_parameter_value(session, http, get_test_page):
-    session.url = get_test_page()
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
+def test_null_parameter_value(session, http, inline, get_shadow_page):
+    session.url = inline(get_shadow_page("<div><a href=# id=linkText>full link text</a></div>"))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
 
     path = "/session/{session_id}/shadow/{shadow_id}/element".format(
         session_id=session.session_id, shadow_id=shadow_root.id)
@@ -35,114 +33,103 @@ def test_no_browsing_context(session, closed_frame):
     assert_error(response, "no such window")
 
 
-def test_no_such_shadow_root_with_element(session, get_test_page):
-    session.url = get_test_page()
+def test_no_such_element_with_unknown_shadow_root(session, inline, get_shadow_page):
+    session.url = inline(get_shadow_page("<div><input type='checkbox'/></div>"))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
 
-    host = session.find.css("custom-element", all=False)
-
-    result = find_element(session, host.id, "css selector", "input")
-    assert_error(result, "no such shadow root")
-
-
-def test_no_such_shadow_root_with_unknown_shadow_root(session):
-    shadow_root = ShadowRoot(session, "foo")
+    session.url = inline("<p>")
 
     result = find_element(session, shadow_root.id, "css selector", "input")
-    assert_error(result, "no such shadow root")
+    assert_error(result, "no such element")
 
 
-def test_no_such_shadow_root_with_shadow_root_from_other_window_handle(
-    session, get_test_page
+@pytest.mark.parametrize(
+    "value",
+    ["#doesNotExist", "#inner"],
+    ids=["not-existent", "existent-inner-shadow-dom"],
+)
+def test_no_such_element_with_invalid_value(
+    session, iframe, inline, get_shadow_page, value
 ):
-    session.url = get_test_page()
+    session.url = inline(get_shadow_page(f"""
+        <div id="outer"/>
+        {get_shadow_page("<div id='inner'>")}
+    """))
 
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
+
+    response = find_element(session, shadow_root.id, "css selector", value)
+    assert_error(response, "no such element")
+
+
+def test_no_such_element_with_shadow_root_from_other_window_handle(
+    session, inline, get_shadow_page
+):
+    session.url = inline(get_shadow_page("<div>"))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
 
     new_handle = session.new_window()
     session.window_handle = new_handle
 
     response = find_element(session, shadow_root.id, "css selector", "div")
-    assert_error(response, "no such shadow root")
+    assert_error(response, "no such element")
 
 
-def test_no_such_shadow_root_with_shadow_root_from_other_frame(
-    session, get_test_page
+def test_no_such_element_with_shadow_root_from_other_frame(
+    session, iframe, inline, get_shadow_page
 ):
-    session.url = get_test_page(as_frame=True)
+    session.url = inline(iframe(get_shadow_page("<div>")))
+
     session.switch_frame(0)
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
     session.switch_frame("parent")
 
     response = find_element(session, shadow_root.id, "css selector", "div")
-    assert_error(response, "no such shadow root")
+    assert_error(response, "no such element")
 
 
 @pytest.mark.parametrize("as_frame", [False, True], ids=["top_context", "child_context"])
-def test_detached_shadow_root(session, get_test_page, as_frame):
-    session.url = get_test_page(as_frame=as_frame)
+def test_detached_shadow_root(session, iframe, inline, get_shadow_page, as_frame):
+    page = get_shadow_page("<div><input type='checkbox'/></div>")
 
     if as_frame:
+        session.url = inline(iframe(page))
         frame = session.find.css("iframe", all=False)
         session.switch_frame(frame)
+    else:
+        session.url = inline(page)
 
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    shadow_root = custom_element.shadow_root
 
-    session.execute_script("arguments[0].remove();", args=[host])
+    session.execute_script("arguments[0].remove();", args=[custom_element])
 
     response = find_element(session, shadow_root.id, "css selector", "input")
     assert_error(response, "detached shadow root")
 
 
-@pytest.mark.parametrize(
-    "selector",
-    ["#same1", "#in-frame", "#with-children"],
-    ids=["not-existent", "existent-other-frame", "existent-outside-shadow-root"],
-)
-def test_no_such_element_with_unknown_selector(session, get_test_page, selector):
-    session.url = get_test_page()
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    response = find_element(session, shadow_root.id, "css selector", selector)
-    assert_error(response, "no such element")
-
-
 @pytest.mark.parametrize("using", ["a", True, None, 1, [], {}])
-def test_invalid_using_argument(session, get_test_page, using):
-    session.url = get_test_page()
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    response = find_element(session, shadow_root.id, using, "input")
+def test_invalid_using_argument(session, using):
+    response = find_element(session, "notReal", using, "value")
     assert_error(response, "invalid argument")
 
 
 @pytest.mark.parametrize("value", [None, [], {}])
-def test_invalid_selector_argument(session, get_test_page, value):
-    session.url = get_test_page()
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    response = find_element(session, shadow_root.id, "css selector", value)
+def test_invalid_selector_argument(session, value):
+    response = find_element(session, "notReal", "css selector", value)
     assert_error(response, "invalid argument")
 
 
-def test_found_element_equivalence(session, get_test_page):
-    session.url = get_test_page()
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    expected = session.execute_script("""
-        return arguments[0].shadowRoot.querySelector('input')
-        """, args=(host,))
-
+def test_found_element_equivalence(session, inline, get_shadow_page):
+    session.url = inline(get_shadow_page("<div><input type='checkbox'/></div>"))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    expected = session.execute_script("return arguments[0].shadowRoot.querySelector('input')",
+                                      args=(custom_element,))
+    shadow_root = custom_element.shadow_root
     response = find_element(session, shadow_root.id, "css selector", "input")
     value = assert_success(response)
     assert_same_element(session, value, expected)
@@ -154,16 +141,12 @@ def test_found_element_equivalence(session, get_test_page):
                           ("partial link text", "link text"),
                           ("tag name", "a"),
                           ("xpath", "//a")])
-def test_find_element(session, get_test_page, using, value):
-    session.url = get_test_page(shadow_doc="<div><a href=# id=linkText>full link text</a></div>")
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    expected = session.execute_script("""
-        return arguments[0].shadowRoot.querySelector('#linkText')
-        """, args=(host,))
-
+def test_find_element(session, inline, get_shadow_page, using, value):
+    session.url = inline(get_shadow_page("<div><a href=# id=linkText>full link text</a></div>"))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    expected = session.execute_script("return arguments[0].shadowRoot.querySelector('#linkText')",
+                                      args=(custom_element,))
+    shadow_root = custom_element.shadow_root
     response = find_element(session, shadow_root.id, using, value)
     value = assert_success(response)
     assert_same_element(session, value, expected)
@@ -177,15 +160,12 @@ def test_find_element(session, get_test_page, using, value):
     ("<a href=#>LINK TEXT</a>", "LINK TEXT"),
     ("<a href=# style='text-transform: uppercase'>link text</a>", "LINK TEXT"),
 ])
-def test_find_element_link_text(session, get_test_page, document, value):
-    session.url = get_test_page(shadow_doc=f"<div>{document}</div>")
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    expected = session.execute_script("""
-        return arguments[0].shadowRoot.querySelectorAll('a')[0]
-        """,  args=(host,))
+def test_find_element_link_text(session, inline, get_shadow_page, document, value):
+    session.url = inline(get_shadow_page("<div>{0}</div>".format(document)))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    expected = session.execute_script("return arguments[0].shadowRoot.querySelectorAll('a')[0]",
+                                      args=(custom_element,))
+    shadow_root = custom_element.shadow_root
 
     response = find_element(session, shadow_root.id, "link text", value)
     value = assert_success(response)
@@ -201,15 +181,12 @@ def test_find_element_link_text(session, get_test_page, document, value):
     ("<a href=#>PARTIAL LINK TEXT</a>", "LINK"),
     ("<a href=# style='text-transform: uppercase'>partial link text</a>", "LINK"),
 ])
-def test_find_element_partial_link_text(session, get_test_page, document, value):
-    session.url = get_test_page(shadow_doc=f"<div>{document}</div>")
-
-    host = session.find.css("custom-element", all=False)
-    shadow_root = host.shadow_root
-
-    expected = session.execute_script("""
-        return arguments[0].shadowRoot.querySelectorAll('a')[0]
-        """, args=(host,))
+def test_find_element_partial_link_text(session, inline, get_shadow_page, document, value):
+    session.url = inline(get_shadow_page("<div>{0}</div>".format(document)))
+    custom_element = session.find.css("custom-shadow-element", all=False)
+    expected = session.execute_script("return arguments[0].shadowRoot.querySelectorAll('a')[0]",
+                                      args=(custom_element,))
+    shadow_root = custom_element.shadow_root
 
     response = find_element(session, shadow_root.id, "partial link text", value)
     value = assert_success(response)

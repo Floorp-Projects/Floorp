@@ -26,7 +26,7 @@ function setupTest() {
 }
 
 add_test(function getOrCreateNodeReference_invalid() {
-  const { browser, htmlEl, nodeCache } = setupTest();
+  const { htmlEl, nodeCache } = setupTest();
 
   const invalidValues = [
     null,
@@ -37,7 +37,6 @@ add_test(function getOrCreateNodeReference_invalid() {
     [],
     {},
     htmlEl.attributes[0],
-    browser.document.createDocumentFragment(),
   ];
 
   for (const value of invalidValues) {

@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
 
-const DOCUMENT_FRAGMENT_NODE = 11;
 const ELEMENT_NODE = 1;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -448,12 +447,12 @@ element.findClosest = function(startNode, selector) {
 };
 
 /**
- * Resolve element from specified web reference identifier.
+ * Resolve element from specified web element reference.
  *
  * @param {BrowsingContext} browsingContext
  *     The browsing context to retrieve the element from.
- * @param {string} nodeId
- *     The WebReference uuid for a DOM element.
+ * @param {ElementIdentifier} nodeId
+ *     The WebElement reference identifier for a DOM element.
  * @param {NodeCache} nodeCache
  *     Node cache that holds already seen WebElement and ShadowRoot references.
  *
@@ -461,7 +460,8 @@ element.findClosest = function(startNode, selector) {
  *     The DOM element that the identifier was generated for.
  *
  * @throws {NoSuchElementError}
- *     If the element doesn't exist in the current browsing context.
+ *     If element represented by reference <var>id</var> doesn't exist
+ *     in the current browsing context.
  * @throws {StaleElementReferenceError}
  *     If the element has gone stale, indicating its node document is no
  *     longer the active document or it is no longer attached to the DOM.
@@ -469,78 +469,25 @@ element.findClosest = function(startNode, selector) {
 element.getKnownElement = function(browsingContext, nodeId, nodeCache) {
   if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
     throw new lazy.error.NoSuchElementError(
-      `The element with the reference ${nodeId} is not known in the current browsing context`
-    );
-  }
-
-  const node = nodeCache.getNode(browsingContext, nodeId);
-
-  // Ensure the node is of the correct Node type.
-  if (node !== null && !element.isElement(node)) {
-    throw new lazy.error.NoSuchElementError(
-      `The element with the reference ${nodeId} is not of type HTMLElement`
+      lazy.pprint`The element reference of ${JSON.stringify(
+        nodeId.webElRef
+      )} is not known in the current browsing context`
     );
   }
 
   // If null, which may be the case if the element has been unwrapped from a
   // weak reference, it is always considered stale.
-  if (node === null || element.isStale(node)) {
+  const el = nodeCache.getNode(browsingContext, nodeId);
+  if (el === null || element.isStale(el)) {
     throw new lazy.error.StaleElementReferenceError(
-      `The element with the reference ${nodeId} ` +
+      lazy.pprint`The element reference of ${el ||
+        JSON.stringify(nodeId.webElRef)} ` +
         "is stale; either its node document is not the active document, " +
         "or it is no longer connected to the DOM"
     );
   }
 
-  return node;
-};
-
-/**
- * Resolve ShadowRoot from specified web reference identifier.
- *
- * @param {BrowsingContext} browsingContext
- *     The browsing context to retrieve the shadow root from.
- * @param {string} nodeId
- *     The WebReference uuid for a ShadowRoot.
- * @param {NodeCache} nodeCache
- *     Node cache that holds already seen WebElement and ShadowRoot references.
- *
- * @returns {ShadowRoot}
- *     The ShadowRoot that the identifier was generated for.
- *
- * @throws {NoSuchShadowRootError}
- *     If the ShadowRoot doesn't exist in the current browsing context.
- * @throws {DetachedShadowRootError}
- *     If the ShadowRoot is detached, indicating its node document is no
- *     longer the active document or it is no longer attached to the DOM.
- */
-element.getKnownShadowRoot = function(browsingContext, nodeId, nodeCache) {
-  if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
-    throw new lazy.error.NoSuchShadowRootError(
-      `The shadow root with the reference ${nodeId} is not known in the current browsing context`
-    );
-  }
-
-  const node = nodeCache.getNode(browsingContext, nodeId);
-
-  // Ensure the node is of the correct Node type.
-  if (node !== null && !element.isShadowRoot(node)) {
-    throw new lazy.error.NoSuchShadowRootError(
-      `The shadow root with the reference ${nodeId} is not of type ShadowRoot`
-    );
-  }
-
-  // If null, which may be the case if the element has been unwrapped from a
-  // weak reference, it is always considered stale.
-  if (node === null || element.isDetached(node)) {
-    throw new lazy.error.DetachedShadowRootError(
-      `The shadow root with the reference ${nodeId} ` +
-        "is detached; either its node document is not the active document, " +
-        "or it is no longer connected to the DOM"
-    );
-  }
-
-  return node;
+  return el;
 };
 
 /**
@@ -567,24 +514,6 @@ element.isCollection = function(seq) {
     default:
       return false;
   }
-};
-
-/**
- * Determines if <var>shadowRoot</var> is detached.
- *
- * A ShadowRoot is detached if its node document is not the active document
- * or if the element node referred to as its host is stale.
- *
- * @param {ShadowRoot} shadowRoot
- *     ShadowRoot to check for detached state.
- *
- * @return {boolean}
- *     True if <var>shadowRoot</var> is detached, false otherwise.
- */
-element.isDetached = function(shadowRoot) {
-  return (
-    !shadowRoot.ownerDocument.isActive() || element.isStale(shadowRoot.host)
-  );
 };
 
 /**
@@ -638,7 +567,7 @@ element.isStale = function(el) {
     return true;
   }
 
-  return !el.ownerDocument.isActive() || !el.isConnected;
+  return !el.ownerGlobal.document.isActive() || !el.isConnected;
 };
 
 /**
@@ -1187,19 +1116,17 @@ element.getShadowRoot = function(el) {
 };
 
 /**
- * Ascertains whether <var>node</var> is a shadow root.
+ * Ascertains whether <var>obj</var> is a shadow root.
  *
- * @param {ShadowRoot} node
+ * @param {ShadowRoot} obj
  *   The node that will be checked to see if it has a shadow root
  *
  * @returns {boolean}
- *     True if <var>node</var> is a shadow root, false otherwise.
+ *     True if <var>obj</var> is a shadow root, false otherwise.
  */
-element.isShadowRoot = function(node) {
+element.isShadowRoot = function(obj) {
   return (
-    node &&
-    node.nodeType === DOCUMENT_FRAGMENT_NODE &&
-    node.containingShadowRoot == node
+    obj !== null && typeof obj == "object" && obj.containingShadowRoot == obj
   );
 };
 
@@ -1213,7 +1140,13 @@ element.isShadowRoot = function(node) {
  *     True if <var>obj</var> is a DOM element, false otherwise.
  */
 element.isDOMElement = function(obj) {
-  return obj && obj.nodeType == ELEMENT_NODE && !element.isXULElement(obj);
+  return (
+    typeof obj == "object" &&
+    obj !== null &&
+    "nodeType" in obj &&
+    obj.nodeType == ELEMENT_NODE &&
+    !element.isXULElement(obj)
+  );
 };
 
 /**
@@ -1226,7 +1159,13 @@ element.isDOMElement = function(obj) {
  *     True if <var>obj</var> is a XULElement, false otherwise.
  */
 element.isXULElement = function(obj) {
-  return obj && obj.nodeType === ELEMENT_NODE && obj.namespaceURI === XUL_NS;
+  return (
+    typeof obj == "object" &&
+    obj !== null &&
+    "nodeType" in obj &&
+    obj.nodeType === obj.ELEMENT_NODE &&
+    obj.namespaceURI === XUL_NS
+  );
 };
 
 /**
@@ -1364,7 +1303,7 @@ export class WebReference {
    * Returns a new {@link WebReference} reference for a DOM or XUL element,
    * <code>WindowProxy</code>, or <code>ShadowRoot</code>.
    *
-   * @param {(Element|ShadowRoot|WindowProxy|MockXULElement)} node
+   * @param {(Element|ShadowRoot|WindowProxy|XULElement)} node
    *     Node to construct a web element reference for.
    * @param {string=} uuid
    *     Optional unique identifier of the WebReference if already known.
