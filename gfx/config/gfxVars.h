@@ -78,8 +78,7 @@ class gfxVarReceiver;
   _(ForceSubpixelAAWherePossible, bool, false)                     \
   _(DwmCompositionEnabled, bool, true)                             \
   _(FxREmbedded, bool, false)                                      \
-  _(UseAHardwareBufferContent, bool, false)                        \
-  _(UseAHardwareBufferSharedSurface, bool, false)                  \
+  _(UseAHardwareBufferSharedSurfaceWebglOop, bool, false)          \
   _(UseEGL, bool, false)                                           \
   _(DrmRenderDevice, nsCString, nsCString())                       \
   _(UseDMABuf, bool, false)                                        \

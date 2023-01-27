@@ -76,6 +76,10 @@ class RemoteTextureHostWrapper : public TextureHost {
 
   bool IsWrappingSurfaceTextureHost() override;
 
+  bool NeedsDeferredDeletion() const override;
+
+  AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override;
+
   bool CheckIsReadyForRendering();
 
   void ApplyTextureFlagsToRemoteTexture();

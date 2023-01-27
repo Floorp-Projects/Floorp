@@ -18,10 +18,6 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "SharedSurfaceGL.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/layers/AndroidHardwareBuffer.h"
-#endif
-
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -80,26 +76,8 @@ RefPtr<layers::TextureClient> ShareableCanvasRenderer::GetFrontBufferFromDesc(
     }
   }
 
-  if (desc.type() !=
-      SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer) {
-    mFrontBufferFromDesc = SharedSurfaceTextureData::CreateTextureClient(
-        desc, format, mData.mSize, flags, textureForwarder);
-  } else {
-#ifdef MOZ_WIDGET_ANDROID
-    const SurfaceDescriptorAndroidHardwareBuffer& bufferDesc =
-        desc.get_SurfaceDescriptorAndroidHardwareBuffer();
-    RefPtr<AndroidHardwareBuffer> buffer =
-        AndroidHardwareBufferManager::Get()->GetBuffer(bufferDesc.bufferId());
-    if (!buffer) {
-      return nullptr;
-    }
-    // TextureClient is created only when AndroidHardwareBuffer does not own it.
-    mFrontBufferFromDesc = buffer->GetTextureClientOfSharedSurfaceTextureData(
-        desc, format, mData.mSize, flags, textureForwarder);
-#else
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-#endif
-  }
+  mFrontBufferFromDesc = SharedSurfaceTextureData::CreateTextureClient(
+      desc, format, mData.mSize, flags, textureForwarder);
   mFrontBufferDesc = desc;
   return mFrontBufferFromDesc;
 }

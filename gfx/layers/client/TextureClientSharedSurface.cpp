@@ -49,58 +49,12 @@ void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
 }
 
 bool SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
-  if (mDesc.type() !=
-      SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer) {
-    aOutDescriptor = mDesc;
-    return true;
-  }
-
-#ifdef MOZ_WIDGET_ANDROID
-  // File descriptor is created heare for reducing its allocation.
-  const SurfaceDescriptorAndroidHardwareBuffer& desc =
-      mDesc.get_SurfaceDescriptorAndroidHardwareBuffer();
-  RefPtr<AndroidHardwareBuffer> buffer =
-      AndroidHardwareBufferManager::Get()->GetBuffer(desc.bufferId());
-  if (!buffer) {
-    return false;
-  }
-
-  int fd[2] = {};
-  if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
-    return false;
-  }
-
-  UniqueFileHandle readerFd(fd[0]);
-  UniqueFileHandle writerFd(fd[1]);
-
-  // Send the AHardwareBuffer to an AF_UNIX socket. It does not acquire or
-  // retain a reference to the buffer object. The caller is therefore
-  // responsible for ensuring that the buffer remains alive through the lifetime
-  // of this file descriptor.
-  int ret = buffer->SendHandleToUnixSocket(writerFd.get());
-  if (ret < 0) {
-    return false;
-  }
-
-  aOutDescriptor = layers::SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(std::move(readerFd)), buffer->mId, buffer->mSize,
-      buffer->mFormat);
+  aOutDescriptor = mDesc;
   return true;
-#else
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-  return false;
-#endif
 }
 
 TextureFlags SharedSurfaceTextureData::GetTextureFlags() const {
   TextureFlags flags = TextureFlags::NO_FLAGS;
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (mDesc.type() ==
-      SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer) {
-    flags |= TextureFlags::WAIT_HOST_USAGE_END;
-  }
-#endif
   return flags;
 }
 

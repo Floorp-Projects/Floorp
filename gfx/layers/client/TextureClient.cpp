@@ -288,10 +288,6 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (gfxVars::UseAHardwareBufferContent() &&
-      aSelector == BackendSelector::Content) {
-    return TextureType::AndroidHardwareBuffer;
-  }
   if (StaticPrefs::gfx_use_surfacetexture_textures_AtStartup()) {
     return TextureType::AndroidNativeWindow;
   }
@@ -363,8 +359,6 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       return MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-    case TextureType::AndroidHardwareBuffer:
-      return AndroidHardwareBufferTextureData::Create(aSize, aFormat);
     case TextureType::AndroidNativeWindow:
       return AndroidNativeWindowTextureData::Create(aSize, aFormat);
 #endif

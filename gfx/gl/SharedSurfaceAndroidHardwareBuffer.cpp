@@ -120,20 +120,12 @@ void SharedSurface_AndroidHardwareBuffer::ProducerReleaseImpl() {
 
 Maybe<layers::SurfaceDescriptor>
 SharedSurface_AndroidHardwareBuffer::ToSurfaceDescriptor() {
-  // Create SurfaceDescriptor without a valid file descriptor.
-  // The valid file descriptor is created by
-  // SharedSurfaceTextureData::Serialize().
-  // When valid file descriptor is created in this function,
-  // It causes out of file descriptor in this process, since the function is
-  // called for each layer transaction.
   return Some(layers::SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(), mAndroidHardwareBuffer->mId,
-      mAndroidHardwareBuffer->mSize, mAndroidHardwareBuffer->mFormat));
+      mAndroidHardwareBuffer->mId, mAndroidHardwareBuffer->mSize,
+      mAndroidHardwareBuffer->mFormat));
 }
 
 void SharedSurface_AndroidHardwareBuffer::WaitForBufferOwnership() {
-  mAndroidHardwareBuffer->WaitForBufferOwnership();
-
   ipc::FileDescriptor fenceFd =
       mAndroidHardwareBuffer->GetAndResetReleaseFence();
   if (!fenceFd.IsValid()) {

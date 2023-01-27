@@ -48,10 +48,6 @@
 #endif
 #include "VsyncSource.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/layers/AndroidHardwareBuffer.h"
-#endif
-
 using mozilla::Unused;
 using mozilla::gfx::GPUProcessManager;
 
@@ -410,12 +406,6 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvParentAsyncMessages(
         NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
         break;
       }
-      case AsyncParentMessageData::TOpDeliverReleaseFence: {
-        // Release fences are delivered via ImageBridge.
-        // Since some TextureClients are recycled without recycle callback.
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        break;
-      }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
         return IPC_FAIL_NO_REASON(this);
@@ -471,15 +461,6 @@ void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
   if (!aClient) {
     return;
   }
-
-#ifdef MOZ_WIDGET_ANDROID
-  auto bufferId = aClient->GetInternalData()->GetBufferId();
-  if (bufferId.isSome()) {
-    MOZ_ASSERT(aClient->GetFlags() & TextureFlags::WAIT_HOST_USAGE_END);
-    AndroidHardwareBufferManager::Get()->HoldUntilNotifyNotUsed(
-        bufferId.ref(), GetFwdTransactionId(), /* aUsesImageBridge */ false);
-  }
-#endif
 
   bool waitNotifyNotUsed =
       aClient->GetFlags() & TextureFlags::RECYCLE ||

@@ -505,11 +505,7 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
   bool NeedsDeferredDeletion() const override { return false; }
 
  protected:
-  void DestroyEGLImage();
-
   RefPtr<AndroidHardwareBuffer> mAndroidHardwareBuffer;
-  RefPtr<GLTextureSource> mTextureSource;
-  EGLImage mEGLImage;
 };
 
 #endif  // MOZ_WIDGET_ANDROID

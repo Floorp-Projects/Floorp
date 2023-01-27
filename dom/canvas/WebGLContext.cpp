@@ -1201,6 +1201,7 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
     case layers::SurfaceDescriptor::TSurfaceDescriptorD3D10:
     case layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
     case layers::SurfaceDescriptor::TSurfaceTextureDescriptor:
+    case layers::SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer:
       keepAlive = surf;
       break;
     default:

@@ -6258,11 +6258,6 @@
   value: false
   mirror: once
 
-- name: gfx.use-ahardwarebuffer-content
-  type: bool
-  value: false
-  mirror: once
-
 # Use SurfaceTextures as preferred backend for TextureClient/Host.
 - name: gfx.use-surfacetexture-textures
   type: bool
@@ -14405,11 +14400,6 @@
   value: true
   mirror: always
 
-- name: webgl.enable-ahardwarebuffer
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: webgl.enable-webgl2
   type: RelaxedAtomicBool
   value: true
@@ -14510,6 +14500,13 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+
+#if defined(MOZ_WIDGET_ANDROID)
+- name: webgl.out-of-process.enable-ahardwarebuffer
+  type: bool
+  value: false
+  mirror: once
+#endif
 
 # Override the blocklist to assume that GL is threadsafe.
 - name: webgl.threadsafe-gl.force-enabled
