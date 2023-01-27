@@ -57,7 +57,7 @@ class {{ webidl_name }} final : public nsISupports,
   // void GetPROP_NAME(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS({{ webidl_name }})
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS({{ webidl_name }})
 
  private:
   ~{{ webidl_name }}() = default;
