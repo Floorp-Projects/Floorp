@@ -65,13 +65,6 @@ class ImageBridgeParent final : public PImageBridgeParent,
   void NotifyNotUsed(PTextureParent* aTexture,
                      uint64_t aTransactionId) override;
 
-  static void NotifyBufferNotUsedOfCompositorBridge(
-      base::ProcessId aChildProcessId, TextureHost* aTexture,
-      uint64_t aTransactionId);
-
-  void NotifyBufferNotUsedOfCompositorBridge(TextureHost* aTexture,
-                                             uint64_t aTransactionId);
-
   base::ProcessId GetChildProcessId() override { return OtherPid(); }
 
   // PImageBridge

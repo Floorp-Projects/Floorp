@@ -19,10 +19,6 @@
 #include "nsDebug.h"   // for NS_WARNING, NS_ASSERTION
 #include "nsRegion.h"  // for nsIntRegion
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/layers/AndroidHardwareBuffer.h"
-#endif
-
 namespace mozilla {
 namespace layers {
 
@@ -100,16 +96,6 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
           AsyncCompositableRef(GetChildProcessId(), aHandle));
       aCompositable->EnableRemoteTexturePushCallback(
           op.ownerId(), GetChildProcessId(), op.size(), op.textureFlags());
-      break;
-    }
-    case CompositableOperationDetail::TOpDeliverAcquireFence: {
-      const OpDeliverAcquireFence& op = aDetail.get_OpDeliverAcquireFence();
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
-      MOZ_ASSERT(tex.get());
-      MOZ_ASSERT(tex->AsAndroidHardwareBufferTextureHost());
-
-      auto fenceFd = op.fenceFd();
-      tex->SetAcquireFence(std::move(fenceFd));
       break;
     }
     default: {

@@ -92,28 +92,12 @@ class AndroidHardwareBuffer
   static already_AddRefed<AndroidHardwareBuffer> Create(
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  // This function creates AndroidHardwareBuffer from FileDescriptor.
-  // The fuction is expected to be called on host side. Client side creates
-  // the FileDescriptor and it is delivered to host side via ipc.
-  static already_AddRefed<AndroidHardwareBuffer> FromFileDescriptor(
-      ipc::FileDescriptor& aFileDescriptor, uint64_t aBufferId,
-      gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
-
   virtual ~AndroidHardwareBuffer();
 
   int Lock(uint64_t aUsage, const ARect* aRect, void** aOutVirtualAddress);
   int Unlock();
 
-  int SendHandleToUnixSocket(int aSocketFd);
-
   AHardwareBuffer* GetNativeBuffer() const { return mNativeBuffer; }
-
-  // Waits until the buffer is no longer used by host side.
-  // Returns false when wait is aborted by timeout.
-  bool WaitForBufferOwnership();
-
-  // Returns true when the buffer is still in use by host side.
-  bool IsWaitingForBufferOwnership();
 
   void SetAcquireFence(ipc::FileDescriptor&& aFenceFd);
 
@@ -125,11 +109,6 @@ class AndroidHardwareBuffer
 
   ipc::FileDescriptor GetAcquireFence();
 
-  RefPtr<TextureClient> GetTextureClientOfSharedSurfaceTextureData(
-      const layers::SurfaceDescriptor& aDesc, const gfx::SurfaceFormat aFormat,
-      const gfx::IntSize& aSize, const TextureFlags aFlags,
-      LayersIPCChannel* aAllocator);
-
   const gfx::IntSize mSize;
   const uint32_t mStride;
   const gfx::SurfaceFormat mFormat;
@@ -140,21 +119,8 @@ class AndroidHardwareBuffer
                         uint32_t aStride, gfx::SurfaceFormat aFormat,
                         uint64_t aId);
 
-  void SetLastFwdTransactionId(uint64_t aFwdTransactionId,
-                               bool aUsesImageBridge,
-                               const MonitorAutoLock& aAutoLock);
-
-  uint64_t GetLastFwdTransactionId(const MonitorAutoLock& aAutoLock);
-
   void SetReleaseFence(ipc::FileDescriptor&& aFenceFd,
                        const MonitorAutoLock& aAutoLock);
-
-  struct FwdTransactionId {
-    FwdTransactionId(uint64_t aFwdTransactionId, bool aUsesImageBridge)
-        : mId(aFwdTransactionId), mUsesImageBridge(aUsesImageBridge) {}
-    uint64_t mId;
-    bool mUsesImageBridge;
-  };
 
   AHardwareBuffer* mNativeBuffer;
 
@@ -163,8 +129,6 @@ class AndroidHardwareBuffer
   bool mIsRegistered;
 
   // protected by AndroidHardwareBufferManager::mMonitor
-
-  Maybe<FwdTransactionId> mTransactionId;
 
   // FileDescriptor of release fence.
   // Release fence is a fence that is used for waiting until usage/composite of
@@ -175,14 +139,6 @@ class AndroidHardwareBuffer
   // Acquire fence is a fence that is used for waiting until rendering to
   // its AHardwareBuffer is completed.
   ipc::FileDescriptor mAcquireFenceFd;
-
-  // Only TextureClient of SharedSurfaceTextureData could be here.
-  // SharedSurfaceTextureData does not own AndroidHardwareBuffer,
-  // then it does not affect to a lifetime of AndroidHardwareBuffer.
-  // It is used for reducing SharedSurfaceTextureData re-creation to
-  // avoid re-allocating file descriptor by
-  // SharedSurfaceTextureData::Serialize().
-  RefPtr<TextureClient> mTextureClientOfSharedSurfaceTextureData;
 
   static uint64_t GetNextId();
 
@@ -209,30 +165,12 @@ class AndroidHardwareBufferManager {
 
   already_AddRefed<AndroidHardwareBuffer> GetBuffer(uint64_t aBufferId);
 
-  bool WaitForBufferOwnership(AndroidHardwareBuffer* aBuffer);
-
-  bool IsWaitingForBufferOwnership(AndroidHardwareBuffer* aBuffer);
-
-  void HoldUntilNotifyNotUsed(uint64_t aBufferId, uint64_t aFwdTransactionId,
-                              bool aUsesImageBridge);
-
-  void NotifyNotUsed(ipc::FileDescriptor&& aFenceFd, uint64_t aBufferId,
-                     uint64_t aTransactionId, bool aUsesImageBridge);
-
   Monitor& GetMonitor() { return mMonitor; }
 
  private:
   Monitor mMonitor MOZ_UNANNOTATED;
   std::unordered_map<uint64_t, ThreadSafeWeakPtr<AndroidHardwareBuffer>>
       mBuffers;
-
-  /**
-   * Hold AndroidHardwareBuffers that are used by host side via
-   * CompositorBridgeChild and ImageBridgeChild until end of their usages
-   * on host side.
-   */
-  std::unordered_map<uint64_t, RefPtr<AndroidHardwareBuffer>>
-      mWaitingNotifyNotUsed;
 
   static StaticAutoPtr<AndroidHardwareBufferManager> sInstance;
 };

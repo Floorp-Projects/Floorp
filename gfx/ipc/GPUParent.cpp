@@ -356,8 +356,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   // hardcode this value because we do not have a gfxPlatform instance.
   SkInitCairoFT(false);
 
-  if (gfxVars::UseAHardwareBufferContent() ||
-      gfxVars::UseAHardwareBufferSharedSurface()) {
+  if (gfxVars::UseAHardwareBufferSharedSurfaceWebglOop()) {
     layers::AndroidHardwareBufferApi::Init();
     layers::AndroidHardwareBufferManager::Init();
   }

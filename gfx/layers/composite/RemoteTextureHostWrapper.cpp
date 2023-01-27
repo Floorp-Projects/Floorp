@@ -226,4 +226,19 @@ bool RemoteTextureHostWrapper::IsWrappingSurfaceTextureHost() {
   return mRemoteTextureForDisplayList->IsWrappingSurfaceTextureHost();
 }
 
+bool RemoteTextureHostWrapper::NeedsDeferredDeletion() const {
+  if (!mRemoteTextureForDisplayList) {
+    return true;
+  }
+  return mRemoteTextureForDisplayList->NeedsDeferredDeletion();
+}
+
+AndroidHardwareBuffer* RemoteTextureHostWrapper::GetAndroidHardwareBuffer()
+    const {
+  if (!mRemoteTextureForDisplayList) {
+    return nullptr;
+  }
+  return mRemoteTextureForDisplayList->GetAndroidHardwareBuffer();
+}
+
 }  // namespace mozilla::layers

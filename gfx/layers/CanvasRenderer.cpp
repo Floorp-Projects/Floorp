@@ -120,7 +120,7 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
 #endif
 
   if (kIsAndroid) {
-    if (gfx::gfxVars::UseAHardwareBufferSharedSurface()) {
+    if (gfx::gfxVars::UseAHardwareBufferSharedSurfaceWebglOop()) {
       return TextureType::AndroidHardwareBuffer;
     }
     if (StaticPrefs::webgl_enable_surface_texture()) {

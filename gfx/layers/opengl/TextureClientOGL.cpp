@@ -246,38 +246,14 @@ void AndroidHardwareBufferTextureData::FillInfo(
 
 bool AndroidHardwareBufferTextureData::Serialize(
     SurfaceDescriptor& aOutDescriptor) {
-  int fd[2];
-  if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
-    aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-        ipc::FileDescriptor(), mAndroidHardwareBuffer->mId, mSize, mFormat);
-    return false;
-  }
-
-  UniqueFileHandle readerFd(fd[0]);
-  UniqueFileHandle writerFd(fd[1]);
-
-  // Send the AHardwareBuffer to an AF_UNIX socket. It does not acquire or
-  // retain a reference to the buffer object. The caller is therefore
-  // responsible for ensuring that the buffer remains alive through the lifetime
-  // of this file descriptor.
-  int ret = mAndroidHardwareBuffer->SendHandleToUnixSocket(writerFd.get());
-  if (ret < 0) {
-    aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-        ipc::FileDescriptor(), mAndroidHardwareBuffer->mId, mSize, mFormat);
-    return false;
-  }
-
   aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(std::move(readerFd)), mAndroidHardwareBuffer->mId,
-      mSize, mFormat);
+      mAndroidHardwareBuffer->mId, mSize, mFormat);
   return true;
 }
 
 bool AndroidHardwareBufferTextureData::Lock(OpenMode aMode) {
   if (!mIsLocked) {
     MOZ_ASSERT(!mAddress);
-
-    mAndroidHardwareBuffer->WaitForBufferOwnership();
 
     uint64_t usage = 0;
     if (aMode & OpenMode::OPEN_READ) {
