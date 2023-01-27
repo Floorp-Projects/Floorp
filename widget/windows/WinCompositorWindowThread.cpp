@@ -62,6 +62,10 @@ WinCompositorWindowThread::WinCompositorWindowThread(base::Thread* aThread)
 
 /* static */
 WinCompositorWindowThread* WinCompositorWindowThread::Get() {
+  if (!sWinCompositorWindowThread ||
+      sWinCompositorWindowThread->mHasAttemptedShutdown) {
+    return nullptr;
+  }
   return sWinCompositorWindowThread;
 }
 
@@ -78,6 +82,7 @@ void WinCompositorWindowThread::Start() {
     sWinCompositorWindowThread->mThread->Stop();
     if (sWinCompositorWindowThread->mThread->StartWithOptions(options)) {
       // Success!
+      sWinCompositorWindowThread->mHasAttemptedShutdown = false;
       return;
     }
     // Restart failed, so null out our sWinCompositorWindowThread and
@@ -100,6 +105,8 @@ void WinCompositorWindowThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sWinCompositorWindowThread);
 
+  sWinCompositorWindowThread->mHasAttemptedShutdown = true;
+
   // Our thread could hang while we're waiting for it to stop.
   // Since we're shutting down, that's not a critical problem.
   // We set a reasonable amount of time to wait for shutdown,
@@ -108,17 +115,33 @@ void WinCompositorWindowThread::ShutDown() {
   // to be deallocated and join the thread. If it times out,
   // we do nothing, which means that the thread will not be
   // joined and sWinCompositorWindowThread memory will leak.
-  static const TimeDuration TIMEOUT = TimeDuration::FromSeconds(2.0);
-  RefPtr<Runnable> runnable =
-      NewRunnableMethod("WinCompositorWindowThread::ShutDownTask",
-                        sWinCompositorWindowThread.get(),
-                        &WinCompositorWindowThread::ShutDownTask);
-  Loop()->PostTask(runnable.forget());
-
   CVStatus status;
   {
+    // It's important to hold the lock before posting the
+    // runnable. This ensures that the runnable can't begin
+    // until we've started our Wait, which prevents us from
+    // Waiting on a monitor that has already been notified.
     MonitorAutoLock lock(sWinCompositorWindowThread->mMonitor);
-    status = sWinCompositorWindowThread->mMonitor.Wait(TIMEOUT);
+
+    static const TimeDuration TIMEOUT = TimeDuration::FromSeconds(2.0);
+    RefPtr<Runnable> runnable =
+        NewRunnableMethod("WinCompositorWindowThread::ShutDownTask",
+                          sWinCompositorWindowThread.get(),
+                          &WinCompositorWindowThread::ShutDownTask);
+    Loop()->PostTask(runnable.forget());
+
+    // Monitor uses SleepConditionVariableSRW, which can have
+    // spurious wakeups which are reported as timeouts, so we
+    // check timestamps to ensure that we've waited as long we
+    // intended to. If we wake early, we don't bother calculating
+    // a precise amount for the next wait; we just wait the same
+    // amount of time. This means timeout might happen after as
+    // much as 2x the TIMEOUT time.
+    TimeStamp timeStart = TimeStamp::NowLoRes();
+    do {
+      status = sWinCompositorWindowThread->mMonitor.Wait(TIMEOUT);
+    } while ((status == CVStatus::Timeout) &&
+             ((TimeStamp::NowLoRes() - timeStart) < TIMEOUT));
   }
 
   if (status == CVStatus::NoTimeout) {

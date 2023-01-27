@@ -55,6 +55,10 @@ class WinCompositorWindowThread final {
 
   UniquePtr<base::Thread> const mThread;
   Monitor mMonitor;
+
+  // Has ShutDown been called on us? We might have survived if our thread join
+  // timed out.
+  bool mHasAttemptedShutdown = false;
 };
 
 }  // namespace widget
