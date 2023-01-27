@@ -1,4 +1,3 @@
-extern crate mp4parse_capi;
 use mp4parse_capi::*;
 use std::io::Read;
 
