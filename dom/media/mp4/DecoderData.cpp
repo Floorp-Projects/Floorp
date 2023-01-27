@@ -197,7 +197,7 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
     }
 
     // Pass the padding number, in frames, to the AAC decoder as well.
-    MP4SampleIndex::Indice indice = {0};
+    Index::Indice indice = {0};
     bool rv = aIndices->GetIndice(aIndices->Length() - 1, indice);
     uint64_t mediaFrameCount = 0;
     if (rv) {

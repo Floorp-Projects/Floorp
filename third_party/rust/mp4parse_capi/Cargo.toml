@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse_capi"
-version = "0.16.0"
+version = "0.13.0"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -12,7 +12,7 @@ authors = [
 description = "Parser for ISO base media file format (mp4)"
 documentation = "https://docs.rs/mp4parse_capi/"
 license = "MPL-2.0"
-edition = "2018"
+
 repository = "https://github.com/mozilla/mp4parse-rust"
 
 # Avoid complaints about trying to package test files.
@@ -27,11 +27,11 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 byteorder = "1.2.1"
 fallible_collections = { version = "0.4", features = ["std_io"] }
 log = "0.4"
-mp4parse = { version = "0.16.0", path = "../mp4parse", features = ["unstable-api"] }
+mp4parse = { version = "0.13.0", path = "../mp4parse", features = ["unstable-api"] }
 num-traits = "0.2.14"
 
 [dev-dependencies]
-env_logger = "0.9"
+env_logger = "0.8"
 
 [features]
 missing-pixi-permitted = ["mp4parse/missing-pixi-permitted"]

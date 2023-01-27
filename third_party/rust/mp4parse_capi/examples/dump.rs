@@ -1,4 +1,11 @@
-use log::info;
+extern crate mp4parse;
+extern crate mp4parse_capi;
+
+#[macro_use]
+extern crate log;
+
+extern crate env_logger;
+
 use mp4parse::ParseStrictness;
 use mp4parse_capi::*;
 use std::env;
@@ -112,9 +119,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                         }
                     }
                 }
-                Mp4parseTrackType::Video
-                | Mp4parseTrackType::Picture
-                | Mp4parseTrackType::AuxiliaryVideo => {
+                Mp4parseTrackType::Video => {
                     let mut video_info = Mp4parseTrackVideoInfo::default();
                     match mp4parse_get_track_video_info(parser, i, &mut video_info) {
                         Mp4parseStatus::Ok => {

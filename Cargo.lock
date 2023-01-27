@@ -71,7 +71,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e9dd62f37dea550caf48c77591dc50bd1a378ce08855be1a0c42a97b7550fb"
 dependencies = [
  "android_log-sys",
- "env_logger",
+ "env_logger 0.9.3",
  "log",
  "once_cell",
 ]
@@ -1566,11 +1566,22 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
+version = "0.8.999"
+dependencies = [
+ "env_logger 0.9.3",
+]
+
+[[package]]
+name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
 dependencies = [
+ "atty",
+ "humantime",
  "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -2057,7 +2068,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger",
+ "env_logger 0.9.3",
  "lazy_static",
  "log",
 ]
@@ -2316,7 +2327,7 @@ dependencies = [
  "bincode",
  "chrono",
  "crossbeam-channel",
- "env_logger",
+ "env_logger 0.9.3",
  "flate2",
  "log",
  "once_cell",
@@ -2611,6 +2622,12 @@ name = "httpdate"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
+
+[[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
@@ -3582,11 +3599,12 @@ dependencies = [
 
 [[package]]
 name = "mp4parse"
-version = "0.16.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=eb0b625bd7e888d05ebcfc7685e2501b34c3b374#eb0b625bd7e888d05ebcfc7685e2501b34c3b374"
+version = "0.13.0"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
 dependencies = [
  "bitreader",
  "byteorder",
+ "env_logger 0.8.999",
  "fallible_collections",
  "log",
  "num-traits",
@@ -3599,8 +3617,8 @@ version = "0.1.0"
 
 [[package]]
 name = "mp4parse_capi"
-version = "0.16.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=eb0b625bd7e888d05ebcfc7685e2501b34c3b374#eb0b625bd7e888d05ebcfc7685e2501b34c3b374"
+version = "0.13.0"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=3bfc47d9a571d0842676043ba60716318e946c06#3bfc47d9a571d0842676043ba60716318e946c06"
 dependencies = [
  "byteorder",
  "fallible_collections",
@@ -3641,7 +3659,7 @@ version = "0.6.3"
 source = "git+https://github.com/mozilla/neqo?tag=v0.6.3#4fe628bb911e4437169d974baa628c159e96f879"
 dependencies = [
  "chrono",
- "env_logger",
+ "env_logger 0.9.3",
  "lazy_static",
  "log",
  "qlog",
@@ -3982,7 +4000,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger",
+ "env_logger 0.9.3",
  "lazy_static",
  "libloading",
  "log",
@@ -5002,7 +5020,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger",
+ "env_logger 0.9.3",
  "jsparagus",
  "log",
 ]
