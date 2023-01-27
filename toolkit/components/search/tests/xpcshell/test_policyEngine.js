@@ -42,6 +42,11 @@ add_task(async function setup() {
 
   Services.fog.initializeFOG();
   await AddonTestUtils.promiseStartupManager();
+  await SearchTestUtils.useTestEngines();
+
+  SearchUtils.GENERAL_SEARCH_ENGINE_IDS = new Set([
+    "engine-resourceicon@search.mozilla.org",
+  ]);
 });
 
 add_task(async function test_enterprise_policy_engine() {
@@ -149,4 +154,32 @@ add_task(async function test_enterprise_policy_engine_remove() {
     !settings.engines.find(e => e.name == "p1"),
     "Should not have the engine settings stored"
   );
+});
+
+add_task(async function test_enterprise_policy_hidden_default() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Remove: ["Test search engine"],
+      },
+    },
+  });
+
+  Services.search.resetToAppDefaultEngine();
+
+  Assert.equal(Services.search.defaultEngine.name, "engine-resourceicon");
+});
+
+add_task(async function test_enterprise_policy_default() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Default: "engine-pref",
+      },
+    },
+  });
+
+  Services.search.resetToAppDefaultEngine();
+
+  Assert.equal(Services.search.defaultEngine.name, "engine-pref");
 });
