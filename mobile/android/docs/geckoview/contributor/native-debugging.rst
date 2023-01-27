@@ -151,14 +151,14 @@ following:
 
 .. code:: shell
 
-adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example
+   adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example
 
 The above command works with child processes too, e.g. to make the GPU
 process wait for a debugger, run:
 
 .. code:: shell
 
-adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example:gpu
+   adb shell am set-debug-app -w --persistent org.mozilla.geckoview_example:gpu
 
 
 Attaching a Java debugger to a waiting child process
