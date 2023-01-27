@@ -131,9 +131,7 @@ vendored in. To skip the install step use the `--no-install` option.
 To run only some specific tests from the whole test suite the appropriate
 test files have to be updated first. To select specific tests or test
 groups within a file define [exclusive tests] by adding the `.only` suffix
-like `it.only()` or `describe.only()`. Make sure to specify as well the
-`--subset` option to the mach command to disable the check for missing or
-skipped tests in our log parsing.
+like `it.only()` or `describe.only()`.
 
 More customizations for [Mocha] can be found in its own documentation.
 
