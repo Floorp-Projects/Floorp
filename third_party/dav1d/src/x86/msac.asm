@@ -619,7 +619,6 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
     mov           t3d, [t0+msac.update_cdf]
     mov           t4d, t2d
     not            t2
-%if STACK_ALIGNMENT < 32
     mov            r5, rsp
 %if WIN64
     and           rsp, ~31
@@ -627,11 +626,6 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
 %else
     and            r5, ~31
     %define buf r5-32
-%endif
-%elif WIN64
-    sub           rsp, 64
-%else
-    %define buf rsp-56
 %endif
     psrlw          m1, m0, 6
     movd      [buf-4], xm2
@@ -666,11 +660,7 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
     movzx         t2d, word [buf+rax-2]
     shr           eax, 1
 %if WIN64
-%if STACK_ALIGNMENT < 32
     mov           rsp, r5
-%else
-    add           rsp, 64
-%endif
 %endif
     vzeroupper
     jmp m(msac_decode_symbol_adapt4, _sse2).renorm2

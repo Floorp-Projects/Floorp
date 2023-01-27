@@ -2650,23 +2650,14 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, stride, w, h, mx, my
 %ifidn %1, put
  %assign isput  1
  %assign isprep 0
- %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal put_8tap_scaled_16bpc, 4, 15, 16, 0xe0, dst, ds, src, ss, w, h, mx, my, dx, dy, pxmax
- %else
 cglobal put_8tap_scaled_16bpc, 4, 14, 16, 0xe0, dst, ds, src, ss, w, h, mx, my, dx, dy, pxmax
- %endif
  %xdefine base_reg r12
     mov                 r7d, pxmaxm
 %else
  %assign isput  0
  %assign isprep 1
- %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal prep_8tap_scaled_16bpc, 4, 15, 16, 0xe0, tmp, src, ss, w, h, mx, my, dx, dy, pxmax
-  %xdefine tmp_stridem r14q
- %else
 cglobal prep_8tap_scaled_16bpc, 4, 14, 16, 0xe0, tmp, src, ss, w, h, mx, my, dx, dy, pxmax
   %define tmp_stridem qword [rsp+0xd0]
- %endif
  %xdefine base_reg r11
 %endif
     lea            base_reg, [%1_8tap_scaled_16bpc_avx2]
@@ -2698,15 +2689,9 @@ cglobal prep_8tap_scaled_16bpc, 4, 14, 16, 0xe0, tmp, src, ss, w, h, mx, my, dx,
   DEFINE_ARGS dst, ds, src, ss, w, h, _, my, dx, dy, ss3
   %define hm r6m
  %endif
- %if required_stack_alignment > STACK_ALIGNMENT
-  %define dsm [rsp+0x98]
-  %define rX r1
-  %define rXd r1d
- %else
-  %define dsm dsq
-  %define rX r14
-  %define rXd r14d
- %endif
+ %define dsm [rsp+0x98]
+ %define rX r1
+ %define rXd r1d
 %else ; prep
  %if WIN64
     mov                 r7d, hm
@@ -3580,9 +3565,7 @@ cglobal prep_8tap_scaled_16bpc, 4, 14, 16, 0xe0, tmp, src, ss, w, h, mx, my, dx,
     ; m1=mx, m7=pxmax, m10=h_rnd, m11=h_sh, m12=free
     mov                 myd, mym
 %if isput
- %if required_stack_alignment > STACK_ALIGNMENT
-  %define dsm [rsp+0xb8]
- %endif
+ %define dsm [rsp+0xb8]
     movifnidn           dsm, dsq
     mova         [rsp+0xc0], xm7
 %else

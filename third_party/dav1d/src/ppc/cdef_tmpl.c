@@ -82,7 +82,15 @@ static inline void copy4xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
     vec_st(l0, 0, tmp + (h + 0) * 8);
     vec_st(l1, 0, tmp + (h + 1) * 8);
 
-    for (int y = 0; y < h; y++) {
+    int y_with_left_edge = 0;
+    if (!(edges & CDEF_HAVE_LEFT)) {
+        u16x8 l = u8h_to_u16(vec_vsx_ld(0, src));
+        vec_vsx_st(l, 0, tmp + 2);
+
+        y_with_left_edge = 1;
+    }
+
+    for (int y = y_with_left_edge; y < h; y++) {
         u16x8 l = u8h_to_u16(vec_vsx_ld(0, src - 2 + y * src_stride));
         vec_st(l, 0, tmp + y * 8);
     }
@@ -160,7 +168,18 @@ static inline void copy8xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
     vec_st(l1h, 0, tmp + (h + 1) * 16);
     vec_st(l1l, 0, tmp + (h + 1) * 16 + 8);
 
-    for (int y = 0; y < h; y++) {
+    int y_with_left_edge = 0;
+    if (!(edges & CDEF_HAVE_LEFT)) {
+        u8x16 l = vec_vsx_ld(0, src);
+        u16x8 lh = u8h_to_u16(l);
+        u16x8 ll = u8l_to_u16(l);
+        vec_vsx_st(lh, 0, tmp + 2);
+        vec_vsx_st(ll, 0, tmp + 8 + 2);
+
+        y_with_left_edge = 1;
+    }
+
+    for (int y = y_with_left_edge; y < h; y++) {
         u8x16 l = vec_vsx_ld(0, src - 2 + y * src_stride);
         u16x8 lh = u8h_to_u16(l);
         u16x8 ll = u8l_to_u16(l);
@@ -456,7 +475,7 @@ void dav1d_cdef_filter_##w##x##h##_vsx(pixel *const dst, \
                                        const int damping, \
                                        const enum CdefEdgeFlags edges) \
 { \
-    ALIGN_STK_16(uint16_t, tmp_buf, 12 * tmp_stride,); \
+    ALIGN_STK_16(uint16_t, tmp_buf, 12 * tmp_stride + 8,); \
     uint16_t *tmp = tmp_buf + 2 * tmp_stride + 2; \
     filter_##w##xN(dst, dst_stride, left, top, bottom, w, h, pri_strength, \
                    sec_strength, dir, damping, edges, tmp_stride, tmp); \

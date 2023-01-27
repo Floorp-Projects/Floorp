@@ -32,15 +32,15 @@
 #include <stdint.h>
 
 typedef struct GetBits {
-    int error, eof;
     uint64_t state;
-    unsigned bits_left;
+    int bits_left, error;
     const uint8_t *ptr, *ptr_start, *ptr_end;
 } GetBits;
 
 void dav1d_init_get_bits(GetBits *c, const uint8_t *data, size_t sz);
-unsigned dav1d_get_bits(GetBits *c, unsigned n);
-int dav1d_get_sbits(GetBits *c, unsigned n);
+unsigned dav1d_get_bit(GetBits *c);
+unsigned dav1d_get_bits(GetBits *c, int n);
+int dav1d_get_sbits(GetBits *c, int n);
 unsigned dav1d_get_uleb128(GetBits *c);
 
 // Output in range 0..max-1

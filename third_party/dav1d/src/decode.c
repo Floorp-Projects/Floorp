@@ -3426,7 +3426,7 @@ void dav1d_decode_frame_exit(Dav1dFrameContext *const f, const int retval) {
                (size_t)f->frame_thread.cf_sz * 128 * 128 / 2);
     }
     for (int i = 0; i < 7; i++) {
-        if (f->refp[i].p.data[0])
+        if (f->refp[i].p.frame_hdr)
             dav1d_thread_picture_unref(&f->refp[i]);
         dav1d_ref_dec(&f->ref_mvs_ref[i]);
     }
@@ -3832,7 +3832,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
     const unsigned refresh_frame_flags = f->frame_hdr->refresh_frame_flags;
     for (int i = 0; i < 8; i++) {
         if (refresh_frame_flags & (1 << i)) {
-            if (c->refs[i].p.p.data[0])
+            if (c->refs[i].p.p.frame_hdr)
                 dav1d_thread_picture_unref(&c->refs[i].p);
             dav1d_thread_picture_ref(&c->refs[i].p, &f->sr_cur);
 
@@ -3862,7 +3862,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             dav1d_thread_picture_unref(&c->out);
             for (int i = 0; i < 8; i++) {
                 if (refresh_frame_flags & (1 << i)) {
-                    if (c->refs[i].p.p.data[0])
+                    if (c->refs[i].p.p.frame_hdr)
                         dav1d_thread_picture_unref(&c->refs[i].p);
                     dav1d_cdf_thread_unref(&c->cdf[i]);
                     dav1d_ref_dec(&c->refs[i].segmap);
@@ -3883,7 +3883,7 @@ error:
     if (f->frame_hdr->refresh_context)
         dav1d_cdf_thread_unref(&f->out_cdf);
     for (int i = 0; i < 7; i++) {
-        if (f->refp[i].p.data[0])
+        if (f->refp[i].p.frame_hdr)
             dav1d_thread_picture_unref(&f->refp[i]);
         dav1d_ref_dec(&f->ref_mvs_ref[i]);
     }
