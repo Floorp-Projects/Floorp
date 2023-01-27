@@ -917,6 +917,18 @@ TEST_F(ImageDecoders, AnimatedWebPWithBlendedFrames) {
   CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedWebPTestCase());
 }
 
+TEST_F(ImageDecoders, AnimatedAVIFSingleChunk) {
+  CheckDecoderSingleChunk(GreenFirstFrameAnimatedAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AnimatedAVIFMultiChunk) {
+  CheckDecoderMultiChunk(GreenFirstFrameAnimatedAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AnimatedAVIFWithBlendedFrames) {
+  CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedAVIFTestCase());
+}
+
 TEST_F(ImageDecoders, CorruptSingleChunk) {
   CheckDecoderSingleChunk(CorruptTestCase());
 }
