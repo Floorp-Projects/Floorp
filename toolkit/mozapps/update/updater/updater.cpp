@@ -2724,6 +2724,12 @@ static void UpdateThreadFunc(void* param) {
     putenv(const_cast<char*>("MOZ_TEST_PROCESS_UPDATES="));
 #endif
   } else {
+#ifdef TEST_UPDATER
+    const char* forceErrorCodeString = getenv("MOZ_FORCE_ERROR_CODE");
+    if (forceErrorCodeString && *forceErrorCodeString) {
+      rv = atoi(forceErrorCodeString);
+    }
+#endif
     if (rv) {
       LOG(("failed: %d", rv));
     } else {
