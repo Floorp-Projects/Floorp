@@ -1,5 +1,7 @@
 {
-    "cc": "cl.exe",
-    "cxx": "cl.exe",
-    "ml": "ml64.exe"
+    "target": "x86_64-pc-windows-msvc",
+    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl",
+    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl",
+    "ml": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl",
+    "lib": "{MOZ_FETCHES_DIR}/clang/bin/llvm-lib"
 }

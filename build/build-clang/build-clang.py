@@ -234,6 +234,10 @@ def build_one_stage(
         ]
         if is_llvm_toolchain(cc[0], cxx[0]):
             cmake_args += ["-DLLVM_ENABLE_LLD=ON"]
+        elif is_windows(target) and is_cross_compile(target):
+            raise Exception(
+                "Cannot cross-compile for Windows with a compiler that is not clang"
+            )
 
         if "TASK_ID" in os.environ:
             cmake_args += [
@@ -264,6 +268,14 @@ def build_one_stage(
         if is_windows(target):
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
+            if is_cross_compile(target):
+                cmake_args += [
+                    f"-DCMAKE_TOOLCHAIN_FILE={src_dir}/cmake/platforms/WinMsvc.cmake",
+                    f"-DLLVM_NATIVE_TOOLCHAIN={os.path.dirname(os.path.dirname(cc[0]))}",
+                    f"-DHOST_ARCH={target[: -len('-pc-windows-msvc')]}",
+                    f"-DLLVM_WINSYSROOT={os.environ['VSINSTALLDIR']}",
+                    "-DLLVM_DISABLE_ASSEMBLY_FILES=ON",
+                ]
         else:
             # libllvm as a shared library is not supported on Windows
             cmake_args += ["-DLLVM_LINK_LLVM_DYLIB=ON"]
@@ -597,9 +609,6 @@ def main():
 
     if is_cross_compile(target) and not is_linux(host):
         raise Exception("Cross-compilation is only supported on Linux")
-
-    if is_cross_compile(target) and not is_darwin(target):
-        raise Exception("Cross-compilation is only supported to target macOS")
 
     if is_darwin(target):
         os.environ["MACOSX_DEPLOYMENT_TARGET"] = (
