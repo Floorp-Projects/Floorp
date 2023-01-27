@@ -21,7 +21,6 @@
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/dom/network/Connection.h"
-#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/webgpu/Instance.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -102,17 +101,20 @@ void WorkerNavigator::GetAppName(nsString& aAppName,
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  if ((!mProperties.mAppNameOverridden.IsEmpty() ||
-       StaticPrefs::privacy_resistFingerprinting()) &&
-      !workerPrivate->UsesSystemPrincipal()) {
-    // We will spoof this value when 'privacy.resistFingerprinting' is true.
-    // See nsRFPService.h for spoofed value.
-    aAppName = StaticPrefs::privacy_resistFingerprinting()
-                   ? NS_LITERAL_STRING_FROM_CSTRING(SPOOFED_APPNAME)
-                   : mProperties.mAppNameOverridden;
-  } else {
-    aAppName = mProperties.mAppName;
+  if (aCallerType != CallerType::System) {
+    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting()) {
+      // See nsRFPService.h for spoofed value.
+      aAppName.AssignLiteral(SPOOFED_APPNAME);
+      return;
+    }
+
+    if (!mProperties.mAppNameOverridden.IsEmpty()) {
+      aAppName = mProperties.mAppNameOverridden;
+      return;
+    }
   }
+
+  aAppName = mProperties.mAppName;
 }
 
 void WorkerNavigator::GetAppVersion(nsString& aAppVersion,
@@ -121,17 +123,20 @@ void WorkerNavigator::GetAppVersion(nsString& aAppVersion,
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  if ((!mProperties.mAppVersionOverridden.IsEmpty() ||
-       StaticPrefs::privacy_resistFingerprinting()) &&
-      !workerPrivate->UsesSystemPrincipal()) {
-    // We will spoof this value when 'privacy.resistFingerprinting' is true.
-    // See nsRFPService.h for spoofed value.
-    aAppVersion = StaticPrefs::privacy_resistFingerprinting()
-                      ? NS_LITERAL_STRING_FROM_CSTRING(SPOOFED_APPVERSION)
-                      : mProperties.mAppVersionOverridden;
-  } else {
-    aAppVersion = mProperties.mAppVersion;
+  if (aCallerType != CallerType::System) {
+    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting()) {
+      // See nsRFPService.h for spoofed value.
+      aAppVersion.AssignLiteral(SPOOFED_APPVERSION);
+      return;
+    }
+
+    if (!mProperties.mAppVersionOverridden.IsEmpty()) {
+      aAppVersion = mProperties.mAppVersionOverridden;
+      return;
+    }
   }
+
+  aAppVersion = mProperties.mAppVersion;
 }
 
 void WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
@@ -139,17 +144,20 @@ void WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  if ((!mProperties.mPlatformOverridden.IsEmpty() ||
-       StaticPrefs::privacy_resistFingerprinting()) &&
-      !workerPrivate->UsesSystemPrincipal()) {
-    // We will spoof this value when 'privacy.resistFingerprinting' is true.
-    // See nsRFPService.h for spoofed value.
-    aPlatform = StaticPrefs::privacy_resistFingerprinting()
-                    ? NS_LITERAL_STRING_FROM_CSTRING(SPOOFED_PLATFORM)
-                    : mProperties.mPlatformOverridden;
-  } else {
-    aPlatform = mProperties.mPlatform;
+  if (aCallerType != CallerType::System) {
+    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting()) {
+      // See nsRFPService.h for spoofed value.
+      aPlatform.AssignLiteral(SPOOFED_PLATFORM);
+      return;
+    }
+
+    if (!mProperties.mPlatformOverridden.IsEmpty()) {
+      aPlatform = mProperties.mPlatformOverridden;
+      return;
+    }
   }
+
+  aPlatform = mProperties.mPlatform;
 }
 
 namespace {
