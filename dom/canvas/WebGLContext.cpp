@@ -623,6 +623,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
   out->options = webgl->mOptions;
   out->limits = *webgl->mLimits;
   out->uploadableSdTypes = UploadableSdTypes();
+  out->vendor = webgl->gl->Vendor();
 
   return webgl;
 }

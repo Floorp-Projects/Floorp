@@ -212,6 +212,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLTextureJS> mNoClipMask;
 
     uint32_t mMaxTextureSize = 0;
+    bool mRasterizationTruncates = false;
 
     // The current blending operation.
     CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;

@@ -102,6 +102,7 @@ pub extern "C" fn wgr_path_rasterize_to_tri_list(
     clip_height: i32,
     need_inside: bool,
     need_outside: bool,
+    rasterization_truncates: bool,
     output_ptr: *mut OutputVertex,
     output_capacity: usize,
 ) -> VertexBuffer {
@@ -115,7 +116,9 @@ pub extern "C" fn wgr_path_rasterize_to_tri_list(
         unsafe { std::slice::from_raw_parts(path.types, path.num_types) },
         unsafe { std::slice::from_raw_parts(path.points, path.num_points) },
         clip_x, clip_y, clip_width, clip_height,
-        need_inside, need_outside, output_buffer,
+        need_inside, need_outside,
+        rasterization_truncates,
+        output_buffer
     );
     if let Some(output_buffer_size) = result.get_output_buffer_size() {
         VertexBuffer {

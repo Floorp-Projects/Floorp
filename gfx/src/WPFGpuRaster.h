@@ -53,7 +53,8 @@ Path wgr_builder_get_path(PathBuilder* pb);
 VertexBuffer wgr_path_rasterize_to_tri_list(
     const Path* p, int32_t clip_x, int32_t clip_y, int32_t clip_width,
     int32_t clip_height, bool need_inside = true, bool need_outside = false,
-    OutputVertex* output_ptr = nullptr, size_t output_capacity = 0);
+    bool rasterization_truncates = false, OutputVertex* output_ptr = nullptr,
+    size_t output_capacity = 0);
 void wgr_path_release(Path p);
 void wgr_vertex_buffer_release(VertexBuffer vb);
 void wgr_builder_release(PathBuilder* pb);

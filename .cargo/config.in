@@ -12,7 +12,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/FirefoxGraphics/wpf-gpu-raster"]
 git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
-rev = "e07e3741d1613b1b7ddb85a1120ed4071b3d6a56"
+rev = "a6514854d4518b02f2805719ff6cd74dae7dfde6"
 replace-with = "vendored-sources"
 
 [source."https://github.com/chris-zen/coremidi.git"]
