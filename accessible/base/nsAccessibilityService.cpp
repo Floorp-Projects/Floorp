@@ -107,18 +107,7 @@ using namespace mozilla::dom;
  * Return true if the element must be accessible.
  */
 static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  MOZ_ASSERT(frame);
-  if (frame->IsFocusable()) {
-    return true;
-  }
-
-  // If the frame has been transformed, we should create an accessible so that
-  // we can account for the transform when calculating the Accessible's bounds
-  // using the parent process cache.
-  if (frame->IsTransformed()) {
-    return true;
-  }
+  if (aContent->GetPrimaryFrame()->IsFocusable()) return true;
 
   if (aContent->IsElement()) {
     uint32_t attrCount = aContent->AsElement()->GetAttrCount();

@@ -4,9 +4,6 @@
 
 "use strict";
 
-/* import globals from ../../mochitest/role.js */
-loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
-
 // test basic translation
 addAccessibleTask(
   `<p id="translate">hello world</p>`,
@@ -114,35 +111,6 @@ addAccessibleTask(
     }
     await testBoundsWithContent(docAcc, "willChangeTopP2", browser);
     await testBoundsWithContent(docAcc, "willChangeInnerP2", browser);
-  },
-  { topLevel: true, iframe: true, remoteIframe: true }
-);
-
-// Verify that a transform forces creation of an accessible.
-addAccessibleTask(
-  `
-<div id="div-transform" style="transform:translate(100px,100px);">
-  <p>test</p>
-</div>
-
-<div id="div-presentational" role="presentation" style="transform:translate(100px,100px);">
-  <p>test</p>
-</div>
-  `,
-  async function(browser, docAcc) {
-    const tree = { SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
-
-    const divWithTransform = findAccessibleChildByID(docAcc, "div-transform");
-    testAccessibleTree(divWithTransform, tree);
-    await testBoundsWithContent(docAcc, "div-transform", browser);
-
-    // An accessible should still be created, even if the role is "presentation."
-    const divPresentational = findAccessibleChildByID(
-      docAcc,
-      "div-presentational"
-    );
-    testAccessibleTree(divPresentational, tree);
-    await testBoundsWithContent(docAcc, "div-presentational", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
