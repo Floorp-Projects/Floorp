@@ -35,10 +35,21 @@ job-defaults:
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
     treeherder:
-        symbol: remote(pup)
+        symbol: Pup(cdp)
     run:  # Bug 1651542: Use screenshot feature to warm-up the font cache before the actual test
         using: run-task
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
             ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
+
+puppeteer-with-bidi:
+    description: Puppeteer tests against Firefox Webdriver BiDi remote protocol
+    treeherder:
+        symbol: Pup(wd)
+    run:  # Bug 1651542: Use screenshot feature to warm-up the font cache before the actual test
+        using: run-task
+        command: >
+            cd $GECKO_PATH/ &&
+            $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --bidi --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
