@@ -631,7 +631,7 @@ class WebIDLHelpers:
                 schema_data["returns"], "%s return value" % api_fun.api_path_string
             )
 
-        return "void"
+        return "undefined"
 
     @classmethod
     def webidl_method_params(cls, api_fun, schema_group=None, params_schema_data=None):
@@ -640,7 +640,7 @@ class WebIDLHelpers:
 
         If the schema for the function includes `allowAmbiguousOptionalArguments`
         then the methods paramers are going to be the variadic arguments of type
-        `any` (e.g. `void myMethod(any... args);`).
+        `any` (e.g. `undefined myMethod(any... args);`).
 
         If params_schema_data is None, then the parameters will be resolved internally
         from the schema data.
