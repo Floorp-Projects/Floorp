@@ -1762,4 +1762,10 @@ bool ChromeUtils::IsDarkBackground(GlobalObject&, Element& aElement) {
 
 double ChromeUtils::DateNow(GlobalObject&) { return JS_Now() / 1000.0; }
 
+/* static */
+unsigned ChromeUtils::AliveUtilityProcesses(const GlobalObject&) {
+  const auto& utilityProcessManager =
+      mozilla::ipc::UtilityProcessManager::GetIfExists();
+  return utilityProcessManager ? utilityProcessManager->AliveProcesses() : 0;
+}
 }  // namespace mozilla::dom

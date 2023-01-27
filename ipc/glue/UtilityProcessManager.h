@@ -130,6 +130,8 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   // Shutdown all utility processes
   void CleanShutdownAllProcesses();
 
+  uint16_t AliveProcesses();
+
  private:
   ~UtilityProcessManager();
 
@@ -196,7 +198,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   RefPtr<ProcessFields> GetProcess(SandboxingKind);
   bool NoMoreProcesses();
-  uint16_t AliveProcesses();
 };
 
 }  // namespace ipc

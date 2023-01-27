@@ -653,6 +653,12 @@ partial namespace ChromeUtils {
    * Returns whether the background of the element is dark.
    */
   boolean isDarkBackground(Element element);
+
+  /**
+   * The number of currently alive utility processes.
+   */
+  [ChromeOnly]
+  readonly attribute unsigned long aliveUtilityProcesses;
 };
 
 /*
