@@ -53,6 +53,12 @@ export MOZ_TARGET_UPSTREAM_BRANCH_HEAD="branch-heads/$bh2"
 # pushing the patch stack to github, it should be named something like
 # 'moz-mods-chr$m2-for-rel$t2'.
 export MOZ_LIBWEBRTC_BRANCH="mozpatches"
+
+# After elm has been merged to mozilla-central, the patch stack in
+# moz-libwebrtc should be pushed to github.  The script
+# push_official_branch.sh uses this branch name when pushing to the
+# public repo.
+export MOZ_LIBWEBRTC_OFFICIAL_BRANCH="moz-mods-chr$m2-for-rel$t2"
 """
 
 
