@@ -8681,7 +8681,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
   }
 }
 
-nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
+nsresult nsWindow::SetNonClientMargins(const LayoutDeviceIntMargin& aMargins) {
   SetDrawsInTitlebar(aMargins.top == 0);
   return NS_OK;
 }

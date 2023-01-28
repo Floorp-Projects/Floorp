@@ -938,7 +938,7 @@ class nsIWidget : public nsISupports {
    *  icon and window title text. Glass desktops will refuse to set
    *  dimensions between zero and size < system default.
    */
-  virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
+  virtual nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) = 0;
 
   /**
    * Sets the region around the edges of the window that can be dragged to

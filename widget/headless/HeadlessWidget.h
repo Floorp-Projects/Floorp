@@ -84,7 +84,7 @@ class HeadlessWidget : public nsBaseWidget {
     return NS_OK;
   }
   virtual nsresult SetNonClientMargins(
-      LayoutDeviceIntMargin& margins) override {
+      const LayoutDeviceIntMargin& margins) override {
     // Headless widgets have no chrome margins, so just ignore the call.
     return NS_OK;
   }

@@ -1043,8 +1043,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // These match the margins set in browser-tabsintitlebar.js with
       // default prefs on Windows. Bug 1673092 tracks lining this up with
       // that more correctly instead of hard-coding it.
-      LayoutDeviceIntMargin margins(0, 2, 2, 2);
-      SetNonClientMargins(margins);
+      SetNonClientMargins(LayoutDeviceIntMargin(0, 2, 2, 2));
 
       // Reset the WNDPROC for this window and its whole class, as we had
       // to use our own WNDPROC when creating the the skeleton UI window.
@@ -2670,14 +2669,9 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     return window->SetDrawsInTitlebar(aState);
   }
 
-  if (aState) {
-    // top, right, bottom, left for nsIntMargin
-    LayoutDeviceIntMargin margins(0, -1, -1, -1);
-    SetNonClientMargins(margins);
-  } else {
-    LayoutDeviceIntMargin margins(-1, -1, -1, -1);
-    SetNonClientMargins(margins);
-  }
+  // top, right, bottom, left
+  SetNonClientMargins(aState ? LayoutDeviceIntMargin(0, -1, -1, -1)
+                             : LayoutDeviceIntMargin(-1, -1, -1, -1));
 }
 
 void nsWindow::ResetLayout() {
@@ -2967,7 +2961,7 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
   return true;
 }
 
-nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
+nsresult nsWindow::SetNonClientMargins(const LayoutDeviceIntMargin& margins) {
   if (!mIsTopWidgetWindow || mBorderStyle == BorderStyle::None)
     return NS_ERROR_INVALID_ARG;
 
