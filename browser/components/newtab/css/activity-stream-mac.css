@@ -396,15 +396,15 @@ input[type=text], input[type=search] {
     opacity: 0.8 !important;
   }
 }
-.not_background, .not_background ~ #unsplash, .gradation ~ #unsplash {
+.not_background, .not_background ~ #unsplash, .gradation ~ #unsplash, .selected_folder ~ #unsplash {
   display: none !important;
 }
 
-.random_image {
+.random_image, .selected_folder {
   background-color: black;
 }
 
-.random_image > #background {
+.random_image > #background, .selected_folder > #background {
   background-image: var(--background-url);
   opacity: 0.8 !important;
 }

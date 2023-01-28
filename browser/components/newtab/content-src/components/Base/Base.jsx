@@ -219,6 +219,9 @@ export class BaseContent extends React.PureComponent {
       case 2:
         Background_ClassName = "gradation"
         break;
+        case 3:
+          Background_ClassName = "selected_folder"
+          break;
       default:
         Background_ClassName = "not_background"
         break;
@@ -226,7 +229,7 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div>
-        <Background className={Background_ClassName} />
+        <Background className={Background_ClassName} imageList={prefs["backgroundPaths"]} />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}
           onOpen={this.openCustomizationMenu}

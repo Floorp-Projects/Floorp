@@ -99,9 +99,25 @@
         <menupopup>
           <menuitem value="1" data-l10n-id="newtab-background-random-image" />
           <menuitem value="2" data-l10n-id="newtab-background-gradation" />
+          <menuitem value="3" data-l10n-id="newtab-background-selected-image" />
           <menuitem value="0" data-l10n-id="newtab-background-not-background" />
         </menupopup>
       </menulist>
+    </hbox>
+    <label data-l10n-id="newtab-background-folder" style="margin-inline-end:1em;" class="pictureFolderDisplay"/>
+    <html:input id="pictureFolder" type="text" readonly="readonly" class="pictureFolderDisplay"/>
+    <hbox class="pictureFolderDisplay">
+      <button id="openImagesFolder" class="accessory-button" data-l10n-id="newtab-background-folder-open" style="-moz-box-flex:1"/>
+      <button id="reloadImages" class="accessory-button" data-l10n-id="newtab-background-folder-reload" style="-moz-box-flex:1"/>
+      <button id="resetFolder" class="accessory-button" data-l10n-id="newtab-background-folder-default" style="-moz-box-flex:1"/>
+      <button id="chooseImagesFolder" class="accessory-button" data-l10n-id="download-choose-folder" style="-moz-box-flex:1"/>
+    </hbox>
+
+    <label data-l10n-id="newtab-background-extensions" class="pictureFolderDisplay"/>
+    <hbox style="-moz-box-align:center;" class="pictureFolderDisplay">  
+      <html:input id="pictureExtensions" type="text" style="-moz-box-flex:1"/>
+      <button id="resetExtensions" class="accessory-button" data-l10n-id="newtab-background-folder-open"/>
+      <button id="saveExtensions" class="accessory-button" data-l10n-id="bookmark-panel-save-button"/>
     </hbox>
   </vbox>
 

@@ -72,6 +72,8 @@ pref("privacy.restrict3rdpartystorage.rollout.enabledByDefault", true);
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 //新しいタブの背景の設定
 pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
+pref("browser.newtabpage.activity-stream.floorp.background.images.folder", "");
+pref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "png,jpg,jpeg,webp,gif,svg,tiff,tif,bmp");
 
 pref("floorp.multitab.bottommode", false);
 

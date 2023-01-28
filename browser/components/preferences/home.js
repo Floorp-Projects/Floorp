@@ -19,6 +19,10 @@
  *   true = Activity Stream is shown,
  *   false = about:blank is shown
  */
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 Preferences.addAll([
   { id: "browser.startup.homepage", type: "wstring" },
@@ -93,32 +97,6 @@ var gHomePane = {
         );
       }
     }
-  },
-
-  async syncToNewTabBackground() {
-    let menulist = document.getElementById("newTabbackground");
-
-    if (["0", "1","2"].includes(menulist.value)) {
-      let newtabEnabledPref = Services.prefs.getIntPref(
-        "browser.newtabpage.activity-stream.floorp.background.type",
-        0
-      );
-      let newValue = menulist.value;
-      // Only set this if the pref has changed, otherwise the pref change will trigger other listeners to repeat.
-      if (newtabEnabledPref !== newValue) {
-        Services.prefs.setIntPref("browser.newtabpage.activity-stream.floorp.background.type", newValue);
-      }
-    }
-  },
-  async syncFromNewTabBackground() {
-    let menulist = document.getElementById("newTabbackground");
-      let newtabEnabledPref = Services.prefs.getIntPref(
-        "browser.newtabpage.activity-stream.floorp.background.type",
-        0
-      );
-      if (newtabEnabledPref !== menulist.value) {
-        menulist.value = newtabEnabledPref;
-      }
   },
 
   async syncFromNewTabPref() {
@@ -714,9 +692,6 @@ var gHomePane = {
       .getElementById("newTabMode")
       .addEventListener("command", this.syncToNewTabPref.bind(this));
     document
-      .getElementById("newTabbackground")
-      .addEventListener("command", this.syncToNewTabBackground.bind(this));
-    document
       .getElementById("homeMode")
       .addEventListener("command", this.onMenuChange.bind(this));
 
@@ -724,7 +699,63 @@ var gHomePane = {
     this._handleHomePageOverrides();
     this.syncFromNewTabPref();
     this.syncFromNewTabBackground();
-Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.type",this.syncFromNewTabBackground.bind(this))
+
+    document
+    .getElementById("newTabbackground")
+    .addEventListener("command", this.syncToNewTabBackground.bind(this));
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.type",this.syncFromNewTabBackground.bind(this))
+    this.imagesFolderInputSet()
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder",this.imagesFolderInputSet.bind(this))
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions",this.imagesFolderInputSet.bind(this))
+    document
+    .getElementById("openImagesFolder")
+    .addEventListener("command", ()=>{
+      let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+    new nsLocalFile(OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 ),).reveal();
+    });
+    document
+    .getElementById("reloadImages")
+    .addEventListener("command", ()=>{
+      Services.obs.notifyObservers({},"floorp-newtab-background-update")
+
+    })
+
+    document
+    .getElementById("resetFolder")
+    .addEventListener("command", (()=>{
+      Services.prefs.clearUserPref("browser.newtabpage.activity-stream.floorp.background.images.folder")
+    }).bind(this))
+
+    document
+    .getElementById("resetExtensions")
+    .addEventListener("command", (()=>{
+      Services.prefs.clearUserPref("browser.newtabpage.activity-stream.floorp.background.images.extensions")
+    }).bind(this))
+    document
+    .getElementById("saveExtensions")
+    .addEventListener("command", (()=>{
+      Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions",document.querySelector("#pictureExtensions").value)
+    }).bind(this))
+
+    document
+    .getElementById("chooseImagesFolder")
+    .addEventListener("command", (async ()=>{
+      let [title] = await document.l10n.formatValues([
+        { id: "newtab-background-folder-choose" },
+      ]);
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  
+      fp.init(window, title, Ci.nsIFilePicker.modeGetFolder);
+      fp.appendFilters(Ci.nsIFilePicker.filterAll);
+      fp.displayDirectory = FileUtils.File(OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 ))
+      let result = await new Promise(resolve => fp.open(resolve));
+      if (result != Ci.nsIFilePicker.returnOK) {
+        return;
+      }
+      Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder",fp.file.path)
+    }).bind(this))
+
+
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
     // Extension/override-related events
@@ -735,4 +766,36 @@ Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "home-pane-loaded");
   },
+
+  async syncToNewTabBackground() {
+    let menulist = document.getElementById("newTabbackground");
+      let newtabEnabledPref = Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type",0);
+      let newValue = menulist.value;
+      // Only set this if the pref has changed, otherwise the pref change will trigger other listeners to repeat.
+      if (newtabEnabledPref !== newValue) {
+        Services.prefs.setIntPref("browser.newtabpage.activity-stream.floorp.background.type", newValue);
+        if(newValue != 3)  document.querySelector("body").style.setProperty('--background-folder-display', "none")
+        else document.querySelector("body").style.removeProperty('--background-folder-display')
+      }
+  },
+
+  async syncFromNewTabBackground() {
+    let menulist = document.getElementById("newTabbackground");
+      let newtabEnabledPref = Services.prefs.getIntPref(
+        "browser.newtabpage.activity-stream.floorp.background.type",
+        0
+      );
+      if (newtabEnabledPref !== menulist.value) {
+        menulist.value = newtabEnabledPref;
+        if(newtabEnabledPref != 3) document.querySelector("body").style.setProperty('--background-folder-display', "none")
+        else document.querySelector("body").style.removeProperty('--background-folder-display')
+      }
+  },
+
+  imagesFolderInputSet(){
+    let folderPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 )
+    document.querySelector("#pictureFolder").value = folderPath
+    document.querySelector("#pictureFolder").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
+    document.querySelector("#pictureExtensions").value = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","")
+  }
 };
