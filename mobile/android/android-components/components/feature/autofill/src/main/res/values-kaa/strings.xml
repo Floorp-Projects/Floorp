@@ -6,6 +6,10 @@
     the username would be displayed. -->
     <string name="mozac_feature_autofill_popup_no_username">(Paydalanıwshı atı joq)</string>
 
+    <!-- Autofill: Text shown in popup in third-party app to autofill the password for an account.
+    %1$s will be replaced with the login/username of the account. -->
+    <string name="mozac_feature_autofill_popup_password">%1$s ushın parol</string>
+
     <!-- Autofill: Positive button shown in dialog asking the user to confirm before autofilling
     credentials in a third-part app (Also see string mozac_feature_autofill_confirmation_authenticity). -->
     <string name="mozac_feature_autofill_confirmation_yes">Awa</string>

@@ -2,8 +2,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Qupıyalıq sazlamaların oqıw hám ózgertiw</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Sheksiz kólemdegi maǵlıwmatlardı paydalanıwshı tárepte saqlaw</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Saylandılardı oqıw hám ózgertiw</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Brauzer sazlamaların oqıw hám ózgertiw</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Qurılmańızǵa júklengen fayllardı ashıw</string>
     <!-- Description for find permission. -->
@@ -67,7 +71,7 @@
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s qosımshalar</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
-    <string name="mozac_feature_addons_unsupported_learn_more">Tolıǵıraq úyreniw</string>
+    <string name="mozac_feature_addons_unsupported_learn_more">Tolıǵıraq</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
     <string name="mozac_feature_addons_updater_status_successfully_updated">Áwmetli jańalandı</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->

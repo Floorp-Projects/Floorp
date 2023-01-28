@@ -10,6 +10,9 @@
     <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
     <string name="mozac_lib_crash_background_process_notification_title">Keshiresiz. %1$s da nasazlıq júz berdi.</string>
 
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">Xabar berıw</string>
+
     <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
     <string name="mozac_lib_crash_share">Bólisiw</string>
 </resources>
