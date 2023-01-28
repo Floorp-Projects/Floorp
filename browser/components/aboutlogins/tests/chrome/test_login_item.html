@@ -24,7 +24,10 @@ Test the login-item component
 </div>
 <pre id="test">
 </pre>
-<script>
+<script type="module">
+
+import { CONCEALED_PASSWORD_TEXT } from "chrome://browser/content/aboutlogins/aboutLoginsUtils.mjs";
+
 /** Test the login-item component **/
 
 let gLoginItem, gConfirmationDialog;
@@ -124,7 +127,7 @@ add_task(async function test_set_login() {
   ok(!passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected");
   let passwordDisplayInput = gLoginItem._passwordDisplayInput;
-  is(passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
+  is(passwordDisplayInput.value, CONCEALED_PASSWORD_TEXT, "password display should be populated");
   ok(!isHidden(passwordDisplayInput), "Password display input should be visible");
 
   let timeline = getLoginTimeline(gLoginItem);
@@ -230,7 +233,7 @@ add_task(async function test_edit_login() {
   );
   is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
   is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
-  is(gLoginItem._passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
+  is(gLoginItem._passwordDisplayInput.value, CONCEALED_PASSWORD_TEXT, "password display should be populated");
 
   let timeline = getLoginTimeline(gLoginItem);
   ok(!isHidden(timeline), "Timeline should be visible");

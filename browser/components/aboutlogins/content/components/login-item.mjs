@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  CONCEALED_PASSWORD_TEXT,
   recordTelemetryEvent,
   promptForPrimaryPassword,
 } from "../aboutLoginsUtils.mjs";
@@ -216,9 +217,7 @@ export default class LoginItem extends HTMLElement {
       // In masked non-edit mode we use a different "display" element to render
       // the masked password so that one cannot simply remove/change
       // @type=password to reveal the real password.
-      this._passwordDisplayInput.value = " ".repeat(
-        this._login.password.length
-      );
+      this._passwordDisplayInput.value = CONCEALED_PASSWORD_TEXT;
     }
 
     if (this.dataset.editing) {
@@ -839,11 +838,10 @@ export default class LoginItem extends HTMLElement {
 
     if (shouldEdit) {
       this._passwordInput.style.removeProperty("width");
-      this._passwordDisplayInput.style.removeProperty("width");
     } else {
       // Need to set a shorter width than -moz-available so the reveal checkbox
       // will still appear next to the password.
-      this._passwordDisplayInput.style.width = this._passwordInput.style.width =
+      this._passwordInput.style.width =
         (this._login.password || "").length + "ch";
     }
 
