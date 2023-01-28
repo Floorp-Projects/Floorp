@@ -52,6 +52,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
             # To disable transition, or the caret may not be the desired
             # location yet, we cannot press a caret successfully.
             "layout.accessiblecaret.transition-duration": "0.0",
+            # Enabled hapticfeedback on all platforms. The tests shouldn't crash
+            # on platforms without hapticfeedback support.
+            "layout.accessiblecaret.hapticfeedback": True,
         }
         self.marionette.set_prefs(self.prefs)
         self.actions = CaretActions(self.marionette)
