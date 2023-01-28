@@ -8,12 +8,18 @@
 #define mozilla_dom_WindowsUtilsChild_h__
 
 #include "mozilla/dom/PWindowsUtilsChild.h"
+#include "mozilla/dom/WindowsLocationChild.h"
 
 namespace mozilla::dom {
 
 // Manager for utilities in the WindowsUtils utility process.
 class WindowsUtilsChild final : public PWindowsUtilsChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WindowsUtilsChild, override);
+
+ public:
+  already_AddRefed<PWindowsLocationChild> AllocPWindowsLocationChild() {
+    return MakeAndAddRef<WindowsLocationChild>();
+  }
 
  protected:
   ~WindowsUtilsChild() = default;
