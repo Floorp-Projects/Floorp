@@ -9,6 +9,13 @@ function show_error_msg()
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'show_error_msg $LINENO' ERR
 
+if [ "x" = "x$NEW_BUG_NUMBER" ]; then
+  echo "NEW_BUG_NUMBER is not defined.  You should probably have a new bug"
+  echo "number defined for the next fast-forward update.  Then do:"
+  echo "  NEW_BUG_NUMBER={new-bug-number} bash $0"
+  exit
+fi
+
 source dom/media/webrtc/third_party_build/use_config_env.sh
 
 if [ "x$MOZ_NEXT_LIBWEBRTC_MILESTONE" = "x" ]; then
@@ -32,6 +39,7 @@ ERROR_HELP=$"
 An error has occurred running $SCRIPT_DIR/write_example_config.py
 "
 ./mach python $SCRIPT_DIR/write_example_config.py \
+  --bug-number $NEW_BUG_NUMBER \
   --milestone $MOZ_NEXT_LIBWEBRTC_MILESTONE \
   --release-target $MOZ_NEXT_FIREFOX_REL_TARGET \
   > $SCRIPT_DIR/example_config_env
