@@ -468,9 +468,10 @@ void AccessibleCaretManager::UpdateCaretsForAlwaysTilt(
 
 void AccessibleCaretManager::ProvideHapticFeedback() {
   if (StaticPrefs::layout_accessiblecaret_hapticfeedback()) {
-    nsCOMPtr<nsIHapticFeedback> haptic =
-        do_GetService("@mozilla.org/widget/hapticfeedback;1");
-    haptic->PerformSimpleAction(haptic->LongPress);
+    if (nsCOMPtr<nsIHapticFeedback> haptic =
+            do_GetService("@mozilla.org/widget/hapticfeedback;1")) {
+      haptic->PerformSimpleAction(haptic->LongPress);
+    }
   }
 }
 
