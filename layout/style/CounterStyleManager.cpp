@@ -515,8 +515,6 @@ class BuiltinCounterStyle : public CounterStyle {
 
   nsStaticAtom* GetStyleName() const { return mName; }
 
-  virtual void GetPrefix(nsAString& aResult) override;
-  virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
                                     nsAString& aResult,
@@ -539,15 +537,20 @@ class BuiltinCounterStyle : public CounterStyle {
   constexpr BuiltinCounterStyle(const BuiltinCounterStyle& aOther)
       : CounterStyle(aOther.mStyle), mName(aOther.mName) {}
 
+  virtual void GetPrefixInternal(nsAString& aResult) override;
+  virtual void GetSuffixInternal(nsAString& aResult) override;
+
  private:
   nsStaticAtom* mName;
 };
 
 /* virtual */
-void BuiltinCounterStyle::GetPrefix(nsAString& aResult) { aResult.Truncate(); }
+void BuiltinCounterStyle::GetPrefixInternal(nsAString& aResult) {
+  aResult.Truncate();
+}
 
 /* virtual */
-void BuiltinCounterStyle::GetSuffix(nsAString& aResult) {
+void BuiltinCounterStyle::GetSuffixInternal(nsAString& aResult) {
   switch (mStyle) {
     case ListStyle::None:
       aResult.Truncate();
@@ -953,8 +956,6 @@ class CustomCounterStyle final : public CounterStyle {
   const RawServoCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
-  virtual void GetPrefix(nsAString& aResult) override;
-  virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
                                     nsAString& aResult,
@@ -972,6 +973,7 @@ class CustomCounterStyle final : public CounterStyle {
   virtual void CallFallbackStyle(CounterValue aOrdinal,
                                  WritingMode aWritingMode, nsAString& aResult,
                                  bool& aIsRTL) override;
+  virtual CounterStyle* ResolveFallbackFor(CounterValue aOrdinal) override;
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
                                      nsAString& aResult, bool& aIsRTL) override;
@@ -988,6 +990,10 @@ class CustomCounterStyle final : public CounterStyle {
     this->~CustomCounterStyle();
     presShell->FreeByObjectID(eArenaObjectID_CustomCounterStyle, this);
   }
+
+ protected:
+  virtual void GetPrefixInternal(nsAString& aResult) override;
+  virtual void GetSuffixInternal(nsAString& aResult) override;
 
  private:
   ~CustomCounterStyle() = default;
@@ -1009,6 +1015,8 @@ class CustomCounterStyle final : public CounterStyle {
   CounterStyle* ComputeExtends();
   CounterStyle* GetExtends();
   CounterStyle* GetExtendsRoot();
+
+  bool AdditiveSymbolsIncludeZero();
 
   // CounterStyleManager should always overlive any CounterStyle as it
   // is owned by nsPresContext, and will be released after all nodes and
@@ -1092,13 +1100,13 @@ void CustomCounterStyle::ResetDependentData() {
 }
 
 /* virtual */
-void CustomCounterStyle::GetPrefix(nsAString& aResult) {
+void CustomCounterStyle::GetPrefixInternal(nsAString& aResult) {
   if (!(mFlags & FLAG_PREFIX_INITED)) {
     mFlags |= FLAG_PREFIX_INITED;
 
     if (!Servo_CounterStyleRule_GetPrefix(mRule, &mPrefix)) {
       if (IsExtendsSystem()) {
-        GetExtends()->GetPrefix(mPrefix);
+        GetExtends()->GetPrefixInternal(mPrefix);
       } else {
         mPrefix.Truncate();
       }
@@ -1108,13 +1116,13 @@ void CustomCounterStyle::GetPrefix(nsAString& aResult) {
 }
 
 /* virtual */
-void CustomCounterStyle::GetSuffix(nsAString& aResult) {
+void CustomCounterStyle::GetSuffixInternal(nsAString& aResult) {
   if (!(mFlags & FLAG_SUFFIX_INITED)) {
     mFlags |= FLAG_SUFFIX_INITED;
 
     if (!Servo_CounterStyleRule_GetSuffix(mRule, &mSuffix)) {
       if (IsExtendsSystem()) {
-        GetExtends()->GetSuffix(mSuffix);
+        GetExtends()->GetSuffixInternal(mSuffix);
       } else {
         mSuffix.AssignLiteral(u". ");
       }
@@ -1190,6 +1198,11 @@ bool CustomCounterStyle::IsOrdinalInRange(CounterValue aOrdinal) {
   return IsOrdinalInAutoRange(aOrdinal);
 }
 
+bool CustomCounterStyle::AdditiveSymbolsIncludeZero() {
+  const auto symbols = GetAdditiveSymbols();
+  return !symbols.IsEmpty() && symbols[symbols.Length() - 1].weight == 0;
+}
+
 /* virtual */
 bool CustomCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal) {
   switch (mSystem) {
@@ -1201,7 +1214,7 @@ bool CustomCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal) {
     case StyleCounterSystem::Symbolic:
       return aOrdinal >= 1;
     case StyleCounterSystem::Additive:
-      return aOrdinal >= 0;
+      return aOrdinal >= (AdditiveSymbolsIncludeZero() ? 0 : 1);
     case StyleCounterSystem::Extends:
       return GetExtendsRoot()->IsOrdinalInAutoRange(aOrdinal);
     default:
@@ -1265,6 +1278,20 @@ void CustomCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
   mFallback = CounterStyleManager::GetDecimalStyle();
   fallback->GetCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
   mFallback = fallback;
+}
+
+/* virtual */
+CounterStyle* CustomCounterStyle::ResolveFallbackFor(CounterValue aOrdinal) {
+  if (IsOrdinalInRange(aOrdinal)) {
+    return this;
+  }
+  CounterStyle* fallback = GetFallback();
+  // If it recursively falls back to this counter style again,
+  // it will then fallback to decimal to break the loop.
+  mFallback = CounterStyleManager::GetDecimalStyle();
+  CounterStyle* result = fallback->ResolveFallbackFor(aOrdinal);
+  mFallback = fallback;
+  return result;
 }
 
 /* virtual */
@@ -1520,12 +1547,12 @@ AnonymousCounterStyle::AnonymousCounterStyle(StyleSymbolsType aType,
       mSymbols(std::move(aSymbols)) {}
 
 /* virtual */
-void AnonymousCounterStyle::GetPrefix(nsAString& aResult) {
+void AnonymousCounterStyle::GetPrefixInternal(nsAString& aResult) {
   aResult.Truncate();
 }
 
 /* virtual */
-void AnonymousCounterStyle::GetSuffix(nsAString& aResult) {
+void AnonymousCounterStyle::GetSuffixInternal(nsAString& aResult) {
   if (IsSingleString()) {
     aResult.Truncate();
   } else {
@@ -1741,6 +1768,16 @@ void CounterStyle::CallFallbackStyle(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
                                      nsAString& aResult, bool& aIsRTL) {
   GetFallback()->GetCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
+}
+
+/* virtual */
+CounterStyle* CounterStyle::ResolveFallbackFor(CounterValue aOrdinal) {
+  // Fallback for built-in counters doesn't involve any loops, so the recursion
+  // here will terminate; custom counters override this to guard against loops.
+  if (IsOrdinalInRange(aOrdinal)) {
+    return this;
+  }
+  return GetFallback()->ResolveFallbackFor(aOrdinal);
 }
 
 CounterStyleManager::CounterStyleManager(nsPresContext* aPresContext)
