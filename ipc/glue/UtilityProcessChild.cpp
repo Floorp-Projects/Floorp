@@ -28,6 +28,7 @@
 
 #if defined(XP_WIN)
 #  include "mozilla/WinDllServices.h"
+#  include "mozilla/dom/WindowsUtilsChild.h"
 #endif
 
 #include "nsDebugImpl.h"
@@ -248,6 +249,20 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartJSOracleService(
   mJSOracleInstance->Start(std::move(aEndpoint));
   return IPC_OK();
 }
+
+#ifdef XP_WIN
+mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWindowsUtilsService(
+    Endpoint<dom::PWindowsUtilsChild>&& aEndpoint) {
+  mWindowsUtilsInstance = new dom::WindowsUtilsChild();
+  if (!mWindowsUtilsInstance) {
+    return IPC_FAIL(this, "Failed to create WindowsUtilsChild");
+  }
+
+  [[maybe_unused]] bool ok = std::move(aEndpoint).Bind(mWindowsUtilsInstance);
+  MOZ_ASSERT(ok);
+  return IPC_OK();
+}
+#endif
 
 void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
