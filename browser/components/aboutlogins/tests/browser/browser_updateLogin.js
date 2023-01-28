@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { CONCEALED_PASSWORD_TEXT } = ChromeUtils.importESModule(
+  "chrome://browser/content/aboutlogins/aboutLoginsUtils.mjs"
+);
+
 add_setup(async function() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
@@ -35,7 +39,11 @@ add_task(async function test_login_item() {
     return;
   }
 
-  async function test_discard_dialog(login, exitPointSelector) {
+  async function test_discard_dialog(
+    login,
+    exitPointSelector,
+    concealedPasswordText
+  ) {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(
@@ -102,7 +110,7 @@ add_task(async function test_login_item() {
     let passwordDisplayInput = loginItem._passwordDisplayInput;
     Assert.equal(
       passwordDisplayInput.value,
-      " ".repeat(login.password.length),
+      concealedPasswordText,
       "Password change should be reverted for display"
     );
     Assert.ok(
@@ -111,11 +119,6 @@ add_task(async function test_login_item() {
     );
     Assert.equal(
       passwordInput.style.width,
-      login.password.length + "ch",
-      "Password field width shouldn't have changed"
-    );
-    Assert.equal(
-      passwordDisplayInput.style.width,
       login.password.length + "ch",
       "Password field width shouldn't have changed"
     );
@@ -154,7 +157,11 @@ add_task(async function test_login_item() {
   await reauthObserved;
   await SpecialPowers.spawn(
     browser,
-    [LoginHelper.loginToVanillaObject(TEST_LOGIN1), ".create-login-button"],
+    [
+      LoginHelper.loginToVanillaObject(TEST_LOGIN1),
+      ".create-login-button",
+      CONCEALED_PASSWORD_TEXT,
+    ],
     test_discard_dialog
   );
   reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
@@ -169,7 +176,11 @@ add_task(async function test_login_item() {
   await reauthObserved;
   await SpecialPowers.spawn(
     browser,
-    [LoginHelper.loginToVanillaObject(TEST_LOGIN1), ".cancel-button"],
+    [
+      LoginHelper.loginToVanillaObject(TEST_LOGIN1),
+      ".cancel-button",
+      CONCEALED_PASSWORD_TEXT,
+    ],
     test_discard_dialog
   );
   reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
@@ -184,8 +195,8 @@ add_task(async function test_login_item() {
   await reauthObserved;
   await SpecialPowers.spawn(
     browser,
-    [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
-    async login => {
+    [LoginHelper.loginToVanillaObject(TEST_LOGIN1), CONCEALED_PASSWORD_TEXT],
+    async (login, concealedPasswordText) => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -260,7 +271,7 @@ add_task(async function test_login_item() {
       );
       Assert.equal(
         passwordDisplayInput.value,
-        " ".repeat(login.password.length),
+        concealedPasswordText,
         "Password change should be reverted for display"
       );
       Assert.ok(
@@ -269,11 +280,6 @@ add_task(async function test_login_item() {
       );
       Assert.equal(
         passwordInput.style.width,
-        login.password.length + "ch",
-        "Password field width shouldn't have changed"
-      );
-      Assert.equal(
-        passwordDisplayInput.style.width,
         login.password.length + "ch",
         "Password field width shouldn't have changed"
       );
@@ -315,7 +321,6 @@ add_task(async function test_login_item() {
         "input[name='username']"
       );
       let passwordInput = loginItem._passwordInput;
-      let passwordDisplayInput = loginItem._passwordDisplayInput;
 
       usernameInput.value += "-saveme";
       passwordInput.value += "-saveme";
@@ -355,11 +360,6 @@ add_task(async function test_login_item() {
         passwordInput.style.width,
         passwordInput.value.length + "ch",
         "Password field width should be correctly updated"
-      );
-      Assert.equal(
-        passwordDisplayInput.style.width,
-        passwordDisplayInput.value.length + "ch",
-        "Password display field width should be correctly updated"
       );
     }
   );
