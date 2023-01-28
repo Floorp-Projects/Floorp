@@ -320,6 +320,24 @@ newtab-background-gradation =
 newtab-background-not-background =
     .label = Disable Background
 
+newtab-background-selected-image =
+    .label = Use a Images in the Selected Folder
+
+newtab-background-folder = Selected Directory
+
+newtab-background-folder-reload = 
+  .label = Reload Images
+
+newtab-background-folder-default = 
+  .label = Restore Default
+
+newtab-background-folder-open = 
+  .label = Open Directory
+
+newtab-background-folder-choose = Choose Images Folder
+
+newtab-background-extensions = Images' Extensions (Separated by ",")
+
 ## lepton preferences
 
 about-lepton = Customize { -brand-short-name } with Lepton

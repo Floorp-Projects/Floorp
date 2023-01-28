@@ -14258,7 +14258,9 @@ const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => (
 
 const imgLength = 100;
 function Background(props) {
-  const [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
+  let imgSrc = "";
+  if (props.className == "random_image") [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
+  if (props.className == "selected_folder" && props.imageList != undefined) imgSrc = props.imageList.length != 0 ? props.imageList[Math.floor(Math.random() * props.imageList.length)] : "";
   return /*#__PURE__*/external_React_default().createElement("div", {
     id: "background_back",
     className: props.className
@@ -14490,13 +14492,18 @@ class BaseContent extends (external_React_default()).PureComponent {
         Background_ClassName = "gradation";
         break;
 
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+
       default:
         Background_ClassName = "not_background";
         break;
     }
 
     return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(Background, {
-      className: Background_ClassName
+      className: Background_ClassName,
+      imageList: prefs["backgroundPaths"]
     }), /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
       onClose: this.closeCustomizationMenu,
       onOpen: this.openCustomizationMenu,
