@@ -360,7 +360,7 @@ class nsWindow final : public nsBaseWidget {
   void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
-  nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) override;
   void SetDrawsInTitlebar(bool aState) override;
   mozilla::LayoutDeviceIntCoord GetTitlebarRadius();
   LayoutDeviceIntRect GetTitlebarRect();

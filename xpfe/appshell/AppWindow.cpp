@@ -1613,9 +1613,8 @@ void AppWindow::SyncAttributesToWidget() {
   nsIntMargin margins;
   windowElement->GetAttribute(u"chromemargin"_ns, attr);
   if (nsContentUtils::ParseIntMarginValue(attr, margins)) {
-    LayoutDeviceIntMargin tmp =
-        LayoutDeviceIntMargin::FromUnknownMargin(margins);
-    mWindow->SetNonClientMargins(tmp);
+    mWindow->SetNonClientMargins(
+        LayoutDeviceIntMargin::FromUnknownMargin(margins));
   }
 
   NS_ENSURE_TRUE_VOID(mWindow);

@@ -2469,7 +2469,7 @@ void nsCocoaWindow::SetDrawsTitle(bool aDrawTitle) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-nsresult nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
+nsresult nsCocoaWindow::SetNonClientMargins(const LayoutDeviceIntMargin& margins) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   SetDrawsInTitlebar(margins.top == 0);

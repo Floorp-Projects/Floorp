@@ -272,7 +272,7 @@ class nsWindow final : public nsBaseWidget {
   void SetTransparencyMode(TransparencyMode aMode) override;
   TransparencyMode GetTransparencyMode() override;
   void UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
-  nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) override;
   void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   void SetDrawsInTitlebar(bool aState) override;
   void UpdateWindowDraggingRegion(

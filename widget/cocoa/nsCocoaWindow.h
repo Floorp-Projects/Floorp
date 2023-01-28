@@ -314,7 +314,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetSupportsNativeFullscreen(bool aShow) override;
   virtual void SetWindowAnimationType(WindowAnimationType aType) override;
   virtual void SetDrawsTitle(bool aDrawTitle) override;
-  virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  virtual nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) override;
   virtual void SetDrawsInTitlebar(bool aState) override;
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
