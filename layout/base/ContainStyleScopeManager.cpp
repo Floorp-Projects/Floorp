@@ -206,10 +206,11 @@ void ContainStyleScopeManager::GetSpokenCounterText(nsIFrame* aFrame,
       aText.Append(' ');
     }
   } else {
-    counterStyle->GetPrefix(aText);
+    auto* resolvedStyle = counterStyle->ResolveFallbackFor(ordinal);
+    resolvedStyle->GetPrefix(ordinal, aText);
     aText += text;
     nsAutoString suffix;
-    counterStyle->GetSuffix(suffix);
+    resolvedStyle->GetSuffix(ordinal, suffix);
     aText += suffix;
   }
 }
