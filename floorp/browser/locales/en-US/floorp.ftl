@@ -321,7 +321,7 @@ newtab-background-not-background =
     .label = Disable Background
 
 newtab-background-selected-image =
-    .label = Use a Images in the Selected Folder
+    .label = Use a Images in the Selected Directory
 
 newtab-background-folder = Selected Directory
 
