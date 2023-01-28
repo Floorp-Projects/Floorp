@@ -1667,10 +1667,9 @@ DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(
   return nullptr;
 }
 
-void DrawTargetSkia::BlendSurface(SourceSurface* aSurface,
-                                  const IntRect& aSourceRect,
-                                  const IntPoint& aDestination,
-                                  CompositionOp aOperator) {
+void DrawTargetSkia::CopySurface(SourceSurface* aSurface,
+                                 const IntRect& aSourceRect,
+                                 const IntPoint& aDestination) {
   MarkChanged();
 
   Maybe<MutexAutoLock> lock;
@@ -1679,31 +1678,28 @@ void DrawTargetSkia::BlendSurface(SourceSurface* aSurface,
     return;
   }
 
-  mCanvas->save();
-  mCanvas->setMatrix(SkMatrix::MakeTrans(SkIntToScalar(aDestination.x),
-                                         SkIntToScalar(aDestination.y)));
-  mCanvas->clipRect(SkRect::MakeIWH(aSourceRect.Width(), aSourceRect.Height()),
-                    SkClipOp::kReplace_deprecated);
-
-  SkPaint paint;
-  if (aOperator == CompositionOp::OP_SOURCE) {
-    if (!image->isOpaque()) {
-      // Keep the xfermode as SOURCE_OVER for opaque bitmaps
-      // http://code.google.com/p/skia/issues/detail?id=628
-      paint.setBlendMode(SkBlendMode::kSrc);
-    }
-    // drawImage with A8 images ends up doing a mask operation
-    // so we need to clear before
-    if (image->isAlphaOnly()) {
-      mCanvas->clear(SK_ColorTRANSPARENT);
-    }
-  } else {
-    paint.setBlendMode(GfxOpToSkiaOp(aOperator));
+  SkPixmap srcPixmap;
+  if (!image->peekPixels(&srcPixmap)) {
+    return;
   }
 
-  mCanvas->drawImage(image, -SkIntToScalar(aSourceRect.X()),
-                     -SkIntToScalar(aSourceRect.Y()), &paint);
-  mCanvas->restore();
+  // Ensure the source rect intersects the surface bounds.
+  IntRect srcRect = aSourceRect.Intersect(SkIRectToIntRect(srcPixmap.bounds()));
+  // Move the destination offset to match the altered source rect.
+  IntPoint dstOffset =
+      aDestination + (srcRect.TopLeft() - aSourceRect.TopLeft());
+  // Then ensure the dest rect intersect the canvas bounds.
+  IntRect dstRect = IntRect(dstOffset, srcRect.Size()).Intersect(GetRect());
+  // Move the source rect to match the altered dest rect.
+  srcRect += dstRect.TopLeft() - dstOffset;
+  srcRect.SizeTo(dstRect.Size());
+
+  if (!srcPixmap.extractSubset(&srcPixmap, IntRectToSkIRect(srcRect))) {
+    return;
+  }
+
+  mCanvas->writePixels(srcPixmap.info(), srcPixmap.addr(), srcPixmap.rowBytes(),
+                       dstRect.x, dstRect.y);
 }
 
 static inline SkPixelGeometry GetSkPixelGeometry() {
@@ -1858,17 +1854,11 @@ already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
   return MakeAndAddRef<PathBuilderSkia>(aFillRule);
 }
 
-void DrawTargetSkia::Clear(const Rect& aRect, bool aClipped) {
+void DrawTargetSkia::ClearRect(const Rect& aRect) {
   MarkChanged();
   mCanvas->save();
-  if (aClipped) {
-    // Restrict clearing to the clip region if requested.
-    mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kIntersect, true);
-  } else {
-    // Otherwise, clear the entire rect.
-    mCanvas->resetMatrix();
-    mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kReplace_deprecated);
-  }
+  // Restrict clearing to the clip region if requested
+  mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kIntersect, true);
   SkColor clearColor = (mFormat == SurfaceFormat::B8G8R8X8)
                            ? SK_ColorBLACK
                            : SK_ColorTRANSPARENT;

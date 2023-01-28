@@ -77,6 +77,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   RefPtr<WebGLTextureJS> mClipMask;
   IntRect mClipBounds;
   RefPtr<DrawTargetSkia> mSkia;
+  // Skia DT pointing to the same pixel data, but without any applied clips.
+  RefPtr<DrawTargetSkia> mSkiaNoClip;
   // The Shmem backing the Skia DT, if applicable.
   mozilla::ipc::Shmem mShmem;
   // The currently cached snapshot of the WebGL context
