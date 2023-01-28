@@ -72,27 +72,25 @@ add_task(async function keyboardSelection_secondResult() {
   );
   await assertIsTestResult(1);
 
-  let resultMenuOffset = UrlbarPrefs.get("resultMenu") ? 1 : 0;
-
   info("Arrow down to the main part of the result.");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  assertMainPartSelected(1 + resultMenuOffset);
+  assertMainPartSelected(1);
 
   info("TAB to the button.");
   EventUtils.synthesizeKey("KEY_Tab");
-  assertButtonSelected(2 + resultMenuOffset);
+  assertButtonSelected(2);
 
   info("TAB to the next (third) result.");
   EventUtils.synthesizeKey("KEY_Tab");
-  assertOtherResultSelected(3 + resultMenuOffset, "next result");
+  assertOtherResultSelected(3, "next result");
 
   info("SHIFT+TAB to the help button.");
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
-  assertButtonSelected(2 + resultMenuOffset);
+  assertButtonSelected(2);
 
   info("SHIFT+TAB to the main part of the result.");
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
-  assertMainPartSelected(1 + resultMenuOffset);
+  assertMainPartSelected(1);
 
   info("Arrow up to the previous (first) result.");
   EventUtils.synthesizeKey("KEY_ArrowUp");
@@ -125,7 +123,7 @@ add_task(async function keyboardSelection_lastResult() {
   await assertIsTestResult(MAX_RESULTS - 1);
 
   let numSelectable = UrlbarPrefs.get("resultMenu")
-    ? MAX_RESULTS * 2 - 1
+    ? MAX_RESULTS * 2 - 2
     : MAX_RESULTS;
 
   // Arrow down to the main part of the result.
@@ -220,7 +218,9 @@ async function doPickTest({ pickButton, useKeyboard }) {
     if (useKeyboard) {
       // Arrow down to the result.
       EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
-      assertMainPartSelected(UrlbarPrefs.get("resultMenu") ? index * 2 : index);
+      assertMainPartSelected(
+        UrlbarPrefs.get("resultMenu") ? index * 2 - 1 : index
+      );
     }
 
     // Pick the result.  The appropriate URL should load.

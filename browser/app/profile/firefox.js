@@ -503,7 +503,11 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 pref("browser.urlbar.openintab", false);
 
 // Enable three-dot options button and menu for eligible results.
+#ifdef NIGHTLY_BUILD
+pref("browser.urlbar.resultMenu", true);
+#else
 pref("browser.urlbar.resultMenu", false);
+#endif
 
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);

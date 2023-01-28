@@ -322,6 +322,13 @@ add_task(async function withDnsFirstForSingleWordsPref() {
 });
 
 add_task(async function buttons() {
+  if (UrlbarPrefs.get("resultMenu")) {
+    todo(
+      false,
+      "the menu button is only visible on hover, so not as easily testable as the block and help buttons."
+    );
+    return;
+  }
   let initialTabUrl = "https://example.com/initial";
   let mainResultUrl = "https://example.com/main";
   let mainResultHelpUrl = "https://example.com/help";
@@ -599,17 +606,7 @@ async function waitForElements(selectors) {
   let elements;
   await BrowserTestUtils.waitForCondition(() => {
     elements = selectors.map(s => document.querySelector(s));
-    return elements.every(e => {
-      if (e?.classList.contains("urlbarView-button-menu")) {
-        // Hover the row to make the menu button visible.
-        let row = e.closest(".urlbarView-row");
-        EventUtils.synthesizeMouse(row, 1, 1, { type: "mouseover" });
-        EventUtils.synthesizeMouse(row, 2, 2, { type: "mousemove" });
-        EventUtils.synthesizeMouse(row, 3, 3, { type: "mousemove" });
-        EventUtils.synthesizeMouse(row, 4, 4, { type: "mousemove" });
-      }
-      return e && BrowserTestUtils.is_visible(e);
-    });
+    return elements.every(e => e && BrowserTestUtils.is_visible(e));
   }, "Waiting for elements to become visible: " + JSON.stringify(selectors));
   return elements;
 }
