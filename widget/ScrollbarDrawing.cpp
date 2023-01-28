@@ -22,16 +22,22 @@ namespace mozilla::widget {
 using mozilla::RelativeLuminanceUtils;
 
 /* static */
-auto ScrollbarDrawing::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
+auto ScrollbarDrawing::GetDPIRatioForScrollbarPart(const nsPresContext* aPc)
     -> DPIRatio {
-  if (auto* rootPc = aPc->GetRootPresContext()) {
-    if (nsCOMPtr<nsIWidget> widget = rootPc->GetRootWidget()) {
-      return widget->GetDefaultScale();
+  auto ratio = [&] {
+    if (auto* rootPc = aPc->GetRootPresContext()) {
+      if (nsCOMPtr<nsIWidget> widget = rootPc->GetRootWidget()) {
+        return widget->GetDefaultScale();
+      }
     }
+    return DPIRatio(
+        float(AppUnitsPerCSSPixel()) /
+        float(aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()));
+  }();
+  if (mKind == Kind::Cocoa) {
+    return DPIRatio(ratio.scale >= 2.0f ? 2.0f : 1.0f);
   }
-  return DPIRatio(
-      float(AppUnitsPerCSSPixel()) /
-      float(aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()));
+  return ratio;
 }
 
 /*static*/
@@ -80,26 +86,41 @@ bool ScrollbarDrawing::IsScrollbarWidthThin(nsIFrame* aFrame) {
   return IsScrollbarWidthThin(*style);
 }
 
-auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
-                                         StyleScrollbarWidth aWidth, Overlay)
-    -> ScrollbarSizes {
-  uint32_t h = GetHorizontalScrollbarHeight();
-  uint32_t w = GetVerticalScrollbarWidth();
-  if (aWidth == StyleScrollbarWidth::Thin) {
-    h /= 2;
-    w /= 2;
-  }
-  auto dpi = GetDPIRatioForScrollbarPart(aPresContext);
-  return {(CSSCoord(w) * dpi).Rounded(), (CSSCoord(h) * dpi).Rounded()};
+CSSIntCoord ScrollbarDrawing::GetCSSScrollbarSize(StyleScrollbarWidth aWidth,
+                                                  Overlay aOverlay) const {
+  return mScrollbarSize[aWidth == StyleScrollbarWidth::Thin]
+                       [aOverlay == Overlay::Yes];
 }
 
-auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
-                                         nsIFrame* aFrame) -> ScrollbarSizes {
+void ScrollbarDrawing::ConfigureScrollbarSize(StyleScrollbarWidth aWidth,
+                                              Overlay aOverlay,
+                                              CSSIntCoord aSize) {
+  mScrollbarSize[aWidth == StyleScrollbarWidth::Thin]
+                [aOverlay == Overlay::Yes] = aSize;
+}
+
+void ScrollbarDrawing::ConfigureScrollbarSize(CSSIntCoord aSize) {
+  ConfigureScrollbarSize(StyleScrollbarWidth::Auto, Overlay::No, aSize);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Auto, Overlay::Yes, aSize);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::No, aSize / 2);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::Yes, aSize / 2);
+}
+
+LayoutDeviceIntCoord ScrollbarDrawing::GetScrollbarSize(
+    const nsPresContext* aPresContext, StyleScrollbarWidth aWidth,
+    Overlay aOverlay) {
+  return (CSSCoord(GetCSSScrollbarSize(aWidth, aOverlay)) *
+          GetDPIRatioForScrollbarPart(aPresContext))
+      .Rounded();
+}
+
+LayoutDeviceIntCoord ScrollbarDrawing::GetScrollbarSize(
+    const nsPresContext* aPresContext, nsIFrame* aFrame) {
   auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
   auto width = style->StyleUIReset()->ScrollbarWidth();
   auto overlay =
       aPresContext->UseOverlayScrollbars() ? Overlay::Yes : Overlay::No;
-  return GetScrollbarSizes(aPresContext, width, overlay);
+  return GetScrollbarSize(aPresContext, width, overlay);
 }
 
 bool ScrollbarDrawing::IsScrollbarTrackOpaque(nsIFrame* aFrame) {

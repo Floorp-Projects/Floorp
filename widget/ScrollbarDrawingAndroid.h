@@ -20,9 +20,6 @@ class ScrollbarDrawingAndroid final : public ScrollbarDrawing {
                                            StyleAppearance aAppearance,
                                            nsIFrame* aFrame) override;
 
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
-
   template <typename PaintBackendData>
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
                              ScrollbarKind, nsIFrame* aFrame,

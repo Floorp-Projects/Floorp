@@ -603,11 +603,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::SystemUsesDarkTheme:
       res = SystemWantsDarkTheme(aResult);
       break;
-    case IntID::SystemVerticalScrollbarWidth:
-      aResult = WinUtils::GetSystemMetricsForDpi(SM_CXVSCROLL, 96);
-      break;
-    case IntID::SystemHorizontalScrollbarHeight:
-      aResult = WinUtils::GetSystemMetricsForDpi(SM_CXHSCROLL, 96);
+    case IntID::SystemScrollbarSize:
+      aResult = std::max(WinUtils::GetSystemMetricsForDpi(SM_CXVSCROLL, 96),
+                         WinUtils::GetSystemMetricsForDpi(SM_CXHSCROLL, 96));
       break;
     case IntID::PrefersReducedMotion: {
       BOOL enable = TRUE;

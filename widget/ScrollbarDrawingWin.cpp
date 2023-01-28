@@ -35,14 +35,12 @@ LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
     case StyleAppearance::ScrollbarthumbHorizontal: {
       // TODO: for short scrollbars it could be nice if the thumb could shrink
       // under this size.
-      auto sizes = GetScrollbarSizes(aPresContext, aFrame);
+      auto relevantSize = GetScrollbarSize(aPresContext, aFrame);
       const bool isHorizontal =
           aAppearance == StyleAppearance::ScrollbarHorizontal ||
           aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
           aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
           aAppearance == StyleAppearance::ScrollbarbuttonRight;
-      const auto relevantSize =
-          isHorizontal ? sizes.mHorizontal : sizes.mVertical;
       auto size = LayoutDeviceIntSize{relevantSize, relevantSize};
       if (aAppearance == StyleAppearance::ScrollbarHorizontal ||
           aAppearance == StyleAppearance::ScrollbarVertical) {
@@ -165,13 +163,11 @@ void ScrollbarDrawingWin::RecomputeScrollbarParams() {
   if (overrideSize > 0) {
     defaultSize = overrideSize;
   }
-  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+  ConfigureScrollbarSize(defaultSize);
 
   if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
-    mHorizontalScrollbarHeight = LookAndFeel::GetInt(
-        LookAndFeel::IntID::SystemHorizontalScrollbarHeight, defaultSize);
-    mVerticalScrollbarWidth = LookAndFeel::GetInt(
-        LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
+    ConfigureScrollbarSize(LookAndFeel::GetInt(
+        LookAndFeel::IntID::SystemScrollbarSize, defaultSize));
   }
 }
 

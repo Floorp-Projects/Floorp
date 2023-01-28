@@ -396,16 +396,11 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
         case StyleAppearance::ScrollbarVertical:
         case StyleAppearance::ScrollbarHorizontal: {
           ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aBox);
-          auto sizes = theme->GetScrollbarSizes(
+          auto size = theme->GetScrollbarSize(
               pc, style->StyleUIReset()->ScrollbarWidth(),
               nsITheme::Overlay::No);
-          if (appearance == StyleAppearance::ScrollbarVertical) {
-            aSize.width = pc->DevPixelsToAppUnits(sizes.mVertical);
-            aWidthSet = true;
-          } else {
-            aSize.height = pc->DevPixelsToAppUnits(sizes.mHorizontal);
-            aHeightSet = true;
-          }
+          aSize.width = pc->DevPixelsToAppUnits(size);
+          aWidthSet = true;
           break;
         }
         default:

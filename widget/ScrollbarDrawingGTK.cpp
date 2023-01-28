@@ -18,9 +18,8 @@ LayoutDeviceIntSize ScrollbarDrawingGTK::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
   MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
-  auto sizes = GetScrollbarSizes(aPresContext, aFrame);
-  MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
-  LayoutDeviceIntSize size{sizes.mHorizontal, sizes.mVertical};
+  auto scrollbarSize = GetScrollbarSize(aPresContext, aFrame);
+  LayoutDeviceIntSize size{scrollbarSize, scrollbarSize};
   if (aAppearance == StyleAppearance::ScrollbarHorizontal ||
       aAppearance == StyleAppearance::ScrollbarVertical ||
       aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
@@ -130,5 +129,5 @@ void ScrollbarDrawingGTK::RecomputeScrollbarParams() {
   if (overrideSize > 0) {
     defaultSize = overrideSize;
   }
-  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+  ConfigureScrollbarSize(defaultSize);
 }

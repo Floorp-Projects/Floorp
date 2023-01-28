@@ -81,75 +81,39 @@ LayoutDeviceIntSize ScrollbarDrawingCocoa::GetMinimumWidgetSize(
     nsIFrame* aFrame) {
   MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
 
-  auto minSize = [&] {
+  auto minSize = [&]() -> CSSIntSize {
     switch (aAppearance) {
       case StyleAppearance::ScrollbarthumbHorizontal:
-        return IntSize{26, 0};
+        return {26, 0};
       case StyleAppearance::ScrollbarthumbVertical:
-        return IntSize{0, 26};
+        return {0, 26};
       case StyleAppearance::ScrollbarVertical:
       case StyleAppearance::ScrollbarHorizontal:
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
         ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
         auto scrollbarWidth = style->StyleUIReset()->ScrollbarWidth();
-        auto size = GetScrollbarSize(
-            scrollbarWidth,
-            LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars));
-        return IntSize{size, size};
+        auto size = GetCSSScrollbarSize(
+            scrollbarWidth, Overlay(aPresContext->UseOverlayScrollbars()));
+        return {size, size};
       }
       case StyleAppearance::ScrollbarbuttonUp:
       case StyleAppearance::ScrollbarbuttonDown:
-        return IntSize{15, 16};
+        return {15, 16};
       case StyleAppearance::ScrollbarbuttonLeft:
       case StyleAppearance::ScrollbarbuttonRight:
-        return IntSize{16, 15};
+        return {16, 15};
       default:
-        return IntSize{};
+        return {};
     }
   }();
 
-  auto dpi = GetDPIRatioForScrollbarPart(aPresContext).scale;
-  if (dpi >= 2.0f) {
-    return LayoutDeviceIntSize{minSize.width * 2, minSize.height * 2};
-  }
-  return LayoutDeviceIntSize{minSize.width, minSize.height};
-}
-
-/*static*/
-CSSIntCoord ScrollbarDrawingCocoa::GetScrollbarSize(StyleScrollbarWidth aWidth,
-                                                    bool aOverlay) {
-  bool isSmall = aWidth == StyleScrollbarWidth::Thin;
-  if (aOverlay) {
-    return isSmall ? 14 : 16;
-  }
-  return isSmall ? 11 : 15;
-}
-
-/*static*/
-LayoutDeviceIntCoord ScrollbarDrawingCocoa::GetScrollbarSize(
-    StyleScrollbarWidth aWidth, bool aOverlay, DPIRatio aDpiRatio) {
-  CSSIntCoord size = GetScrollbarSize(aWidth, aOverlay);
-  if (aDpiRatio.scale >= 2.0f) {
-    return int32_t(size) * 2;
-  }
-  return int32_t(size);
-}
-
-auto ScrollbarDrawingCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
-                                              StyleScrollbarWidth aWidth,
-                                              Overlay aOverlay)
-    -> ScrollbarSizes {
-  auto size = GetScrollbarSize(aWidth, aOverlay == Overlay::Yes,
-                               GetDPIRatioForScrollbarPart(aPresContext));
-  return {size, size};
+  auto dpi = GetDPIRatioForScrollbarPart(aPresContext);
+  return LayoutDeviceIntSize::Round(CSSSize(minSize) * dpi);
 }
 
 static ThumbRect GetThumbRect(const LayoutDeviceRect& aRect,
                               const ScrollbarParams& aParams, float aScale) {
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
-
   // Compute the thumb thickness. This varies based on aParams.small,
   // aParams.overlay and aParams.rolledOver. non-overlay: 6 / 8, overlay
   // non-hovered: 5 / 7, overlay hovered: 9 / 11
@@ -255,9 +219,6 @@ static bool GetScrollbarTrackRects(const LayoutDeviceRect& aRect,
     return false;
   }
 
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
-
   nscolor trackColor;
   if (aParams.isCustom) {
     trackColor = aParams.trackColor;
@@ -322,9 +283,6 @@ static bool GetScrollCornerRects(const LayoutDeviceRect& aRect,
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
     return false;
   }
-
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
   // Draw the following scroll corner.
   //
@@ -506,13 +464,13 @@ bool ScrollbarDrawingCocoa::PaintScrollCorner(
 }
 
 void ScrollbarDrawingCocoa::RecomputeScrollbarParams() {
-  uint32_t defaultSize = 17;
-  uint32_t overrideSize =
-      StaticPrefs::widget_non_native_theme_scrollbar_size_override();
-  if (overrideSize > 0) {
-    defaultSize = overrideSize;
-  }
-  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+  // FIXME(emilio): This doesn't respect the
+  // StaticPrefs::widget_non_native_theme_scrollbar_size_override() pref;
+  ConfigureScrollbarSize(15);  // Just in case, for future-proofing
+  ConfigureScrollbarSize(StyleScrollbarWidth::Auto, Overlay::No, 15);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::No, 11);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Auto, Overlay::Yes, 16);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::Yes, 14);
 }
 
 }  // namespace mozilla::widget

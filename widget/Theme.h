@@ -90,8 +90,9 @@ class Theme : protected nsNativeTheme, public nsITheme {
   bool WidgetIsContainer(StyleAppearance) override;
   bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
+
+  LayoutDeviceIntCoord GetScrollbarSize(const nsPresContext*,
+                                        StyleScrollbarWidth, Overlay) final;
 
   nscoord GetCheckboxRadioPrefSize() override;
 
@@ -100,8 +101,8 @@ class Theme : protected nsNativeTheme, public nsITheme {
  protected:
   virtual ~Theme() = default;
 
-  static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
-  static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
+  DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
+  DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
 
   std::tuple<sRGBColor, sRGBColor, sRGBColor> ComputeCheckboxColors(
       const ElementState&, StyleAppearance, const Colors&);
