@@ -65,15 +65,9 @@ class DrawTargetSkia : public DrawTarget {
                                      const Point& aDest,
                                      const ShadowOptions& aShadow,
                                      CompositionOp aOperator) override;
-  void Clear(const Rect& aRect, bool aClipped);
-  void Clear() { Clear(Rect(GetRect()), false); }
-  virtual void ClearRect(const Rect& aRect) override { Clear(aRect, true); }
-  void BlendSurface(SourceSurface* aSurface, const IntRect& aSourceRect,
-                    const IntPoint& aDestination, CompositionOp aOperator);
+  virtual void ClearRect(const Rect& aRect) override;
   virtual void CopySurface(SourceSurface* aSurface, const IntRect& aSourceRect,
-                           const IntPoint& aDestination) override {
-    BlendSurface(aSurface, aSourceRect, aDestination, CompositionOp::OP_SOURCE);
-  }
+                           const IntPoint& aDestination) override;
   virtual void FillRect(const Rect& aRect, const Pattern& aPattern,
                         const DrawOptions& aOptions = DrawOptions()) override;
   virtual void StrokeRect(const Rect& aRect, const Pattern& aPattern,
