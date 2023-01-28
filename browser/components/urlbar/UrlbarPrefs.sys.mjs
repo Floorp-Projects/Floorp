@@ -244,11 +244,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether we will match QuickActions within a phrase and not only a prefix.
   ["quickactions.matchInPhrase", true],
 
-  // Whether we show QuickActions when in zero-prefix.
-  ["quickactions.showInZeroPrefix", false],
-
   // Show multiple actions in a random order.
   ["quickactions.randomOrderActions", false],
+
+  // The minumum amount of characters required for the user to input before
+  // matching actions. Setting this to 0 will show the actions in the
+  // zero prefix state.
+  ["quickactions.minimumSearchString", 3],
 
   // Whether results will include non-sponsored quick suggest suggestions.
   ["suggest.quicksuggest.nonsponsored", false],

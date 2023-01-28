@@ -107,3 +107,20 @@ add_task(async function remove_action() {
     matches: [],
   });
 });
+
+add_task(async function minimum_search_string() {
+  let searchString = "newa";
+  for (let minimumSearchString of [0, 3]) {
+    UrlbarPrefs.set("quickactions.minimumSearchString", minimumSearchString);
+    for (let i = 1; i < 4; i++) {
+      let context = createContext(searchString.substring(0, i), {
+        providers: [UrlbarProviderQuickActions.name],
+        isPrivate: false,
+      });
+      let matches =
+        i >= minimumSearchString ? [expectedMatch("newaction", i)] : [];
+      await check_results({ context, matches });
+    }
+  }
+  UrlbarPrefs.clear("quickactions.minimumSearchString");
+});
