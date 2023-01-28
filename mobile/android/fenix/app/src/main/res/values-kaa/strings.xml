@@ -84,6 +84,10 @@
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
 
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Avtomatikalıq jabıwdı qosıw</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Jańa bet</string>
@@ -189,6 +193,8 @@
     <string name="onboarding_home_get_started_button">Baslaw</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Kiriw</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Ótkizip jiberiw</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Jabıw</string>
 
@@ -219,6 +225,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s haqqında </string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Tiykarǵi brauzer retinde ornatıw</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Qosımsha</string>
 
@@ -254,13 +262,15 @@
     <!-- Summary of https only preference if https only is set to on in private tabs only -->
     <string name="preferences_https_only_on_private">Jeke betlerde qosıwlı</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
-    <string name="preferences_http_only_learn_more">Kóbirek úyreniw</string>
+    <string name="preferences_http_only_learn_more">Tolıǵıraq</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">Hámme betlerde iske túsiriw</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">Tek ǵana jeke betlerde iske túsiriw</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akkaunt</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Ásbaplar paneli</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -285,6 +295,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qosımshalar</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Xabarlandırıwlar</string>
     <!-- Summary for notification preference indicating notifications are allowed -->
     <string name="notifications_allowed_summary">Ruqsat etildi</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
@@ -307,7 +319,7 @@
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Qayta urınıp kóriń</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
-    <string name="wallpaper_learn_more">Kóbirek úyreniw</string>
+    <string name="wallpaper_learn_more">Tolıǵıraq</string>
 
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Tariyx</string>
@@ -327,6 +339,8 @@
     <string name="empty_device_name_error">Qurılma atı bos bolıwı múmkin emes.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinxronlaw…</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Bank kartaları</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Mánziller</string>
 
@@ -337,7 +351,7 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Barlıq saytlar ushın qosıw</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message_learn_more_link">Kóbirek úyreniw</string>
+    <string name="exceptions_empty_message_learn_more_link">Tolıǵıraq</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Paydalanıw hám texnikalıq maǵlıwmatlar</string>
@@ -351,14 +365,22 @@
     <!-- Preference for using bottom toolbar -->
     <string name="preference_bottom_toolbar">Tómen</string>
 
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Jaqtı</string>
     <!-- Preference for using dark theme -->
-    <string name="preference_dark_theme">Qara</string>
+    <string name="preference_dark_theme">Qaranǵı</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Ásbaplar panelin jasırıw ushın aylandırıń</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Júklengenler</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Saylandılar</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Saylandılar paneli</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Basqa saylandılar</string>
     <!-- Option in Library to open History page -->
@@ -434,7 +456,7 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktiv</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
-    <string name="studies_learn_more">Kóbirek úyreniw</string>
+    <string name="studies_learn_more">Tolıǵıraq</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">MAQUL</string>
     <!-- Dialog button text for canceling removing a study. -->
@@ -637,6 +659,10 @@
     <string name="create_collection_name_collection">Toplam atı</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">Jańa toplam qosıw</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Barlıǵın saylaw</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Saylanǵanlardı biykar etıw</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Betler saqlandı!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
@@ -663,7 +689,7 @@
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Bólisiw</string>
      <!-- Text for the Save to PDF feature in the share menu -->
-    <string name="share_save_to_pdf">PDF kórisinde saqlaw</string>
+    <string name="share_save_to_pdf">PDF kórinisinde saqlaw</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Qurılmaǵa jiberiw</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -704,6 +730,14 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL nusqalandı</string>
 
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Shrift ólshemi</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Avtomatikalıq shrift ólshemi</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Brauzer maǵlıwmatların óshiriw</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Betlerdi ashıw</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -716,11 +750,16 @@
     <!-- Title for the downloads item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_downloads">Júklengenler</string>
 
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Brauzer maǵlıwmatların óshiriw</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Shıǵıw</string>
 
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">Keshe hám búgin</string>
+
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Hámmesi</string>
 
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Biykarlaw</string>
@@ -753,7 +792,7 @@
     <string name="sign_out_cancel">Biykarlaw</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Kóbirek úyreniw</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Barlıq betlerde</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -765,7 +804,7 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ruqsat etildi</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
-    <string name="preference_etp_smartblock_learn_more">Kóbirek úyreniw</string>
+    <string name="preference_etp_smartblock_learn_more">Tolıǵıraq</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Qollap-quwatlaw</string>
@@ -951,7 +990,7 @@
     <string name="privacy_content_close_button_content_description">Jabıw</string>
 
     <!-- Clickable text for opening an external link for more information about Pocket. -->
-    <string name="pocket_stories_feature_learn_more">Kóbirek úyreniw</string>
+    <string name="pocket_stories_feature_learn_more">Tolıǵıraq</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
     <string name="pocket_stories_sponsor_indication">Qáwenderlik etken</string>

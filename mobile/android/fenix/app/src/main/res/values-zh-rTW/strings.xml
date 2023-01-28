@@ -67,11 +67,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">新增捷徑</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">新增捷徑</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">新增至裝置主畫面</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -266,7 +266,7 @@
     <string name="search_settings_menu_item">搜尋設定</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">這次搜尋使用:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">這次搜尋使用:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">這次搜尋:</string>
@@ -362,8 +362,12 @@
     <string name="preferences_cookie_banner_reduction">減少 Cookie 橫幅</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">減少 Cookie 橫幅</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">關閉</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">開啟</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox 會自動嘗試為您點擊 Cookie 橫幅上的「拒絕」按鈕。若網站未提供拒絕選向，可能還是會接受所有 Cookie 來讓橫幅消失。</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox 會自動嘗試為您點擊 Cookie 橫幅上的「拒絕」按鈕。若網站未提供拒絕選向，可能還是會接受所有 Cookie 來讓橫幅消失。</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s 會自動嘗試拒絕網站 Cookie 橫幅上的設定請求。</string>
@@ -371,6 +375,8 @@
     <string name="reduce_cookie_banner_off_for_site">對此網站關閉</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">對此網站開啟</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">目前不支援的網站</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">要為 %1$s 開啟減少 Cookie 橫幅功能嗎？</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -378,16 +384,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 將清除此網站的 Cookie 並重新載入頁面。清除 Cookie 可能會將您從網站登出，或清空購物車。</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s 可自動嘗試為您拒絕 Cookie。若網站未提供拒絕選向，%2$s 可能還是會接受所有 Cookie 來讓橫幅消失。</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s 可自動嘗試為您拒絕 Cookie。若網站未提供拒絕選向，%2$s 可能還是會接受所有 Cookie 來讓橫幅消失。</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s 可以嘗試自動為您拒絕網站要設定 Cookie 的請求。</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s 可以嘗試自動為您拒絕網站要設定 Cookie 的請求。</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s 可自動在支援的網站，為您拒絕網站設定 Cookie 的請求。</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">讓 Cookie 橫幅消失！</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">讓 Cookie 橫幅消失！</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">在可能的情況下自動拒絕 Cookie 橫幅，否則就接受網站的所有 Cookie 來讓橫幅消失。</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">在可能的情況下自動拒絕 Cookie 橫幅，否則就接受網站的所有 Cookie 來讓橫幅消失。</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">可能的話就自動拒絕 Cookie 請求。</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">可能的話就自動拒絕 Cookie 請求。</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">要允許 %1$s 盡可能自動拒絕 Cookie 請求嗎？</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">現在不要</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -398,7 +408,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">減少顯示 Cookie 彈出提示</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">自動回答設定 Cookie 的彈出提示，讓您上網不用分心。%1$s 可以的話將會拒絕所有請求，如果無法拒絕就會全部接受。</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">自動回答設定 Cookie 的彈出提示，讓您上網不用分心。%1$s 可以的話將會拒絕所有請求，如果無法拒絕就會全部接受。</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">自動回答設定 Cookie 的彈出提示，讓您上網不用分心。%1$s 可以的話將會拒絕所有請求。</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -406,7 +416,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">減少 Cookie 橫幅</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">要允許 %1$s 幫您拒絕網站的 Cookie 提示，或者當網站無法拒絕時就接受嗎？</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">要允許 %1$s 幫您拒絕網站的 Cookie 提示，或者當網站無法拒絕時就接受嗎？</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">要讓 %1$s 在可以拒絕時，盡量拒絕網站設定 Cookie 的請求嗎？</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -415,7 +425,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自動嘗試使用加密過的 HTTPS 通訊協定連線到網站，以增加安全性。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">開啟</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">開啟</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">關閉</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1063,7 +1073,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">例外網站</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">開啟</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">開啟</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">關閉</string>
 
@@ -1830,7 +1840,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">要使用的搜尋字串</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">用「%s」取代查詢關鍵字。例如:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">用「%s」取代查詢關鍵字。例如:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">自訂搜尋引擎詳細資訊</string>
