@@ -732,7 +732,21 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s yezmer ad yeɛreḍ s wudem awurman ad yegdel issutar n yinagan n tuqqna. Ma yella ulac taxtiṛt n ugdal, %1$s yezmer ad yeqbel meṛṛa inagan n tuqqna i umdal n uɣarrac.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s yezmer ad yeɛreḍ s wudem awurman ad yegdel issutar n yinagan n tuqqna. Ma yella ulac taxtiṛt n ugdal, %1$s yezmer ad yeqbel meṛṛa inagan n tuqqna i umdal n uɣarrac.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s yezmer ad yeɛreḍ s wudem awurman ad yagi issutar n yinagan n tuqqna.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s yettaɛraḍ ad yagi issutar n yinagan n tuqqna i wakken ad tekksem iɣarracen n yinagan n tuqqna.\n\nSefrek ismenyifen n yiɣarracen n yinagan n tuqqna deg yiɣewwaren.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s yettaɛraḍ ad yagi issutar n yinagan n tuqqna i wakken ad tekksem iɣarracen n yinagan n tuqqna.\n\nSefrek ismenyifen n yiɣarracen n yinagan n tuqqna deg %2$s.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">iɣewwaren</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">iɣewwaren</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Taɣuri tawurmant</string>
