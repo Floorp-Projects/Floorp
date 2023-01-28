@@ -1660,10 +1660,9 @@ nscoord nsIScrollableFrame::GetNondisappearingScrollbarWidth(nsPresContext* aPc,
   // We use this to size the combobox dropdown button. For that, we need to have
   // the proper big, non-overlay scrollbar size, regardless of whether we're
   // using e.g. scrollbar-width: thin, or overlay scrollbars.
-  auto sizes = aPc->Theme()->GetScrollbarSizes(aPc, StyleScrollbarWidth::Auto,
-                                               nsITheme::Overlay::No);
-  return aPc->DevPixelsToAppUnits(aWM.IsVertical() ? sizes.mHorizontal
-                                                   : sizes.mVertical);
+  auto size = aPc->Theme()->GetScrollbarSize(aPc, StyleScrollbarWidth::Auto,
+                                             nsITheme::Overlay::No);
+  return aPc->DevPixelsToAppUnits(size);
 }
 
 void ScrollFrameHelper::HandleScrollbarStyleSwitching() {
@@ -7219,18 +7218,18 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
                               ->StyleUIReset()
                               ->ScrollbarWidth();
-    auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
-                                                nsITheme::Overlay::No);
+    auto scrollbarSize = pc->Theme()->GetScrollbarSize(pc, scrollbarWidth,
+                                                       nsITheme::Overlay::No);
     nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
 
     nsRect r;
-    nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(sizes.mVertical);
+    nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(scrollbarSize);
     r.width =
         std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
     r.x = scrollbarOnLeft ? aInsideBorderArea.x
                           : aInsideBorderArea.XMost() - r.width;
 
-    nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(sizes.mHorizontal);
+    nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(scrollbarSize);
     r.height =
         std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
     r.y = aInsideBorderArea.YMost() - r.height;

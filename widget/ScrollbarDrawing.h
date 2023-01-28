@@ -25,7 +25,6 @@ class ScrollbarDrawing {
   using DrawTarget = mozilla::gfx::DrawTarget;
   using sRGBColor = mozilla::gfx::sRGBColor;
   using Colors = ThemeColors;
-  using ScrollbarSizes = nsITheme::ScrollbarSizes;
   using Overlay = nsITheme::Overlay;
   using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
 
@@ -48,7 +47,7 @@ class ScrollbarDrawing {
     VerticalRight,
   };
 
-  static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
+  DPIRatio GetDPIRatioForScrollbarPart(const nsPresContext*);
 
   static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame);
   static bool IsParentScrollbarRolledOver(nsIFrame* aFrame);
@@ -57,9 +56,11 @@ class ScrollbarDrawing {
   static bool IsScrollbarWidthThin(const ComputedStyle& aStyle);
   static bool IsScrollbarWidthThin(nsIFrame* aFrame);
 
-  virtual ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                           Overlay);
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, nsIFrame*);
+  CSSIntCoord GetCSSScrollbarSize(StyleScrollbarWidth, Overlay) const;
+  LayoutDeviceIntCoord GetScrollbarSize(const nsPresContext*,
+                                        StyleScrollbarWidth, Overlay);
+  LayoutDeviceIntCoord GetScrollbarSize(const nsPresContext*, nsIFrame*);
+
   virtual LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                                    StyleAppearance aAppearance,
                                                    nsIFrame* aFrame) = 0;
@@ -149,17 +150,21 @@ class ScrollbarDrawing {
 
   virtual bool ShouldDrawScrollbarButtons() { return true; }
 
-  uint32_t GetHorizontalScrollbarHeight() const {
-    return mHorizontalScrollbarHeight;
-  }
-  uint32_t GetVerticalScrollbarWidth() const { return mVerticalScrollbarWidth; }
+ private:
+  // The scrollbar sizes for all our scrollbars. Indices are overlay or not,
+  // then thin or not. Should be configured via ConfigureScrollbarSize.
+  CSSIntCoord mScrollbarSize[2][2]{};
 
  protected:
   // For some kind of style differences a full virtual method is overkill, so we
   // store the kind here so we can branch on it if necessary.
   Kind mKind;
-  uint32_t mHorizontalScrollbarHeight = 0;
-  uint32_t mVerticalScrollbarWidth = 0;
+
+  // Configures the scrollbar sizes based on a single size.
+  void ConfigureScrollbarSize(CSSIntCoord);
+
+  // Configures a particular scrollbar size.
+  void ConfigureScrollbarSize(StyleScrollbarWidth, Overlay, CSSIntCoord);
 };
 
 }  // namespace mozilla::widget

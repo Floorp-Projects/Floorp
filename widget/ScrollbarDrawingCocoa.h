@@ -22,13 +22,7 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
                                            StyleAppearance aAppearance,
                                            nsIFrame* aFrame) override;
 
-  static CSSIntCoord GetScrollbarSize(StyleScrollbarWidth aWidth,
-                                      bool aOverlay);
-  static LayoutDeviceIntCoord GetScrollbarSize(StyleScrollbarWidth aWidth,
-                                               bool aOverlay,
-                                               DPIRatio aDpiRatio);
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
+  static CSSIntCoord GetScrollbarSize(StyleScrollbarWidth, bool aOverlay);
 
   template <typename PaintBackendData>
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,

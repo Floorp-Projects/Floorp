@@ -16,22 +16,9 @@ LayoutDeviceIntSize ScrollbarDrawingAndroid::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
   MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
-
-  auto sizes =
-      GetScrollbarSizes(aPresContext, StyleScrollbarWidth::Auto, Overlay::Yes);
-  MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
-
-  return LayoutDeviceIntSize{sizes.mHorizontal, sizes.mVertical};
-}
-
-auto ScrollbarDrawingAndroid::GetScrollbarSizes(nsPresContext* aPresContext,
-                                                StyleScrollbarWidth aWidth,
-                                                Overlay aOverlay)
-    -> ScrollbarSizes {
-  // We force auto-width scrollbars because scrollbars on android are already
-  // thin enough.
-  return ScrollbarDrawing::GetScrollbarSizes(
-      aPresContext, StyleScrollbarWidth::Auto, aOverlay);
+  auto size =
+      GetScrollbarSize(aPresContext, StyleScrollbarWidth::Auto, Overlay::Yes);
+  return LayoutDeviceIntSize{size, size};
 }
 
 template <typename PaintBackendData>
@@ -89,5 +76,9 @@ void ScrollbarDrawingAndroid::RecomputeScrollbarParams() {
   if (overrideSize > 0) {
     defaultSize = overrideSize;
   }
-  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+  ConfigureScrollbarSize(defaultSize);
+  // We make thin scrollbars as wide as auto ones because auto scrollbars on
+  // android are already thin enough.
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::Yes, defaultSize);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::No, defaultSize);
 }

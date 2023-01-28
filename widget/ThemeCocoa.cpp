@@ -18,9 +18,8 @@ LayoutDeviceIntSize ThemeCocoa::GetMinimumWidgetSize(
     nsPresContext* aPresContext, nsIFrame* aFrame,
     StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
-    LayoutDeviceIntCoord size = ScrollbarDrawingCocoa::GetScrollbarSize(
-        StyleScrollbarWidth::Auto, /* aOverlay = */ false,
-        GetDPIRatio(aFrame, aAppearance));
+    auto size =
+        GetScrollbarSize(aPresContext, StyleScrollbarWidth::Auto, Overlay::No);
     return {size, size};
   }
   return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);

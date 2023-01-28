@@ -18,9 +18,6 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
   ScrollbarDrawingWin11() : ScrollbarDrawingWin(Kind::Win11) {}
   virtual ~ScrollbarDrawingWin11() = default;
 
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
-
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                            StyleAppearance aAppearance,
                                            nsIFrame* aFrame) override;
@@ -62,6 +59,8 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
                            const ElementState& aElementState,
                            const DocumentState& aDocumentState, const Colors&,
                            const DPIRatio&) override;
+
+  void RecomputeScrollbarParams() override;
 };
 
 }  // namespace mozilla::widget

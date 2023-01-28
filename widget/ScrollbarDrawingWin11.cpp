@@ -45,23 +45,6 @@ static constexpr CSSIntCoord kDefaultWinOverlayScrollbarSize = CSSIntCoord(12);
 static constexpr CSSIntCoord kDefaultWinOverlayThinScrollbarSize =
     CSSIntCoord(10);
 
-auto ScrollbarDrawingWin11::GetScrollbarSizes(nsPresContext* aPresContext,
-                                              StyleScrollbarWidth aWidth,
-                                              Overlay aOverlay)
-    -> ScrollbarSizes {
-  if (aOverlay == Overlay::Yes) {
-    // TODO(emilio): Maybe make this configurable? Though this doesn't respect
-    // classic Windows registry settings, and cocoa overlay scrollbars also
-    // don't respect the override it seems, so this should be fine.
-    CSSCoord cssSize(aWidth == StyleScrollbarWidth::Thin
-                         ? kDefaultWinOverlayThinScrollbarSize
-                         : kDefaultWinOverlayScrollbarSize);
-    auto size = (cssSize * GetDPIRatioForScrollbarPart(aPresContext)).Rounded();
-    return {size, size};
-  }
-  return ScrollbarDrawingWin::GetScrollbarSizes(aPresContext, aWidth, aOverlay);
-}
-
 LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
@@ -73,24 +56,16 @@ LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
   constexpr float kArrowRatio = 14.0f / kDefaultWinScrollbarSize;
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown: {
-      if (IsScrollbarWidthThin(aFrame)) {
-        return {};
-      }
-      const LayoutDeviceIntCoord size =
-          ScrollbarDrawing::GetScrollbarSizes(aPresContext, aFrame).mVertical;
-      return LayoutDeviceIntSize{
-          size, (kArrowRatio * LayoutDeviceCoord(size)).Rounded()};
-    }
+    case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
       if (IsScrollbarWidthThin(aFrame)) {
         return {};
       }
       const LayoutDeviceIntCoord size =
-          ScrollbarDrawing::GetScrollbarSizes(aPresContext, aFrame).mHorizontal;
+          ScrollbarDrawing::GetScrollbarSize(aPresContext, aFrame);
       return LayoutDeviceIntSize{
-          (kArrowRatio * LayoutDeviceCoord(size)).Rounded(), size};
+          size, (kArrowRatio * LayoutDeviceCoord(size)).Rounded()};
     }
     default:
       return ScrollbarDrawingWin::GetMinimumWidgetSize(aPresContext,
@@ -373,6 +348,17 @@ bool ScrollbarDrawingWin11::PaintScrollbarThumb(
   return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
+}
+
+void ScrollbarDrawingWin11::RecomputeScrollbarParams() {
+  ScrollbarDrawingWin::RecomputeScrollbarParams();
+  // TODO(emilio): Maybe make this configurable? Though this doesn't respect
+  // classic Windows registry settings, and cocoa overlay scrollbars also don't
+  // respect the override it seems, so this should be fine.
+  ConfigureScrollbarSize(StyleScrollbarWidth::Thin, Overlay::Yes,
+                         kDefaultWinOverlayThinScrollbarSize);
+  ConfigureScrollbarSize(StyleScrollbarWidth::Auto, Overlay::Yes,
+                         kDefaultWinOverlayScrollbarSize);
 }
 
 }  // namespace mozilla::widget
