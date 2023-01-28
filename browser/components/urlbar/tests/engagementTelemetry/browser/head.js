@@ -363,7 +363,7 @@ async function setup() {
     set: [
       ["browser.urlbar.searchEngagementTelemetry.enabled", true],
       ["browser.urlbar.quickactions.enabled", true],
-      ["browser.urlbar.quickactions.showInZeroPrefix", true],
+      ["browser.urlbar.quickactions.minimumSearchString", 0],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
       [

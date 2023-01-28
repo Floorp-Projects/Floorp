@@ -150,9 +150,6 @@ add_task(async function enter_search_mode_oneoff_by_key() {
 });
 
 add_task(async function enter_search_mode_key() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.quickactions.showInZeroPrefix", false]],
-  });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "> ",
@@ -736,10 +733,17 @@ async function hasQuickActions(win) {
 }
 
 add_task(async function test_show_in_zero_prefix() {
-  for (const showInZeroPrefix of [false, true]) {
-    info(`Test when quickactions.showInZeroPrefix pref is ${showInZeroPrefix}`);
+  for (const minimumSearchString of [0, 3]) {
+    info(
+      `Test when quickactions.minimumSearchString pref is ${minimumSearchString}`
+    );
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.quickactions.showInZeroPrefix", showInZeroPrefix]],
+      set: [
+        [
+          "browser.urlbar.quickactions.minimumSearchString",
+          minimumSearchString,
+        ],
+      ],
     });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -748,7 +752,7 @@ add_task(async function test_show_in_zero_prefix() {
 
     Assert.equal(
       await hasQuickActions(window),
-      showInZeroPrefix,
+      !minimumSearchString,
       "Result for quick actions is as expected"
     );
     await SpecialPowers.popPrefEnv();

@@ -17,7 +17,7 @@ add_setup(async function() {
       ["browser.urlbar.searchEngagementTelemetry.enabled", true],
       ["browser.urlbar.quickactions.enabled", true],
       ["browser.urlbar.suggest.quickactions", true],
-      ["browser.urlbar.quickactions.showInZeroPrefix", true],
+      ["browser.urlbar.quickactions.minimumSearchString", 0],
     ],
   });
   registerCleanupFunction(async function() {
