@@ -142,9 +142,7 @@ add_task(async function activedescendant_tab() {
     "The second result is a tab-to-search result."
   );
 
-  EventUtils.synthesizeKey("KEY_Tab", {
-    repeat: UrlbarPrefs.get("resultMenu") ? 2 : 1,
-  });
+  EventUtils.synthesizeKey("KEY_Tab");
 
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
@@ -164,9 +162,7 @@ add_task(async function activedescendant_tab() {
     firstRow._content.id,
     "aria-activedescendant was set to the row after the tab-to-search result."
   );
-  EventUtils.synthesizeKey("KEY_Tab", {
-    repeat: UrlbarPrefs.get("resultMenu") ? 2 : 1,
-  });
+  EventUtils.synthesizeKey("KEY_Tab");
   aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
   Assert.equal(
     aadID,
@@ -190,9 +186,7 @@ add_task(async function activedescendant_tab() {
     "The second result is a tab-to-search result."
   );
 
-  EventUtils.synthesizeKey("KEY_Tab", {
-    repeat: UrlbarPrefs.get("resultMenu") ? 2 : 1,
-  });
+  EventUtils.synthesizeKey("KEY_Tab");
 
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: TEST_ENGINE_NAME,
