@@ -24,6 +24,8 @@
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Jańa bet ashıldı</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Jańa jeke bet ashıldı</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Silteme almasıw buferine kóshirip alındı</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Ótiw</string>
     <!-- Text for context menu item to open the link in an external app. -->
@@ -32,6 +34,8 @@
     <string name="mozac_feature_contextmenu_share_email_address">Elektron pochta mánzilin bólisiw</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_email_address">Elektron pochta mánzilin nusqalaw</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Elektron pochta mánzili almasıw buferine kóshirip alındı</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Kontaktke qosıw</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->

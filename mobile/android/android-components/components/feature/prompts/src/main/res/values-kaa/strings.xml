@@ -41,6 +41,12 @@
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">Isenimińiz kámil me?</string>
 
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Qalıw</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Shıǵıp ketiw</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Aydı saylań</string>
     <!-- January (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_jan">Dáliw</string>
     <!-- February month of the year (short description), used on the month chooser dialog. -->
@@ -66,8 +72,14 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Jeddi</string>
 
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Waqıttı ornatıw</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Loginlerdi basqarıw</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Usınıs etilgen loginlerdi keńeytiw</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Usınıs etilgen loginlerdi qısqartıw</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Usınıs etilgen loginler</string>
 
@@ -81,6 +93,10 @@
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
     <string name="mozac_feature_prompts_select_credit_card">Bank kartasın tańlań</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Usınıs etilgen bank kartaların keńeytiw</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Usınıs etilgen bank kartaların qısqartıw</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Bank kartaların basqarıw</string>
     <!-- Text for the title of a save credit card dialog. -->
@@ -93,6 +109,8 @@
     <string name="mozac_feature_prompts_select_address" moz:removedIn="104" tools:ignore="UnusedResources">Mánzillerdi saylań</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Mánzil saylań</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Usınıs etilgen mánzillerdi keńeytiriw</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Mánzillerdi basqarıw</string>
 </resources>

@@ -18,5 +18,7 @@
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Qaranǵı</string>
     <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Sepia</string>
+    <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Jaqtı</string>
     </resources>
