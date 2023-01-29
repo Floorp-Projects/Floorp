@@ -733,31 +733,11 @@ add_task(async function() {
     set: [["privacy.documentCookies.maxage", 0]],
   });
 
-  const { commands, front } = await openTabAndSetupStorage(
+  const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-listings.html"
   );
 
   await testStores(commands);
-
-  // Only test listStores if JSWindowActor based target is disabled
-  // if they are enabled, we are supported to use ResourceCommand instead of listStores
-  if (
-    !Services.prefs.getBoolPref(
-      "devtools.target-switching.server.enabled",
-      false
-    )
-  ) {
-    info("Check that listStores can handle multiple concurrent calls");
-    const listStoresCalls = [];
-    for (let i = 0; i < 5; i++) {
-      listStoresCalls.push(front.listStores());
-    }
-    const onAllListStoresCallsResolved = Promise.all(listStoresCalls);
-    const timeoutResValue = "TIMED_OUT";
-    const onTimeout = wait(5000).then(() => timeoutResValue);
-    const res = await Promise.race([onTimeout, onAllListStoresCallsResolved]);
-    isnot(res, timeoutResValue, "listStores handled concurrent calls");
-  }
 
   await clearStorage();
 

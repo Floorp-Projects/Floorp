@@ -316,6 +316,8 @@ types.addDictType(
 
 exports.childSpecs = childSpecs;
 
+// @backward-compat { version 111 } This spec can be removed once 111 is released.
+// This codepath was only used when connecting to older servers.
 exports.storageSpec = protocol.generateActorSpec({
   typeName: "storage",
 
