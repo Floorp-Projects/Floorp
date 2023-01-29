@@ -53,14 +53,12 @@ function connectToFrame(
     mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
 
     const trackMessageManager = () => {
-      mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
       if (!actor) {
         mm.addMessageListener("debug:actor", onActorCreated);
       }
     };
 
     const untrackMessageManager = () => {
-      mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
       if (!actor) {
         mm.removeMessageListener("debug:actor", onActorCreated);
       }
@@ -70,42 +68,6 @@ function connectToFrame(
     const prefix = connection.allocID("child");
     // Compute the same prefix that's used by DevToolsServerConnection
     const connPrefix = prefix + "/";
-
-    // provides hook to actor modules that need to exchange messages
-    // between e10s parent and child processes
-    const parentModules = [];
-    const onSetupInParent = function(msg) {
-      // We may have multiple connectToFrame instance running for the same frame and
-      // need to filter the messages.
-      if (msg.json.prefix != connPrefix) {
-        return false;
-      }
-
-      const { module, setupParent } = msg.json;
-      let m;
-
-      try {
-        m = require(module);
-
-        if (!(setupParent in m)) {
-          dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
-          return false;
-        }
-
-        parentModules.push(m[setupParent]({ mm, prefix: connPrefix }));
-
-        return true;
-      } catch (e) {
-        const errorMessage =
-          "Exception during actor module setup running in the parent process: ";
-        DevToolsUtils.reportException(errorMessage + e);
-        dumpn(
-          `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-            `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(e)}`
-        );
-        return false;
-      }
-    };
 
     const onActorCreated = DevToolsUtils.makeInfallible(function(msg) {
       if (msg.json.prefix != prefix) {
@@ -137,13 +99,6 @@ function connectToFrame(
         "message-manager-close"
       );
 
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      parentModules.forEach(mod => {
-        if (mod.onDisconnected) {
-          mod.onDisconnected();
-        }
-      });
       // TODO: Remove this deprecated path once it's no longer needed by add-ons.
       DevToolsServer.emit("disconnected-from-child:" + connPrefix, {
         mm,

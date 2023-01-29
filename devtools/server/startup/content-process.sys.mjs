@@ -45,7 +45,6 @@ export function initContentProcessTarget(msg) {
   // Connect both parent/child processes devtools servers RDP via message
   // managers
   const conn = DevToolsServer.connectToParent(prefix, mm);
-  conn.parentMessageManager = mm;
 
   const { ContentProcessTargetActor } = loader.require(
     "resource://devtools/server/actors/targets/content-process.js"
