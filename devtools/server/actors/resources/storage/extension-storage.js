@@ -14,6 +14,10 @@ const {
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
+loader.lazyGetter(this, "ExtensionParent", () => {
+  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm")
+    .ExtensionParent;
+});
 loader.lazyGetter(this, "ExtensionProcessScript", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionProcessScript.jsm")
     .ExtensionProcessScript;
@@ -58,6 +62,8 @@ exports.ExtensionStorageActor = StorageActors.createActor(
       // need to be updated (e.g. getNamesForHost).
       this.hostVsStores = new Map();
 
+      this.onExtensionStartup = this.onExtensionStartup.bind(this);
+
       this.onStorageChange = this.onStorageChange.bind(this);
 
       this.onWindowReady = this.onWindowReady.bind(this);
@@ -75,6 +81,7 @@ exports.ExtensionStorageActor = StorageActors.createActor(
         this.addonId,
         this.onStorageChange
       );
+      ExtensionParent.apiManager.off("startup", this.onExtensionStartup);
 
       this.storageActor.off("window-ready", this.onWindowReady);
       this.storageActor.off("window-destroyed", this.onWindowDestroyed);
@@ -156,6 +163,9 @@ exports.ExtensionStorageActor = StorageActors.createActor(
         // (See Bug 1802929).
         const { extension } = WebExtensionPolicy.getByID(this.addonId);
         await extension.apiManager.asyncGetAPI("storage", extension);
+        // Also watch for addon reload in order to also do that
+        // on next addon startup, otherwise we may also miss updates
+        ExtensionParent.apiManager.on("startup", this.onExtensionStartup);
       } catch (e) {
         console.error(
           "Exception while trying to initialize webext storage API",
@@ -164,6 +174,20 @@ exports.ExtensionStorageActor = StorageActors.createActor(
       }
 
       await this.populateStoresForHost(this.extensionHostURL);
+    },
+
+    /**
+     * AddonManager listener used to force instantiating storage API
+     * implementation in the parent process so that it forward content process
+     * messages to ExtensionStorageIDB.
+     *
+     * Without this, we may miss storage updated after the addon reload.
+     */
+    async onExtensionStartup(_evtName, extension) {
+      if (extension.id != this.addonId) {
+        return;
+      }
+      await extension.apiManager.asyncGetAPI("storage", extension);
     },
 
     /**
