@@ -44,10 +44,10 @@ add_setup(async function setup() {
 add_task(async function testKill() {
   await runTest("small-shot.ogg", "Utility Generic", "vorbis audio decoder");
 
-  await cleanUtilityProcessShutdown(
-    "audioDecoder_Generic",
-    true /* preferKill */
-  );
+  const audioDecoderPid = await findGenericAudioDecoder();
+  ok(audioDecoderPid > 0, `Valid PID found: ${audioDecoderPid}`);
+
+  await cleanUtilityProcessShutdown(audioDecoderPid, /* preferKill */ true);
 
   info("Waiting 15s to trigger mShutdownBlockers assertions");
   await new Promise((resolve, reject) => {
@@ -64,7 +64,7 @@ add_task(async function testShutdown() {
   const audioDecoderPid = await findGenericAudioDecoder();
   ok(audioDecoderPid > 0, `Valid PID found: ${audioDecoderPid}`);
 
-  await cleanUtilityProcessShutdown("audioDecoder_Generic");
+  await cleanUtilityProcessShutdown(audioDecoderPid);
 
   info("Waiting 15s to trigger mShutdownBlockers assertions");
   await new Promise((resolve, reject) => {

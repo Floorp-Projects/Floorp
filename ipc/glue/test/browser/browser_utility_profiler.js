@@ -10,10 +10,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// When running full suite, previous tests may have left some utility
-// processes running and this might interfere with our testing.
+// When running full suite, previous audio decoding tests might have left some
+// running and this might interfere with our testing
 add_setup(async function ensureNoExistingProcess() {
-  await killUtilityProcesses();
+  await killPendingUtilityProcess();
 });
 
 add_task(async () => {
@@ -72,5 +72,5 @@ add_task(async () => {
 
   Services.profiler.StopProfiler();
 
-  await cleanUtilityProcessShutdown();
+  await cleanUtilityProcessShutdown(utilityPid);
 });
