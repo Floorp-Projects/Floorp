@@ -262,7 +262,7 @@
     <!-- Summary of https only preference if https only is set to on in private tabs only -->
     <string name="preferences_https_only_on_private">Jeke betlerde qosıwlı</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
-    <string name="preferences_http_only_learn_more">Tolıǵıraq</string>
+    <string name="preferences_http_only_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">Hámme betlerde iske túsiriw</string>
     <!-- Option for the https only setting -->
@@ -286,6 +286,8 @@
     <string name="preferences_data_collection">Maǵlıwmatlardı jıynaw</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Dawıslı izlewdi kórsetiw</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Brauzer tariyxınan izlew</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Saylandılardı izlew</string>
     <!-- Preference for account settings -->
@@ -313,13 +315,17 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Toplam iyesi (Paydalanıwshı ID)</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Artqa qaytıw</string>
+
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Kóriw</string>
 
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Qayta urınıp kóriń</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
-    <string name="wallpaper_learn_more">Tolıǵıraq</string>
+    <string name="wallpaper_learn_more">Tolıǵıraq úyreniw</string>
 
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Tariyx</string>
@@ -348,10 +354,13 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Qabıllanǵan betler</string>
 
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Esaptan tısqarılar</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Barlıq saytlar ushın qosıw</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message_learn_more_link">Tolıǵıraq</string>
+    <string name="exceptions_empty_message_learn_more_link">Tolıǵıraq úyreniw</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Paydalanıw hám texnikalıq maǵlıwmatlar</string>
@@ -405,7 +414,7 @@
     <string name="history_search_group_sites">%d sayt</string>
 
     <!-- Option in library for Recently Closed Tabs -->
-    <string name="library_recently_closed_tabs">Jaqında jawılǵan betler</string>
+    <string name="library_recently_closed_tabs">Jaqında jabılǵan betler</string>
     <!-- Option in library to open Recently Closed Tabs page -->
     <string name="recently_closed_show_full_history">Tolıq tariyxın kórsetiw</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
@@ -415,7 +424,7 @@
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d bet</string>
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
-    <string name="recently_closed_empty_message">Bul jerde jaqında jawılǵan betler joq</string>
+    <string name="recently_closed_empty_message">Bul jerde jaqında jabılǵan betler joq</string>
 
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
@@ -456,7 +465,7 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktiv</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
-    <string name="studies_learn_more">Tolıǵıraq</string>
+    <string name="studies_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">MAQUL</string>
     <!-- Dialog button text for canceling removing a study. -->
@@ -476,9 +485,9 @@
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Barlıq betlerdi bólisiw</string>
     <!-- Text shown in the menu to view recently closed tabs -->
-    <string name="tab_tray_menu_recently_closed">Jaqında jawılǵan betler</string>
+    <string name="tab_tray_menu_recently_closed">Jaqında jabılǵan betler</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Jaqında jawıldı</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Jaqında jabıldı</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Akkaunt sazlamaları</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -607,6 +616,8 @@
     <string name="phone_feature_go_to_settings">Sazlamalarǵa ótiw</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Usınıs etilgen</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Ruqsatlardı tazalaw</string>
     <!-- Text for the OK button on Clear permissions dialog -->
     <string name="clear_permissions_positive">MAQUL</string>
     <!-- Text for the cancel button on Clear permissions dialog -->
@@ -674,6 +685,8 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Saqlaw</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Kóriw</string>
     <!-- Text for the OK button from collection dialogs -->
     <string name="create_collection_positive">MAQUL</string>
     <!-- Text for the cancel button from collection dialogs -->
@@ -694,6 +707,10 @@
     <string name="share_device_subheader">Qurılmaǵa jiberiw</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
     <string name="share_link_all_apps_subheader">Barlıq háreketler</string>
+     <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Almasıw buferine kóshirip alıw</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Almasıw buferine kóshirip alındı</string>
      <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Oflayn</string>
     <!-- An option to connect additional devices -->
@@ -710,6 +727,8 @@
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Toplam óshirildi</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Toplam atı ózgertildi</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Jeke bet jabıldı</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -741,7 +760,7 @@
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Betlerdi ashıw</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
-    <string name="preferences_delete_browsing_data_tabs_subtitle">%d betler</string>
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d bet</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d mánziller</string>
@@ -792,7 +811,7 @@
     <string name="sign_out_cancel">Biykarlaw</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Barlıq betlerde</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -804,7 +823,7 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ruqsat etildi</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
-    <string name="preference_etp_smartblock_learn_more">Tolıǵıraq</string>
+    <string name="preference_etp_smartblock_learn_more">Tolıǵıraq úyreniw</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Qollap-quwatlaw</string>
@@ -814,6 +833,9 @@
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Nusqalaw</string>
+
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL almasıw buferine kóshirip alındı</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Tiykarǵı ekranǵa qosıw</string>
@@ -983,6 +1005,9 @@
     <!-- Label text displayed for a sponsored top site. -->
     <string name="top_sites_sponsored_label">Qáwenderlik etken</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Avtomatik jabıw iske túsirilgen</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Alıp taslaw</string>
 
@@ -990,7 +1015,7 @@
     <string name="privacy_content_close_button_content_description">Jabıw</string>
 
     <!-- Clickable text for opening an external link for more information about Pocket. -->
-    <string name="pocket_stories_feature_learn_more">Tolıǵıraq</string>
+    <string name="pocket_stories_feature_learn_more">Tolıǵıraq úyreniw</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
     <string name="pocket_stories_sponsor_indication">Qáwenderlik etken</string>
