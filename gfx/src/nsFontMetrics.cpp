@@ -127,9 +127,9 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
                      gfxFloat(aFont.size.ToAppUnits()) / mP2A, aFont.sizeAdjust,
                      aFont.family.is_system_font,
                      aContext->DeviceContext()->IsPrinterContext(),
-                     aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
-                     aFont.synthesis & NS_FONT_SYNTHESIS_STYLE,
-                     aFont.synthesis & NS_FONT_SYNTHESIS_SMALL_CAPS,
+                     aFont.synthesisWeight == StyleFontSynthesis::Auto,
+                     aFont.synthesisStyle == StyleFontSynthesis::Auto,
+                     aFont.synthesisSmallCaps == StyleFontSynthesis::Auto,
                      aFont.languageOverride);
 
   aFont.AddFontFeaturesToStyle(&style, mOrientation == eVertical);
