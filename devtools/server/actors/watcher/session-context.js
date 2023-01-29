@@ -188,6 +188,7 @@ function getWatcherSupportedResources(type) {
     [Resources.TYPES.CACHE_STORAGE]: true,
     [Resources.TYPES.COOKIE]: true,
     [Resources.TYPES.ERROR_MESSAGE]: true,
+    [Resources.TYPES.EXTENSION_STORAGE]: true,
     [Resources.TYPES.INDEXED_DB]: true,
     [Resources.TYPES.LOCAL_STORAGE]: true,
     [Resources.TYPES.SESSION_STORAGE]: true,

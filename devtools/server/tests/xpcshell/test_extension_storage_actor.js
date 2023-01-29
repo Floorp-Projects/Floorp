@@ -60,13 +60,13 @@ add_setup(async function setup() {
 add_task(async function test_extension_store_exists() {
   const extension = await startupExtension(getExtensionConfig());
 
-  const { target, extensionStorage } = await openAddonStoragePanel(
+  const { commands, extensionStorage } = await openAddonStoragePanel(
     extension.id
   );
 
   ok(extensionStorage, "Should have an extensionStorage store");
 
-  await shutdown(extension, target);
+  await shutdown(extension, commands);
 });
 
 add_task(
@@ -86,7 +86,7 @@ add_task(
       getExtensionConfig({ background })
     );
 
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -97,7 +97,7 @@ add_task(
       "Should have the expected extension host in the extensionStorage store"
     );
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -118,7 +118,7 @@ add_task(async function test_panel_live_updates() {
     getExtensionConfig({ background: extensionScriptWithMessageListener })
   );
 
-  const { target, extensionStorage } = await openAddonStoragePanel(
+  const { commands, extensionStorage } = await openAddonStoragePanel(
     extension.id
   );
 
@@ -319,7 +319,7 @@ add_task(async function test_panel_live_updates() {
     "Got the expected results on populated storage.local"
   );
 
-  await shutdown(extension, target);
+  await shutdown(extension, commands);
 });
 
 /**
@@ -347,7 +347,7 @@ add_task(
     extension.sendMessage("storage-local-set", { a: 123 });
     await extension.awaitMessage("storage-local-set:done");
 
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -366,7 +366,7 @@ add_task(
     );
 
     await contentPage.close();
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -396,7 +396,7 @@ add_task(async function test_panel_data_matches_extension_with_no_pages_open() {
   await extension.awaitMessage("storage-local-onChanged");
   await contentPage.close();
 
-  const { target, extensionStorage } = await openAddonStoragePanel(
+  const { commands, extensionStorage } = await openAddonStoragePanel(
     extension.id
   );
 
@@ -414,7 +414,7 @@ add_task(async function test_panel_data_matches_extension_with_no_pages_open() {
     "Got the expected results on populated storage.local"
   );
 
-  await shutdown(extension, target);
+  await shutdown(extension, commands);
 });
 
 /**
@@ -434,7 +434,7 @@ add_task(
       getExtensionConfig({ files: ext_no_bg.files })
     );
 
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -493,7 +493,7 @@ add_task(
     );
 
     await contentPage.close();
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -516,7 +516,7 @@ add_task(
 
     const host = await extension.awaitMessage("extension-origin");
 
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -588,7 +588,7 @@ add_task(
       );
     }
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -610,11 +610,9 @@ add_task(
 
     const host = await extension.awaitMessage("extension-origin");
 
-    const {
-      target,
-      extensionStorage,
-      storageFront,
-    } = await openAddonStoragePanel(extension.id);
+    const { commands, extensionStorage } = await openAddonStoragePanel(
+      extension.id
+    );
 
     const DEFAULT_VALUE = "value"; // global in devtools/server/actors/storage.js
     let items = {
@@ -624,7 +622,7 @@ add_task(
     };
 
     info("Adding storage items from the extension");
-    let storesUpdate = storageFront.once("stores-update");
+    let storesUpdate = extensionStorage.once("single-store-update");
     extension.sendMessage("storage-local-set", items);
     await extension.awaitMessage("storage-local-set:done");
 
@@ -637,13 +635,15 @@ add_task(
             [host]: ["guid_1", "guid_2", "guid_3"],
           },
         },
+        changed: undefined,
+        deleted: undefined,
       },
       data,
       "The change data from the storage actor's 'stores-update' event matches the changes made in the client."
     );
 
     info("Waiting for panel to edit some items");
-    storesUpdate = storageFront.once("stores-update");
+    storesUpdate = extensionStorage.once("single-store-update");
     await extensionStorage.editItem({
       host,
       field: "value",
@@ -655,11 +655,13 @@ add_task(
     data = await storesUpdate;
     Assert.deepEqual(
       {
+        added: undefined,
         changed: {
           extensionStorage: {
             [host]: ["guid_1"],
           },
         },
+        deleted: undefined,
       },
       data,
       "The change data from the storage actor's 'stores-update' event matches the changes made in the client."
@@ -679,13 +681,15 @@ add_task(
     );
 
     info("Waiting for panel to remove an item");
-    storesUpdate = storageFront.once("stores-update");
+    storesUpdate = extensionStorage.once("single-store-update");
     await extensionStorage.removeItem(host, "guid_3");
 
     info("Waiting for the storage actor to emit a 'stores-update' event");
     data = await storesUpdate;
     Assert.deepEqual(
       {
+        added: undefined,
+        changed: undefined,
         deleted: {
           extensionStorage: {
             [host]: ["guid_3"],
@@ -709,14 +713,14 @@ add_task(
     );
 
     info("Waiting for panel to remove all items");
-    const storesCleared = storageFront.once("stores-cleared");
+    const storesCleared = extensionStorage.once("single-store-cleared");
     await extensionStorage.removeAll(host);
 
     info("Waiting for the storage actor to emit a 'stores-cleared' event");
     data = await storesCleared;
     Assert.deepEqual(
       {
-        extensionStorage: {
+        clearedHostsOrPaths: {
           [host]: [],
         },
       },
@@ -733,7 +737,7 @@ add_task(
       `The storage items in the extension match the items in the panel`
     );
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -780,7 +784,7 @@ add_task(
 
     await extension.awaitMessage("extension-origin");
 
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -829,7 +833,7 @@ add_task(
     Services.prefs.setBoolPref(LEAVE_STORAGE_PREF, false);
     Services.prefs.setBoolPref(LEAVE_UUID_PREF, false);
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -884,7 +888,7 @@ add_task(async function test_panel_live_reload_for_extension_without_bg_page() {
   await contentPage.close();
 
   info("Opening storage panel");
-  const { target, extensionStorage } = await openAddonStoragePanel(
+  const { commands, extensionStorage } = await openAddonStoragePanel(
     extension.id
   );
 
@@ -915,7 +919,7 @@ add_task(async function test_panel_live_reload_for_extension_without_bg_page() {
     "Got the expected results on populated storage.local"
   );
 
-  await shutdown(extension, target);
+  await shutdown(extension, commands);
 });
 
 /**
@@ -953,7 +957,7 @@ add_task(
     const host = await extension.awaitMessage("extension-origin");
 
     info("Opening storage panel");
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -994,7 +998,7 @@ add_task(
       "Got the expected results on populated storage.local"
     );
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 
@@ -1034,7 +1038,7 @@ add_task(
     const host = await extension.awaitMessage("extension-origin");
 
     info("Opening storage panel");
-    const { target, extensionStorage } = await openAddonStoragePanel(
+    const { commands, extensionStorage } = await openAddonStoragePanel(
       extension.id
     );
 
@@ -1052,7 +1056,7 @@ add_task(
       "Got the expected results on populated storage.local"
     );
 
-    await shutdown(extension, target);
+    await shutdown(extension, commands);
   }
 );
 

@@ -407,7 +407,10 @@ class StorageActorMock extends EventEmitter {
   }
 
   get parentActor() {
-    return { isRootActor: this.watcherActor.sessionContext.type == "all" };
+    return {
+      isRootActor: this.watcherActor.sessionContext.type == "all",
+      addonId: this.watcherActor.sessionContext.addonId,
+    };
   }
 
   /**
