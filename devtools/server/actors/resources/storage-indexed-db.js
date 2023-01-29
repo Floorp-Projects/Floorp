@@ -9,10 +9,13 @@ const {
 } = require("resource://devtools/server/actors/resources/index.js");
 
 const ParentProcessStorage = require("resource://devtools/server/actors/resources/utils/parent-process-storage.js");
+const {
+  IndexedDBStorageActor,
+} = require("resource://devtools/server/actors/resources/storage/indexed-db.js");
 
 class IndexedDBWatcher extends ParentProcessStorage {
   constructor() {
-    super("indexedDB", INDEXED_DB);
+    super(IndexedDBStorageActor, "indexedDB", INDEXED_DB);
   }
 }
 

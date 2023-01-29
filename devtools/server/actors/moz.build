@@ -53,7 +53,6 @@ DevToolsModules(
     "screenshot-content.js",
     "screenshot.js",
     "source.js",
-    "storage.js",
     "string.js",
     "style-rule.js",
     "style-sheets.js",
@@ -82,9 +81,6 @@ with Files("performance*"):
 
 with Files("source.js"):
     BUG_COMPONENT = ("DevTools", "Debugger")
-
-with Files("storage.js"):
-    BUG_COMPONENT = ("DevTools", "Storage Inspector")
 
 with Files("stylesheets.js"):
     BUG_COMPONENT = ("DevTools", "Style Editor")

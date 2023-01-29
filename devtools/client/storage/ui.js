@@ -16,7 +16,7 @@ const {
 const getStorageTypeURL = require("resource://devtools/client/storage/utils/doc-utils.js");
 
 // GUID to be used as a separator in compound keys. This must match the same
-// constant in devtools/server/actors/storage.js,
+// constant in devtools/server/actors/resources/storage/index.js,
 // devtools/client/storage/test/head.js and
 // devtools/server/tests/browser/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";

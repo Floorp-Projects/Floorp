@@ -129,7 +129,7 @@ add_task(async function test_panel_live_updates() {
 
   info("Waiting for extension to bulk add 50 items to storage local");
   const bulkStorageItems = {};
-  // limited by MAX_STORE_OBJECT_COUNT in devtools/server/actors/storage.js
+  // limited by MAX_STORE_OBJECT_COUNT in devtools/server/actors/resources/storage/index.js
   const numItems = 2;
   for (let i = 1; i <= numItems; i++) {
     bulkStorageItems[i] = i;
@@ -614,7 +614,7 @@ add_task(
       extension.id
     );
 
-    const DEFAULT_VALUE = "value"; // global in devtools/server/actors/storage.js
+    const DEFAULT_VALUE = "value"; // global in devtools/server/actors/resources/storage/index.js
     let items = {
       guid_1: DEFAULT_VALUE,
       guid_2: DEFAULT_VALUE,

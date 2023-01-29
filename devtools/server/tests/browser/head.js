@@ -29,7 +29,7 @@ const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
 // GUID to be used as a separator in compound keys. This must match the same
-// constant in devtools/server/actors/storage.js,
+// constant in devtools/server/actors/resources/storage/index.js,
 // devtools/client/storage/ui.js and devtools/client/storage/test/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 
