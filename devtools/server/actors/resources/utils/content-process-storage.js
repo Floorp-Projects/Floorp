@@ -4,9 +4,6 @@
 
 "use strict";
 
-const {
-  storageTypePool,
-} = require("resource://devtools/server/actors/storage.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const lazy = {};
@@ -38,7 +35,8 @@ function getFilteredStorageEvents(updates, storageType) {
 }
 
 class ContentProcessStorage {
-  constructor(storageKey, storageType) {
+  constructor(ActorConstructor, storageKey, storageType) {
+    this.ActorConstructor = ActorConstructor;
     this.storageKey = storageKey;
     this.storageType = storageType;
 
@@ -47,10 +45,9 @@ class ContentProcessStorage {
   }
 
   async watch(targetActor, { onAvailable }) {
-    const ActorConstructor = storageTypePool.get(this.storageKey);
     const storageActor = new StorageActorMock(targetActor);
     this.storageActor = storageActor;
-    this.actor = new ActorConstructor(storageActor);
+    this.actor = new this.ActorConstructor(storageActor);
 
     // Some storage types require to prelist their stores
     if (typeof this.actor.preListStores === "function") {

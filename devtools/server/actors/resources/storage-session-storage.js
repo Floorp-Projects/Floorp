@@ -9,10 +9,13 @@ const {
 } = require("resource://devtools/server/actors/resources/index.js");
 
 const ContentProcessStorage = require("resource://devtools/server/actors/resources/utils/content-process-storage.js");
+const {
+  SessionStorageActor,
+} = require("resource://devtools/server/actors/resources/storage/local-and-session-storage.js");
 
 class SessionStorageWatcher extends ContentProcessStorage {
   constructor() {
-    super("sessionStorage", SESSION_STORAGE);
+    super(SessionStorageActor, "sessionStorage", SESSION_STORAGE);
   }
 }
 

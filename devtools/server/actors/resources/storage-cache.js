@@ -9,10 +9,13 @@ const {
 } = require("resource://devtools/server/actors/resources/index.js");
 
 const ContentProcessStorage = require("resource://devtools/server/actors/resources/utils/content-process-storage.js");
+const {
+  CacheStorageActor,
+} = require("resource://devtools/server/actors/resources/storage/cache.js");
 
 class CacheWatcher extends ContentProcessStorage {
   constructor() {
-    super("Cache", CACHE_STORAGE);
+    super(CacheStorageActor, "Cache", CACHE_STORAGE);
   }
 }
 
