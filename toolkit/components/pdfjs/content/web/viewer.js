@@ -398,14 +398,13 @@ function normalizeWheelEventDirection(evt) {
   return delta;
 }
 function normalizeWheelEventDelta(evt) {
+  const deltaMode = evt.deltaMode;
   let delta = normalizeWheelEventDirection(evt);
-  const MOUSE_DOM_DELTA_PIXEL_MODE = 0;
-  const MOUSE_DOM_DELTA_LINE_MODE = 1;
   const MOUSE_PIXELS_PER_LINE = 30;
   const MOUSE_LINES_PER_PAGE = 30;
-  if (evt.deltaMode === MOUSE_DOM_DELTA_PIXEL_MODE) {
+  if (deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
     delta /= MOUSE_PIXELS_PER_LINE * MOUSE_LINES_PER_PAGE;
-  } else if (evt.deltaMode === MOUSE_DOM_DELTA_LINE_MODE) {
+  } else if (deltaMode === WheelEvent.DOM_DELTA_LINE) {
     delta /= MOUSE_LINES_PER_PAGE;
   }
   return delta;
@@ -435,9 +434,11 @@ class ProgressBar {
   #classList = null;
   #disableAutoFetchTimeout = null;
   #percent = 0;
+  #style = null;
   #visible = true;
   constructor(bar) {
     this.#classList = bar.classList;
+    this.#style = bar.style;
   }
   get percent() {
     return this.#percent;
@@ -449,7 +450,7 @@ class ProgressBar {
       return;
     }
     this.#classList.remove("indeterminate");
-    docStyle.setProperty("--progressBar-percent", `${this.#percent}%`);
+    this.#style.setProperty("--progressBar-percent", `${this.#percent}%`);
   }
   setWidth(viewer) {
     if (!viewer) {
@@ -458,7 +459,7 @@ class ProgressBar {
     const container = viewer.parentNode;
     const scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
     if (scrollbarWidth > 0) {
-      docStyle.setProperty("--progressBar-end-offset", `${scrollbarWidth}px`);
+      this.#style.setProperty("--progressBar-end-offset", `${scrollbarWidth}px`);
     }
   }
   setDisableAutoFetch(delay = 5000) {
@@ -1759,7 +1760,8 @@ const PDFViewerApplication = {
   initPassiveLoading() {
     this.externalServices.initPassiveLoading({
       onOpenWithTransport: (url, length, transport) => {
-        this.open(url, {
+        this.open({
+          url,
           length,
           range: transport
         });
@@ -1768,17 +1770,16 @@ const PDFViewerApplication = {
         if ((0, _pdfjsLib.isPdfFile)(contentDispositionFilename)) {
           this._contentDispositionFilename = contentDispositionFilename;
         }
-        this.open(data);
+        this.open({
+          data
+        });
       },
       onOpenWithURL: (url, length, originalUrl) => {
-        const file = originalUrl !== undefined ? {
+        this.open({
           url,
+          length,
           originalUrl
-        } : url;
-        const args = length !== undefined ? {
-          length
-        } : null;
-        this.open(file, args);
+        });
       },
       onError: err => {
         this.l10n.get("loading_error").then(msg => {
@@ -1871,7 +1872,7 @@ const PDFViewerApplication = {
     this._PDFBug?.cleanup();
     await Promise.all(promises);
   },
-  async open(file, args) {
+  async open(args) {
     if (this.pdfLoadingTask) {
       await this.close();
     }
@@ -1880,27 +1881,16 @@ const PDFViewerApplication = {
       _pdfjsLib.GlobalWorkerOptions[key] = workerParameters[key];
     }
     const parameters = Object.create(null);
-    if (typeof file === "string") {
-      this.setTitleUsingUrl(file, file);
-      parameters.url = file;
-    } else if (file && "byteLength" in file) {
-      parameters.data = file;
-    } else if (file.url && file.originalUrl) {
-      this.setTitleUsingUrl(file.originalUrl, file.url);
-      parameters.url = file.url;
-    }
     const apiParameters = _app_options.AppOptions.getAll(_app_options.OptionKind.API);
     for (const key in apiParameters) {
       let value = apiParameters[key];
-      if (key === "docBaseUrl" && !value) {
-        value = this.baseUrl;
+      if (key === "docBaseUrl") {
+        value ||= this.baseUrl;
       }
       parameters[key] = value;
     }
-    if (args) {
-      for (const key in args) {
-        parameters[key] = args[key];
-      }
+    for (const key in args) {
+      parameters[key] = args[key];
     }
     const loadingTask = (0, _pdfjsLib.getDocument)(parameters);
     this.pdfLoadingTask = loadingTask;
@@ -3022,7 +3012,9 @@ function webViewerWheel(evt) {
   if (pdfViewer.isInPresentationMode) {
     return;
   }
-  const isPinchToZoom = evt.ctrlKey && !PDFViewerApplication._isCtrlKeyDown;
+  const deltaMode = evt.deltaMode;
+  let scaleFactor = Math.exp(-evt.deltaY / 100);
+  const isPinchToZoom = evt.ctrlKey && !PDFViewerApplication._isCtrlKeyDown && deltaMode === WheelEvent.DOM_DELTA_PIXEL && evt.deltaX === 0 && Math.abs(scaleFactor - 1) < 0.05 && evt.deltaZ === 0;
   if (isPinchToZoom || evt.ctrlKey && supportedMouseWheelZoomModifierKeys.ctrlKey || evt.metaKey && supportedMouseWheelZoomModifierKeys.metaKey) {
     evt.preventDefault();
     if (zoomDisabledTimeout || document.visibilityState === "hidden") {
@@ -3030,7 +3022,6 @@ function webViewerWheel(evt) {
     }
     const previousScale = pdfViewer.currentScale;
     if (isPinchToZoom && supportsPinchToZoom) {
-      let scaleFactor = Math.exp(-evt.deltaY / 100);
       scaleFactor = PDFViewerApplication._accumulateFactor(previousScale, scaleFactor, "_wheelUnusedFactor");
       if (scaleFactor < 1) {
         PDFViewerApplication.zoomOut(null, scaleFactor);
@@ -3040,7 +3031,6 @@ function webViewerWheel(evt) {
         return;
       }
     } else {
-      const deltaMode = evt.deltaMode;
       const delta = (0, _ui_utils.normalizeWheelEventDirection)(evt);
       let ticks = 0;
       if (deltaMode === WheelEvent.DOM_DELTA_LINE || deltaMode === WheelEvent.DOM_DELTA_PAGE) {
@@ -8189,7 +8179,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.3.97';
+    const viewerVersion = '3.3.122';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12774,8 +12764,8 @@ var _ui_utils = __webpack_require__(1);
 var _app_options = __webpack_require__(2);
 var _pdf_link_service = __webpack_require__(3);
 var _app = __webpack_require__(4);
-const pdfjsVersion = '3.3.97';
-const pdfjsBuild = 'edfdb693e';
+const pdfjsVersion = '3.3.122';
+const pdfjsBuild = '562045607';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
