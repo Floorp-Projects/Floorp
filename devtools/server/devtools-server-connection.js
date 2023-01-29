@@ -86,13 +86,6 @@ DevToolsServerConnection.prototype = {
     return this._transport;
   },
 
-  /**
-   * Message manager used to communicate with the parent process,
-   * set by child.js. Is only defined for connections instantiated
-   * within a child process.
-   */
-  parentMessageManager: null,
-
   close(options) {
     if (this._transport) {
       this._transport.close(options);
@@ -546,29 +539,5 @@ DevToolsServerConnection.prototype = {
     this._extraPools.forEach(pool => this.dumpPool(pool, output, dumpedPools));
 
     return output;
-  },
-
-  /**
-   * In a content child process, ask the DevToolsServer in the parent process
-   * to execute a given module setup helper.
-   *
-   * @param module
-   *        The module to be required
-   * @param setupParent
-   *        The name of the setup helper exported by the above module
-   *        (setup helper signature: function ({mm}) { ... })
-   * @return boolean
-   *         true if the setup helper returned successfully
-   */
-  setupInParent({ module, setupParent }) {
-    if (!this.parentMessageManager) {
-      return false;
-    }
-
-    return this.parentMessageManager.sendSyncMessage("debug:setup-in-parent", {
-      prefix: this.prefix,
-      module,
-      setupParent,
-    });
   },
 };

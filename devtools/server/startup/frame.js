@@ -71,7 +71,6 @@ try {
       removeMessageListener("debug:connect", onConnect);
 
       const conn = DevToolsServer.connectToParent(prefix, mm);
-      conn.parentMessageManager = mm;
       connections.set(prefix, conn);
 
       let actor;
