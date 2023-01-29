@@ -116,14 +116,14 @@
             }
             if self.list_style_image != &ListStyleImage::None {
                 if have_one_non_initial_value {
-                    dest.write_str(" ")?;
+                    dest.write_char(' ')?;
                 }
                 self.list_style_image.to_css(dest)?;
                 have_one_non_initial_value = true;
             }
             if self.list_style_type != &ListStyleType::disc() {
                 if have_one_non_initial_value {
-                    dest.write_str(" ")?;
+                    dest.write_char(' ')?;
                 }
                 self.list_style_type.to_css(dest)?;
                 have_one_non_initial_value = true;
