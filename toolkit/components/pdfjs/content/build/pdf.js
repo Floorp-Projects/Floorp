@@ -896,43 +896,28 @@ exports.DefaultStandardFontDataFactory = DefaultStandardFontDataFactory;
 let createPDFNetworkStream;
 ;
 function getDocument(src) {
-  const task = new PDFDocumentLoadingTask();
-  let source;
-  if (typeof src === "string" || src instanceof URL) {
-    source = {
-      url: src
-    };
-  } else if ((0, _util.isArrayBuffer)(src)) {
-    source = {
-      data: src
-    };
-  } else {
-    if (typeof src !== "object") {
-      throw new Error("Invalid parameter in getDocument, " + "need either string, URL, TypedArray, or parameter object.");
-    }
-    if (!src.url && !src.data && !src.range) {
-      throw new Error("Invalid parameter object: need either .data, .range or .url");
-    }
-    source = src;
+  if (typeof src !== "object") {
+    throw new Error("Invalid parameter in getDocument, need parameter object.");
   }
+  if (!src.url && !src.data && !src.range) {
+    throw new Error("Invalid parameter object: need either .data, .range or .url");
+  }
+  const task = new PDFDocumentLoadingTask();
   const params = Object.create(null);
   let rangeTransport = null,
     worker = null;
-  for (const key in source) {
-    const val = source[key];
+  for (const key in src) {
+    const val = src[key];
     switch (key) {
       case "url":
-        if (typeof window !== "undefined") {
-          try {
-            params[key] = new URL(val, window.location).href;
-            continue;
-          } catch (ex) {
-            (0, _util.warn)(`Cannot create valid URL: "${ex}".`);
-          }
-        } else if (typeof val === "string" || val instanceof URL) {
-          params[key] = val.toString();
+        if (val instanceof URL) {
+          params[key] = val.href;
           continue;
         }
+        try {
+          params[key] = new URL(val, window.location).href;
+          continue;
+        } catch (ex) {}
         throw new Error("Invalid PDF url data: " + "either string or URL-object is expected in the url property.");
       case "range":
         rangeTransport = val;
@@ -1058,7 +1043,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   const transfers = source.data ? [source.data.buffer] : null;
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.3.97',
+    apiVersion: '3.3.122',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2657,9 +2642,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.3.97';
+const version = '3.3.122';
 exports.version = version;
-const build = 'edfdb693e';
+const build = '562045607';
 exports.build = build;
 
 /***/ }),
@@ -4686,7 +4671,6 @@ var _util = __w_pdfjs_require__(1);
 var _display_utils = __w_pdfjs_require__(6);
 var _pattern_helper = __w_pdfjs_require__(12);
 var _image_utils = __w_pdfjs_require__(13);
-var _is_node = __w_pdfjs_require__(10);
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
 const MAX_GROUP_SIZE = 4096;
@@ -6925,7 +6909,6 @@ exports.TilingPattern = exports.PathType = void 0;
 exports.getShadingPattern = getShadingPattern;
 var _util = __w_pdfjs_require__(1);
 var _display_utils = __w_pdfjs_require__(6);
-var _is_node = __w_pdfjs_require__(10);
 const PathType = {
   FILL: "Fill",
   STROKE: "Stroke",
@@ -6933,7 +6916,7 @@ const PathType = {
 };
 exports.PathType = PathType;
 function applyBoundingBox(ctx, bbox) {
-  if (!bbox || _is_node.isNodeJS) {
+  if (!bbox) {
     return;
   }
   const width = bbox[2] - bbox[0];
@@ -7436,8 +7419,8 @@ Object.defineProperty(exports, "__esModule", ({
 exports.GlobalWorkerOptions = void 0;
 const GlobalWorkerOptions = Object.create(null);
 exports.GlobalWorkerOptions = GlobalWorkerOptions;
-GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? null : GlobalWorkerOptions.workerPort;
-GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? "" : GlobalWorkerOptions.workerSrc;
+GlobalWorkerOptions.workerPort = null;
+GlobalWorkerOptions.workerSrc = "";
 
 /***/ }),
 /* 15 */
@@ -13058,8 +13041,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.3.97';
-const pdfjsBuild = 'edfdb693e';
+const pdfjsVersion = '3.3.122';
+const pdfjsBuild = '562045607';
 })();
 
 /******/ 	return __webpack_exports__;

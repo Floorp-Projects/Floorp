@@ -582,19 +582,29 @@ class Field extends _pdf_object.PDFObject {
     } else if (typeof value === "string") {
       switch (this._fieldType) {
         case _common.FieldType.none:
-          this._value = !isNaN(value) ? parseFloat(value) : value;
-          break;
+          {
+            this._originalValue = value;
+            const _value = value.trim().replace(",", ".");
+            this._value = !isNaN(_value) ? parseFloat(_value) : value;
+            break;
+          }
         case _common.FieldType.number:
         case _common.FieldType.percent:
-          const number = parseFloat(value);
-          this._value = !isNaN(number) ? number : 0;
-          break;
+          {
+            const _value = value.trim().replace(",", ".");
+            const number = parseFloat(_value);
+            this._value = !isNaN(number) ? number : 0;
+            break;
+          }
         default:
           this._value = value;
       }
     } else {
       this._value = value;
     }
+  }
+  _getValue() {
+    return this._originalValue ?? this.value;
   }
   _setChoiceValue(value) {
     if (this.multipleSelection) {
@@ -2393,7 +2403,8 @@ class EventDispatcher {
     if (event.rc) {
       source.obj.value = event.value;
       this.runCalculate(source, event);
-      const savedValue = event.value = source.obj.value;
+      const savedValue = source.obj._getValue();
+      event.value = source.obj.value;
       let formattedValue = null;
       if (this.runActions(source, source, event, "Format")) {
         formattedValue = event.value?.toString?.();
@@ -3657,7 +3668,7 @@ class ProxyHandler {
         const data = {
           id: obj._id
         };
-        data[prop] = obj[prop];
+        data[prop] = prop === "value" ? obj._getValue() : obj[prop];
         if (!obj._siblings) {
           obj._send(data);
         } else {
@@ -4247,8 +4258,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.3.97';
-const pdfjsBuild = 'edfdb693e';
+const pdfjsVersion = '3.3.122';
+const pdfjsBuild = '562045607';
 })();
 
 /******/ 	return __webpack_exports__;
