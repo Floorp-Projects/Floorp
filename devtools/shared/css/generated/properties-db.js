@@ -3045,7 +3045,9 @@ exports.CSS_PROPERTIES = {
       "font-weight",
       "font-size",
       "font-size-adjust",
-      "font-synthesis",
+      "font-synthesis-weight",
+      "font-synthesis-style",
+      "font-synthesis-small-caps",
       "font-stretch",
       "font-kerning",
       "font-variant-alternates",
@@ -6977,7 +6979,9 @@ exports.CSS_PROPERTIES = {
   "font-synthesis": {
     "isInherited": true,
     "subproperties": [
-      "font-synthesis"
+      "font-synthesis-weight",
+      "font-synthesis-style",
+      "font-synthesis-small-caps"
     ],
     "supports": [],
     "values": [
@@ -6990,6 +6994,54 @@ exports.CSS_PROPERTIES = {
       "style",
       "unset",
       "weight"
+    ]
+  },
+  "font-synthesis-small-caps": {
+    "isInherited": true,
+    "subproperties": [
+      "font-synthesis-small-caps"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "font-synthesis-style": {
+    "isInherited": true,
+    "subproperties": [
+      "font-synthesis-style"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "font-synthesis-weight": {
+    "isInherited": true,
+    "subproperties": [
+      "font-synthesis-weight"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
     ]
   },
   "font-variant": {
