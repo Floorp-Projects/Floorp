@@ -63,7 +63,7 @@
             % for name in "color style width".split():
                 if *self.outline_${name} != outline_${name}::get_initial_specified_value() {
                     if wrote_value {
-                        dest.write_str(" ")?;
+                        dest.write_char(' ')?;
                     }
                     self.outline_${name}.to_css(dest)?;
                     wrote_value = true;

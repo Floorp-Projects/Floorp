@@ -1187,7 +1187,7 @@ where
     W: Write,
 {
     if !*is_first_serialization {
-        dest.write_str(" ")
+        dest.write_char(' ')
     } else {
         *is_first_serialization = false;
         Ok(())
