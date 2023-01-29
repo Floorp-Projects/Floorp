@@ -65,7 +65,6 @@ static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
 #define LOG_E(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Error, (__VA_ARGS__))
 #define LOG_W(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Warning, (__VA_ARGS__))
-#define LOG_D(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Debug, (__VA_ARGS__))
 
 // Used to store whether we have accumulated an error combination for this
 // session.
@@ -1258,233 +1257,174 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
   return true;
 }
 
-// A strict base sandbox for utility sandboxes to adapt.
-struct UtilitySandboxProps {
-  sandbox::JobLevel mJobLevel = sandbox::JOB_LOCKDOWN;
-
-  sandbox::TokenLevel mInitialTokenLevel = sandbox::USER_RESTRICTED_SAME_ACCESS;
-  sandbox::TokenLevel mDelayedTokenLevel = sandbox::USER_LOCKDOWN;
-
-  sandbox::IntegrityLevel mInitialIntegrityLevel =  // before lockdown
-      sandbox::INTEGRITY_LEVEL_LOW;
-  sandbox::IntegrityLevel mDelayedIntegrityLevel =  // after lockdown
-      sandbox::INTEGRITY_LEVEL_UNTRUSTED;
-
-  bool mUseAlternateWindowStation = true;
-  bool mUseWin32kLockdown = true;
-  bool mUseCig = true;
-
-  sandbox::MitigationFlags mInitialMitigations =
-      sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
-      sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
-      sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
-      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32 |
-      sandbox::MITIGATION_CET_COMPAT_MODE;
-
-  sandbox::MitigationFlags mDelayedMitigations =
-      sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-      sandbox::MITIGATION_DLL_SEARCH_ORDER |
-      sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-};
-
-struct GenericUtilitySandboxProps : public UtilitySandboxProps {};
-
-struct UtilityAudioDecodingWmfSandboxProps : public UtilitySandboxProps {
-  UtilityAudioDecodingWmfSandboxProps() {
-    mDelayedTokenLevel = sandbox::USER_LIMITED;
-    mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                          sandbox::MITIGATION_DLL_SEARCH_ORDER;
-#ifdef MOZ_WMF
-    if (StaticPrefs::security_sandbox_utility_wmf_acg_enabled()) {
-      mDelayedMitigations |= DynamicCodeFlagForSystemMediaLibraries();
-    }
-#else
-    mDelayedMitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-#endif  // MOZ_WMF
-  }
-};
-
-#ifdef MOZ_WMF_MEDIA_ENGINE
-struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
-  UtilityMfMediaEngineCdmSandboxProps() {
-    mJobLevel = sandbox::JOB_INTERACTIVE;
-    mDelayedTokenLevel = sandbox::USER_RESTRICTED_NON_ADMIN;
-    mUseAlternateWindowStation = false;
-    mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
-    mUseWin32kLockdown = false;
-    mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                          sandbox::MITIGATION_DLL_SEARCH_ORDER;
-  }
-};
-#endif
-
-struct WindowsUtilitySandboxProps : public UtilitySandboxProps {
-  WindowsUtilitySandboxProps() {
-    mJobLevel = sandbox::JOB_INTERACTIVE;
-    mDelayedTokenLevel = sandbox::USER_RESTRICTED_SAME_ACCESS;
-    mUseAlternateWindowStation = false;
-    mInitialIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
-    mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
-    mUseWin32kLockdown = false;
-    mUseCig = false;
-    mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                          sandbox::MITIGATION_DLL_SEARCH_ORDER;
-  }
-};
-
-void LogUtilitySandboxProps(const UtilitySandboxProps& us) {
-  if (!static_cast<LogModule*>(sSandboxBrokerLog)->ShouldLog(LogLevel::Debug)) {
-    return;
-  }
-
-  nsAutoCString logMsg;
-  logMsg.AppendPrintf("Building sandbox for utility process:\n");
-  logMsg.AppendPrintf("\tJob Level: %d\n", static_cast<int>(us.mJobLevel));
-  logMsg.AppendPrintf("\tInitial Token Level: %d\n",
-                      static_cast<int>(us.mInitialTokenLevel));
-  logMsg.AppendPrintf("\tDelayed Token Level: %d\n",
-                      static_cast<int>(us.mDelayedTokenLevel));
-  logMsg.AppendPrintf("\tInitial Integrity Level: %d\n",
-                      static_cast<int>(us.mInitialIntegrityLevel));
-  logMsg.AppendPrintf("\tDelayed Integrity Level: %d\n",
-                      static_cast<int>(us.mDelayedIntegrityLevel));
-  logMsg.AppendPrintf("\tUse Alternate Window Station: %s\n",
-                      us.mUseAlternateWindowStation ? "yes" : "no");
-  logMsg.AppendPrintf("\tUse Win32k Lockdown: %s\n",
-                      us.mUseWin32kLockdown ? "yes" : "no");
-  logMsg.AppendPrintf("\tUse CIG: %s\n", us.mUseCig ? "yes" : "no");
-  logMsg.AppendPrintf("\tInitial mitigations: %016llx\n",
-                      static_cast<uint64_t>(us.mInitialMitigations));
-  logMsg.AppendPrintf("\tDelayed mitigations: %016llx\n",
-                      static_cast<uint64_t>(us.mDelayedMitigations));
-
-  LOG_D("%s", logMsg.get());
-}
-
-bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
-                         const UtilitySandboxProps& us) {
-  LogUtilitySandboxProps(us);
-
-  auto result = SetJobLevel(policy, us.mJobLevel, 0 /* ui_exceptions */);
-  SANDBOX_ENSURE_SUCCESS(
-      result,
-      "SetJobLevel should never fail with these arguments, what happened?");
-
-  result = policy->SetTokenLevel(us.mInitialTokenLevel, us.mDelayedTokenLevel);
-  SANDBOX_ENSURE_SUCCESS(
-      result,
-      "SetTokenLevel should never fail with these arguments, what happened?");
-
-  result = policy->SetAlternateDesktop(us.mUseAlternateWindowStation);
-  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
-          ::GetLastError());
-  }
-
-  result = policy->SetIntegrityLevel(us.mInitialIntegrityLevel);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "SetIntegrityLevel should never fail with these "
-                         "arguments, what happened?");
-
-  result = policy->SetDelayedIntegrityLevel(us.mDelayedIntegrityLevel);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "SetDelayedIntegrityLevel should never fail with "
-                         "these arguments, what happened?");
-
-  policy->SetLockdownDefaultDacl();
-  policy->AddRestrictingRandomSid();
-
-  sandbox::MitigationFlags initialMitigations = us.mInitialMitigations;
-  sandbox::MitigationFlags delayedMitigations = us.mDelayedMitigations;
-
-  if (us.mUseCig) {
-    const Maybe<Vector<const wchar_t*>>& exceptionModules =
-        GetPrespawnCigExceptionModules();
-    if (exceptionModules.isSome()) {
-      initialMitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-    } else {
-      delayedMitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-    }
-  }
-
-  result = policy->SetProcessMitigations(initialMitigations);
-  SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
-
-  // Win32k lockdown might not work on earlier versions
-  // Bug 1719212, 1769992
-  if (IsWin10FallCreatorsUpdateOrLater() && us.mUseWin32kLockdown) {
-    result = AddWin32kLockdownPolicy(policy, false);
-    SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
-  }
-
-  if (us.mUseCig) {
-    const Maybe<Vector<const wchar_t*>>& exceptionModules =
-        GetPrespawnCigExceptionModules();
-    if (exceptionModules.isSome()) {
-      // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
-      // because of DCHECK in PolicyBase::AddRuleInternal.
-      result = InitSignedPolicyRulesToBypassCig(policy, exceptionModules.ref());
-      SANDBOX_ENSURE_SUCCESS(result,
-                             "Failed to initialize signed policy rules.");
-    }
-
-    // Running audio decoder somehow fails on MSIX packages unless we do that
-    if (mozilla::HasPackageIdentity() && exceptionModules.isNothing()) {
-      const Vector<const wchar_t*> emptyVector;
-      result = InitSignedPolicyRulesToBypassCig(policy, emptyVector);
-      SANDBOX_ENSURE_SUCCESS(result,
-                             "Failed to initialize signed policy rules.");
-    }
-  }
-
-  result = policy->SetDelayedProcessMitigations(delayedMitigations);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "Invalid flags for SetDelayedProcessMitigations.");
-
-  // Add the policy for the client side of a pipe. It is just a file
-  // in the \pipe\ namespace. We restrict it to pipes that start with
-  // "chrome." so the sandboxed process cannot connect to system services.
-  result = policy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                           sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                           L"\\??\\pipe\\chrome.*");
-  SANDBOX_ENSURE_SUCCESS(
-      result,
-      "With these static arguments AddRule should never fail, what happened?");
-
-  // Add the policy for the client side of the crash server pipe.
-  result = policy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                           sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                           L"\\??\\pipe\\gecko-crash-server-pipe.*");
-  SANDBOX_ENSURE_SUCCESS(
-      result,
-      "With these static arguments AddRule should never fail, what happened?");
-
-  return true;
-}
-
 bool SandboxBroker::SetSecurityLevelForUtilityProcess(
     mozilla::ipc::SandboxingKind aSandbox) {
   if (!mPolicy) {
     return false;
   }
 
+  auto jobLevel = sandbox::JOB_LOCKDOWN;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    jobLevel = sandbox::JOB_INTERACTIVE;
+  }
+#endif
+  auto result = SetJobLevel(mPolicy, jobLevel, 0 /* ui_exceptions */);
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "SetJobLevel should never fail with these arguments, what happened?");
+
+  auto lockdownLevel = sandbox::USER_LOCKDOWN;
+  if (aSandbox == mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+    lockdownLevel = sandbox::USER_LIMITED;
+  }
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    lockdownLevel = sandbox::USER_RESTRICTED_NON_ADMIN;
+  }
+#endif
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  lockdownLevel);
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "SetTokenLevel should never fail with these arguments, what happened?");
+
+  bool useAlternateWindowStation = true;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    useAlternateWindowStation = false;
+  }
+#endif
+  result = mPolicy->SetAlternateDesktop(useAlternateWindowStation);
+  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
+          ::GetLastError());
+  }
+
+  result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "SetIntegrityLevel should never fail with these "
+                         "arguments, what happened?");
+
+  auto integrityLevel = sandbox::INTEGRITY_LEVEL_UNTRUSTED;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    integrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+  }
+#endif
+  result = mPolicy->SetDelayedIntegrityLevel(integrityLevel);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "SetDelayedIntegrityLevel should never fail with "
+                         "these arguments, what happened?");
+
+  mPolicy->SetLockdownDefaultDacl();
+  mPolicy->AddRestrictingRandomSid();
+
+  sandbox::MitigationFlags mitigations =
+      sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
+      sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+      sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32 |
+      sandbox::MITIGATION_CET_COMPAT_MODE;
+
+  const Maybe<Vector<const wchar_t*>>& exceptionModules =
+      GetPrespawnCigExceptionModules();
+  if (exceptionModules.isSome()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
+
+  result = mPolicy->SetProcessMitigations(mitigations);
+  SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
+
+  if (exceptionModules.isSome()) {
+    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
+    // because of DCHECK in PolicyBase::AddRuleInternal.
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
+
+  // Win32k lockdown might not work on earlier versions
+  // Bug 1719212, 1769992
+  if (IsWin10FallCreatorsUpdateOrLater()
+#ifdef MOZ_WMF_MEDIA_ENGINE
+      && aSandbox != mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM
+#endif
+  ) {
+    result = AddWin32kLockdownPolicy(mPolicy, false);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
+  }
+
+  mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
+                sandbox::MITIGATION_DLL_SEARCH_ORDER;
+
+  switch (aSandbox) {
+#ifdef MOZ_WMF
+    // The audio decoder process depends on MsAudDecMFT.dll.
+    case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
+      if (StaticPrefs::security_sandbox_utility_wmf_acg_enabled()) {
+        mitigations |= DynamicCodeFlagForSystemMediaLibraries();
+      }
+      break;
+#endif  // MOZ_WMF
+
+#ifdef MOZ_WMF_MEDIA_ENGINE
+    // No ACG on CDM utility processes.
+    case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM:
+      break;
+#endif  // MOZ_WMF_MEDIA_ENGINE
+
+    default:
+      mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+  }
+
+  if (exceptionModules.isNothing()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
+
+  result = mPolicy->SetDelayedProcessMitigations(mitigations);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "Invalid flags for SetDelayedProcessMitigations.");
+
+  // Running audio decoder somehow fails on MSIX packages unless we do that
+  if (mozilla::HasPackageIdentity() && exceptionModules.isNothing()) {
+    const Vector<const wchar_t*> emptyVector;
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, emptyVector);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
+
+  // Add the policy for the client side of a pipe. It is just a file
+  // in the \pipe\ namespace. We restrict it to pipes that start with
+  // "chrome." so the sandboxed process cannot connect to system services.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\chrome.*");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
+  // Add the policy for the client side of the crash server pipe.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\gecko-crash-server-pipe.*");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
   switch (aSandbox) {
     case mozilla::ipc::SandboxingKind::GENERIC_UTILITY:
-      return BuildUtilitySandbox(mPolicy, GenericUtilitySandboxProps());
     case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
-      return BuildUtilitySandbox(mPolicy,
-                                 UtilityAudioDecodingWmfSandboxProps());
-#ifdef MOZ_WMF_MEDIA_ENGINE
+#if MOZ_WMF_MEDIA_ENGINE
     case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM:
-      return BuildUtilitySandbox(mPolicy,
-                                 UtilityMfMediaEngineCdmSandboxProps());
 #endif
-    case mozilla::ipc::SandboxingKind::WINDOWS_UTILS:
-      return BuildUtilitySandbox(mPolicy, WindowsUtilitySandboxProps());
+      // Nothing specific to perform yet?
+      break;
+
     default:
-      MOZ_ASSERT_UNREACHABLE("Unknown sandboxing value");
-      return false;
+      MOZ_ASSERT(false, "Invalid SandboxingKind");
+      break;
   }
+
+  return true;
 }
 
 bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
