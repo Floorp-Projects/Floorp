@@ -120,10 +120,6 @@
     <string name="shortcut_erase_and_open_long_label">Isojsal as ijajpu %1$s</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Chuk stuul sajunal</string>
-
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Ye\'xhib\'il unka\'te la ootzin as tii tatine\'</string>
 
@@ -471,11 +467,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">¡B´a´n ool tu %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Jupa</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -506,20 +498,8 @@
     <string name="onboarding_second_screen_default_browser_button_text">Aq´kan uva´ a´ kuxhe´ la b´anb´e</string>
 
 
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">U chukb´ale´ uva´ eetz kuxhtu´ la aaq´kan stiib´a</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Tul uva´ at kat u vee´ uve´ ye´ na´l</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Xaanen kuxh stuul ech chite´ uva´ ye´xh kam kuxh ni pale´</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Eetz kuxhtu´ uva´ kat kuxh la b´anb´e kat</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Asoj nasa´ ajalput u chukb´al tetze´, as jit b´a´n tan ab´il kuxh la ootzin ve´t unq´a kame´ chukeltu s-´an.</string>
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Ye\' ookeb\'al sti\'</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">B\'an ooksat uyak\'il u eetze\'</string>
@@ -633,6 +613,17 @@
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Tii ve\'t tuche\'</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Oypisa\'m</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Tzaanale</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">B\'an tuche\'</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">b\'an tuche\'</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Eesamal ve\'t el ta\'n USB/Wi-Fi</string>

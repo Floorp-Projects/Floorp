@@ -119,8 +119,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Mita deungön Rahsia</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Mita lam Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Mita lam Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Mita lam Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Mita lam Focus Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -278,21 +291,74 @@
     <string name="preference_privacy_block_ads">Tham peulacak iklan</string>
 
     <string name="preference_privacy_block_ads_summary">Ladôm iklan jiseutöt seunaweue situs, bahpih meunyo hana neuteugön iklan nyan</string>
+    <string name="preference_privacy_block_analytics">Tham peulacak analitik</string>
+    <string name="preference_privacy_block_analytics_summary">Geungui keu peusaho, analisis ngön seumipat buet lagèe klik ngon skrol</string>
     <string name="preference_privacy_block_social">Tham peulacak sosial</string>
+
+    <string name="preference_privacy_block_social_summary">Geupeukeumat bak situs keu jilacak seunaweueneuh ngön jipeuleumah fungsi lagèe teuneuthèp bulueng</string>
+    <string name="preference_privacy_block_content">Tham peulacak asoe nyang laén</string>
+    <string name="preference_privacy_block_content_summary2">Meunyo neupeuudép akébatjih ladôm mieng mungkén akan jimeulagèe </string>
+    <string name="preference_privacy_category_cookies">Tham kuki</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Han</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Tham kuki peulacak pihak keulhèe mantöng</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Tham kuki pihak keulhèe mantöng</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Tham kuki lintas-situs</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Nyo</string>
 
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Ngui sidék jaroe keu peuhah aplikasi</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Ngui sidék jaroe keu peuhah meunyo neutamah shortcut atawa watèe situs wèb ka teuhah bak %s.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Bèk peuleumah</string>
+
     <string name="preference_category_security">Seuneuaman</string>
+
+    <string name="preference_category_performance">Hasé buet</string>
+    <string name="preference_performance_block_webfonts">Tham haraih web</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Peujeuet %1$s browser teutap</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
 
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Bhaih %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Meusén mita teupasang</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Piléh meusén mita</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Peuriwang meusén mita teutap</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Tamah meusén mita laén</string>
+    <string name="preference_search_remove_title">Sampôh meusén mita</string>
     <string name="preference_search_remove">Sampôh</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Tamah meusén seumeutöt</string>
+
+    <string name="search_add_manually_name_hint">Nan meusén mita</string>
+    <string name="search_add_manually_save">Keubah</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Peuhah</string>
@@ -316,8 +382,28 @@
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
     <string name="accessibility_dismiss_find_in_page">Sampôh nyang meuteumèe lam laman</string>
 
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Alat peukeumang</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Leubèh le</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">atô</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">atô</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Atô</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">H‘an</string>
+
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Nyo</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Tôp</string>
 
     <!-- Tips displayed on the home view -->
 
@@ -330,5 +416,26 @@
     <string name="tab_crash_report_close_tab_button_label">Tôp Tab</string>
 
     <!-- Tracking protection bottom sheet -->
+
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Tamah Lindông Seumeutöt</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Layeue</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Peungeuh</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Seupôt</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Geuatô lé Himat Batré</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Seutöt layeue peukakaih</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Tôp</string>
 
     </resources>
