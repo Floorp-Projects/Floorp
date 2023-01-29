@@ -40,3 +40,4 @@ pref(layout.css.backdrop-filter.enabled,true) == 1765862.html 1765862-ref.html
 == 1972885.html 1972885-ref.html
 == 1801588-1.html 1801588-1-ref.html
 skip-if(!cocoaWidget) != 1806140.html 1806140-notref.html
+== 1812341.html 1812341-ref.html

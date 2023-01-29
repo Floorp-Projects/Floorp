@@ -2117,14 +2117,6 @@ impl<'a> SceneBuilder<'a> {
         // clip node doesn't affect the stacking context rect.
         let mut blit_reason = BlitReason::empty();
 
-        // If backface visibility is explicitly set, we force a surface. This
-        // simplifies handling this grouping as an atomic primitive that can
-        // be culled if the transform changes. It also allows us to cache
-        // this as a regular child surface in future.
-        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
-            blit_reason |= BlitReason::ISOLATE;
-        }
-
         // If this stacking context has any complex clips, we need to draw it
         // to an off-screen surface.
         if let Some(clip_chain_id) = clip_chain_id {
@@ -2140,6 +2132,7 @@ impl<'a> SceneBuilder<'a> {
             &composite_ops,
             blit_reason,
             self.sc_stack.last(),
+            prim_flags,
         );
 
         // If the stacking context is a blend container, and if we're at the top level
@@ -3883,6 +3876,7 @@ impl FlattenedStackingContext {
         composite_ops: &CompositeOps,
         blit_reason: BlitReason,
         parent: Option<&FlattenedStackingContext>,
+        prim_flags: PrimitiveFlags,
     ) -> bool {
         // Any 3d context is required
         if let Picture3DContext::In { .. } = context_3d {
@@ -3915,6 +3909,11 @@ impl FlattenedStackingContext {
 
         // If need to isolate in surface due to clipping / mix-blend-mode
         if !blit_reason.is_empty() {
+            return false;
+        }
+
+        // If backface visibility is explicitly set.
+        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             return false;
         }
 
