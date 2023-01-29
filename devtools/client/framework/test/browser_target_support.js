@@ -10,11 +10,6 @@ async function testTarget(client, target) {
     "target.hasActor() true when actor exists."
   );
   is(
-    target.hasActor("storage"),
-    true,
-    "target.hasActor() true when actor exists."
-  );
-  is(
     target.hasActor("notreal"),
     false,
     "target.hasActor() false when actor does not exist."

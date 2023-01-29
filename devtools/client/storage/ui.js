@@ -363,16 +363,6 @@ class StorageUI {
     this._l10nStrings = new Map(ids.map((id, i) => [id, results[i]]));
   }
 
-  async _onTargetAvailable({ targetFront }) {
-    // Only support top level target and navigation to new processes.
-    // i.e. ignore additional targets created for remote <iframes>
-    if (!targetFront.isTopLevel) {
-      return;
-    }
-
-    this.front = await targetFront.getFront("storage");
-  }
-
   async _onResourceListAvailable(resources) {
     for (const resource of resources) {
       if (resource.isDestroyed()) {
@@ -411,6 +401,10 @@ class StorageUI {
       console.error(e);
     }
   }
+
+  // We only need to listen to target destruction, but TargetCommand.watchTarget
+  // requires a target available function...
+  async _onTargetAvailable({ targetFront }) {}
 
   _onTargetDestroyed({ targetFront }) {
     // Remove all storages related to this target

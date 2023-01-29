@@ -57,6 +57,8 @@ for (const childSpec of Object.values(childSpecs)) {
   registerFront(ChildStorageFront);
 }
 
+// @backward-compat { version 111 } This class can be removed once 111 is released.
+// This codepath was only used when connecting to older servers.
 class StorageFront extends FrontClassWithSpec(storageSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);

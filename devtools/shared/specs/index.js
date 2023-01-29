@@ -233,6 +233,8 @@ const Types = (exports.__TypesForTests = [
       "extensionStorage",
       "indexedDB",
       "sessionStorage",
+      // @backward-compat { version 111 } This type can be removed once 111 is released.
+      // This codepath was only used when connecting to older servers.
       "storage",
     ],
     spec: "devtools/shared/specs/storage",

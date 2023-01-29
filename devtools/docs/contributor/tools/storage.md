@@ -2,18 +2,6 @@
 
 ## Actor structure
 
-### Legacy
-
-This is currently only used by the browser toolbox and when inspecting Web Extensions.
-
-![Class structure architecture (legacy)](storage/legacy.svg)
-
-- We have an actor per storage type.
-- These actors are contained in a pool managed by a global `Storage` actor. See [source code of the actor](https://searchfox.org/mozilla-central/rev/2c991232499e826e46f9d976eb653817340ba389/devtools/server/actors/storage.js#3435) and [source code of the pool](https://searchfox.org/mozilla-central/rev/2c991232499e826e46f9d976eb653817340ba389/devtools/server/actors/storage.js#3477-3489)
-- Each specific storage type actor has a reference back to this global `Storage` actor.
-
-### Resource-based
-
 This is the new architecture that is being implemented to support Fission. It's currently used when inspecting tabs.
 
 ![Class structure architecture (resource-based)](storage/resources.svg)
@@ -22,10 +10,8 @@ This is the new architecture that is being implemented to support Fission. It's 
 - The specific actors for each storage type are spawned by watchers instead.
 - The reference to a global `Storage` actor that each actor has now points to a mock instead.
 - Some watchers require to be run in the parent process, while others can be run in the content process.
-  - Parent process: Cookies, IndexedDB, Web Extension[^web-extension-not-implemented].
+  - Parent process: Cookies, IndexedDB, Web Extension.
   - Content process: LocalStorage, SessionStorage, Cache.
-
-[^web-extension-not-implemented]: Web Extension has not yet been implemented in this new architecture.
 
 ## Flow
 

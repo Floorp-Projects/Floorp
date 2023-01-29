@@ -361,7 +361,14 @@ Tools.storage = {
   inMenu: false,
 
   isToolSupported(toolbox) {
-    return toolbox.target.hasActor("storage");
+    const { descriptorFront } = toolbox.commands;
+    // Storage is available on all contexts debugging a BrowsingContext.
+    // As of today, this is all but worker toolboxes.
+    return (
+      descriptorFront.isTabDescriptor ||
+      descriptorFront.isParentProcessDescriptor ||
+      descriptorFront.isWebExtensionDescriptor
+    );
   },
 
   build(iframeWindow, toolbox, commands) {

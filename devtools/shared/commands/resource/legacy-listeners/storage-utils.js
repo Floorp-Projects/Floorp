@@ -4,6 +4,9 @@
 
 "use strict";
 
+// @backward-compat { version 111 } This modules *and all its callsites modules*  can be removed once 111 is released.
+// This codepath was only used when connecting to older servers.
+
 // Filters "stores-update" response to only include events for
 // the storage type we desire
 function getFilteredStorageEvents(updates, storageType) {

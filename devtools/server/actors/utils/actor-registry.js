@@ -189,11 +189,6 @@ const ActorRegistry = {
       constructor: "StyleSheetsActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/storage", {
-      prefix: "storage",
-      constructor: "StorageActor",
-      type: { target: true },
-    });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",
