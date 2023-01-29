@@ -1374,6 +1374,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   ResourceTransformers,
+  ResourceCommand.TYPES.EXTENSION_STORAGE,
+  "resource://devtools/shared/commands/resource/transformers/storage-extension.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
   ResourceCommand.TYPES.INDEXED_DB,
   "resource://devtools/shared/commands/resource/transformers/storage-indexed-db.js"
 );

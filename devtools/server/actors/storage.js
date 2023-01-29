@@ -1488,14 +1488,6 @@ StorageActors.createActor(
 );
 
 const extensionStorageHelpers = {
-  unresolvedPromises: new Map(),
-  // Map of addonId => onStorageChange listeners in the parent process. Each addon toolbox targets
-  // a single addon, and multiple addon toolboxes could be open at the same time.
-  onChangedParentListeners: new Map(),
-  // Set of onStorageChange listeners in the extension child process. Each addon toolbox will create
-  // a separate extensionStorage actor targeting that addon. The addonId is passed into the listener,
-  // so that changes propagate only if the storage actor has a matching addonId.
-  onChangedChildListeners: new Set(),
   /**
    * Editing is supported only for serializable types. Examples of unserializable
    * types include Map, Set and ArrayBuffer.
@@ -1610,172 +1602,6 @@ const extensionStorageHelpers = {
       },
     },
   },
-
-  // Sets the parent process message manager
-  setPpmm(ppmm) {
-    this.ppmm = ppmm;
-  },
-
-  // A promise in the main process has resolved, and we need to pass the return value(s)
-  // back to the child process
-  backToChild(...args) {
-    Services.mm.broadcastAsyncMessage(
-      "debug:storage-extensionStorage-request-child",
-      {
-        method: "backToChild",
-        args,
-      }
-    );
-  },
-
-  // Send a message from the main process to a listener in the child process that the
-  // extension has modified storage local data
-  fireStorageOnChanged({ addonId, changes }) {
-    Services.mm.broadcastAsyncMessage(
-      "debug:storage-extensionStorage-request-child",
-      {
-        addonId,
-        changes,
-        method: "storageOnChanged",
-      }
-    );
-  },
-
-  // Subscribe a listener for event notifications from the WE storage API when
-  // storage local data has been changed by the extension, and keep track of the
-  // listener to remove it when the debugger is being disconnected.
-  subscribeOnChangedListenerInParent(addonId) {
-    if (!this.onChangedParentListeners.has(addonId)) {
-      const onChangedListener = changes => {
-        this.fireStorageOnChanged({ addonId, changes });
-      };
-      ExtensionStorageIDB.addOnChangedListener(addonId, onChangedListener);
-      this.onChangedParentListeners.set(addonId, onChangedListener);
-    }
-  },
-
-  // The main process does not require an extension context to select the backend
-  // Bug 1542038, 1542039: Each storage area will need its own implementation, as
-  // they use different storage backends.
-  async setupStorageInParent(addonId) {
-    const { extension } = WebExtensionPolicy.getByID(addonId);
-    try {
-      // Make sure the extension storage APIs have been loaded,
-      // otherwise the DevTools storage panel would not be updated
-      // automatically when the extension storage data is being changed
-      // if the parent ext-storage.js module wasn't already loaded
-      // (See Bug 1802929).
-      await extension.apiManager.asyncGetAPI("storage", extension);
-    } catch (err) {
-      console.error(err);
-    }
-    const parentResult = await ExtensionStorageIDB.selectBackend({ extension });
-    const result = {
-      ...parentResult,
-      // Received as a StructuredCloneHolder, so we need to deserialize
-      storagePrincipal: parentResult.storagePrincipal.deserialize(this, true),
-    };
-
-    this.subscribeOnChangedListenerInParent(addonId);
-    return this.backToChild("setupStorageInParent", result);
-  },
-
-  onDisconnected() {
-    for (const [addonId, listener] of this.onChangedParentListeners) {
-      ExtensionStorageIDB.removeOnChangedListener(addonId, listener);
-    }
-    this.onChangedParentListeners.clear();
-  },
-
-  // Runs in the main process. This determines what code to execute based on the message
-  // received from the child process.
-  async handleChildRequest(msg) {
-    switch (msg.json.method) {
-      case "setupStorageInParent":
-        const addonId = msg.data.args[0];
-        const result = await extensionStorageHelpers.setupStorageInParent(
-          addonId
-        );
-        return result;
-      default:
-        console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
-        throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
-    }
-  },
-
-  // Runs in the child process. This determines what code to execute based on the message
-  // received from the parent process.
-  handleParentRequest(msg) {
-    switch (msg.json.method) {
-      case "backToChild": {
-        const [func, rv] = msg.json.args;
-        const resolve = this.unresolvedPromises.get(func);
-        if (resolve) {
-          this.unresolvedPromises.delete(func);
-          resolve(rv);
-        }
-        break;
-      }
-      case "storageOnChanged": {
-        const { addonId, changes } = msg.data;
-        for (const listener of this.onChangedChildListeners) {
-          try {
-            listener({ addonId, changes });
-          } catch (err) {
-            console.error(err);
-            // Ignore errors raised from listeners.
-          }
-        }
-        break;
-      }
-      default:
-        console.error("ERR_DIRECTOR_CLIENT_UNKNOWN_METHOD", msg.json.method);
-        throw new Error("ERR_DIRECTOR_CLIENT_UNKNOWN_METHOD");
-    }
-  },
-
-  callParentProcessAsync(methodName, ...args) {
-    const promise = new Promise(resolve => {
-      this.unresolvedPromises.set(methodName, resolve);
-    });
-
-    this.ppmm.sendAsyncMessage(
-      "debug:storage-extensionStorage-request-parent",
-      {
-        method: methodName,
-        args,
-      }
-    );
-
-    return promise;
-  },
-};
-
-/**
- * E10S parent/child setup helpers
- * Add a message listener in the parent process to receive messages from the child
- * process.
- */
-exports.setupParentProcessForExtensionStorage = function({ mm, prefix }) {
-  // listen for director-script requests from the child process
-  mm.addMessageListener(
-    "debug:storage-extensionStorage-request-parent",
-    extensionStorageHelpers.handleChildRequest
-  );
-
-  return {
-    onDisconnected: () => {
-      // Although "disconnected-from-child" implies that the child is already
-      // disconnected this is not the case. The disconnection takes place after
-      // this method has finished. This gives us chance to clean up items within
-      // the parent process e.g. observers.
-      mm.removeMessageListener(
-        "debug:storage-extensionStorage-request-parent",
-        extensionStorageHelpers.handleChildRequest
-      );
-      extensionStorageHelpers.onDisconnected();
-    },
-  };
 };
 
 /**
@@ -1815,8 +1641,6 @@ StorageActors.createActor(
 
       this.onStorageChange = this.onStorageChange.bind(this);
 
-      this.setupChildProcess();
-
       this.onWindowReady = this.onWindowReady.bind(this);
       this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
       this.storageActor.on("window-ready", this.onWindowReady);
@@ -1828,7 +1652,8 @@ StorageActors.createActor(
     },
 
     destroy() {
-      extensionStorageHelpers.onChangedChildListeners.delete(
+      ExtensionStorageIDB.removeOnChangedListener(
+        this.addonId,
         this.onStorageChange
       );
 
@@ -1841,42 +1666,12 @@ StorageActors.createActor(
       this.storageActor = null;
     },
 
-    setupChildProcess() {
-      const ppmm = this.conn.parentMessageManager;
-      extensionStorageHelpers.setPpmm(ppmm);
-
-      // eslint-disable-next-line no-restricted-properties
-      this.conn.setupInParent({
-        module: "devtools/server/actors/storage",
-        setupParent: "setupParentProcessForExtensionStorage",
-      });
-
-      extensionStorageHelpers.onChangedChildListeners.add(this.onStorageChange);
-      this.setupStorageInParent = extensionStorageHelpers.callParentProcessAsync.bind(
-        extensionStorageHelpers,
-        "setupStorageInParent"
-      );
-
-      // Add a message listener in the child process to receive messages from the parent
-      // process
-      ppmm.addMessageListener(
-        "debug:storage-extensionStorage-request-child",
-        extensionStorageHelpers.handleParentRequest.bind(
-          extensionStorageHelpers
-        )
-      );
-    },
-
     /**
      * This fires when the extension changes storage data while the storage
      * inspector is open. Ensures this.hostVsStores stays up-to-date and
      * passes the changes on to update the client.
      */
-    onStorageChange({ addonId, changes }) {
-      if (addonId !== this.addonId) {
-        return;
-      }
-
+    onStorageChange(changes) {
       const host = this.extensionHostURL;
       const storeMap = this.hostVsStores.get(host);
 
@@ -1922,8 +1717,30 @@ StorageActors.createActor(
      */
     async preListStores() {
       // Ensure the actor's target is an extension and it is enabled
-      if (!this.addonId || !WebExtensionPolicy.getByID(this.addonId)) {
+      if (!this.addonId || !this.getExtensionPolicy()) {
         return;
+      }
+
+      // Subscribe a listener for event notifications from the WE storage API when
+      // storage local data has been changed by the extension, and keep track of the
+      // listener to remove it when the debugger is being disconnected.
+      ExtensionStorageIDB.addOnChangedListener(
+        this.addonId,
+        this.onStorageChange
+      );
+      try {
+        // Make sure the extension storage APIs have been loaded,
+        // otherwise the DevTools storage panel would not be updated
+        // automatically when the extension storage data is being changed
+        // if the parent ext-storage.js module wasn't already loaded
+        // (See Bug 1802929).
+        const { extension } = WebExtensionPolicy.getByID(this.addonId);
+        await extension.apiManager.asyncGetAPI("storage", extension);
+      } catch (e) {
+        console.error(
+          "Exception while trying to initialize webext storage API",
+          e
+        );
       }
 
       await this.populateStoresForHost(this.extensionHostURL);
@@ -1956,7 +1773,7 @@ StorageActors.createActor(
       const storeMap = new Map();
       this.hostVsStores.set(host, storeMap);
 
-      const storagePrincipal = await this.getStoragePrincipal(extension.id);
+      const storagePrincipal = await this.getStoragePrincipal();
 
       if (!storagePrincipal) {
         // This could happen if the extension fails to be migrated to the
@@ -1982,17 +1799,20 @@ StorageActors.createActor(
       }
     },
 
-    async getStoragePrincipal(addonId) {
+    async getStoragePrincipal() {
+      const { extension } = this.getExtensionPolicy();
       const {
         backendEnabled,
         storagePrincipal,
-      } = await this.setupStorageInParent(addonId);
+      } = await ExtensionStorageIDB.selectBackend({ extension });
 
       if (!backendEnabled) {
         // IDB backend disabled; give up.
         return null;
       }
-      return storagePrincipal;
+
+      // Received as a StructuredCloneHolder, so we need to deserialize
+      return storagePrincipal.deserialize(this, true);
     },
 
     getValuesForHost(host, name) {

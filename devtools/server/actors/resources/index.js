@@ -26,6 +26,7 @@ const TYPES = {
   // storage types
   CACHE_STORAGE: "Cache",
   COOKIE: "cookies",
+  EXTENSION_STORAGE: "extension-storage",
   INDEXED_DB: "indexed-db",
   LOCAL_STORAGE: "local-storage",
   SESSION_STORAGE: "session-storage",
@@ -159,6 +160,9 @@ const ParentProcessResources = augmentResourceDictionary({
   },
   [TYPES.COOKIE]: {
     path: "devtools/server/actors/resources/storage-cookie",
+  },
+  [TYPES.EXTENSION_STORAGE]: {
+    path: "devtools/server/actors/resources/storage-extension",
   },
   [TYPES.INDEXED_DB]: {
     path: "devtools/server/actors/resources/storage-indexed-db",

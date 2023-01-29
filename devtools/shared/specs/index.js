@@ -227,11 +227,12 @@ const Types = (exports.__TypesForTests = [
   },
   {
     types: [
+      "Cache",
       "cookies",
       "localStorage",
-      "sessionStorage",
-      "Cache",
+      "extensionStorage",
       "indexedDB",
+      "sessionStorage",
       "storage",
     ],
     spec: "devtools/shared/specs/storage",

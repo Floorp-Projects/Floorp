@@ -21,21 +21,6 @@ const {
 } = require("resource://devtools/shared/commands/commands-factory.js");
 
 /**
- * Set up the equivalent of an `about:debugging` toolbox for a given extension, minus
- * the toolbox.
- *
- * @param {String} id - The id for the extension to be targeted by the toolbox.
- * @return {Object} Resolves with the web extension actor front and target objects when
- * the debugger has been connected to the extension.
- */
-async function setupExtensionDebugging(id) {
-  const commands = await CommandsFactory.forAddon(id);
-  const target = await commands.descriptorFront.getTarget();
-  return { front: commands.descriptorFront, target };
-}
-exports.setupExtensionDebugging = setupExtensionDebugging;
-
-/**
  * Loads and starts up a test extension given the provided extension configuration.
  *
  * @param {Object} extConfig - The extension configuration object
@@ -52,21 +37,32 @@ async function startupExtension(extConfig) {
 exports.startupExtension = startupExtension;
 
 /**
- * Initializes the extensionStorage actor for a target extension. This is effectively
+ * Initializes the extensionStorage actor for a given extension. This is effectively
  * what happens when the addon storage panel is opened in the browser.
  *
  * @param {String} - id, The addon id
- * @return {Object} - Resolves with the web extension actor target and extensionStorage
- * store objects when the panel has been opened.
+ * @return {Object} - Resolves with the DevTools "commands" objact and the extensionStorage
+ * resource/front.
  */
 async function openAddonStoragePanel(id) {
-  const { target } = await setupExtensionDebugging(id);
+  const commands = await CommandsFactory.forAddon(id);
+  await commands.targetCommand.startListening();
 
-  const storageFront = await target.getFront("storage");
-  const stores = await storageFront.listStores();
-  const extensionStorage = stores.extensionStorage || null;
+  // Fetch the EXTENSION_STORAGE resource.
+  // Unfortunately, we can't use resourceCommand.waitForNextResource as it would destroy
+  // the actor by immediately unwatching for the resource type.
+  const extensionStorage = await new Promise(resolve => {
+    commands.resourceCommand.watchResources(
+      [commands.resourceCommand.TYPES.EXTENSION_STORAGE],
+      {
+        onAvailable(resources) {
+          resolve(resources[0]);
+        },
+      }
+    );
+  });
 
-  return { target, extensionStorage, storageFront };
+  return { commands, extensionStorage };
 }
 exports.openAddonStoragePanel = openAddonStoragePanel;
 
@@ -170,11 +166,11 @@ exports.extensionScriptWithMessageListener = extensionScriptWithMessageListener;
  * Shutdown procedure common to all tasks.
  *
  * @param {Object} extension - The test extension
- * @param {Object} target - The web extension actor targeted by the DevTools client
+ * @param {Object} commands - The web extension commands used by the DevTools to interact with the backend
  */
-async function shutdown(extension, target) {
-  if (target) {
-    await target.destroy();
+async function shutdown(extension, commands) {
+  if (commands) {
+    await commands.destroy();
   }
   await extension.unload();
 }
