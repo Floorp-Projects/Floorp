@@ -556,7 +556,6 @@ StorageActors.createActor(
 
       this.storageActor = storageActor;
 
-      this.maybeSetupChildProcess();
       this.populateStoresForHosts();
       this.addCookieObservers();
 
@@ -833,476 +832,271 @@ StorageActors.createActor(
 
     async removeAllSessionCookies(host, domain) {
       const originAttributes = this.getOriginAttributesFromHost(host);
-      this.removeAllSessionCookies(host, domain, originAttributes);
+      this._removeCookies(host, { domain, originAttributes, session: true });
     },
 
-    maybeSetupChildProcess() {
-      cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
+    getCookiesFromHost(host, originAttributes) {
+      // Local files have no host.
+      if (host.startsWith("file:///")) {
+        host = "";
+      }
 
-      if (!DevToolsServer.isInChildProcess) {
-        this.getCookiesFromHost = cookieHelpers.getCookiesFromHost.bind(
-          cookieHelpers
-        );
-        this.addCookieObservers = cookieHelpers.addCookieObservers.bind(
-          cookieHelpers
-        );
-        this.removeCookieObservers = cookieHelpers.removeCookieObservers.bind(
-          cookieHelpers
-        );
-        this.addCookie = cookieHelpers.addCookie.bind(cookieHelpers);
-        this.editCookie = cookieHelpers.editCookie.bind(cookieHelpers);
-        this.removeCookie = cookieHelpers.removeCookie.bind(cookieHelpers);
-        this.removeAllCookies = cookieHelpers.removeAllCookies.bind(
-          cookieHelpers
-        );
-        this.removeAllSessionCookies = cookieHelpers.removeAllSessionCookies.bind(
-          cookieHelpers
-        );
+      host = trimHttpHttpsPort(host);
+
+      return Services.cookies.getCookiesFromHost(host, originAttributes);
+    },
+
+    addCookie(guid, principal) {
+      // Set expiry time for cookie 1 day into the future
+      // NOTE: Services.cookies.add expects the time in seconds.
+      const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+      const time = Math.floor(Date.now() / 1000);
+      const expiry = time + ONE_DAY_IN_SECONDS;
+
+      // principal throws an error when we try to access principal.host if it
+      // does not exist (which happens at about: pages).
+      // We check for asciiHost instead, which is always present, and has a
+      // value of "" when the host is not available.
+      const domain = principal.asciiHost
+        ? principal.host
+        : principal.baseDomain;
+      const path = principal.filePath.startsWith("/")
+        ? principal.filePath
+        : "/";
+
+      Services.cookies.add(
+        domain,
+        path,
+        guid, // name
+        DEFAULT_VALUE, // value
+        false, // isSecure
+        false, // isHttpOnly,
+        false, // isSession,
+        expiry, // expires,
+        principal.originAttributes, // originAttributes
+        Ci.nsICookie.SAMESITE_LAX, // sameSite
+        principal.scheme === "https" // schemeMap
+          ? Ci.nsICookie.SCHEME_HTTPS
+          : Ci.nsICookie.SCHEME_HTTP
+      );
+    },
+
+    /**
+     * Apply the results of a cookie edit.
+     *
+     * @param {Object} data
+     *        An object in the following format:
+     *        {
+     *          host: "http://www.mozilla.org",
+     *          field: "value",
+     *          editCookie: "name",
+     *          oldValue: "%7BHello%7D",
+     *          newValue: "%7BHelloo%7D",
+     *          items: {
+     *            name: "optimizelyBuckets",
+     *            path: "/",
+     *            host: ".mozilla.org",
+     *            expires: "Mon, 02 Jun 2025 12:37:37 GMT",
+     *            creationTime: "Tue, 18 Nov 2014 16:21:18 GMT",
+     *            lastAccessed: "Wed, 17 Feb 2016 10:06:23 GMT",
+     *            value: "%7BHelloo%7D",
+     *            isDomain: "true",
+     *            isSecure: "false",
+     *            isHttpOnly: "false"
+     *          }
+     *        }
+     */
+    // eslint-disable-next-line complexity
+    editCookie(data) {
+      let { field, oldValue, newValue } = data;
+      const origName = field === "name" ? oldValue : data.items.name;
+      const origHost = field === "host" ? oldValue : data.items.host;
+      const origPath = field === "path" ? oldValue : data.items.path;
+      let cookie = null;
+
+      const cookies = Services.cookies.getCookiesFromHost(
+        origHost,
+        data.originAttributes || {}
+      );
+      for (const nsiCookie of cookies) {
+        if (
+          nsiCookie.name === origName &&
+          nsiCookie.host === origHost &&
+          nsiCookie.path === origPath
+        ) {
+          cookie = {
+            host: nsiCookie.host,
+            path: nsiCookie.path,
+            name: nsiCookie.name,
+            value: nsiCookie.value,
+            isSecure: nsiCookie.isSecure,
+            isHttpOnly: nsiCookie.isHttpOnly,
+            isSession: nsiCookie.isSession,
+            expires: nsiCookie.expires,
+            originAttributes: nsiCookie.originAttributes,
+            schemeMap: nsiCookie.schemeMap,
+          };
+          break;
+        }
+      }
+
+      if (!cookie) {
         return;
       }
 
-      const mm = this.conn.parentMessageManager;
+      // If the date is expired set it for 10 seconds in the future.
+      const now = new Date();
+      if (!cookie.isSession && cookie.expires * 1000 <= now) {
+        const tenSecondsFromNow = (now.getTime() + 10 * 1000) / 1000;
 
-      // eslint-disable-next-line no-restricted-properties
-      this.conn.setupInParent({
-        module: "devtools/server/actors/storage",
-        setupParent: "setupParentProcessForCookies",
-      });
+        cookie.expires = tenSecondsFromNow;
+      }
 
-      this.getCookiesFromHost = callParentProcess.bind(
-        null,
-        "getCookiesFromHost"
-      );
-      this.addCookieObservers = callParentProcess.bind(
-        null,
-        "addCookieObservers"
-      );
-      this.removeCookieObservers = callParentProcess.bind(
-        null,
-        "removeCookieObservers"
-      );
-      this.addCookie = callParentProcess.bind(null, "addCookie");
-      this.editCookie = callParentProcess.bind(null, "editCookie");
-      this.removeCookie = callParentProcess.bind(null, "removeCookie");
-      this.removeAllCookies = callParentProcess.bind(null, "removeAllCookies");
-      this.removeAllSessionCookies = callParentProcess.bind(
-        null,
-        "removeAllSessionCookies"
-      );
+      switch (field) {
+        case "isSecure":
+        case "isHttpOnly":
+        case "isSession":
+          newValue = newValue === "true";
+          break;
 
-      mm.addMessageListener(
-        "debug:storage-cookie-request-child",
-        cookieHelpers.handleParentRequest
-      );
+        case "expires":
+          newValue = Date.parse(newValue) / 1000;
 
-      function callParentProcess(methodName, ...args) {
-        const reply = mm.sendSyncMessage(
-          "debug:storage-cookie-request-parent",
-          {
-            method: methodName,
-            args,
+          if (isNaN(newValue)) {
+            newValue = MAX_COOKIE_EXPIRY;
           }
-        );
+          break;
 
-        if (reply.length === 0) {
-          console.error("ERR_DIRECTOR_CHILD_NO_REPLY from " + methodName);
-        } else if (reply.length > 1) {
-          console.error(
-            "ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES from " + methodName
+        case "host":
+        case "name":
+        case "path":
+          // Remove the edited cookie.
+          Services.cookies.remove(
+            origHost,
+            origName,
+            origPath,
+            cookie.originAttributes
+          );
+          break;
+      }
+
+      // Apply changes.
+      cookie[field] = newValue;
+
+      // cookie.isSession is not always set correctly on session cookies so we
+      // need to trust cookie.expires instead.
+      cookie.isSession = !cookie.expires;
+
+      // Add the edited cookie.
+      Services.cookies.add(
+        cookie.host,
+        cookie.path,
+        cookie.name,
+        cookie.value,
+        cookie.isSecure,
+        cookie.isHttpOnly,
+        cookie.isSession,
+        cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires,
+        cookie.originAttributes,
+        cookie.sameSite,
+        cookie.schemeMap
+      );
+    },
+
+    _removeCookies(host, opts = {}) {
+      // We use a uniqueId to emulate compound keys for cookies. We need to
+      // extract the cookie name to remove the correct cookie.
+      if (opts.name) {
+        const split = opts.name.split(SEPARATOR_GUID);
+
+        opts.name = split[0];
+        opts.path = split[2];
+      }
+
+      host = trimHttpHttpsPort(host);
+
+      function hostMatches(cookieHost, matchHost) {
+        if (cookieHost == null) {
+          return matchHost == null;
+        }
+        if (cookieHost.startsWith(".")) {
+          return ("." + matchHost).endsWith(cookieHost);
+        }
+        return cookieHost == host;
+      }
+
+      const cookies = Services.cookies.getCookiesFromHost(
+        host,
+        opts.originAttributes || {}
+      );
+      for (const cookie of cookies) {
+        if (
+          hostMatches(cookie.host, host) &&
+          (!opts.name || cookie.name === opts.name) &&
+          (!opts.domain || cookie.host === opts.domain) &&
+          (!opts.path || cookie.path === opts.path) &&
+          (!opts.session || (!cookie.expires && !cookie.maxAge))
+        ) {
+          Services.cookies.remove(
+            cookie.host,
+            cookie.name,
+            cookie.path,
+            cookie.originAttributes
           );
         }
+      }
+    },
 
-        const result = reply[0];
+    removeCookie(host, name, originAttributes) {
+      if (name !== undefined) {
+        this._removeCookies(host, { name, originAttributes });
+      }
+    },
 
-        if (methodName === "getCookiesFromHost") {
-          return JSON.parse(result);
-        }
+    removeAllCookies(host, domain, originAttributes) {
+      this._removeCookies(host, { domain, originAttributes });
+    },
 
-        return result;
+    addCookieObservers() {
+      Services.obs.addObserver(this, "cookie-changed");
+      Services.obs.addObserver(this, "private-cookie-changed");
+      return null;
+    },
+
+    removeCookieObservers() {
+      Services.obs.removeObserver(this, "cookie-changed");
+      Services.obs.removeObserver(this, "private-cookie-changed");
+      return null;
+    },
+
+    observe(subject, topic, data) {
+      if (!subject) {
+        return;
+      }
+
+      switch (topic) {
+        case "cookie-changed":
+        case "private-cookie-changed":
+          if (data === "batch-deleted") {
+            const cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
+            const cookies = [];
+
+            for (let i = 0; i < cookiesNoInterface.length; i++) {
+              const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
+              cookies.push(cookie);
+            }
+            this.onCookieChanged(cookies, topic, data);
+
+            return;
+          }
+
+          const cookie = subject.QueryInterface(Ci.nsICookie);
+          this.onCookieChanged(cookie, topic, data);
+          break;
       }
     },
   }
 );
-
-var cookieHelpers = {
-  getCookiesFromHost(host, originAttributes) {
-    // Local files have no host.
-    if (host.startsWith("file:///")) {
-      host = "";
-    }
-
-    host = trimHttpHttpsPort(host);
-
-    return Services.cookies.getCookiesFromHost(host, originAttributes);
-  },
-
-  addCookie(guid, principal) {
-    // Set expiry time for cookie 1 day into the future
-    // NOTE: Services.cookies.add expects the time in seconds.
-    const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
-    const time = Math.floor(Date.now() / 1000);
-    const expiry = time + ONE_DAY_IN_SECONDS;
-
-    // principal throws an error when we try to access principal.host if it
-    // does not exist (which happens at about: pages).
-    // We check for asciiHost instead, which is always present, and has a
-    // value of "" when the host is not available.
-    const domain = principal.asciiHost ? principal.host : principal.baseDomain;
-    const path = principal.filePath.startsWith("/") ? principal.filePath : "/";
-
-    Services.cookies.add(
-      domain,
-      path,
-      guid, // name
-      DEFAULT_VALUE, // value
-      false, // isSecure
-      false, // isHttpOnly,
-      false, // isSession,
-      expiry, // expires,
-      principal.originAttributes, // originAttributes
-      Ci.nsICookie.SAMESITE_LAX, // sameSite
-      principal.scheme === "https" // schemeMap
-        ? Ci.nsICookie.SCHEME_HTTPS
-        : Ci.nsICookie.SCHEME_HTTP
-    );
-  },
-
-  /**
-   * Apply the results of a cookie edit.
-   *
-   * @param {Object} data
-   *        An object in the following format:
-   *        {
-   *          host: "http://www.mozilla.org",
-   *          field: "value",
-   *          editCookie: "name",
-   *          oldValue: "%7BHello%7D",
-   *          newValue: "%7BHelloo%7D",
-   *          items: {
-   *            name: "optimizelyBuckets",
-   *            path: "/",
-   *            host: ".mozilla.org",
-   *            expires: "Mon, 02 Jun 2025 12:37:37 GMT",
-   *            creationTime: "Tue, 18 Nov 2014 16:21:18 GMT",
-   *            lastAccessed: "Wed, 17 Feb 2016 10:06:23 GMT",
-   *            value: "%7BHelloo%7D",
-   *            isDomain: "true",
-   *            isSecure: "false",
-   *            isHttpOnly: "false"
-   *          }
-   *        }
-   */
-  // eslint-disable-next-line complexity
-  editCookie(data) {
-    let { field, oldValue, newValue } = data;
-    const origName = field === "name" ? oldValue : data.items.name;
-    const origHost = field === "host" ? oldValue : data.items.host;
-    const origPath = field === "path" ? oldValue : data.items.path;
-    let cookie = null;
-
-    const cookies = Services.cookies.getCookiesFromHost(
-      origHost,
-      data.originAttributes || {}
-    );
-    for (const nsiCookie of cookies) {
-      if (
-        nsiCookie.name === origName &&
-        nsiCookie.host === origHost &&
-        nsiCookie.path === origPath
-      ) {
-        cookie = {
-          host: nsiCookie.host,
-          path: nsiCookie.path,
-          name: nsiCookie.name,
-          value: nsiCookie.value,
-          isSecure: nsiCookie.isSecure,
-          isHttpOnly: nsiCookie.isHttpOnly,
-          isSession: nsiCookie.isSession,
-          expires: nsiCookie.expires,
-          originAttributes: nsiCookie.originAttributes,
-          schemeMap: nsiCookie.schemeMap,
-        };
-        break;
-      }
-    }
-
-    if (!cookie) {
-      return;
-    }
-
-    // If the date is expired set it for 10 seconds in the future.
-    const now = new Date();
-    if (!cookie.isSession && cookie.expires * 1000 <= now) {
-      const tenSecondsFromNow = (now.getTime() + 10 * 1000) / 1000;
-
-      cookie.expires = tenSecondsFromNow;
-    }
-
-    switch (field) {
-      case "isSecure":
-      case "isHttpOnly":
-      case "isSession":
-        newValue = newValue === "true";
-        break;
-
-      case "expires":
-        newValue = Date.parse(newValue) / 1000;
-
-        if (isNaN(newValue)) {
-          newValue = MAX_COOKIE_EXPIRY;
-        }
-        break;
-
-      case "host":
-      case "name":
-      case "path":
-        // Remove the edited cookie.
-        Services.cookies.remove(
-          origHost,
-          origName,
-          origPath,
-          cookie.originAttributes
-        );
-        break;
-    }
-
-    // Apply changes.
-    cookie[field] = newValue;
-
-    // cookie.isSession is not always set correctly on session cookies so we
-    // need to trust cookie.expires instead.
-    cookie.isSession = !cookie.expires;
-
-    // Add the edited cookie.
-    Services.cookies.add(
-      cookie.host,
-      cookie.path,
-      cookie.name,
-      cookie.value,
-      cookie.isSecure,
-      cookie.isHttpOnly,
-      cookie.isSession,
-      cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires,
-      cookie.originAttributes,
-      cookie.sameSite,
-      cookie.schemeMap
-    );
-  },
-
-  _removeCookies(host, opts = {}) {
-    // We use a uniqueId to emulate compound keys for cookies. We need to
-    // extract the cookie name to remove the correct cookie.
-    if (opts.name) {
-      const split = opts.name.split(SEPARATOR_GUID);
-
-      opts.name = split[0];
-      opts.path = split[2];
-    }
-
-    host = trimHttpHttpsPort(host);
-
-    function hostMatches(cookieHost, matchHost) {
-      if (cookieHost == null) {
-        return matchHost == null;
-      }
-      if (cookieHost.startsWith(".")) {
-        return ("." + matchHost).endsWith(cookieHost);
-      }
-      return cookieHost == host;
-    }
-
-    const cookies = Services.cookies.getCookiesFromHost(
-      host,
-      opts.originAttributes || {}
-    );
-    for (const cookie of cookies) {
-      if (
-        hostMatches(cookie.host, host) &&
-        (!opts.name || cookie.name === opts.name) &&
-        (!opts.domain || cookie.host === opts.domain) &&
-        (!opts.path || cookie.path === opts.path) &&
-        (!opts.session || (!cookie.expires && !cookie.maxAge))
-      ) {
-        Services.cookies.remove(
-          cookie.host,
-          cookie.name,
-          cookie.path,
-          cookie.originAttributes
-        );
-      }
-    }
-  },
-
-  removeCookie(host, name, originAttributes) {
-    if (name !== undefined) {
-      this._removeCookies(host, { name, originAttributes });
-    }
-  },
-
-  removeAllCookies(host, domain, originAttributes) {
-    this._removeCookies(host, { domain, originAttributes });
-  },
-
-  removeAllSessionCookies(host, domain, originAttributes) {
-    this._removeCookies(host, { domain, originAttributes, session: true });
-  },
-
-  addCookieObservers() {
-    Services.obs.addObserver(cookieHelpers, "cookie-changed");
-    Services.obs.addObserver(cookieHelpers, "private-cookie-changed");
-    return null;
-  },
-
-  removeCookieObservers() {
-    Services.obs.removeObserver(cookieHelpers, "cookie-changed");
-    Services.obs.removeObserver(cookieHelpers, "private-cookie-changed");
-    return null;
-  },
-
-  observe(subject, topic, data) {
-    if (!subject) {
-      return;
-    }
-
-    switch (topic) {
-      case "cookie-changed":
-      case "private-cookie-changed":
-        if (data === "batch-deleted") {
-          const cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
-          const cookies = [];
-
-          for (let i = 0; i < cookiesNoInterface.length; i++) {
-            const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
-            cookies.push(cookie);
-          }
-          cookieHelpers.onCookieChanged(cookies, topic, data);
-
-          return;
-        }
-
-        const cookie = subject.QueryInterface(Ci.nsICookie);
-        cookieHelpers.onCookieChanged(cookie, topic, data);
-        break;
-    }
-  },
-
-  handleParentRequest(msg) {
-    switch (msg.json.method) {
-      case "onCookieChanged":
-        let [cookie, topic, data] = msg.data.args;
-        cookie = JSON.parse(cookie);
-        cookieHelpers.onCookieChanged(cookie, topic, data);
-        break;
-    }
-  },
-
-  handleChildRequest(msg) {
-    switch (msg.json.method) {
-      case "getCookiesFromHost": {
-        const host = msg.data.args[0];
-        const originAttributes = msg.data.args[1];
-        const cookies = cookieHelpers.getCookiesFromHost(
-          host,
-          originAttributes
-        );
-        return JSON.stringify(cookies);
-      }
-      case "addCookieObservers": {
-        return cookieHelpers.addCookieObservers();
-      }
-      case "removeCookieObservers": {
-        return cookieHelpers.removeCookieObservers();
-      }
-      case "addCookie": {
-        const guid = msg.data.args[0];
-        const principal = msg.data.args[1];
-        return cookieHelpers.addCookie(guid, principal);
-      }
-      case "editCookie": {
-        const rowdata = msg.data.args[0];
-        return cookieHelpers.editCookie(rowdata);
-      }
-      case "createNewCookie": {
-        const host = msg.data.args[0];
-        const guid = msg.data.args[1];
-        const originAttributes = msg.data.args[2];
-        return cookieHelpers.createNewCookie(host, guid, originAttributes);
-      }
-      case "removeCookie": {
-        const host = msg.data.args[0];
-        const name = msg.data.args[1];
-        const originAttributes = msg.data.args[2];
-        return cookieHelpers.removeCookie(host, name, originAttributes);
-      }
-      case "removeAllCookies": {
-        const host = msg.data.args[0];
-        const domain = msg.data.args[1];
-        const originAttributes = msg.data.args[2];
-        return cookieHelpers.removeAllCookies(host, domain, originAttributes);
-      }
-      case "removeAllSessionCookies": {
-        const host = msg.data.args[0];
-        const domain = msg.data.args[1];
-        const originAttributes = msg.data.args[2];
-        return cookieHelpers.removeAllSessionCookies(
-          host,
-          domain,
-          originAttributes
-        );
-      }
-      default:
-        console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
-        throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
-    }
-  },
-};
-
-/**
- * E10S parent/child setup helpers
- */
-
-exports.setupParentProcessForCookies = function({ mm, prefix }) {
-  cookieHelpers.onCookieChanged = callChildProcess.bind(
-    null,
-    "onCookieChanged"
-  );
-
-  // listen for director-script requests from the child process
-  mm.addMessageListener(
-    "debug:storage-cookie-request-parent",
-    cookieHelpers.handleChildRequest
-  );
-
-  function callChildProcess(methodName, ...args) {
-    if (methodName === "onCookieChanged") {
-      args[0] = JSON.stringify(args[0]);
-    }
-
-    try {
-      mm.sendAsyncMessage("debug:storage-cookie-request-child", {
-        method: methodName,
-        args,
-      });
-    } catch (e) {
-      // We may receive a NS_ERROR_NOT_INITIALIZED if the target window has
-      // been closed. This can legitimately happen in between test runs.
-    }
-  }
-
-  return {
-    onDisconnected: () => {
-      // Although "disconnected-from-child" implies that the child is already
-      // disconnected this is not the case. The disconnection takes place after
-      // this method has finished. This gives us chance to clean up items within
-      // the parent process e.g. observers.
-      cookieHelpers.removeCookieObservers();
-      mm.removeMessageListener(
-        "debug:storage-cookie-request-parent",
-        cookieHelpers.handleChildRequest
-      );
-    },
-  };
-};
 
 /**
  * Helper method to create the overriden object required in
@@ -2292,8 +2086,6 @@ StorageActors.createActor(
 
       this.storageActor = storageActor;
 
-      this.maybeSetupChildProcess();
-
       this.objectsSize = {};
       this.storageActor = storageActor;
       this.onWindowReady = this.onWindowReady.bind(this);
@@ -2477,7 +2269,7 @@ StorageActors.createActor(
       for (const { name, storage } of names) {
         let metadata = await this.getDBMetaData(host, principal, name, storage);
 
-        metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
+        metadata = this.patchMetadataMapsAndProtos(metadata);
 
         storeMap.set(`${name} (${storage})`, metadata);
       }
@@ -2549,89 +2341,6 @@ StorageActors.createActor(
       });
     },
 
-    maybeSetupChildProcess() {
-      if (!DevToolsServer.isInChildProcess) {
-        this.backToChild = (func, rv) => rv;
-        this.clearDBStore = indexedDBHelpers.clearDBStore;
-        this.findIDBPathsForHost = indexedDBHelpers.findIDBPathsForHost;
-        this.findSqlitePathsForHost = indexedDBHelpers.findSqlitePathsForHost;
-        this.findStorageTypePaths = indexedDBHelpers.findStorageTypePaths;
-        this.getDBMetaData = indexedDBHelpers.getDBMetaData;
-        this.getDBNamesForHost = indexedDBHelpers.getDBNamesForHost;
-        this.getNameFromDatabaseFile = indexedDBHelpers.getNameFromDatabaseFile;
-        this.getObjectStoreData = indexedDBHelpers.getObjectStoreData;
-        this.getSanitizedHost = indexedDBHelpers.getSanitizedHost;
-        this.getValuesForHost = indexedDBHelpers.getValuesForHost;
-        this.openWithPrincipal = indexedDBHelpers.openWithPrincipal;
-        this.removeDB = indexedDBHelpers.removeDB;
-        this.removeDBRecord = indexedDBHelpers.removeDBRecord;
-        this.splitNameAndStorage = indexedDBHelpers.splitNameAndStorage;
-        this.getInternalHosts = indexedDBHelpers.getInternalHosts;
-        return;
-      }
-
-      const mm = this.conn.parentMessageManager;
-
-      // eslint-disable-next-line no-restricted-properties
-      this.conn.setupInParent({
-        module: "devtools/server/actors/storage",
-        setupParent: "setupParentProcessForIndexedDB",
-      });
-
-      this.getDBMetaData = callParentProcessAsync.bind(null, "getDBMetaData");
-      this.splitNameAndStorage = callParentProcessAsync.bind(
-        null,
-        "splitNameAndStorage"
-      );
-      this.getInternalHosts = callParentProcessAsync.bind(
-        null,
-        "getInternalHosts"
-      );
-      this.getDBNamesForHost = callParentProcessAsync.bind(
-        null,
-        "getDBNamesForHost"
-      );
-      this.getValuesForHost = callParentProcessAsync.bind(
-        null,
-        "getValuesForHost"
-      );
-      this.removeDB = callParentProcessAsync.bind(null, "removeDB");
-      this.removeDBRecord = callParentProcessAsync.bind(null, "removeDBRecord");
-      this.clearDBStore = callParentProcessAsync.bind(null, "clearDBStore");
-
-      mm.addMessageListener("debug:storage-indexedDB-request-child", msg => {
-        switch (msg.json.method) {
-          case "backToChild": {
-            const [func, rv] = msg.json.args;
-            const resolve = unresolvedPromises.get(func);
-            if (resolve) {
-              unresolvedPromises.delete(func);
-              resolve(rv);
-            }
-            break;
-          }
-          case "onItemUpdated": {
-            const [action, host, path] = msg.json.args;
-            this.onItemUpdated(action, host, path);
-          }
-        }
-      });
-
-      const unresolvedPromises = new Map();
-      function callParentProcessAsync(methodName, ...args) {
-        const promise = new Promise(resolve => {
-          unresolvedPromises.set(methodName, resolve);
-        });
-
-        mm.sendAsyncMessage("debug:storage-indexedDB-request-parent", {
-          method: methodName,
-          args,
-        });
-
-        return promise;
-      }
-    },
-
     async getFields(subType) {
       switch (subType) {
         // Detail of database
@@ -2662,267 +2371,53 @@ StorageActors.createActor(
           ];
       }
     },
-  }
-);
 
-var indexedDBHelpers = {
-  backToChild(...args) {
-    Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
-      method: "backToChild",
-      args,
-    });
-  },
+    /**
+     * Fetches and stores all the metadata information for the given database
+     * `name` for the given `host` with its `principal`. The stored metadata
+     * information is of `DatabaseMetadata` type.
+     */
+    async getDBMetaData(host, principal, name, storage) {
+      const request = this.openWithPrincipal(principal, name, storage);
+      return new Promise(resolve => {
+        request.onsuccess = event => {
+          const db = event.target.result;
+          const dbData = new DatabaseMetadata(host, db, storage);
+          db.close();
 
-  onItemUpdated(action, host, path) {
-    Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
-      method: "onItemUpdated",
-      args: [action, host, path],
-    });
-  },
-
-  /**
-   * Fetches and stores all the metadata information for the given database
-   * `name` for the given `host` with its `principal`. The stored metadata
-   * information is of `DatabaseMetadata` type.
-   */
-  async getDBMetaData(host, principal, name, storage) {
-    const request = this.openWithPrincipal(principal, name, storage);
-    return new Promise(resolve => {
-      request.onsuccess = event => {
-        const db = event.target.result;
-        const dbData = new DatabaseMetadata(host, db, storage);
-        db.close();
-
-        resolve(this.backToChild("getDBMetaData", dbData));
-      };
-      request.onerror = ({ target }) => {
-        console.error(
-          `Error opening indexeddb database ${name} for host ${host}`,
-          target.error
-        );
-        resolve(this.backToChild("getDBMetaData", null));
-      };
-    });
-  },
-
-  splitNameAndStorage(name) {
-    const lastOpenBracketIndex = name.lastIndexOf("(");
-    const lastCloseBracketIndex = name.lastIndexOf(")");
-    const delta = lastCloseBracketIndex - lastOpenBracketIndex - 1;
-
-    const storage = name.substr(lastOpenBracketIndex + 1, delta);
-
-    name = name.substr(0, lastOpenBracketIndex - 1);
-
-    return { storage, name };
-  },
-
-  /**
-   * Get all "internal" hosts. Internal hosts are database namespaces used by
-   * the browser.
-   */
-  async getInternalHosts() {
-    const profileDir = PathUtils.profileDir;
-    const storagePath = PathUtils.join(profileDir, "storage", "permanent");
-    const children = await IOUtils.getChildren(storagePath);
-    const hosts = [];
-
-    for (const path of children) {
-      const exists = await IOUtils.exists(path);
-      if (!exists) {
-        continue;
-      }
-
-      const stats = await IOUtils.stat(path);
-      if (
-        stats.type === "directory" &&
-        !SAFE_HOSTS_PREFIXES_REGEX.test(stats.path)
-      ) {
-        const basename = PathUtils.filename(path);
-        hosts.push(basename);
-      }
-    }
-
-    return this.backToChild("getInternalHosts", hosts);
-  },
-
-  /**
-   * Opens an indexed db connection for the given `principal` and
-   * database `name`.
-   */
-  openWithPrincipal(principal, name, storage) {
-    return indexedDBForStorage.openForPrincipal(principal, name, {
-      storage,
-    });
-  },
-
-  async removeDB(host, principal, dbName) {
-    const result = new Promise(resolve => {
-      const { name, storage } = this.splitNameAndStorage(dbName);
-      const request = indexedDBForStorage.deleteForPrincipal(principal, name, {
-        storage,
+          resolve(dbData);
+        };
+        request.onerror = ({ target }) => {
+          console.error(
+            `Error opening indexeddb database ${name} for host ${host}`,
+            target.error
+          );
+          resolve(null);
+        };
       });
+    },
 
-      request.onsuccess = () => {
-        resolve({});
-        this.onItemUpdated("deleted", host, [dbName]);
-      };
+    splitNameAndStorage(name) {
+      const lastOpenBracketIndex = name.lastIndexOf("(");
+      const lastCloseBracketIndex = name.lastIndexOf(")");
+      const delta = lastCloseBracketIndex - lastOpenBracketIndex - 1;
 
-      request.onblocked = () => {
-        console.warn(
-          `Deleting indexedDB database ${name} for host ${host} is blocked`
-        );
-        resolve({ blocked: true });
-      };
+      const storage = name.substr(lastOpenBracketIndex + 1, delta);
 
-      request.onerror = () => {
-        const { error } = request;
-        console.warn(
-          `Error deleting indexedDB database ${name} for host ${host}: ${error}`
-        );
-        resolve({ error: error.message });
-      };
+      name = name.substr(0, lastOpenBracketIndex - 1);
 
-      // If the database is blocked repeatedly, the onblocked event will not
-      // be fired again. To avoid waiting forever, report as blocked if nothing
-      // else happens after 3 seconds.
-      setTimeout(() => resolve({ blocked: true }), 3000);
-    });
+      return { storage, name };
+    },
 
-    return this.backToChild("removeDB", await result);
-  },
-
-  async removeDBRecord(host, principal, dbName, storeName, id) {
-    let db;
-    const { name, storage } = this.splitNameAndStorage(dbName);
-
-    try {
-      db = await new Promise((resolve, reject) => {
-        const request = this.openWithPrincipal(principal, name, storage);
-        request.onsuccess = ev => resolve(ev.target.result);
-        request.onerror = ev => reject(ev.target.error);
-      });
-
-      const transaction = db.transaction(storeName, "readwrite");
-      const store = transaction.objectStore(storeName);
-
-      await new Promise((resolve, reject) => {
-        const request = store.delete(id);
-        request.onsuccess = () => resolve();
-        request.onerror = ev => reject(ev.target.error);
-      });
-
-      this.onItemUpdated("deleted", host, [dbName, storeName, id]);
-    } catch (error) {
-      const recordPath = [dbName, storeName, id].join("/");
-      console.error(
-        `Failed to delete indexedDB record: ${recordPath}: ${error}`
-      );
-    }
-
-    if (db) {
-      db.close();
-    }
-
-    return this.backToChild("removeDBRecord", null);
-  },
-
-  async clearDBStore(host, principal, dbName, storeName) {
-    let db;
-    const { name, storage } = this.splitNameAndStorage(dbName);
-
-    try {
-      db = await new Promise((resolve, reject) => {
-        const request = this.openWithPrincipal(principal, name, storage);
-        request.onsuccess = ev => resolve(ev.target.result);
-        request.onerror = ev => reject(ev.target.error);
-      });
-
-      const transaction = db.transaction(storeName, "readwrite");
-      const store = transaction.objectStore(storeName);
-
-      await new Promise((resolve, reject) => {
-        const request = store.clear();
-        request.onsuccess = () => resolve();
-        request.onerror = ev => reject(ev.target.error);
-      });
-
-      this.onItemUpdated("cleared", host, [dbName, storeName]);
-    } catch (error) {
-      const storePath = [dbName, storeName].join("/");
-      console.error(`Failed to clear indexedDB store: ${storePath}: ${error}`);
-    }
-
-    if (db) {
-      db.close();
-    }
-
-    return this.backToChild("clearDBStore", null);
-  },
-
-  /**
-   * Fetches all the databases and their metadata for the given `host`.
-   */
-  async getDBNamesForHost(host, principal) {
-    const sanitizedHost = this.getSanitizedHost(host) + principal.originSuffix;
-    const profileDir = PathUtils.profileDir;
-    const storagePath = PathUtils.join(profileDir, "storage");
-    const files = [];
-    const names = [];
-
-    // We expect sqlite DB paths to look something like this:
-    // - PathToProfileDir/storage/default/http+++www.example.com/
-    //   idb/1556056096MeysDaabta.sqlite
-    // - PathToProfileDir/storage/permanent/http+++www.example.com/
-    //   idb/1556056096MeysDaabta.sqlite
-    // - PathToProfileDir/storage/temporary/http+++www.example.com/
-    //   idb/1556056096MeysDaabta.sqlite
-    // The subdirectory inside the storage folder is determined by the storage
-    // type:
-    // - default:   { storage: "default" } or not specified.
-    // - permanent: { storage: "persistent" }.
-    // - temporary: { storage: "temporary" }.
-    const sqliteFiles = await this.findSqlitePathsForHost(
-      storagePath,
-      sanitizedHost
-    );
-
-    for (const file of sqliteFiles) {
-      const splitPath = PathUtils.split(file);
-      const idbIndex = splitPath.indexOf("idb");
-      const storage = splitPath[idbIndex - 2];
-      const relative = file.substr(profileDir.length + 1);
-
-      files.push({
-        file: relative,
-        storage: storage === "permanent" ? "persistent" : storage,
-      });
-    }
-
-    if (files.length) {
-      for (const { file, storage } of files) {
-        const name = await this.getNameFromDatabaseFile(file);
-        if (name) {
-          names.push({
-            name,
-            storage,
-          });
-        }
-      }
-    }
-
-    return this.backToChild("getDBNamesForHost", { names });
-  },
-
-  /**
-   * Find all SQLite files that hold IndexedDB data for a host, such as:
-   *   storage/temporary/http+++www.example.com/idb/1556056096MeysDaabta.sqlite
-   */
-  async findSqlitePathsForHost(storagePath, sanitizedHost) {
-    const sqlitePaths = [];
-    const idbPaths = await this.findIDBPathsForHost(storagePath, sanitizedHost);
-    for (const idbPath of idbPaths) {
-      const children = await IOUtils.getChildren(idbPath);
+    /**
+     * Get all "internal" hosts. Internal hosts are database namespaces used by
+     * the browser.
+     */
+    async getInternalHosts() {
+      const profileDir = PathUtils.profileDir;
+      const storagePath = PathUtils.join(profileDir, "storage", "permanent");
+      const children = await IOUtils.getChildren(storagePath);
+      const hosts = [];
 
       for (const path of children) {
         const exists = await IOUtils.exists(path);
@@ -2931,356 +2426,497 @@ var indexedDBHelpers = {
         }
 
         const stats = await IOUtils.stat(path);
-        if (stats.type !== "directory" && stats.path.endsWith(".sqlite")) {
-          sqlitePaths.push(path);
+        if (
+          stats.type === "directory" &&
+          !SAFE_HOSTS_PREFIXES_REGEX.test(stats.path)
+        ) {
+          const basename = PathUtils.filename(path);
+          hosts.push(basename);
         }
       }
-    }
-    return sqlitePaths;
-  },
 
-  /**
-   * Find all paths that hold IndexedDB data for a host, such as:
-   *   storage/temporary/http+++www.example.com/idb
-   */
-  async findIDBPathsForHost(storagePath, sanitizedHost) {
-    const idbPaths = [];
-    const typePaths = await this.findStorageTypePaths(storagePath);
-    for (const typePath of typePaths) {
-      const idbPath = PathUtils.join(typePath, sanitizedHost, "idb");
-      if (await IOUtils.exists(idbPath)) {
-        idbPaths.push(idbPath);
-      }
-    }
-    return idbPaths;
-  },
+      return hosts;
+    },
 
-  /**
-   * Find all the storage types, such as "default", "permanent", or "temporary".
-   * These names have changed over time, so it seems simpler to look through all
-   * types that currently exist in the profile.
-   */
-  async findStorageTypePaths(storagePath) {
-    const children = await IOUtils.getChildren(storagePath);
-    const typePaths = [];
-
-    for (const path of children) {
-      const exists = await IOUtils.exists(path);
-      if (!exists) {
-        continue;
-      }
-
-      const stats = await IOUtils.stat(path);
-      if (stats.type === "directory") {
-        typePaths.push(path);
-      }
-    }
-
-    return typePaths;
-  },
-
-  /**
-   * Removes any illegal characters from the host name to make it a valid file
-   * name.
-   */
-  getSanitizedHost(host) {
-    if (host.startsWith("about:")) {
-      host = "moz-safe-" + host;
-    }
-    return host.replace(ILLEGAL_CHAR_REGEX, "+");
-  },
-
-  /**
-   * Retrieves the proper indexed db database name from the provided .sqlite
-   * file location.
-   */
-  async getNameFromDatabaseFile(path) {
-    let connection = null;
-    let retryCount = 0;
-
-    // Content pages might be having an open transaction for the same indexed db
-    // which this sqlite file belongs to. In that case, sqlite.openConnection
-    // will throw. Thus we retry for some time to see if lock is removed.
-    while (!connection && retryCount++ < 25) {
-      try {
-        connection = await lazy.Sqlite.openConnection({ path });
-      } catch (ex) {
-        // Continuously retrying is overkill. Waiting for 100ms before next try
-        await sleep(100);
-      }
-    }
-
-    if (!connection) {
-      return null;
-    }
-
-    const rows = await connection.execute("SELECT name FROM database");
-    if (rows.length != 1) {
-      return null;
-    }
-
-    const name = rows[0].getResultByName("name");
-
-    await connection.close();
-
-    return name;
-  },
-
-  async getValuesForHost(
-    host,
-    name = "null",
-    options,
-    hostVsStores,
-    principal
-  ) {
-    name = JSON.parse(name);
-    if (!name || !name.length) {
-      // This means that details about the db in this particular host are
-      // requested.
-      const dbs = [];
-      if (hostVsStores.has(host)) {
-        for (let [, db] of hostVsStores.get(host)) {
-          db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
-          dbs.push(db.toObject());
-        }
-      }
-      return this.backToChild("getValuesForHost", { dbs });
-    }
-
-    const [db2, objectStore, id] = name;
-    if (!objectStore) {
-      // This means that details about all the object stores in this db are
-      // requested.
-      const objectStores = [];
-      if (hostVsStores.has(host) && hostVsStores.get(host).has(db2)) {
-        let db = hostVsStores.get(host).get(db2);
-
-        db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
-
-        const objectStores2 = db.objectStores;
-
-        for (const objectStore2 of objectStores2) {
-          objectStores.push(objectStore2[1].toObject());
-        }
-      }
-      return this.backToChild("getValuesForHost", {
-        objectStores,
+    /**
+     * Opens an indexed db connection for the given `principal` and
+     * database `name`.
+     */
+    openWithPrincipal(principal, name, storage) {
+      return indexedDBForStorage.openForPrincipal(principal, name, {
+        storage,
       });
-    }
-    // Get either all entries from the object store, or a particular id
-    const storage = hostVsStores.get(host).get(db2).storage;
-    const result = await this.getObjectStoreData(
-      host,
-      principal,
-      db2,
-      storage,
-      {
-        objectStore,
-        id,
-        index: options.index,
-        offset: options.offset,
-        size: options.size,
-      }
-    );
-    return this.backToChild("getValuesForHost", { result });
-  },
+    },
 
-  /**
-   * Returns requested entries (or at most MAX_STORE_OBJECT_COUNT) from a particular
-   * objectStore from the db in the given host.
-   *
-   * @param {string} host
-   *        The given host.
-   * @param {nsIPrincipal} principal
-   *        The principal of the given document.
-   * @param {string} dbName
-   *        The name of the indexed db from the above host.
-   * @param {String} storage
-   *        Storage type, either "temporary", "default" or "persistent".
-   * @param {Object} requestOptions
-   *        An object in the following format:
-   *        {
-   *          objectStore: The name of the object store from the above db,
-   *          id:          Id of the requested entry from the above object
-   *                       store. null if all entries from the above object
-   *                       store are requested,
-   *          index:       Name of the IDBIndex to be iterated on while fetching
-   *                       entries. null or "name" if no index is to be
-   *                       iterated,
-   *          offset:      offset of the entries to be fetched,
-   *          size:        The intended size of the entries to be fetched
-   *        }
-   */
-  getObjectStoreData(host, principal, dbName, storage, requestOptions) {
-    const { name } = this.splitNameAndStorage(dbName);
-    const request = this.openWithPrincipal(principal, name, storage);
-
-    return new Promise((resolve, reject) => {
-      let { objectStore, id, index, offset, size } = requestOptions;
-      const data = [];
-      let db;
-
-      if (!size || size > MAX_STORE_OBJECT_COUNT) {
-        size = MAX_STORE_OBJECT_COUNT;
-      }
-
-      request.onsuccess = event => {
-        db = event.target.result;
-
-        const transaction = db.transaction(objectStore, "readonly");
-        let source = transaction.objectStore(objectStore);
-        if (index && index != "name") {
-          source = source.index(index);
-        }
-
-        source.count().onsuccess = event2 => {
-          const objectsSize = [];
-          const count = event2.target.result;
-          objectsSize.push({
-            key: host + dbName + objectStore + index,
-            count,
-          });
-
-          if (!offset) {
-            offset = 0;
-          } else if (offset > count) {
-            db.close();
-            resolve([]);
-            return;
-          }
-
-          if (id) {
-            source.get(id).onsuccess = event3 => {
-              db.close();
-              resolve([{ name: id, value: event3.target.result }]);
-            };
-          } else {
-            source.openCursor().onsuccess = event4 => {
-              const cursor = event4.target.result;
-
-              if (!cursor || data.length >= size) {
-                db.close();
-                resolve({
-                  data,
-                  objectsSize,
-                });
-                return;
-              }
-              if (offset-- <= 0) {
-                data.push({ name: cursor.key, value: cursor.value });
-              }
-              cursor.continue();
-            };
-          }
-        };
-      };
-
-      request.onerror = () => {
-        db.close();
-        resolve([]);
-      };
-    });
-  },
-
-  /**
-   * When indexedDB metadata is parsed to and from JSON then the object's
-   * prototype is dropped and any Maps are changed to arrays of arrays. This
-   * method is used to repair the prototypes and fix any broken Maps.
-   */
-  patchMetadataMapsAndProtos(metadata) {
-    const md = Object.create(DatabaseMetadata.prototype);
-    Object.assign(md, metadata);
-
-    md._objectStores = new Map(metadata._objectStores);
-
-    for (const [name, store] of md._objectStores) {
-      const obj = Object.create(ObjectStoreMetadata.prototype);
-      Object.assign(obj, store);
-
-      md._objectStores.set(name, obj);
-
-      if (typeof store._indexes.length !== "undefined") {
-        obj._indexes = new Map(store._indexes);
-      }
-
-      for (const [name2, value] of obj._indexes) {
-        const obj2 = Object.create(IndexMetadata.prototype);
-        Object.assign(obj2, value);
-
-        obj._indexes.set(name2, obj2);
-      }
-    }
-
-    return md;
-  },
-
-  handleChildRequest(msg) {
-    const args = msg.data.args;
-
-    switch (msg.json.method) {
-      case "getDBMetaData": {
-        const [host, principal, name, storage] = args;
-        return indexedDBHelpers.getDBMetaData(host, principal, name, storage);
-      }
-      case "getInternalHosts": {
-        return indexedDBHelpers.getInternalHosts();
-      }
-      case "splitNameAndStorage": {
-        const [name] = args;
-        return indexedDBHelpers.splitNameAndStorage(name);
-      }
-      case "getDBNamesForHost": {
-        const [host, principal] = args;
-        return indexedDBHelpers.getDBNamesForHost(host, principal);
-      }
-      case "getValuesForHost": {
-        const [host, name, options, hostVsStores, principal] = args;
-        return indexedDBHelpers.getValuesForHost(
-          host,
+    async removeDB(host, principal, dbName) {
+      const result = new Promise(resolve => {
+        const { name, storage } = this.splitNameAndStorage(dbName);
+        const request = indexedDBForStorage.deleteForPrincipal(
+          principal,
           name,
-          options,
-          hostVsStores,
-          principal
+          {
+            storage,
+          }
+        );
+
+        request.onsuccess = () => {
+          resolve({});
+          this.onItemUpdated("deleted", host, [dbName]);
+        };
+
+        request.onblocked = () => {
+          console.warn(
+            `Deleting indexedDB database ${name} for host ${host} is blocked`
+          );
+          resolve({ blocked: true });
+        };
+
+        request.onerror = () => {
+          const { error } = request;
+          console.warn(
+            `Error deleting indexedDB database ${name} for host ${host}: ${error}`
+          );
+          resolve({ error: error.message });
+        };
+
+        // If the database is blocked repeatedly, the onblocked event will not
+        // be fired again. To avoid waiting forever, report as blocked if nothing
+        // else happens after 3 seconds.
+        setTimeout(() => resolve({ blocked: true }), 3000);
+      });
+
+      return result;
+    },
+
+    async removeDBRecord(host, principal, dbName, storeName, id) {
+      let db;
+      const { name, storage } = this.splitNameAndStorage(dbName);
+
+      try {
+        db = await new Promise((resolve, reject) => {
+          const request = this.openWithPrincipal(principal, name, storage);
+          request.onsuccess = ev => resolve(ev.target.result);
+          request.onerror = ev => reject(ev.target.error);
+        });
+
+        const transaction = db.transaction(storeName, "readwrite");
+        const store = transaction.objectStore(storeName);
+
+        await new Promise((resolve, reject) => {
+          const request = store.delete(id);
+          request.onsuccess = () => resolve();
+          request.onerror = ev => reject(ev.target.error);
+        });
+
+        this.onItemUpdated("deleted", host, [dbName, storeName, id]);
+      } catch (error) {
+        const recordPath = [dbName, storeName, id].join("/");
+        console.error(
+          `Failed to delete indexedDB record: ${recordPath}: ${error}`
         );
       }
-      case "removeDB": {
-        const [host, principal, dbName] = args;
-        return indexedDBHelpers.removeDB(host, principal, dbName);
-      }
-      case "removeDBRecord": {
-        const [host, principal, db, store, id] = args;
-        return indexedDBHelpers.removeDBRecord(host, principal, db, store, id);
-      }
-      case "clearDBStore": {
-        const [host, principal, db, store] = args;
-        return indexedDBHelpers.clearDBStore(host, principal, db, store);
-      }
-      default:
-        console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);
-        throw new Error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD");
-    }
-  },
-};
 
-/**
- * E10S parent/child setup helpers
- */
+      if (db) {
+        db.close();
+      }
 
-exports.setupParentProcessForIndexedDB = function({ mm, prefix }) {
-  mm.addMessageListener(
-    "debug:storage-indexedDB-request-parent",
-    indexedDBHelpers.handleChildRequest
-  );
-
-  return {
-    onDisconnected: () => {
-      mm.removeMessageListener(
-        "debug:storage-indexedDB-request-parent",
-        indexedDBHelpers.handleChildRequest
-      );
+      return null;
     },
-  };
-};
+
+    async clearDBStore(host, principal, dbName, storeName) {
+      let db;
+      const { name, storage } = this.splitNameAndStorage(dbName);
+
+      try {
+        db = await new Promise((resolve, reject) => {
+          const request = this.openWithPrincipal(principal, name, storage);
+          request.onsuccess = ev => resolve(ev.target.result);
+          request.onerror = ev => reject(ev.target.error);
+        });
+
+        const transaction = db.transaction(storeName, "readwrite");
+        const store = transaction.objectStore(storeName);
+
+        await new Promise((resolve, reject) => {
+          const request = store.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = ev => reject(ev.target.error);
+        });
+
+        this.onItemUpdated("cleared", host, [dbName, storeName]);
+      } catch (error) {
+        const storePath = [dbName, storeName].join("/");
+        console.error(
+          `Failed to clear indexedDB store: ${storePath}: ${error}`
+        );
+      }
+
+      if (db) {
+        db.close();
+      }
+
+      return null;
+    },
+
+    /**
+     * Fetches all the databases and their metadata for the given `host`.
+     */
+    async getDBNamesForHost(host, principal) {
+      const sanitizedHost =
+        this.getSanitizedHost(host) + principal.originSuffix;
+      const profileDir = PathUtils.profileDir;
+      const storagePath = PathUtils.join(profileDir, "storage");
+      const files = [];
+      const names = [];
+
+      // We expect sqlite DB paths to look something like this:
+      // - PathToProfileDir/storage/default/http+++www.example.com/
+      //   idb/1556056096MeysDaabta.sqlite
+      // - PathToProfileDir/storage/permanent/http+++www.example.com/
+      //   idb/1556056096MeysDaabta.sqlite
+      // - PathToProfileDir/storage/temporary/http+++www.example.com/
+      //   idb/1556056096MeysDaabta.sqlite
+      // The subdirectory inside the storage folder is determined by the storage
+      // type:
+      // - default:   { storage: "default" } or not specified.
+      // - permanent: { storage: "persistent" }.
+      // - temporary: { storage: "temporary" }.
+      const sqliteFiles = await this.findSqlitePathsForHost(
+        storagePath,
+        sanitizedHost
+      );
+
+      for (const file of sqliteFiles) {
+        const splitPath = PathUtils.split(file);
+        const idbIndex = splitPath.indexOf("idb");
+        const storage = splitPath[idbIndex - 2];
+        const relative = file.substr(profileDir.length + 1);
+
+        files.push({
+          file: relative,
+          storage: storage === "permanent" ? "persistent" : storage,
+        });
+      }
+
+      if (files.length) {
+        for (const { file, storage } of files) {
+          const name = await this.getNameFromDatabaseFile(file);
+          if (name) {
+            names.push({
+              name,
+              storage,
+            });
+          }
+        }
+      }
+
+      return { names };
+    },
+
+    /**
+     * Find all SQLite files that hold IndexedDB data for a host, such as:
+     *   storage/temporary/http+++www.example.com/idb/1556056096MeysDaabta.sqlite
+     */
+    async findSqlitePathsForHost(storagePath, sanitizedHost) {
+      const sqlitePaths = [];
+      const idbPaths = await this.findIDBPathsForHost(
+        storagePath,
+        sanitizedHost
+      );
+      for (const idbPath of idbPaths) {
+        const children = await IOUtils.getChildren(idbPath);
+
+        for (const path of children) {
+          const exists = await IOUtils.exists(path);
+          if (!exists) {
+            continue;
+          }
+
+          const stats = await IOUtils.stat(path);
+          if (stats.type !== "directory" && stats.path.endsWith(".sqlite")) {
+            sqlitePaths.push(path);
+          }
+        }
+      }
+      return sqlitePaths;
+    },
+
+    /**
+     * Find all paths that hold IndexedDB data for a host, such as:
+     *   storage/temporary/http+++www.example.com/idb
+     */
+    async findIDBPathsForHost(storagePath, sanitizedHost) {
+      const idbPaths = [];
+      const typePaths = await this.findStorageTypePaths(storagePath);
+      for (const typePath of typePaths) {
+        const idbPath = PathUtils.join(typePath, sanitizedHost, "idb");
+        if (await IOUtils.exists(idbPath)) {
+          idbPaths.push(idbPath);
+        }
+      }
+      return idbPaths;
+    },
+
+    /**
+     * Find all the storage types, such as "default", "permanent", or "temporary".
+     * These names have changed over time, so it seems simpler to look through all
+     * types that currently exist in the profile.
+     */
+    async findStorageTypePaths(storagePath) {
+      const children = await IOUtils.getChildren(storagePath);
+      const typePaths = [];
+
+      for (const path of children) {
+        const exists = await IOUtils.exists(path);
+        if (!exists) {
+          continue;
+        }
+
+        const stats = await IOUtils.stat(path);
+        if (stats.type === "directory") {
+          typePaths.push(path);
+        }
+      }
+
+      return typePaths;
+    },
+
+    /**
+     * Removes any illegal characters from the host name to make it a valid file
+     * name.
+     */
+    getSanitizedHost(host) {
+      if (host.startsWith("about:")) {
+        host = "moz-safe-" + host;
+      }
+      return host.replace(ILLEGAL_CHAR_REGEX, "+");
+    },
+
+    /**
+     * Retrieves the proper indexed db database name from the provided .sqlite
+     * file location.
+     */
+    async getNameFromDatabaseFile(path) {
+      let connection = null;
+      let retryCount = 0;
+
+      // Content pages might be having an open transaction for the same indexed db
+      // which this sqlite file belongs to. In that case, sqlite.openConnection
+      // will throw. Thus we retry for some time to see if lock is removed.
+      while (!connection && retryCount++ < 25) {
+        try {
+          connection = await lazy.Sqlite.openConnection({ path });
+        } catch (ex) {
+          // Continuously retrying is overkill. Waiting for 100ms before next try
+          await sleep(100);
+        }
+      }
+
+      if (!connection) {
+        return null;
+      }
+
+      const rows = await connection.execute("SELECT name FROM database");
+      if (rows.length != 1) {
+        return null;
+      }
+
+      const name = rows[0].getResultByName("name");
+
+      await connection.close();
+
+      return name;
+    },
+
+    async getValuesForHost(
+      host,
+      name = "null",
+      options,
+      hostVsStores,
+      principal
+    ) {
+      name = JSON.parse(name);
+      if (!name || !name.length) {
+        // This means that details about the db in this particular host are
+        // requested.
+        const dbs = [];
+        if (hostVsStores.has(host)) {
+          for (let [, db] of hostVsStores.get(host)) {
+            db = this.patchMetadataMapsAndProtos(db);
+            dbs.push(db.toObject());
+          }
+        }
+        return { dbs };
+      }
+
+      const [db2, objectStore, id] = name;
+      if (!objectStore) {
+        // This means that details about all the object stores in this db are
+        // requested.
+        const objectStores = [];
+        if (hostVsStores.has(host) && hostVsStores.get(host).has(db2)) {
+          let db = hostVsStores.get(host).get(db2);
+
+          db = this.patchMetadataMapsAndProtos(db);
+
+          const objectStores2 = db.objectStores;
+
+          for (const objectStore2 of objectStores2) {
+            objectStores.push(objectStore2[1].toObject());
+          }
+        }
+        return {
+          objectStores,
+        };
+      }
+      // Get either all entries from the object store, or a particular id
+      const storage = hostVsStores.get(host).get(db2).storage;
+      const result = await this.getObjectStoreData(
+        host,
+        principal,
+        db2,
+        storage,
+        {
+          objectStore,
+          id,
+          index: options.index,
+          offset: options.offset,
+          size: options.size,
+        }
+      );
+      return { result };
+    },
+
+    /**
+     * Returns requested entries (or at most MAX_STORE_OBJECT_COUNT) from a particular
+     * objectStore from the db in the given host.
+     *
+     * @param {string} host
+     *        The given host.
+     * @param {nsIPrincipal} principal
+     *        The principal of the given document.
+     * @param {string} dbName
+     *        The name of the indexed db from the above host.
+     * @param {String} storage
+     *        Storage type, either "temporary", "default" or "persistent".
+     * @param {Object} requestOptions
+     *        An object in the following format:
+     *        {
+     *          objectStore: The name of the object store from the above db,
+     *          id:          Id of the requested entry from the above object
+     *                       store. null if all entries from the above object
+     *                       store are requested,
+     *          index:       Name of the IDBIndex to be iterated on while fetching
+     *                       entries. null or "name" if no index is to be
+     *                       iterated,
+     *          offset:      offset of the entries to be fetched,
+     *          size:        The intended size of the entries to be fetched
+     *        }
+     */
+    getObjectStoreData(host, principal, dbName, storage, requestOptions) {
+      const { name } = this.splitNameAndStorage(dbName);
+      const request = this.openWithPrincipal(principal, name, storage);
+
+      return new Promise((resolve, reject) => {
+        let { objectStore, id, index, offset, size } = requestOptions;
+        const data = [];
+        let db;
+
+        if (!size || size > MAX_STORE_OBJECT_COUNT) {
+          size = MAX_STORE_OBJECT_COUNT;
+        }
+
+        request.onsuccess = event => {
+          db = event.target.result;
+
+          const transaction = db.transaction(objectStore, "readonly");
+          let source = transaction.objectStore(objectStore);
+          if (index && index != "name") {
+            source = source.index(index);
+          }
+
+          source.count().onsuccess = event2 => {
+            const objectsSize = [];
+            const count = event2.target.result;
+            objectsSize.push({
+              key: host + dbName + objectStore + index,
+              count,
+            });
+
+            if (!offset) {
+              offset = 0;
+            } else if (offset > count) {
+              db.close();
+              resolve([]);
+              return;
+            }
+
+            if (id) {
+              source.get(id).onsuccess = event3 => {
+                db.close();
+                resolve([{ name: id, value: event3.target.result }]);
+              };
+            } else {
+              source.openCursor().onsuccess = event4 => {
+                const cursor = event4.target.result;
+
+                if (!cursor || data.length >= size) {
+                  db.close();
+                  resolve({
+                    data,
+                    objectsSize,
+                  });
+                  return;
+                }
+                if (offset-- <= 0) {
+                  data.push({ name: cursor.key, value: cursor.value });
+                }
+                cursor.continue();
+              };
+            }
+          };
+        };
+
+        request.onerror = () => {
+          db.close();
+          resolve([]);
+        };
+      });
+    },
+
+    /**
+     * When indexedDB metadata is parsed to and from JSON then the object's
+     * prototype is dropped and any Maps are changed to arrays of arrays. This
+     * method is used to repair the prototypes and fix any broken Maps.
+     */
+    patchMetadataMapsAndProtos(metadata) {
+      const md = Object.create(DatabaseMetadata.prototype);
+      Object.assign(md, metadata);
+
+      md._objectStores = new Map(metadata._objectStores);
+
+      for (const [name, store] of md._objectStores) {
+        const obj = Object.create(ObjectStoreMetadata.prototype);
+        Object.assign(obj, store);
+
+        md._objectStores.set(name, obj);
+
+        if (typeof store._indexes.length !== "undefined") {
+          obj._indexes = new Map(store._indexes);
+        }
+
+        for (const [name2, value] of obj._indexes) {
+          const obj2 = Object.create(IndexMetadata.prototype);
+          Object.assign(obj2, value);
+
+          obj._indexes.set(name2, obj2);
+        }
+      }
+
+      return md;
+    },
+  }
+);
 
 /**
  * General helpers
