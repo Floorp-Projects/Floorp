@@ -65,6 +65,7 @@ add_task(async function() {
   });
 
   const selectRect = await SpecialPowers.spawn(iframeBC, [], async function() {
+    await SpecialPowers.contentTransformsReceived(content);
     const input = content.document.getElementById("select");
     const focusPromise = new Promise(resolve => {
       input.addEventListener("focus", resolve, { once: true });
