@@ -7171,7 +7171,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-12-07T15:13:11Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-01-30T09:23:24Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8913,9 +8913,6 @@ locker
 // locus : 2015-06-25 Locus Analytics LLC
 locus
 
-// loft : 2015-07-30 Annco, Inc.
-loft
-
 // lol : 2015-01-30 XYZ.COM LLC
 lol
 
@@ -9702,9 +9699,6 @@ sener
 // services : 2014-02-27 Binky Moon, LLC
 services
 
-// ses : 2015-07-23 SES
-ses
-
 // seven : 2015-08-06 Seven West Media Ltd
 seven
 
@@ -9789,7 +9783,7 @@ smart
 // smile : 2014-12-18 Amazon Registry Services, Inc.
 smile
 
-// sncf : 2015-02-19 Société Nationale des Chemins de fer Francais S N C F
+// sncf : 2015-02-19 Société Nationale SNCF
 sncf
 
 // soccer : 2015-03-26 Binky Moon, LLC
@@ -10026,7 +10020,7 @@ toray
 // toshiba : 2014-04-10 TOSHIBA Corporation
 toshiba
 
-// total : 2015-08-06 TOTAL SE
+// total : 2015-08-06 TotalEnergies SE
 total
 
 // tours : 2015-01-22 Binky Moon, LLC
