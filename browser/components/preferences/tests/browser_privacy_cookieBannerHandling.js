@@ -77,7 +77,7 @@ add_task(async function test_checkbox_unchecked_detect_only_mode() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT],
+      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
       [DETECT_ONLY_PREF, true],
     ],
   });
@@ -138,7 +138,7 @@ add_task(async function test_checkbox_modifies_mode_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT],
+      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
     ],
   });
 
@@ -172,9 +172,9 @@ add_task(async function test_checkbox_modifies_mode_pref() {
       );
       Assert.ok(checkbox.checked, "checkbox should be checked");
       Assert.equal(
-        Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+        Ci.nsICookieBannerService.MODE_REJECT,
         Services.prefs.getIntPref(MODE_PREF),
-        "cookie banner handling mode should be set to REJECT_OR_ACCEPT mode after checking the checkbox"
+        "cookie banner handling mode should be set to REJECT mode after checking the checkbox"
       );
     }
   );
