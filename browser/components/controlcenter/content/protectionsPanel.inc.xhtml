@@ -68,18 +68,21 @@
         </hbox>
 
         <toolbarseparator id="protections-popup-cookie-banner-section-separator"></toolbarseparator>
-        <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section" uiDisabled="true" enabled="true" flex="1">
-          <toolbarbutton id="protections-popup-cookie-banner-switch"
-                         class="subviewbutton subviewbutton-nav"
-                         onclick="gProtectionsHandler.onCookieBannerClick()"
-                         flex="1">
-            <vbox flex="1">
-              <label role="heading" class="protections-popup-switch-header" aria-level="2" data-l10n-id="protections-panel-cookie-banner-handling-header"></label>
-              <description id="protections-popup-cookie-banner-undetected" data-l10n-id="protections-panel-cookie-banner-handling-undetected"></description>
-              <description id="protections-popup-cookie-banner-disabled" data-l10n-id="protections-panel-cookie-banner-handling-disabled"></description>
-              <description id="protections-popup-cookie-banner-enabled" data-l10n-id="protections-panel-cookie-banner-handling-enabled"></description>
-            </vbox>
-          </toolbarbutton>
+        <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section protections-popup-switch-section" uiDisabled="true">
+          <vbox class="protections-popup-tp-switch-label-box" flex="1" align="start">
+            <label class="protections-popup-switch-header protections-popup-cookie-banner-switch-on-header"
+                   role="heading"
+                   aria-level="2" data-l10n-id="protections-panel-cookie-banner-handling-on-header"></label>
+            <label class="protections-popup-switch-header protections-popup-cookie-banner-switch-off-header"
+                   role="heading"
+                   aria-level="2" data-l10n-id="protections-panel-cookie-banner-handling-off-header"></label>
+          </vbox>
+          <vbox class="protections-popup-tp-switch-box">
+            <toolbarbutton id="protections-popup-cookie-banner-switch"
+                           class="protections-popup-tp-switch"
+                           enabled="false"
+                           oncommand="gProtectionsHandler.onCookieBannerSwitchCommand()" />
+          </vbox>
         </hbox>
 
         <!-- Tracking Protection Section -->
@@ -385,47 +388,6 @@
                   default="true"
                   data-l10n-id="protections-panel-content-blocking-breakage-report-view-send-report"
                   oncommand="gProtectionsHandler.onSendReportClicked(); gProtectionsHandler.recordClick('send_report_submit');"/>
-        </vbox>
-    </panelview>
-
-    <!-- Cookie Banner SubView -->
-    <panelview id="protections-popup-cookieBannerView"
-               class="PanelUI-subView"
-               role="document"
-               data-l10n-id="protections-panel-cookie-banner-view-title">
-        <vbox class="panel-header">
-          <toolbarbutton class="subviewbutton subviewbutton-iconic subviewbutton-back"
-                         data-l10n-id="protections-panel-cookie-banner-view-go-back"
-                         closemenu="none"
-                         tabindex="0"
-                         oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();">
-            <image class="toolbarbutton-icon"></image>
-            <label class="toolbarbutton-text" crop="right" flex="1"></label>
-          </toolbarbutton>
-          <h1><span data-l10n-id="protections-panel-cookie-banner-handling-header"></span></h1>
-        </vbox>
-        <toolbarseparator />
-        <vbox id="protections-popup-cookieBannerView-heading"
-              class="protections-popup-description protections-popup-cookiesView-list-section">
-          <description id="cookieBannerView-disable-site" data-l10n-id="protections-panel-cookie-banner-view-turn-off-for-site" data-l10n-args='{"host":""}'></description>
-          <description id="cookieBannerView-enable-site" data-l10n-id="protections-panel-cookie-banner-view-turn-on-for-site" data-l10n-args='{"host":""}'></description>
-          <description id="cookieBannerView-disable-site-warning" data-l10n-id="protections-panel-cookie-banner-view-cookie-clear-warning"></description>
-        </vbox>
-        <vbox class="panel-footer protections-popup-cookieBannerView-footer">
-          <button id="protections-popup-cookieBannerView-cancel"
-                    data-l10n-id="protections-panel-cookie-banner-view-cancel"
-                    oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"
-                    class="subviewbutton panel-subview-footer-button" />
-          <button id="protections-popup-cookieBannerView-enable-button"
-                    data-l10n-id="protections-panel-cookie-banner-view-turn-on"
-                    oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
-                    default="true"
-                    class="subviewbutton panel-subview-footer-button" />
-          <button id="protections-popup-cookieBannerView-disable-button"
-                    data-l10n-id="protections-panel-cookie-banner-view-turn-off"
-                    oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
-                    default="true"
-                    class="subviewbutton panel-subview-footer-button" />
         </vbox>
     </panelview>
   </panelmultiview>
