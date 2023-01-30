@@ -2460,12 +2460,17 @@ void DocAccessible::PutChildrenBack(
 }
 
 void DocAccessible::TrackMovedAccessible(LocalAccessible* aAcc) {
+  MOZ_ASSERT(aAcc->mDoc == this);
   // If an Accessible is inserted and moved during the same tick, don't track
   // it as a move because it hasn't been shown yet.
   if (!mInsertedAccessibles.Contains(aAcc)) {
     mMovedAccessibles.EnsureInserted(aAcc);
   }
   // When we move an Accessible, we're also moving its descendants.
+  if (aAcc->IsOuterDoc()) {
+    // Don't descend into other documents.
+    return;
+  }
   for (uint32_t c = 0, count = aAcc->ContentChildCount(); c < count; ++c) {
     TrackMovedAccessible(aAcc->ContentChildAt(c));
   }
