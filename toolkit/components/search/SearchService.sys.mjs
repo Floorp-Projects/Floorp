@@ -1799,7 +1799,7 @@ export class SearchService {
           continue;
         }
 
-        policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+        policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
           engine._extensionID
         );
         locale =
@@ -1828,7 +1828,7 @@ export class SearchService {
       } else {
         // This is an existing engine that we should update (we don't know if
         // the configuration for this engine has changed or not).
-        policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+        policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
           engine._extensionID
         );
         locale = engine._locale;
@@ -2553,36 +2553,43 @@ export class SearchService {
 
   /**
    * Creates and adds a WebExtension based engine.
-   * Note: this is currently used for enterprise policy engines as well.
    *
    * @param {object} options
    *   Options for the engine.
-   * @param {string} options.extensionID
-   *   The extension ID being added for the engine.
-   * @param {nsIURI} [options.extensionBaseURI]
-   *   The base URI of the extension.
-   * @param {boolean} options.isAppProvided
-   *   True if the WebExtension is built-in or installed into the system scope.
-   * @param {object} options.manifest
-   *   An object that represents the extension's manifest.
-   * @param {stirng} [options.locale]
+   * @param {Extension} options.extension
+   *   An Extension object containing data about the extension.
+   * @param {string} [options.locale]
    *   The locale to use within the WebExtension. Defaults to the WebExtension's
    *   default locale.
    * @param {initEngine} [options.initEngine]
    *   Set to true if this engine is being loaded during initialisation.
    */
   async _createAndAddEngine({
-    extensionID,
-    extensionBaseURI,
-    isAppProvided,
-    manifest,
+    extension,
     locale = lazy.SearchUtils.DEFAULT_TAG,
     initEngine = false,
   }) {
+    // If we're in the startup cycle, and we've already loaded this engine,
+    // then we use the existing one rather than trying to start from scratch.
+    // This also avoids console errors.
+    if (extension.startupReason == "APP_STARTUP") {
+      let engine = this.#getEngineByWebExtensionDetails({
+        id: extension.id,
+        locale,
+      });
+      if (engine) {
+        lazy.logConsole.debug(
+          "Engine already loaded via settings, skipping due to APP_STARTUP:",
+          extension.id
+        );
+        return engine;
+      }
+    }
+
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!this._initialized && !isAppProvided && !initEngine) {
+    if (!this._initialized && !extension.isAppProvided && !initEngine) {
       await this.init();
     }
 
@@ -2591,7 +2598,7 @@ export class SearchService {
     for (let engine of this._engines.values()) {
       if (
         !engine.extensionID &&
-        engine._loadPath.startsWith(`jar:[profile]/extensions/${extensionID}`)
+        engine._loadPath.startsWith(`jar:[profile]/extensions/${extension.id}`)
       ) {
         // This is a legacy extension engine that needs to be migrated to WebExtensions.
         lazy.logConsole.debug("Migrating existing engine");
@@ -2601,13 +2608,15 @@ export class SearchService {
     }
 
     let newEngine = new lazy.AddonSearchEngine({
-      isAppProvided,
+      isAppProvided: extension.isAppProvided,
       details: {
-        extensionID,
-        extensionBaseURI,
-        manifest,
+        extensionID: extension.id,
         locale,
       },
+    });
+    await newEngine.init({
+      extension,
+      locale,
     });
 
     let existingEngine = this.#getEngineByName(newEngine.name);
@@ -2683,13 +2692,7 @@ export class SearchService {
     lazy.logConsole.debug("installExtensionEngine:", extension.id);
 
     let installLocale = async locale => {
-      let manifest = await this.#getManifestForLocale(extension, locale);
-      return this.#addEngineForManifest(
-        extension,
-        manifest,
-        locale,
-        initEngine
-      );
+      return this._createAndAddEngine({ extension, locale, initEngine });
     };
 
     let engines = [];
@@ -2703,39 +2706,6 @@ export class SearchService {
       engines.push(await installLocale(locale));
     }
     return engines;
-  }
-
-  async #addEngineForManifest(
-    extension,
-    manifest,
-    locale = lazy.SearchUtils.DEFAULT_TAG,
-    initEngine = false
-  ) {
-    // If we're in the startup cycle, and we've already loaded this engine,
-    // then we use the existing one rather than trying to start from scratch.
-    // This also avoids console errors.
-    if (extension.startupReason == "APP_STARTUP") {
-      let engine = this.#getEngineByWebExtensionDetails({
-        id: extension.id,
-        locale,
-      });
-      if (engine) {
-        lazy.logConsole.debug(
-          "Engine already loaded via settings, skipping due to APP_STARTUP:",
-          extension.id
-        );
-        return engine;
-      }
-    }
-
-    return this._createAndAddEngine({
-      extensionID: extension.id,
-      extensionBaseURI: extension.baseURI,
-      isAppProvided: extension.isAppProvided,
-      manifest,
-      locale,
-      initEngine,
-    });
   }
 
   #internalRemoveEngine(engine) {
@@ -3477,7 +3447,7 @@ export class SearchService {
    */
   async _makeEngineFromConfig(config) {
     lazy.logConsole.debug("_makeEngineFromConfig:", config);
-    let policy = await lazy.AddonSearchEngine.getExtensionPolicy(
+    let policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
       config.webExtension.id
     );
     let locale =
@@ -3485,18 +3455,19 @@ export class SearchService {
         ? config.webExtension.locale
         : lazy.SearchUtils.DEFAULT_TAG;
 
-    let manifest = await this.#getManifestForLocale(policy.extension, locale);
-
-    return new lazy.AddonSearchEngine({
+    let engine = new lazy.AddonSearchEngine({
       isAppProvided: policy.extension.isAppProvided,
       details: {
         extensionID: policy.extension.id,
-        extensionBaseURI: policy.extension.baseURI,
-        manifest,
         locale,
-        config,
       },
     });
+    await engine.init({
+      extension: policy.extension,
+      locale,
+      config,
+    });
+    return engine;
   }
 
   /**
