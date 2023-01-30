@@ -106,7 +106,3 @@ WEBIDL_FILES += [
     "Glean.webidl",
     "GleanPings.webidl",
 ]
-
-WEBIDL_FILES += [
-    "PrioEncoder.webidl",
-]

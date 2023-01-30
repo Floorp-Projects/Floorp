@@ -21,7 +21,6 @@ if CONFIG["OS_TARGET"] != "Android":
         "TestCounters.cpp",
         "TestEvents.cpp",
         "TestHistograms.cpp",
-        "TestOrigins.cpp",
         "TestScalars.cpp",
     ]
 
