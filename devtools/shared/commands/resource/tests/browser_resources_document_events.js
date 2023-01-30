@@ -12,10 +12,6 @@ add_task(async function() {
   await testIframeNavigation();
   await testBfCacheNavigation();
   await testDomCompleteWithWindowStop();
-
-  // Enable server side target switching for next test
-  // as the regression it tracks only occurs with server side target switching enabled
-  await pushPref("devtools.target-switching.server.enabled", true);
   await testCrossOriginNavigation();
 });
 

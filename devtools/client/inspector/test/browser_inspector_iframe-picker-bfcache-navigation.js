@@ -111,22 +111,11 @@ add_task(async function() {
 });
 
 function getOnInspectorReadyAfterNavigation(inspector) {
-  const promises = [inspector.once("reloaded")];
-
-  if (
-    isFissionEnabled() ||
-    isServerTargetSwitchingEnabled() ||
-    isEveryFrameTargetEnabled()
-  ) {
+  return Promise.all([
+    inspector.once("reloaded"),
     // the inspector is initializing the accessibility front in onTargetAvailable, so we
     // need to wait for the target to be processed, otherwise we may end up with pending
     // promises failures.
-    promises.push(
-      inspector.toolbox.commands.targetCommand.once(
-        "processed-available-target"
-      )
-    );
-  }
-
-  return Promise.all(promises);
+    inspector.toolbox.commands.targetCommand.once("processed-available-target"),
+  ]);
 }

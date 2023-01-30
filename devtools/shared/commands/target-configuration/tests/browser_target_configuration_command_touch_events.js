@@ -11,9 +11,6 @@ add_task(async function() {
   // Disable click hold and double tap zooming as it might interfere with the test
   await pushPref("ui.click_hold_context_menus", false);
   await pushPref("apz.allow_double_tap_zooming", false);
-  // We turn server-side target switching on so touch simulation is enabled when navigating
-  // to a different origin (See Bug 1704029).
-  await pushPref("devtools.target-switching.server.enabled", true);
 
   const tab = await addTab(TEST_URI);
 

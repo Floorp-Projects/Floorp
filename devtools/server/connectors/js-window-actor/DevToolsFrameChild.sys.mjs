@@ -355,8 +355,6 @@ export class DevToolsFrameChild extends JSWindowActorChild {
       // Targets created from the server side, via Watcher actor and DevToolsFrame JSWindow
       // actor pair are following WindowGlobal lifecycle. i.e. will be destroyed on any
       // type of navigation/reload.
-      // Note that if devtools.target-switching.server.enabled is false, the top level target
-      // won't be created via the codepath. Except if we have a bfcache-in-parent navigation.
       followWindowGlobalLifeCycle: true,
       isTopLevelTarget,
       ignoreSubFrames: isEveryFrameTargetEnabled,

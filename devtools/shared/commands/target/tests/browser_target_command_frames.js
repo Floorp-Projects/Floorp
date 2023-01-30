@@ -83,10 +83,8 @@ async function testNavigationToParentProcessDocument() {
   // in our expected listener.
   const onSwitchedTarget1 = targetCommand.once("switched-target");
   await targetCommand.startListening();
-  if (isServerTargetSwitchingEnabled()) {
-    info("wait for first top level target");
-    await onSwitchedTarget1;
-  }
+  info("wait for first top level target");
+  await onSwitchedTarget1;
 
   const firstTarget = targetCommand.targetFront;
   is(firstTarget.url, firstLocation, "first target url is correct");
@@ -154,10 +152,8 @@ async function testNavigationToAboutBlankDocument() {
   // in our expected listener.
   const onSwitchedTarget1 = targetCommand.once("switched-target");
   await targetCommand.startListening();
-  if (isServerTargetSwitchingEnabled()) {
-    info("wait for first top level target");
-    await onSwitchedTarget1;
-  }
+  info("wait for first top level target");
+  await onSwitchedTarget1;
 
   const firstTarget = targetCommand.targetFront;
   is(firstTarget.url, firstLocation, "first target url is correct");
@@ -169,28 +165,18 @@ async function testNavigationToAboutBlankDocument() {
   await BrowserTestUtils.loadURIString(browser, secondLocation);
   await onLoaded;
 
-  if (isServerTargetSwitchingEnabled()) {
-    await onSwitchedTarget;
-    isnot(targetCommand.targetFront, firstTarget, "got a new target");
+  await onSwitchedTarget;
+  isnot(targetCommand.targetFront, firstTarget, "got a new target");
 
-    // Check that calling getAllTargets([frame]) return the same target instances
-    const frames = await targetCommand.getAllTargets([
-      targetCommand.TYPES.FRAME,
-    ]);
-    is(frames.length, 1);
-    is(frames[0].url, secondLocation, "second target url is correct");
-    is(
-      frames[0],
-      targetCommand.targetFront,
-      "second target is the current top level one"
-    );
-  } else {
-    is(
-      targetCommand.targetFront,
-      firstTarget,
-      "without server target switching, we stay on the same top level target"
-    );
-  }
+  // Check that calling getAllTargets([frame]) return the same target instances
+  const frames = await targetCommand.getAllTargets([targetCommand.TYPES.FRAME]);
+  is(frames.length, 1);
+  is(frames[0].url, secondLocation, "second target url is correct");
+  is(
+    frames[0],
+    targetCommand.targetFront,
+    "second target is the current top level one"
+  );
 
   await commands.destroy();
 }
@@ -503,10 +489,7 @@ async function testTabFrames(mainRoot) {
   info("Navigate to another domain and process (if fission is enabled)");
   // When a new target will be created, we need to wait until it's fully processed
   // to avoid pending promises.
-  const onNewTargetProcessed =
-    isFissionEnabled() || isServerTargetSwitchingEnabled()
-      ? targetCommand.once("processed-available-target")
-      : null;
+  const onNewTargetProcessed = targetCommand.once("processed-available-target");
 
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
@@ -564,7 +547,7 @@ async function testTabFrames(mainRoot) {
       true,
       "the target destruction is flagged as target switching"
     );
-  } else if (isServerTargetSwitchingEnabled()) {
+  } else {
     await waitFor(
       () => targets.length == 2,
       "Wait for all expected targets after navigation"
@@ -586,18 +569,6 @@ async function testTabFrames(mainRoot) {
     ok(
       targets[0].targetFront.isDestroyed(),
       "but the previous one is destroyed"
-    );
-  } else {
-    is(targets.length, 1, "without fission, we always have only one target");
-    is(destroyedTargets.length, 0, "no target should be destroyed");
-    is(
-      targetCommand.targetFront,
-      targets[0].targetFront,
-      "and that unique target is always the same"
-    );
-    ok(
-      !targetCommand.targetFront.isDestroyed(),
-      "and that target is never destroyed"
     );
   }
 

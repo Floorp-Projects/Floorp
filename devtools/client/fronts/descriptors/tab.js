@@ -28,8 +28,6 @@ const {
   DescriptorMixin,
 } = require("resource://devtools/client/fronts/descriptors/descriptor-mixin.js");
 
-const SERVER_TARGET_SWITCHING_ENABLED_PREF =
-  "devtools.target-switching.server.enabled";
 const POPUP_DEBUG_PREF = "devtools.popups.debug";
 
 /**
@@ -143,12 +141,7 @@ class TabDescriptorFront extends DescriptorMixin(
   }
 
   isServerTargetSwitchingEnabled() {
-    const isEnabled = Services.prefs.getBoolPref(
-      SERVER_TARGET_SWITCHING_ENABLED_PREF,
-      false
-    );
-    const enabled = isEnabled && !this._disableTargetSwitching;
-    return enabled;
+    return !this._disableTargetSwitching;
   }
 
   /**
