@@ -15,11 +15,13 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.MetricController
@@ -35,6 +37,7 @@ import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 class TelemetryMiddleware(
     private val settings: Settings,
     private val metrics: MetricController,
+    private val crashReporting: CrashReporting? = null,
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("TelemetryMiddleware")
@@ -62,6 +65,10 @@ class TelemetryMiddleware(
             }
             is ContentAction.CheckForFormDataExceptionAction -> {
                 Events.formDataFailure.record(NoExtras())
+                if (Config.channel.isNightlyOrDebug) {
+                    crashReporting?.submitCaughtException(action.throwable)
+                }
+                return
             }
             else -> {
                 // no-op

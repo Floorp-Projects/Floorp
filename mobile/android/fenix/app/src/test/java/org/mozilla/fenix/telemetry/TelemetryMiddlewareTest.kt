@@ -35,6 +35,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
+import org.robolectric.shadows.ShadowLooper
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -358,6 +359,9 @@ class TelemetryMiddlewareTest {
         store.dispatch(
             ContentAction.CheckForFormDataExceptionAction("1", RuntimeException("session form data request failed")),
         ).joinBlocking()
+
+        // Wait for the main looper to process the re-thrown exception.
+        ShadowLooper.idleMainLooper()
 
         assertNotNull(Events.formDataFailure.testGetValue())
     }
