@@ -9,7 +9,7 @@
           }
         ]
       },
-      "schema": 1673982797783,
+      "schema": 1674147734571,
       "appliesTo": [
         {
           "included": {
@@ -34,6 +34,22 @@
             }
           ],
           "telemetryId": "ddg-esr"
+        },
+        {
+          "override": "true",
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "lm",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
         }
       ],
       "extraParams": [
@@ -49,7 +65,7 @@
         "id": "ddg@search.mozilla.org"
       },
       "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
-      "last_modified": 1674147734521
+      "last_modified": 1674751976728
     },
     {
       "schema": 1673982699337,
@@ -2750,5 +2766,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1674147734521
+  "timestamp": 1674751976728
 }
