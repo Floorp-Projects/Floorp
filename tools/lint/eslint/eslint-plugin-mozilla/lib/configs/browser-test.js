@@ -23,7 +23,6 @@ module.exports = {
     PromiseDebugging: false,
     SpecialPowers: false,
     TestUtils: false,
-    XPCNativeWrapper: false,
     addLoadEvent: false,
     add_setup: false,
     add_task: false,
