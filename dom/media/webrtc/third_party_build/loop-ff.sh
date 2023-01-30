@@ -104,6 +104,11 @@ fi
 
 echo_log "==================="
 
+COMMITS_REMAINING=`cd $MOZ_LIBWEBRTC_SRC ; \
+   git log --oneline $MOZ_LIBWEBRTC_BASE..$MOZ_TARGET_UPSTREAM_BRANCH_HEAD \
+   | wc -l | tr -d " "`
+echo_log "Commits remaining: $COMMITS_REMAINING"
+
 ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
 has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
 When fixed, please resume this script with the following command:
