@@ -31,7 +31,7 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
     for (uint32_t csrc : packet_info.csrcs()) {
       SourceKey key(RtpSourceType::CSRC, csrc);
       SourceEntry& entry = UpdateEntry(key);
-      const auto packet_time = packet_info.receive_time_ms();
+      const auto packet_time = packet_info.receive_time().ms();
       entry.timestamp_ms = packet_time ? packet_time : now_ms;
       entry.audio_level = packet_info.audio_level();
       entry.absolute_capture_time = packet_info.absolute_capture_time();
