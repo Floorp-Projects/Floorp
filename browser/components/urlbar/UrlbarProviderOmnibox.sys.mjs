@@ -179,6 +179,7 @@ class ProviderOmnibox extends UrlbarProvider {
                   queryContext.tokens[0].value,
                   UrlbarUtils.HIGHLIGHT.TYPED,
                 ],
+                blockL10n: { id: "urlbar-result-menu-dismiss-firefox-suggest" },
                 isBlockable: suggestion.deletable,
                 icon: UrlbarUtils.ICON.EXTENSION,
               }
