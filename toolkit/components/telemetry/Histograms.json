@@ -10791,10 +10791,10 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["media-alerts@mozilla.com"],
-    "expires_in_version": "112",
+    "expires_in_version": "118",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
-    "bug_numbers": [1429986, 1570634, 1606206, 1689266, 1754643]
+    "bug_numbers": [1429986, 1570634, 1606206, 1689266, 1754643, 1813150]
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
