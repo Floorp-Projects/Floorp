@@ -49,7 +49,7 @@ struct WakeLockInformation {
 
 namespace hal_sandbox {
 
-[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PHal {
     manager PContent;
 
