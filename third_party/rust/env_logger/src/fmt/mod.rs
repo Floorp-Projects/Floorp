@@ -202,9 +202,9 @@ impl Builder {
     }
 }
 
-#[cfg(feature = "color")]
+#[cfg(feature = "termcolor")]
 type SubtleStyle = StyledValue<'static, &'static str>;
-#[cfg(not(feature = "color"))]
+#[cfg(not(feature = "termcolor"))]
 type SubtleStyle = &'static str;
 
 /// The default format.
@@ -233,7 +233,7 @@ impl<'a> DefaultFormat<'a> {
     }
 
     fn subtle_style(&self, text: &'static str) -> SubtleStyle {
-        #[cfg(feature = "color")]
+        #[cfg(feature = "termcolor")]
         {
             self.buf
                 .style()
@@ -242,7 +242,7 @@ impl<'a> DefaultFormat<'a> {
                 .clone()
                 .into_value(text)
         }
-        #[cfg(not(feature = "color"))]
+        #[cfg(not(feature = "termcolor"))]
         {
             text
         }
@@ -268,11 +268,11 @@ impl<'a> DefaultFormat<'a> {
         }
 
         let level = {
-            #[cfg(feature = "color")]
+            #[cfg(feature = "termcolor")]
             {
                 self.buf.default_styled_level(record.level())
             }
-            #[cfg(not(feature = "color"))]
+            #[cfg(not(feature = "termcolor"))]
             {
                 record.level()
             }
