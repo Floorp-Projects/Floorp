@@ -10,6 +10,7 @@
 #if defined(XP_WIN)
 
 #  include <windows.h>
+#  include "mozilla/Maybe.h"
 
 #  define POLICY_REGKEY_NAME L"SOFTWARE\\Policies\\Mozilla\\" MOZ_APP_BASENAME
 
@@ -17,21 +18,42 @@
 
 namespace mozilla {
 
-inline bool PolicyHasRegValue(HKEY aKey, LPCWSTR aName, DWORD* aValue) {
-  DWORD len = sizeof(DWORD);
-  LONG ret = ::RegGetValueW(aKey, POLICY_REGKEY_NAME, aName, RRF_RT_DWORD,
-                            nullptr, aValue, &len);
-  return ret == ERROR_SUCCESS;
+// Returns Some(true) if the registry value is 1
+// Returns Some(false) if the registry value is not 1
+// Returns Nothing() if the registry value is not present
+inline Maybe<bool> PolicyHasRegValueOfOne(HKEY aKey, LPCWSTR aName) {
+  {
+    DWORD len = sizeof(DWORD);
+    DWORD value;
+    LONG ret = ::RegGetValueW(aKey, POLICY_REGKEY_NAME, aName, RRF_RT_DWORD,
+                              nullptr, &value, &len);
+    if (ret == ERROR_SUCCESS) {
+      return Some(value == 1);
+    }
+  }
+  {
+    ULONGLONG value;
+    DWORD len = sizeof(ULONGLONG);
+    LONG ret = ::RegGetValueW(aKey, POLICY_REGKEY_NAME, aName, RRF_RT_QWORD,
+                              nullptr, &value, &len);
+    if (ret == ERROR_SUCCESS) {
+      return Some(value == 1);
+    }
+  }
+  return Nothing();
 }
 
 inline bool PolicyCheckBoolean(LPCWSTR aPolicyName) {
-  DWORD value;
-  if (PolicyHasRegValue(HKEY_LOCAL_MACHINE, aPolicyName, &value)) {
-    return value == 1;
+  Maybe<bool> localMachineResult =
+      PolicyHasRegValueOfOne(HKEY_LOCAL_MACHINE, aPolicyName);
+  if (localMachineResult.isSome()) {
+    return localMachineResult.value();
   }
 
-  if (PolicyHasRegValue(HKEY_CURRENT_USER, aPolicyName, &value)) {
-    return value == 1;
+  Maybe<bool> currentUserResult =
+      PolicyHasRegValueOfOne(HKEY_CURRENT_USER, aPolicyName);
+  if (currentUserResult.isSome()) {
+    return currentUserResult.value();
   }
 
   return false;
