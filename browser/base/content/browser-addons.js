@@ -1258,21 +1258,16 @@ var gUnifiedExtensions = {
     lazy.ExtensionPermissions.addListener(this.permListener);
 
     gNavToolbox.addEventListener("customizationstarting", this);
-    CustomizableUI.addListener(this);
 
     this._initialized = true;
   },
 
   uninit() {
-    if (!this._initialized) {
-      return;
+    if (this.permListener) {
+      lazy.ExtensionPermissions.removeListener(this.permListener);
+      this.permListener = null;
     }
-
-    lazy.ExtensionPermissions.removeListener(this.permListener);
-    this.permListener = null;
-
     gNavToolbox.removeEventListener("customizationstarting", this);
-    CustomizableUI.removeListener(this);
   },
 
   onLocationChange(browser, webProgress, _request, _uri, flags) {
@@ -1626,75 +1621,5 @@ var gUnifiedExtensions = {
     CustomizableUI.addWidgetToArea(widgetId, newArea, newPosition);
 
     this.updateAttention();
-  },
-
-  onWidgetAdded(aWidgetId, aArea, aPosition) {
-    // When we pin a widget to the toolbar from a narrow window, the widget
-    // will be overflowed directly. In this case, we do not want to change the
-    // class name since it is going to be changed by `onWidgetOverflow()`
-    // below.
-    if (CustomizableUI.getWidget(aWidgetId)?.forWindow(window)?.overflowed) {
-      return;
-    }
-
-    const inPanel =
-      CustomizableUI.getAreaType(aArea) !== CustomizableUI.TYPE_TOOLBAR;
-
-    this._updateWidgetClassName(aWidgetId, inPanel);
-  },
-
-  onWidgetOverflow(aNode, aContainer) {
-    // We register a CUI listener for each window so we make sure that we
-    // handle the event for the right window here.
-    if (window !== aNode.ownerGlobal) {
-      return;
-    }
-
-    this._updateWidgetClassName(aNode.getAttribute("widget-id"), true);
-  },
-
-  onWidgetUnderflow(aNode, aContainer) {
-    // We register a CUI listener for each window so we make sure that we
-    // handle the event for the right window here.
-    if (window !== aNode.ownerGlobal) {
-      return;
-    }
-
-    this._updateWidgetClassName(aNode.getAttribute("widget-id"), false);
-  },
-
-  onAreaNodeRegistered(aArea, aContainer) {
-    // We register a CUI listener for each window so we make sure that we
-    // handle the event for the right window here.
-    if (window !== aContainer.ownerGlobal) {
-      return;
-    }
-
-    const inPanel =
-      CustomizableUI.getAreaType(aArea) !== CustomizableUI.TYPE_TOOLBAR;
-
-    for (const widgetId of CustomizableUI.getWidgetIdsInArea(aArea)) {
-      this._updateWidgetClassName(widgetId, inPanel);
-    }
-  },
-
-  // This internal method is used to change some CSS classnames on the action
-  // button of an extension (CUI) widget. When the widget is placed in the
-  // panel, the action button should have the `.subviewbutton` class and not
-  // the `.toolbarbutton-1` one. When NOT placed in the panel, it is the other
-  // way around.
-  _updateWidgetClassName(aWidgetId, inPanel) {
-    if (!CustomizableUI.isWebExtensionWidget(aWidgetId)) {
-      return;
-    }
-
-    const node = CustomizableUI.getWidget(aWidgetId)?.forWindow(window)?.node;
-    if (node) {
-      const actionButton = node.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      actionButton.classList.toggle("subviewbutton", inPanel);
-      actionButton.classList.toggle("toolbarbutton-1", !inPanel);
-    }
   },
 };
