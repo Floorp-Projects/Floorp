@@ -98,8 +98,8 @@ class GeckoViewModule {
     this._eventProxy.registerListener(aEventList);
   }
 
-  unregisterListener() {
-    this._eventProxy.unregisterListener();
+  unregisterListener(aEventList) {
+    this._eventProxy.unregisterListener(aEventList);
   }
 }
 
@@ -118,13 +118,21 @@ class EventProxy {
     this._registeredEvents = this._registeredEvents.concat(aEventList);
   }
 
-  unregisterListener() {
+  unregisterListener(aEventList) {
     debug`unregisterListener`;
     if (this._registeredEvents.length === 0) {
       return;
     }
-    this.eventDispatcher.unregisterListener(this, this._registeredEvents);
-    this._registeredEvents = [];
+
+    if (!aEventList) {
+      this.eventDispatcher.unregisterListener(this, this._registeredEvents);
+      this._registeredEvents = [];
+    } else {
+      this.eventDispatcher.unregisterListener(this, aEventList);
+      this._registeredEvents = this._registeredEvents.filter(
+        e => !aEventList.includes(e)
+      );
+    }
   }
 
   onEvent(aEvent, aData, aCallback) {

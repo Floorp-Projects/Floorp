@@ -113,6 +113,15 @@ const JSWINDOWACTORS = {
     },
     allFrames: true,
   },
+  GeckoViewPdfjs: {
+    parent: {
+      esModuleURI: "resource://pdf.js/GeckoViewPdfjsParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://pdf.js/GeckoViewPdfjsChild.sys.mjs",
+    },
+    allFrames: true,
+  },
 };
 
 class GeckoViewStartup {

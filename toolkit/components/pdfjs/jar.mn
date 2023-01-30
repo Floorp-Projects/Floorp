@@ -1,16 +1,25 @@
 pdfjs.jar:
 % resource pdf.js %content/
- content/ (content/*.jsm)
+ content/PdfJs.jsm (content/PdfJs.jsm)
+ content/PdfJsDefaultPreferences.jsm (content/PdfJsDefaultPreferences.jsm)
+ content/PdfJsNetwork.jsm (content/PdfJsNetwork.jsm)
+ content/PdfJsTelemetry.jsm (content/PdfJsTelemetry.jsm)
+ content/PdfSandbox.jsm (content/PdfSandbox.jsm)
+ content/PdfStreamConverter.jsm (content/PdfStreamConverter.jsm)
  content/build/	(content/build/*)
  content/web/cmaps/	(content/web/cmaps/*)
  content/web/standard_fonts/	(content/web/standard_fonts/*)
  content/web/images/	(content/web/images/annotation-*.svg)
  content/web/images/loading-icon.gif	(content/web/images/loading-icon.gif)
 #ifdef ANDROID
+ content/GeckoViewPdfjsParent.sys.mjs (content/GeckoViewPdfjsParent.sys.mjs)
+ content/GeckoViewPdfjsChild.sys.mjs (content/GeckoViewPdfjsChild.sys.mjs)
  content/web/viewer.html (content/web/viewer-geckoview.html)
  content/web/viewer.css (content/web/viewer-geckoview.css)
  content/web/viewer.js (content/web/viewer-geckoview.js)
 #else
+ content/PdfjsParent.jsm (content/PdfjsParent.jsm)
+ content/PdfjsChild.jsm (content/PdfjsChild.jsm)
  content/web/viewer.html (content/web/viewer.html)
  content/web/viewer.css (content/web/viewer.css)
  content/web/viewer.js (content/web/viewer.js)
