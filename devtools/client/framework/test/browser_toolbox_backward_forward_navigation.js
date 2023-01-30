@@ -10,7 +10,6 @@ const FILENAME = "doc_backward_forward_navigation.html";
 const TEST_URI_ORG = `${URL_ROOT_ORG_SSL}${FILENAME}`;
 const TEST_URI_COM = `${URL_ROOT_COM_SSL}${FILENAME}`;
 
-/* import-globals-from ../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this

@@ -6,8 +6,6 @@
 // Test that the global Firefox "Select All" functionality (e.g. Edit >
 // Select All) works properly in the Web Console.
 
-/* import-globals-from head.js */
-
 const TEST_URI = "http://example.com/";
 
 add_task(async function testSelectAll() {

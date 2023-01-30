@@ -8,7 +8,6 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this

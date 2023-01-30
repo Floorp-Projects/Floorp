@@ -6,7 +6,6 @@
 // Test that the storage panel is able to display multiple cookies with the same
 // name (and different paths).
 
-/* import-globals-from storage-helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
   this

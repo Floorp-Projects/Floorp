@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* import-globals-from ../../../../client/shared/test/shared-head.js */
-
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this

@@ -1,9 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../test/head.js */
-/* import-globals-from ../../../inspector/rules/test/head.js */
-/* import-globals-from ../../../inspector/test/shared-head.js */
+
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).

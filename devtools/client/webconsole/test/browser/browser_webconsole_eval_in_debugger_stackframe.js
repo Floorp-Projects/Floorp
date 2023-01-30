@@ -5,7 +5,6 @@
 // from the js debugger.
 
 "use strict";
-/* import-globals-from head.js*/
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +

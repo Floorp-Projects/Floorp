@@ -9,7 +9,6 @@
 // Test that the markup view is correctly updated to show those items if the custom
 // element definition happens after opening the inspector.
 
-/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this

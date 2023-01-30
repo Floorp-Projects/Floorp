@@ -7,7 +7,6 @@
 "use strict";
 
 // Import helpers for the inspector
-/* import-globals-from ../../../inspector/test/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
   this

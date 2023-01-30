@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../test/head.js */
 
 "use strict";
 
