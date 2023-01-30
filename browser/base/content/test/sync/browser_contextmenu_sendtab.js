@@ -5,10 +5,10 @@
 
 const kForceOverflowWidthPx = 450;
 
-const chrome_base =
-  "chrome://mochitests/content/browser/browser/base/content/test/general/";
-Services.scriptloader.loadSubScript(chrome_base + "head.js", this);
-/* import-globals-from ../general/head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/base/content/test/general/head.js",
+  this
+);
 
 const fxaDevices = [
   {

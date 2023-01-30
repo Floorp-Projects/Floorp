@@ -5,7 +5,6 @@
 
 // Test engagement telemetry with persisted search terms disabled.
 
-/* import-globals-from head-interaction.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-interaction.js",
   this
