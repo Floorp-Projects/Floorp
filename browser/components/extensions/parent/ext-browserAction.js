@@ -905,14 +905,15 @@ this.browserAction = class extends ExtensionAPIPersistent {
       `;
     };
 
+    let icon16 = IconDetails.getPreferredIcon(icons, this.extension, 16).icon;
     let icon32 = IconDetails.getPreferredIcon(icons, this.extension, 32).icon;
     let icon64 = IconDetails.getPreferredIcon(icons, this.extension, 64).icon;
 
     return `
         ${getStyle("menupanel-image", icon32)}
         ${getStyle("menupanel-image-2x", icon64)}
-        ${getStyle("toolbar-image", icon32)}
-        ${getStyle("toolbar-image-2x", icon64)}
+        ${getStyle("toolbar-image", icon16)}
+        ${getStyle("toolbar-image-2x", icon32)}
       `;
   }
 
