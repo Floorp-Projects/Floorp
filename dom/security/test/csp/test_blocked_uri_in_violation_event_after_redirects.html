@@ -29,11 +29,11 @@ function receiveMessage(event) {
        "Test 1 should be the URI before redirect");
   } else if (blockedURI.includes("test2")) {
     is(blockedURI,
-      "http://test2.example.com/",
+      "http://test2.example.com",
       "Test 2 should be the redirected pre-path URI");
   } else if (blockedURI.includes("test3")) {
     is(blockedURI,
-      "http://test3.example.com/",
+      "http://test3.example.com",
       "Test 3 should be the redirected pre-path URI");
   } else {
   	ok(false, "sanity: how can we end up here?");
@@ -48,7 +48,8 @@ function receiveMessage(event) {
 }
 
 let testframe = document.getElementById("testframe");
-testframe.src = "file_blocked_uri_in_violation_event_after_redirects.html";
+// This has to be same-origin with the test1 URL.
+testframe.src = "http://example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.html";
 
 </script>
 </body>
