@@ -49,12 +49,6 @@ var StarUI = {
     return document.getElementById(aID);
   },
 
-  get showForNewBookmarks() {
-    return Services.prefs.getBoolPref(
-      "browser.bookmarks.editDialog.showForNewBookmarks"
-    );
-  },
-
   // Edit-bookmark panel
   get panel() {
     delete this.panel;
@@ -86,37 +80,10 @@ var StarUI = {
       case "popuphidden": {
         clearTimeout(this._autoCloseTimer);
         if (aEvent.originalTarget == this.panel) {
-          let { selectedFolderGuid, didChangeFolder } = gEditItemOverlay;
-          gEditItemOverlay.uninitPanel(true);
-
-          let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
-          this._removeBookmarksOnPopupHidden = false;
-          let guidsForRemoval = this._itemGuids;
-          this._itemGuids = null;
-
-          if (this._batching) {
-            this.endBatch();
-          }
-
-          if (removeBookmarksOnPopupHidden && guidsForRemoval) {
-            if (this._isNewBookmark) {
-              PlacesTransactions.undo().catch(console.error);
-              break;
-            }
-            // Remove all bookmarks for the bookmark's url, this also removes
-            // the tags for the url.
-            PlacesTransactions.Remove(guidsForRemoval)
-              .transact()
-              .catch(console.error);
-          } else if (this._isNewBookmark) {
-            this.showConfirmation();
-          }
-
-          if (!removeBookmarksOnPopupHidden) {
-            this._storeRecentlyUsedFolder(
-              selectedFolderGuid,
-              didChangeFolder
-            ).catch(console.error);
+          if (gEditItemOverlay.delayedApplyEnabled) {
+            this._handlePopupHiddenEvent().catch(console.error);
+          } else {
+            this._handlePopupHiddenEventInstantApply().catch(console.error);
           }
         }
         break;
@@ -208,6 +175,77 @@ var StarUI = {
     }
   },
 
+  /**
+   * Handle popup hidden event in delayed apply mode.
+   */
+  async _handlePopupHiddenEvent() {
+    const {
+      bookmarkState,
+      didChangeFolder,
+      selectedFolderGuid,
+    } = gEditItemOverlay;
+    gEditItemOverlay.uninitPanel(true);
+
+    // Capture _removeBookmarksOnPopupHidden and _itemGuids values. Reset them
+    // before we handle the next popup.
+    const removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
+    this._removeBookmarksOnPopupHidden = false;
+    const guidsForRemoval = this._itemGuids;
+    this._itemGuids = null;
+
+    if (removeBookmarksOnPopupHidden && guidsForRemoval) {
+      if (!this._isNewBookmark) {
+        // Remove all bookmarks for the bookmark's url, this also removes
+        // the tags for the url.
+        await PlacesTransactions.Remove(guidsForRemoval).transact();
+      } else {
+        BookmarkingUI.star.removeAttribute("starred");
+      }
+      return;
+    }
+
+    await bookmarkState.save();
+    if (this._isNewBookmark) {
+      this.showConfirmation();
+    }
+    await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
+  },
+
+  /**
+   * Handle popup hidden event in instant apply mode.
+   */
+  async _handlePopupHiddenEventInstantApply() {
+    const { selectedFolderGuid, didChangeFolder } = gEditItemOverlay;
+    gEditItemOverlay.uninitPanel(true);
+
+    // Capture _removeBookmarksOnPopupHidden and _itemGuids values. Reset them
+    // before we handle the next popup.
+    const removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
+    this._removeBookmarksOnPopupHidden = false;
+    const guidsForRemoval = this._itemGuids;
+    this._itemGuids = null;
+
+    if (this._batching) {
+      this.endBatch();
+    }
+
+    if (removeBookmarksOnPopupHidden && guidsForRemoval) {
+      if (this._isNewBookmark) {
+        await PlacesTransactions.undo();
+        return;
+      }
+      // Remove all bookmarks for the bookmark's url, this also removes
+      // the tags for the url.
+      await PlacesTransactions.Remove(guidsForRemoval).transact();
+    } else if (this._isNewBookmark) {
+      this.showConfirmation();
+    }
+
+    if (!removeBookmarksOnPopupHidden) {
+      await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
+    }
+  },
+
   async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
@@ -248,7 +286,9 @@ var StarUI = {
 
     this._setIconAndPreviewImage();
 
-    this.beginBatch();
+    if (!gEditItemOverlay.delayedApplyEnabled) {
+      this.beginBatch();
+    }
 
     let onPanelReady = fn => {
       let target = this.panel;
@@ -428,6 +468,12 @@ var StarUI = {
   },
 };
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  StarUI,
+  "showForNewBookmarks",
+  "browser.bookmarks.editDialog.showForNewBookmarks"
+);
+
 var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the current browser.
@@ -468,14 +514,22 @@ var PlacesCommandHook = {
         console.error(e);
       }
 
-      if (showEditUI) {
+      if (showEditUI && !gEditItemOverlay.delayedApplyEnabled) {
         // If we bookmark the page here but open right into a cancelable
         // state (i.e. new bookmark in Library), start batching here so
         // all of the actions can be undone in a single undo step.
         StarUI.beginBatch();
       }
 
-      info.guid = await PlacesTransactions.NewBookmark(info).transact();
+      if (
+        !gEditItemOverlay.delayedApplyEnabled ||
+        !StarUI.showForNewBookmarks
+      ) {
+        info.guid = await PlacesTransactions.NewBookmark(info).transact();
+      } else {
+        info.guid = PlacesUtils.bookmarks.unsavedGuid;
+        BookmarkingUI.star.setAttribute("starred", "true");
+      }
 
       if (charset) {
         PlacesUIUtils.setCharsetForPage(url, charset, window).catch(

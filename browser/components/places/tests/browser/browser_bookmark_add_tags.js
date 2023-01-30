@@ -134,6 +134,80 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
+add_task(
+  async function test_add_bookmark_tags_from_bookmarkProperties_delayed_apply() {
+    const TEST_URL = "about:robots";
+
+    // Open a new window with delayed apply enabled.
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
+    });
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+
+    // Cleanup.
+    registerCleanupFunction(async () => {
+      await BrowserTestUtils.closeWindow(win);
+    });
+
+    await BrowserTestUtils.withNewTab(
+      { gBrowser: win.gBrowser, url: TEST_URL },
+      async () => {
+        win.StarUI._createPanelIfNeeded();
+
+        // Click the bookmark star.
+        const panel = win.document.getElementById("editBookmarkPanel");
+        const star = win.BookmarkingUI.star;
+        let shownPromise = promisePopupShown(panel);
+        star.click();
+        await shownPromise;
+
+        // Add a tag and save changes.
+        await fillBookmarkTextField("editBMPanel_tagsField", "tag1", win);
+        const doneButton = win.document.getElementById(
+          "editBookmarkPanelDoneButton"
+        );
+        const bookmarkAddedPromise = PlacesTestUtils.waitForNotification(
+          "bookmark-added",
+          events => events.some(({ url }) => !url || url == TEST_URL),
+          "places"
+        );
+        doneButton.click();
+        await bookmarkAddedPromise;
+        Assert.deepEqual(
+          PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)),
+          ["tag1"],
+          "The initial set of tags is correct."
+        );
+
+        // Click the bookmark star again, add more tags.
+        shownPromise = promisePopupShown(panel);
+        star.click();
+        await shownPromise;
+        await fillBookmarkTextField(
+          "editBMPanel_tagsField",
+          "tag1, tag2, tag3",
+          win
+        );
+        const tagsChangedPromise = PlacesTestUtils.waitForNotification(
+          "bookmark-tags-changed",
+          () => true,
+          "places"
+        );
+        doneButton.click();
+        await tagsChangedPromise;
+        Assert.deepEqual(
+          PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)),
+          ["tag1", "tag2", "tag3"],
+          "The updated set of tags is correct."
+        );
+
+        // Cleanup.
+        await PlacesUtils.bookmarks.eraseEverything();
+      }
+    );
+  }
+);
+
 add_task(async function test_add_bookmark_tags_from_library() {
   const uri = "http://example.com/";
 
