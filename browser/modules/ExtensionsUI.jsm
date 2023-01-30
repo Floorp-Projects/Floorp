@@ -431,7 +431,9 @@ var ExtensionsUI = {
         persistent: true,
         eventCallback,
         removeOnDismissal: true,
-        position: "bottomright topright",
+        popupOptions: {
+          position: "bottomright topright",
+        },
       };
       // The prompt/notification machinery has a special affordance wherein
       // certain subsets of the header string can be designated "names", and
