@@ -4,18 +4,6 @@
 
 "use strict";
 
-const BTN_MONTH_YEAR = "#month-year-label",
-  SPINNER_MONTH = "#spinner-month",
-  SPINNER_YEAR = "#spinner-year",
-  MONTH_YEAR = ".month-year";
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-  timeZone: "UTC",
-}).format;
-
-let helper = new DateTimeTestHelper();
-
 add_setup(async function setPrefsReducedMotion() {
   // Set "prefers-reduced-motion" media to "reduce"
   // to avoid intermittent scroll failures (1803612, 1803687)
@@ -26,10 +14,6 @@ add_setup(async function setPrefsReducedMotion() {
     matchMedia("(prefers-reduced-motion: reduce)").matches,
     "The reduce motion mode is active"
   );
-
-  registerCleanupFunction(() => {
-    helper.cleanup();
-  });
 });
 
 /**
