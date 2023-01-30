@@ -5,7 +5,6 @@
 
 // Test engagement telemetry with persisted search terms enabled.
 
-/* import-globals-from head-interaction.js */
 // Allow more time for Mac machines so they don't time out in verify mode.
 if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);

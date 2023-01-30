@@ -8,7 +8,6 @@ const VIDEO_URL =
  * mockTransfer.js provides a utility that lets us mock out
  * the "Save File" dialog.
  */
-/* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
   this

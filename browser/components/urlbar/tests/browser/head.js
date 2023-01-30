@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 let sandbox;
 
-/* import-globals-from head-common.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
   this

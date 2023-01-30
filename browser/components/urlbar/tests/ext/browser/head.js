@@ -19,9 +19,8 @@
 
 "use strict";
 
-/* import-globals-from ../../browser/head-common.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/urlbar/tests/ext/browser/head-common.js",
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
   this
 );
 
