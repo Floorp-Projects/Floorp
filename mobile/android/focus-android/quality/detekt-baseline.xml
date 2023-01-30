@@ -274,7 +274,6 @@
     <ID>UndocumentedPublicFunction:AutocompleteListFragment.kt$AutocompleteListFragment.DomainListAdapter$fun refresh(context: Context, body: (() -&gt; Unit)? = null)</ID>
     <ID>UndocumentedPublicFunction:AutocompleteListFragment.kt$AutocompleteListFragment.DomainListAdapter$fun selection(): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:BaseFragment.kt$BaseFragment$fun cancelAnimation()</ID>
-    <ID>UndocumentedPublicFunction:BaseFragment.kt$fun Fragment.requestInPlacePermissions( permissionsToRequest: Array&lt;String&gt;, onResult: (Map&lt;String, Boolean&gt;) -&gt; Unit, )</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun crashReporterIsVisible(): Boolean</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun erase(shouldEraseAllTabs: Boolean = false)</ID>
     <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment$fun handleTabCrash(crash: Crash)</ID>
