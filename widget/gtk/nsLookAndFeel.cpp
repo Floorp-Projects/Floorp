@@ -995,6 +995,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
           // Disabled on wayland, see bug 1800442 and bug 1800368.
           return false;
         }
+        if (IsKdeDesktopEnvironment()) {
+          // Disabled on KDE, see bug 1813070.
+          return false;
+        }
         return true;
       }();
       break;
