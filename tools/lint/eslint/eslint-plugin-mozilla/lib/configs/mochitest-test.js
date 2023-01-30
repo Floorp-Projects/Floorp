@@ -10,7 +10,6 @@ module.exports = {
   globals: {
     // SpecialPowers is injected into the window object via SimpleTest.js
     SpecialPowers: false,
-    XPCNativeWrapper: false,
   },
 
   overrides: [

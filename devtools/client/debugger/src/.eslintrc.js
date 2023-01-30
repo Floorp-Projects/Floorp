@@ -20,7 +20,6 @@ module.exports = {
     loader: true,
     Services: true,
     Task: true,
-    XPCNativeWrapper: true,
     XPCOMUtils: true,
     _Iterator: true,
     __dirname: true,

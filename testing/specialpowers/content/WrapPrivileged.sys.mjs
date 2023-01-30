@@ -12,6 +12,8 @@
  * chrome-privileged scripts when they need to interact with privileged APIs.
  */
 
+// XPCNativeWrapper is not defined globally in ESLint as it may be going away.
+// See bug 1481337.
 /* globals XPCNativeWrapper */
 
 Cu.crashIfNotInAutomation();

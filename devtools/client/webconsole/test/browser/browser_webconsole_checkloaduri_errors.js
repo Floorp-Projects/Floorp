@@ -3,6 +3,10 @@
 
 // Ensure that same-origin errors are logged to the console.
 
+// XPCNativeWrapper is not defined globally in ESLint as it may be going away.
+// See bug 1481337.
+/* global XPCNativeWrapper */
+
 "use strict";
 
 const TEST_URI =

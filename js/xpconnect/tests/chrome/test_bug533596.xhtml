@@ -18,6 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
+  // XPCNativeWrapper is not defined globally in ESLint as it may be going away.
+  // See bug 1481337.
+  /* global XPCNativeWrapper */
+
   /** Test for Bug 533596 **/
 
   function go() {
