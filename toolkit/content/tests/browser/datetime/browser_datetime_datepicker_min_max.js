@@ -4,21 +4,6 @@
 
 "use strict";
 
-const MONTH_YEAR = ".month-year",
-  DAYS_VIEW = ".days-view",
-  BTN_NEXT_MONTH = ".next",
-  DAY_TODAY = ".today",
-  DAY_SELECTED = ".selection";
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-  timeZone: "UTC",
-}).format;
-const DATE_FORMAT_LOCAL = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-}).format;
-
 // Create a list of abbreviations for calendar class names
 const W = "weekend",
   O = "outside",
@@ -72,73 +57,6 @@ const calendarClasslist_201612 = [
   [O],
   [W, O],
 ];
-
-function getCalendarText() {
-  let calendarCells = [];
-  for (const tr of helper.getChildren(DAYS_VIEW)) {
-    for (const td of tr.children) {
-      calendarCells.push(td.textContent);
-    }
-  }
-  return calendarCells;
-}
-
-function getCalendarClassList() {
-  let calendarCellsClasses = [];
-  for (const tr of helper.getChildren(DAYS_VIEW)) {
-    for (const td of tr.children) {
-      calendarCellsClasses.push(td.classList);
-    }
-  }
-  return calendarCellsClasses;
-}
-
-function mergeArrays(a, b) {
-  return a.map((classlist, index) => classlist.concat(b[index]));
-}
-
-async function verifyPickerPosition(browsingContext, inputId) {
-  let inputRect = await SpecialPowers.spawn(
-    browsingContext,
-    [inputId],
-    async function(inputIdChild) {
-      let rect = content.document
-        .getElementById(inputIdChild)
-        .getBoundingClientRect();
-      return {
-        left: content.mozInnerScreenX + rect.left,
-        bottom: content.mozInnerScreenY + rect.bottom,
-      };
-    }
-  );
-
-  function is_close(got, exp, msg) {
-    // on some platforms we see differences of a fraction of a pixel - so
-    // allow any difference of < 1 pixels as being OK.
-    Assert.ok(
-      Math.abs(got - exp) < 1,
-      msg + ": " + got + " should be equal(-ish) to " + exp
-    );
-  }
-  const marginLeft = parseFloat(getComputedStyle(helper.panel).marginLeft);
-  const marginTop = parseFloat(getComputedStyle(helper.panel).marginTop);
-  is_close(
-    helper.panel.screenX - marginLeft,
-    inputRect.left,
-    "datepicker x position"
-  );
-  is_close(
-    helper.panel.screenY - marginTop,
-    inputRect.bottom,
-    "datepicker y position"
-  );
-}
-
-let helper = new DateTimeTestHelper();
-
-registerCleanupFunction(() => {
-  helper.cleanup();
-});
 
 /**
  * When min and max attributes are set, calendar should show some dates as

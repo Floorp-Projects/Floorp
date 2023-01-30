@@ -4,59 +4,6 @@
 
 "use strict";
 
-const MONTH_YEAR = ".month-year",
-  WEEK_HEADER = ".week-header",
-  DAYS_VIEW = ".days-view",
-  DAY_TODAY = ".today",
-  DAY_SELECTED = ".selection",
-  BTN_PREV_MONTH = ".prev",
-  BTN_NEXT_MONTH = ".next",
-  DIALOG_PICKER = "#date-picker",
-  MONTH_YEAR_NAV = ".month-year-nav",
-  MONTH_YEAR_VIEW = ".month-year-view",
-  SPINNER_MONTH = "#spinner-month",
-  SPINNER_YEAR = "#spinner-year";
-
-/**
- * Helper function to check the value of a Calendar button's specific attribute
- *
- * @param {String} attr: The name of the attribute to be tested
- * @param {String} val: Value that is expected to be assigned to the attribute.
- * @param {Boolean} presenceOnly: If "true", test only the presence of the attribute
- */
-async function testCalendarBtnAttribute(attr, val, presenceOnly = false) {
-  let browser = helper.tab.linkedBrowser;
-
-  await SpecialPowers.spawn(
-    browser,
-    [attr, val, presenceOnly],
-    (attr, val, presenceOnly) => {
-      const input = content.document.querySelector("input");
-      const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
-      const calendarBtn = shadowRoot.getElementById("calendar-button");
-
-      if (presenceOnly) {
-        Assert.ok(
-          calendarBtn.hasAttribute(attr),
-          `Calendar button has ${attr} attribute`
-        );
-      } else {
-        Assert.equal(
-          calendarBtn.getAttribute(attr),
-          val,
-          `Calendar button has ${attr} attribute set to ${val}`
-        );
-      }
-    }
-  );
-}
-
-let helper = new DateTimeTestHelper();
-
-registerCleanupFunction(() => {
-  helper.cleanup();
-});
-
 /**
  * Test that date picker opens with accessible markup
  */

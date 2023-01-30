@@ -8,6 +8,7 @@ XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 
 BROWSER_CHROME_MANIFESTS += [
     "browser/browser.ini",
+    "browser/datetime/browser.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

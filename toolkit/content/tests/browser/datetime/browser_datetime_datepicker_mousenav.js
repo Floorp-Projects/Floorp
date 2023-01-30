@@ -4,53 +4,6 @@
 
 "use strict";
 
-const MONTH_YEAR = ".month-year",
-  DAYS_VIEW = ".days-view",
-  BTN_PREV_MONTH = ".prev",
-  BTN_NEXT_MONTH = ".next";
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-  timeZone: "UTC",
-}).format;
-
-/**
- * Helper function to find and return a gridcell element
- * for a specific day of the month
- *
- * @param {Number} day: A day of the month to find in the month grid
- *
- * @return {HTMLElement} A gridcell that represents the needed day of the month
- */
-function getDayEl(dayNum) {
-  const dayEls = Array.from(
-    helper.getElement(DAYS_VIEW).querySelectorAll("td")
-  );
-  return dayEls.find(el => el.textContent === dayNum.toString());
-}
-
-/**
- * Helper function to find and return a gridcell element
- * for a specific day of the month
- *
- * @return {Array[String]} TextContent of each gridcell within a calendar grid
- */
-function getCalendarText() {
-  let calendarCells = [];
-  for (const tr of helper.getChildren(DAYS_VIEW)) {
-    for (const td of tr.children) {
-      calendarCells.push(td.textContent);
-    }
-  }
-  return calendarCells;
-}
-
-let helper = new DateTimeTestHelper();
-
-registerCleanupFunction(() => {
-  helper.cleanup();
-});
-
 /**
  * When the previous month button is clicked, calendar should display the dates
  * for the previous month.

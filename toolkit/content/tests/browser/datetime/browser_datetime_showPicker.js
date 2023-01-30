@@ -4,21 +4,6 @@
 
 "use strict";
 
-const MONTH_YEAR = ".month-year",
-  DAYS_VIEW = ".days-view",
-  BTN_PREV_MONTH = ".prev",
-  BTN_NEXT_MONTH = ".next";
-const DATE_FORMAT_LOCAL = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-}).format;
-
-let helper = new DateTimeTestHelper();
-
-registerCleanupFunction(() => {
-  helper.cleanup();
-});
-
 /**
  * Test that date picker opens with showPicker.
  */
