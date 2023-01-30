@@ -92,7 +92,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "19": "a.png", "38": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -107,11 +107,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a-32.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-16.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-16.png"),
           },
           "2": {
-            browserActionImageURL: browser.runtime.getURL("data/a-64.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a-32.png"),
             pageActionImageURL: browser.runtime.getURL("data/a-32.png"),
           },
         },
@@ -185,7 +185,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: imageData.green.url,
+            browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -206,7 +206,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: imageData.red.url,
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -222,7 +222,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -240,7 +240,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: imageData.red.url,
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -256,7 +256,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a.png"),
+            browserActionImageURL: imageData.red.url,
             pageActionImageURL: imageData.red.url,
           },
           "2": {
@@ -271,7 +271,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "18": "a.png", "36": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -284,7 +284,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "16": "a.png", "30": "a-x2.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/a-x2.png"),
+            browserActionImageURL: browser.runtime.getURL("data/a.png"),
             pageActionImageURL: browser.runtime.getURL("data/a.png"),
           },
           "2": {
@@ -297,7 +297,7 @@ add_task(async function testDetailsObjects() {
         details: { path: { "16": "16.png", "100": "100.png" } },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/100.png"),
+            browserActionImageURL: browser.runtime.getURL("data/16.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
           "2": {
@@ -328,7 +328,7 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/18.svg"),
+            browserActionImageURL: browser.runtime.getURL("data/16.svg"),
             pageActionImageURL: browser.runtime.getURL("data/16.svg"),
           },
           "2": {
@@ -349,11 +349,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/36.png"),
+            browserActionImageURL: browser.runtime.getURL("data/18.png"),
             pageActionImageURL: browser.runtime.getURL("data/18.png"),
           },
           "2": {
-            browserActionImageURL: browser.runtime.getURL("data/128.png"),
+            browserActionImageURL: browser.runtime.getURL("data/36.png"),
             pageActionImageURL: browser.runtime.getURL("data/36.png"),
           },
         },
@@ -375,11 +375,11 @@ add_task(async function testDetailsObjects() {
         },
         resolutions: {
           "1": {
-            browserActionImageURL: browser.runtime.getURL("data/32.png"),
+            browserActionImageURL: browser.runtime.getURL("data/16.png"),
             pageActionImageURL: browser.runtime.getURL("data/16.png"),
           },
           "2": {
-            browserActionImageURL: browser.runtime.getURL("data/64.png"),
+            browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
         },
@@ -403,7 +403,7 @@ add_task(async function testDetailsObjects() {
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
           "2": {
-            browserActionImageURL: browser.runtime.getURL("data/128.png"),
+            browserActionImageURL: browser.runtime.getURL("data/32.png"),
             pageActionImageURL: browser.runtime.getURL("data/32.png"),
           },
         },
