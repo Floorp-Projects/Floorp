@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 requestLongerTimeout(4);
 
 // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"

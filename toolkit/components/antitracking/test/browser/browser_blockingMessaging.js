@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 if (AppConstants.MOZ_CODE_COVERAGE) {
   requestLongerTimeout(12);
 } else {

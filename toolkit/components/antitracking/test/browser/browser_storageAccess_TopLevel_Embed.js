@@ -2,7 +2,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/storage_access_head.js",
   this
 );
-/* import-globals-from storage_access_head.js */
 
 async function requestStorageAccessUnderSiteAndExpectSuccess() {
   SpecialPowers.wrap(document).notifyUserGestureActivation();

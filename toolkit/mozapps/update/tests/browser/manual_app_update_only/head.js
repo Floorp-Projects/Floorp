@@ -3,7 +3,6 @@
 
 "use strict";
 
-/* import-globals-from ../head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/mozapps/update/tests/browser/head.js",
   this

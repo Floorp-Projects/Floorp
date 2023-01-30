@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 function waitStoragePermission() {
   return new Promise(resolve => {
     let id = setInterval(async _ => {

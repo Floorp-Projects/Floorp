@@ -13,8 +13,6 @@
  *  the assertion. See Bug 1641153 for details.
  *  */
 
-/* import-globals-from antitracking_head.js */
-
 add_task(async _ => {
   // Manually add the storage permission.
   PermissionTestUtils.add(

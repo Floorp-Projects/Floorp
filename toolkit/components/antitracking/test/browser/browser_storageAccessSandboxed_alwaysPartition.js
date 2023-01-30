@@ -1,4 +1,3 @@
-/* import-globals-from antitracking_head.js */
 /* import-globals-from storageAccessAPIHelpers.js */
 
 const APS_PREF =

@@ -3,8 +3,6 @@
 // eTLD+1 URL when tracking identifiers controlled by this service are
 // present in the referrer URI.
 
-/* import-globals-from antitracking_head.js */
-
 "use strict";
 
 const { RemoteSettings } = ChromeUtils.import(

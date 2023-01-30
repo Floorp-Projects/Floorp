@@ -1,5 +1,3 @@
-/* import-globals-from partitionedstorage_head.js */
-
 PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "HTTP Cookies",
   async (win3rdParty, win1stParty, allowed) => {

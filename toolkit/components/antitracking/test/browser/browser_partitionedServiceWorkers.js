@@ -1,4 +1,3 @@
-/* import-globals-from partitionedstorage_head.js */
 /* import-globals-from storageAccessAPIHelpers.js */
 
 PartitionedStorageHelper.runTest(

@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 requestLongerTimeout(6);
 
 AntiTracking.runTestInNormalAndPrivateMode(
