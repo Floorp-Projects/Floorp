@@ -61,23 +61,30 @@ export class AddonSearchEngine extends SearchEngine {
     this._extensionID = extensionId;
     this.#isAppProvided = isAppProvided;
 
-    if (details) {
-      if (!details.extensionID) {
-        throw Components.Exception(
-          "Empty extensionID passed to _createAndAddEngine!",
-          Cr.NS_ERROR_INVALID_ARG
-        );
-      }
-
-      this.#initFromManifest(
-        details.extensionBaseURI,
-        details.manifest,
-        details.locale,
-        details.config
-      );
-    } else {
+    if (json) {
       this._initWithJSON(json);
     }
+  }
+
+  /**
+   * Call to initalise an instance with extension details. Does not need to be
+   * called if json has been passed to the constructor.
+   *
+   * @param {object} options
+   *   The options object.
+   * @param {Extension} options.extension
+   *   The extension object representing the add-on.
+   * @param {object} options.locale
+   *   The locale to use from the extension for getting details of the search
+   *   engine.
+   * @param {object} [options.config]
+   *   The search engine configuration for application provided engines, that
+   *   may be overriding some of the WebExtension's settings.
+   */
+  async init({ extension, locale, config }) {
+    let manifest = await this.#getManifestForLocale(extension, locale);
+
+    this.#initFromManifest(extension.baseURI, manifest, locale, config);
   }
 
   /**
@@ -173,7 +180,7 @@ export class AddonSearchEngine extends SearchEngine {
         2
       );
     } else {
-      let policy = await AddonSearchEngine.getExtensionPolicy(
+      let policy = await AddonSearchEngine.getWebExtensionPolicy(
         this._extensionID
       );
       let providerSettings =
@@ -283,13 +290,47 @@ export class AddonSearchEngine extends SearchEngine {
   }
 
   /**
+   * Get the localized manifest from the WebExtension for the given locale or
+   * manifest default locale.
+   *
+   * The search service configuration overloads the add-on manager concepts of
+   * locales, and forces particular locales within the WebExtension to be used,
+   * ignoring the user's current locale. The user's current locale is taken into
+   * account within the configuration, just not in the WebExtension.
+   *
+   * @param {object} extension
+   *   The extension to get the manifest from.
+   * @param {string} locale
+   *   The locale to load from the WebExtension. If this is `DEFAULT_TAG`, then
+   *   the default locale is loaded.
+   * @returns {object}
+   *   The loaded manifest.
+   */
+  async #getManifestForLocale(extension, locale) {
+    let manifest = extension.manifest;
+
+    // If the locale we want from the WebExtension is the extension's default
+    // then we get that from the manifest here. We do this because if we
+    // are reloading due to the locale change, the add-on manager might not
+    // have updated the WebExtension's manifest to the new version by the
+    // time we hit this code.
+    let localeToLoad =
+      locale == lazy.SearchUtils.DEFAULT_TAG ? manifest.default_locale : locale;
+
+    if (localeToLoad) {
+      manifest = await extension.getLocalizedManifest(localeToLoad);
+    }
+    return manifest;
+  }
+
+  /**
    * Gets the WebExtensionPolicy for an add-on.
    *
    * @param {string} id
    *   The WebExtension id.
    * @returns {WebExtensionPolicy}
    */
-  static async getExtensionPolicy(id) {
+  static async getWebExtensionPolicy(id) {
     let policy = WebExtensionPolicy.getByID(id);
     if (!policy) {
       let idPrefix = id.split("@")[0];
