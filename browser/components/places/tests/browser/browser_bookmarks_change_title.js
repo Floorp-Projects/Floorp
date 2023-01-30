@@ -35,33 +35,46 @@ add_setup(async function() {
   });
 });
 
-add_task(async function test_change_title_from_BookmarkStar() {
+async function test_change_title_from_BookmarkStar(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
+
   let originalBm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: TEST_URL,
     title: "Before Edit",
   });
 
+  const win = await BrowserTestUtils.openNewBrowserWindow();
   let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
+    gBrowser: win.gBrowser,
     opening: TEST_URL,
     waitForStateStop: true,
   });
 
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.closeWindow(win);
   });
 
-  StarUI._createPanelIfNeeded();
-  let bookmarkPanel = document.getElementById("editBookmarkPanel");
+  Assert.equal(
+    win.gEditItemOverlay.delayedApplyEnabled,
+    delayedApply,
+    "Sanity check: delayedApply preference value is correct."
+  );
+  win.StarUI._createPanelIfNeeded();
+  let bookmarkPanel = win.document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
 
-  let bookmarkStar = BookmarkingUI.star;
+  let bookmarkStar = win.BookmarkingUI.star;
   bookmarkStar.click();
 
   await shownPromise;
 
-  let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
+  let bookmarkPanelTitle = win.document.getElementById(
+    "editBookmarkPanelTitle"
+  );
   await BrowserTestUtils.waitForCondition(
     () =>
       bookmarkPanelTitle.textContent ===
@@ -80,10 +93,10 @@ add_task(async function test_change_title_from_BookmarkStar() {
   await fillBookmarkTextField(
     "editBMPanel_namePicker",
     titleAfterFirstUpdate,
-    window
+    win
   );
 
-  let doneButton = document.getElementById("editBookmarkPanelDoneButton");
+  let doneButton = win.document.getElementById("editBookmarkPanelDoneButton");
   doneButton.click();
   await promiseNotification;
 
@@ -93,6 +106,15 @@ add_task(async function test_change_title_from_BookmarkStar() {
     titleAfterFirstUpdate,
     "Should have updated the bookmark title in the database"
   );
+  await PlacesUtils.bookmarks.remove(originalBm.guid);
+}
+
+add_task(async function test_change_title_from_BookmarkStar_instant_apply() {
+  await test_change_title_from_BookmarkStar(false);
+});
+
+add_task(async function test_change_title_from_BookmarkStar_delayed_apply() {
+  await test_change_title_from_BookmarkStar(true);
 });
 
 add_task(async function test_change_title_from_Toolbar() {
@@ -227,7 +249,7 @@ add_task(async function test_change_title_from_Sidebar() {
           "Sidebar Title",
           "Should have updated the bookmark title in the database"
         );
-        Assert.equal(bookmarks.length, 2, "Two bookmarks should exist");
+        Assert.equal(bookmarks.length, 1, "One bookmark should exist");
       }
     );
   });
@@ -239,7 +261,7 @@ async function test_change_title_from_Library(delayedApply) {
   });
 
   info("Open library and select the bookmark.");
-  const library = await promiseLibrary("UnfiledBookmarks");
+  const library = await promiseLibrary("BookmarksToolbar");
   registerCleanupFunction(async function() {
     await promiseLibraryClosed(library);
   });
