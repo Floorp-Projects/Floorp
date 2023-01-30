@@ -3,32 +3,29 @@
 
 "use strict";
 
-const { RootActor } = require("resource://devtools/server/actors/root.js");
+const { rootSpec } = require("resource://devtools/shared/specs/root.js");
+const {
+  generateRequestTypes,
+} = require("resource://devtools/shared/protocol/Actor.js");
 
-function test_requestTypes_request(client, anActor) {
-  client.mainRoot.requestTypes().then(function(response) {
-    const expectedRequestTypes = Object.keys(RootActor.prototype.requestTypes);
-
-    Assert.ok(Array.isArray(response.requestTypes));
-    Assert.equal(
-      JSON.stringify(response.requestTypes),
-      JSON.stringify(expectedRequestTypes)
-    );
-
-    client.close().then(() => {
-      do_test_finished();
-    });
-  });
-}
-
-function run_test() {
+add_task(async function() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
   const client = new DevToolsClient(DevToolsServer.connectPipe());
-  client.connect().then(function() {
-    test_requestTypes_request(client);
-  });
+  await client.connect();
 
-  do_test_pending();
-}
+  const response = await client.mainRoot.requestTypes();
+  const expectedRequestTypes = Object.keys(generateRequestTypes(rootSpec));
+  // As "echo" can't be implemented via protocol.js this is manually added from RootActor
+  // while bypassing the specification.
+  expectedRequestTypes.push("echo");
+
+  Assert.ok(Array.isArray(response.requestTypes));
+  Assert.equal(
+    JSON.stringify(response.requestTypes),
+    JSON.stringify(expectedRequestTypes)
+  );
+
+  await client.close();
+});

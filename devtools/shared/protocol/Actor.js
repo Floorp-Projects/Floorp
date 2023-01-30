@@ -25,8 +25,22 @@ exports.actorSpecs = actorSpecs;
  *   conn can be null if the subclass provides a conn property.
  * @constructor
  */
+
 class Actor extends Pool {
+  constructor(conn, spec) {
+    super();
+
+    // Actors migrated to ES Classes, passed the specification via the constructor
+    if (spec) {
+      this.typeName = spec.typeName;
+      this.requestTypes = generateRequestTypes(spec);
+      this._actorSpec = spec;
+    }
+    this.initialize(conn);
+  }
+
   // Existing Actors extending this class expect initialize to contain constructor logic.
+  // Bug 1813648: This method can be folded into constructor once all Actor are migrated to ES Classes.
   initialize(conn) {
     // Repeat Pool.constructor here as we can't call it from initialize
     // This is to be removed once actors switch to es classes and are able to call
@@ -38,7 +52,13 @@ class Actor extends Pool {
     // Will contain the actor's ID
     this.actorID = null;
 
-    this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
+    // When the subclass is still using ActorClassWithSpec (i.e. not ES Classses)
+    // The spec is only registered in actorSpecs.
+    // This codepath can be removed once all actors are using ES Classes.
+    if (!this._actorSpec) {
+      this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
+    }
+
     // Forward events to the connection.
     if (this._actorSpec && this._actorSpec.events) {
       for (const [name, request] of this._actorSpec.events.entries()) {
@@ -159,14 +179,23 @@ class Actor extends Pool {
 exports.Actor = Actor;
 
 /**
- * Generates request handlers as described by the given actor specification on
- * the given actor prototype. Returns the actor prototype.
+ * Generate the "requestTypes" object used by DevToolsServerConnection to implement RDP.
+ * When a RDP packet is received for calling an actor method, this lookup for
+ * the method name in this object and call the function holded on this attribute.
+ *
+ * @params {Object} actorSpec
+ *         The procotol-js actor specific coming from devtools/shared/specs/*.js files
+ *         This describes the types for methods and events implemented by all actors.
+ * @return {Object} requestTypes
+ *         An object where attributes are actor method names
+ *         and values are function implementing these methods.
+ *         These methods receive a RDP Packet (JSON-serializable object) and a DevToolsServerConnection.
+ *         We expect them to return a promise that reserves with the response object
+ *         to send back to the client (JSON-serializable object).
  */
-var generateRequestHandlers = function(actorSpec, actorProto) {
-  actorProto.typeName = actorSpec.typeName;
-
+var generateRequestTypes = function(actorSpec) {
   // Generate request handlers for each method definition
-  actorProto.requestTypes = Object.create(null);
+  const requestTypes = Object.create(null);
   actorSpec.methods.forEach(spec => {
     const handler = function(packet, conn) {
       try {
@@ -181,7 +210,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
 
         if (!this[spec.name]) {
           throw new Error(
-            `Spec for '${actorProto.typeName}' specifies a '${spec.name}'` +
+            `Spec for '${actorSpec.typeName}' specifies a '${spec.name}'` +
               ` method that isn't implemented by the actor`
           );
         }
@@ -213,7 +242,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
             try {
               this.destroy();
             } catch (e) {
-              this.writeError(e, actorProto.typeName, spec.name);
+              this.writeError(e, actorSpec.typeName, spec.name);
               return;
             }
           }
@@ -231,19 +260,29 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           return p
             .then(() => ret)
             .then(sendReturn)
-            .catch(e => this.writeError(e, actorProto.typeName, spec.name));
+            .catch(e => this.writeError(e, actorSpec.typeName, spec.name));
         });
       } catch (e) {
         this._queueResponse(p => {
           return p.then(() =>
-            this.writeError(e, actorProto.typeName, spec.name)
+            this.writeError(e, actorSpec.typeName, spec.name)
           );
         });
       }
     };
 
-    actorProto.requestTypes[spec.request.type] = handler;
+    requestTypes[spec.request.type] = handler;
   });
+
+  return requestTypes;
+};
+exports.generateRequestTypes = generateRequestTypes;
+
+var generateRequestHandlers = function(actorSpec, actorProto) {
+  actorProto.typeName = actorSpec.typeName;
+
+  // Generate request handlers for each method definition
+  actorProto.requestTypes = generateRequestTypes(actorSpec);
 
   return actorProto;
 };
@@ -257,6 +296,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
  *    The actor prototype. Should have method definitions, can have event
  *    definitions.
  */
+// bug 1813648: We can remove this codepath, generateRequestHandlers and actorSpecs WeakMap once all Actors use ES Classes
 var ActorClassWithSpec = function(actorSpec, actorProto) {
   if (!actorSpec.typeName) {
     throw Error("Actor specification must have a typeName member.");
