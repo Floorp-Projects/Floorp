@@ -42,8 +42,9 @@
 #include "mozilla/XorShift128PlusRNG.h"
 
 #include "nsBaseHashtable.h"
-#include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsCoord.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
@@ -668,8 +669,7 @@ nsresult nsRFPService::Init() {
 void nsRFPService::UpdateRFPPref() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  bool privacyResistFingerprinting =
-      StaticPrefs::privacy_resistFingerprinting();
+  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting();
 
   JS::SetReduceMicrosecondTimePrecisionCallback(
       nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
@@ -677,9 +677,9 @@ void nsRFPService::UpdateRFPPref() {
   // set fdlibm pref
   JS::SetUseFdlibmForSinCosTan(
       StaticPrefs::javascript_options_use_fdlibm_for_sin_cos_tan() ||
-      privacyResistFingerprinting);
+      resistFingerprinting);
 
-  if (privacyResistFingerprinting) {
+  if (resistFingerprinting) {
     PR_SetEnv("TZ=UTC");
   } else if (sInitialized) {
     // We will not touch the TZ value if 'privacy.resistFingerprinting' is false
@@ -714,7 +714,7 @@ void nsRFPService::UpdateRFPPref() {
 
   // If and only if the time zone was changed above, propagate the change to the
   // <time.h> functions and the JS runtime.
-  if (privacyResistFingerprinting || sInitialized) {
+  if (resistFingerprinting || sInitialized) {
     // localtime_r (and other functions) may not call tzset, so do this here
     // after changing TZ to ensure all <time.h> functions use the new time zone.
 #if defined(XP_WIN)

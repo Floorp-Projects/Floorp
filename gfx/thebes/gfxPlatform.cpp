@@ -48,6 +48,7 @@
 #include "nsAppRunner.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCSSProps.h"
+#include "nsContentUtils.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
@@ -3253,7 +3254,8 @@ bool gfxPlatform::IsInLayoutAsapMode() {
 
 static int LayoutFrameRateFromPrefs() {
   auto val = StaticPrefs::layout_frame_rate();
-  if (StaticPrefs::privacy_resistFingerprinting()) {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          "The frame rate is a global property.")) {
     val = 60;
   }
   return val;
