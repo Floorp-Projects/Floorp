@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* import-globals-from ../head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/remote/shared/messagehandler/test/browser/head.js",
   this
