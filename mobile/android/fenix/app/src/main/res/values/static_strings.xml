@@ -48,6 +48,12 @@
     <string name="preferences_debug_settings_unified_search" translatable="false">Enable Unified Search (requires restart)</string>
     <!-- Label for custom Glean server URL -->
     <string name="preferences_debug_settings_custom_glean_server_url" translatable="false">Custom Glean server URL (requires restart)</string>
+    <!-- Label for custom Pocket sponsored stories settings -->
+    <string name="preferences_debug_settings_custom_sponsored_stories_parameters" translatable="false">Pocket sponsored stories</string>
+    <!-- Label for custom Pocket sponsored stories site enabled setting -->
+    <string name="preferences_debug_settings_custom_sponsored_stories_parameters_enabled" translatable="false">Enable custom Pocket sponsored stories parameters (requires restart)</string>
+    <!-- Label for custom Pocket sponsored stories site id setting -->
+    <string name="preferences_debug_settings_custom_sponsored_stories_parameters_site" translatable="false">Site parameter</string>
     <!-- Title of preference for sync debugging (only shown in the when the secret debug menu is enabled) -->
     <string name="preferences_sync_debug">Sync Debug</string>
     <!-- Preference to override the Push server -->

@@ -1457,6 +1457,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     *  Whether or not to display the Pocket sponsored stories parameter secret settings.
+     */
+    var useCustomConfigurationForSponsoredStories by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_custom_sponsored_stories_parameters_enabled),
+        default = false,
+    )
+
+    /**
+     * Site parameter used to set the spoc content.
+     */
+    var pocketSponsoredStoriesSiteId by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_custom_sponsored_stories_site_id),
+        default = "",
+    )
+
+    /**
      * Indicates if the Contile functionality should be visible.
      */
     var showContileFeature by booleanPreference(

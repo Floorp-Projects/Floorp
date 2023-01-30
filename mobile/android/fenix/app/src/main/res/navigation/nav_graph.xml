@@ -817,7 +817,15 @@
     <fragment
         android:id="@+id/secretSettingsPreference"
         android:name="org.mozilla.fenix.settings.SecretSettingsFragment"
-        android:label="@string/preferences_debug_settings" />
+        android:label="@string/preferences_debug_settings">
+        <action
+            android:id="@+id/action_secretSettingsFragment_to_sponsoredStoriesSettings"
+            app:destination="@id/sponsoredStoriesSettings"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
     <fragment
         android:id="@+id/secretInfoSettingsFragment"
         android:name="org.mozilla.fenix.settings.SecretDebugSettingsFragment"
@@ -842,6 +850,10 @@
         android:id="@+id/cookieBannerFragment"
         android:name="org.mozilla.fenix.settings.CookieBannersFragment"
         android:label="@string/preferences_cookie_banner_reduction" />
+    <fragment
+        android:id="@+id/sponsoredStoriesSettings"
+        android:name="org.mozilla.fenix.settings.SponsoredStoriesSettingsFragment"
+        android:label="@string/preferences_debug_settings_custom_sponsored_stories_parameters" />
     <fragment
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment">

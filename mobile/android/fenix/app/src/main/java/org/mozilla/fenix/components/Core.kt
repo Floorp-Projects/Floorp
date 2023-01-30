@@ -72,6 +72,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementRelationCheck
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.pocket.PocketStoriesConfig
+import mozilla.components.service.pocket.PocketStoriesRequestConfig
 import mozilla.components.service.pocket.PocketStoriesService
 import mozilla.components.service.pocket.Profile
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
@@ -411,6 +412,11 @@ class Core(
                 profileId = UUID.fromString(context.settings().pocketSponsoredStoriesProfileId),
                 appId = BuildConfig.POCKET_CONSUMER_KEY,
             ),
+            sponsoredStoriesParams = if (context.settings().useCustomConfigurationForSponsoredStories) {
+                PocketStoriesRequestConfig(context.settings().pocketSponsoredStoriesSiteId)
+            } else {
+                PocketStoriesRequestConfig()
+            },
         )
     }
     val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }
