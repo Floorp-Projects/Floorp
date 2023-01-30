@@ -438,9 +438,11 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
     }
 #endif
     return AV_CODEC_ID_MP3;
-  } else if (aMimeType.EqualsLiteral("audio/flac")) {
+  }
+  if (aMimeType.EqualsLiteral("audio/flac")) {
     return AV_CODEC_ID_FLAC;
-  } else if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
+  }
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
     return AV_CODEC_ID_AAC;
   }
 
