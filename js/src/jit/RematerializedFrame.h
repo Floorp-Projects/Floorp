@@ -207,7 +207,10 @@ class RematerializedFrame {
 
   void setReturnValue(const Value& value) { returnValue_ = value; }
 
-  Value& returnValue() { return returnValue_; }
+  Value& returnValue() {
+    MOZ_ASSERT(!script()->noScriptRval());
+    return returnValue_;
+  }
 
   void trace(JSTracer* trc);
   void dump();
