@@ -1624,10 +1624,6 @@ function testScope(aTester, aTest, expected) {
     self.__timeoutFactor = aFactor;
   };
 
-  this.copyToProfile = function test_copyToProfile(filename) {
-    self.SimpleTest.copyToProfile(filename);
-  };
-
   this.expectUncaughtException = function test_expectUncaughtException(
     aExpecting
   ) {
