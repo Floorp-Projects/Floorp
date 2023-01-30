@@ -54,7 +54,7 @@
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Pue Nyang Barô</string>
-    <string name="menu_settings">Peuatô</string>
+    <string name="menu_settings">Atô</string>
     <string name="menu_about">Bhaih</string>
     <string name="menu_help">Beunantu</string>
     <string name="menu_rights">Hak Droeneuh</string>
@@ -88,7 +88,7 @@
          so that the user doesn't forget about the website still being open. This text is shown in
          the notification. Clicking the notification will have the same effect as clicking the "erase"
          button in the application. -->
-    <string name="notification_erase_text">Sampôh riwayat browsing</string>
+    <string name="notification_erase_text">Sampôh riwayat pumeuhah</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Peuhah</string>
@@ -104,7 +104,7 @@
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters. -->
-    <string name="shortcut_erase_long_label">Sampôh riwayat browsing</string>
+    <string name="shortcut_erase_long_label">Sampôh riwayat pumeuhah</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
@@ -173,7 +173,7 @@
     <string name="preference_category_switching_apps">Tuka App</string>
 
     <!-- Preference category for General Settings -->
-    <string name="preference_category_general">Awam</string>
+    <string name="preference_category_general">Umom</string>
 
     <!-- Preference summary for General Settings category; the two things users can find in this category -->
     <string name="preference_general_summary2">Browser baku, bahsa</string>
@@ -188,13 +188,13 @@
 
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">%1$s meung geupeuét peue nyang neukeutik lam bateueng alamat keu meusén seumeutöt droeneuh</string>
+    <string name="preference_show_search_suggestions_summary">%1$s meung geupeuét peue nyang neukeutik lam bateueng alamat keu meusén mita droeneuh</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Teutap</string>
 
     <!-- This label is shown above the currently selected search engine in settings -->
-    <string name="preference_search_engine_label">Meusén seumeutöt</string>
+    <string name="preference_search_engine_label">Meusén mita</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">Udép</string>
@@ -325,6 +325,8 @@
     <string name="preference_category_performance">Hasé buet</string>
     <string name="preference_performance_block_webfonts">Tham haraih web</string>
 
+    <string name="preference_performance_block_javascript">Blokir JavaScript</string>
+
     <!-- This preference does not set Focus as the default browser but instead links to Android's
      "default apps" settings screen or if not supported by this Android version to a SUMO page describing
      how to set Focus as a default browser.
@@ -333,8 +335,13 @@
 
     <string name="preference_category_mozilla">Mozilla</string>
 
+    <string name="preference_mozilla_telemetry2">Peuét data teungui</string>
+
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Reusam Privasi</string>
 
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">Bhaih %1$s</string>
@@ -355,16 +362,55 @@
     <string name="preference_search_remove">Sampôh</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
-    <string name="action_option_add_search_engine">Tamah meusén seumeutöt</string>
+    <string name="action_option_add_search_engine">Tamah meusén mita</string>
 
     <string name="search_add_manually_name_hint">Nan meusén mita</string>
     <string name="search_add_manually_save">Keubah</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Sampôh riwayat pumeuhah</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Peuhah ulang situs wèb</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Gisa u likôt</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blokir peulacak</string>
+
+    <string name="your_rights">Hak Droeneuh</string>
+
+    <string name="external_app_prompt_title">Peuhah link lam aplikasi laén</string>
+
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Peuhah</string>
 
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Puphôn</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">NYO</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Bateuë</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">HAN</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Sampôh riwayat pumeuhah</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Cok keubah Firefox</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Nan ureung ngui</string>
+    <string name="gv_prompt_password_hint">Lageuem tamöng</string>
+    <string name="gv_prompt_clear">Peugléh</string>
 
     <!-- Label for the Find in page button -->
     <string name="find_in_page">Mita lam laman</string>
