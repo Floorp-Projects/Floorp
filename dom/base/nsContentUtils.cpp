@@ -2147,7 +2147,7 @@ bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting() {
-  return StaticPrefs::privacy_resistFingerprinting();
+  return StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly();
 }
 
 /* static */
