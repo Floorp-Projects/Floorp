@@ -759,7 +759,7 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
     case EditAction::eInsertHorizontalRuleElement:
       return true;
 
-    // EditActions chaning format around selection or inserting or deleting
+    // EditActions changing format around selection or inserting or deleting
     // something at specific position.
     case EditAction::eInsertLinkElement:
     case EditAction::eInsertUnorderedListElement:
