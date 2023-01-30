@@ -42,16 +42,6 @@ bug-numbers = [1605154, 1605153]
 is-public = true
 default-value = true
 
-[cookie-samesite-lax-by-default]
-title = "experimental-features-cookie-samesite-lax-by-default2"
-description = "experimental-features-cookie-samesite-lax-by-default2-description"
-restart-required = false
-preference = "network.cookie.sameSite.laxByDefault"
-type = "boolean"
-bug-numbers = [1618610, 1617609]
-default-value = {default = false, early_beta_or_earlier = true}
-is-public = true
-
 [cookie-samesite-none-requires-secure]
 title = "experimental-features-cookie-samesite-none-requires-secure2"
 description = "experimental-features-cookie-samesite-none-requires-secure2-description"
