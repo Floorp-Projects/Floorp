@@ -5,6 +5,7 @@ function show_error_msg()
   echo "*** ERROR *** $? line $1 $0 did not complete successfully!"
   echo "$ERROR_HELP"
 }
+ERROR_HELP=""
 
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'show_error_msg $LINENO' ERR
@@ -37,7 +38,6 @@ if [ "x$HANDLE_NOOP_COMMIT" = "x" ]; then
   HANDLE_NOOP_COMMIT=""
 fi
 
-ERROR_HELP=""
 RESUME=""
 if [ -f $STATE_DIR/resume_state ]; then
   RESUME=`tail -1 $STATE_DIR/resume_state`
