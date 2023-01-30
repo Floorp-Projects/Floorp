@@ -530,16 +530,6 @@
     boolean: BooleanId
     result: NumberId
 
-- name: GuardAndGetIterator
-  shared: true
-  transpile: false
-  cost_estimate: 4
-  args:
-    obj: ObjId
-    iter: ObjectField
-    enumeratorsAddr: RawPointerField
-    result: ObjId
-
 - name: GuardHasGetterSetter
   shared: true
   transpile: true
