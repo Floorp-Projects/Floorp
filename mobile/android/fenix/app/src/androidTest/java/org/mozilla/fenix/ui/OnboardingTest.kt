@@ -138,12 +138,12 @@ class OnboardingTest {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
-            verifyWelcomeHeader()
+            verifyStartBrowsingButton()
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.goToHomescreen {
-            verifyExistingTopSitesList()
+            verifyHomeScreen()
         }
     }
 
