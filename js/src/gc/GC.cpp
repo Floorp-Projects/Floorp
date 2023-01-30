@@ -3924,11 +3924,18 @@ bool GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
   return wasIncreasedForLongCollections || wasIncreasedForUgentCollections;
 }
 
-static void ExtendBudget(SliceBudget& budget, double newDuration) {
+// Return true if the budget is actually extended after rounding.
+static bool ExtendBudget(SliceBudget& budget, double newDuration) {
+  long newDurationMS = lround(newDuration);
+  if (newDurationMS <= budget.timeBudget()) {
+    return false;
+  }
+
   bool idleTriggered = budget.idle;
   budget = SliceBudget(TimeBudget(newDuration), nullptr);  // Uninterruptible.
   budget.idle = idleTriggered;
   budget.extended = true;
+  return true;
 }
 
 bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
@@ -3950,12 +3957,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
       LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
                         MinBudgetEnd.time, MinBudgetEnd.budget);
 
-  if (budget.timeBudget() >= minBudget) {
-    return false;
-  }
-
-  ExtendBudget(budget, minBudget);
-  return true;
+  return ExtendBudget(budget, minBudget);
 }
 
 bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
@@ -3983,10 +3985,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
     double fractionRemaining =
         double(minBytesRemaining) / double(tunables.urgentThresholdBytes());
     double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
-    if (budget.timeBudget() < minBudget) {
-      ExtendBudget(budget, minBudget);
-      return true;
-    }
+    return ExtendBudget(budget, minBudget);
   }
 
   return false;
