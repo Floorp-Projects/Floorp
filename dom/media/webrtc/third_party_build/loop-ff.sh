@@ -15,6 +15,7 @@ function show_error_msg()
   echo_log "*** ERROR *** $? line $1 $0 did not complete successfully!"
   echo_log "$ERROR_HELP"
 }
+ERROR_HELP=""
 
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'show_error_msg $LINENO' ERR
@@ -50,7 +51,6 @@ fi
 
 MOZ_CHANGED=0
 GIT_CHANGED=0
-ERROR_HELP=""
 HANDLE_NOOP_COMMIT=""
 
 # After this point:
