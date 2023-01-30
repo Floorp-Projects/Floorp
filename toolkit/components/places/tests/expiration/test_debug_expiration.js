@@ -229,49 +229,42 @@ add_task(async function test_expire_icons() {
 
   const entries = [
     {
-      desc: "Expired because it redirects",
-      page: "http://source.old.org/",
-      icon: "http://source.old.org/test_icon.png",
-      iconExpired: true,
-      redirect: "http://dest.old.org/",
-      removed: true,
-    },
-    {
       desc: "Not expired because recent",
-      page: "http://source.new.org/",
-      icon: "http://source.new.org/test_icon.png",
+      page: "https://recent.notexpired.org/",
+      icon: "https://recent.notexpired.org/test_icon.png",
+      root: "https://recent.notexpired.org/favicon.ico",
       iconExpired: false,
-      redirect: "http://dest.new.org/",
       removed: false,
     },
     {
-      desc: "Not expired because does not match, even if old",
-      page: "http://stay.moz.org/",
-      icon: "http://stay.moz.org/test_icon.png",
-      iconExpired: true,
+      desc: "Not expired because recent, no root",
+      page: "https://recentnoroot.notexpired.org/",
+      icon: "https://recentnoroot.notexpired.org/test_icon.png",
+      iconExpired: false,
       removed: false,
     },
     {
-      desc: "Not expired because does not have a root icon, even if old",
-      page: "http://noroot.ref.org/#test",
-      icon: "http://noroot.ref.org/test_icon.png",
-      iconExpired: true,
-      removed: false,
-    },
-    {
-      desc: "Expired because has a root icon",
-      page: "http://root.ref.org/#test",
-      icon: "http://root.ref.org/test_icon.png",
-      root: "http://root.ref.org/favicon.ico",
+      desc: "Expired because old with root",
+      page: "https://oldroot.expired.org/",
+      icon: "https://oldroot.expired.org/test_icon.png",
+      root: "https://oldroot.expired.org/favicon.ico",
       iconExpired: true,
       removed: true,
     },
     {
-      desc: "Not expired because recent",
-      page: "http://new.ref.org/#test",
-      icon: "http://new.ref.org/test_icon.png",
-      iconExpired: false,
-      root: "http://new.ref.org/favicon.ico",
+      desc: "Not expired because bookmarked, even if old with root",
+      page: "https://oldrootbm.notexpired.org/",
+      icon: "https://oldrootbm.notexpired.org/test_icon.png",
+      root: "https://oldrootbm.notexpired.org/favicon.ico",
+      bookmarked: true,
+      iconExpired: true,
+      removed: false,
+    },
+    {
+      desc: "Not Expired because old but has no root",
+      page: "https://old.notexpired.org/",
+      icon: "https://old.notexpired.org/test_icon.png",
+      iconExpired: true,
       removed: false,
     },
     {
@@ -292,15 +285,14 @@ add_task(async function test_expire_icons() {
   ];
 
   for (let entry of entries) {
-    if (entry.redirect) {
+    if (!entry.skipHistory) {
       await PlacesTestUtils.addVisits(entry.page);
-      await PlacesTestUtils.addVisits({
-        uri: entry.redirect,
-        transition: TRANSITION_REDIRECT_PERMANENT,
-        referrer: entry.page,
+    }
+    if (entry.bookmarked) {
+      await PlacesUtils.bookmarks.insert({
+        url: entry.page,
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       });
-    } else if (!entry.skipHistory) {
-      await PlacesTestUtils.addVisits(entry.page);
     }
 
     if (entry.icon) {
@@ -336,11 +328,13 @@ add_task(async function test_expire_icons() {
       );
       await PlacesTestUtils.addFavicons(new Map([[entry.page, entry.root]]));
     }
+
     if (entry.iconExpired) {
       // Set an expired time on the icon.
       await PlacesUtils.withConnectionWrapper("expireFavicon", async db => {
         await db.execute(
-          `UPDATE moz_icons SET expire_ms = 1 WHERE icon_url = :url`,
+          `UPDATE moz_icons_to_pages SET expire_ms = 1
+           WHERE icon_id = (SELECT id FROM moz_icons WHERE icon_url = :url)`,
           { url: entry.icon }
         );
         if (entry.root) {
@@ -351,16 +345,19 @@ add_task(async function test_expire_icons() {
         }
       });
     }
+    if (entry.icon) {
+      Assert.equal(
+        await getFaviconUrlForPage(entry.page),
+        entry.icon,
+        "Sanity check the initial icon value"
+      );
+    }
   }
 
   info("Run expiration");
   await promiseForceExpirationStep(-1);
 
   info("Check expiration");
-  // Remove the root icons before checking the associated icons have been expired.
-  await PlacesUtils.withConnectionWrapper("test_debug_expiration.js", db =>
-    db.execute(`DELETE FROM moz_icons WHERE root = 1`)
-  );
   for (let entry of entries) {
     Assert.ok(page_in_database(entry.page));
 
@@ -368,6 +365,15 @@ add_task(async function test_expire_icons() {
       Assert.equal(
         await getFaviconUrlForPage(entry.page),
         entry.icon,
+        entry.desc
+      );
+      continue;
+    }
+
+    if (entry.root) {
+      Assert.equal(
+        await getFaviconUrlForPage(entry.page),
+        entry.root,
         entry.desc
       );
       continue;

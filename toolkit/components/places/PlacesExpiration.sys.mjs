@@ -229,42 +229,34 @@ const EXPIRATION_QUERIES = {
       ACTION.DEBUG,
   },
 
-  // Expire old favicons for:
-  //  - urls that permanently redirect.
-  //  - urls with ref, when the origin has a root favicon that can be used as
-  //    a fallback.
-  // This deletes pages instead of icons, because icons may be referenced by
-  // multiple pages. The moz_pages_to_icons entries are removed by the table's
-  // FOREIGN KEY, while orphan icons are removed by one of the next queries.
+  // Expire from favicons any page that has only relations older than 180 days,
+  // if the page is not bookmarked, and we have a root icon that can be used
+  // as a placeholder until the page is visited again.
+  // The moz_pages_to_icons entries are removed by the table's FOREIGN KEY,
+  // while orphan icons are removed by the following queries.
   QUERY_EXPIRE_OLD_FAVICONS: {
-    sql: `DELETE FROM moz_pages_w_icons WHERE id IN (
-            SELECT DISTINCT page_id FROM moz_icons i
-            JOIN moz_icons_to_pages ON icon_id = i.id
-            JOIN moz_pages_w_icons p ON page_id = p.id
-            JOIN moz_places h ON h.url_hash = page_url_hash
-            JOIN moz_origins o ON o.id = h.origin_id
-            WHERE root = 0
-              AND h.foreign_count = 0
-              AND i.expire_ms BETWEEN 1 AND strftime('%s','now','localtime','start of day','-180 days','utc') * 1000
-              AND (
-              h.id IN (
-                SELECT v.place_id
-                FROM moz_historyvisits v
-                JOIN moz_historyvisits v_dest on v_dest.from_visit = v.id
-                WHERE v_dest.visit_type = 5
-              )
-              OR (
-                INSTR(page_url, '#') >= 0
-                AND EXISTS(SELECT id FROM moz_icons WHERE root = 1 AND fixed_icon_url_hash = hash(fixup_url(o.host) || '/favicon.ico'))
-              )
-            )
-            LIMIT 100
-          )`,
-    actions:
-      ACTION.SHUTDOWN_DIRTY |
-      ACTION.IDLE_DIRTY |
-      ACTION.IDLE_DAILY |
-      ACTION.DEBUG,
+    sql: `
+    DELETE FROM moz_pages_w_icons WHERE id IN (
+      WITH pages_with_old_relations (page_id, page_url_hash) AS (
+        SELECT page_id, page_url_hash
+        FROM moz_icons_to_pages ip
+        JOIN moz_pages_w_icons p ON p.id = page_id
+        GROUP BY page_id
+        HAVING max(expire_ms) < strftime('%s','now','localtime','start of day','-180 days','utc') * 1000
+      )
+      SELECT page_id
+      FROM pages_with_old_relations
+      JOIN moz_places h ON h.url_hash = page_url_hash
+      JOIN moz_origins o ON h.origin_id = o.id
+      WHERE foreign_count = 0
+      AND EXISTS (
+        SELECT 1 FROM moz_icons
+        WHERE root = 1
+          AND fixed_icon_url_hash = hash(fixup_url(o.host) || '/favicon.ico')
+      )
+      LIMIT 100
+    )`,
+    actions: ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,
   },
 
   // Expire orphan pages from the icons database.
@@ -309,34 +301,6 @@ const EXPIRATION_QUERIES = {
     actions:
       ACTION.TIMED |
       ACTION.TIMED_OVERLIMIT |
-      ACTION.SHUTDOWN_DIRTY |
-      ACTION.IDLE_DIRTY |
-      ACTION.IDLE_DAILY |
-      ACTION.DEBUG,
-  },
-
-  // Expire item annos without a corresponding item id.
-  QUERY_EXPIRE_ITEMS_ANNOS: {
-    sql: `DELETE FROM moz_items_annos WHERE id IN (
-            SELECT a.id FROM moz_items_annos a
-            LEFT JOIN moz_bookmarks b ON a.item_id = b.id
-            WHERE b.id IS NULL
-            LIMIT :limit_annos
-          )`,
-    actions: ACTION.IDLE_DAILY | ACTION.DEBUG,
-  },
-
-  // Expire all annotation names without a corresponding annotation.
-  QUERY_EXPIRE_ANNO_ATTRIBUTES: {
-    sql: `DELETE FROM moz_anno_attributes WHERE id IN (
-            SELECT n.id FROM moz_anno_attributes n
-            LEFT JOIN moz_annos a ON n.id = a.anno_attribute_id
-            LEFT JOIN moz_items_annos t ON n.id = t.anno_attribute_id
-            WHERE a.anno_attribute_id IS NULL
-              AND t.anno_attribute_id IS NULL
-            LIMIT :limit_annos
-          )`,
-    actions:
       ACTION.SHUTDOWN_DIRTY |
       ACTION.IDLE_DIRTY |
       ACTION.IDLE_DAILY |
@@ -412,6 +376,7 @@ const EXPIRATION_QUERIES = {
       );
     },
     actions:
+      ACTION.TIMED_OVERLIMIT |
       ACTION.SHUTDOWN_DIRTY |
       ACTION.IDLE_DIRTY |
       ACTION.IDLE_DAILY |
@@ -914,14 +879,6 @@ nsPlacesExpiration.prototype = {
         return {
           // Each page may have multiple annos.
           limit_annos: baseLimit * EXPIRE_AGGRESSIVITY_MULTIPLIER,
-        };
-      case "QUERY_EXPIRE_ITEMS_ANNOS":
-        return {
-          limit_annos: baseLimit,
-        };
-      case "QUERY_EXPIRE_ANNO_ATTRIBUTES":
-        return {
-          limit_annos: baseLimit,
         };
       case "QUERY_EXPIRE_INPUTHISTORY":
         return {
