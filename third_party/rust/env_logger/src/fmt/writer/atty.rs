@@ -1,25 +1,24 @@
 /*
 This internal module contains the terminal detection implementation.
 
-If the `auto-color` feature is enabled then we detect whether we're attached to a particular TTY.
-Otherwise, assume we're not attached to anything. This effectively prevents styles from being
-printed.
+If the `atty` crate is available then we use it to detect whether we're
+attached to a particular TTY. If the `atty` crate is not available we
+assume we're not attached to anything. This effectively prevents styles
+from being printed.
 */
 
-#[cfg(feature = "auto-color")]
+#[cfg(feature = "atty")]
 mod imp {
-    use is_terminal::IsTerminal;
-
     pub(in crate::fmt) fn is_stdout() -> bool {
-        std::io::stdout().is_terminal()
+        atty::is(atty::Stream::Stdout)
     }
 
     pub(in crate::fmt) fn is_stderr() -> bool {
-        std::io::stderr().is_terminal()
+        atty::is(atty::Stream::Stderr)
     }
 }
 
-#[cfg(not(feature = "auto-color"))]
+#[cfg(not(feature = "atty"))]
 mod imp {
     pub(in crate::fmt) fn is_stdout() -> bool {
         false
