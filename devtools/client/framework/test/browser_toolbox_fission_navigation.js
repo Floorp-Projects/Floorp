@@ -8,16 +8,6 @@ const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?html=<div id=org>org";
 
 add_task(async function() {
-  info("Test with server side target switching ENABLED");
-  await pushPref("devtools.target-switching.server.enabled", true);
-  await testCase();
-
-  info("Test with server side target switching DISABLED");
-  await pushPref("devtools.target-switching.server.enabled", false);
-  await testCase();
-});
-
-async function testCase() {
   const tab = await addTab(EXAMPLE_COM_URI);
 
   const toolbox = await openToolboxForTab(tab, "inspector");
@@ -58,7 +48,7 @@ async function testCase() {
     aboutRobotsAfterNavigation,
     "Found node for the about:robots page after navigation"
   );
-}
+});
 
 async function getNodeBySelector(toolbox, selector) {
   const inspector = await toolbox.selectTool("inspector");

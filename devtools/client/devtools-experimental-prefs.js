@@ -19,10 +19,6 @@ const PREFERENCES = [
       "hosted from another domain, it will run in another process",
   ],
   [
-    "devtools.target-switching.server.enabled",
-    "Enable experimental server side target switching",
-  ],
-  [
     "devtools.every-frame-target.enabled",
     "When enabled, targets will be created for all iframes, no matter if " +
       "they are remote or not, independently of Fission being enabled or not",

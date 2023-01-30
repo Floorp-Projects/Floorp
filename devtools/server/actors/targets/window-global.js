@@ -239,7 +239,7 @@ const windowGlobalTargetPrototype = {
    *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
    *          But won't inspect next document loaded in the same BrowsingContext.
    *          The actor will behave more like a WindowGlobalTarget rather than a BrowsingContextTarget.
-   *          Since we enabled devtools.target-switching.server.enabled by default, this is always true.
+   *          This is always true for Tab debugging, but not yet for parent process/web extension.
    *        - isTopLevelTarget Boolean
    *          Should be set to true for all top-level targets. A top level target
    *          is the topmost target of a DevTools "session". For instance for a local

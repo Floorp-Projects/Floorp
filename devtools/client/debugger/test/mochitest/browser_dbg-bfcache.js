@@ -45,9 +45,6 @@ async function testSourcesOnNavigation() {
 async function testDebuggerPauseStateOnNavigation() {
   info("Test the debugger pause state when navigating using the BFCache");
 
-  if (Services.appinfo.sessionHistoryInParent) {
-    enableTargetSwitching();
-  }
   const dbg = await initDebugger("doc-bfcache1.html");
 
   await addBreakpoint(dbg, "doc-bfcache1.html", 4);

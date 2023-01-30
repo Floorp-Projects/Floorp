@@ -25,11 +25,6 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  // Run with server side targets in order to avoid the restart
-  // of console and error resource listeners during a client side target switching.
-  // This leads to unexpected order between console and error messages
-  await pushPref("devtools.target-switching.server.enabled", true);
-
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Test TLS warnings");

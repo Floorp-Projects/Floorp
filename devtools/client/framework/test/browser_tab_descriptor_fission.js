@@ -47,26 +47,15 @@ add_task(async function() {
 
   const newTarget = toolbox.target;
 
-  const serverSideTargetSwitchingEnabled = Services.prefs.getBoolPref(
-    "devtools.target-switching.server.enabled"
+  is(
+    comTabTarget.actorID,
+    null,
+    "With Fission or server side target switching, example.com target front is destroyed"
   );
-  if (isFissionEnabled() || serverSideTargetSwitchingEnabled) {
-    is(
-      comTabTarget.actorID,
-      null,
-      "With Fission or server side target switching, example.com target front is destroyed"
-    );
-    ok(
-      comTabTarget != newTarget,
-      "With Fission or server side target switching, a new target was created for example.org"
-    );
-  } else {
-    is(
-      comTabTarget,
-      newTarget,
-      "Without Fission, nor server side targets, the example.com target is reused"
-    );
-  }
+  ok(
+    comTabTarget != newTarget,
+    "With Fission or server side target switching, a new target was created for example.org"
+  );
 
   const onDescriptorDestroyed = tabDescriptor.once("descriptor-destroyed");
 

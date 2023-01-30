@@ -39,10 +39,10 @@ add_task(async function() {
   // Navigation clears messages. Wait for that clear to happen before
   // continuing the test or it might destroy messages we wait later on (Bug
   // 1270234).
-  const promises = [hud.ui.once("messages-cleared")];
-  if (isFissionEnabled() || isServerTargetSwitchingEnabled()) {
-    promises.push(hud.commands.targetCommand.once("switched-target"));
-  }
+  const promises = [
+    hud.ui.once("messages-cleared"),
+    hud.commands.targetCommand.once("switched-target"),
+  ];
 
   gBrowser.goBack();
 

@@ -6,18 +6,7 @@
 
 "use strict";
 
-// test without target switching
 add_task(async function() {
-  await testNavigation();
-});
-
-// test with target switching enabled
-add_task(async function() {
-  enableTargetSwitching();
-  await testNavigation();
-});
-
-async function testNavigation() {
   const URL1 = buildURLWithContent(
     "example.com",
     `<h1>example.com</h1>` +
@@ -70,4 +59,4 @@ async function testNavigation() {
     "Session Storage",
     "sessionStorage item is properly displayed"
   );
-}
+});
