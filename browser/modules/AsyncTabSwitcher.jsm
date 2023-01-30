@@ -1388,7 +1388,10 @@ class AsyncTabSwitcher {
           );
         }
       }
-      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Composited");
+      let { innerWindowId } = this.window.windowGlobalChild;
+      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Composited", {
+        innerWindowId,
+      });
       this.switchPaintId = -1;
     }
   }
@@ -1431,7 +1434,8 @@ class AsyncTabSwitcher {
       TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
     }
     TelemetryStopwatch.start("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
-    ChromeUtils.addProfilerMarker("AsyncTabSwitch:Start");
+    let { innerWindowId } = this.window.windowGlobalChild;
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:Start", { innerWindowId });
   }
 
   noteFinishTabSwitch() {
@@ -1444,7 +1448,8 @@ class AsyncTabSwitcher {
     if (time != -1) {
       TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
       this.log("DEBUG: tab switch time = " + time);
-      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Finish");
+      let { innerWindowId } = this.window.windowGlobalChild;
+      ChromeUtils.addProfilerMarker("AsyncTabSwitch:Finish", { innerWindowId });
     }
   }
 
@@ -1459,7 +1464,10 @@ class AsyncTabSwitcher {
       "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS",
       this.window
     );
-    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerShown");
+    let { innerWindowId } = this.window.windowGlobalChild;
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerShown", {
+      innerWindowId,
+    });
     Services.telemetry
       .getHistogramById("FX_TAB_SWITCH_SPINNER_VISIBLE_TRIGGER")
       .add(this._loadTimerClearedBy);
@@ -1482,7 +1490,10 @@ class AsyncTabSwitcher {
       "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS",
       this.window
     );
-    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerHidden");
+    let { innerWindowId } = this.window.windowGlobalChild;
+    ChromeUtils.addProfilerMarker("AsyncTabSwitch:SpinnerHidden", {
+      innerWindowId,
+    });
     // we do not get a onPaint after displaying the spinner
     this._loadTimerClearedBy = "none";
   }
