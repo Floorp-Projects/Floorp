@@ -1694,7 +1694,11 @@ static bool CopyFromRematerializedFrame(JSContext* cx, JitActivation* act,
     *frame->valueSlot(i) = rematFrame->locals()[i];
   }
 
-  frame->setReturnValue(rematFrame->returnValue());
+  if (frame->script()->noScriptRval()) {
+    frame->setReturnValue(UndefinedValue());
+  } else {
+    frame->setReturnValue(rematFrame->returnValue());
+  }
 
   // Don't copy over the hasCachedSavedFrame bit. The new BaselineFrame we're
   // building has a different AbstractFramePtr, so it won't be found in the
