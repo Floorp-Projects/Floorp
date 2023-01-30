@@ -29,7 +29,7 @@ gcloud:
 
 flank:
   project: GOOGLE_PROJECT
-  max-test-shards: 50
+  max-test-shards: 100
   num-test-runs: 1
   output-style: compact
   full-junit-result: true
