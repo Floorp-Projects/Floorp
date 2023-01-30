@@ -319,10 +319,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mShouldSendWebProgressEventsToParent(false),
       mRenderLayers(true),
       mIsPreservingLayers(false),
-      mPendingDocShellIsActive(false),
-      mPendingDocShellReceivedMessage(false),
-      mPendingRenderLayers(false),
-      mPendingRenderLayersReceivedMessage(false),
       mLayersObserverEpoch{1},
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
       mNativeWindowHandle(0),
@@ -330,8 +326,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
 #if defined(ACCESSIBILITY)
       mTopLevelDocAccessibleChild(nullptr),
 #endif
-      mPendingLayersObserverEpoch{0},
-      mPendingDocShellBlockers(0),
       mCancelContentJSEpoch(0) {
   mozilla::HoldJSObjects(this);
 
@@ -2508,13 +2502,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvDestroy() {
 
 mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
-  if (mPendingDocShellBlockers > 0) {
-    mPendingRenderLayersReceivedMessage = true;
-    mPendingRenderLayers = aEnabled;
-    mPendingLayersObserverEpoch = aEpoch;
-    return IPC_OK();
-  }
-
   // Since requests to change the rendering state come in from both the hang
   // monitor channel and the PContent channel, we have an ordering problem. This
   // code ensures that we respect the order in which the requests were made and
