@@ -45,6 +45,10 @@ const callExpressionMultiDefinitions = [
   "loader.lazyRequireGetter(globalThis,",
 ];
 
+const subScriptMatches = [
+  /Services\.scriptloader\.loadSubScript\("(.*?)", this\)/,
+];
+
 const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
 
 /**
@@ -154,6 +158,19 @@ function convertCallExpressionToGlobals(node, isGlobal) {
   // a global, so bail out early if we're not a global.
   if (!isGlobal) {
     return [];
+  }
+
+  for (let reg of subScriptMatches) {
+    let match = source.match(reg);
+    if (match) {
+      return getGlobalsForScript(match[1], "script").map(g => {
+        // We don't want any loadSubScript globals to be explicit, as this
+        // could trigger no-unused-vars when importing multiple variables
+        // from a script and not using all of them.
+        g.explicit = false;
+        return g;
+      });
+    }
   }
 
   for (let reg of callExpressionDefinitions) {
@@ -278,6 +295,47 @@ function convertWorkerExpressionToGlobals(node, isGlobal, dirname) {
   }
 
   return results;
+}
+
+/**
+ * Attempts to load the globals for a given script.
+ *
+ * @param {string} src
+ *   The source path or url of the script to look for.
+ * @param {string} type
+ *   The type of the current file (script/module).
+ * @param {string} [dir]
+ *   The directory of the current file.
+ * @returns {object[]}
+ *   An array of objects with details of the globals in them.
+ */
+function getGlobalsForScript(src, type, dir) {
+  let scriptName;
+  if (src.includes("http:")) {
+    // We don't handle this currently as the paths are complex to match.
+  } else if (src.startsWith("chrome://mochikit/content/")) {
+    // Various ways referencing test files.
+    src = src.replace("chrome://mochikit/content/", "/");
+    scriptName = path.join(helpers.rootDir, "testing", "mochitest", src);
+  } else if (src.startsWith("chrome://mochitests/content/browser")) {
+    src = src.replace("chrome://mochitests/content/browser", "");
+    scriptName = path.join(helpers.rootDir, src);
+  } else if (src.includes("SimpleTest")) {
+    // This is another way of referencing test files...
+    scriptName = path.join(helpers.rootDir, "testing", "mochitest", src);
+  } else if (src.startsWith("/tests/")) {
+    scriptName = path.join(helpers.rootDir, src.substring(7));
+  } else if (dir) {
+    // Fallback to hoping this is a relative path.
+    scriptName = path.join(dir, src);
+  }
+  if (scriptName && fs.existsSync(scriptName)) {
+    return module.exports.getGlobalsForFile(scriptName, {
+      ecmaVersion: helpers.getECMAVersion(),
+      sourceType: type,
+    });
+  }
+  return [];
 }
 
 /**
@@ -554,40 +612,7 @@ module.exports = {
       if (!script.src) {
         continue;
       }
-      let scriptName;
-      if (script.src.includes("http:")) {
-        // We don't handle this currently as the paths are complex to match.
-      } else if (script.src.includes("chrome")) {
-        // This is one way of referencing test files.
-        script.src = script.src.replace("chrome://mochikit/content/", "/");
-        scriptName = path.join(
-          helpers.rootDir,
-          "testing",
-          "mochitest",
-          script.src
-        );
-      } else if (script.src.includes("SimpleTest")) {
-        // This is another way of referencing test files...
-        scriptName = path.join(
-          helpers.rootDir,
-          "testing",
-          "mochitest",
-          script.src
-        );
-      } else if (script.src.startsWith("/tests/")) {
-        scriptName = path.join(helpers.rootDir, script.src.substring(7));
-      } else {
-        // Fallback to hoping this is a relative path.
-        scriptName = path.join(dir, script.src);
-      }
-      if (scriptName && fs.existsSync(scriptName)) {
-        globals.push(
-          ...module.exports.getGlobalsForFile(scriptName, {
-            ecmaVersion: helpers.getECMAVersion(),
-            sourceType: script.type,
-          })
-        );
-      }
+      globals.push(...getGlobalsForScript(script.src, script.type, dir));
     }
 
     lastHTMLGlobals.filePath = filePath;
