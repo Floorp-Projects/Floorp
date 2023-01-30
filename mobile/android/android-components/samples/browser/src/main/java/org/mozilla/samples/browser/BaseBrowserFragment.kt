@@ -5,6 +5,7 @@
 package org.mozilla.samples.browser
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -29,12 +30,12 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayA
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.support.base.feature.ActivityResultHandler
-import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.utils.ext.requestInPlacePermissions
 import org.mozilla.samples.browser.databinding.FragmentBrowserBinding
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
@@ -129,8 +130,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 ),
                 tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->
-                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
-                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                    requestInPlacePermissions(permissions) { result ->
+                        downloadsFeature.get()?.onPermissionsResult(
+                            result.keys.toTypedArray(),
+                            result.values.map {
+                                when (it) {
+                                    true -> PackageManager.PERMISSION_GRANTED
+                                    false -> PackageManager.PERMISSION_DENIED
+                                }
+                            }.toIntArray(),
+                        )
+                    }
                 },
             ),
             owner = this,
@@ -173,8 +183,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 customTabId = sessionId,
                 fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
-                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
-                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                    requestInPlacePermissions(permissions) { result ->
+                        promptFeature.get()?.onPermissionsResult(
+                            result.keys.toTypedArray(),
+                            result.values.map {
+                                when (it) {
+                                    true -> PackageManager.PERMISSION_GRANTED
+                                    false -> PackageManager.PERMISSION_DENIED
+                                }
+                            }.toIntArray(),
+                        )
+                    }
                 },
             ),
             owner = this,
@@ -199,8 +218,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 ),
                 onNeedToRequestPermissions = { permissions ->
-                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358
-                    requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+                    requestInPlacePermissions(permissions) { result ->
+                        sitePermissionsFeature.get()?.onPermissionsResult(
+                            result.keys.toTypedArray(),
+                            result.values.map {
+                                when (it) {
+                                    true -> PackageManager.PERMISSION_GRANTED
+                                    false -> PackageManager.PERMISSION_DENIED
+                                }
+                            }.toIntArray(),
+                        )
+                    }
                 },
                 onShouldShowRequestPermissionRationale = { shouldShowRequestPermissionRationale(it) },
                 store = components.store,
@@ -251,27 +279,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         listOf(findInPageIntegration, toolbarFeature, sessionFeature).any { it.onBackPressed() }
 
     @CallSuper
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        val feature: PermissionsFeature? = when (requestCode) {
-            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.get()
-            REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.get()
-            REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.get()
-            else -> null
-        }
-        feature?.onPermissionsResult(permissions, grantResults)
-    }
-
-    @CallSuper
     override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
         return activityResultHandler.any { it.onActivityResult(requestCode, data, resultCode) }
     }
 
     companion object {
         private const val SESSION_ID_KEY = "session_id"
-
-        private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
-        private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
-        private const val REQUEST_CODE_APP_PERMISSIONS = 3
 
         @JvmStatic
         protected fun Bundle.putSessionId(sessionId: String?) {
