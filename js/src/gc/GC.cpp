@@ -3525,9 +3525,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 #endif
 
 #ifdef DEBUG
-  stats().log("Incremental: %d, lastMarkSlice: %d, useZeal: %d, budget: %s",
-              bool(isIncremental), bool(lastMarkSlice), bool(useZeal),
-              DescribeBudget(budget));
+  stats().log(
+      "Incremental: %d, lastMarkSlice: %d, useZeal: %d, budget: %s, "
+      "budgetWasIncreased: %d",
+      bool(isIncremental), bool(lastMarkSlice), bool(useZeal),
+      DescribeBudget(budget), budgetWasIncreased);
 #endif
 
   if (useZeal && hasIncrementalTwoSliceZealMode()) {
