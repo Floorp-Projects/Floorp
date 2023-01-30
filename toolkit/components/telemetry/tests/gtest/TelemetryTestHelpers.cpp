@@ -5,7 +5,6 @@
 #include "TelemetryTestHelpers.h"
 
 #include "core/TelemetryCommon.h"
-#include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
 #include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CallAndConstruct.h"    // JS_CallFunctionName
@@ -259,99 +258,6 @@ nsTArray<nsString> EventValuesToArray(JSContext* aCx,
   }
 
   return valueArray;
-}
-
-void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-                       bool aClear) {
-  nsCOMPtr<nsITelemetry> telemetry =
-      do_GetService("@mozilla.org/base/telemetry;1");
-
-  JS::Rooted<JS::Value> originSnapshot(aCx);
-  nsresult rv;
-  rv = telemetry->GetOriginSnapshot(aClear, aCx, &originSnapshot);
-  ASSERT_EQ(rv, NS_OK) << "Snapshotting origin data must not fail.";
-  ASSERT_TRUE(originSnapshot.isObject())
-  << "The snapshot must be an object.";
-
-  aResult.set(originSnapshot);
-}
-
-/*
- * Extracts the `a` and `b` strings from the prioData snapshot object
- * of any length. Which looks like:
- *
- * [{
- *   encoding: encodingName,
- *   prio: {
- *     a: <string>,
- *     b: <string>,
- *   },
- * }, ...]
- */
-void GetEncodedOriginStrings(
-    JSContext* aCx, const nsCString& aEncoding,
-    nsTArray<Tuple<nsCString, nsCString>>& aPrioStrings) {
-  JS::Rooted<JS::Value> snapshot(aCx);
-  nsresult rv;
-  rv = TelemetryOrigin::GetEncodedOriginSnapshot(false /* clear */, aCx,
-                                                 &snapshot);
-
-  ASSERT_NS_SUCCEEDED(rv);
-  ASSERT_FALSE(snapshot.isNullOrUndefined())
-  << "Encoded snapshot must not be null/undefined.";
-
-  JS::Rooted<JSObject*> prioDataObj(aCx, &snapshot.toObject());
-  bool isArray = false;
-  ASSERT_TRUE(JS::IsArrayObject(aCx, prioDataObj, &isArray) && isArray)
-  << "The metric's origins must be in an array.";
-
-  uint32_t length = 0;
-  ASSERT_TRUE(JS::GetArrayLength(aCx, prioDataObj, &length));
-  ASSERT_TRUE(length > 0)
-  << "Length of returned array must greater than 0";
-
-  for (auto i = 0u; i < length; ++i) {
-    JS::Rooted<JS::Value> arrayItem(aCx);
-    ASSERT_TRUE(JS_GetElement(aCx, prioDataObj, i, &arrayItem));
-    ASSERT_TRUE(arrayItem.isObject());
-    ASSERT_FALSE(arrayItem.isNullOrUndefined());
-
-    JS::Rooted<JSObject*> arrayItemObj(aCx, &arrayItem.toObject());
-
-    JS::Rooted<JS::Value> encodingVal(aCx);
-    ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "encoding", &encodingVal));
-    ASSERT_TRUE(encodingVal.isString());
-    nsAutoJSString jsStr;
-    ASSERT_TRUE(jsStr.init(aCx, encodingVal));
-
-    nsPrintfCString encoding(aEncoding.get(),
-                             i % TelemetryOrigin::SizeOfPrioDatasPerMetric());
-    ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
-    << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
-    << ") must match expected (" << encoding << ")";
-
-    JS::Rooted<JS::Value> prioVal(aCx);
-    ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
-    ASSERT_TRUE(prioVal.isObject());
-    ASSERT_FALSE(prioVal.isNullOrUndefined());
-
-    JS::Rooted<JSObject*> prioObj(aCx, &prioVal.toObject());
-
-    JS::Rooted<JS::Value> aVal(aCx);
-    nsAutoJSString aStr;
-    ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "a", &aVal));
-    ASSERT_TRUE(aVal.isString());
-    ASSERT_TRUE(aStr.init(aCx, aVal));
-
-    JS::Rooted<JS::Value> bVal(aCx);
-    nsAutoJSString bStr;
-    ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "b", &bVal));
-    ASSERT_TRUE(bVal.isString());
-    ASSERT_TRUE(bStr.init(aCx, bVal));
-
-    aPrioStrings.AppendElement(Tuple<nsCString, nsCString>(
-        NS_ConvertUTF16toUTF8(aStr), NS_ConvertUTF16toUTF8(bStr)));
-  }
 }
 
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
