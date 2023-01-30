@@ -1655,18 +1655,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     type: "object",
     required: ["keyword"],
     properties: {
-      blockL10n: {
-        type: "object",
-        required: ["id"],
-        properties: {
-          id: {
-            type: "string",
-          },
-          args: {
-            type: "array",
-          },
-        },
-      },
       content: {
         type: "string",
       },
