@@ -6,7 +6,6 @@
 //!
 //! TODO: document this!
 
-use std::cmp;
 use api::{ColorF, PremultipliedColorF, PropertyBinding};
 use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
@@ -306,14 +305,17 @@ fn prepare_interned_prim_for_render(
                 let world_scale = LayoutToWorldScale::new(scale_width.max(scale_height));
 
                 let scale_factor = world_scale * Scale::new(1.0);
-                let mut task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
-                if task_size.width > MAX_LINE_DECORATION_RESOLUTION as i32 ||
-                   task_size.height > MAX_LINE_DECORATION_RESOLUTION as i32 {
-                     let max_extent = cmp::max(task_size.width, task_size.height);
-                     let task_scale_factor = Scale::new(MAX_LINE_DECORATION_RESOLUTION as f32 / max_extent as f32);
-                     task_size = (LayoutSize::from_au(cache_key.size) * scale_factor * task_scale_factor)
+                let task_size_f = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil();
+                let mut task_size = if task_size_f.width > MAX_LINE_DECORATION_RESOLUTION as f32 ||
+                   task_size_f.height > MAX_LINE_DECORATION_RESOLUTION as f32 {
+                     let max_extent = task_size_f.width.max(task_size_f.height);
+                     let task_scale_factor = Scale::new(MAX_LINE_DECORATION_RESOLUTION as f32 / max_extent);
+                     let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor * task_scale_factor)
                                     .ceil().to_i32();
-                }
+                    task_size
+                } else {
+                    task_size_f.to_i32()
+                };
 
                 // It's plausible, due to float accuracy issues that the line decoration may be considered
                 // visible even if the scale factors are ~0. However, the render task allocation below requires
