@@ -16,7 +16,6 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>
   <body>Test browser toolbox</body>`;
 
 /* global gToolbox */
-/* import-globals-from ../../framework/browser-toolbox/test/helpers-browser-toolbox.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
   this

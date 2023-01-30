@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-/* import-globals-from ../../../rules/test/head.js */
 
 // Import the rule view's head.js first (which itself imports inspector's head.js and shared-head.js).
 Services.scriptloader.loadSubScript(

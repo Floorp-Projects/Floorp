@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from ../../../shared/test/shared-head.js */
-/* import-globals-from ../../../inspector/test/shared-head.js */
-/* import-globals-from ../../../shared/test/telemetry-test-helpers.js */
-
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
             toggleRow, toggleMenuItem, addA11yPanelTestsTask, navigate,

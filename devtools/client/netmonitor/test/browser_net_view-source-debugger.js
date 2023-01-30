@@ -11,7 +11,6 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
-/* import-globals-from ../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this

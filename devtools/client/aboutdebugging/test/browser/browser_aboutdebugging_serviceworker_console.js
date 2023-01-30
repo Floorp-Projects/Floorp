@@ -9,7 +9,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this

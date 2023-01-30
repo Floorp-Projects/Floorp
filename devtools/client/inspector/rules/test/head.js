@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../../shared/test/telemetry-test-helpers.js */
-/* import-globals-from ../../test/head.js */
+
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).

@@ -3,7 +3,6 @@
 
 "use strict";
 
-/* import-globals-from inspector-helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js",
   this
