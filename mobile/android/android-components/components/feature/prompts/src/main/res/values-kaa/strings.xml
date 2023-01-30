@@ -41,6 +41,8 @@
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">Isenimińiz kámil me?</string>
 
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Bul sayttan shıǵıwdı qáleysiz be? Siz kirgizgen maǵlıwmat saqlanbawı múmkin</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
     <string name="mozac_feature_prompts_before_unload_stay">Qalıw</string>
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
@@ -111,6 +113,8 @@
     <string name="mozac_feature_prompts_select_address_2">Mánzil saylań</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description">Usınıs etilgen mánzillerdi keńeytiriw</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Usınıs etilgen mánzillerdi qısqartıw</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Mánzillerdi basqarıw</string>
 </resources>

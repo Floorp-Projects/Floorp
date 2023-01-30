@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">Qupıyalıq sazlamaların oqıw hám ózgertiw</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">Qupıyalıq sazlawların oqıw hám ózgertiw</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Brauzer betlerine kiriw</string>
     <!-- Description for unlimited_storage permission. -->
@@ -9,7 +9,7 @@
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Saylandılardı oqıw hám ózgertiw</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description">Brauzer sazlamaların oqıw hám ózgertiw</string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Brauzer sazlawların oqıw hám ózgertiw</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Almasıw buferinen maǵlıwmatlardı alıw</string>
     <!-- Description for clipboard_write permission. -->
@@ -29,17 +29,27 @@
     <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">Ruqsatnamalar haqqında tolıǵıraq úyreniw</string>
     <!-- The settings of the add-on. -->
-    <string name="mozac_feature_addons_settings">Sazlamalar</string>
+    <string name="mozac_feature_addons_settings">Sazlawlar</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Qosıwlı</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Óshirilgen</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Jeke betlerde iske túsiriw</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Iske túsirilgen</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">Óshirilgen</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Ornatıldı</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Usınıs etilgen</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">Házirshe kiriw múmkinshiligi joq</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">Óshirilgen</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Tolıq maǵlıwmat</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Ruqsatnamalar</string>
     <!-- This is button that remove (uninstall an add-on). -->
@@ -54,6 +64,8 @@
     <string name="mozac_feature_addons_install_addon_content_description">Qosımshalardı ornatıw</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Biykarlaw</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">Pikirler: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -82,6 +94,26 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s hám %2$slardı %3$sǵa qosıw</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Olardı %1$sǵa qosıw</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Qosımsha tastıyıqlanıp hám júklenip atır…</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s sátli ornatıldı</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s ornatıw ámelge aspadı</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s sátli qosıldı</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s qosıw ámelge aspadı</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s sátli óshirildi</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s óshiriw ámelge aspadı</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s sátli óshirildi</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s óshiriw ámelge aspadı</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s sátli alıp taslandı</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s alıp taslaw ámelge aspadı</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->

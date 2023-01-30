@@ -137,7 +137,16 @@
     <string name="mozac_browser_errorpages_file_access_denied_title">Faylǵa kiriw biykar etilgen</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksi server qosılıwdı biykarladı</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksi server tawılmadı</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Zıyanlı sayt mashqalası</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Kútilmegen sayt mashqalası</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Zıyanlı sayt mashqalası</string>
@@ -147,4 +156,6 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Qáwipsiz sayt joq</string>
-    </resources>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP saytında dawam etiw</string>
+</resources>

@@ -17,8 +17,14 @@
     <string name="mozac_feature_readerview_font_size_increase_desc">Shrift ólshemin úlkeytiw</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Qaranǵı</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Qara reń gamması</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Sepia</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Sepiya reń gamması</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Jaqtı</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Ashıq reń gamması</string>
+</resources>
