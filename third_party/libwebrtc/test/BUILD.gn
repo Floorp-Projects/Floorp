@@ -13,7 +13,6 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
-if (!build_with_mozilla) {
 if (!build_with_chromium) {
   group("test") {
     testonly = true
@@ -158,6 +157,7 @@ rtc_library("audio_test_common") {
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
+if (!build_with_mozilla) {
 if (!build_with_chromium) {
   if (is_mac || is_ios) {
     rtc_library("video_test_mac") {
@@ -239,7 +239,6 @@ rtc_library("rtp_test_utils") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("field_trial") {
   testonly = true
   visibility = [ "*" ]
@@ -404,6 +403,16 @@ rtc_source_set("test_support") {
     "//testing/gmock",
     "//testing/gtest",
   ]
+  if (build_with_mozilla) {
+    all_dependent_configs -= [
+      "//third_party/googletest:gmock_config",
+      "//third_party/googletest:gtest_config",
+    ]
+    deps -= [
+      "//testing/gmock",
+      "//testing/gtest"
+    ]
+  }
 }
 
 rtc_library("fixed_fps_video_frame_writer_adapter") {
@@ -465,7 +474,9 @@ rtc_library("video_test_support") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 
   if (!is_ios) {
+    if (!build_with_mozilla) {
     deps += [ "//third_party:jpeg" ]
+    }
     sources += [ "testsupport/jpeg_frame_writer.cc" ]
   } else {
     sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
@@ -1015,6 +1026,10 @@ rtc_library("test_common") {
   if (!is_android && !build_with_chromium) {
     deps += [ "../modules/video_capture:video_capture_internal_impl" ]
   }
+  # This, or some form of it should be upstreamed.
+  if (!rtc_include_tests) {
+    deps -= [ "../rtc_base:task_queue_for_test" ]
+  }
 }
 
 rtc_library("mock_transport") {
@@ -1178,6 +1193,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
   ]
 }
 
+if (!build_with_mozilla) {
 if (!build_with_chromium && is_android) {
   rtc_android_library("native_test_java") {
     testonly = true
@@ -1190,6 +1206,7 @@ if (!build_with_chromium && is_android) {
       "//testing/android/native_test:native_test_java",
     ]
   }
+}
 }
 
 rtc_library("call_config_utils") {
@@ -1221,5 +1238,4 @@ rtc_library("fake_encoded_frame") {
     "../api/video:video_rtp_headers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
 }

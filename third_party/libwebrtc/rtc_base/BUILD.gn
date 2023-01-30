@@ -805,7 +805,6 @@ config("rtc_json_suppressions") {
   }
 }
 
-if (!build_with_mozilla) {
 rtc_library("rtc_json") {
   public_configs = [ ":rtc_json_suppressions" ]
   poisonous = [ "rtc_json" ]
@@ -815,7 +814,9 @@ rtc_library("rtc_json") {
     "strings/json.h",
   ]
   deps = [ ":stringutils" ]
+if (!build_with_mozilla) {
   all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
+}
   if (rtc_build_json) {
     deps += [ "//third_party/jsoncpp" ]
   } else {
@@ -826,7 +827,6 @@ rtc_library("rtc_json") {
     defines += [ "WEBRTC_EXTERNAL_JSON" ]
   }
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-}
 }
 
 rtc_library("net_helpers") {
