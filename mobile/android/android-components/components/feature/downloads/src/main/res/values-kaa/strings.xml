@@ -51,4 +51,6 @@
     <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Jeke júklemelerdi biykarlayıq pa?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">Júklemelerdi biykarlaw</string>
-    </resources>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Jeke kóriwde qalıw</string>
+</resources>

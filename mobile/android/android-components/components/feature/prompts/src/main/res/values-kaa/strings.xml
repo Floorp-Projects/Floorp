@@ -31,7 +31,7 @@
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">Logindi saqlayıq pa?</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
-    <string name="mozac_feature_prompts_choose_a_color">Reńdi saylań</string>
+    <string name="mozac_feature_prompts_choose_a_color">Reńdi tańlań</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Ruqsat beriw</string>
 
@@ -48,7 +48,7 @@
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
     <string name="mozac_feature_prompts_before_unload_leave">Shıǵıp ketiw</string>
     <!-- Title of the month chooser dialog. -->
-    <string name="mozac_feature_prompts_set_month">Aydı saylań</string>
+    <string name="mozac_feature_prompts_set_month">Aydı tańlań</string>
     <!-- January (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_jan">Dáliw</string>
     <!-- February month of the year (short description), used on the month chooser dialog. -->
@@ -108,9 +108,9 @@
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string name="mozac_feature_prompts_select_address" moz:removedIn="104" tools:ignore="UnusedResources">Mánzillerdi saylań</string>
+    <string name="mozac_feature_prompts_select_address" moz:removedIn="104" tools:ignore="UnusedResources">Mánzillerdi tańlań</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string name="mozac_feature_prompts_select_address_2">Mánzil saylań</string>
+    <string name="mozac_feature_prompts_select_address_2">Mánzildi tańlań</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description">Usınıs etilgen mánzillerdi keńeytiriw</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->

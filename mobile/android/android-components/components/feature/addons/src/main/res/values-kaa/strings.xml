@@ -18,6 +18,16 @@
     <string name="mozac_feature_addons_permissions_downloads_open_description">Qurılmańızǵa júklengen fayllardı ashıw</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Barlıq ashıq bettegi tekstlerdi oqıw</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Brauzer tariyxına kiriw</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Brauzer proksi sazlawların basqarıw</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Jaqında jabılǵan betlerge kiriw</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Brauzer betlerin jasırıw hám kórsetiw</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Brauzer tariyxına kiriw</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versiya</string>
     <!-- The authors of an add-on. -->
@@ -28,6 +38,8 @@
     <string name="mozac_feature_addons_home_page">Bas bet</string>
     <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">Ruqsatnamalar haqqında tolıǵıraq úyreniw</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">Baha</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Sazlawlar</string>
     <!-- Indicates the add-on is enabled. -->
