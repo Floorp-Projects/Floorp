@@ -716,12 +716,12 @@ Document* ScreenOrientation::GetResponsibleDocument() const {
 }
 
 void ScreenOrientation::MaybeChanged() {
-  if (ShouldResistFingerprinting()) {
+  Document* doc = GetResponsibleDocument();
+  if (!doc || doc->ShouldResistFingerprinting()) {
     return;
   }
 
-  Document* doc = GetResponsibleDocument();
-  BrowsingContext* bc = doc ? doc->GetBrowsingContext() : nullptr;
+  BrowsingContext* bc = doc->GetBrowsingContext();
   if (!bc) {
     return;
   }
@@ -803,19 +803,6 @@ ScreenOrientation::DispatchChangeEventAndResolvePromise() {
 JSObject* ScreenOrientation::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {
   return ScreenOrientation_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-bool ScreenOrientation::ShouldResistFingerprinting() const {
-  if (nsContentUtils::ShouldResistFingerprinting(
-          "Legacy RFP function called to avoid observed hangs in the code "
-          "below if we can avoid it.")) {
-    bool resist = false;
-    if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-      resist = nsContentUtils::ShouldResistFingerprinting(owner->GetDocShell());
-    }
-    return resist;
-  }
-  return false;
 }
 
 NS_IMPL_ISUPPORTS(ScreenOrientation::VisibleEventListener, nsIDOMEventListener)
