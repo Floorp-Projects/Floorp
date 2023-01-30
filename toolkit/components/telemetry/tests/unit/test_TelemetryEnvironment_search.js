@@ -387,14 +387,13 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
     );
   });
 
-  engine.wrappedJSObject.updateFromManifest(
-    extension.baseURI,
-    SearchTestUtils.createEngineManifest({
+  engine.wrappedJSObject.update({
+    manifest: SearchTestUtils.createEngineManifest({
       name: "TestEngine",
       version: "1.2",
       search_url: "https://www.google.com/fake2",
-    })
-  );
+    }),
+  });
 
   await promise;
 
