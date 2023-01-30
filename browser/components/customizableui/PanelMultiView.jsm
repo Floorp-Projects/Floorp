@@ -631,7 +631,8 @@ var PanelMultiView = class extends AssociatedToNode {
    * sure they will not be removed together with the <panelmultiview> element.
    */
   _moveOutKids() {
-    let viewCacheId = this.node.getAttribute("viewCacheId");
+    // this.node may have been set to null by a call to disconnect().
+    let viewCacheId = this.node?.getAttribute("viewCacheId");
     if (!viewCacheId) {
       return;
     }
