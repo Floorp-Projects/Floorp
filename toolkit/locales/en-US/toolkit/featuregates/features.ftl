@@ -24,10 +24,6 @@ experimental-features-devtools-compatibility-panel =
     .label = Developer Tools: Compatibility Panel
 experimental-features-devtools-compatibility-panel-description = A side panel for the Page Inspector that shows you information detailing your app’s cross-browser compatibility status. See <a data-l10n-name="bugzilla">bug 1584464</a> for more details.
 
-# Do not translate 'SameSite', 'Lax' and 'None'.
-experimental-features-cookie-samesite-lax-by-default2 =
-    .label = Cookies: SameSite=Lax by default
-experimental-features-cookie-samesite-lax-by-default2-description = Treat cookies as “SameSite=Lax” by default if no “SameSite” attribute is specified. Developers must opt-in to the current status quo of unrestricted use by explicitly asserting “SameSite=None”.
 
 # Do not translate 'SameSite', 'Lax' and 'None'.
 experimental-features-cookie-samesite-none-requires-secure2 =

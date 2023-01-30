@@ -10971,7 +10971,7 @@
 
 - name: network.cookie.sameSite.laxByDefault
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # lax-by-default 2 minutes tollerance for unsafe methods. The value is in seconds.
