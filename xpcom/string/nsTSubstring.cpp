@@ -1048,12 +1048,24 @@ void nsTSubstring<T>::StripTaggedASCII(const ASCIIMaskArray& aToStrip) {
     return;
   }
 
+  size_t untaggedPrefixLength = 0;
+  for (; untaggedPrefixLength < this->mLength; ++untaggedPrefixLength) {
+    uint32_t theChar = (uint32_t)this->mData[untaggedPrefixLength];
+    if (mozilla::ASCIIMask::IsMasked(aToStrip, theChar)) {
+      break;
+    }
+  }
+
+  if (untaggedPrefixLength == this->mLength) {
+    return;
+  }
+
   if (!EnsureMutable()) {
     AllocFailed(this->mLength);
   }
 
-  char_type* to = this->mData;
-  char_type* from = this->mData;
+  char_type* to = this->mData + untaggedPrefixLength;
+  char_type* from = to;
   char_type* end = this->mData + this->mLength;
 
   while (from < end) {
