@@ -112,20 +112,6 @@ interface nsINotificationStorage : nsISupports
    */
   void delete(in AString origin,
               in AString id);
-
-  /**
-   * Notifications are not supposed to be persistent, according to spec, at
-   * least for now. But we want to be able to have this behavior on B2G. Thus,
-   * this method will check if the origin sending the notifications is a valid
-   * registered app with a manifest or not. Hence, a webpage that has none
-   * will have its notification sent and available (via Notification.get())
-   * during the life time of the page.
-   *
-   * @param origin: Origin from which the notification is sent.
-   *
-   * @return boolean
-   */
-  boolean canPut(in AString origin);
 };
 
 %{C++

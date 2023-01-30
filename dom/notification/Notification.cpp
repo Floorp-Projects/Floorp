@@ -688,11 +688,6 @@ bool Notification::PrefEnabled(JSContext* aCx, JSObject* aObj) {
   return StaticPrefs::dom_webnotifications_enabled();
 }
 
-// static
-bool Notification::IsGetEnabled(JSContext* aCx, JSObject* aObj) {
-  return NS_IsMainThread();
-}
-
 Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                            const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
@@ -1682,17 +1677,6 @@ already_AddRefed<Promise> Notification::Get(
   }
 
   return promise.forget();
-}
-
-already_AddRefed<Promise> Notification::Get(
-    const GlobalObject& aGlobal, const GetNotificationOptions& aFilter,
-    ErrorResult& aRv) {
-  AssertIsOnMainThread();
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-
-  return Get(window, aFilter, u""_ns, aRv);
 }
 
 class WorkerGetResultRunnable final : public NotificationWorkerRunnable {
