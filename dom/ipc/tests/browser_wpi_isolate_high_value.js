@@ -1,5 +1,4 @@
 // Import this in order to use `do_tests()`.
-/* import-globals-from ./browser_wpi_base.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/dom/ipc/tests/browser_wpi_base.js",
   this

@@ -10,9 +10,8 @@
  * https://searchfox.org/mozilla-central/source/dom/localstorage/test/unit/head.js
  **/
 
-// To use this file, explicitly import it via (including the eslint comment):
+// To use this file, explicitly import it via:
 //
-// /* import-globals-from browser_head.js */
 // Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/dom/serviceworkers/test/browser_head.js", this);
 
 // Find the current parent directory of the test context we're being loaded into
