@@ -322,3 +322,53 @@ add_task(async function test_migrateEncryptedCreditCardNumber() {
   Assert.ok(v1record.deleted);
   Assert.ok(v2record.deleted);
 });
+
+add_task(async function test_migrateDeprecatedCreditCardV4() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+
+  let profileStorage = new FormAutofillStorage(path);
+  await profileStorage.initialize();
+
+  let records = [
+    {
+      guid: "test-guid1",
+      version: CREDIT_CARD_SCHEMA_VERSION,
+      "cc-name": "Alice",
+      _sync: {
+        changeCounter: 0,
+        lastSyncedFields: {},
+      },
+    },
+    {
+      guid: "test-guid2",
+      version: 4,
+      "cc-name": "Timothy",
+      _sync: {
+        changeCounter: 0,
+        lastSyncedFields: {},
+      },
+    },
+    {
+      guid: "test-guid3",
+      version: 4,
+      "cc-name": "Bob",
+    },
+  ];
+
+  profileStorage._store.data.creditCards = records;
+  for (let idx = 0; idx < records.length; idx++) {
+    await profileStorage.creditCards._migrateRecord(records[idx], idx);
+  }
+
+  profileStorage.creditCards.pullSyncChanges();
+
+  // Record that has already synced before, do not sync again
+  equal(getSyncChangeCounter(profileStorage.creditCards, records[0].guid), 0);
+
+  // alaways force sync v4 record
+  equal(records[1].version, CREDIT_CARD_SCHEMA_VERSION);
+  equal(getSyncChangeCounter(profileStorage.creditCards, records[1].guid), 1);
+
+  equal(records[2].version, CREDIT_CARD_SCHEMA_VERSION);
+  equal(getSyncChangeCounter(profileStorage.creditCards, records[2].guid), 1);
+});
