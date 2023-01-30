@@ -23,9 +23,6 @@ interface Notification : EventTarget {
   [NewObject, Func="mozilla::dom::Notification::RequestPermissionEnabledForScope"]
   static Promise<NotificationPermission> requestPermission(optional NotificationPermissionCallback permissionCallback);
 
-  [NewObject, Func="mozilla::dom::Notification::IsGetEnabled"]
-  static Promise<sequence<Notification>> get(optional GetNotificationOptions filter = {});
-
   attribute EventHandler onclick;
 
   attribute EventHandler onshow;
