@@ -88,7 +88,9 @@ It appears that initial vendoring verification has failed.
 if [ "x$RESUME" = "x" ]; then
   # start off by verifying the vendoring process to make sure no changes have
   # been added to elm to fix bugs.
+  echo_log "Verifying vendoring..."
   bash $SCRIPT_DIR/verify_vendoring.sh
+  echo_log "Done verifying vendoring."
 fi
 ERROR_HELP=""
 
