@@ -103,13 +103,13 @@ p {
   background-color: var(--in-content-box-background);
 }
 
-.toggle-button[aria-pressed="true"]:not(:active, :hover:active):before {
-  outline-color: var(--in-content-box-background);
+.toggle-button[aria-pressed="true"]:-moz-locale-dir(rtl)::before,
+.toggle-button[aria-pressed="true"]:dir(rtl)::before {
+  translate: calc(-1 * var(--dot-transform-x));
 }
 
-.toggle-button:-moz-locale-dir(rtl)::before,
-.toggle-button:dir(rtl)::before {
-  scale: -1;
+.toggle-button[aria-pressed="true"]:not(:active, :hover:active)::before {
+  outline-color: var(--in-content-box-background);
 }
 
 @media (prefers-reduced-motion: no-preference) {
