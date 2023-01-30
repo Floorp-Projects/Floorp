@@ -290,7 +290,7 @@
     <string name="preference_privacy_block_ads">&quot;Blocar los traçadors publicitaris &quot;</string>
     <string name="preference_privacy_block_ads_summary">De publicitats vos seguèsson, amai las cliquetz pas</string>
     <string name="preference_privacy_block_analytics">Blocar los traçadors d’estatisticas</string>
-    <string name="preference_privacy_block_analytics_summary">Servisson a reculhir, analisar e mesurar las activitats coma la tòca o desfilament</string>
+    <string name="preference_privacy_block_analytics_summary">Servisson a reculhir, analisar e mesurar las activitats coma la tòca o defilament</string>
     <string name="preference_privacy_block_social">Blocar los traçadors de malhums socials</string>
     <string name="preference_privacy_block_social_summary">Son embarcats dins de sites per traçar vòstras visitas e mostrar de foncionalitat coma los botons de partatge</string>
     <string name="preference_privacy_block_content">Blocar los autres traçadors de contengut</string>
@@ -725,14 +725,20 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s escafarà los cookies d’aqueste site e actualizarà la pagina. La supression de totes los cookies pòt vos desconnectar o voidar los panièrs de crompa.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s pòt ensajar de regetar automaticament las demandas de cookies de las bandièras de cookies. Se l’opcion de refús es pas disponibla, %1$s accèpta totes las cookies per tampar la bandièra.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s pòt ensajar de regetar automaticament las demandas de cookies de las bandièras de cookies. Se l’opcion de refús es pas disponibla, %1$s accèpta totes las cookies per tampar la bandièra.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s pòt ensajar de refusar automaticament las demandas de cookies.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner">%1$s ensaja de regetar las demandas de cookies per ignorar las bandièras de cookies embestiantas.\n\n Gerir preferéncias de bandièras de cookies als paramètres.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ensaja de regetar las demandas de cookies per ignorar las bandièras de cookies embestiantas.\n\n Gerir preferéncias de bandièras de cookies als paramètres.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message).This text should be the same as the settings text from "cfr_for_cookie_banner".The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings">paramètres</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">paramètres</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">paramètres</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Lectura automatica</string>
@@ -1023,13 +1029,18 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Tampar</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Widget de recèrca</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Istoric de navegacion escafat ! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
@@ -1039,13 +1050,19 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">Vos anam daissar navegar en privat, mas lo còp que ven, començat mai rapidament amb un widget %1$s per l’ecran d’acuèlh.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Apondre lo widget a l’ecran d’acuèlh</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Widget apondut a l’ecran d’acuèlh</string>
 </resources>
