@@ -8,9 +8,7 @@ import android.Manifest
 import android.content.Context
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
-import android.os.Build
 import androidx.core.net.toUri
-import androidx.test.filters.SdkSuppress
 import androidx.test.rule.GrantPermissionRule
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -55,7 +53,6 @@ class SitePermissionsTest {
     @get: Rule
     val retryTestRule = RetryTestRule(3)
 
-    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")
     @SmokeTest
     @Test
     fun audioVideoPermissionChoiceOnEachRequestTest() {
