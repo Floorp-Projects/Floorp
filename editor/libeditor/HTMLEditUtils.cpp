@@ -138,12 +138,17 @@ template bool HTMLEditUtils::IsSameCSSColorValue(const nsACString& aColorA,
                                                  const nsACString& aColorB);
 
 bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
-                                        const nsIContent& aRightContent,
-                                        StyleDifference aStyleDifference) {
+                                        const nsIContent& aRightContent) {
   if (aLeftContent.NodeInfo()->NameAtom() !=
       aRightContent.NodeInfo()->NameAtom()) {
     return false;
   }
+
+  if (!aLeftContent.IsElement()) {
+    return true;  // can join text nodes, etc
+  }
+  MOZ_ASSERT(aRightContent.IsElement());
+
   if (aLeftContent.NodeInfo()->NameAtom() == nsGkAtoms::font) {
     const nsAttrValue* const leftSize =
         aLeftContent.AsElement()->GetParsedAttr(nsGkAtoms::size);
@@ -169,17 +174,6 @@ bool HTMLEditUtils::CanContentsBeJoined(const nsIContent& aLeftContent,
     if (!leftFace ^ !rightFace || (leftFace && !leftFace->Equals(*rightFace))) {
       return false;
     }
-  }
-  if (aStyleDifference == StyleDifference::Ignore ||
-      !aLeftContent.IsElement()) {
-    return true;
-  }
-  if (aStyleDifference == StyleDifference::CompareIfSpanElements &&
-      !aLeftContent.IsHTMLElement(nsGkAtoms::span)) {
-    return true;
-  }
-  if (!aLeftContent.IsElement() || !aRightContent.IsElement()) {
-    return false;
   }
   nsStyledElement* leftStyledElement =
       nsStyledElement::FromNode(const_cast<nsIContent*>(&aLeftContent));

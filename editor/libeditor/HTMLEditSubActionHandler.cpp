@@ -80,7 +80,6 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using EmptyCheckOptions = HTMLEditUtils::EmptyCheckOptions;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
-using StyleDifference = HTMLEditUtils::StyleDifference;
 using WalkTextOption = HTMLEditUtils::WalkTextOption;
 using WalkTreeDirection = HTMLEditUtils::WalkTreeDirection;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
@@ -9050,8 +9049,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   if ((lastEditableChildOfLeftContent->IsText() ||
        lastEditableChildOfLeftContent->IsElement()) &&
       HTMLEditUtils::CanContentsBeJoined(*lastEditableChildOfLeftContent,
-                                         *firstEditableChildOfRightContent,
-                                         StyleDifference::CompareIfElements)) {
+                                         *firstEditableChildOfRightContent)) {
     nsresult rv = JoinNearestEditableNodesWithTransaction(
         *lastEditableChildOfLeftContent, *firstEditableChildOfRightContent,
         aNewFirstChildOfRightNode);
