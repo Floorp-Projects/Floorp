@@ -6,7 +6,6 @@
 requestLongerTimeout(2);
 
 // Import helpers
-/* import-globals-from fullscreen_helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/dom/base/test/fullscreen/fullscreen_helpers.js",
   this

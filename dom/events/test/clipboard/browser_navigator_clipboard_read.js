@@ -6,8 +6,6 @@
 
 "use strict";
 
-/* import-globals-from head.js */
-
 const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"

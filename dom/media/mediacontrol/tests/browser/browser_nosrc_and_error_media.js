@@ -1,5 +1,4 @@
 // Import this in order to use `triggerPictureInPicture()`.
-/* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
   this
