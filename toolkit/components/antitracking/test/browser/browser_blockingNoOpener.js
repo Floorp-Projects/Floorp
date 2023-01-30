@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 gFeatures = "noopener";
 
 AntiTracking.runTestInNormalAndPrivateMode(

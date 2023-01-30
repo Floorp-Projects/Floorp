@@ -1,8 +1,6 @@
 // This test works by setting up an exception for the tracker domain, which
 // disables all the anti-tracking tests.
 
-/* import-globals-from antitracking_head.js */
-
 add_task(async _ => {
   PermissionTestUtils.add(
     "http://example.net",

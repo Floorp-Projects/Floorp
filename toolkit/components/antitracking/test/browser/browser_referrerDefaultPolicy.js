@@ -2,10 +2,10 @@
 
 requestLongerTimeout(8);
 
-const CHROME_BASE =
-  "chrome://mochitests/content/browser/browser/base/content/test/general/";
-Services.scriptloader.loadSubScript(CHROME_BASE + "head.js", this);
-/* import-globals-from ../../../../../browser/base/content/test/general/head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/base/content/test/general/head.js",
+  this
+);
 
 async function openAWindow(usePrivate) {
   info("Creating a new " + (usePrivate ? "private" : "normal") + " window");

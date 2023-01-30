@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTest(
   "Storage Access is removed when topframe navigates",
   // blocking callback

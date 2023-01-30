@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTestInNormalAndPrivateMode(
   "IndexedDB in workers",
   async _ => {

@@ -9,8 +9,6 @@
   }],
 */
 
-/* import-globals-from ../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
-
 var gPopupShownExpected = false;
 var gPopupShownListener;
 var gLastAutoCompleteResults;

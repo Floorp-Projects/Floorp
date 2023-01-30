@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTest(
   "Storage Access API returns promises that maintain user activation",
   // blocking callback

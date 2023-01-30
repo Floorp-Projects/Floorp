@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTest(
   "Test whether we receive any persistent permissions in private windows",
   // Blocking callback

@@ -1,8 +1,6 @@
 // This test ensures HasStorageAccess API returns the right value under different
 // scenarios.
 
-/* import-globals-from antitracking_head.js */
-
 var settings = [
   // same-origin no-tracker
   {

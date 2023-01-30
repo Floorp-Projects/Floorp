@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from head.js */
-
 /*
  * Bug 1759496 - A test to verify if the console message of partitioned storage
  *               was sent correctly.

@@ -1,6 +1,3 @@
-/* import-globals-from antitracking_head.js */
-/* import-globals-from partitionedstorage_head.js */
-
 AntiTracking.runTestInNormalAndPrivateMode(
   "localStorage and Storage Access API",
   async _ => {

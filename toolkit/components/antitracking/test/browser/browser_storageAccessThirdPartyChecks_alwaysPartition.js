@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 const allBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL;
 const foreignBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN;
 

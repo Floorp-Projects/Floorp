@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* import-globals-from antitracking_head.js */
-
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );

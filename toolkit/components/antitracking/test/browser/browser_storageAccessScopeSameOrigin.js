@@ -1,6 +1,3 @@
-/* import-globals-from ../../../../../browser/modules/test/browser/head.js */
-/* import-globals-from head.js */
-/* import-globals-from storage_access_head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/modules/test/browser/head.js",
   this

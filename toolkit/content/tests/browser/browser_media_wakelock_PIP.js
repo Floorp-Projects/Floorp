@@ -37,7 +37,6 @@ const VIDEO_WAKELOCK_NAME = "video-playing";
 const TEST_VIDEO_ID = "v";
 
 // Import this in order to use `triggerPictureInPicture()`.
-/* import-globals-from ../../../../toolkit/components/pictureinpicture/tests/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
   this

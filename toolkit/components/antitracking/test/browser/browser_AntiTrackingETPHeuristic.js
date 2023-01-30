@@ -1,7 +1,5 @@
 "use strict";
 
-/* import-globals-from antitracking_head.js */
-
 const TEST_PAGE = TEST_DOMAIN + TEST_PATH + "page.html";
 const TEST_REDIRECT_PAGE = TEST_DOMAIN + TEST_PATH + "redirect.sjs";
 const TEST_TRACKING_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "page.html";
