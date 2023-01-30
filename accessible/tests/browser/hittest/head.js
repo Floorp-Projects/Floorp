@@ -4,11 +4,9 @@
 
 "use strict";
 
-// Load the shared-head file first.
-/* import-globals-from ../shared-head.js */
-
 /* exported CommonUtils, testChildAtPoint, Layout, hitTest, testOffsetAtPoint */
 
+// Load the shared-head file first.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
   this
