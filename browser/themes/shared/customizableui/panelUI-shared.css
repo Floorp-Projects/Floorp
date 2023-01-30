@@ -1366,13 +1366,6 @@ toolbarpaletteitem[place="panel"] > toolbaritem {
   margin: 0;
 }
 
-toolbaritem[overflowedItem=true],
-.widget-overflow-list .toolbarbutton-1 {
-  max-width: var(--menu-panel-width-wide);
-  background-repeat: no-repeat;
-  background-position: 0 center;
-}
-
 .widget-overflow-list .toolbarbutton-1 {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
