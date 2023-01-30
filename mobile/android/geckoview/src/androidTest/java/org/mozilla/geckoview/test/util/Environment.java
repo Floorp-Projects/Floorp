@@ -86,4 +86,8 @@ public class Environment {
   public long getDefaultTimeoutMillis() {
     return isDebugging() ? DEFAULT_IDE_DEBUG_TIMEOUT_MILLIS : getScaledTimeoutMillis();
   }
+
+  public boolean isNightly() {
+    return BuildConfig.NIGHTLY_BUILD;
+  }
 }
