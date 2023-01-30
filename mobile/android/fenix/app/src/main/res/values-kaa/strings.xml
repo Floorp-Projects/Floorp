@@ -52,13 +52,20 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla tárepinen islep  shıǵılǵan.</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Bas ekrannan jeke betlerdi ashıw ushın operativ buyrıq qosıń.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Keyingi jeke betti bir basqannan iske túsiriń.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Operativ buyrıq qosıw</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Tiykarǵı ekranǵa qosıw</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Yaq, raxmet</string>
 
     <!-- Text for the positive action button -->
-    <string name="open_in_app_cfr_positive_button_text">Sazlamalardı ashıw</string>
+    <string name="open_in_app_cfr_positive_button_text">Sazlawlardı ashıw</string>
 
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Jabıw</string>
@@ -67,9 +74,9 @@
     <string name="cfr_dismiss_button_default_content_description">Jabıw</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Kameraǵa kiriw kerek. Bunıń ushın Android sazlamaların ashıń, ruqsatnamalar bólimin tańlań, hám ruqsat etiw túymesin basıń.</string>
+    <string name="camera_permissions_needed_message">Kameraǵa kiriw kerek. Bunıń ushın Android sazlawların ashıń, ruqsatnamalar bólimin tańlań, hám ruqsat etiw túymesin basıń.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
-    <string name="camera_permissions_needed_positive_button_text">Sazlamalarǵa ótiw</string>
+    <string name="camera_permissions_needed_positive_button_text">Sazlawlarǵa ótiw</string>
 
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Jabıw</string>
@@ -79,7 +86,7 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Jabıw</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text">Sazlamalarda óshiriń</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Sazlawlarda óshiriń</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
@@ -135,9 +142,11 @@
     <!-- Browser menu button that sends a to a the what's new article -->
     <string name="browser_menu_whats_new">Ne jańalıq</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">Sazlamalar</string>
+    <string name="browser_menu_settings">Sazlawlar</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Kitapxana</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Sayttıń kompyuter versiyasi</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Bas ekranǵa qosıw</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -179,7 +188,7 @@
     <!-- Button in the search view that lets a user change their search engine -->
     <string name="search_engine_button">Izlew sisteması</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Izlew sisteması sazlamaları</string>
+    <string name="search_shortcuts_engine_settings">Izlew sisteması sazlawları</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Ruqsat beriw</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -187,7 +196,7 @@
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s izlew</string>
     <!-- Menu option in the search selector menu to open the search settings -->
-    <string name="search_settings_menu_item">Izlew sazlamaları</string>
+    <string name="search_settings_menu_item">Izlew sazlawları</string>
 
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Baslaw</string>
@@ -203,6 +212,9 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Házir emes</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Jańa %1$s betti ashıw</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Izlew</string>
 
@@ -213,7 +225,7 @@
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
-    <string name="settings">Sazlamalar</string>
+    <string name="settings">Sazlawlar</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Ulıwmalıq</string>
     <!-- Preference category for all links about Fenix -->
@@ -234,8 +246,13 @@
     <string name="preferences_category_privacy_security">Qupıyalıq hám qáwipsizlik</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Sayt ruqsatnamaları</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Jeke kóriw</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Siltemelerdi jeke bette ashıw</string>
+
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Tek ǵana HTTPS rejimi</string>
 
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
@@ -284,6 +301,8 @@
     <string name="preferences_data_choices">Maǵlıwmatlardı tańlaw</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Maǵlıwmatlardı jıynaw</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Izlew usınısların kórsetiw</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Dawıslı izlewdi kórsetiw</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
@@ -291,14 +310,14 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Saylandılardı izlew</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Akkaunt sazlamaları</string>
+    <string name="preferences_account_settings">Akkaunt sazlawları</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qosımshalar</string>
 
     <!-- Preference for notifications -->
-    <string name="preferences_notifications">Xabarlandırıwlar</string>
+    <string name="preferences_notifications">Xabarnamalar</string>
     <!-- Summary for notification preference indicating notifications are allowed -->
     <string name="notifications_allowed_summary">Ruqsat etildi</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
@@ -319,6 +338,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Artqa qaytıw</string>
 
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Qáwenderlik operativ buyrıqları</string>
+
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Kóriw</string>
 
@@ -326,6 +348,13 @@
     <string name="wallpaper_download_error_snackbar_action">Qayta urınıp kóriń</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Tolıǵıraq úyreniw</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Klassik %s</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Qosımshanı qollap-quwatlamaydı</string>
 
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Tariyx</string>
@@ -353,6 +382,9 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Qabıllanǵan betler</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s qurılmasınan bet</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -397,7 +429,7 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Jańa bet</string>
     <!-- Settings Page Title -->
-    <string name="settings_title">Sazlamalar</string>
+    <string name="settings_title">Sazlawlar</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Jabıw</string>
 
@@ -419,7 +451,7 @@
     <string name="recently_closed_show_full_history">Tolıq tariyxın kórsetiw</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="recently_closed_tabs">%d betler</string>
+    <string name="recently_closed_tabs">%d bet</string>
     <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d bet</string>
@@ -458,6 +490,13 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Bir aydan keyin jabıw</string>
 
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Bas bette ashıw</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Aqırǵı bette ashıw</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Tórt saattan soń bas bette ashıw</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Alıp taslaw</string>
@@ -489,9 +528,9 @@
     <!-- Text shown in the tabs tray inactive tabs section -->
     <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Jaqında jabıldı</string>
     <!-- Text shown in the menu to view account settings -->
-    <string name="tab_tray_menu_account_settings">Akkaunt sazlamaları</string>
+    <string name="tab_tray_menu_account_settings">Akkaunt sazlawları</string>
     <!-- Text shown in the menu to view tab settings -->
-    <string name="tab_tray_menu_tab_settings">Bet sazlamaları</string>
+    <string name="tab_tray_menu_tab_settings">Bet sazlawları</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Barlıq betlerdi jabıw</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
@@ -530,6 +569,9 @@
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Tariyxtan óshiriw</string>
 
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Izlew sózlerin kiritiń</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Tariyxtı óshiriw</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -550,6 +592,8 @@
     <string name="history_7_days">Ótken 7 kún</string>
     <!-- Text for the header that groups the history the past 30 days -->
     <string name="history_30_days">Ótken 30 kún</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Eskirek</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Bul jerde tariyx joq</string>
 
@@ -570,14 +614,19 @@
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Betti jabıw</string>
 
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Betti qayta tiklew</string>
+
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">Biykarlaw</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Saylandı saqlandı!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">ÓZGERIS KIRITIW</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Ózgeris kiritiw</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">Nusqalaw</string>
+    <string name="bookmark_menu_copy_button">Kóshirip alıw</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Bólisiw</string>
     <!-- Bookmark overflow menu open in new tab button -->
@@ -613,7 +662,7 @@
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">Sazlamalarǵa ótiw</string>
+    <string name="phone_feature_go_to_settings">Sazlawlarǵa ótiw</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Usınıs etilgen</string>
     <!-- Button label for clearing all the information of site permissions-->
@@ -630,14 +679,18 @@
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Mikrofon</string>
-    <!-- Preference for altering the location access for all websites -->
-    <string name="preference_phone_feature_location">Mánzil</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Xabarnama</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Ruxsat beriwdi sorań</string>
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Bloklanǵan</string>
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Ruqsat etilgen</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Android tárepinen bloklanǵan</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Esaptan tısqarılar</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Qosıwlı</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -674,6 +727,14 @@
     <string name="create_collection_select_all">Barlıǵın saylaw</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Saylanǵanlardı biykar etıw</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Saqlaw ushın betlerdı tańlań</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d bet saylandı</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d bet saylandı</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Betler saqlandı!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
@@ -720,6 +781,9 @@
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Qurılmaǵa jiberiw</string>
 
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Jeke betlerdı jabıw</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_title">%1$s tez hám qupıya</string>
@@ -729,12 +793,22 @@
     <string name="snackbar_collection_deleted">Toplam óshirildi</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Toplam atı ózgertildi</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Bet jabıldı</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Betler jabıldı</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Saylandılar saqlandı!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Operativ buyrıqlarǵa qosıldı!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Jeke bet jabıldı</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Jeke betler jabıldı</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">BIYKARLAW</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Sayt alıp taslandı</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">RUQSAT BERIW</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -763,7 +837,7 @@
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d bet</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
-    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d mánziller</string>
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d mánzil</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sayt ruqsatnamaları</string>
     <!-- Title for the downloads item in Delete browsing data -->
@@ -774,6 +848,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Shıǵıw</string>
 
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Aqırǵı saat</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">Keshe hám búgin</string>
 
@@ -827,12 +903,14 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Qollap-quwatlaw</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Nasazlıqlar</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Huqıqlarıńızdı biliń </string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
-    <string name="browser_toolbar_long_press_popup_copy">Nusqalaw</string>
+    <string name="browser_toolbar_long_press_popup_copy">Kóshirip alıw</string>
 
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL almasıw buferine kóshirip alındı</string>
@@ -845,6 +923,9 @@
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Qosıw</string>
 
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Operativ buyrıq atı</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Loginler hám paroller</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -856,6 +937,8 @@
 
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saqlanǵan loginler</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Esaptan tısqarılar</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Loginlerdı izleń</string>
     <!-- The header for the site that a login is for -->
@@ -865,9 +948,17 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Parol</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
-    <string name="saved_logins_copy_password">Paroldi nusqalaw</string>
+    <string name="saved_logins_copy_password">Paroldi kóshirip alıw</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Paroldı tazalaw</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">Paydalanıwshı atın nusqalaw</string>
+    <string name="saved_login_copy_username">Paydalanıwshı atın kóshirip alıw</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Paydalanıwshı atın tazalaw</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Host atın tazalaw</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Sayttı brauzerda ashıw</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Paroldi kórsetiw</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -890,6 +981,9 @@
     <string name="preferences_credit_cards_manage_saved_cards">Saqlanǵan kartalardı basqarıw</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Mánzil qosıw</string>
+
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Mánzillerdi basqarıw</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Karta qosıw</string>
@@ -917,6 +1011,8 @@
     <string name="credit_cards_warning_dialog_later">Keyinirek</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Mánzil qosıw</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Mánzillerdi basqarıw</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Atı</string>
     <!-- The header for the middle name of an address -->
@@ -968,6 +1064,13 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s óshirildi</string>
 
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android sazlawların ashıń</string>
+
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Operativ buyrıqlarǵa qosıw</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Operativ buyrıqlardan alıp tastaw</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Óshiriw</string>
     <!-- Login overflow menu edit button -->
@@ -990,17 +1093,29 @@
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Dawıslı izlew</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Ashıq betler joq</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Operativ buyrıqlar tolıp qaldı</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Jańa operativ buyrıq qosıw ushın birewin alıp taslań. Sayttı basıp turıń hám alıp taslawdi tańlań</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Maqul, tusindim</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Operativ buyrıqlar</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Atı</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Operativ buyrıq atı</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">MAQUL</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Biykarlaw</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
-    <string name="top_sites_menu_settings">Sazlamalar</string>
+    <string name="top_sites_menu_settings">Sazlawlar</string>
 
     <!-- Label text displayed for a sponsored top site. -->
     <string name="top_sites_sponsored_label">Qáwenderlik etken</string>
@@ -1021,7 +1136,7 @@
     <string name="pocket_stories_sponsor_indication">Qáwenderlik etken</string>
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
-    <string name="experiments_snackbar_button">Sazlamalarǵa ótiw</string>
+    <string name="experiments_snackbar_button">Sazlawlarǵa ótiw</string>
 
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">Maqalanı oqıw</string>

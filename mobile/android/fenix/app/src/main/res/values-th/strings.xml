@@ -347,6 +347,10 @@
     <string name="preferences_cookie_banner_reduction">การลดคุกกี้แบนเนอร์</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">ลดคุกกี้แบนเนอร์</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">ปิด</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">เปิด</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ หากไม่มีตัวเลือกปฏิเสธ Firefox อาจยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์</string>
 
@@ -478,6 +482,11 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">การแจ้งเตือน</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">อนุญาต</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">ไม่อนุญาต</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -758,6 +767,13 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ปิดหลังจากหนึ่งเดือน</string>
 
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">เปิดในหน้าแรก</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">เปิดบนแท็บสุดท้าย</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">เปิดหน้าแรกหลังจากสี่ชั่วโมง</string>
+
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">ย้ายแท็บเก่าไปยังส่วนที่ไม่ได้ใช้งาน</string>
@@ -1026,6 +1042,12 @@
     <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">เปิด</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ปิด</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">มาตรฐาน</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">เข้มงวด</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">กำหนดเอง</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">อนุญาตเสียงและวิดีโอ</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1832,6 +1854,10 @@
     <string name="login_options_menu">ตัวเลือกการเข้าสู่ระบบ</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้ของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่านของการเข้าสู่ระบบ</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
     <!--  The page title for editing a saved login. -->

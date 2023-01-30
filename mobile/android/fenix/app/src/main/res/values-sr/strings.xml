@@ -59,7 +59,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s ће обрисати вашу историју прегледања и претраживања када затворите све приватне језичке или изађете из апликације. Додуше, ово неће сакрити ваш идентитет од веб страница и интернет провајдера, али ће вам помоћи да заштитите ваш онлајн живот од других корисника овог уређаја.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s ће обрисати вашу историју прегледања и претраживања када затворите све приватне језичке или изађете из апликације. Додуше, ово неће сакрити ваш идентитет од веб страница и интернет добављача, али ће вам помоћи да заштитите ваш онлајн живот од других корисника овог уређаја.</string>
     <string name="private_browsing_common_myths">Чести митови о приватном прегледању</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
