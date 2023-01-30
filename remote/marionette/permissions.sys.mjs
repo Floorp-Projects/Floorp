@@ -34,13 +34,6 @@ permissions.set = function(descriptor, state, oneRealm) {
     );
   }
 
-  const { name } = descriptor;
-  if (!["clipboard-write", "clipboard-read"].includes(name)) {
-    throw new lazy.error.UnsupportedOperationError(
-      `'Set Permission' doesn't support '${name}'`
-    );
-  }
-
   if (state === "prompt") {
     throw new lazy.error.UnsupportedOperationError(
       "'Set Permission' doesn't support prompt"
@@ -49,12 +42,28 @@ permissions.set = function(descriptor, state, oneRealm) {
 
   // This is not a real implementation of the permissions API.
   // Instead the purpose of this implementation is to have web-platform-tests
-  // that use `set_permission('clipboard-write|read')` not fail.
-  // We enable dom.events.testing.asyncClipboard for the whole test suite anyway,
-  // so no extra permission is necessary.
-  if (!Services.prefs.getBoolPref("dom.events.testing.asyncClipboard", false)) {
+  // that use `set_permission()` not fail.
+  // Each test needs the corresponding testing pref to make it actually work.
+  const { name } = descriptor;
+  if (["clipboard-write", "clipboard-read"].includes(name)) {
+    if (
+      Services.prefs.getBoolPref("dom.events.testing.asyncClipboard", false)
+    ) {
+      return;
+    }
     throw new lazy.error.UnsupportedOperationError(
       "'Set Permission' expected dom.events.testing.asyncClipboard to be set"
     );
+  } else if (name === "notifications") {
+    if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
+      return;
+    }
+    throw new lazy.error.UnsupportedOperationError(
+      "'Set Permission' expected notification.prompt.testing to be set"
+    );
   }
+
+  throw new lazy.error.UnsupportedOperationError(
+    `'Set Permission' doesn't support '${name}'`
+  );
 };
