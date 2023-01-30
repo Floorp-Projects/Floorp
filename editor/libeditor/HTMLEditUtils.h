@@ -142,20 +142,10 @@ class HTMLEditUtils final {
 
   /**
    * CanContentsBeJoined() returns true if aLeftContent and aRightContent can be
-   * joined.  At least, Node.nodeName must be same when this returns true.
+   * joined.
    */
-  enum class StyleDifference {
-    // Ignore style information so that callers may join different styled
-    // contents.
-    Ignore,
-    // Compare style information when the contents are any elements.
-    CompareIfElements,
-    // Compare style information only when the contents are <span> elements.
-    CompareIfSpanElements,
-  };
   static bool CanContentsBeJoined(const nsIContent& aLeftContent,
-                                  const nsIContent& aRightContent,
-                                  StyleDifference aStyleDifference);
+                                  const nsIContent& aRightContent);
 
   /**
    * IsBlockElement() returns true if aContent is an element and it should

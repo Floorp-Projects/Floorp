@@ -62,7 +62,6 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using ScanLineBreak = HTMLEditUtils::ScanLineBreak;
-using StyleDifference = HTMLEditUtils::StyleDifference;
 using TableBoundary = HTMLEditUtils::TableBoundary;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
@@ -3429,10 +3428,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   // type of elements, we can merge them after deleting the selected contents.
   // MOOSE: this could conceivably screw up a table.. fix me.
   if (mLeftContent->GetParentNode() == mRightContent->GetParentNode() &&
-      HTMLEditUtils::CanContentsBeJoined(
-          *mLeftContent, *mRightContent,
-          aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
-                                     : StyleDifference::Ignore) &&
+      HTMLEditUtils::CanContentsBeJoined(*mLeftContent, *mRightContent) &&
       // XXX What's special about these three types of block?
       (mLeftContent->IsHTMLElement(nsGkAtoms::p) ||
        HTMLEditUtils::IsListItem(mLeftContent) ||
@@ -4605,12 +4601,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   nsCOMPtr<nsINode> parentNode = aRightContent.GetParentNode();
 
   EditorDOMPoint ret;
-  const HTMLEditUtils::StyleDifference kCompareStyle =
-      aHTMLEditor.IsCSSEnabled() ? StyleDifference::CompareIfSpanElements
-                                 : StyleDifference::Ignore;
   while (leftContentToJoin && rightContentToJoin && parentNode &&
-         HTMLEditUtils::CanContentsBeJoined(
-             *leftContentToJoin, *rightContentToJoin, kCompareStyle)) {
+         HTMLEditUtils::CanContentsBeJoined(*leftContentToJoin,
+                                            *rightContentToJoin)) {
     // Do the join
     Result<JoinNodesResult, nsresult> joinNodesResult =
         aHTMLEditor.JoinNodesWithTransaction(*leftContentToJoin,
