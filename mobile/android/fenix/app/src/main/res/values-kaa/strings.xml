@@ -105,6 +105,10 @@
     <string name="recent_tabs_show_all">Hámmesin kórsetiw</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Barlıq jaqındaǵı betlerdiń túymesin kórsetiw</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Barlıq sáykeslestirilgen betlerdi kóriw</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Sáykeslestirilgen qurılma</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
     <string name="recent_synced_tab_menu_item_remove">Alıp taslaw</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
@@ -193,6 +197,8 @@
     <string name="search_suggestions_onboarding_allow_button">Ruqsat beriw</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Ruqsat etpew</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Jeke seanslarda izlew usınısına ruxsat berilsinbe?</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s izlew</string>
     <!-- Menu option in the search selector menu to open the search settings -->
@@ -230,10 +236,14 @@
     <string name="preferences_category_general">Ulıwmalıq</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Haqqında</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Standart izlew sısteması</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Izlew</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Mánzil qatarı</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Google Playda baxa beriń</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s haqqında </string>
@@ -284,6 +294,8 @@
     <string name="preferences_https_only_in_all_tabs">Hámme betlerde iske túsiriw</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">Tek ǵana jeke betlerde iske túsiriw</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Arnawlı imkaniyatlar</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akkaunt</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -301,6 +313,8 @@
     <string name="preferences_data_choices">Maǵlıwmatlardı tańlaw</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Maǵlıwmatlardı jıynaw</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Izlew sistemaların kórsetiw</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Izlew usınısların kórsetiw</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -309,10 +323,14 @@
     <string name="preferences_search_browsing_history">Brauzer tariyxınan izlew</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Saylandılardı izlew</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Sáykeslestirilgen betlerdi izlew</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Akkaunt sazlawları</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Sırtqı júklep alıw menedjeri</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qosımshalar</string>
 
@@ -338,24 +356,43 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Artqa qaytıw</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Fon súwretleri</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">Qáwenderlik operativ buyrıqları</string>
 
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Fon súwreti jańalandı!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Kóriw</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Fon súwreti júklep alınbadı</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Qayta urınıp kóriń</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Fon súwreti ózgermedi</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Tolıǵıraq úyreniw</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Klassik %s</string>
 
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Kóbirek fon súwretlerin kóriw</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Qosımshanı qollap-quwatlamaydı</string>
 
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Qosımsha álleqashan ornatılǵan</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Házir sáykeslestiriw</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Neni sáykeslestiriwdi tańlań</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">Tariyx</string>
     <!-- Preference for syncing bookmarks -->
@@ -374,6 +411,14 @@
     <string name="empty_device_name_error">Qurılma atı bos bolıwı múmkin emes.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinxronlaw…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Sáykeslestiriw ámelge aspadı. Aqırǵı sáykeslik: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sáykeslestiriw ámelge aspadı. Aqırǵı sáykeslik: heshqashan</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Aqırǵı sáykeslik: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Aqırǵı sáykeslik: heshqashan</string>
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Bank kartaları</string>
     <!-- Preference for syncing addresses -->
@@ -397,6 +442,9 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Paydalanıw hám texnikalıq maǵlıwmatlar</string>
 
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Akkaunttı óshiriw</string>
 
@@ -411,6 +459,9 @@
     <string name="preference_light_theme">Jaqtı</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Qaranǵı</string>
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Qurılma temasına ámel etiń</string>
 
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Ásbaplar panelin jasırıw ushın aylandırıń</string>
@@ -433,6 +484,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Jabıw</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">%d bet ashılsın ba?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Betlerdi ashıw</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -515,12 +569,16 @@
     <string name="tab_header_label">Betlerdi ashıw</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Jeke betler</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Sáykeslestirilgen betler</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Bet qosıw</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Jeke bet qosıw</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Jeke</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sáykeslestiriw</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Barlıq betlerdi bólisiw</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -568,6 +626,9 @@
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Tariyxtan óshiriw</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Qupıya rejim)</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -619,6 +680,8 @@
 
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">Biykarlaw</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Papka qosıw</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Saylandı saqlandı!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -644,16 +707,30 @@
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d  saylandı</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Papkaǵa ózgeris kirgiziw</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">PAPKA</string>
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">ATI</string>
 
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Papka qosıw</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Papkanı tańlaw</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Baslama bolıwı shárt</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Bul jerde saylandılar joq</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s óshirildi</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Saylandılar óshirildi</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Saylanǵan papkalardı óshiriw</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">BIYKARLAW</string>
 
@@ -772,7 +849,13 @@
     <string name="share_copy_link_to_clipboard">Almasıw buferine kóshirip alıw</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Almasıw buferine kóshirip alındı</string>
-     <!-- Text displayed when sync is offline and cannot be accessed -->
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Maǵlıwmatlarıńızdı sáykeslestiriń hám saqlań</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Barlıq qurılmalarǵa jiberiw</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Sáykeslestiriwge qayta jalǵanıw</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Oflayn</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Basqa qurılmaǵa jalǵaw</string>
@@ -780,6 +863,14 @@
     <string name="sync_confirmation_button">Túsindim</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Qurılmaǵa jiberiw</string>
+
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Heshqanday qurılma jalǵanbaǵan</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Betlerdi Jiberiw haqqında úyreniw…</string>
+
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Basqa qurılmanı jalǵaw…</string>
 
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
@@ -821,7 +912,7 @@
     <string name="tab_collection_dialog_positive">Óshiriw</string>
 
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">URL nusqalandı</string>
+    <string name="url_copied">Silteme nusqalandı</string>
 
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Shrift ólshemi</string>
@@ -877,6 +968,14 @@
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Avtomatik</string>
 
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Qurılmańız sazlawlarına maslasadı</string>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Qara reńli tema</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Ashıq reńli tema</string>
+
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Betler jiberildi!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -886,6 +985,9 @@
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Biykarlaw</string>
 
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Qorǵaw sazlawları</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -935,10 +1037,16 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Login qosıw</string>
 
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Loginlardı sáykeslestiriw</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saqlanǵan loginler</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sáykeslestiriw haqqında kóbirek úyreniń.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Esaptan tısqarılar</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Bul saytlar ushın login hám paroller saqlanbaydı.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Loginlerdı izleń</string>
     <!-- The header for the site that a login is for -->
@@ -947,6 +1055,10 @@
     <string name="preferences_passwords_saved_logins_username">Paydalanıwshı atı</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Parol</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Parol almasıw buferine kóshirip alındı</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Paydalanıwshı atı almasıw buferine kóshirip alındı</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Paroldi kóshirip alıw</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -975,6 +1087,8 @@
     <string name="preferences_addresses">Mánziller</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Bank kartaları</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Kartalardı sáykeslestiriw</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Bank kartasın qosıw</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1011,6 +1125,8 @@
     <string name="credit_cards_warning_dialog_later">Keyinirek</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Mánzil qosıw</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Mánzilge ózgeris kiritiw</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Mánzillerdi basqarıw</string>
     <!-- The header for the first name of an address -->
@@ -1023,6 +1139,10 @@
     <string name="addresses_street_address">Kóshe mánzili</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Qala</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Pochta indeksi</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Mámleket yamasa aymaq</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefon</string>
     <!-- The header for the email of an address -->
@@ -1043,6 +1163,10 @@
     <!-- The text for the "Delete address" menu item for deleting an address -->
     <string name="address_menu_delete_address">Mánzildi óshiriw</string>
 
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Izlew sistemasın qosıw</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Izlew sistemasına ózgeris kiritiw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Qosıw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1057,6 +1181,8 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Atı</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Izlew sistemasınıń atın kirgiziń</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s jaratıldı</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1064,9 +1190,18 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s óshirildi</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Ruqsat beriw ushın:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Android sazlawların ashıń</string>
 
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>Ruqsatlar</b> ústine basıń]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Jalǵanıw qáwipsiz</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Jalǵanıw qáwipsiz emes</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Operativ buyrıqlarǵa qosıw</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1093,8 +1228,25 @@
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Dawıslı izlew</string>
 
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Házir sóyleń</string>
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Basqa qurılmanı jalǵaw.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Basqa qurılmalarıńızdaǵı Firefoxta birde-bir bet ashıq emes.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Basqa qurılmalarıńızdaǵı betler dizimin kóriń.</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ashıq betler joq</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Sáykeslestirilgen betler toparın keńeytiw</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Sáykeslestirilgen betler toparın qısqartıw</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
@@ -1120,24 +1272,47 @@
     <!-- Label text displayed for a sponsored top site. -->
     <string name="top_sites_sponsored_label">Qáwenderlik etken</string>
 
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AVTOMAT JABÍWDÍ QOSÍW</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Avtomatik jabıw iske túsirilgen</string>
+
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox usınıs etedi</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Googlede izlew</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s da izlew</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Alıp taslaw</string>
 
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Kóbirek biliw ushın basıń</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Joqarıǵa ótiw</string>
+
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Jabıw</string>
 
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Kóbirek biliń</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Tolıǵıraq úyreniw</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
     <string name="pocket_stories_sponsor_indication">Qáwenderlik etken</string>
 
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Maǵlıwmatlardı jiberiw ushın telemetriyanı qosıw.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Sazlawlarǵa ótiw</string>
 
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">bul toplam haqqında kóbirek biliw ushın siltemeni ashıń</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">Maqalanı oqıw</string>
 </resources>

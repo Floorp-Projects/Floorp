@@ -376,7 +376,7 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s pòt ensajar de regetar automaticament las demandas de cookies de las bandièras de cookies. Se l’opcion de refús es pas disponibla, %2$s accèpta totes las cookies per tampar la bandièra.</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Fòra las bandièras de cookies !</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Fòra las bandièras de cookies !</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Regèta automaticament las demandas de cookies, quand es possible. Autrament, accèpta totes los cookies per suprimir las bandièras de cookies.</string>
 
@@ -675,7 +675,7 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Tirar per actualizar</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Desfilar per amagar la barra d’aisinas</string>
+    <string name="preference_gestures_dynamic_toolbar">Defilar per amagar la barra d’aisinas</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Cambiar d’onglet en lisant la barra d’aisinas cap las costats</string>

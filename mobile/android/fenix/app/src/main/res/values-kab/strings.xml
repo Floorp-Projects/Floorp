@@ -370,6 +370,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="reduce_cookie_banner_off_for_site">Sens i usmel-a</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Rme i usmel-a</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Asmel-a ur yettusefrak ara akka tura</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -380,10 +382,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s yezmer ad yeɛreḍ s wudem awurman ad yegdel issutar n yinagan n tuqqna. Ma yella ulac taxtiṛt n ugdal, %2$s yezmer ad yeqbel meṛṛa inagan n tuqqna i umdal n uɣarrac.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s yezmer ad yeɛreḍ s wudem awurman ad yagi issutar n yinagan n tuqqna.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s yettaɛraḍ s wudem awurman ad yagi issutar n yinagan n tuqqna deg yismal i ten-yessefraken.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title">Dayen iɣarracen n yinagan n tuqqna!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Yettagi issutar n yinagan n tuqqna s wudem awurman, mi ara yili wamek. Neɣ, iqebbel inagan n tuqqna i waken ad yekkes iɣarracen.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Yettagi s wudem awurman issutar n yinagan n tuqqna mi ara tettunefk tegnit.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Sireg %1$s s ugdal awurman n yissutar n yinagan n tuqqna mi ara tettunefk tegnit?</string>
     <!-- Remind me later text button for the onboarding dialog -->
@@ -398,6 +406,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Mdel isfuyla udhimen</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Asenqes n yiɣarracen n yinagan n tuqqna</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Sireg %1$s i tugin n usssuter n uqbal n yinagan n tuqqna ma yella wamek?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Sireg</string>
 
@@ -783,6 +793,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="opening_screen_homepage_summary">Ldi deg ugejdan</string>
     <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab_summary">Ldi deg yiccer aneggaru</string>
+
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Ldi deg usebtar agejdan seld ukkuẓ n yisragen</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->

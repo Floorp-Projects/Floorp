@@ -66,11 +66,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Bæta flýtileið til að opa huliðsflipa frá upphafsskjánum þínum.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Bæta flýtileið til að opa huliðsflipa frá upphafsskjánum þínum.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Ræstu næsta huliðsflipa með einni snertingu.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Bæta við flýtileið</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Bæta við flýtileið</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Bæta við á upphafsskjá</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -261,7 +261,7 @@
     <string name="search_settings_menu_item">Leitarstillingar</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Leita núna með:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Leita núna með:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Leita núna í:</string>
@@ -356,8 +356,12 @@
     <string name="preferences_cookie_banner_reduction">Fækkun vefkökuborða</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Fækka vefkökuborðum</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Óvirkt</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Virkt</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum. Ef ekki er boðið upp á að hafna vefkökum getur Firefox samþykkt allar vefkökur til að hafna borðanum.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum. Ef ekki er boðið upp á að hafna vefkökum getur Firefox samþykkt allar vefkökur til að hafna borðanum.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum.</string>
@@ -365,6 +369,8 @@
     <string name="reduce_cookie_banner_off_for_site">Slökkt fyrir þetta vefsvæði</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Kveikt fyrir þetta vefsvæði</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Vefsvæðið er ekki stutt í augnablikinu</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Viltu kveikja á fækkun vefkökuborða fyrir %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -373,16 +379,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s mun hreinsa vefkökur þessa vefsvæðis og endurlesa síðuna. Að hreinsa allar vefkökur gæti skráð þig út eða tæmt innkaupakörfur.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum. Ef ekki er boðið upp á að hafna vefkökum getur %2$s samþykkt allar vefkökur til að hafna borðanum.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum. Ef ekki er boðið upp á að hafna vefkökum getur %2$s samþykkt allar vefkökur til að hafna borðanum.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1">%1$s getur reynt að hafna sjálfkrafa beiðnum um vefkökur.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s getur reynt að hafna sjálfkrafa beiðnum um vefkökur.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s reynir að hafna sjálfkrafa beiðnum um vefkökur á þeim vefsvæðum þar sem það er hægt.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Vökuborðar fyrir bí!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Vefkökuborðar fyrir bí!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Hafna sjálfkrafa beiðnum um vefkökur, þegar það sé mögulegt. Annars skal samþykkja allar vefkökur til að afgreiða vefkökuborða.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Hafna sjálfkrafa beiðnum um vefkökur, þegar það sé mögulegt. Annars skal samþykkja allar vefkökur til að afgreiða vefkökuborða.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1">Hafna sjálfkrafa beiðnum um vefkökur, þegar mögulegt er.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Hafna sjálfkrafa beiðnum um vefkökur, þegar mögulegt er.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Leyfa %1$s að hafna sjálfkrafa beiðnum um vefkökur, þegar mögulegt er?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ekki núna</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -392,7 +402,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Sjá færri sprettglugga fyrir vefkökur</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_1_experiment_dialog_body" tools:ignore="UnusedResources">Svara sjálfkrafa sprettgluggum fyrir vefkökur til að vafra án truflana. %1$s mun hafna öllum beiðnum ef slíkt er í boði, eða samþykkja allar ef ekki.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Svara sjálfkrafa sprettgluggum fyrir vefkökur til að vafra án truflana. %1$s mun hafna öllum beiðnum ef slíkt er í boði, eða samþykkja allar ef ekki.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Svara sjálfkrafa sprettgluggum fyrir vefkökur til að vafra án truflana. %1$s mun hafna öllum beiðnum ef slíkt er mögulegt.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -400,7 +410,7 @@
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Fækkun vefkökuborða</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_variant_2_experiment_dialog_body" tools:ignore="UnusedResources">Á að leyfa %1$s að hafna beiðni um samþykki á vefkökum ef mögulegt er eða að samþykkja aðgang að vefkökum þegar það er ekki hægt?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Á að leyfa %1$s að hafna beiðni um samþykki á vefkökum ef mögulegt er eða að samþykkja aðgang að vefkökum þegar það er ekki hægt?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Leyfa %1$s að hafna beiðni vefsvæðis um að samþykkja vefkökur ef mögulegt er?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -409,7 +419,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Reynir sjálfkrafa að tengjast vefsvæðum með HTTPS dulritunareglum til að auka öryggi.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Virkt</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Virkt</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Óvirkt</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1045,7 +1055,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Undanþágur</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Virkt</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Virkt</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Óvirkt</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1789,7 +1799,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Leitarstrengur sem á að nota</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Skipta út fyrirspurninni með “%s”. Dæmi:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Skipta út fyrirspurninni með “%s”. Dæmi:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Upplýsingar um sérsniðnar leitarvélar</string>
 
