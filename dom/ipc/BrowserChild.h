@@ -833,18 +833,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Whether we're artificially preserving layers.
   bool mIsPreservingLayers : 1;
 
-  // In some circumstances, a DocShell might be in a state where it is
-  // "blocked", and we should not attempt to change its active state or
-  // the underlying PresShell state until the DocShell becomes unblocked.
-  // It is possible, however, for the parent process to send commands to
-  // change those states while the DocShell is blocked. We store those
-  // states temporarily as "pending", and only apply them once the DocShell
-  // is no longer blocked.
-  bool mPendingDocShellIsActive : 1;
-  bool mPendingDocShellReceivedMessage : 1;
-  bool mPendingRenderLayers : 1;
-  bool mPendingRenderLayersReceivedMessage : 1;
-
   // Holds the compositor options for the compositor rendering this tab,
   // once we find out which compositor that is.
   Maybe<mozilla::layers::CompositorOptions> mCompositorOptions;
@@ -889,10 +877,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 #if defined(ACCESSIBILITY)
   PDocAccessibleChild* mTopLevelDocAccessibleChild;
 #endif
-  layers::LayersObserverEpoch mPendingLayersObserverEpoch;
-  // When mPendingDocShellBlockers is greater than 0, the DocShell is blocked,
-  // and once it reaches 0, it is no longer blocked.
-  uint32_t mPendingDocShellBlockers;
   int32_t mCancelContentJSEpoch;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
