@@ -5296,12 +5296,11 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   return AttachDecision::Attach;
 }
 
-GetIteratorIRGenerator::GetIteratorIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState state,
-    HandleValue value, Handle<PropertyIteratorObject*> iterObj)
-    : IRGenerator(cx, script, pc, CacheKind::GetIterator, state),
-      val_(value),
-      iterObj_(iterObj) {}
+GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx,
+                                               HandleScript script,
+                                               jsbytecode* pc, ICState state,
+                                               HandleValue value)
+    : IRGenerator(cx, script, pc, CacheKind::GetIterator, state), val_(value) {}
 
 AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::GetIterator);
