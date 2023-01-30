@@ -1059,9 +1059,9 @@ let SocialTracking = new (class SocialTrackingProtection extends ProtectionCateg
 
 /**
  * Singleton to manage the cookie banner feature section in the protections
- * panel.
+ * panel and the cookie banner handling subview.
  */
-let cookieBannerSection = new (class {
+let cookieBannerHandling = new (class {
   // Check if this is a private window. We don't expect PBM state to change
   // during the lifetime of this window.
   #isPrivateBrowsing = PrivateBrowsingUtils.isWindowPrivate(window);
@@ -1094,129 +1094,64 @@ let cookieBannerSection = new (class {
   }
 
   /**
-   * Initialize or update the cookie banner handling section state. To be called
-   * initially or whenever the panel opens for a new site.
-   */
-  updateSection({ hostForDisplay }) {
-    let showSection = this.#shouldShowSection();
-
-    for (let el of [
-      this.#cookieBannerSection,
-      this.#cookieBannerSectionSeparator,
-    ]) {
-      el.toggleAttribute("uiDisabled", !showSection);
-    }
-
-    if (showSection) {
-      // If section is visible also update the switch.
-      this.#updateSwitchState({ hostForDisplay });
-    }
-  }
-
-  /**
-   * Handler for clicks on the cookie banner per-site toggle.
-   */
-  onCookieBannerSwitchCommand() {
-    // Update the switch UI state.
-    let newState = this.#cookieBannerSwitch.toggleAttribute("enabled");
-    // Update the switch label UI state.
-    this.#cookieBannerSection.toggleAttribute("hasException", !newState);
-
-    if (newState) {
-      // Enable the feature for the current site, this means clearing the
-      // per-site preference so we revert to global settings.
-      Services.cookieBanners.removeDomainPref(
-        gBrowser.currentURI,
-        this.#isPrivateBrowsing
-      );
-
-      gProtectionsHandler.recordClick("cookieb_toggle_on");
-    } else {
-      // Disable the feature for the current site by setting an exception.
-      Services.cookieBanners.setDomainPref(
-        gBrowser.currentURI,
-        Ci.nsICookieBannerService.MODE_DISABLED,
-        this.#isPrivateBrowsing
-      );
-
-      gProtectionsHandler.recordClick("cookieb_toggle_off");
-    }
-
-    this.#updateSwitchState({ hasException: !newState });
-  }
-
-  /**
-   * Update the UI state of the cookie banner feature switch.
-   * @param {*} options
-   * @param {boolean} [options.hasException] - Whether the current site has an
-   * exception from the cookie banner mechanism.
-   * @param {string} [options.hostForDisplay] - The host to expose via the switch
-   * label.
-   */
-  #updateSwitchState({
-    hasException = this.#hasException,
-    hostForDisplay = gIdentityHandler.getHostForDisplay(),
-  }) {
-    // Switch state
-    this.#cookieBannerSwitch.toggleAttribute("enabled", !hasException);
-    // Switch label
-    this.#cookieBannerSection.toggleAttribute("hasException", hasException);
-
-    // Give the button an accessible label for screen readers.
-    // TODO: integrate this with fluent for the final UX.
-    if (hasException) {
-      this.#cookieBannerSwitch.setAttribute(
-        "aria-label",
-        "Enable cookie banner handling for " + hostForDisplay
-      );
-    } else {
-      this.#cookieBannerSwitch.setAttribute(
-        "aria-label",
-        "Disable cookie banner handling for " + hostForDisplay
-      );
-    }
-  }
-
-  /**
-   * Determines whether the cookie banner handling section should be shown.
-   * @returns {boolean} - true if the section should be shown, false otherwise.
-   */
-  #shouldShowSection() {
-    // UI is globally disabled by pref.
-    if (!this._uiDisabled) {
-      return false;
-    }
-    // Don't show UI for detect-only mode.
-    if (this._serviceDetectOnly) {
-      return false;
-    }
-
-    let mode;
-
-    if (this.#isPrivateBrowsing) {
-      mode = this._serviceModePrefPrivateBrowsing;
-    } else {
-      mode = this._serviceModePref;
-    }
-
-    // Only show the section if the feature is enabled for the normal or PBM
-    // window.
-    return mode != Ci.nsICookieBannerService.MODE_DISABLED;
-  }
-
-  /**
-   * Tests if the current site has an exception from the default cookie banner
-   * handling mode. Currently that means the feature is disabled for that site.
+   * Tests if the current site has a user-created exception from the default
+   * cookie banner handling mode. Currently that means the feature is disabled
+   * for the current site.
+   *
+   * Note: bug 1790688 will move this mode handling logic into the
+   * nsCookieBannerService.
+   *
+   * @returns {boolean} - true if the user has manually created an exception.
    */
   get #hasException() {
-    let pref = Services.cookieBanners.getDomainPref(
-      gBrowser.currentURI,
-      this.#isPrivateBrowsing
-    );
+    // If the CBH feature is preffed off, we can't have an exception.
+    if (!Services.cookieBanners.isEnabled) {
+      return false;
+    }
+
+    // URLs containing IP addresses are not supported by the CBH service, and
+    // will throw. In this case, users can't create an exception, so initialize
+    // `pref` to the default value returned by `getDomainPref`.
+    let pref = Ci.nsICookieBannerService.MODE_UNSET;
+    try {
+      pref = Services.cookieBanners.getDomainPref(
+        gBrowser.currentURI,
+        this.#isPrivateBrowsing
+      );
+    } catch (ex) {
+      console.error(
+        "Cookie Banner Handling error checking for per-site exceptions: ",
+        ex
+      );
+    }
     return pref == Ci.nsICookieBannerService.MODE_DISABLED;
   }
 
+  /**
+   * Tests if the cookie banner handling code supports the current site.
+   *
+   * See nsICookieBannerService.hasRuleForBrowsingContextTree for details.
+   *
+   * @returns {boolean} - true if the base domain is in the list of rules.
+   */
+  get isSiteSupported() {
+    return (
+      Services.cookieBanners.isEnabled &&
+      Services.cookieBanners.hasRuleForBrowsingContextTree(
+        gBrowser.selectedBrowser.browsingContext
+      )
+    );
+  }
+
+  /*
+   * @returns {string} - Base domain (eTLD + 1) used for clearing site data.
+   */
+  get #currentBaseDomain() {
+    return gBrowser.contentPrincipal.baseDomain;
+  }
+
   // Element getters
+
   #cookieBannerSectionEl;
   get #cookieBannerSection() {
     if (this.#cookieBannerSectionEl) {
@@ -1245,6 +1180,132 @@ let cookieBannerSection = new (class {
     return (this.#cookieBannerSwitchEl = document.getElementById(
       "protections-popup-cookie-banner-switch"
     ));
+  }
+
+  #cookieBannerSubviewEl;
+  get #cookieBannerSubview() {
+    if (this.#cookieBannerSubviewEl) {
+      return this.#cookieBannerSubviewEl;
+    }
+    return (this.#cookieBannerSubviewEl = document.getElementById(
+      "protections-popup-cookieBannerView"
+    ));
+  }
+
+  /*
+   * Initialize or update the cookie banner handling section state. To be called
+   * initially or whenever the panel opens for a new site.
+   *
+   */
+  updateSection() {
+    let showSection = this.#shouldShowSection();
+
+    for (let el of [
+      this.#cookieBannerSection,
+      this.#cookieBannerSectionSeparator,
+    ]) {
+      el.toggleAttribute("uiDisabled", !showSection);
+    }
+
+    // Reflect ternary CBH state in two boolean DOM attributes.
+    this.#cookieBannerSection.toggleAttribute(
+      "hasException",
+      this.#hasException
+    );
+    this.#cookieBannerSection.toggleAttribute("enabled", this.isSiteSupported);
+
+    // On unsupported sites, disable button styling and click behavior.
+    // Note: to be replaced with a "please support site" subview in bug 1801971.
+    this.#cookieBannerSection.toggleAttribute(
+      "disabled",
+      !this.isSiteSupported
+    );
+    if (this.isSiteSupported) {
+      this.#cookieBannerSection.removeAttribute("disabled");
+      this.#cookieBannerSwitch.classList.add("subviewbutton-nav");
+      this.#cookieBannerSwitch.removeAttribute("disabled");
+    } else {
+      this.#cookieBannerSection.setAttribute("disabled", true);
+      this.#cookieBannerSwitch.classList.remove("subviewbutton-nav");
+      this.#cookieBannerSwitch.setAttribute("disabled", true);
+    }
+  }
+
+  #shouldShowSection() {
+    // UI is globally disabled by pref.
+    if (!this._uiDisabled) {
+      return false;
+    }
+    // Don't show UI for detect-only mode.
+    if (this._serviceDetectOnly) {
+      return false;
+    }
+
+    let mode;
+
+    if (this.#isPrivateBrowsing) {
+      mode = this._serviceModePrefPrivateBrowsing;
+    } else {
+      mode = this._serviceModePref;
+    }
+
+    // Only show the section if the feature is enabled for the normal or PBM
+    // window.
+    return mode != Ci.nsICookieBannerService.MODE_DISABLED;
+  }
+
+  /*
+   * Updates the cookie banner handling subview just before it's shown.
+   *
+   * Note that this subview can only be shown if we have cookie banner rules
+   * for a given site, so in this function, we assume the site is supported,
+   * and only check if the user has manually created an exception for the
+   * current base domain.
+   */
+  updateSubView() {
+    this.#cookieBannerSubview.toggleAttribute(
+      "hasException",
+      this.#hasException
+    );
+
+    let siteDescription = this.#cookieBannerSubview.querySelectorAll(
+      "description#cookieBannerView-disable-site, description#cookieBannerView-enable-site"
+    );
+    let host = this.#currentBaseDomain;
+    siteDescription.forEach(d =>
+      d.setAttribute("data-l10n-args", JSON.stringify({ host }))
+    );
+  }
+
+  async #disableCookieBannerHandling() {
+    await SiteDataManager.remove(this.#currentBaseDomain);
+    Services.cookieBanners.setDomainPref(
+      gBrowser.currentURI,
+      Ci.nsICookieBannerService.MODE_DISABLED,
+      this.#isPrivateBrowsing
+    );
+  }
+
+  #enableCookieBannerHandling() {
+    Services.cookieBanners.removeDomainPref(
+      gBrowser.currentURI,
+      this.#isPrivateBrowsing
+    );
+  }
+
+  async onCookieBannerToggleCommand() {
+    let hasException = this.#cookieBannerSection.toggleAttribute(
+      "hasException"
+    );
+    if (hasException) {
+      await this.#disableCookieBannerHandling();
+      gProtectionsHandler.recordClick("cookieb_toggle_off");
+    } else {
+      this.#enableCookieBannerHandling();
+      gProtectionsHandler.recordClick("cookieb_toggle_on");
+    }
+    gProtectionsHandler._hidePopup();
+    gBrowser.reloadTab(gBrowser.selectedTab);
   }
 })();
 
@@ -1614,6 +1675,16 @@ var gProtectionsHandler = {
     await Cryptomining.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cryptominersView"
+    );
+  },
+
+  async onCookieBannerClick(event) {
+    if (!cookieBannerHandling.isSiteSupported) {
+      return;
+    }
+    await cookieBannerHandling.updateSubView();
+    this._protectionsPopupMultiView.showSubView(
+      "protections-popup-cookieBannerView"
     );
   },
 
@@ -2058,7 +2129,7 @@ var gProtectionsHandler = {
       this._protectionsPopup.removeAttribute("milestone");
     }
 
-    cookieBannerSection.updateSection({ hostForDisplay: host });
+    cookieBannerHandling.updateSection();
 
     this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
     this._protectionsPopup.toggleAttribute("blocking", this.anyBlocking);
@@ -2211,8 +2282,8 @@ var gProtectionsHandler = {
     delete this._TPSwitchCommanding;
   },
 
-  onCookieBannerSwitchCommand() {
-    cookieBannerSection.onCookieBannerSwitchCommand();
+  onCookieBannerToggleCommand() {
+    cookieBannerHandling.onCookieBannerToggleCommand();
   },
 
   setTrackersBlockedCounter(trackerCount) {
