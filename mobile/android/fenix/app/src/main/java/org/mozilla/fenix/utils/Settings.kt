@@ -647,7 +647,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var reEngagementNotificationEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_re_engagement_notification_enabled),
-        default = { FxNimbus.features.reEngagementNotification.value(appContext).enabled },
+        default = { FxNimbus.features.reEngagementNotification.value().enabled },
         featureFlag = true,
     )
 
@@ -1467,7 +1467,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showUnifiedSearchFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_unified_search),
-        default = { FxNimbus.features.unifiedSearch.value(appContext).enabled },
+        default = { FxNimbus.features.unifiedSearch.value().enabled },
         featureFlag = FeatureFlags.unifiedSearchFeature,
     )
 
@@ -1484,7 +1484,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var notificationPrePermissionPromptEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_notification_pre_permission_prompt_enabled),
-        default = { FxNimbus.features.prePermissionNotificationPrompt.value(appContext).enabled },
+        default = { FxNimbus.features.prePermissionNotificationPrompt.value().enabled },
         featureFlag = FeatureFlags.notificationPrePermissionPromptEnabled,
     )
 
