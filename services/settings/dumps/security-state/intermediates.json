@@ -1,6 +1,222 @@
 {
   "data": [
     {
+      "schema": 1674831022888,
+      "derHash": "z48+Opk8nQIAaLerIArJQgB0hzGCL9WzJ2ciai7k76U=",
+      "subject": "CN=Sooma Digital Trust Validation,O=Sooma.com Web Services Lda,C=PT",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlBUMSMwIQYDVQQKDBpTb29tYS5jb20gV2ViIFNlcnZpY2VzIExkYTEnMCUGA1UEAwweU29vbWEgRGlnaXRhbCBUcnVzdCBWYWxpZGF0aW9u",
+      "whitelist": false,
+      "attachment": {
+        "hash": "851f49a7a7218844b557e0b3aaf654647f2f8fe9e6205b4f1f2ff80d3a34f4c7",
+        "size": 1739,
+        "filename": "LATZ1J06AHqrk9VsNHj2eLFLEFlkqAd2SQ4y3hqzzN0=.pem",
+        "location": "security-state-staging/intermediates/d593074a-d73e-4e7a-b819-4800085c2f9f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LATZ1J06AHqrk9VsNHj2eLFLEFlkqAd2SQ4y3hqzzN0=",
+      "crlite_enrolled": false,
+      "id": "eddcc056-16e1-46d1-b6c3-4a86ea59aa4a",
+      "last_modified": 1674831423067
+    },
+    {
+      "schema": 1674831022033,
+      "derHash": "4hp4Q0P3Y/Xv6JTdyB4LW5KonfZQVvyoxJrUQUzXTrQ=",
+      "subject": "CN=netartSSL,O=netart.com sp. z o.o.,C=PL",
+      "subjectDN": "MEExCzAJBgNVBAYTAlBMMR4wHAYDVQQKDBVuZXRhcnQuY29tIHNwLiB6IG8uby4xEjAQBgNVBAMMCW5ldGFydFNTTA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "057738bae1021f294dc71891bef222761d8436fb7edc08e538db6c7e392210af",
+        "size": 1707,
+        "filename": "KaszdLtbqC_Ce0PVFw_k38sW-T8Ds1ODjsYj3DtSWMc=.pem",
+        "location": "security-state-staging/intermediates/fd03be7e-e416-420c-a8c0-2b829c362d52.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "KaszdLtbqC/Ce0PVFw/k38sW+T8Ds1ODjsYj3DtSWMc=",
+      "crlite_enrolled": false,
+      "id": "3c365cf9-2f49-4979-874c-47d919ec4382",
+      "last_modified": 1674831423059
+    },
+    {
+      "schema": 1674787704399,
+      "derHash": "fXQDQbUZP1PmdeOh47SxCV5gJQn2Wl+nV2sOOlRw+cY=",
+      "subject": "CN=GTS Y1,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "639a1475e5dc0801f220279c12f2a7afd908a3c78a3734cd6f1be16127a0c9d7",
+        "size": 1906,
+        "filename": "V7Wxjz1qgqxtHdP2QmPdLItv2zRjJ79Zl1N6X7TYHVA=.pem",
+        "location": "security-state-staging/intermediates/3d7c6c33-2992-4273-abc3-d340cc09e904.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "V7Wxjz1qgqxtHdP2QmPdLItv2zRjJ79Zl1N6X7TYHVA=",
+      "crlite_enrolled": false,
+      "id": "09afd445-0d6a-4a32-911f-aaf947abcb1f",
+      "last_modified": 1674788223262
+    },
+    {
+      "schema": 1674787702650,
+      "derHash": "02gLTj+I2x9bud3b+2v/MZx4Dj2fRO4k7BmVq0LWkU8=",
+      "subject": "CN=GIAG4x,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHSUFHNHg=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7863677df584a77841650e5ad47e7ef8f7c42807c9d69969881133b275b19a50",
+        "size": 1991,
+        "filename": "AAGolo0N1iZa5uuvm02csZnkuZs8hvI-HRLhAHtNhqk=.pem",
+        "location": "security-state-staging/intermediates/e653ac73-2a44-4cf2-a0dd-085d990af883.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "AAGolo0N1iZa5uuvm02csZnkuZs8hvI+HRLhAHtNhqk=",
+      "crlite_enrolled": false,
+      "id": "590d8d13-89e7-4e1e-a3bb-72c583579d7a",
+      "last_modified": 1674788223254
+    },
+    {
+      "schema": 1674787703543,
+      "derHash": "yvOiKdRUWX8mKTnwfhBWg6cf3PkWRvxgoyr2s1T+Uq4=",
+      "subject": "CN=GIAG4 ECC,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRIwEAYDVQQDEwlHSUFHNCBFQ0M=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d250d9ee687cf9e4246b82644cb5630d09a6b047ffbc09e2710c262db5258086",
+        "size": 1033,
+        "filename": "BZc_5XFEr4iNHxqv9J30g896n5jT5IJLYZJnXyqUkIU=.pem",
+        "location": "security-state-staging/intermediates/b1facc0e-29f8-46fb-aa78-793969728b53.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "BZc/5XFEr4iNHxqv9J30g896n5jT5IJLYZJnXyqUkIU=",
+      "crlite_enrolled": false,
+      "id": "56a051c1-fed1-4386-b35d-bf1955952093",
+      "last_modified": 1674788223247
+    },
+    {
+      "schema": 1674787701762,
+      "derHash": "I+ywPuwXM4xOM6a0ikHcPNoSKBu8P/gTwFidbMI4dSI=",
+      "subject": "CN=GTS CA 1C3,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUMz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "88a6ecb70d888765711d7b8ea76f793d4b228fedad48e215e01fc948196b7baf",
+        "size": 1995,
+        "filename": "zCTnfLwLKbS9S2sbp-uFz4KZOocFvXxkV06Ce9O5M2w=.pem",
+        "location": "security-state-staging/intermediates/eec3a261-928a-474b-a9db-297e4d855111.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zCTnfLwLKbS9S2sbp+uFz4KZOocFvXxkV06Ce9O5M2w=",
+      "crlite_enrolled": false,
+      "id": "92f275a2-aac5-4159-bb64-fa9324986d7a",
+      "last_modified": 1674788223239
+    },
+    {
+      "schema": 1674787700915,
+      "derHash": "ZOKGt2BjYCo3Lv1gzejbJlaknuFehCVLPW61/jj0KIs=",
+      "subject": "CN=GTS CA 1D4,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUQ0",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3eeab8b593f9b526e5e441336b3c99ef183d6618c02890e5bab1825e1a95744b",
+        "size": 1983,
+        "filename": "cXjPgKdVe6iojP8s0YQJ3rtmDFHTnYZxcYvmYGFiYME=.pem",
+        "location": "security-state-staging/intermediates/2ff09e25-9b47-4a3a-9759-af5ca75012da.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "cXjPgKdVe6iojP8s0YQJ3rtmDFHTnYZxcYvmYGFiYME=",
+      "crlite_enrolled": false,
+      "id": "ea3a64a9-15b0-4050-98b9-d20a4a168573",
+      "last_modified": 1674788223231
+    },
+    {
+      "schema": 1674787699185,
+      "derHash": "GB3Ivn6R7fFj5mzD+tFNl5ptrlO1Vtruj33KDhFMFPY=",
+      "subject": "CN=GTS Y3,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f539ab8855770bc8a9e8f1286baa54629b8813ded2d2972aa64a9f3e37d83152",
+        "size": 1065,
+        "filename": "LbcjaXDdzSbOmLRKWKuGWSqd6T4QuNVJwnA_RYD9a1k=.pem",
+        "location": "security-state-staging/intermediates/21cba999-1957-49a3-bd3f-714261c4714b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LbcjaXDdzSbOmLRKWKuGWSqd6T4QuNVJwnA/RYD9a1k=",
+      "crlite_enrolled": false,
+      "id": "de26b52b-81c4-4c97-9438-3113fb6f3fd5",
+      "last_modified": 1674788223224
+    },
+    {
+      "schema": 1674787697466,
+      "derHash": "KGdiAMQV2C0QJR9Senc+fnrJkCIy+rpD4aaMWtO32H0=",
+      "subject": "CN=GTS Y4,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "486ab74ff1c4972cd1baab20287fa21027e8baa01565310ad4a6b2ba09b0db74",
+        "size": 1069,
+        "filename": "HS03mRwbGwWTfk-g79L17_0GMn7Rd5Xac10BclJV8_Q=.pem",
+        "location": "security-state-staging/intermediates/1001dd20-646a-4264-89d0-3b37a434957d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "HS03mRwbGwWTfk+g79L17/0GMn7Rd5Xac10BclJV8/Q=",
+      "crlite_enrolled": false,
+      "id": "76dcbcc6-803e-4285-80a3-42f64c04fbe6",
+      "last_modified": 1674788223216
+    },
+    {
+      "schema": 1674787696592,
+      "derHash": "nDBRZJbhJbPQkx9Jh14pUW2dwlRz5dahBsH8+GbTBts=",
+      "subject": "CN=GTS Y2,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEIxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMQ8wDQYDVQQDEwZHVFMgWTI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e8c95c6e8334db472dd4dd81fc9057a756258573b6b2c815af66cdf0e960c6a0",
+        "size": 1906,
+        "filename": "zYGIkpoNQj_A8MrSV7BzubZdDqEk9LkLgAj8t8_U_ns=.pem",
+        "location": "security-state-staging/intermediates/1d17c147-7074-4238-a5f3-2afbfe4c0bd9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zYGIkpoNQj/A8MrSV7BzubZdDqEk9LkLgAj8t8/U/ns=",
+      "crlite_enrolled": false,
+      "id": "587a02fb-6fac-4b80-b5d7-04b72bf36446",
+      "last_modified": 1674788223208
+    },
+    {
+      "schema": 1674787698322,
+      "derHash": "l9QgA+EyVSlGCX8g75VfWxzVcKpDcteAAzpl775pdY0=",
+      "subject": "CN=GTS CA 1P5,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMVA1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6d39d26fa45c2aea9f3ecfb72ba0887e152ffd6f6a6dc6e197c57cefd4030fa0",
+        "size": 1983,
+        "filename": "81Wf12bcLlFHQAfJluxnzZ6Frg-oJ9PWY_Wrwur8viQ=.pem",
+        "location": "security-state-staging/intermediates/bceea9fa-e4b3-4241-b6a6-400d7eff3735.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "81Wf12bcLlFHQAfJluxnzZ6Frg+oJ9PWY/Wrwur8viQ=",
+      "crlite_enrolled": false,
+      "id": "532667c0-63b1-489e-b811-2addd1bc4e5d",
+      "last_modified": 1674788223200
+    },
+    {
+      "schema": 1674787700063,
+      "derHash": "EcaXh4cyBW3hfB2hNOnSttI88d6Vs/sKTRilF6tjIwo=",
+      "subject": "CN=GTS CA 2A1,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkEx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "66c35c0df4a124a571526bb96130bec322a6f7500769403d0c068726f5bf3b3c",
+        "size": 1130,
+        "filename": "dEp_Gc3Me0g2QnAtpHNcs692NFByRfF7Od0K2TuwG1Y=.pem",
+        "location": "security-state-staging/intermediates/607f27bf-2819-4878-b856-10593b911305.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "dEp/Gc3Me0g2QnAtpHNcs692NFByRfF7Od0K2TuwG1Y=",
+      "crlite_enrolled": false,
+      "id": "7e85fc12-49ef-46b5-b15d-3fce25360ce3",
+      "last_modified": 1674788223192
+    },
+    {
       "schema": 1674182897507,
       "derHash": "KQ5piTmiT3tjqxTQSQ3pK+vvbBwtO+cX83dbccGrYm0=",
       "subject": "CN=DigiCert Secure Site Pro EV G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
@@ -27109,5 +27325,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1674637023060
+  "timestamp": 1674831423067
 }
