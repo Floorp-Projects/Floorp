@@ -1783,7 +1783,6 @@ export class SearchService {
           e.webExtension.locale == engine._locale
       );
 
-      let policy, manifest, locale;
       if (index == -1) {
         // No engines directly match on id and locale, however, check to see
         // if we have a new entry that matches on id and name - we might just
@@ -1799,47 +1798,36 @@ export class SearchService {
           continue;
         }
 
-        policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
-          engine._extensionID
-        );
-        locale =
-          replacementEngines[0].webExtension.locale ||
-          lazy.SearchUtils.DEFAULT_TAG;
-        manifest = await this.#getManifestForLocale(policy.extension, locale);
-
-        // If the name is different, then we must treat the engine as different,
-        // and go through the remove and add cycle, rather than modifying the
-        // existing one.
-        if (
-          engine.name !=
-          manifest.chrome_settings_overrides.search_provider.name.trim()
-        ) {
-          // No matching name, so just remove it.
-          engine.pendingRemoval = true;
-          continue;
-        }
-
         // Update the index so we can handle the updating below.
         index = configEngines.findIndex(
           e =>
             e.webExtension.id == replacementEngines[0].webExtension.id &&
             e.webExtension.locale == replacementEngines[0].webExtension.locale
         );
+        let locale =
+          replacementEngines[0].webExtension.locale ||
+          lazy.SearchUtils.DEFAULT_TAG;
+
+        // If the name is different, then we must treat the engine as different,
+        // and go through the remove and add cycle, rather than modifying the
+        // existing one.
+        let hasUpdated = await engine.updateIfNoNameChange({
+          configuration: configEngines[index],
+          locale,
+        });
+        if (!hasUpdated) {
+          // No matching name, so just remove it.
+          engine.pendingRemoval = true;
+          continue;
+        }
       } else {
         // This is an existing engine that we should update (we don't know if
         // the configuration for this engine has changed or not).
-        policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
-          engine._extensionID
-        );
-        locale = engine._locale;
-        manifest = await this.#getManifestForLocale(policy.extension, locale);
+        await engine.update({
+          configuration: configEngines[index],
+          locale: engine._locale,
+        });
       }
-      engine.updateFromManifest(
-        policy.extension.baseURI,
-        manifest,
-        locale,
-        configEngines[index]
-      );
 
       configEngines.splice(index, 1);
     }
@@ -2645,31 +2633,24 @@ export class SearchService {
     let extensionEngines = await this.getEnginesByExtensionID(extension.id);
 
     for (let engine of extensionEngines) {
+      let isDefault = engine == this.defaultEngine;
+      let isDefaultPrivate = engine == this.defaultPrivateEngine;
+
+      let originalName = engine.name;
       let locale = engine._locale || lazy.SearchUtils.DEFAULT_TAG;
-      let manifest = await this.#getManifestForLocale(extension, locale);
       let configuration =
         engines.find(
           e =>
             e.webExtension.id == extension.id && e.webExtension.locale == locale
         ) ?? {};
 
-      let appDefaultName = engine.name;
-      let name = manifest.chrome_settings_overrides.search_provider.name.trim();
-      if (appDefaultName != name && this.getEngineByName(name)) {
-        throw new Error("Can't upgrade to the same name as an existing engine");
-      }
-
-      let isDefault = engine == this.defaultEngine;
-      let isDefaultPrivate = engine == this.defaultPrivateEngine;
-
-      engine.updateFromManifest(
-        extension.baseURI,
-        manifest,
+      await engine.update({
+        configuration,
+        extension,
         locale,
-        configuration
-      );
+      });
 
-      if (appDefaultName != engine.name) {
+      if (engine.name != originalName) {
         if (isDefault) {
           this._settings.setVerifiedMetaDataAttribute(
             "defaultEngineId",
@@ -3447,23 +3428,19 @@ export class SearchService {
    */
   async _makeEngineFromConfig(config) {
     lazy.logConsole.debug("_makeEngineFromConfig:", config);
-    let policy = await lazy.AddonSearchEngine.getWebExtensionPolicy(
-      config.webExtension.id
-    );
     let locale =
       "locale" in config.webExtension
         ? config.webExtension.locale
         : lazy.SearchUtils.DEFAULT_TAG;
 
     let engine = new lazy.AddonSearchEngine({
-      isAppProvided: policy.extension.isAppProvided,
+      isAppProvided: true,
       details: {
-        extensionID: policy.extension.id,
+        extensionID: config.webExtension.id,
         locale,
       },
     });
     await engine.init({
-      extension: policy.extension,
       locale,
       config,
     });
@@ -3513,40 +3490,6 @@ export class SearchService {
       prevCurrentEngine,
       newCurrentEngine
     );
-  }
-
-  /**
-   * Get the localized manifest from the WebExtension for the given locale or
-   * manifest default locale.
-   *
-   * The search service configuration overloads the add-on manager concepts of
-   * locales, and forces particular locales within the WebExtension to be used,
-   * ignoring the user's current locale. The user's current locale is taken into
-   * account within the configuration, just not in the WebExtension.
-   *
-   * @param {object} extension
-   *   The extension to get the manifest from.
-   * @param {string} locale
-   *   The locale to load from the WebExtension. If this is `DEFAULT_TAG`, then
-   *   the default locale is loaded.
-   * @returns {object}
-   *   The loaded manifest.
-   */
-  async #getManifestForLocale(extension, locale) {
-    let manifest = extension.manifest;
-
-    // If the locale we want from the WebExtension is the extension's default
-    // then we get that from the manifest here. We do this because if we
-    // are reloading due to the locale change, the add-on manager might not
-    // have updated the WebExtension's manifest to the new version by the
-    // time we hit this code.
-    let localeToLoad =
-      locale == lazy.SearchUtils.DEFAULT_TAG ? manifest.default_locale : locale;
-
-    if (localeToLoad) {
-      manifest = await extension.getLocalizedManifest(localeToLoad);
-    }
-    return manifest;
   }
 } // end SearchService class
 
