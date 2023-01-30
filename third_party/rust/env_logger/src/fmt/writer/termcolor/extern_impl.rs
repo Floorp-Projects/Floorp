@@ -107,7 +107,7 @@ impl BufferWriter {
         pipe: Box<Mutex<dyn io::Write + Send + 'static>>,
     ) -> Self {
         BufferWriter {
-            // The inner Buffer is never printed from, but it is still needed to handle coloring and other formating
+            // The inner Buffer is never printed from, but it is still needed to handle coloring and other formatting
             inner: termcolor::BufferWriter::stderr(write_style.into_color_choice()),
             uncolored_target: Some(WritableTarget::Pipe(pipe)),
         }
