@@ -15,7 +15,6 @@
    AXTextSelectionGranularityLine */
 
 // Load the shared-head file first.
-/* import-globals-from ../shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js",
   this
