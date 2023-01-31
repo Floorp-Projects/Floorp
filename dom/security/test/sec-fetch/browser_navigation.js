@@ -8,10 +8,6 @@ let gExpectedHeader = {};
 
 async function setup() {
   waitForExplicitFinish();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.secFetch.enabled", true]],
-  });
 }
 
 function checkSecFetchUser(subject, topic, data) {
@@ -165,10 +161,6 @@ async function testNavigations() {
 
 add_task(async function() {
   waitForExplicitFinish();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.secFetch.enabled", true]],
-  });
 
   await testNavigations();
 
