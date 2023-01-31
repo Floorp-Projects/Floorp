@@ -166,6 +166,7 @@ TEST_F(JitterEstimatorTest, EmptyFieldTrialsParsesToUnsetConfig) {
   EXPECT_FALSE(config.avg_frame_size_median);
   EXPECT_FALSE(config.max_frame_size_percentile.has_value());
   EXPECT_FALSE(config.frame_size_window.has_value());
+  EXPECT_FALSE(config.num_stddev_delay_clamp.has_value());
   EXPECT_FALSE(config.num_stddev_delay_outlier.has_value());
   EXPECT_FALSE(config.num_stddev_size_outlier.has_value());
   EXPECT_FALSE(config.congestion_rejection_factor.has_value());
@@ -179,6 +180,7 @@ class FieldTrialsOverriddenJitterEstimatorTest : public JitterEstimatorTest {
             "avg_frame_size_median:true,"
             "max_frame_size_percentile:0.9,"
             "frame_size_window:30,"
+            "num_stddev_delay_clamp:1.1,"
             "num_stddev_delay_outlier:2,"
             "num_stddev_size_outlier:3.1,"
             "congestion_rejection_factor:-1.55/") {}
@@ -190,6 +192,7 @@ TEST_F(FieldTrialsOverriddenJitterEstimatorTest, FieldTrialsParsesCorrectly) {
   EXPECT_TRUE(config.avg_frame_size_median);
   EXPECT_EQ(*config.max_frame_size_percentile, 0.9);
   EXPECT_EQ(*config.frame_size_window, 30);
+  EXPECT_EQ(*config.num_stddev_delay_clamp, 1.1);
   EXPECT_EQ(*config.num_stddev_delay_outlier, 2.0);
   EXPECT_EQ(*config.num_stddev_size_outlier, 3.1);
   EXPECT_EQ(*config.congestion_rejection_factor, -1.55);
@@ -243,6 +246,7 @@ class MisconfiguredFieldTrialsJitterEstimatorTest : public JitterEstimatorTest {
             "WebRTC-JitterEstimatorConfig/"
             "max_frame_size_percentile:-0.9,"
             "frame_size_window:-1,"
+            "num_stddev_delay_clamp:-1.9,"
             "num_stddev_delay_outlier:-2,"
             "num_stddev_size_outlier:-23.1/") {}
   ~MisconfiguredFieldTrialsJitterEstimatorTest() {}
@@ -252,6 +256,7 @@ TEST_F(MisconfiguredFieldTrialsJitterEstimatorTest, FieldTrialsAreValidated) {
   JitterEstimator::Config config = estimator_.GetConfigForTest();
   EXPECT_EQ(*config.max_frame_size_percentile, 0.0);
   EXPECT_EQ(*config.frame_size_window, 1);
+  EXPECT_EQ(*config.num_stddev_delay_clamp, 0.0);
   EXPECT_EQ(*config.num_stddev_delay_outlier, 0.0);
   EXPECT_EQ(*config.num_stddev_size_outlier, 0.0);
 }
