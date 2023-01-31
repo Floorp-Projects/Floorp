@@ -703,12 +703,7 @@ nsresult nsDiscriminatedUnion::ToString(nsACString& aOutString) const {
       // nsID has its own text formatter.
 
     case nsIDataType::VTYPE_ID: {
-      char* ptr = u.mIDValue.ToString();
-      if (!ptr) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      aOutString.Assign(ptr);
-      free(ptr);
+      aOutString.Assign(u.mIDValue.ToString().get());
       return NS_OK;
     }
 

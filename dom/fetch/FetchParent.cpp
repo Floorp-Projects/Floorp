@@ -27,7 +27,7 @@ FetchParent::FetchParentCSPEventListener::FetchParentCSPEventListener(
     : mActorID(aActorID), mEventTarget(aEventTarget) {
   MOZ_ASSERT(mEventTarget);
   FETCH_LOG(("FetchParentCSPEventListener [%p] actor ID: %s", this,
-             mActorID.ToString()));
+             mActorID.ToString().get()));
 }
 
 NS_IMETHODIMP FetchParent::FetchParentCSPEventListener::OnCSPViolationEvent(
