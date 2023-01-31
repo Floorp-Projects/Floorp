@@ -8,7 +8,7 @@
  * This module defines custom globals injected in all our modules and also
  * pseudo modules that aren't separate files but just dynamically set values.
  *
- * Note that some globals are being defined by base-loader.js via wantGlobalProperties property.
+ * Note that some globals are being defined by base-loader.sys.mjs via wantGlobalProperties property.
  *
  * As it does so, the module itself doesn't have access to these globals,
  * nor the pseudo modules. Be careful to avoid loading any other js module as

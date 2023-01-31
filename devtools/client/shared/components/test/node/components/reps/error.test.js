@@ -410,7 +410,7 @@ describe("Error - DOMException", () => {
   });
 });
 
-describe("Error - base-loader.js", () => {
+describe("Error - base-loader.sys.mjs", () => {
   const stub = stubs.get("base-loader Error");
 
   it("renders as expected without mode", () => {

@@ -3,12 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Manages the base loader (base-loader.js) instance used to load the developer tools.
+ * Manages the base loader (base-loader.sys.mjs) instance used to load the developer tools.
  */
 
-var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
-  "resource://devtools/shared/loader/base-loader.js"
-);
+import {
+  Loader,
+  Require,
+  resolveURI,
+  unload,
+} from "resource://devtools/shared/loader/base-loader.sys.mjs";
 import { requireRawId } from "resource://devtools/shared/loader/loader-plugin-raw.sys.mjs";
 
 export const DEFAULT_SANDBOX_NAME = "DevTools (Module loader)";
