@@ -410,7 +410,7 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage*
   [NSGraphicsContext setCurrentContext:context];
 
   // Get the Quartz context and draw.
-  CGContextRef imageContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  CGContextRef imageContext = [[NSGraphicsContext currentContext] CGContext];
   ::CGContextDrawImage(imageContext, *(CGRect*)&imageRect, aInputImage);
 
   [NSGraphicsContext restoreGraphicsState];

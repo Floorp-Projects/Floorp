@@ -328,8 +328,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   CGColorSpaceRelease(cs);
 
   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx
-                                                                                  flipped:NO]];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
+                                                                               flipped:NO]];
 
   [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
 
