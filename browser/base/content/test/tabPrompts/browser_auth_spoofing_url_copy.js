@@ -84,7 +84,7 @@ async function waitForDialogAndCopyURL() {
 }
 
 /**
- * Tests that the 401 auth spoofing mechanisms covers the url bar copy action propperly,
+ * Tests that the 401 auth spoofing mechanisms covers the url bar copy action properly,
  * canceling the prompt
  */
 add_task(async function testUrlCopy() {

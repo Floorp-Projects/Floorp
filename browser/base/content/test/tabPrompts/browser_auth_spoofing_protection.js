@@ -57,7 +57,12 @@ async function waitForDialog(doConfirmPrompt, crossDomain) {
       AUTH_URL,
       "Correct location is provided by the prompt"
     );
-    // switch to another tab and make sure we dont mess up this new tabs url bar
+    Assert.equal(
+      window.gBrowser.selectedTab.label,
+      "example.org",
+      "Tab title is manipulated"
+    );
+    // switch to another tab and make sure we dont mess up this new tabs url bar and tab title
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "https://example.org:443"
@@ -67,12 +72,22 @@ async function waitForDialog(doConfirmPrompt, crossDomain) {
       "https://example.org",
       "No location is provided by the prompt, correct location is displayed"
     );
-    // switch back to our tab with the prompt and make sure the url bar state is still there
+    Assert.equal(
+      window.gBrowser.selectedTab.label,
+      "mochitest index /",
+      "Tab title is not manipulated"
+    );
+    // switch back to our tab with the prompt and make sure the url bar state and tab title is still there
     BrowserTestUtils.removeTab(tab);
     Assert.equal(
       window.gURLBar.value,
       AUTH_URL,
       "Correct location is provided by the prompt"
+    );
+    Assert.equal(
+      window.gBrowser.selectedTab.label,
+      "example.org",
+      "Tab title is manipulated"
     );
     // make sure a value that the user types in has a higher priority than our prompts location
     gBrowser.selectedBrowser.userTypedValue = "user value";
@@ -101,6 +116,11 @@ async function waitForDialog(doConfirmPrompt, crossDomain) {
       SAME_DOMAIN_URL,
       "No location is provided by the prompt, correct location is displayed"
     );
+    Assert.equal(
+      window.gBrowser.selectedTab.label,
+      "example.com",
+      "Tab title is not manipulated"
+    );
   }
 
   let onDialogClosed = BrowserTestUtils.waitForEvent(
@@ -124,6 +144,11 @@ async function waitForDialog(doConfirmPrompt, crossDomain) {
     window.gURLBar.value,
     crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL,
     "No location is provided by the prompt"
+  );
+  Assert.equal(
+    window.gBrowser.selectedTab.label,
+    "example.com",
+    "Tab title is not manipulated"
   );
 }
 

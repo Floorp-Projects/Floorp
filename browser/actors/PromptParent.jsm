@@ -11,6 +11,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -314,8 +315,11 @@ class PromptParent extends JSWindowActorParent {
         if (dialogBox._allowTabFocusByPromptPrincipal) {
           this.addTabSwitchCheckboxToArgs(dialogBox, args);
         }
+
+        let currentLocationsTabLabel;
+
+        let targetTab = win.gBrowser.getTabForBrowser(browser);
         if (args.isTopLevelCrossDomainAuth) {
-          // Auth prompt spoofing protection, see bug 791594.
           // Set up the url bar with the url of the cross domain resource.
           // onLocationChange will change the url back to the current browsers
           // if we do not hold the state here.
@@ -324,6 +328,14 @@ class PromptParent extends JSWindowActorParent {
           if (browser == win.gBrowser.selectedBrowser) {
             win.gURLBar.setURI();
           }
+          // Set up the tab title for the cross domain resource.
+          // We need to remember the original tab title in case
+          // the load does not happen after the prompt, then we need to reset the tab title manually.
+          currentLocationsTabLabel = targetTab.label;
+          win.gBrowser.setTabLabelForAuthPrompts(
+            targetTab,
+            lazy.BrowserUtils.formatURIForDisplay(args.channel.URI)
+          );
         }
         bag = lazy.PromptUtils.objectToPropBag(args);
         try {
@@ -341,10 +353,14 @@ class PromptParent extends JSWindowActorParent {
           if (args.isTopLevelCrossDomainAuth) {
             browser.currentAuthPromptURI = null;
             // If the user is stopping the page load before answering the prompt, no navigation will happen after the prompt
-            // so we need to reset the uri here to the current browsers for that specific case
+            // so we need to reset the uri and tab title here to the current browsers for that specific case
             if (browser == win.gBrowser.selectedBrowser) {
               win.gURLBar.setURI();
             }
+            win.gBrowser.setTabLabelForAuthPrompts(
+              targetTab,
+              currentLocationsTabLabel
+            );
           }
         }
       } else {
