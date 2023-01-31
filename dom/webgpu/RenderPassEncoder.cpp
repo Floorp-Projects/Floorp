@@ -46,29 +46,9 @@ ffi::WGPUStoreOp ConvertStoreOp(const dom::GPUStoreOp& aOp) {
   }
 }
 
-ffi::WGPUColor ConvertColor(const dom::Sequence<double>& aSeq) {
-  ffi::WGPUColor color;
-  color.r = aSeq.SafeElementAt(0, 0.0);
-  color.g = aSeq.SafeElementAt(1, 0.0);
-  color.b = aSeq.SafeElementAt(2, 0.0);
-  color.a = aSeq.SafeElementAt(3, 1.0);
-  return color;
-}
-
 ffi::WGPUColor ConvertColor(const dom::GPUColorDict& aColor) {
   ffi::WGPUColor color = {aColor.mR, aColor.mG, aColor.mB, aColor.mA};
   return color;
-}
-
-ffi::WGPUColor ConvertColor(const dom::DoubleSequenceOrGPUColorDict& aColor) {
-  if (aColor.IsDoubleSequence()) {
-    return ConvertColor(aColor.GetAsDoubleSequence());
-  } else if (aColor.IsGPUColorDict()) {
-    return ConvertColor(aColor.GetAsGPUColorDict());
-  } else {
-    MOZ_ASSERT_UNREACHABLE(
-        "Unexpected dom::DoubleSequenceOrGPUColorDict variant");
-  }
 }
 
 ffi::WGPURenderPass* BeginRenderPass(
@@ -132,8 +112,19 @@ ffi::WGPURenderPass* BeginRenderPass(
     } else {
       cd.channel.load_op = ffi::WGPULoadOp_Clear;
       if (ca.mLoadValue.IsDoubleSequence()) {
-        cd.channel.clear_value =
-            ConvertColor(ca.mLoadValue.GetAsDoubleSequence());
+        const auto& seq = ca.mLoadValue.GetAsDoubleSequence();
+        if (seq.Length() >= 1) {
+          cd.channel.clear_value.r = seq[0];
+        }
+        if (seq.Length() >= 2) {
+          cd.channel.clear_value.g = seq[1];
+        }
+        if (seq.Length() >= 3) {
+          cd.channel.clear_value.b = seq[2];
+        }
+        if (seq.Length() >= 4) {
+          cd.channel.clear_value.a = seq[3];
+        }
       }
       if (ca.mLoadValue.IsGPUColorDict()) {
         cd.channel.clear_value =
@@ -261,7 +252,7 @@ void RenderPassEncoder::SetScissorRect(uint32_t x, uint32_t y, uint32_t width,
 void RenderPassEncoder::SetBlendConstant(
     const dom::DoubleSequenceOrGPUColorDict& color) {
   if (mValid) {
-    ffi::WGPUColor aColor = ConvertColor(color);
+    ffi::WGPUColor aColor = ConvertColor(color.GetAsGPUColorDict());
     ffi::wgpu_render_pass_set_blend_constant(mPass, &aColor);
   }
 }
