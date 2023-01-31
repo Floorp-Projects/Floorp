@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { MigrationUtils } = ChromeUtils.importESModule(
-  "resource:///modules/MigrationUtils.sys.mjs"
-);
 const { MigrationWizardConstants } = ChromeUtils.importESModule(
   "chrome://browser/content/migration/migration-wizard-constants.mjs"
 );
