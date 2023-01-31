@@ -19,6 +19,8 @@ add_setup(async function() {
     ],
   });
 
+  UrlbarTestUtils.disableResultMenuAutohide(window);
+
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   UrlbarProviderQuickActions.addAction("test-addons", {
@@ -322,13 +324,6 @@ add_task(async function withDnsFirstForSingleWordsPref() {
 });
 
 add_task(async function buttons() {
-  if (UrlbarPrefs.get("resultMenu")) {
-    todo(
-      false,
-      "the menu button is only visible on hover, so not as easily testable as the block and help buttons."
-    );
-    return;
-  }
   let initialTabUrl = "https://example.com/initial";
   let mainResultUrl = "https://example.com/main";
   let mainResultHelpUrl = "https://example.com/help";
@@ -404,7 +399,7 @@ add_task(async function buttons() {
     Assert.equal(
       gURLBar.view.resultMenu.state,
       "showing",
-      "Result menu is open"
+      "Result menu is showing"
     );
     EventUtils.synthesizeKey("KEY_Escape");
   };

@@ -339,7 +339,7 @@
   background-image: url("chrome://global/skin/icons/more.svg");
 }
 
-.urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]) {
+.urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]) {
   display: none;
 }
 
