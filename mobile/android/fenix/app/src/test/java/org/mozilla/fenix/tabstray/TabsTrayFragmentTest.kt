@@ -53,7 +53,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.helpers.MockkRetryTestRule
 import org.mozilla.fenix.home.HomeScreenViewModel
-import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.utils.allowUndo
 
@@ -221,7 +220,6 @@ class TabsTrayFragmentTest {
         val store: TabsTrayStore = mockk()
         val lifecycleOwner = mockk<LifecycleOwner>(relaxed = true)
         val trayInteractor: TabsTrayInteractor = mockk()
-        val inactiveTabsInteractor: InactiveTabsInteractor = mockk()
         val browserStore: BrowserStore = mockk()
         every { context.components.core.store } returns browserStore
 
@@ -230,14 +228,13 @@ class TabsTrayFragmentTest {
             lifecycleOwner = lifecycleOwner,
             store = store,
             trayInteractor = trayInteractor,
-            inactiveTabsInteractor = inactiveTabsInteractor,
         )
 
         val adapter = (tabsTrayBinding.tabsTray.adapter as TrayPagerAdapter)
         assertSame(context, adapter.context)
         assertSame(lifecycleOwner, adapter.lifecycleOwner)
         assertSame(store, adapter.tabsTrayStore)
-        assertSame(trayInteractor, adapter.tabsTrayInteractor)
+        assertSame(trayInteractor, adapter.interactor)
         assertSame(browserStore, adapter.browserStore)
         assertFalse(tabsTrayBinding.tabsTray.isUserInputEnabled)
     }

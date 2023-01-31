@@ -6,14 +6,16 @@ package org.mozilla.fenix.tabstray
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.mockk.verifySequence
+import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Test
 
 class DefaultTabsTrayInteractorTest {
 
-    val controller: TabsTrayController = mockk(relaxed = true)
-    val interactor = DefaultTabsTrayInteractor(controller)
+    private val controller: TabsTrayController = mockk(relaxed = true)
+    private val interactor = DefaultTabsTrayInteractor(controller)
 
     @Test
     fun `WHEN user selects a new tray page THEN the Interactor delegates to the controller`() {
@@ -54,5 +56,61 @@ class DefaultTabsTrayInteractorTest {
         interactor.onDeleteTabs(tabsToDelete)
 
         verifySequence { controller.handleMultipleTabsDeletion(tabsToDelete) }
+    }
+
+    @Test
+    fun `WHEN the inactive tabs header is clicked THEN update the expansion state of the inactive tabs card`() {
+        interactor.onInactiveTabsHeaderClicked(true)
+
+        verify { controller.handleInactiveTabsHeaderClicked(true) }
+    }
+
+    @Test
+    fun `WHEN the inactive tabs auto close dialog's close button is clicked THEN dismiss the dialog`() {
+        interactor.onAutoCloseDialogCloseButtonClicked()
+
+        verify { controller.handleInactiveTabsAutoCloseDialogDismiss() }
+    }
+
+    @Test
+    fun `WHEN the enable inactive tabs auto close button is clicked THEN turn on the auto close feature`() {
+        interactor.onEnableAutoCloseClicked()
+
+        verify { controller.handleEnableInactiveTabsAutoCloseClicked() }
+    }
+
+    @Test
+    fun `WHEN an inactive tab is clicked THEN open the tab`() {
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
+
+        interactor.onInactiveTabClicked(tab)
+
+        verify { controller.handleInactiveTabClicked(tab) }
+    }
+
+    @Test
+    fun `WHEN an inactive tab is clicked to be closed THEN close the tab`() {
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
+
+        interactor.onInactiveTabClosed(tab)
+
+        verify { controller.handleCloseInactiveTabClicked(tab) }
+    }
+
+    @Test
+    fun `WHEN the close all inactive tabs button is clicked THEN delete all inactive tabs`() {
+        interactor.onDeleteAllInactiveTabsClicked()
+
+        verify { controller.handleDeleteAllInactiveTabsClicked() }
     }
 }

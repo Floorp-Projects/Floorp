@@ -49,9 +49,6 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.share.ShareFragment
-import org.mozilla.fenix.tabstray.browser.DefaultInactiveTabsController
-import org.mozilla.fenix.tabstray.browser.DefaultInactiveTabsInteractor
-import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
@@ -80,7 +77,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     @VisibleForTesting internal lateinit var tabsTrayStore: TabsTrayStore
     private lateinit var tabsTrayInteractor: TabsTrayInteractor
     private lateinit var tabsTrayController: DefaultTabsTrayController
-    private lateinit var inactiveTabsInteractor: DefaultInactiveTabsInteractor
     private lateinit var navigationInteractor: DefaultNavigationInteractor
 
     @VisibleForTesting internal lateinit var trayBehaviorManager: TabSheetBehaviorManager
@@ -210,8 +206,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         tabsTrayController = DefaultTabsTrayController(
             activity = activity,
+            appStore = requireComponents.appStore,
             tabsTrayStore = tabsTrayStore,
             browserStore = requireComponents.core.store,
+            settings = requireContext().settings(),
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
             navigateToHomeAndDeleteSession = ::navigateToHomeAndDeleteSession,
@@ -228,24 +226,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             controller = tabsTrayController,
         )
 
-        inactiveTabsInteractor = DefaultInactiveTabsInteractor(
-            controller = DefaultInactiveTabsController(
-                appStore = requireComponents.appStore,
-                settings = requireContext().settings(),
-                browserStore = requireComponents.core.store,
-                tabsUseCases = requireComponents.useCases.tabsUseCases,
-                showUndoSnackbar = ::showUndoSnackbarForTab,
-            ),
-            tabsTrayInteractor = tabsTrayInteractor,
-        )
-
         setupMenu(navigationInteractor)
         setupPager(
             context = view.context,
             lifecycleOwner = viewLifecycleOwner,
             store = tabsTrayStore,
             trayInteractor = tabsTrayInteractor,
-            inactiveTabsInteractor = inactiveTabsInteractor,
         )
 
         setupBackgroundDismissalListener {
@@ -485,17 +471,15 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         lifecycleOwner: LifecycleOwner,
         store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
-        inactiveTabsInteractor: InactiveTabsInteractor,
     ) {
         tabsTrayBinding.tabsTray.apply {
             adapter = TrayPagerAdapter(
                 context = context,
                 lifecycleOwner = lifecycleOwner,
                 tabsTrayStore = store,
-                tabsTrayInteractor = trayInteractor,
+                interactor = trayInteractor,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
-                inactiveTabsInteractor = inactiveTabsInteractor,
             )
             isUserInputEnabled = false
         }

@@ -15,7 +15,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
-import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserPageViewHolder
@@ -26,10 +25,9 @@ class TrayPagerAdapter(
     internal val context: Context,
     internal val lifecycleOwner: LifecycleOwner,
     internal val tabsTrayStore: TabsTrayStore,
-    internal val tabsTrayInteractor: TabsTrayInteractor,
+    internal val interactor: TabsTrayInteractor,
     internal val browserStore: BrowserStore,
     internal val appStore: AppStore,
-    internal val inactiveTabsInteractor: InactiveTabsInteractor,
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
     /**
@@ -42,17 +40,17 @@ class TrayPagerAdapter(
             InactiveTabsAdapter(
                 lifecycleOwner = lifecycleOwner,
                 tabsTrayStore = tabsTrayStore,
-                inactiveTabsInteractor = inactiveTabsInteractor,
+                interactor = interactor,
                 featureName = INACTIVE_TABS_FEATURE_NAME,
             ),
-            BrowserTabsAdapter(context, tabsTrayInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner),
+            BrowserTabsAdapter(context, interactor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner),
         )
     }
 
     private val privateAdapter by lazy {
         BrowserTabsAdapter(
             context,
-            tabsTrayInteractor,
+            interactor,
             tabsTrayStore,
             TABS_TRAY_FEATURE_NAME,
             lifecycleOwner,
@@ -68,7 +66,7 @@ class TrayPagerAdapter(
                     tabsTrayStore,
                     browserStore,
                     appStore,
-                    tabsTrayInteractor,
+                    interactor,
                 )
             }
             PrivateBrowserPageViewHolder.LAYOUT_ID -> {
@@ -76,7 +74,7 @@ class TrayPagerAdapter(
                     LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                     tabsTrayStore,
                     browserStore,
-                    tabsTrayInteractor,
+                    interactor,
                 )
             }
             SyncedTabsPageViewHolder.LAYOUT_ID -> {
@@ -88,7 +86,7 @@ class TrayPagerAdapter(
                         )
                     },
                     tabsTrayStore = tabsTrayStore,
-                    interactor = tabsTrayInteractor,
+                    interactor = interactor,
                 )
             }
             else -> throw IllegalStateException("Unknown viewType.")
