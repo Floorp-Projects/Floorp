@@ -60,6 +60,7 @@ rtc_library("jitter_estimator") {
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_numerics",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base/experiments:field_trial_parser",
