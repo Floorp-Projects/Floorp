@@ -422,10 +422,8 @@ void WritableStream::UpdateBackpressure(bool aBackpressure, ErrorResult& aRv) {
     // Step 4.1. If backpressure is true, set writer.[[readyPromise]] to a new
     // promise.
     if (aBackpressure) {
-      RefPtr<Promise> promise = Promise::Create(writer->GetParentObject(), aRv);
-      if (aRv.Failed()) {
-        return;
-      }
+      RefPtr<Promise> promise =
+          Promise::CreateInfallible(writer->GetParentObject());
       writer->SetReadyPromise(promise);
     } else {
       // Step 4.2. Otherwise,
@@ -513,10 +511,8 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   // resolved with undefined.
   if (aStream->State() == WritableStream::WriterState::Closed ||
       aStream->State() == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
+    RefPtr<Promise> promise =
+        Promise::CreateInfallible(aStream->GetParentObject());
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
@@ -533,10 +529,8 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   // code and that might have changed the state.
   if (aStream->State() == WritableStream::WriterState::Closed ||
       aStream->State() == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
+    RefPtr<Promise> promise =
+        Promise::CreateInfallible(aStream->GetParentObject());
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
@@ -565,10 +559,8 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   }
 
   // Step 9. Let promise be a new promise.
-  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise =
+      Promise::CreateInfallible(aStream->GetParentObject());
 
   // Step 10. Set stream.[[pendingAbortRequest]] to a new pending abort request
   // whose promise is promise, reason is reason, and was already erroring is
@@ -628,10 +620,8 @@ already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
   MOZ_ASSERT(!aStream->CloseQueuedOrInFlight());
 
   // Step 5. Let promise be a new promise.
-  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise =
+      Promise::CreateInfallible(aStream->GetParentObject());
 
   // Step 6. Set stream.[[closeRequest]] to promise.
   aStream->SetCloseRequest(promise);
@@ -742,10 +732,8 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(WritableStream* aStream,
   MOZ_ASSERT(aStream->State() == WritableStream::WriterState::Writable);
 
   // Step 3. Let promise be a new promise.
-  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise =
+      Promise::CreateInfallible(aStream->GetParentObject());
 
   // Step 4. Append promise to stream.[[writeRequests]].
   aStream->AppendWriteRequest(promise);

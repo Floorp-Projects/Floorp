@@ -517,10 +517,7 @@ void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
   }
 
   // Step 3. Set stream.[[backpressureChangePromise]] to a new promise.
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
   mBackpressureChangePromise = promise;
 
   // Step 4. Set stream.[[backpressure]] to backpressure.
@@ -657,10 +654,7 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
 
   // Step 9. Let startPromise be a new promise.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> startPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> startPromise = Promise::CreateInfallible(global);
 
   // Step 10. Perform ! InitializeTransformStream(this, startPromise,
   // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,
