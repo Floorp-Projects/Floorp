@@ -3,15 +3,16 @@
 
 "use strict";
 
-async function startAndCrashUtility(actors, actorsCheck) {
+async function startAndCrashUtility(numUnknownActors, actorsCheck) {
+  const actors = Array(numUnknownActors).fill("unknown");
   const utilityPid = await startUtilityProcess(actors);
   await crashSomeUtility(utilityPid, actorsCheck);
 }
 
-// When running full suite, previous audio decoding tests might have left some
-// running and this might interfere with our testing
+// When running full suite, previous tests may have left some utility
+// processes running and this might interfere with our testing.
 add_setup(async function ensureNoExistingProcess() {
-  await killPendingUtilityProcess();
+  await killUtilityProcesses();
 });
 
 add_task(async function utilityNoActor() {
