@@ -49,7 +49,12 @@ AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
       mRate(aRate),
       mOriginalTime(aTime),
       mAudioData(std::move(aData)),
-      mFrames(mAudioData.Length() / aChannels) {}
+      mFrames(mAudioData.Length() / aChannels) {
+  MOZ_RELEASE_ASSERT(aChannels != 0,
+                     "Can't create an AudioData with 0 channels.");
+  MOZ_RELEASE_ASSERT(aRate != 0,
+                     "Can't create an AudioData with a sample-rate of 0.");
+}
 
 Span<AudioDataValue> AudioData::Data() const {
   return Span{GetAdjustedData(), mFrames * mChannels};
