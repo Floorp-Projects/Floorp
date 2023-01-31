@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "XPCOM")
 
+with Files("nsCycleCollect*"):
+    BUG_COMPONENT = ("Core", "Cycle Collector")
+
 DIRS += [
     "idl-parser/xpidl",
     "geckoprocesstypes_generator/geckoprocesstypes",
