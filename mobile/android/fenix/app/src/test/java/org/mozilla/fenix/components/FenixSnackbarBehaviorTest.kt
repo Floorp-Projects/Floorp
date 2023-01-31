@@ -9,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import io.mockk.every
+import io.mockk.mockk
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -20,14 +22,20 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class FenixSnackbarBehaviorTest {
-    private val snackbarParams = CoordinatorLayout.LayoutParams(0, 0)
-    private val snackbarContainer = FrameLayout(testContext)
+    private val snackbarContainer = mockk<FrameLayout>(relaxed = true)
+    private var snackbarLayoutParams = CoordinatorLayout.LayoutParams(0, 0)
     private val dependency = View(testContext)
     private val parent = CoordinatorLayout(testContext)
 
     @Before
     fun setup() {
-        snackbarContainer.layoutParams = snackbarParams
+        every { snackbarContainer.layoutParams } returns snackbarLayoutParams
+        every { snackbarContainer.post(any()) } answers {
+            // Immediately run the given Runnable argument
+            val action: Runnable = firstArg()
+            action.run()
+            true
+        }
         parent.addView(dependency)
     }
 
@@ -235,17 +243,14 @@ class FenixSnackbarBehaviorTest {
     }
 
     private fun assertSnackbarPlacementAboveAnchor(anchor: View = dependency) {
-        assertEquals(anchor.id, snackbarContainer.params.anchorId)
-        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, snackbarContainer.params.anchorGravity)
-        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, snackbarContainer.params.gravity)
+        assertEquals(anchor.id, snackbarLayoutParams.anchorId)
+        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, snackbarLayoutParams.anchorGravity)
+        assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, snackbarLayoutParams.gravity)
     }
 
     private fun assertSnackbarIsPlacedAtTheBottomOfTheScreen() {
-        assertEquals(View.NO_ID, snackbarContainer.params.anchorId)
-        assertEquals(Gravity.NO_GRAVITY, snackbarContainer.params.anchorGravity)
-        assertEquals(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, snackbarContainer.params.gravity)
+        assertEquals(View.NO_ID, snackbarLayoutParams.anchorId)
+        assertEquals(Gravity.NO_GRAVITY, snackbarLayoutParams.anchorGravity)
+        assertEquals(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, snackbarLayoutParams.gravity)
     }
-
-    private val FrameLayout.params
-        get() = layoutParams as CoordinatorLayout.LayoutParams
 }

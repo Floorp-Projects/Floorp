@@ -60,18 +60,20 @@ class FenixSnackbarBehavior<V : View>(
         currentAnchorId = dependency?.id ?: View.NO_ID
         val params = snackbar.layoutParams as CoordinatorLayout.LayoutParams
 
-        if (dependency == null || (dependency.id == R.id.toolbar && toolbarPosition == ToolbarPosition.TOP)) {
-            // Position the snackbar at the bottom of the screen.
-            params.anchorId = View.NO_ID
-            params.anchorGravity = Gravity.NO_GRAVITY
-            params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-        } else {
-            // Position the snackbar just above the anchor.
-            params.anchorId = dependency.id
-            params.anchorGravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            params.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        snackbar.post {
+            if (dependency == null || (dependency.id == R.id.toolbar && toolbarPosition == ToolbarPosition.TOP)) {
+                // Position the snackbar at the bottom of the screen.
+                params.anchorId = View.NO_ID
+                params.anchorGravity = Gravity.NO_GRAVITY
+                params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                snackbar.layoutParams = params
+            } else {
+                // Position the snackbar just above the anchor.
+                params.anchorId = dependency.id
+                params.anchorGravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                params.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                snackbar.layoutParams = params
+            }
         }
-
-        snackbar.layoutParams = params
     }
 }
