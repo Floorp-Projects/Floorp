@@ -12,7 +12,8 @@
 namespace mozilla {
 
 RefPtr<GenericPromise> RemoteSandboxBrokerParent::Launch(
-    const nsTArray<uint64_t>& aHandlesToShare, nsISerialEventTarget* aThread) {
+    uint32_t aLaunchArch, const nsTArray<uint64_t>& aHandlesToShare,
+    nsISerialEventTarget* aThread) {
   MOZ_ASSERT(!mProcess);
   if (mProcess) {
     // Don't re-init.
@@ -20,6 +21,9 @@ RefPtr<GenericPromise> RemoteSandboxBrokerParent::Launch(
   }
 
   mProcess = new RemoteSandboxBrokerProcessParent();
+#ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
+  mProcess->SetLaunchArchitecture(aLaunchArch);
+#endif
   for (uint64_t handle : aHandlesToShare) {
     mProcess->AddHandleToShare(HANDLE(handle));
   }

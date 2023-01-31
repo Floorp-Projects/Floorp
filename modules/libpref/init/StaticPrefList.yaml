@@ -171,6 +171,14 @@
 #define IS_NOT_ANDROID true
 #endif
 
+#ifdef XP_WIN
+#define IS_XP_WIN true
+#define IS_NOT_XP_WIN false
+#else
+#define IS_XP_WIN false
+#define IS_NOT_XP_WIN true
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "accessibility."
 #---------------------------------------------------------------------------
@@ -8759,24 +8767,38 @@
     mirror: always
 #endif
 
-#ifdef XP_MACOSX
-  # These prefs control whether or not a universal build running on
-  # an Apple Silicon machine will attempt to use an x64 Widevine or
-  # OpenH264 plugin. This requires launching the GMP child process
-  # executable in x64 mode. We expect to allow this for Widevine until
-  # an arm64 version of Widevine is made available. We don't expect
-  # to need to allow this for OpenH264.
+# (When reading the next line, know that preprocessor.py doesn't
+# understand parentheses, but && is higher precedence than ||.)
+#if defined(XP_WIN) && defined(_ARM64_) || defined(XP_MACOSX)
+  # These prefs control whether or not we will allow x86/x64 plugins
+  # to run on Windows ARM or Apple Silicon machines. This requires
+  # launching the GMP child process executable in x86/x64 mode. We
+  # expect to allow this for Widevine until an arm64 version of
+  # Widevine and Clearkey is made available. We don't expect to need
+  # to allow this for OpenH264.
   #
-  # Allow a Widevine GMP x64 process to be executed on ARM builds.
+  # For Apple Silicon and OSX, it will be for universal builds and
+  # whether or not it can use the x64 Widevine plugin.
+  #
+  # For Windows ARM, it will be for ARM builds and whether or not it
+  # can use x86 Widevine or Clearkey plugins.
+
+  # May a Widevine GMP x64 process be executed on ARM builds.
 - name: media.gmp-widevinecdm.allow-x64-plugin-on-arm64
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-  # Don't allow an OpenH264 GMP x64 process to be executed on ARM builds.
+  # May an OpenH264 GMP x64 process be executed on ARM builds.
 - name: media.gmp-gmpopenh264.allow-x64-plugin-on-arm64
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+  # May a Clearkey GMP x64 process be executed on ARM builds.
+- name: media.gmp-gmpclearkey.allow-x64-plugin-on-arm64
+  type: RelaxedAtomicBool
+  value: @IS_XP_WIN@
   mirror: always
 #endif
 

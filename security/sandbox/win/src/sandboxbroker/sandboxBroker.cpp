@@ -1656,22 +1656,4 @@ SandboxBroker::~SandboxBroker() {
   }
 }
 
-#ifdef _ARM64_
-// We can't include remoteSandboxBroker.h here directly, as it includes
-// IPDL headers, which include a different copy of the chromium base
-// libraries, which leads to conflicts.
-extern AbstractSandboxBroker* CreateRemoteSandboxBroker();
-#endif
-
-// static
-AbstractSandboxBroker* AbstractSandboxBroker::Create(
-    GeckoProcessType aProcessType) {
-#ifdef _ARM64_
-  if (aProcessType == GeckoProcessType_GMPlugin) {
-    return CreateRemoteSandboxBroker();
-  }
-#endif
-  return new SandboxBroker();
-}
-
 }  // namespace mozilla
