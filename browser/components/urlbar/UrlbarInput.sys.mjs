@@ -360,8 +360,15 @@ export class UrlbarInput {
     // an empty string and we're switching tabs. In the latter case, when the
     // user makes the input empty, switches tabs, and switches back, we want the
     // URI to become visible again so the user knows what URI they're viewing.
+    // An exception to this is made in case of an auth request from a different
+    // base domain. To avoid auth prompt spoofing we already display the url of
+    // the cross domain resource, although the page is not loaded yet.
+    // This url will be set/unset by PromptParent. See bug 791594 for reference.
     if (value === null || (!value && dueToTabSwitch)) {
-      uri = uri || this.window.gBrowser.currentURI;
+      uri =
+        this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
+        uri ||
+        this.window.gBrowser.currentURI;
       // Strip off usernames and passwords for the location bar
       try {
         uri = Services.io.createExposableURI(uri);
