@@ -251,9 +251,7 @@ header = """/*
 """
 
 include = """
-#ifndef __gen_%(basename)s_h__
 #include "%(basename)s.h"
-#endif
 """
 
 jsvalue_include = """
