@@ -508,11 +508,14 @@ var ExtensionAPIRequestHandler = {
       return request.args;
     }
 
+    const { apiNamespace, apiName, args } = request;
     // Validate and normalize parameters, set the normalized args on the
     // mozIExtensionAPIRequest normalizedArgs property.
-    return lazy.Schemas.checkWebIDLRequestParameters(
+    return lazy.Schemas.checkParameters(
       context.childManager,
-      request
+      apiNamespace,
+      apiName,
+      args
     );
   },
 };
