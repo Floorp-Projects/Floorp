@@ -39,7 +39,7 @@ ExtensionServiceWorkerInfo::GetScriptURL(nsAString& aScriptURL) {
 NS_IMETHODIMP
 ExtensionServiceWorkerInfo::GetClientInfoId(nsAString& aClientInfoId) {
   MOZ_ASSERT(NS_IsMainThread());
-  aClientInfoId = NS_ConvertUTF8toUTF16(mClientInfo.Id().ToString().get());
+  aClientInfoId = NS_ConvertUTF8toUTF16(mClientInfo.Id().ToString());
   return NS_OK;
 }
 

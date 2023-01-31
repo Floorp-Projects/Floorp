@@ -27,7 +27,10 @@ TEST(nsID, StringConversion)
     const char* idstr = ids[i];
     ASSERT_TRUE(id.Parse(idstr));
 
-    auto cp = id.ToString();
-    ASSERT_STREQ(cp.get(), ids[4 * (i / 4) + 3]);
+    char* cp = id.ToString();
+    ASSERT_NE(cp, nullptr);
+    ASSERT_STREQ(cp, ids[4 * (i / 4) + 3]);
+
+    free(cp);
   }
 }

@@ -13,10 +13,6 @@
 
 #define NSID_LENGTH 39
 
-#ifndef XPCOM_GLUE_AVOID_NSPR
-class nsIDToCString;
-#endif
-
 /**
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
  */
@@ -73,10 +69,11 @@ struct nsID {
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
   /**
-   * nsID string encoder. Returns a managed string in
-   * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format.
+   * nsID string encoder. Returns an allocated string in
+   * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
+   * YOU SHOULD ONLY USE THIS IF YOU CANNOT USE ToProvidedString() BELOW.
    */
-  nsIDToCString ToString() const;
+  char* ToString() const;
 
   /**
    * nsID string encoder. Builds a string in
