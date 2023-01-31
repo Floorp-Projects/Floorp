@@ -710,6 +710,7 @@ menupopup::part(drop-indicator) {
 
 .webRTC-selectDevice-selector-container > menulist {
   flex: 1;
+  min-width: 0;
 }
 
 popupnotificationcontent {
