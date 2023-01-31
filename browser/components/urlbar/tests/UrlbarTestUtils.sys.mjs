@@ -215,6 +215,21 @@ export var UrlbarTestUtils = {
   },
 
   /**
+   * Show the result menu button regardless of the result being hovered or
+   + selected.
+   *
+   * @param {object} win The window containing the urlbar
+   */
+  disableResultMenuAutohide(win) {
+    let container = this.getResultsContainer(win);
+    let attr = "disable-resultmenu-autohide";
+    container.toggleAttribute(attr, true);
+    this._testScope?.registerCleanupFunction(() => {
+      container.toggleAttribute(attr, false);
+    });
+  },
+
+  /**
    * Opens the result menu of a specific result and presses an access key to
    * activate a menu item.
    *
