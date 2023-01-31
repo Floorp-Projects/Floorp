@@ -27,17 +27,17 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/d3d12-rs"]
 git = "https://github.com/gfx-rs/d3d12-rs"
-rev = "a990c93"
+rev = "b940b1d71"
 replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
-rev = "1be8024"
+rev = "f0edae8"
 replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "24a904256e225b20b11fb30f914ef53212a2909e"
+rev = "48d8666de002c7bfddbe85a2596f7748b4cc18b4"
 replace-with = "vendored-sources"
 
 [source."https://github.com/glandium/warp"]

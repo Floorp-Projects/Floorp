@@ -126,8 +126,6 @@ pub fn map_relational_fun(word: &str) -> Option<crate::RelationalFunction> {
     match word {
         "any" => Some(crate::RelationalFunction::Any),
         "all" => Some(crate::RelationalFunction::All),
-        "isFinite" => Some(crate::RelationalFunction::IsFinite),
-        "isNormal" => Some(crate::RelationalFunction::IsNormal),
         _ => None,
     }
 }
@@ -149,8 +147,11 @@ pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
         "tan" => Mf::Tan,
         "tanh" => Mf::Tanh,
         "acos" => Mf::Acos,
+        "acosh" => Mf::Acosh,
         "asin" => Mf::Asin,
+        "asinh" => Mf::Asinh,
         "atan" => Mf::Atan,
+        "atanh" => Mf::Atanh,
         "atan2" => Mf::Atan2,
         "radians" => Mf::Radians,
         "degrees" => Mf::Degrees,
@@ -178,6 +179,7 @@ pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
         "normalize" => Mf::Normalize,
         "faceForward" => Mf::FaceForward,
         "reflect" => Mf::Reflect,
+        "refract" => Mf::Refract,
         // computational
         "sign" => Mf::Sign,
         "fma" => Mf::Fma,

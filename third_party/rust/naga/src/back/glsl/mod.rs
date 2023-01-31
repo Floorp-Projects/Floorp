@@ -214,6 +214,10 @@ bitflags::bitflags! {
         /// Supports GL_EXT_texture_shadow_lod on the host, which provides
         /// additional functions on shadows and arrays of shadows.
         const TEXTURE_SHADOW_LOD = 0x2;
+        /// Include unused global variables, constants and functions. By default the output will exclude
+        /// global variables that are not used in the specified entrypoint (including indirect use),
+        /// all constant declarations, and functions that use excluded global variables.
+        const INCLUDE_UNUSED_ITEMS = 0x4;
     }
 }
 
@@ -228,6 +232,8 @@ pub struct Options {
     pub writer_flags: WriterFlags,
     /// Map of resources association to binding locations.
     pub binding_map: BindingMap,
+    /// Should workgroup variables be zero initialized (by polyfilling)?
+    pub zero_initialize_workgroup_memory: bool,
 }
 
 impl Default for Options {
@@ -236,6 +242,7 @@ impl Default for Options {
             version: Version::new_gles(310),
             writer_flags: WriterFlags::ADJUST_COORDINATE_SPACE,
             binding_map: BindingMap::default(),
+            zero_initialize_workgroup_memory: true,
         }
     }
 }
@@ -599,11 +606,17 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Write the globals
         //
-        // We filter all globals that aren't used by the selected entry point as they might be
+        // Unless explicitly disabled with WriterFlags::INCLUDE_UNUSED_ITEMS,
+        // we filter all globals that aren't used by the selected entry point as they might be
         // interfere with each other (i.e. two globals with the same location but different with
         // different classes)
+        let include_unused = self
+            .options
+            .writer_flags
+            .contains(WriterFlags::INCLUDE_UNUSED_ITEMS);
         for (handle, global) in self.module.global_variables.iter() {
-            if ep_info[handle].is_empty() {
+            let is_unused = ep_info[handle].is_empty();
+            if !include_unused && is_unused {
                 continue;
             }
 
@@ -679,11 +692,34 @@ impl<'a, W: Write> Writer<'a, W> {
                 TypeInner::Sampler { .. } => continue,
                 // All other globals are written by `write_global`
                 _ => {
-                    if !ep_info[handle].is_empty() {
-                        self.write_global(handle, global)?;
-                        // Add a newline (only for readability)
-                        writeln!(self.out)?;
-                    }
+                    self.write_global(handle, global)?;
+                    // Add a newline (only for readability)
+                    writeln!(self.out)?;
+                }
+            }
+        }
+
+        if include_unused {
+            // write named constants
+            for (handle, constant) in self.module.constants.iter() {
+                if let Some(name) = constant.name.as_ref() {
+                    write!(self.out, "const ")?;
+                    match constant.inner {
+                        crate::ConstantInner::Scalar { width, value } => {
+                            // create a TypeInner to write
+                            let inner = TypeInner::Scalar {
+                                width,
+                                kind: value.scalar_kind(),
+                            };
+                            self.write_value_type(&inner)?;
+                        }
+                        crate::ConstantInner::Composite { ty, .. } => {
+                            self.write_type(ty)?;
+                        }
+                    };
+                    write!(self.out, " {} = ", name)?;
+                    self.write_constant(handle)?;
+                    writeln!(self.out, ";")?;
                 }
             }
         }
@@ -700,7 +736,7 @@ impl<'a, W: Write> Writer<'a, W> {
         for (handle, function) in self.module.functions.iter() {
             // Check that the function doesn't use globals that aren't supported
             // by the current entry point
-            if !ep_info.dominates_global_use(&self.info[handle]) {
+            if !include_unused && !ep_info.dominates_global_use(&self.info[handle]) {
                 continue;
             }
 
@@ -1399,6 +1435,12 @@ impl<'a, W: Write> Writer<'a, W> {
         // Close the parentheses and open braces to start the function body
         writeln!(self.out, ") {{")?;
 
+        if self.options.zero_initialize_workgroup_memory
+            && ctx.ty.is_compute_entry_point(self.module)
+        {
+            self.write_workgroup_variables_initialization(&ctx)?;
+        }
+
         // Compose the function arguments from globals, in case of an entry point.
         if let back::FunctionType::EntryPoint(ep_index) = ctx.ty {
             let stage = self.module.entry_points[ep_index as usize].stage;
@@ -1483,6 +1525,42 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Close braces and add a newline
         writeln!(self.out, "}}")?;
+
+        Ok(())
+    }
+
+    fn write_workgroup_variables_initialization(
+        &mut self,
+        ctx: &back::FunctionCtx,
+    ) -> BackendResult {
+        let mut vars = self
+            .module
+            .global_variables
+            .iter()
+            .filter(|&(handle, var)| {
+                !ctx.info[handle].is_empty() && var.space == crate::AddressSpace::WorkGroup
+            })
+            .peekable();
+
+        if vars.peek().is_some() {
+            let level = back::Level(1);
+
+            writeln!(
+                self.out,
+                "{}if (gl_GlobalInvocationID == uvec3(0u)) {{",
+                level
+            )?;
+
+            for (handle, var) in vars {
+                let name = &self.names[&NameKey::GlobalVariable(handle)];
+                write!(self.out, "{}{} = ", level.next(), name)?;
+                self.write_zero_init_value(var.ty)?;
+                writeln!(self.out, ";")?;
+            }
+
+            writeln!(self.out, "{}}}", level)?;
+            self.write_barrier(crate::Barrier::WORK_GROUP, level)?;
+        }
 
         Ok(())
     }
@@ -2002,18 +2080,8 @@ impl<'a, W: Write> Writer<'a, W> {
             // keyword which ceases all further processing in a fragment shader, it's called OpKill
             // in spir-v that's why it's called `Statement::Kill`
             Statement::Kill => writeln!(self.out, "{}discard;", level)?,
-            // Issue a memory barrier. Please note that to ensure visibility,
-            // OpenGL always requires a call to the `barrier()` function after a `memoryBarrier*()`
             Statement::Barrier(flags) => {
-                if flags.contains(crate::Barrier::STORAGE) {
-                    writeln!(self.out, "{}memoryBarrierBuffer();", level)?;
-                }
-
-                if flags.contains(crate::Barrier::WORK_GROUP) {
-                    writeln!(self.out, "{}memoryBarrierShared();", level)?;
-                }
-
-                writeln!(self.out, "{}barrier();", level)?;
+                self.write_barrier(flags, level)?;
             }
             // Stores in glsl are just variable assignments written as `pointer = value;`
             Statement::Store { pointer, value } => {
@@ -3525,7 +3593,7 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_zero_init_value(&mut self, ty: Handle<crate::Type>) -> BackendResult {
         let inner = &self.module.types[ty].inner;
         match *inner {
-            TypeInner::Scalar { kind, .. } => {
+            TypeInner::Scalar { kind, .. } | TypeInner::Atomic { kind, .. } => {
                 self.write_zero_init_scalar(kind)?;
             }
             TypeInner::Vector { kind, .. } => {
@@ -3570,7 +3638,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
                 write!(self.out, ")")?;
             }
-            _ => {} // TODO:
+            _ => unreachable!(),
         }
 
         Ok(())
@@ -3585,6 +3653,19 @@ impl<'a, W: Write> Writer<'a, W> {
             crate::ScalarKind::Sint => write!(self.out, "0")?,
         }
 
+        Ok(())
+    }
+
+    /// Issue a memory barrier. Please note that to ensure visibility,
+    /// OpenGL always requires a call to the `barrier()` function after a `memoryBarrier*()`
+    fn write_barrier(&mut self, flags: crate::Barrier, level: back::Level) -> BackendResult {
+        if flags.contains(crate::Barrier::STORAGE) {
+            writeln!(self.out, "{}memoryBarrierBuffer();", level)?;
+        }
+        if flags.contains(crate::Barrier::WORK_GROUP) {
+            writeln!(self.out, "{}memoryBarrierShared();", level)?;
+        }
+        writeln!(self.out, "{}barrier();", level)?;
         Ok(())
     }
 
