@@ -464,6 +464,11 @@ using RootedValVector = Rooted<ValVector>;
 using HandleValVector = Handle<ValVector>;
 using MutableHandleValVector = MutableHandle<ValVector>;
 
+template <int N>
+using ValVectorN = GCVector<Val, N, SystemAllocPolicy>;
+template <int N>
+using RootedValVectorN = Rooted<ValVectorN<N>>;
+
 // Check a value against the given reference type.  If the targetType
 // is RefType::Extern then the test always passes, but the value may be boxed.
 // If the test passes then the value is stored either in fnval (for
