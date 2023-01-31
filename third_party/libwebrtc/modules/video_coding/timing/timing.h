@@ -23,11 +23,9 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
-
-class Clock;
-class TimestampExtrapolator;
 
 class VCMTiming {
  public:
