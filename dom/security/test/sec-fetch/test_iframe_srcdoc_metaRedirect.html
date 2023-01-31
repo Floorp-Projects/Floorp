@@ -86,11 +86,9 @@ script.addMessageListener("test-pass", async () => {
   SimpleTest.finish();
 });
 
-SpecialPowers.pushPrefEnv({set: [["dom.security.secFetch.enabled", true]]}, async () => {
-  let frame = document.createElement("iframe");
-  frame.srcdoc = `<meta http-equiv="refresh" content="0; url='${REQUEST_URL}?meta'">`;
-  document.body.appendChild(frame);
-});
+let frame = document.createElement("iframe");
+frame.srcdoc = `<meta http-equiv="refresh" content="0; url='${REQUEST_URL}?meta'">`;
+document.body.appendChild(frame);
 
 </script>
 </body>

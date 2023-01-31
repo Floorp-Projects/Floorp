@@ -76,12 +76,9 @@ function iframeAction(test) {
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({set: [["dom.security.secFetch.enabled", true]]}, async () => {
-  testFrame = document.createElement('iframe');
-  testFrame.src = `https://example.org/${REQUEST_PATH}?test`;
-  document.body.appendChild(testFrame);
-});
-
+testFrame = document.createElement('iframe');
+testFrame.src = `https://example.org/${REQUEST_PATH}?test`;
+document.body.appendChild(testFrame);
 
 </script>
 </body>

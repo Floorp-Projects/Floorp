@@ -91,9 +91,7 @@ script.addMessageListener("test-pass", async () => {
   SimpleTest.finish();
 });
 
-SpecialPowers.pushPrefEnv({set: [["dom.security.secFetch.enabled", true]]}, async () => {
-  testWindow = window.open(REQUEST_URL + "?meta");
-});
+testWindow = window.open(REQUEST_URL + "?meta");
 
 </script>
 </body>

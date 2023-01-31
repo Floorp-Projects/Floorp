@@ -60,20 +60,14 @@ script.addMessageListener("test-end", () => {
   checkTestsDone();
 });
 
-function test_sec_fetch_websocket() {
-  var wssSocket = new WebSocket("wss://example.com/tests/dom/security/test/sec-fetch/file_websocket");
-  wssSocket.onopen = function(e) {
-    ok(true, "sanity: wssSocket onopen");
-    checkTestsDone();
-  };
-  wssSocket.onerror = function(e) {
-    ok(false, "sanity: wssSocket onerror");
-  };
-}
-
-SpecialPowers.pushPrefEnv({
-  set: [["dom.security.secFetch.enabled", true]]
-}, test_sec_fetch_websocket);
+var wssSocket = new WebSocket("wss://example.com/tests/dom/security/test/sec-fetch/file_websocket");
+wssSocket.onopen = function(e) {
+  ok(true, "sanity: wssSocket onopen");
+  checkTestsDone();
+};
+wssSocket.onerror = function(e) {
+  ok(false, "sanity: wssSocket onerror");
+};
 
 </script>
 </body>

@@ -3599,13 +3599,6 @@
   value: false
   mirror: always
 
-# This pref enables Sec-Fetch-* logic and causes corresponding
-# request headers to be set.
-- name: dom.security.secFetch.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # This pref enables the featurePolicy header support.
 - name: dom.security.featurePolicy.header.enabled
   type: bool
