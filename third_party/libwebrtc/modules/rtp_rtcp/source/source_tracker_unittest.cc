@@ -266,10 +266,12 @@ TEST(SourceTrackerTest, OnFrameDeliveredRecordsSourcesDistinctSsrcs) {
                      kAbsoluteCaptureTime, kReceiveTime1)}));
 
   int64_t timestamp_ms = clock.TimeInMilliseconds();
-  constexpr RtpSource::Extensions extensions0 = {kAudioLevel0,
-                                                 kAbsoluteCaptureTime};
-  constexpr RtpSource::Extensions extensions1 = {kAudioLevel1,
-                                                 kAbsoluteCaptureTime};
+  constexpr RtpSource::Extensions extensions0 = {
+      .audio_level = kAudioLevel0,
+      .absolute_capture_time = kAbsoluteCaptureTime};
+  constexpr RtpSource::Extensions extensions1 = {
+      .audio_level = kAudioLevel1,
+      .absolute_capture_time = kAbsoluteCaptureTime};
 
   EXPECT_THAT(tracker.GetSources(),
               ElementsAre(RtpSource(timestamp_ms, kSsrc2, RtpSourceType::SSRC,
@@ -354,12 +356,15 @@ TEST(SourceTrackerTest, OnFrameDeliveredUpdatesSources) {
   constexpr Timestamp kReceiveTime1 = Timestamp::Millis(61);
   constexpr Timestamp kReceiveTime2 = Timestamp::Millis(62);
 
-  constexpr RtpSource::Extensions extensions0 = {kAudioLevel0,
-                                                 kAbsoluteCaptureTime0};
-  constexpr RtpSource::Extensions extensions1 = {kAudioLevel1,
-                                                 kAbsoluteCaptureTime1};
-  constexpr RtpSource::Extensions extensions2 = {kAudioLevel2,
-                                                 kAbsoluteCaptureTime2};
+  constexpr RtpSource::Extensions extensions0 = {
+      .audio_level = kAudioLevel0,
+      .absolute_capture_time = kAbsoluteCaptureTime0};
+  constexpr RtpSource::Extensions extensions1 = {
+      .audio_level = kAudioLevel1,
+      .absolute_capture_time = kAbsoluteCaptureTime1};
+  constexpr RtpSource::Extensions extensions2 = {
+      .audio_level = kAudioLevel2,
+      .absolute_capture_time = kAbsoluteCaptureTime2};
 
   SimulatedClock clock(1000000000000ULL);
   SourceTracker tracker(&clock);
@@ -453,8 +458,9 @@ TEST(SourceTrackerTest, TimedOutSourcesAreRemoved) {
 
   clock.AdvanceTimeMilliseconds(SourceTracker::kTimeoutMs);
 
-  constexpr RtpSource::Extensions extensions1 = {kAudioLevel1,
-                                                 kAbsoluteCaptureTime1};
+  constexpr RtpSource::Extensions extensions1 = {
+      .audio_level = kAudioLevel1,
+      .absolute_capture_time = kAbsoluteCaptureTime1};
 
   EXPECT_THAT(
       tracker.GetSources(),
