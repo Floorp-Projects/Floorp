@@ -12,6 +12,7 @@ group("metrics") {
   deps = [
     ":metric",
     ":metrics_exporter",
+    ":metrics_logger_and_exporter",
     ":stdout_metrics_exporter",
   ]
 }
@@ -20,7 +21,10 @@ if (rtc_include_tests) {
   group("metrics_unittests") {
     testonly = true
 
-    deps = [ ":stdout_metrics_exporter_test" ]
+    deps = [
+      ":metrics_logger_and_exporter_test",
+      ":stdout_metrics_exporter_test",
+    ]
   }
 }
 
@@ -39,7 +43,7 @@ rtc_library("metrics_exporter") {
   sources = [ "metrics_exporter.h" ]
   deps = [
     ":metric",
-    "../../../api:array_view",
+    "../..:array_view",
   ]
 }
 
@@ -52,10 +56,32 @@ rtc_library("stdout_metrics_exporter") {
   deps = [
     ":metric",
     ":metrics_exporter",
-    "../../../api:array_view",
+    "../..:array_view",
     "../../../rtc_base:stringutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("metrics_logger_and_exporter") {
+  visibility = [ "*" ]
+  sources = [
+    "metrics_logger_and_exporter.cc",
+    "metrics_logger_and_exporter.h",
+  ]
+  deps = [
+    ":metric",
+    ":metrics_exporter",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../rtc_base/synchronization:mutex",
+    "../../../system_wrappers",
+    "../../numerics",
+  ]
+
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 if (rtc_include_tests) {
@@ -65,8 +91,22 @@ if (rtc_include_tests) {
     deps = [
       ":metric",
       ":stdout_metrics_exporter",
-      "../../../api/units:timestamp",
       "../../../test:test_support",
+      "../../units:timestamp",
     ]
+  }
+
+  rtc_library("metrics_logger_and_exporter_test") {
+    testonly = true
+    sources = [ "metrics_logger_and_exporter_test.cc" ]
+    deps = [
+      ":metric",
+      ":metrics_exporter",
+      ":metrics_logger_and_exporter",
+      "../../../system_wrappers",
+      "../../../test:test_support",
+      "../../numerics",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }

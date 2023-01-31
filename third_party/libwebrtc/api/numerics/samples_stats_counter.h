@@ -11,6 +11,8 @@
 #ifndef API_NUMERICS_SAMPLES_STATS_COUNTER_H_
 #define API_NUMERICS_SAMPLES_STATS_COUNTER_H_
 
+#include <map>
+#include <string>
 #include <vector>
 
 #include "api/array_view.h"
@@ -27,6 +29,8 @@ class SamplesStatsCounter {
   struct StatsSample {
     double value;
     Timestamp time;
+    // Sample's specific metadata.
+    std::map<std::string, std::string> metadata;
   };
 
   SamplesStatsCounter();
