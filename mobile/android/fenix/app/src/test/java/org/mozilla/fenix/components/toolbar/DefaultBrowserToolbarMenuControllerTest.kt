@@ -60,7 +60,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -802,25 +801,6 @@ class DefaultBrowserToolbarMenuControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         verify { navController.navigate(turnOnSyncDirections, null) }
-    }
-
-    @Test
-    fun `GIVEN the default browser experiment WHEN SetDefaultBrowser menu item is pressed THEN proper metrics are recorded`() = runTest {
-        val item = ToolbarMenu.Item.SetDefaultBrowser
-
-        val store: BrowserStore = mockk()
-
-        val controller = createController(
-            scope = this,
-            store = store,
-            bookmarkTapped = { _, _ -> },
-        )
-
-        assertNull(ExperimentsDefaultBrowser.toolbarMenuClicked.testGetValue())
-
-        controller.handleToolbarItemInteraction(item)
-
-        assertNotNull(ExperimentsDefaultBrowser.toolbarMenuClicked.testGetValue())
     }
 
     @Suppress("LongParameterList")

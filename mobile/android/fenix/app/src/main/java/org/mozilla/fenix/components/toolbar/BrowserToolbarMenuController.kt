@@ -30,7 +30,6 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -360,7 +359,6 @@ class DefaultBrowserToolbarMenuController(
                 )
             }
             is ToolbarMenu.Item.SetDefaultBrowser -> {
-                ExperimentsDefaultBrowser.toolbarMenuClicked.record(NoExtras())
                 activity.openSetDefaultBrowserOption()
             }
             is ToolbarMenu.Item.RemoveFromTopSites -> {
