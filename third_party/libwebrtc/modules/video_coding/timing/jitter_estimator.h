@@ -11,6 +11,7 @@
 #ifndef MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 #define MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 
+#include <algorithm>
 #include <memory>
 #include <queue>
 
@@ -38,11 +39,8 @@ class JitterEstimator {
   struct Config {
     static constexpr char kFieldTrialsKey[] = "WebRTC-JitterEstimatorConfig";
 
-    static Config Parse(absl::string_view field_trial) {
-      Config config;
-      config.Parser()->Parse(field_trial);
-      return config;
-    }
+    // Parses a field trial string and validates the values.
+    static Config ParseAndValidate(absl::string_view field_trial);
 
     std::unique_ptr<StructParametersParser> Parser() {
       // clang-format off

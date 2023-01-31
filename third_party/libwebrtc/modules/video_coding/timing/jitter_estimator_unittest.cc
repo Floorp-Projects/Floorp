@@ -26,7 +26,6 @@
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
-#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace {
@@ -235,6 +234,26 @@ TEST_F(FieldTrialsOverriddenJitterEstimatorTest,
   estimator_.UpdateEstimate(gen.Delay(), 2 * gen.FrameSize());
   TimeDelta outlier_jitter_4x = estimator_.GetJitterEstimate(0, absl::nullopt);
   EXPECT_GT(outlier_jitter_4x.ms(), outlier_jitter_3x.ms());
+}
+
+class MisconfiguredFieldTrialsJitterEstimatorTest : public JitterEstimatorTest {
+ protected:
+  MisconfiguredFieldTrialsJitterEstimatorTest()
+      : JitterEstimatorTest(
+            "WebRTC-JitterEstimatorConfig/"
+            "max_frame_size_percentile:-0.9,"
+            "frame_size_window:-1,"
+            "num_stddev_delay_outlier:-2,"
+            "num_stddev_size_outlier:-23.1/") {}
+  ~MisconfiguredFieldTrialsJitterEstimatorTest() {}
+};
+
+TEST_F(MisconfiguredFieldTrialsJitterEstimatorTest, FieldTrialsAreValidated) {
+  JitterEstimator::Config config = estimator_.GetConfigForTest();
+  EXPECT_EQ(*config.max_frame_size_percentile, 0.0);
+  EXPECT_EQ(*config.frame_size_window, 1);
+  EXPECT_EQ(*config.num_stddev_delay_outlier, 0.0);
+  EXPECT_EQ(*config.num_stddev_size_outlier, 0.0);
 }
 
 }  // namespace
