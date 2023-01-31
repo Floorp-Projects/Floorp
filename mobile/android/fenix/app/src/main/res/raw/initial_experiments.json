@@ -69,7 +69,7 @@
       "channel": "release",
       "userFacingName": "Android Reengagment Notifications Release",
       "userFacingDescription": "Re engagement notifications on Android",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
