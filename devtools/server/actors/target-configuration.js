@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   targetConfigurationSpec,
 } = require("resource://devtools/shared/specs/target-configuration.js");
+
 const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
@@ -68,10 +66,10 @@ const SUPPORTED_OPTIONS = {
  * @constructor
  *
  */
-const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
-  initialize(watcherActor) {
+class TargetConfigurationActor extends Actor {
+  constructor(watcherActor) {
+    super(watcherActor.conn, targetConfigurationSpec);
     this.watcherActor = watcherActor;
-    Actor.prototype.initialize.call(this, this.watcherActor.conn);
 
     this._onBrowsingContextAttached = this._onBrowsingContextAttached.bind(
       this
@@ -95,7 +93,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     );
 
     this._browsingContext = this.watcherActor.browserElement?.browsingContext;
-  },
+  }
 
   form() {
     return {
@@ -103,7 +101,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       configuration: this._getConfiguration(),
       traits: { supportedOptions: SUPPORTED_OPTIONS },
     };
-  },
+  }
 
   /**
    * Returns whether or not this actor should handle the flag that should be set on the
@@ -117,7 +115,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // For now, the Browser Toolbox and Web Extension are having a unique target
     // which applies the configuration by itself on new documents.
     return this.watcherActor.sessionContext.type == "browser-element";
-  },
+  }
 
   /**
    * Event handler for attached browsing context. This will be called when
@@ -175,13 +173,13 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       this._browsingContext.inRDMPane = true;
     }
     this._updateParentProcessConfiguration(this._getConfiguration());
-  },
+  }
 
   _onBfCacheNavigation({ windowGlobal } = {}) {
     if (windowGlobal) {
       this._onBrowsingContextAttached(windowGlobal.browsingContext);
     }
-  },
+  }
 
   _getConfiguration() {
     const targetConfigurationData = this.watcherActor.getSessionDataForType(
@@ -196,7 +194,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       cfgMap[key] = value;
     }
     return cfgMap;
-  },
+  }
 
   /**
    *
@@ -217,7 +215,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     this._updateParentProcessConfiguration(configuration);
     await this.watcherActor.addDataEntry(TARGET_CONFIGURATION, cfgArray);
     return this._getConfiguration();
-  },
+  }
 
   /**
    *
@@ -274,7 +272,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (shouldReload) {
       this._browsingContext.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }
-  },
+  }
 
   _restoreParentProcessConfiguration() {
     if (!this._shouldHandleConfigurationInParentProcess()) {
@@ -312,7 +310,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (this._initialTouchEventsOverride !== undefined) {
       this._setTouchEventsOverride(this._initialTouchEventsOverride);
     }
-  },
+  }
 
   /**
    * Disable or enable the service workers testing features.
@@ -321,7 +319,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (this._browsingContext.serviceWorkersTestingEnabled != enabled) {
       this._browsingContext.serviceWorkersTestingEnabled = enabled;
     }
-  },
+  }
 
   /**
    * Disable or enable the print simulation.
@@ -331,7 +329,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (this._browsingContext.mediumOverride != value) {
       this._browsingContext.mediumOverride = value;
     }
-  },
+  }
 
   /**
    * Disable or enable the color-scheme simulation.
@@ -342,7 +340,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       this._browsingContext.prefersColorSchemeOverride = value;
       this._resetColorSchemeSimulationOnDestroy = true;
     }
-  },
+  }
 
   /**
    * Set a custom user agent on the page
@@ -361,11 +359,11 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     }
 
     this._browsingContext.customUserAgent = userAgent;
-  },
+  }
 
   isJavascriptEnabled() {
     return this._browsingContext.allowJavascript;
-  },
+  }
 
   _setJavascriptEnabled(allow) {
     if (this._initialJavascriptEnabled === undefined) {
@@ -374,7 +372,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (allow !== undefined) {
       this._browsingContext.allowJavascript = allow;
     }
-  },
+  }
 
   /* DPPX override */
   _setDPPXOverride(dppx) {
@@ -391,7 +389,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (dppx !== undefined) {
       this._browsingContext.overrideDPPX = dppx;
     }
-  },
+  }
 
   /**
    * Set the touchEventsOverride on the browsing context.
@@ -415,7 +413,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (flag !== undefined) {
       this._browsingContext.touchEventsOverride = flag;
     }
-  },
+  }
 
   /**
    * Overrides navigator.maxTouchPoints.
@@ -426,7 +424,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
    */
   _setRDMPaneMaxTouchPoints(maxTouchPoints) {
     this._browsingContext.setRDMPaneMaxTouchPoints(maxTouchPoints);
-  },
+  }
 
   /**
    * Set an orientation and an angle on the browsing context. This will be applied only
@@ -438,7 +436,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
    */
   _setRDMPaneOrientation({ type, angle }) {
     this._browsingContext.setRDMPaneOrientation(type, angle);
-  },
+  }
 
   /**
    * Disable or enable the cache via the browsing context.
@@ -452,7 +450,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (this._browsingContext.defaultLoadFlags != value) {
       this._browsingContext.defaultLoadFlags = value;
     }
-  },
+  }
 
   destroy() {
     Services.obs.removeObserver(
@@ -464,8 +462,8 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       this._onBfCacheNavigation
     );
     this._restoreParentProcessConfiguration();
-    Actor.prototype.destroy.call(this);
-  },
-});
+    super.destroy();
+  }
+}
 
 exports.TargetConfigurationActor = TargetConfigurationActor;

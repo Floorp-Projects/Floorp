@@ -4,11 +4,11 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
-const { ActorClassWithSpec, Actor } = protocol;
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   cssPropertiesSpec,
 } = require("resource://devtools/shared/specs/css-properties.js");
+
 const { cssColors } = require("resource://devtools/shared/css/color-db.js");
 const InspectorUtils = require("InspectorUtils");
 
@@ -19,14 +19,10 @@ loader.lazyRequireGetter(
   true
 );
 
-exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
-  initialize(conn) {
-    Actor.prototype.initialize.call(this, conn);
-  },
-
-  destroy() {
-    Actor.prototype.destroy.call(this);
-  },
+class CssPropertiesActor extends Actor {
+  constructor(conn) {
+    super(conn, cssPropertiesSpec);
+  }
 
   getCSSDatabase() {
     const properties = generateCssProperties();
@@ -39,8 +35,9 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
     };
 
     return { properties, pseudoElements, supportedFeature };
-  },
-});
+  }
+}
+exports.CssPropertiesActor = CssPropertiesActor;
 
 /**
  * Generate the CSS properties object. Every key is the property name, while

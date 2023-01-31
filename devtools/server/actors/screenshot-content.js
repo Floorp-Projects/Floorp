@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   screenshotContentSpec,
 } = require("resource://devtools/shared/specs/screenshot-content.js");
@@ -21,18 +18,18 @@ loader.lazyRequireGetter(
   true
 );
 
-exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+exports.ScreenshotContentActor = class ScreenshotContentActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, screenshotContentSpec);
     this.targetActor = targetActor;
-  },
+  }
 
   _getRectForNode(node) {
     const originWindow = this.targetActor.ignoreSubFrames
       ? node.ownerGlobal
       : node.ownerGlobal.top;
     return getRect(originWindow, node, node.ownerGlobal);
-  },
+  }
 
   /**
    * Retrieve some window-related information that will be passed to the parent process
@@ -143,5 +140,5 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
       rect: { left, top, width, height },
       messages,
     };
-  },
-});
+  }
+};

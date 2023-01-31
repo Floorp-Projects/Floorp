@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   manifestSpec,
 } = require("resource://devtools/shared/specs/manifest.js");
@@ -23,11 +20,11 @@ ChromeUtils.defineModuleGetter(
 /**
  * An actor for a Web Manifest
  */
-const ManifestActor = ActorClassWithSpec(manifestSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+class ManifestActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, manifestSpec);
     this.targetActor = targetActor;
-  },
+  }
 
   async fetchCanonicalManifest() {
     try {
@@ -39,7 +36,7 @@ const ManifestActor = ActorClassWithSpec(manifestSpec, {
     } catch (error) {
       return { manifest: null, errorMessage: error.message };
     }
-  },
-});
+  }
+}
 
 exports.ManifestActor = ManifestActor;

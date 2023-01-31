@@ -4,7 +4,7 @@
 
 "use strict";
 
-var protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   arrayBufferSpec,
 } = require("resource://devtools/shared/specs/array-buffer.js");
@@ -17,16 +17,16 @@ const {
  * @param buffer ArrayBuffer
  *        The buffer.
  */
-const ArrayBufferActor = protocol.ActorClassWithSpec(arrayBufferSpec, {
-  initialize(conn, buffer) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class ArrayBufferActor extends Actor {
+  constructor(conn, buffer) {
+    super(conn, arrayBufferSpec);
     this.buffer = buffer;
     this.bufferLength = buffer.byteLength;
-  },
+  }
 
   rawValue() {
     return this.buffer;
-  },
+  }
 
   form() {
     return {
@@ -36,7 +36,7 @@ const ArrayBufferActor = protocol.ActorClassWithSpec(arrayBufferSpec, {
       // which can either be an ArrayBuffer actor or a LongString actor.
       typeName: this.typeName,
     };
-  },
+  }
 
   slice(start, count) {
     const slice = new Uint8Array(this.buffer, start, count);
@@ -61,8 +61,8 @@ const ArrayBufferActor = protocol.ActorClassWithSpec(arrayBufferSpec, {
       from: this.actorID,
       encoded: parts.join(""),
     };
-  },
-});
+  }
+}
 
 module.exports = {
   ArrayBufferActor,

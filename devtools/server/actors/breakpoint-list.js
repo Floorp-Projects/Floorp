@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   breakpointListSpec,
 } = require("resource://devtools/shared/specs/breakpoint-list.js");
+
 const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
@@ -27,25 +25,21 @@ const { BREAKPOINTS, XHR_BREAKPOINTS, EVENT_BREAKPOINTS } = SUPPORTED_DATA;
  * @constructor
  *
  */
-const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
-  initialize(watcherActor) {
+class BreakpointListActor extends Actor {
+  constructor(watcherActor) {
+    super(watcherActor.conn, breakpointListSpec);
     this.watcherActor = watcherActor;
-    Actor.prototype.initialize.call(this, this.watcherActor.conn);
-  },
-
-  destroy(conn) {
-    Actor.prototype.destroy.call(this, conn);
-  },
+  }
 
   setBreakpoint(location, options) {
     return this.watcherActor.addDataEntry(BREAKPOINTS, [{ location, options }]);
-  },
+  }
 
   removeBreakpoint(location, options) {
     return this.watcherActor.removeDataEntry(BREAKPOINTS, [
       { location, options },
     ]);
-  },
+  }
 
   /**
    * Request to break on next XHR or Fetch request for a given URL and HTTP Method.
@@ -60,7 +54,7 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
    */
   setXHRBreakpoint(path, method) {
     return this.watcherActor.addDataEntry(XHR_BREAKPOINTS, [{ path, method }]);
-  },
+  }
 
   /**
    * Stop breakpoint on requests we ask to break on via setXHRBreakpoint.
@@ -71,7 +65,7 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
     return this.watcherActor.removeDataEntry(XHR_BREAKPOINTS, [
       { path, method },
     ]);
-  },
+  }
 
   /**
    * Set the active breakpoints
@@ -94,7 +88,7 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
     if (removeIds.length) {
       this.watcherActor.removeDataEntry(EVENT_BREAKPOINTS, removeIds);
     }
-  },
-});
+  }
+}
 
 exports.BreakpointListActor = BreakpointListActor;
