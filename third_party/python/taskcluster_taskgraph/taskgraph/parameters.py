@@ -84,7 +84,11 @@ def _get_defaults(repo_root=None):
         repo_url = repo.get_url()
         parsed_url = mozilla_repo_urls.parse(repo_url)
         project = parsed_url.repo_name
-    except (CalledProcessError, mozilla_repo_urls.errors.InvalidRepoUrlError):
+    except (
+        CalledProcessError,
+        mozilla_repo_urls.errors.InvalidRepoUrlError,
+        mozilla_repo_urls.errors.UnsupportedPlatformError,
+    ):
         repo_url = ""
         project = ""
 

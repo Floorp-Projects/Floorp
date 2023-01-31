@@ -9,8 +9,7 @@ taskgraph/generator.py,sha256=tonQ3UvaZYRdpWOtmdQ5Mr4en1FRCUJvbvlbzfChluM,15590
 taskgraph/graph.py,sha256=9tE3bSSBRHvRLgJzK4dTieGT3RrzQZdR1YbKizEhzlw,4667
 taskgraph/main.py,sha256=rb7cwghT5U97kSpIho0KzXo4HSXp2Iw_jaL2A2Qrf18,23581
 taskgraph/morph.py,sha256=8qxYdruEQkbHGqv7dh3e1OWhH9Y5i6bFUKzDMs-Ctnw,9625
-taskgraph/optimize.py,sha256=NVshvkqRKr7SQvRdqz5CELmnIXeiODkDxlK0D9QMi9k,16487
-taskgraph/parameters.py,sha256=CYaR9E6pFsysUcRahlFILplEy3unVwUu7scLhP03nQo,11824
+taskgraph/parameters.py,sha256=4JWaL_otzQaQjmXc7-HnjfhlHYSaltYRb_6xeUNbERY,11906
 taskgraph/target_tasks.py,sha256=41BIVwiATy8DCQujPduTtnFmgHlKOfw6RPGL4b20WO8,3324
 taskgraph/task.py,sha256=QCrOzMaTsy5QHShKUo89XgjJVMl3cSZGZJPLuHCXItE,3132
 taskgraph/taskgraph.py,sha256=tfj0ZMqjuwEQDET0W57EcP-_KBEbqkxJci9Z6DkeOEQ,2397
@@ -67,9 +66,9 @@ taskgraph/util/vcs.py,sha256=i13idS8y9ooR216mnd1gksdjSgHBNlAZEdq7Xr-ROwE,18536
 taskgraph/util/verify.py,sha256=YETuZVkwnfYe57GRPx2x_vedstgqdGiH46HLWAdcks8,8827
 taskgraph/util/workertypes.py,sha256=5g2mgIbEKMzDpZNnmPMoMNyy7Wahi-jmWcV1amDAcPo,2341
 taskgraph/util/yaml.py,sha256=hfKI_D8Q7dimq4_VvO3WEh8CJsTrsIMwN6set7HIQbY,990
-taskcluster_taskgraph-3.5.1.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-taskcluster_taskgraph-3.5.1.dist-info/METADATA,sha256=uy5bE9DFHpqImbRhKEVM6CSC1me3wjdCW76836B0rEc,1126
-taskcluster_taskgraph-3.5.1.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
-taskcluster_taskgraph-3.5.1.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
-taskcluster_taskgraph-3.5.1.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
-taskcluster_taskgraph-3.5.1.dist-info/RECORD,,
+taskcluster_taskgraph-3.5.2.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+taskcluster_taskgraph-3.5.2.dist-info/METADATA,sha256=8vZXhtvvL0WcQK5Sp9vslS9bdJHFN0LWZG0YzEUZips,1126
+taskcluster_taskgraph-3.5.2.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
+taskcluster_taskgraph-3.5.2.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
+taskcluster_taskgraph-3.5.2.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
+taskcluster_taskgraph-3.5.2.dist-info/RECORD,,

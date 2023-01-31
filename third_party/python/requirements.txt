@@ -197,9 +197,9 @@ markupsafe==2.0.1; python_version >= "3.6" \
 mohawk==0.3.4 \
     --hash=sha256:b3f85ffa93a5c7d2f9cc591246ef9f8ac4a9fa716bfd5bae0377699a2d89d78c \
     --hash=sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3
-mozilla-repo-urls==0.1.0 \
-    --hash=sha256:aa43ebcc4744b4cf20bf27f8dff885e82efee21a0219ba20f6bd99931cabd7b9 \
-    --hash=sha256:5978abd796ae2b51a66e571754f0c559050cb4a024f2bf401471fa7ac4afd54e
+mozilla-repo-urls==0.1.1 \
+    --hash=sha256:7364da790751db2a060eb45adbf1d7db89a145ed279ba235f3425db9dd255915 \
+    --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba
 mozilla-version==0.3.4 \
     --hash=sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255 \
     --hash=sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f
@@ -350,9 +350,9 @@ six==1.13.0; (python_version >= "2.6" and python_full_version < "3.0.0") or (pyt
 slugid==2.0.0 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297
-taskcluster-taskgraph==3.5.1 \
-    --hash=sha256:e08b935175349ef8728ff5f19c7e9866a562256180f5580b291da3217cb5016c \
-    --hash=sha256:dc56b87228fb8eb1ef611750202344817a8cf5d825c0dc7e2dcc0f8b2795cbcd
+taskcluster-taskgraph==3.5.2 \
+    --hash=sha256:62f1a320d6b310f65151904a9992719a9b2c4c41ef8f57be810899fd3c5d2703 \
+    --hash=sha256:6a024ba2383f56e11b764500f92837afb825612a49d24bde9791dfa7aa7ddaec
 taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
