@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-01-30T13:00:05.472977'
+updated_at: '2023-01-31T11:22:46.154655'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -157,6 +157,10 @@ people:
     bmo_id: 700441
     name: Bryan Thrall
     nick: bthrall
+  - &bvandersloot
+    bmo_id: 692134
+    name: Benjamin VanderSloot
+    nick: bvandersloot
   - &bwc
     bmo_id: 478411
     name: Byron Campen
@@ -1248,6 +1252,27 @@ modules:
       - *KrisWright
       - *calixte
     machine_name: core_crash_reporting
+
+  - machine_name: core_credentials
+    name: 'Core: Credentials'
+    description: API Surface for FedCM and WebAuthn
+    includes:
+      - toolkit/components/credentialmanagement/**/*
+      - browser/components/credentialmanager/**/*
+      - dom/credentialmanagement/**/*
+      - dom/webauthn/**/*
+    excludes: []
+    owners:
+      - *bvandersloot
+      - *jschanck
+    peers:
+      - *timhuang
+      - *pbz
+    meta:
+      group: dev-platform
+      components:
+        - 'Core::DOM: Credential Management'
+        - 'Core::DOM: Web Authentication'
 
   - name: 'Core: C++/Rust usage, tools, and style'
     description: Aspects of C++ use such as language feature usage, standard library
@@ -3720,5 +3745,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 09098eb2620f01f1d06195d7257af43b47d4390a
-  export: da91fb9b15a29e9cb31025200054c240942e2493
+  config: 9f677ec0857bcf73217e6aa0bc01dcdb7b97be66
+  export: 45fdc64af455b15cae5f2d82edc8f467a07fee97

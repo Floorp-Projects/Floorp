@@ -431,6 +431,34 @@ Infrastructure and tools used to generate, submit and process crash reports. Thi
     * - Bugzilla Components
       - Toolkit::Crash Reporting
 
+Core: Credentials
+~~~~~~~~~~~~~~~~~
+API Surface for FedCM and WebAuthn
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Benjamin VanderSloot (bvandersloot) <https://people.mozilla.org/s?query=bvandersloot>`__
+        | `John Schanck (jschanck) <https://people.mozilla.org/s?query=jschanck>`__
+    * - Peer(s)
+      -
+        | `Tim Huang (timhuang) <https://people.mozilla.org/s?query=timhuang>`__
+        | `Paul Zühlcke (pbz) <https://people.mozilla.org/s?query=pbz>`__
+    * - Includes
+      -
+        | `toolkit/components/credentialmanagement/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/credentialmanagement/\*\*/\*>`__
+        | `browser/components/credentialmanager/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/credentialmanager/\*\*/\*>`__
+        | `dom/credentialmanagement/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/credentialmanagement/\*\*/\*>`__
+        | `dom/webauthn/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/webauthn/\*\*/\*>`__
+    * - Group
+      - dev-platform
+    * - Bugzilla Components
+      - Core::DOM: Credential Management, Core::DOM: Web Authentication
+
 Core: C++/Rust usage, tools, and style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Aspects of C++ use such as language feature usage, standard library versions/usage, compiler/toolchain versions, formatting and naming style, and aspects of Rust use as needs arise
