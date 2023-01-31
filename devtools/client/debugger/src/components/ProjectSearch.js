@@ -12,6 +12,7 @@ import { getEditor } from "../utils/editor";
 
 import { statusType } from "../reducers/project-text-search";
 import { getRelativePath } from "../utils/sources-tree/utils";
+import { getFormattedSourceId } from "../utils/source";
 import {
   getActiveSearch,
   getTextSearchResults,
@@ -204,7 +205,6 @@ export class ProjectSearch extends Component {
   renderFile = (file, focused, expanded) => {
     const matchesLength = file.matches.length;
     const matches = ` (${matchesLength} match${matchesLength > 1 ? "es" : ""})`;
-
     return (
       <div
         className={classnames("file-result", { focused })}
@@ -212,7 +212,11 @@ export class ProjectSearch extends Component {
       >
         <AccessibleImage className={classnames("arrow", { expanded })} />
         <AccessibleImage className="file" />
-        <span className="file-path">{getRelativePath(file.filepath)}</span>
+        <span className="file-path">
+          {file.filepath
+            ? getRelativePath(file.filepath)
+            : getFormattedSourceId(file.sourceId)}
+        </span>
         <span className="matches-summary">{matches}</span>
       </div>
     );
