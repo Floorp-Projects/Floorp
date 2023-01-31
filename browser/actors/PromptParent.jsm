@@ -322,6 +322,7 @@ class PromptParent extends JSWindowActorParent {
             features: "resizable=no",
             modalType: args.modalType,
             allowFocusCheckbox: args.allowFocusCheckbox,
+            hideContent: args.isTopLevelCrossDomainAuth,
           },
           bag
         ).closedPromise;

@@ -1118,6 +1118,24 @@ class ModalPrompter {
       args.isInsecureAuth =
         args.channel.URI.schemeIs("http") &&
         !args.channel.loadInfo.isTopLevelLoad;
+      // whether we are going to prompt the user for their credentials for a different base domain.
+      // When true, auth prompt spoofing protection mechanisms will be triggered (see bug 791594).
+      args.isTopLevelCrossDomainAuth = false;
+      // We don't support auth prompt spoofing protections for sub resources and window prompts
+      if (
+        args.modalType == MODAL_TYPE_TAB &&
+        args.channel.loadInfo.isTopLevelLoad
+      ) {
+        // check if this is a request from a third party
+        try {
+          args.isTopLevelCrossDomainAuth = this.browsingContext.currentWindowGlobal?.documentPrincipal?.isThirdPartyURI(
+            args.channel.URI
+          );
+        } catch (e) {
+          // isThirdPartyURI failes for about:/blob/data URIs
+          console.warn("nsPrompter: isThirdPartyURI failed: " + e);
+        }
+      }
     } else {
       args.promptPrincipal = this.browsingContext.window?.document.nodePrincipal;
     }
