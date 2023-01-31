@@ -16,10 +16,9 @@ Who this guide is for: As the title suggests, the target audience of
 this guide is existing Gecko engineers who need to be able to build and
 (locally) test GeckoView. If you aren’t already familiar with building
 Firefox on a desktop platform, you’ll likely be better served by reading
-`our general introduction <geckoview-quick-start>`_. This guide may
+`our general introduction <geckoview-quick-start.html>`_. This guide may
 also be helpful if you find you’ve written a patch that requires
-changing GeckoView’s public API, see `Landing a
-Patch <#landing-a-patch>`_.
+changing GeckoView’s public API, see `Landing a Patch <#landing-a-patch>`_.
 
 Who this guide is not for: As mentioned above, if you are not already
 familiar with building Firefox for desktop, you’d likely be better
