@@ -246,7 +246,7 @@ impl Wrench {
             use_optimized_shaders,
             enable_subpixel_aa: !no_subpixel_aa,
             debug_flags,
-            enable_clear_scissor: !no_scissor,
+            enable_clear_scissor: no_scissor.then_some(false),
             max_recorded_profiles: 16,
             precache_flags,
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
