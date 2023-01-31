@@ -63,21 +63,21 @@ function matchServiceWorker(dbg, origin) {
 //
 // FIXME Bug 1601279 separate WorkerPauser from WorkerDescriptorActorList and give
 // it a more consistent interface.
-function WorkerPauser(options) {
-  this._options = options;
-  this._pauseMatching = null;
-  this._pauseServiceWorkerOrigin = null;
+class WorkerPauser {
+  constructor(options) {
+    this._options = options;
+    this._pauseMatching = null;
+    this._pauseServiceWorkerOrigin = null;
 
-  this.onRegister = this._onRegister.bind(this);
-  this.onUnregister = () => {};
+    this.onRegister = this._onRegister.bind(this);
+    this.onUnregister = () => {};
 
-  wdm.addListener(this);
-}
+    wdm.addListener(this);
+  }
 
-WorkerPauser.prototype = {
   destroy() {
     wdm.removeListener(this);
-  },
+  }
 
   _onRegister(dbg) {
     if (
@@ -89,36 +89,36 @@ WorkerPauser.prototype = {
       // has finished attaching to it.
       dbg.setDebuggerReady(false);
     }
-  },
+  }
 
   setPauseMatching(shouldPause) {
     this._pauseMatching = shouldPause;
-  },
+  }
 
   setPauseServiceWorkers(origin) {
     this._pauseServiceWorkerOrigin = origin;
-  },
-};
-
-function WorkerDescriptorActorList(conn, options) {
-  this._conn = conn;
-  this._options = options;
-  this._actors = new Map();
-  this._onListChanged = null;
-  this._workerPauser = null;
-  this._mustNotify = false;
-  this.onRegister = this.onRegister.bind(this);
-  this.onUnregister = this.onUnregister.bind(this);
+  }
 }
 
-WorkerDescriptorActorList.prototype = {
+class WorkerDescriptorActorList {
+  constructor(conn, options) {
+    this._conn = conn;
+    this._options = options;
+    this._actors = new Map();
+    this._onListChanged = null;
+    this._workerPauser = null;
+    this._mustNotify = false;
+    this.onRegister = this.onRegister.bind(this);
+    this.onUnregister = this.onUnregister.bind(this);
+  }
+
   destroy() {
     this.onListChanged = null;
     if (this._workerPauser) {
       this._workerPauser.destroy();
       this._workerPauser = null;
     }
-  },
+  }
 
   getList() {
     // Create a set of debuggers.
@@ -156,11 +156,11 @@ WorkerDescriptorActorList.prototype = {
     }
 
     return Promise.resolve(actors);
-  },
+  }
 
   get onListChanged() {
     return this._onListChanged;
-  },
+  }
 
   set onListChanged(onListChanged) {
     if (typeof onListChanged !== "function" && onListChanged !== null) {
@@ -179,7 +179,7 @@ WorkerDescriptorActorList.prototype = {
       }
     }
     this._onListChanged = onListChanged;
-  },
+  }
 
   _notifyListChanged() {
     this._onListChanged();
@@ -188,26 +188,26 @@ WorkerDescriptorActorList.prototype = {
       wdm.removeListener(this);
     }
     this._mustNotify = false;
-  },
+  }
 
   onRegister(dbg) {
     if (matchWorkerDebugger(dbg, this._options)) {
       this._notifyListChanged();
     }
-  },
+  }
 
   onUnregister(dbg) {
     if (matchWorkerDebugger(dbg, this._options)) {
       this._notifyListChanged();
     }
-  },
+  }
 
   get workerPauser() {
     if (!this._workerPauser) {
       this._workerPauser = new WorkerPauser(this._options);
     }
     return this._workerPauser;
-  },
-};
+  }
+}
 
 exports.WorkerDescriptorActorList = WorkerDescriptorActorList;

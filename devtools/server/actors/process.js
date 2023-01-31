@@ -8,14 +8,14 @@ loader.lazyGetter(this, "ppmm", () => {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
 });
 
-function ProcessActorList() {
-  this._actors = new Map();
-  this._onListChanged = null;
-  this._mustNotify = false;
-  this._hasObserver = false;
-}
+class ProcessActorList {
+  constructor() {
+    this._actors = new Map();
+    this._onListChanged = null;
+    this._mustNotify = false;
+    this._hasObserver = false;
+  }
 
-ProcessActorList.prototype = {
   getList() {
     const processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
@@ -33,11 +33,11 @@ ProcessActorList.prototype = {
     this._checkListening();
 
     return processes;
-  },
+  }
 
   get onListChanged() {
     return this._onListChanged;
-  },
+  }
 
   set onListChanged(onListChanged) {
     if (typeof onListChanged !== "function" && onListChanged !== null) {
@@ -49,7 +49,7 @@ ProcessActorList.prototype = {
 
     this._onListChanged = onListChanged;
     this._checkListening();
-  },
+  }
 
   _checkListening() {
     if (this._onListChanged !== null && this._mustNotify) {
@@ -63,14 +63,14 @@ ProcessActorList.prototype = {
       Services.obs.removeObserver(this, "ipc:content-shutdown");
       this._hasObserver = false;
     }
-  },
+  }
 
   observe() {
     if (this._mustNotify) {
       this._onListChanged();
       this._mustNotify = false;
     }
-  },
-};
+  }
+}
 
 exports.ProcessActorList = ProcessActorList;

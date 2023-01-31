@@ -10,14 +10,7 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
  * A helper class that is listened to by the ChangesActor, and can be
  * used to send changes to the ChangesActor.
  */
-class TrackChangeEmitter {
-  /**
-   * Initialize this object.
-   */
-  constructor() {
-    EventEmitter.decorate(this);
-  }
-
+class TrackChangeEmitter extends EventEmitter {
   trackChange(change) {
     this.emit("track-change", change);
   }
