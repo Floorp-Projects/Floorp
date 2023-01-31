@@ -398,6 +398,8 @@ nsresult Http3WebTransportStream::ReadSegments() {
           task();
         }
       }
+      // Tell the underlying stream we're done
+      SendFin();
     }
 
     // write more to the socket until error or end-of-request...
