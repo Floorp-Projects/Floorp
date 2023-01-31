@@ -5,6 +5,7 @@
 
 #include "ExtensionProxy.h"
 #include "ExtensionEventManager.h"
+#include "ExtensionSetting.h"
 
 #include "mozilla/dom/ExtensionProxyBinding.h"
 #include "nsIGlobalObject.h"
@@ -14,8 +15,8 @@ namespace mozilla::extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionProxy);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionProxy)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionProxy, mGlobal,
-                                      mExtensionBrowser, mOnRequestEventMgr,
-                                      mOnErrorEventMgr);
+                                      mExtensionBrowser, mSettingsMgr,
+                                      mOnRequestEventMgr, mOnErrorEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionProxy)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -40,6 +41,15 @@ JSObject* ExtensionProxy::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionProxy::GetParentObject() const { return mGlobal; }
+
+ExtensionSetting* ExtensionProxy::Settings() {
+  if (!mSettingsMgr) {
+    mSettingsMgr =
+        new ExtensionSetting(mGlobal, mExtensionBrowser, u"proxy.settings"_ns);
+  }
+
+  return mSettingsMgr;
+}
 
 ExtensionEventManager* ExtensionProxy::OnRequest() {
   if (!mOnRequestEventMgr) {

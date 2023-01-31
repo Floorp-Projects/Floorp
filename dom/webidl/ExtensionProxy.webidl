@@ -34,5 +34,5 @@ interface ExtensionProxy {
   // API properties.
 
   [Replaceable]
-  readonly attribute any settings;
+  readonly attribute ExtensionSetting settings;
 };
