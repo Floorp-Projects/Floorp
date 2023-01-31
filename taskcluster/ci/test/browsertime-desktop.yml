@@ -610,3 +610,20 @@ browsertime-grandprix:
             default: []
     tier: 3
     treeherder-symbol: Btime(grandprix)
+
+browsertime-regression-tests:
+    raptor:
+        apps: [firefox]
+        subtests: [[constant-regression, regress-c]]
+    description: Raptor (browsertime) tests for our regression detection system
+    max-run-time: 700
+    run-on-projects: [autoland]
+    limit-platforms:
+        - .*linux(?!.*shippable)(?!.*clang).*
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows10-64.*shippable.*-qr.*: []
+                default: []
+    tier: 3
+    treeherder-symbol: Btime(regressor)

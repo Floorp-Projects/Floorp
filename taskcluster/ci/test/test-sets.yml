@@ -92,6 +92,7 @@ browsertime:
     - browsertime-first-install
     - browsertime-grandprix
     - browsertime-responsiveness
+    - browsertime-regression-tests
 
 browsertime-profiling:
     - browsertime-tp6-profiling
