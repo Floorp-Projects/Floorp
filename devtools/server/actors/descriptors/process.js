@@ -21,6 +21,11 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  processDescriptorSpec,
+} = require("resource://devtools/shared/specs/descriptors/process.js");
+
 const {
   DevToolsServer,
 } = require("resource://devtools/server/devtools-server.js");
@@ -29,13 +34,6 @@ const {
   createBrowserSessionContext,
   createContentProcessSessionContext,
 } = require("resource://devtools/server/actors/watcher/session-context.js");
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
-const {
-  processDescriptorSpec,
-} = require("resource://devtools/shared/specs/descriptors/process.js");
 
 loader.lazyRequireGetter(
   this,
@@ -62,39 +60,41 @@ loader.lazyRequireGetter(
   true
 );
 
-const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
-  initialize(connection, options = {}) {
+class ProcessDescriptorActor extends Actor {
+  constructor(connection, options = {}) {
+    super(connection, processDescriptorSpec);
+
     if ("id" in options && typeof options.id != "number") {
       throw Error("process connect requires a valid `id` attribute.");
     }
-    Actor.prototype.initialize.call(this, connection);
+
     this.id = options.id;
     this._windowGlobalTargetActor = null;
     this.isParent = options.parent;
     this.destroy = this.destroy.bind(this);
-  },
+  }
 
   get browsingContextID() {
     if (this._windowGlobalTargetActor) {
       return this._windowGlobalTargetActor.docShell.browsingContext.id;
     }
     return null;
-  },
+  }
 
   get isWindowlessParent() {
     return this.isParent && (this.isXpcshell || this.isBackgroundTaskMode);
-  },
+  }
 
   get isXpcshell() {
     return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
-  },
+  }
 
   get isBackgroundTaskMode() {
     const bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
       Ci.nsIBackgroundTasks
     );
     return bts && bts.isBackgroundTaskMode;
-  },
+  }
 
   _parentProcessConnect() {
     let targetActor;
@@ -129,7 +129,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     // to be consistent with the return value of the _childProcessConnect, we are returning
     // the form here. This might be memoized in the future
     return targetActor.form();
-  },
+  }
 
   /**
    * Connect to a remote process actor, always a ContentProcess target.
@@ -149,7 +149,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       this.destroy
     );
     return childTargetForm;
-  },
+  }
 
   _lookupMessageManager(id) {
     for (let i = 0; i < Services.ppmm.childCount; i++) {
@@ -161,7 +161,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       }
     }
     return null;
-  },
+  }
 
   /**
    * Connect the a process actor.
@@ -178,7 +178,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     }
     // This is a remote process we are connecting to
     return this._childProcessConnect();
-  },
+  }
 
   /**
    * Return a Watcher actor, allowing to keep track of targets which
@@ -191,7 +191,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       this.manage(this.watcher);
     }
     return this.watcher;
-  },
+  }
 
   form() {
     return {
@@ -209,7 +209,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
         supportsReloadDescriptor: this.isParent && !this.isWindowlessParent,
       },
     };
-  },
+  }
 
   async reloadDescriptor() {
     if (!this.isParent || this.isWindowlessParent) {
@@ -233,14 +233,14 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     Services.startup.quit(
       Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
     );
-  },
+  }
 
   destroy() {
     this.emit("descriptor-destroyed");
 
     this._windowGlobalTargetActor = null;
-    Actor.prototype.destroy.call(this);
-  },
-});
+    super.destroy();
+  }
+}
 
 exports.ProcessDescriptorActor = ProcessDescriptorActor;

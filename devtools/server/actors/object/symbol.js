@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const { symbolSpec } = require("resource://devtools/shared/specs/symbol.js");
 loader.lazyRequireGetter(
   this,
@@ -19,28 +19,28 @@ loader.lazyRequireGetter(
  * @param {DevToolsServerConnection} conn: The connection to the client.
  * @param {Symbol} symbol: The symbol we want to create an actor for.
  */
-const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
-  initialize(conn, symbol) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class SymbolActor extends Actor {
+  constructor(conn, symbol) {
+    super(conn, symbolSpec);
     this.symbol = symbol;
-  },
+  }
 
-  rawValue: function() {
+  rawValue() {
     return this.symbol;
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     // Because symbolActors is not a weak map, we won't automatically leave
     // it so we need to manually leave on destroy so that we don't leak
     // memory.
     this._releaseActor();
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  form: function() {
+  form() {
     const form = {
       type: this.typeName,
       actor: this.actorID,
@@ -51,27 +51,27 @@ const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
       form.name = createValueGrip(name, this.getParent());
     }
     return form;
-  },
+  }
 
   /**
    * Handle a request to release this SymbolActor instance.
    */
-  release: function() {
+  release() {
     // TODO: also check if this.getParent() === threadActor.threadLifetimePool
     // when the web console moves away from manually releasing pause-scoped
     // actors.
     this._releaseActor();
     this.destroy();
     return {};
-  },
+  }
 
-  _releaseActor: function() {
+  _releaseActor() {
     const parent = this.getParent();
     if (parent && parent.symbolActors) {
       delete parent.symbolActors[this.symbol];
     }
-  },
-});
+  }
+}
 
 const symbolProtoToString = Symbol.prototype.toString;
 

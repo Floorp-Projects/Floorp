@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   accessibleSpec,
 } = require("resource://devtools/shared/specs/accessibility.js");
+
 const {
   accessibility: { AUDIT_TYPE },
 } = require("resource://devtools/shared/constants.js");
@@ -198,9 +196,9 @@ function getSnapshot(acc, a11yService, targetActor) {
  * The AccessibleActor provides information about a given accessible object: its
  * role, name, states, etc.
  */
-const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
-  initialize(walker, rawAccessible) {
-    Actor.prototype.initialize.call(this, null);
+class AccessibleActor extends Actor {
+  constructor(walker, rawAccessible) {
+    super(null, accessibleSpec);
     this.walker = walker;
     this.rawAccessible = rawAccessible;
 
@@ -222,7 +220,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       },
       configurable: true,
     });
-  },
+  }
 
   /**
    * Instead of storing a connection object, the NodeActor gets its connection
@@ -230,41 +228,41 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
    */
   get conn() {
     return this.walker.conn;
-  },
+  }
 
   destroy() {
-    Actor.prototype.destroy.call(this);
+    super.destroy();
     this.walker = null;
     this.rawAccessible = null;
-  },
+  }
 
   get role() {
     if (this.isDefunct) {
       return null;
     }
     return this.walker.a11yService.getStringRole(this.rawAccessible.role);
-  },
+  }
 
   get name() {
     if (this.isDefunct) {
       return null;
     }
     return this.rawAccessible.name;
-  },
+  }
 
   get value() {
     if (this.isDefunct) {
       return null;
     }
     return this.rawAccessible.value;
-  },
+  }
 
   get description() {
     if (this.isDefunct) {
       return null;
     }
     return this.rawAccessible.description;
-  },
+  }
 
   get keyboardShortcut() {
     if (this.isDefunct) {
@@ -276,7 +274,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     // Windows implementation does: try AccessKey first, and if that's empty, use
     // KeyboardShortcut.
     return this.rawAccessible.accessKey || this.rawAccessible.keyboardShortcut;
-  },
+  }
 
   get childCount() {
     if (this.isDefunct) {
@@ -289,21 +287,21 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     return this.rawAccessible.childCount;
-  },
+  }
 
   get domNodeType() {
     if (this.isDefunct) {
       return 0;
     }
     return this.rawAccessible.DOMNode ? this.rawAccessible.DOMNode.nodeType : 0;
-  },
+  }
 
   get parentAcc() {
     if (this.isDefunct) {
       return null;
     }
     return this.walker.addRef(this.rawAccessible.parent);
-  },
+  }
 
   children() {
     const children = [];
@@ -319,7 +317,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       children.push(this.walker.addRef(child));
     }
     return children;
-  },
+  }
 
   get indexInParent() {
     if (this.isDefunct) {
@@ -332,7 +330,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       // Accessible is dead.
       return -1;
     }
-  },
+  }
 
   get actions() {
     const actions = [];
@@ -344,7 +342,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       actions.push(this.rawAccessible.getActionDescription(i));
     }
     return actions;
-  },
+  }
 
   get states() {
     if (this.isDefunct) {
@@ -357,7 +355,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return [
       ...this.walker.a11yService.getStringStates(state.value, extState.value),
     ];
-  },
+  }
 
   get attributes() {
     if (this.isDefunct || !this.rawAccessible.attributes) {
@@ -370,7 +368,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     return attributes;
-  },
+  }
 
   get bounds() {
     if (this.isDefunct) {
@@ -401,7 +399,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     return { x, y, w, h };
-  },
+  }
 
   async getRelations() {
     const relationObjects = [];
@@ -454,7 +452,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     });
 
     return relationObjects;
-  },
+  }
 
   get useChildTargetToFetchChildren() {
     if (this.isDefunct) {
@@ -468,7 +466,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
         this.rawAccessible.DOMNode
       )
     );
-  },
+  }
 
   form() {
     return {
@@ -479,7 +477,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       childCount: this.childCount,
       checks: this._lastAudit,
     };
-  },
+  }
 
   /**
    * Provide additional (full) information about the accessible object that is
@@ -500,7 +498,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       actions: this.actions,
       attributes: this.attributes,
     };
-  },
+  }
 
   _isValidTextLeaf(rawAccessible) {
     return (
@@ -509,7 +507,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       rawAccessible.name &&
       !!rawAccessible.name.trim().length
     );
-  },
+  }
 
   /**
    * Calculate the contrast ratio of the given accessible.
@@ -544,7 +542,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     await walker.restoreStyles(win);
 
     return contrastRatio;
-  },
+  }
 
   /**
    * Run an accessibility audit for a given audit type.
@@ -570,7 +568,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       default:
         return null;
     }
-  },
+  }
 
   /**
    * Audit the state of the accessible object.
@@ -650,7 +648,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       });
 
     return this._auditing;
-  },
+  }
 
   snapshot() {
     return getSnapshot(
@@ -658,7 +656,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       this.walker.a11yService,
       this.walker.targetActor
     );
-  },
-});
+  }
+}
 
 exports.AccessibleActor = AccessibleActor;

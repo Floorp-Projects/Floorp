@@ -4,19 +4,16 @@
 
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   parentAccessibilitySpec,
 } = require("resource://devtools/shared/specs/accessibility.js");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
-const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
-  initialize(conn) {
-    Actor.prototype.initialize.call(this, conn);
+class ParentAccessibilityActor extends Actor {
+  constructor(conn) {
+    super(conn, parentAccessibilitySpec);
 
     this.userPref = Services.prefs.getIntPref(
       PREF_ACCESSIBILITY_FORCE_DISABLED
@@ -33,14 +30,14 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
 
     Services.obs.addObserver(this, "a11y-consumers-changed");
     Services.prefs.addObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
-  },
+  }
 
   bootstrap() {
     return {
       canBeDisabled: this.canBeDisabled,
       canBeEnabled: this.canBeEnabled,
     };
-  },
+  }
 
   observe(subject, topic, data) {
     if (topic === "a11y-consumers-changed") {
@@ -63,7 +60,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
       // we disable the accessibility inspector itself.
       this.emit("can-be-enabled-change", this.canBeEnabled);
     }
-  },
+  }
 
   /**
    * A getter that indicates if accessibility service is enabled.
@@ -73,7 +70,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
    */
   get enabled() {
     return Services.appinfo.accessibilityEnabled;
-  },
+  }
 
   /**
    * A getter that indicates if the accessibility service can be disabled.
@@ -91,7 +88,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
     }
 
     return true;
-  },
+  }
 
   /**
    * A getter that indicates if the accessibility service can be enabled.
@@ -101,7 +98,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
    */
   get canBeEnabled() {
     return Services.prefs.getIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED) < 1;
-  },
+  }
 
   /**
    * Enable accessibility service (via XPCOM service).
@@ -114,7 +111,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
     this.accService = Cc["@mozilla.org/accessibilityService;1"].getService(
       Ci.nsIAccessibilityService
     );
-  },
+  }
 
   /**
    * Force disable accessibility service. This method removes the reference to
@@ -140,7 +137,7 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
     // start again (when value is below 1).
     Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, this.userPref);
     delete this.disabling;
-  },
+  }
 
   /**
    * Destroy the helper class, remove all listeners and if possible disable
@@ -148,10 +145,10 @@ const ParentAccessibilityActor = ActorClassWithSpec(parentAccessibilitySpec, {
    */
   destroy() {
     this.disable();
-    Actor.prototype.destroy.call(this);
+    super.destroy();
     Services.obs.removeObserver(this, "a11y-consumers-changed");
     Services.prefs.removeObserver(PREF_ACCESSIBILITY_FORCE_DISABLED, this);
-  },
-});
+  }
+}
 
 exports.ParentAccessibilityActor = ParentAccessibilityActor;

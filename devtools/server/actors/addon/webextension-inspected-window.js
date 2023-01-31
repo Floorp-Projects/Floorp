@@ -4,7 +4,10 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  webExtensionInspectedWindowSpec,
+} = require("resource://devtools/shared/specs/addon/webextension-inspected-window.js");
 
 const {
   DevToolsServer,
@@ -17,10 +20,6 @@ loader.lazyGetter(
     require("resource://devtools/server/actors/inspector/node.js").NodeActor,
   true
 );
-
-const {
-  webExtensionInspectedWindowSpec,
-} = require("resource://devtools/shared/specs/addon/webextension-inspected-window.js");
 
 // A weak set of the documents for which a warning message has been
 // already logged (so that we don't keep emitting the same warning if an
@@ -266,415 +265,406 @@ CustomizedReload.prototype = {
   },
 };
 
-var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
-  webExtensionInspectedWindowSpec,
-  {
-    /**
-     * Created the WebExtension InspectedWindow actor
-     */
-    initialize(conn, targetActor) {
-      protocol.Actor.prototype.initialize.call(this, conn);
-      this.targetActor = targetActor;
-    },
+class WebExtensionInspectedWindowActor extends Actor {
+  /**
+   * Created the WebExtension InspectedWindow actor
+   */
+  constructor(conn, targetActor) {
+    super(conn, webExtensionInspectedWindowSpec);
+    this.targetActor = targetActor;
+  }
 
-    destroy(conn) {
-      protocol.Actor.prototype.destroy.call(this, conn);
+  destroy(conn) {
+    super.destroy();
 
-      if (this.customizedReload) {
-        this.customizedReload.stop(
-          new Error("WebExtensionInspectedWindowActor destroyed")
-        );
-        delete this.customizedReload;
-      }
+    if (this.customizedReload) {
+      this.customizedReload.stop(
+        new Error("WebExtensionInspectedWindowActor destroyed")
+      );
+      delete this.customizedReload;
+    }
 
-      if (this._dbg) {
-        this._dbg.disable();
-        delete this._dbg;
-      }
-    },
+    if (this._dbg) {
+      this._dbg.disable();
+      delete this._dbg;
+    }
+  }
 
-    get dbg() {
-      if (this._dbg) {
-        return this._dbg;
-      }
-
-      this._dbg = this.targetActor.makeDebugger();
+  get dbg() {
+    if (this._dbg) {
       return this._dbg;
-    },
+    }
 
-    get window() {
-      return this.targetActor.window;
-    },
+    this._dbg = this.targetActor.makeDebugger();
+    return this._dbg;
+  }
 
-    get webNavigation() {
-      return this.targetActor.webNavigation;
-    },
+  get window() {
+    return this.targetActor.window;
+  }
 
-    createEvalBindings(dbgWindow, options) {
-      const bindings = Object.create(null);
+  get webNavigation() {
+    return this.targetActor.webNavigation;
+  }
 
-      let selectedDOMNode;
+  createEvalBindings(dbgWindow, options) {
+    const bindings = Object.create(null);
 
-      if (options.toolboxSelectedNodeActorID) {
-        const actor = DevToolsServer.searchAllConnectionsForActor(
-          options.toolboxSelectedNodeActorID
-        );
-        if (actor && actor instanceof NodeActor) {
-          selectedDOMNode = actor.rawNode;
+    let selectedDOMNode;
+
+    if (options.toolboxSelectedNodeActorID) {
+      const actor = DevToolsServer.searchAllConnectionsForActor(
+        options.toolboxSelectedNodeActorID
+      );
+      if (actor && actor instanceof NodeActor) {
+        selectedDOMNode = actor.rawNode;
+      }
+    }
+
+    Object.defineProperty(bindings, "$0", {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+        if (selectedDOMNode && !Cu.isDeadWrapper(selectedDOMNode)) {
+          return dbgWindow.makeDebuggeeValue(selectedDOMNode);
         }
-      }
 
-      Object.defineProperty(bindings, "$0", {
-        enumerable: true,
-        configurable: true,
-        get: () => {
-          if (selectedDOMNode && !Cu.isDeadWrapper(selectedDOMNode)) {
-            return dbgWindow.makeDebuggeeValue(selectedDOMNode);
-          }
+        return undefined;
+      },
+    });
 
-          return undefined;
-        },
-      });
-
-      // This function is used by 'eval' and 'reload' requests, but only 'eval'
-      // passes 'toolboxConsoleActor' from the client side in order to set
-      // the 'inspect' binding.
-      Object.defineProperty(bindings, "inspect", {
-        enumerable: true,
-        configurable: true,
-        value: dbgWindow.makeDebuggeeValue(object => {
-          const consoleActor = DevToolsServer.searchAllConnectionsForActor(
-            options.toolboxConsoleActorID
-          );
-          if (consoleActor) {
-            const dbgObj = consoleActor.makeDebuggeeValue(object);
-            consoleActor.inspectObject(
-              dbgObj,
-              "webextension-devtools-inspectedWindow-eval"
-            );
-          } else {
-            // TODO(rpl): evaluate if it would be better to raise an exception
-            // to the caller code instead.
-            console.error("Toolbox Console RDP Actor not found");
-          }
-        }),
-      });
-
-      return bindings;
-    },
-
-    /**
-     * Reload the target tab, optionally bypass cache, customize the userAgent and/or
-     * inject a script in targeted document or any of its sub-frame.
-     *
-     * @param {webExtensionCallerInfo} callerInfo
-     *   the addonId and the url (the addon base url or the url of the actual caller
-     *   filename and lineNumber) used to log useful debugging information in the
-     *   produced error logs and eval stack trace.
-     *
-     * @param {webExtensionReloadOptions} options
-     *   used to optionally enable the reload customizations.
-     * @param {boolean|undefined}       options.ignoreCache
-     *   enable/disable the cache bypass headers.
-     * @param {string|undefined}        options.userAgent
-     *   customize the userAgent during the page reload.
-     * @param {string|undefined}        options.injectedScript
-     *   evaluate the provided javascript code in the top level and every sub-frame
-     *   created during the page reload, before any other script in the page has been
-     *   executed.
-     */
-    async reload(callerInfo, { ignoreCache, userAgent, injectedScript }) {
-      if (isSystemPrincipalWindow(this.window)) {
-        console.error(
-          "Ignored inspectedWindow.reload on system principal target for " +
-            `${callerInfo.url}:${callerInfo.lineNumber}`
+    // This function is used by 'eval' and 'reload' requests, but only 'eval'
+    // passes 'toolboxConsoleActor' from the client side in order to set
+    // the 'inspect' binding.
+    Object.defineProperty(bindings, "inspect", {
+      enumerable: true,
+      configurable: true,
+      value: dbgWindow.makeDebuggeeValue(object => {
+        const consoleActor = DevToolsServer.searchAllConnectionsForActor(
+          options.toolboxConsoleActorID
         );
-        return {};
-      }
+        if (consoleActor) {
+          const dbgObj = consoleActor.makeDebuggeeValue(object);
+          consoleActor.inspectObject(
+            dbgObj,
+            "webextension-devtools-inspectedWindow-eval"
+          );
+        } else {
+          // TODO(rpl): evaluate if it would be better to raise an exception
+          // to the caller code instead.
+          console.error("Toolbox Console RDP Actor not found");
+        }
+      }),
+    });
 
-      await new Promise(resolve => {
-        const delayedReload = () => {
-          // This won't work while the browser is shutting down and we don't really
-          // care.
-          if (Services.startup.shuttingDown) {
+    return bindings;
+  }
+
+  /**
+   * Reload the target tab, optionally bypass cache, customize the userAgent and/or
+   * inject a script in targeted document or any of its sub-frame.
+   *
+   * @param {webExtensionCallerInfo} callerInfo
+   *   the addonId and the url (the addon base url or the url of the actual caller
+   *   filename and lineNumber) used to log useful debugging information in the
+   *   produced error logs and eval stack trace.
+   *
+   * @param {webExtensionReloadOptions} options
+   *   used to optionally enable the reload customizations.
+   * @param {boolean|undefined}       options.ignoreCache
+   *   enable/disable the cache bypass headers.
+   * @param {string|undefined}        options.userAgent
+   *   customize the userAgent during the page reload.
+   * @param {string|undefined}        options.injectedScript
+   *   evaluate the provided javascript code in the top level and every sub-frame
+   *   created during the page reload, before any other script in the page has been
+   *   executed.
+   */
+  async reload(callerInfo, { ignoreCache, userAgent, injectedScript }) {
+    if (isSystemPrincipalWindow(this.window)) {
+      console.error(
+        "Ignored inspectedWindow.reload on system principal target for " +
+          `${callerInfo.url}:${callerInfo.lineNumber}`
+      );
+      return {};
+    }
+
+    await new Promise(resolve => {
+      const delayedReload = () => {
+        // This won't work while the browser is shutting down and we don't really
+        // care.
+        if (Services.startup.shuttingDown) {
+          return;
+        }
+
+        if (injectedScript || userAgent) {
+          if (this.customizedReload) {
+            // TODO(rpl): check what chrome does, and evaluate if queue the new reload
+            // after the current one has been completed.
+            console.error(
+              "Reload already in progress. Ignored inspectedWindow.reload for " +
+                `${callerInfo.url}:${callerInfo.lineNumber}`
+            );
             return;
           }
 
-          if (injectedScript || userAgent) {
-            if (this.customizedReload) {
-              // TODO(rpl): check what chrome does, and evaluate if queue the new reload
-              // after the current one has been completed.
-              console.error(
-                "Reload already in progress. Ignored inspectedWindow.reload for " +
-                  `${callerInfo.url}:${callerInfo.lineNumber}`
-              );
-              return;
-            }
+          try {
+            this.customizedReload = new CustomizedReload({
+              targetActor: this.targetActor,
+              inspectedWindowEval: this.eval.bind(this),
+              callerInfo,
+              injectedScript,
+              ignoreCache,
+            });
 
-            try {
-              this.customizedReload = new CustomizedReload({
-                targetActor: this.targetActor,
-                inspectedWindowEval: this.eval.bind(this),
-                callerInfo,
-                injectedScript,
-                ignoreCache,
+            this.customizedReload
+              .start()
+              .catch(err => {
+                console.error(err);
+              })
+              .then(() => {
+                delete this.customizedReload;
+                resolve();
               });
-
-              this.customizedReload
-                .start()
-                .catch(err => {
-                  console.error(err);
-                })
-                .then(() => {
-                  delete this.customizedReload;
-                  resolve();
-                });
-            } catch (err) {
-              // Cancel the customized reload (if any) on exception during the
-              // reload setup.
-              if (this.customizedReload) {
-                this.customizedReload.stop(err);
-              }
-              throw err;
+          } catch (err) {
+            // Cancel the customized reload (if any) on exception during the
+            // reload setup.
+            if (this.customizedReload) {
+              this.customizedReload.stop(err);
             }
-          } else {
-            // If there is no custom user agent and/or injected script, then
-            // we can reload the target without subscribing any observer/listener.
-            let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-            if (ignoreCache) {
-              reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-            }
-            this.webNavigation.reload(reloadFlags);
-            resolve();
+            throw err;
           }
-        };
-
-        // Execute the reload in a dispatched runnable, so that we can
-        // return the reply to the caller before the reload is actually
-        // started.
-        Services.tm.dispatchToMainThread(delayedReload);
-      });
-
-      return {};
-    },
-
-    /**
-     * Evaluate the provided javascript code in a target window (that is always the
-     * targetActor window when called through RDP protocol, or the passed
-     * customTargetWindow when called directly from the CustomizedReload instances).
-     *
-     * @param {webExtensionCallerInfo} callerInfo
-     *   the addonId and the url (the addon base url or the url of the actual caller
-     *   filename and lineNumber) used to log useful debugging information in the
-     *   produced error logs and eval stack trace.
-     *
-     * @param {string} expression
-     *   the javascript code to be evaluated in the target window
-     *
-     * @param {webExtensionEvalOptions} evalOptions
-     *   used to optionally enable the eval customizations.
-     *   NOTE: none of the eval options is currently implemented, they will be already
-     *   reported as unsupported by the WebExtensions schema validation wrappers, but
-     *   an additional level of error reporting is going to be applied here, so that
-     *   if the server and the client have different ideas of which option is supported
-     *   the eval call result will contain detailed informations (in the format usually
-     *   expected for errors not raised in the evaluated javascript code).
-     *
-     * @param {DOMWindow|undefined} customTargetWindow
-     *   Used in the CustomizedReload instances to evaluate the `injectedScript`
-     *   javascript code in every sub-frame of the target window during the tab reload.
-     *   NOTE: this parameter is not part of the RDP protocol exposed by this actor, when
-     *   it is called over the remote debugging protocol the target window is always
-     *   `targetActor.window`.
-     */
-    // eslint-disable-next-line complexity
-    eval(callerInfo, expression, options, customTargetWindow) {
-      const window = customTargetWindow || this.window;
-      options = options || {};
-
-      const extensionPolicy = WebExtensionPolicy.getByID(callerInfo.addonId);
-
-      if (!extensionPolicy) {
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s %s",
-          details: ["Caller extension not found for", callerInfo.url],
-        });
-      }
-
-      if (!window) {
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s",
-          details: [
-            "The target window is not defined. inspectedWindow.eval not executed.",
-          ],
-        });
-      }
-
-      // Log the error for the user to know that the extension request has been denied
-      // (the extension may not warn the user at all).
-      const logEvalDenied = () => {
-        logAccessDeniedWarning(window, callerInfo, extensionPolicy);
+        } else {
+          // If there is no custom user agent and/or injected script, then
+          // we can reload the target without subscribing any observer/listener.
+          let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+          if (ignoreCache) {
+            reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+          }
+          this.webNavigation.reload(reloadFlags);
+          resolve();
+        }
       };
 
-      if (isSystemPrincipalWindow(window)) {
-        logEvalDenied();
+      // Execute the reload in a dispatched runnable, so that we can
+      // return the reply to the caller before the reload is actually
+      // started.
+      Services.tm.dispatchToMainThread(delayedReload);
+    });
 
-        // On denied JS evaluation, report it to the extension using the same data format
-        // used in the corresponding chrome API method to report issues that are
-        // not exceptions raised in the evaluated javascript code.
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s",
-          details: [
-            "This target has a system principal. inspectedWindow.eval denied.",
-          ],
-        });
-      }
-
-      const docPrincipalURI = window.document.nodePrincipal.URI;
-
-      // Deny on document principals listed as restricted or
-      // related to the about: pages (only about:blank and about:srcdoc are
-      // allowed and their are expected to not have their about URI associated
-      // to the principal).
-      if (
-        WebExtensionPolicy.isRestrictedURI(docPrincipalURI) ||
-        docPrincipalURI.schemeIs("about")
-      ) {
-        logEvalDenied();
-
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s %s",
-          details: [
-            "This extension is not allowed on the current inspected window origin",
-            docPrincipalURI.spec,
-          ],
-        });
-      }
-
-      const windowAddonId = window.document.nodePrincipal.addonId;
-
-      if (windowAddonId && extensionPolicy.id !== windowAddonId) {
-        logEvalDenied();
-
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s on %s",
-          details: [
-            "This extension is not allowed to access this extension page.",
-            window.document.location.origin,
-          ],
-        });
-      }
-
-      // Raise an error on the unsupported options.
-      if (
-        options.frameURL ||
-        options.contextSecurityOrigin ||
-        options.useContentScriptContext
-      ) {
-        return createExceptionInfoResult({
-          description: "Inspector protocol error: %s",
-          details: [
-            "The inspectedWindow.eval options are currently not supported",
-          ],
-        });
-      }
-
-      const dbgWindow = this.dbg.makeGlobalObjectReference(window);
-
-      let evalCalledFrom = callerInfo.url;
-      if (callerInfo.lineNumber) {
-        evalCalledFrom += `:${callerInfo.lineNumber}`;
-      }
-
-      const bindings = this.createEvalBindings(dbgWindow, options);
-
-      const result = dbgWindow.executeInGlobalWithBindings(
-        expression,
-        bindings,
-        {
-          url: `debugger eval called from ${evalCalledFrom} - eval code`,
-        }
-      );
-
-      let evalResult;
-
-      if (result) {
-        if ("return" in result) {
-          evalResult = result.return;
-        } else if ("yield" in result) {
-          evalResult = result.yield;
-        } else if ("throw" in result) {
-          const throwErr = result.throw;
-
-          // XXXworkers: Calling unsafeDereference() returns an object with no
-          // toString method in workers. See Bug 1215120.
-          const unsafeDereference =
-            throwErr &&
-            typeof throwErr === "object" &&
-            throwErr.unsafeDereference();
-          const message = unsafeDereference?.toString
-            ? unsafeDereference.toString()
-            : String(throwErr);
-          const stack = unsafeDereference?.stack
-            ? unsafeDereference.stack
-            : null;
-
-          return {
-            exceptionInfo: {
-              isException: true,
-              value: `${message}\n\t${stack}`,
-            },
-          };
-        }
-      } else {
-        // TODO(rpl): can the result of executeInGlobalWithBinding be null or
-        // undefined? (which means that it is not a return, a yield or a throw).
-        console.error(
-          "Unexpected empty inspectedWindow.eval result for",
-          `${callerInfo.url}:${callerInfo.lineNumber}`
-        );
-      }
-
-      if (evalResult) {
-        try {
-          // Return the evalResult as a grip (used by the WebExtensions
-          // devtools inspector's sidebar.setExpression API method).
-          if (options.evalResultAsGrip) {
-            if (!options.toolboxConsoleActorID) {
-              return createExceptionInfoResult({
-                description: "Inspector protocol error: %s - %s",
-                details: [
-                  "Unexpected invalid sidebar panel expression request",
-                  "missing toolboxConsoleActorID",
-                ],
-              });
-            }
-
-            const consoleActor = DevToolsServer.searchAllConnectionsForActor(
-              options.toolboxConsoleActorID
-            );
-
-            return { valueGrip: consoleActor.createValueGrip(evalResult) };
-          }
-
-          if (evalResult && typeof evalResult === "object") {
-            evalResult = evalResult.unsafeDereference();
-          }
-          evalResult = JSON.parse(JSON.stringify(evalResult));
-        } catch (err) {
-          // The evaluation result cannot be sent over the RDP Protocol,
-          // report it as with the same data format used in the corresponding
-          // chrome API method.
-          return createExceptionInfoResult({
-            description: "Inspector protocol error: %s",
-            details: [String(err)],
-          });
-        }
-      }
-
-      return { value: evalResult };
-    },
+    return {};
   }
-);
+
+  /**
+   * Evaluate the provided javascript code in a target window (that is always the
+   * targetActor window when called through RDP protocol, or the passed
+   * customTargetWindow when called directly from the CustomizedReload instances).
+   *
+   * @param {webExtensionCallerInfo} callerInfo
+   *   the addonId and the url (the addon base url or the url of the actual caller
+   *   filename and lineNumber) used to log useful debugging information in the
+   *   produced error logs and eval stack trace.
+   *
+   * @param {string} expression
+   *   the javascript code to be evaluated in the target window
+   *
+   * @param {webExtensionEvalOptions} evalOptions
+   *   used to optionally enable the eval customizations.
+   *   NOTE: none of the eval options is currently implemented, they will be already
+   *   reported as unsupported by the WebExtensions schema validation wrappers, but
+   *   an additional level of error reporting is going to be applied here, so that
+   *   if the server and the client have different ideas of which option is supported
+   *   the eval call result will contain detailed informations (in the format usually
+   *   expected for errors not raised in the evaluated javascript code).
+   *
+   * @param {DOMWindow|undefined} customTargetWindow
+   *   Used in the CustomizedReload instances to evaluate the `injectedScript`
+   *   javascript code in every sub-frame of the target window during the tab reload.
+   *   NOTE: this parameter is not part of the RDP protocol exposed by this actor, when
+   *   it is called over the remote debugging protocol the target window is always
+   *   `targetActor.window`.
+   */
+  // eslint-disable-next-line complexity
+  eval(callerInfo, expression, options, customTargetWindow) {
+    const window = customTargetWindow || this.window;
+    options = options || {};
+
+    const extensionPolicy = WebExtensionPolicy.getByID(callerInfo.addonId);
+
+    if (!extensionPolicy) {
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s %s",
+        details: ["Caller extension not found for", callerInfo.url],
+      });
+    }
+
+    if (!window) {
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s",
+        details: [
+          "The target window is not defined. inspectedWindow.eval not executed.",
+        ],
+      });
+    }
+
+    // Log the error for the user to know that the extension request has been denied
+    // (the extension may not warn the user at all).
+    const logEvalDenied = () => {
+      logAccessDeniedWarning(window, callerInfo, extensionPolicy);
+    };
+
+    if (isSystemPrincipalWindow(window)) {
+      logEvalDenied();
+
+      // On denied JS evaluation, report it to the extension using the same data format
+      // used in the corresponding chrome API method to report issues that are
+      // not exceptions raised in the evaluated javascript code.
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s",
+        details: [
+          "This target has a system principal. inspectedWindow.eval denied.",
+        ],
+      });
+    }
+
+    const docPrincipalURI = window.document.nodePrincipal.URI;
+
+    // Deny on document principals listed as restricted or
+    // related to the about: pages (only about:blank and about:srcdoc are
+    // allowed and their are expected to not have their about URI associated
+    // to the principal).
+    if (
+      WebExtensionPolicy.isRestrictedURI(docPrincipalURI) ||
+      docPrincipalURI.schemeIs("about")
+    ) {
+      logEvalDenied();
+
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s %s",
+        details: [
+          "This extension is not allowed on the current inspected window origin",
+          docPrincipalURI.spec,
+        ],
+      });
+    }
+
+    const windowAddonId = window.document.nodePrincipal.addonId;
+
+    if (windowAddonId && extensionPolicy.id !== windowAddonId) {
+      logEvalDenied();
+
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s on %s",
+        details: [
+          "This extension is not allowed to access this extension page.",
+          window.document.location.origin,
+        ],
+      });
+    }
+
+    // Raise an error on the unsupported options.
+    if (
+      options.frameURL ||
+      options.contextSecurityOrigin ||
+      options.useContentScriptContext
+    ) {
+      return createExceptionInfoResult({
+        description: "Inspector protocol error: %s",
+        details: [
+          "The inspectedWindow.eval options are currently not supported",
+        ],
+      });
+    }
+
+    const dbgWindow = this.dbg.makeGlobalObjectReference(window);
+
+    let evalCalledFrom = callerInfo.url;
+    if (callerInfo.lineNumber) {
+      evalCalledFrom += `:${callerInfo.lineNumber}`;
+    }
+
+    const bindings = this.createEvalBindings(dbgWindow, options);
+
+    const result = dbgWindow.executeInGlobalWithBindings(expression, bindings, {
+      url: `debugger eval called from ${evalCalledFrom} - eval code`,
+    });
+
+    let evalResult;
+
+    if (result) {
+      if ("return" in result) {
+        evalResult = result.return;
+      } else if ("yield" in result) {
+        evalResult = result.yield;
+      } else if ("throw" in result) {
+        const throwErr = result.throw;
+
+        // XXXworkers: Calling unsafeDereference() returns an object with no
+        // toString method in workers. See Bug 1215120.
+        const unsafeDereference =
+          throwErr &&
+          typeof throwErr === "object" &&
+          throwErr.unsafeDereference();
+        const message = unsafeDereference?.toString
+          ? unsafeDereference.toString()
+          : String(throwErr);
+        const stack = unsafeDereference?.stack ? unsafeDereference.stack : null;
+
+        return {
+          exceptionInfo: {
+            isException: true,
+            value: `${message}\n\t${stack}`,
+          },
+        };
+      }
+    } else {
+      // TODO(rpl): can the result of executeInGlobalWithBinding be null or
+      // undefined? (which means that it is not a return, a yield or a throw).
+      console.error(
+        "Unexpected empty inspectedWindow.eval result for",
+        `${callerInfo.url}:${callerInfo.lineNumber}`
+      );
+    }
+
+    if (evalResult) {
+      try {
+        // Return the evalResult as a grip (used by the WebExtensions
+        // devtools inspector's sidebar.setExpression API method).
+        if (options.evalResultAsGrip) {
+          if (!options.toolboxConsoleActorID) {
+            return createExceptionInfoResult({
+              description: "Inspector protocol error: %s - %s",
+              details: [
+                "Unexpected invalid sidebar panel expression request",
+                "missing toolboxConsoleActorID",
+              ],
+            });
+          }
+
+          const consoleActor = DevToolsServer.searchAllConnectionsForActor(
+            options.toolboxConsoleActorID
+          );
+
+          return { valueGrip: consoleActor.createValueGrip(evalResult) };
+        }
+
+        if (evalResult && typeof evalResult === "object") {
+          evalResult = evalResult.unsafeDereference();
+        }
+        evalResult = JSON.parse(JSON.stringify(evalResult));
+      } catch (err) {
+        // The evaluation result cannot be sent over the RDP Protocol,
+        // report it as with the same data format used in the corresponding
+        // chrome API method.
+        return createExceptionInfoResult({
+          description: "Inspector protocol error: %s",
+          details: [String(err)],
+        });
+      }
+    }
+
+    return { value: evalResult };
+  }
+}
 
 exports.WebExtensionInspectedWindowActor = WebExtensionInspectedWindowActor;

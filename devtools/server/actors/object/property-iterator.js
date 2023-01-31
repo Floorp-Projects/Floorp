@@ -4,11 +4,12 @@
 
 "use strict";
 
-const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   propertyIteratorSpec,
 } = require("resource://devtools/shared/specs/property-iterator.js");
+
+const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 loader.lazyRequireGetter(
   this,
   "ObjectUtils",
@@ -41,11 +42,9 @@ loader.lazyRequireGetter(
  *          Regarding value filtering it just compare to the stringification
  *          of the property value.
  */
-const PropertyIteratorActor = protocol.ActorClassWithSpec(
-  propertyIteratorSpec,
-  {
-    initialize(objectActor, options, conn) {
-      protocol.Actor.prototype.initialize.call(this, conn);
+class PropertyIteratorActor extends Actor {
+    constructor(objectActor, options, conn) {
+      super(conn, propertyIteratorSpec);
       if (!DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
         this.iterator = {
           size: 0,
@@ -88,7 +87,7 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
       } else {
         this.iterator = enumObjectProperties(objectActor, options);
       }
-    },
+    }
 
     form() {
       return {
@@ -96,7 +95,7 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
         actor: this.actorID,
         count: this.iterator.size,
       };
-    },
+    }
 
     names({ indexes }) {
       const list = [];
@@ -104,7 +103,7 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
         list.push(this.iterator.propertyName(idx));
       }
       return indexes;
-    },
+    }
 
     slice({ start, count }) {
       const ownProperties = Object.create(null);
@@ -116,13 +115,12 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
       return {
         ownProperties,
       };
-    },
+    }
 
     all() {
       return this.slice({ start: 0, count: this.iterator.size });
-    },
+    }
   }
-);
 
 function waiveXrays(obj) {
   return isWorker ? obj : Cu.waiveXrays(obj);

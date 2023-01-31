@@ -4,10 +4,11 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   privatePropertiesIteratorSpec,
 } = require("resource://devtools/shared/specs/private-properties-iterator.js");
+
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
@@ -16,11 +17,9 @@ const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
  * @param objectActor ObjectActor
  *        The object actor.
  */
-const PrivatePropertiesIteratorActor = protocol.ActorClassWithSpec(
-  privatePropertiesIteratorSpec,
-  {
-    initialize(objectActor, conn) {
-      protocol.Actor.prototype.initialize.call(this, conn);
+class PrivatePropertiesIteratorActor extends Actor {
+    constructor(objectActor, conn) {
+      super(conn, privatePropertiesIteratorSpec);
 
       let privateProperties = [];
       if (DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
@@ -43,7 +42,7 @@ const PrivatePropertiesIteratorActor = protocol.ActorClassWithSpec(
           };
         },
       };
-    },
+    }
 
     form() {
       return {
@@ -51,7 +50,7 @@ const PrivatePropertiesIteratorActor = protocol.ActorClassWithSpec(
         actor: this.actorID,
         count: this.iterator.size,
       };
-    },
+    }
 
     slice({ start, count }) {
       const privateProperties = [];
@@ -61,12 +60,11 @@ const PrivatePropertiesIteratorActor = protocol.ActorClassWithSpec(
       return {
         privateProperties,
       };
-    },
+    }
 
     all() {
       return this.slice({ start: 0, count: this.iterator.size });
-    },
+    }
   }
-);
 
 exports.PrivatePropertiesIteratorActor = PrivatePropertiesIteratorActor;
