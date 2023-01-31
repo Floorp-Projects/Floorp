@@ -6,6 +6,7 @@ package org.mozilla.fenix.downloads
 
 import android.app.Activity
 import android.app.Dialog
+import android.text.method.ScrollingMovementMethod
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -186,6 +187,7 @@ class FirstPartyDownloadDialog(
         }
 
         dialog.filename.text = filename
+        dialog.filename.movementMethod = ScrollingMovementMethod()
 
         dialog.downloadButton.setOnClickListener {
             positiveButtonAction()

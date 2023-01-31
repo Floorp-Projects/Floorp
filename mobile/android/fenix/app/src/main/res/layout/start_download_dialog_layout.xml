@@ -69,9 +69,11 @@
         android:layout_marginStart="3dp"
         android:layout_marginTop="16dp"
         android:layout_toEndOf="@id/icon"
+        android:maxHeight="160dp"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
+        android:scrollbars="vertical"
         android:textColor="?android:attr/textColorPrimary"
         tools:text="@tools:sample/lorem/random"
         tools:textColor="#000000" />
