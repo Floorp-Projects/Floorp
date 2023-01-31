@@ -137,7 +137,7 @@ void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
   // Step 3: If stream.[[backpressure]] is true, perform !
   // TransformStreamSetBackpressure(stream, false).
   if (aStream->Backpressure()) {
-    aStream->SetBackpressure(false);
+    aStream->SetBackpressure(false, aRv);
   }
 }
 
@@ -460,7 +460,7 @@ class TransformStreamUnderlyingSourceAlgorithms final
     MOZ_ASSERT(mStream->BackpressureChangePromise());
 
     // Step 3: Perform ! TransformStreamSetBackpressure(stream, false).
-    mStream->SetBackpressure(false);
+    mStream->SetBackpressure(false, aRv);
 
     // Step 4: Return stream.[[backpressureChangePromise]].
     return do_AddRef(mStream->BackpressureChangePromise());
@@ -506,7 +506,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
-void TransformStream::SetBackpressure(bool aBackpressure) {
+void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[backpressure]] is not backpressure.
   MOZ_ASSERT(Backpressure() != aBackpressure);
 
@@ -517,7 +517,10 @@ void TransformStream::SetBackpressure(bool aBackpressure) {
   }
 
   // Step 3. Set stream.[[backpressureChangePromise]] to a new promise.
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
   mBackpressureChangePromise = promise;
 
   // Step 4. Set stream.[[backpressure]] to backpressure.
@@ -569,7 +572,7 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   mBackpressureChangePromise = nullptr;
 
   // Step 10. Perform ! TransformStreamSetBackpressure(stream, true).
-  SetBackpressure(true);
+  SetBackpressure(true, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -654,7 +657,10 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
 
   // Step 9. Let startPromise be a new promise.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> startPromise = Promise::CreateInfallible(global);
+  RefPtr<Promise> startPromise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 10. Perform ! InitializeTransformStream(this, startPromise,
   // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,

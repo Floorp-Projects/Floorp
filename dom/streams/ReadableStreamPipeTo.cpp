@@ -538,7 +538,9 @@ void PipeToPump::Finalize(JSContext* aCx,
                           JS::Handle<mozilla::Maybe<JS::Value>> aError) {
   IgnoredErrorResult rv;
   // Step 1. Perform ! WritableStreamDefaultWriterRelease(writer).
-  WritableStreamDefaultWriterRelease(aCx, mWriter);
+  WritableStreamDefaultWriterRelease(aCx, mWriter, rv);
+  NS_WARNING_ASSERTION(!rv.Failed(),
+                       "WritableStreamDefaultWriterRelease should not fail.");
 
   // Step 2. If reader implements ReadableStreamBYOBReader,
   // perform ! ReadableStreamBYOBReaderRelease(reader).
@@ -939,8 +941,10 @@ already_AddRefed<Promise> ReadableStreamPipeTo(
   // Note: PipeToPump ensures this by construction.
 
   // Step 13. Let promise be a new promise.
-  RefPtr<Promise> promise =
-      Promise::CreateInfallible(aSource->GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(aSource->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Steps 14-15.
   RefPtr<PipeToPump> pump = new PipeToPump(

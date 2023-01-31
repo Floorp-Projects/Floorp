@@ -59,15 +59,18 @@ JSObject* ReadableStreamDefaultReader::WrapObject(
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
 bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
-                                           ReadableStream* aStream) {
+                                           ReadableStream* aStream,
+                                           ErrorResult& aRv) {
   // Step 1.
   aReader->SetStream(aStream);
 
   // Step 2.
   aStream->SetReader(aReader);
 
-  aReader->SetClosedPromise(
-      Promise::CreateInfallible(aReader->GetParentObject()));
+  aReader->SetClosedPromise(Promise::Create(aReader->GetParentObject(), aRv));
+  if (aRv.Failed()) {
+    return false;
+  }
 
   switch (aStream->State()) {
       // Step 3.
@@ -120,7 +123,7 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
 
   // Step 2.
   RefPtr<ReadableStream> streamPtr = &aStream;
-  if (!ReadableStreamReaderGenericInitialize(reader, streamPtr)) {
+  if (!ReadableStreamReaderGenericInitialize(reader, streamPtr, aRv)) {
     return nullptr;
   }
 
@@ -244,7 +247,7 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(ErrorResult& aRv) {
   }
 
   // Step 2.
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
 
   // Step 3.
   RefPtr<ReadRequest> request = new Read_ReadRequest(promise);
@@ -406,7 +409,7 @@ void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
   }
 
   // Step 2.
-  if (!ReadableStreamReaderGenericInitialize(aReader, aStream)) {
+  if (!ReadableStreamReaderGenericInitialize(aReader, aStream, aRv)) {
     return;
   }
 

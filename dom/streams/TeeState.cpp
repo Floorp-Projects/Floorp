@@ -47,7 +47,10 @@ already_AddRefed<TeeState> TeeState::Create(ReadableStream* aStream,
   teeState->SetReader(reader);
 
   RefPtr<Promise> promise =
-      Promise::CreateInfallible(teeState->GetStream()->GetParentObject());
+      Promise::Create(teeState->GetStream()->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   teeState->SetCancelPromise(promise);
 
   return teeState.forget();

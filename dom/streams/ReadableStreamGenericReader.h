@@ -63,7 +63,8 @@ class ReadableStreamGenericReader : public nsISupports {
 };
 
 bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
-                                           ReadableStream* aStream);
+                                           ReadableStream* aStream,
+                                           ErrorResult& aRv);
 
 void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
                                         ErrorResult& aRv);
