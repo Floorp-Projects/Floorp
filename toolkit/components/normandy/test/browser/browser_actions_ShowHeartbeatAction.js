@@ -12,7 +12,12 @@ const { ClientEnvironment } = ChromeUtils.import(
 const { Heartbeat } = ChromeUtils.import(
   "resource://normandy/lib/Heartbeat.jsm"
 );
+
+// The name of this module conflicts with the window.Storage
+// DOM global - https://developer.mozilla.org/en-US/docs/Web/API/Storage .
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 const { Storage } = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
+
 const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"

@@ -1,3 +1,6 @@
+// In an SJS file we need to get NetUtil ourselves, despite
+// what eslint might think applies for browser tests.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 Cu.importGlobalProperties(["IOUtils", "PathUtils"]);

@@ -28,6 +28,9 @@ Services.scriptloader.loadSubScript(
   EventUtils
 );
 
+// We're an actor so we don't run in the browser test environment, so
+// we need to import TestUtils manually despite what the linter thinks.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
