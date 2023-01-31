@@ -198,25 +198,20 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
 
     // Pass the padding number, in frames, to the AAC decoder as well.
     MP4SampleIndex::Indice indice = {0};
+    bool rv = aIndices->GetIndice(aIndices->Length() - 1, indice);
     uint64_t mediaFrameCount = 0;
-    if (aIndices) {
-      bool rv = aIndices->GetIndice(aIndices->Length() - 1, indice);
-      if (rv) {
-        // The `end_composition` member of the very last index member is the
-        // duration of the media in microseconds, excluding decoder delay and
-        // padding. Convert to frames and give to the decoder so that trimming
-        // can be done properly.
-        mediaFrameCount = static_cast<uint64_t>(indice.end_composition) *
-                          aAudio->sample_info->sample_rate / USECS_PER_S;
-        LOG("AAC stream in MP4 container, total media duration is %" PRIu64
-            " frames",
-            mediaFrameCount);
-      } else {
-        LOG("AAC stream in MP4 container, couldn't determine total media time");
-      }
+    if (rv) {
+      // The `end_composition` member of the very last index member is the
+      // duration of the media in microseconds, excluding decoder delay and
+      // padding. Convert to frames and give to the decoder so that trimming can
+      // be done properly.
+      mediaFrameCount = static_cast<uint64_t>(indice.end_composition) *
+                        aAudio->sample_info->sample_rate / USECS_PER_S;
+      LOG("AAC stream in MP4 container, total media duration is %" PRIu64
+          " frames",
+          mediaFrameCount);
     } else {
-      LOG("AAC stream in MP4 container, couldn't determine total media time: "
-          "no index");
+      LOG("AAC stream in MP4 container, couldn't determine total media time");
     }
 
     AacCodecSpecificData aacCodecSpecificData{};
