@@ -70,10 +70,6 @@ GMPProcessParent::GMPProcessParent(const std::string& aGMPPath)
       ,
       mRequiresWindowServer(false)
 #endif
-#if defined(XP_MACOSX) && defined(__aarch64__)
-      ,
-      mChildLaunchArch(base::PROCESS_ARCH_INVALID)
-#endif
 {
   MOZ_COUNT_CTOR(GMPProcessParent);
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -87,13 +83,14 @@ GMPProcessParent::~GMPProcessParent() { MOZ_COUNT_DTOR(GMPProcessParent); }
 bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   vector<string> args;
 
-#if defined(XP_MACOSX) && defined(__aarch64__)
-  GMP_LOG_DEBUG("GMPProcessParent::Launch() mChildLaunchArch: %d",
-                mChildLaunchArch);
-  mLaunchOptions->arch = mChildLaunchArch;
-  if (mChildLaunchArch == base::PROCESS_ARCH_X86_64) {
+#ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
+  GMP_LOG_DEBUG("GMPProcessParent::Launch() mLaunchArch: %d", mLaunchArch);
+#  if defined(XP_MACOSX)
+  mLaunchOptions->arch = mLaunchArch;
+  if (mLaunchArch == base::PROCESS_ARCH_X86_64) {
     mLaunchOptions->env_map["MOZ_SHMEM_PAGESIZE_16K"] = 1;
   }
+#  endif
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)

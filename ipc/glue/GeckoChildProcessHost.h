@@ -43,6 +43,11 @@
 #  include "mozilla/ipc/UtilityProcessSandboxing.h"
 #endif
 
+#if (defined(XP_WIN) && defined(_ARM64_)) || \
+    (defined(XP_MACOSX) && defined(__aarch64__))
+#  define ALLOW_GECKO_CHILD_PROCESS_ARCH
+#endif
+
 struct _MacSandboxInfo;
 typedef _MacSandboxInfo MacSandboxInfo;
 
@@ -150,6 +155,10 @@ class GeckoChildProcessHost : public ChildProcessHost,
   }
 #endif
 
+#ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
+  void SetLaunchArchitecture(uint32_t aArch) { mLaunchArch = aArch; }
+#endif
+
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
@@ -192,6 +201,11 @@ class GeckoChildProcessHost : public ChildProcessHost,
   bool mIsFileContent;
   Monitor mMonitor;
   FilePath mProcessPath;
+#ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
+  // Used on platforms where we may launch a child process with a different
+  // architecture than the parent process.
+  uint32_t mLaunchArch = base::PROCESS_ARCH_INVALID;
+#endif
   // GeckoChildProcessHost holds the launch options so they can be set
   // up on the main thread using main-thread-only APIs like prefs, and
   // then used for the actual launch on another thread.  This pointer

@@ -53,10 +53,6 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   static MacSandboxType GetMacSandboxType() { return MacSandboxType_GMP; };
 #endif
 
-#if defined(XP_MACOSX) && defined(__aarch64__)
-  void SetLaunchArchitecture(uint32_t aArch) { mChildLaunchArch = aArch; }
-#endif
-
   using mozilla::ipc::GeckoChildProcessHost::GetChannel;
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
@@ -96,10 +92,6 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   // Used to assert InitStaticMainThread() is called before the constructor.
   static bool sIsMainThreadInitDone;
 #  endif
-#endif
-
-#if defined(XP_MACOSX) && defined(__aarch64__)
-  uint32_t mChildLaunchArch;
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(GMPProcessParent);

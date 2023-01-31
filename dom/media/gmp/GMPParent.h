@@ -189,8 +189,8 @@ class GMPParent final
   void PreTranslateBinsWorker();
 #endif
 
-#if defined(XP_MACOSX)
-  nsresult GetPluginFileArch(nsIFile* aPluginDir, nsAutoString& aLeafName,
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  nsresult GetPluginFileArch(nsIFile* aPluginDir, const nsString& aBaseName,
                              uint32_t& aArchSet);
 #endif
 
@@ -233,9 +233,11 @@ class GMPParent final
   // to terminate gracefully.
   bool mHoldingSelfRef;
 
-#if defined(XP_MACOSX) && defined(__aarch64__)
+#ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
   // The child process architecture to use.
   uint32_t mChildLaunchArch;
+#endif
+#if defined(XP_MACOSX) && defined(__aarch64__)
   nsCString mPluginFilePath;
 #endif
 
