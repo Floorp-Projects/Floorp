@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { Translation, TranslationTelemetry } = ChromeUtils.import(
+const { TranslationTelemetry } = ChromeUtils.import(
   "resource:///modules/translation/TranslationParent.jsm"
 );
 const Telemetry = Services.telemetry;

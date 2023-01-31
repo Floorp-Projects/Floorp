@@ -4,10 +4,6 @@
 
 const DEFAULT_THEME = "default-theme@mozilla.org";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 async function selectTheme(id) {
   let theme = await AddonManager.getAddonByID(id || DEFAULT_THEME);
   await theme.enable();

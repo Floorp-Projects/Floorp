@@ -1,12 +1,5 @@
 "use strict";
 
-const { BrowserWindowTracker } = ChromeUtils.import(
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 const TEST_WINDOW = window;
 
 function windowActivated(win) {

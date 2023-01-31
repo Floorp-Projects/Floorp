@@ -3,9 +3,6 @@
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
-const { AboutNewTab } = ChromeUtils.import(
-  "resource:///modules/AboutNewTab.jsm"
-);
 
 const NEWTAB_PRIVATE_ALLOWED = "browser.newtab.privateAllowed";
 const NEWTAB_EXTENSION_CONTROLLED = "browser.newtab.extensionControlled";

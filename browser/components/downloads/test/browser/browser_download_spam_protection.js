@@ -4,10 +4,6 @@
 
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   DownloadSpamProtection: "resource:///modules/DownloadSpamProtection.sys.mjs",
 });

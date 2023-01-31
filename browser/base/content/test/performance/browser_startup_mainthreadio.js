@@ -21,10 +21,6 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 /* Set this to true only for debugging purpose; it makes the output noisy. */
 const kDumpAllStacks = false;
 

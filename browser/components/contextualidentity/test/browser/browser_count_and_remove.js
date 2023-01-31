@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { ContextualIdentityService } = ChromeUtils.importESModule(
-  "resource://gre/modules/ContextualIdentityService.sys.mjs"
-);
-
 function openTabInUserContext(userContextId) {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", { userContextId });
   gBrowser.selectedTab = tab;

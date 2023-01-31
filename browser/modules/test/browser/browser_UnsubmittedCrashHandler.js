@@ -8,9 +8,7 @@
 const { UnsubmittedCrashHandler } = ChromeUtils.import(
   "resource:///modules/ContentCrashHandlers.jsm"
 );
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
+
 const { makeFakeAppDir } = ChromeUtils.importESModule(
   "resource://testing-common/AppData.sys.mjs"
 );

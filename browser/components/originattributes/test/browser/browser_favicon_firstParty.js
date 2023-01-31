@@ -8,9 +8,6 @@ if (SpecialPowers.useRemoteSubframes) {
 
 const CC = Components.Constructor;
 
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
-);
 const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );

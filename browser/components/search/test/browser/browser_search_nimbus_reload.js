@@ -6,9 +6,7 @@
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { NimbusFeatures } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
+
 const { SearchService } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchService.sys.mjs"
 );

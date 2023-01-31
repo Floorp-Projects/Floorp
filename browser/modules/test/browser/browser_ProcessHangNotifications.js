@@ -2,10 +2,6 @@
 
 const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
-const { UpdateUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/UpdateUtils.sys.mjs"
-);
-
 function promiseNotificationShown(aWindow, aName) {
   return new Promise(resolve => {
     let notificationBox = aWindow.gNotificationBox;

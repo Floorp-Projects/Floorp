@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-
 add_setup(async function() {
   await setupPolicyEngineWithJson({
     policies: {

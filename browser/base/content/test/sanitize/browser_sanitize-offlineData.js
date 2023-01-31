@@ -3,9 +3,6 @@
 
 // Bug 380852 - Delete permission manager entries in Clear Recent History
 
-const { Sanitizer } = ChromeUtils.importESModule(
-  "resource:///modules/Sanitizer.sys.mjs"
-);
 const { SiteDataTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );

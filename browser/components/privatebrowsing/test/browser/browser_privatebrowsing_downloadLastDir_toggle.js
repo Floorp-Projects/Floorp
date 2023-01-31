@@ -1,10 +1,3 @@
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-const { DownloadLastDir } = ChromeUtils.import(
-  "resource://gre/modules/DownloadLastDir.jsm"
-);
-
 /**
  * Tests how the browser remembers the last download folder
  * from download to download, with a particular emphasis

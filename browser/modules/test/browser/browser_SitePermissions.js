@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
-);
-
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(

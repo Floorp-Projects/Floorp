@@ -21,10 +21,6 @@ const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kDetectLanguagePref = "browser.translation.detectLanguage";
 const kShowUIPref = "browser.translation.ui.show";
 
-const { Translation } = ChromeUtils.import(
-  "resource:///modules/translation/TranslationParent.jsm"
-);
-
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [

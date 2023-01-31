@@ -4,9 +4,6 @@ const { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
 const { OSKeyStore } = ChromeUtils.importESModule(
   "resource://gre/modules/OSKeyStore.sys.mjs"
 );
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 
 add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {

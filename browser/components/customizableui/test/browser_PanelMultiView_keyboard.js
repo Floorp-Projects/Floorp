@@ -7,9 +7,6 @@
  * Test the keyboard behavior of PanelViews.
  */
 
-const { PanelMultiView } = ChromeUtils.import(
-  "resource:///modules/PanelMultiView.jsm"
-);
 const kEmbeddedDocUrl =
   'data:text/html,<textarea id="docTextarea">value</textarea><button id="docButton"></button>';
 

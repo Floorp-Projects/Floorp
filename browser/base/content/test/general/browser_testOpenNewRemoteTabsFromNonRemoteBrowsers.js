@@ -5,10 +5,6 @@
 const OPEN_LOCATION_PREF = "browser.link.open_newwindow";
 const NON_REMOTE_PAGE = "about:welcomeback";
 
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-
 requestLongerTimeout(2);
 
 function insertAndClickAnchor(browser) {

@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 add_task(async function test() {
   const testPageURL =
     "http://mochi.test:8888/browser/" +

@@ -5,9 +5,6 @@
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const sandbox = sinon.createSandbox();
-const { ShellService } = ChromeUtils.import(
-  "resource:///modules/ShellService.jsm"
-);
 
 add_setup(async function() {
   ASRouter.resetMessageState();

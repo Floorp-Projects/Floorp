@@ -7,9 +7,6 @@
 
 "use strict";
 
-const { BrowserSearchTelemetry } = ChromeUtils.importESModule(
-  "resource:///modules/BrowserSearchTelemetry.sys.mjs"
-);
 const { SearchSERPTelemetry } = ChromeUtils.importESModule(
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );

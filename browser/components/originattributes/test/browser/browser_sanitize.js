@@ -10,8 +10,6 @@ const CC = Components.Constructor;
 
 const TEST_DOMAIN = "https://example.net/";
 
-const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
-
 async function setCookies(aBrowser) {
   await SpecialPowers.spawn(aBrowser, [], function() {
     content.document.cookie = "key=value";
