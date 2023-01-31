@@ -204,8 +204,9 @@ dependencies = [
 
 [[package]]
 name = "async-task"
-version = "4.0.3"
-source = "git+https://github.com/smol-rs/async-task?rev=f6488e35beccb26eb6e85847b02aa78a42cd3d0e#f6488e35beccb26eb6e85847b02aa78a42cd3d0e"
+version = "4.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a40729d2133846d9ed0ea60a8b9541bccddab49cd30f0715a1da672fe9a2524"
 
 [[package]]
 name = "async-trait"

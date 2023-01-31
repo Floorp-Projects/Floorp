@@ -74,6 +74,17 @@
 
 extern crate alloc;
 
+/// We can't use `?` in const contexts yet, so this macro acts
+/// as a workaround.
+macro_rules! leap {
+    ($x: expr) => {{
+        match ($x) {
+            Some(val) => val,
+            None => return None,
+        }
+    }};
+}
+
 mod header;
 mod raw;
 mod runnable;

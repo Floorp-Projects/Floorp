@@ -1,3 +1,17 @@
+# Version 4.3.0
+
+- Bump MSRV to Rust 1.47. (#30)
+- Evaluate the layouts for the tasks at compile time. (#30)
+- Add layout_info field to TaskVTable so that debuggers can decode raw tasks. (#29)
+
+# Version 4.2.0
+
+- Add `Task::is_finished`. (#19)
+
+# Version 4.1.0
+
+- Add `FallibleTask`. (#21)
+
 # Version 4.0.3
 
 - Document the return value of `Runnable::run()` better.

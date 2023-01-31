@@ -7,10 +7,6 @@ url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-c
 [imports.embark]
 url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
 
-[policy.async-task]
-audit-as-crates-io = true
-notes = "This is the upstream code plus an extra fix that hasn't been released yet, see bug 1746533."
-
 [policy.audioipc-client]
 criteria = []
 notes = "Going away very soon in bug 1697845"

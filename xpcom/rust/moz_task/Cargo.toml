@@ -10,7 +10,7 @@ edition = "2018"
 log = "0.4"
 cstr = "0.2"
 libc = "0.2"
-async-task = { version = "4.0" }
+async-task = { version = "4.3" }
 nserror = { path = "../nserror" }
 nsstring = { path = "../nsstring" }
 xpcom = { path = "../xpcom" }
