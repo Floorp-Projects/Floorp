@@ -93,7 +93,6 @@ EXPORTS.mozilla += [
     "AtomArray.h",
     "Dafsa.h",
     "IncrementalTokenizer.h",
-    "MruCache.h",
     "Observer.h",
     "PerfectHash.h",
     "SimpleEnumerator.h",
