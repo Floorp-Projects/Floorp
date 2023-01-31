@@ -101,7 +101,10 @@ ProbeControllerConfig::ProbeControllerConfig(
       min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_duration("min_probe_duration", TimeDelta::Millis(15)),
       limit_probe_target_rate_to_loss_bwe("limit_probe_target_rate_to_loss_bwe",
-                                          false) {
+                                          false),
+      skip_if_estimate_larger_than_fraction_of_max(
+          "skip_if_est_larger_than_fraction_of_max",
+          0.0) {
   ParseFieldTrial(
       {&first_exponential_probe_scale, &second_exponential_probe_scale,
        &further_exponential_probe_scale, &further_probe_threshold,
@@ -111,7 +114,8 @@ ProbeControllerConfig::ProbeControllerConfig(
        &network_state_estimate_fast_rampup_rate,
        &network_state_estimate_drop_down_rate, &network_state_probe_scale,
        &network_state_probe_duration, &min_probe_packets_sent,
-       &limit_probe_target_rate_to_loss_bwe},
+       &limit_probe_target_rate_to_loss_bwe,
+       &skip_if_estimate_larger_than_fraction_of_max},
       key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration"));
 
   // Specialized keys overriding subsets of WebRTC-Bwe-ProbingConfiguration
@@ -450,10 +454,20 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     Timestamp now,
     std::vector<DataRate> bitrates_to_probe,
     bool probe_further) {
+  if (config_.skip_if_estimate_larger_than_fraction_of_max > 0) {
+    DataRate network_estimate = network_estimate_
+                                    ? network_estimate_->link_capacity_upper
+                                    : DataRate::PlusInfinity();
+    if (std::min(network_estimate, estimated_bitrate_) >
+        config_.skip_if_estimate_larger_than_fraction_of_max * max_bitrate_) {
+      return {};
+    }
+  }
+
   DataRate max_probe_bitrate = max_bitrate_;
   if (bwe_limited_due_to_packet_loss_ &&
       config_.limit_probe_target_rate_to_loss_bwe) {
-    max_probe_bitrate = estimated_bitrate_;
+    max_probe_bitrate = std::min(estimated_bitrate_, max_bitrate_);
   }
   if (config_.network_state_estimate_probing_interval->IsFinite() &&
       network_estimate_ &&
@@ -472,6 +486,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     max_probe_bitrate =
         std::min(max_probe_bitrate, max_total_allocated_bitrate_ * 2);
   }
+
   send_probe_on_next_process_interval_ = false;
 
   std::vector<ProbeClusterConfig> pending_probes;
