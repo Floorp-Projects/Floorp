@@ -8,13 +8,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const {
-  clearInterval,
-  clearTimeout,
-  setInterval,
-  setTimeout,
-} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-
 const { PollPromise } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/Sync.sys.mjs"
 );

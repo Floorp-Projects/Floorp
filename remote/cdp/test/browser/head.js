@@ -3,12 +3,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { RemoteAgent } = ChromeUtils.importESModule(
-  "chrome://remote/content/components/RemoteAgent.sys.mjs"
-);
 const { RemoteAgentError } = ChromeUtils.importESModule(
   "chrome://remote/content/cdp/Error.sys.mjs"
 );

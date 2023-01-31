@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
-
 add_task(async function test_first() {
   registerCleanupFunction(() => {
     // Must clear mode first, otherwise we'll have non-local connections to

@@ -8,9 +8,6 @@ const DUMMY_URL =
     "http://example.com"
   ) + "/dummy.html";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const HAS_THREAD_NAMES =
   AppConstants.platform != "win" ||
   AppConstants.isPlatformAndVersionAtLeast("win", 10);

@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
-
 add_task(async function testStopStartingAutoScroll() {
   await SpecialPowers.pushPrefEnv({
     set: [

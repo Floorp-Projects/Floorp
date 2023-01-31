@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
 const gDOMWindowUtils = EventUtils._getDOMWindowUtils(window);
 
 function promiseURLBarFocus() {

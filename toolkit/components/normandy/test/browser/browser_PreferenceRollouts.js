@@ -3,9 +3,7 @@
 const { IndexedDB } = ChromeUtils.importESModule(
   "resource://gre/modules/IndexedDB.sys.mjs"
 );
-const { TelemetryEnvironment } = ChromeUtils.importESModule(
-  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
-);
+
 const { PreferenceRollouts } = ChromeUtils.import(
   "resource://normandy/lib/PreferenceRollouts.jsm"
 );

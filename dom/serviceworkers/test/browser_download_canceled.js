@@ -19,10 +19,6 @@
  * notification with the headers, so there are two ways to produce
  */
 
-const { Downloads } = ChromeUtils.importESModule(
-  "resource://gre/modules/Downloads.sys.mjs"
-);
-
 /**
  * Clear the downloads list so other tests don't see our byproducts.
  */

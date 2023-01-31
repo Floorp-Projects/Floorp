@@ -8,7 +8,7 @@ const { RemoteSettings } = ChromeUtils.import(
 );
 const {
   _ExperimentFeature: ExperimentFeature,
-  NimbusFeatures,
+
   ExperimentAPI,
 } = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
 const { ExperimentTestUtils } = ChromeUtils.import(
@@ -19,9 +19,6 @@ const { ExperimentManager } = ChromeUtils.import(
 );
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
-const { TelemetryEnvironment } = ChromeUtils.importESModule(
-  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
 
 const FOO_FAKE_FEATURE_MANIFEST = {

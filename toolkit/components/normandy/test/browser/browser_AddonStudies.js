@@ -3,9 +3,7 @@
 const { IndexedDB } = ChromeUtils.importESModule(
   "resource://gre/modules/IndexedDB.sys.mjs"
 );
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );

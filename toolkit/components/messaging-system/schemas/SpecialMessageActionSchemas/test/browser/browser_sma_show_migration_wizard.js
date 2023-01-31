@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { MigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
-
 add_task(async function test_SHOW_MIGRATION_WIZARD() {
   let migratorOpen = TestUtils.waitForCondition(() => {
     let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");

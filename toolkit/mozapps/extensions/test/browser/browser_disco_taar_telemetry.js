@@ -6,10 +6,6 @@
 
 "use strict";
 
-const { AMTelemetry } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 loadTestSubscript("head_disco.js");
 
 const AMO_TEST_HOST = "rewritten-for-testing.addons.allizom.org";

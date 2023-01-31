@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 // A bunch of assumptions we make about the behavior of the parent process,
 // and which we use as sanity checks. If Firefox evolves, we will need to
 // update these values.

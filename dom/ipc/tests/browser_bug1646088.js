@@ -1,7 +1,3 @@
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-
 let dir = getChromeDir(getResolvedURI(gTestPath));
 dir.append("file_dummy.html");
 const uriString = Services.io.newFileURI(dir).spec;

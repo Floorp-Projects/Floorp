@@ -13,9 +13,7 @@ const PAGE_URL =
 // This HDR tests will only pass on platforms that accurately report color
 // depth in their VideoInfo structures. Presently, that is only true for
 // macOS.
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+
 const reportsColorDepthFromVideoData = AppConstants.platform == "macosx";
 
 add_task(async function testChangingTabVisibilityAffectsInvisiblePlayTime() {
