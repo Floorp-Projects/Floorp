@@ -6,10 +6,6 @@
 
 "use strict";
 
-const { AboutNewTab } = ChromeUtils.import(
-  "resource:///modules/AboutNewTab.jsm"
-);
-
 function checkUrlbarFocus(win) {
   let urlbar = win.gURLBar;
   is(

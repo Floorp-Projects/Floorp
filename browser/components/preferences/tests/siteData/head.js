@@ -26,13 +26,6 @@ const TEST_SERVICE_WORKER_URL =
 const REMOVE_DIALOG_URL =
   "chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.xhtml";
 
-const { DownloadUtils } = ChromeUtils.import(
-  "resource://gre/modules/DownloadUtils.jsm"
-);
-const { SiteDataManager } = ChromeUtils.import(
-  "resource:///modules/SiteDataManager.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "SiteDataTestUtils",

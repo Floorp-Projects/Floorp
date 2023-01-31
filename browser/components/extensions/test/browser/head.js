@@ -53,12 +53,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.import(
   "resource://testing-common/AppUiTestDelegate.jsm"
 );
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
-);
+
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );

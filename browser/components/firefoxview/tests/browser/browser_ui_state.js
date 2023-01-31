@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { TabsSetupFlowManager } = ChromeUtils.importESModule(
-  "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
-);
-
 add_task(async function test_state_prefs_unset() {
   await SpecialPowers.clearUserPref(TAB_PICKUP_STATE_PREF);
   await SpecialPowers.clearUserPref(RECENTLY_CLOSED_STATE_PREF);

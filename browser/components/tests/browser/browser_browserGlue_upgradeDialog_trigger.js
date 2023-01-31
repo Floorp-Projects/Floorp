@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { NimbusFeatures, ExperimentAPI } = ChromeUtils.import(
+const { ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
 const { OnboardingMessageProvider } = ChromeUtils.import(

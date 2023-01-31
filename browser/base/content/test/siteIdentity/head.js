@@ -1,7 +1,3 @@
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 function openIdentityPopup() {
   gIdentityHandler._initializePopup();
   let mainView = document.getElementById("identity-popup-mainView");

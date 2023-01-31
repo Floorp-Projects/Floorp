@@ -8,8 +8,6 @@ const permissionError =
 const badDeviceError =
   "error: NotReadableError: Failed to allocate videosource";
 
-const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
-
 var gTests = [
   {
     desc: "test 'Not now' label queueing audio twice behind allow video",

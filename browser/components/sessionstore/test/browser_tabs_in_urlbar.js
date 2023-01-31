@@ -13,10 +13,6 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
-);
-
 const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
   "resource:///modules/UrlbarProviderOpenTabs.sys.mjs"
 );

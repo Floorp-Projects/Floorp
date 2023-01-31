@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 add_task(async function test_searchDetection_isActive() {
   let addon = await AddonManager.getAddonByID(
     "addons-search-detection@mozilla.com"

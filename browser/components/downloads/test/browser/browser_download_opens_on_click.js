@@ -11,10 +11,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-const { DownloadIntegration } = ChromeUtils.importESModule(
-  "resource://gre/modules/DownloadIntegration.sys.mjs"
-);
-
 add_task(async function test_download_opens_on_click() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.improvements_to_download_panel", true]],

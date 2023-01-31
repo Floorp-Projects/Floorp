@@ -9,10 +9,6 @@ const { SyncedTabs } = ChromeUtils.import(
   "resource://services-sync/SyncedTabs.jsm"
 );
 
-const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
-  "resource:///modules/firefox-view-notification-manager.sys.mjs"
-);
-
 function setupRecentDeviceListMocks() {
   const sandbox = sinon.createSandbox();
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => [

@@ -3,7 +3,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
 });

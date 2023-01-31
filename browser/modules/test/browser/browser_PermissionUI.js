@@ -6,15 +6,10 @@
 
 "use strict";
 
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
 const { PermissionUI } = ChromeUtils.importESModule(
   "resource:///modules/PermissionUI.sys.mjs"
 );
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
-);
+
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );

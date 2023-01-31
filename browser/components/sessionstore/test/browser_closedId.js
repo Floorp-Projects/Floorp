@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { SessionStore } = ChromeUtils.importESModule(
-  "resource:///modules/sessionstore/SessionStore.sys.mjs"
-);
 const BACKUP_STATE = SessionStore.getBrowserState();
 
 async function add_new_tab(URL) {

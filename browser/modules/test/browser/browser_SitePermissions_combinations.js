@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
-);
-
 // This function applies combinations of different permissions and
 // checks how they override each other.
 async function checkPermissionCombinations(combinations) {

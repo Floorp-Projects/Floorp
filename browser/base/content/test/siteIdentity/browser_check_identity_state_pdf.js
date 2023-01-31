@@ -7,10 +7,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 function testIdentityMode(uri, expectedState, message) {
   return BrowserTestUtils.withNewTab(uri, () => {
     is(getIdentityMode(), expectedState, message);

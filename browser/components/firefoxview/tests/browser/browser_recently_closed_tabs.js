@@ -18,10 +18,6 @@ ChromeUtils.defineESModuleGetters(globalThis, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
-const { TabsSetupFlowManager } = ChromeUtils.importESModule(
-  "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
-);
-
 const RECENTLY_CLOSED_EVENT = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "recently_closed", "tabs", undefined],

@@ -9,9 +9,6 @@ const BASE = getRootDirectory(gTestPath).replace(
   "https://example.com/"
 );
 
-var { ExtensionsUI } = ChromeUtils.import(
-  "resource:///modules/ExtensionsUI.jsm"
-);
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   // eslint-disable-next-line no-shadow
   const { Management } = ChromeUtils.import(

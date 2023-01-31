@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
-);
-
 const PERMISSIONS_URL =
   "chrome://browser/content/preferences/dialogs/sitePermissions.xhtml";
 const URL = "http://www.example.com";

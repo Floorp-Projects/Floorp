@@ -8,8 +8,6 @@
 
 var tmp = {};
 
-const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
-
 function test() {
   waitForExplicitFinish();
 
