@@ -50,10 +50,6 @@ class nsPageFrame final : public nsContainerFrame {
   void SetSharedPageData(nsSharedPageData* aPD);
   nsSharedPageData* GetSharedPageData() const { return mPD; }
 
-  // We must allow Print Preview UI to have a background, no matter what the
-  // user's settings
-  bool HonorPrintBackgroundSettings() const override { return false; }
-
   void PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
                          bool aSubpixelAA);
 

@@ -357,11 +357,6 @@ void nsBoxFrame::DidReflow(nsPresContext* aPresContext,
   }
 }
 
-bool nsBoxFrame::HonorPrintBackgroundSettings() const {
-  return !mContent->IsInNativeAnonymousSubtree() &&
-         nsContainerFrame::HonorPrintBackgroundSettings();
-}
-
 #ifdef DO_NOISY_REFLOW
 static int myCounter = 0;
 static void printSize(char* aDesc, nscoord aSize) {
