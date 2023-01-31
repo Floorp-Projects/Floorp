@@ -127,12 +127,8 @@ locales = [
     l10n = "{l}browser/**"
 
 [[paths]]
-    reference = "browser/branding/official/locales/en-US/**"
-    l10n = "{l}browser/branding/official/**"
-
-[[paths]]
-    reference = "browser/branding/beta/locales/en-US/**"
-    l10n = "{l}browser/branding/beta/**"
+    reference = "browser/branding/*/locales/en-US/**"
+    l10n = "{l}browser/branding/*/**"
 
 [[paths]]
     reference = "floorp/browser/branding/*/locales/en-US/**"
