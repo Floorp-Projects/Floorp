@@ -657,9 +657,11 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
   nsresult rv;
 
   if (MOZ_LOG_TEST(nsComponentManagerLog, LogLevel::Debug)) {
-    char buf[NSID_LENGTH];
-    aClass.ToProvidedString(buf);
+    char* buf = aClass.ToString();
     PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
+    if (buf) {
+      free(buf);
+    }
   }
 
   MOZ_ASSERT(aResult != nullptr);
@@ -763,11 +765,13 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass, const nsIID& aIID,
   }
 
   if (MOZ_LOG_TEST(nsComponentManagerLog, LogLevel::Warning)) {
-    char buf[NSID_LENGTH];
-    aClass.ToProvidedString(buf);
+    char* buf = aClass.ToString();
     MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
             ("nsComponentManager: CreateInstance(%s) %s", buf,
              NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
+    if (buf) {
+      free(buf);
+    }
   }
 
   return rv;

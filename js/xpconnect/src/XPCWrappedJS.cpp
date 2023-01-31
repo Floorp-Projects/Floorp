@@ -594,7 +594,8 @@ nsXPCWrappedJS* nsXPCWrappedJS::FindInherited(REFNSIID aIID) {
   return nullptr;
 }
 
-nsresult nsIXPConnectWrappedJS::GetInterfaceIID(nsIID** iid) {
+nsresult
+nsIXPConnectWrappedJS::GetInterfaceIID(nsIID** iid) {
   MOZ_ASSERT(iid, "bad param");
 
   *iid = AsXPCWrappedJS()->GetIID().Clone();
@@ -661,8 +662,11 @@ nsresult nsXPCWrappedJS::DebugDump(int16_t depth) {
                   IsRootWrapper() ? "ROOT" : "non-root", mJSObj.get()));
   const char* name = mInfo->Name();
   XPC_LOG_ALWAYS(("interface name is %s", name));
-  auto iid = mInfo->IID().ToString();
-  XPC_LOG_ALWAYS(("IID number is %s", iid.get()));
+  char* iid = mInfo->IID().ToString();
+  XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
+  if (iid) {
+    free(iid);
+  }
   XPC_LOG_ALWAYS(("nsXPTInterfaceInfo @ %p", mInfo));
 
   if (!IsRootWrapper()) {

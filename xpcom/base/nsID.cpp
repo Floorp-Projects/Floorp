@@ -163,10 +163,18 @@ static const char gIDFormat[] =
     "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
 
 /*
- * Returns a managed string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
- * format.
+ * Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+ * format. The string is allocated with moz_xmalloc and should be freed by
+ * the caller.
  */
-nsIDToCString nsID::ToString() const { return nsIDToCString(*this); }
+
+char* nsID::ToString() const {
+  char* res = (char*)moz_xmalloc(NSID_LENGTH);
+  snprintf(res, NSID_LENGTH, gIDFormat, m0, (uint32_t)m1, (uint32_t)m2,
+           (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2], (uint32_t)m3[3],
+           (uint32_t)m3[4], (uint32_t)m3[5], (uint32_t)m3[6], (uint32_t)m3[7]);
+  return res;
+}
 
 void nsID::ToProvidedString(char (&aDest)[NSID_LENGTH]) const {
   SprintfLiteral(aDest, gIDFormat, m0, (uint32_t)m1, (uint32_t)m2,

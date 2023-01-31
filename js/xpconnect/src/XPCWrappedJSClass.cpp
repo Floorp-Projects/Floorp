@@ -1065,8 +1065,11 @@ void nsXPCWrappedJS::DebugDumpInterfaceInfo(const nsXPTInterfaceInfo* aInfo,
   XPC_LOG_INDENT();
   const char* name = aInfo->Name();
   XPC_LOG_ALWAYS(("interface name is %s", name));
-  auto iid = aInfo->IID().ToString();
-  XPC_LOG_ALWAYS(("IID number is %s", iid.get()));
+  char* iid = aInfo->IID().ToString();
+  XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
+  if (iid) {
+    free(iid);
+  }
   XPC_LOG_ALWAYS(("InterfaceInfo @ %p", aInfo));
   uint16_t methodCount = 0;
   if (depth) {
