@@ -9,14 +9,18 @@
 import("../../../webrtc.gni")
 
 group("metrics") {
-  deps = [ ":metric" ]
+  deps = [
+    ":metric",
+    ":metrics_exporter",
+    ":stdout_metrics_exporter",
+  ]
 }
 
 if (rtc_include_tests) {
   group("metrics_unittests") {
     testonly = true
 
-    deps = []
+    deps = [ ":stdout_metrics_exporter_test" ]
   }
 }
 
@@ -28,4 +32,41 @@ rtc_library("metric") {
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   deps = [ "../../../api/units:timestamp" ]
+}
+
+rtc_library("metrics_exporter") {
+  visibility = [ "*" ]
+  sources = [ "metrics_exporter.h" ]
+  deps = [
+    ":metric",
+    "../../../api:array_view",
+  ]
+}
+
+rtc_library("stdout_metrics_exporter") {
+  visibility = [ "*" ]
+  sources = [
+    "stdout_metrics_exporter.cc",
+    "stdout_metrics_exporter.h",
+  ]
+  deps = [
+    ":metric",
+    ":metrics_exporter",
+    "../../../api:array_view",
+    "../../../rtc_base:stringutils",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+if (rtc_include_tests) {
+  rtc_library("stdout_metrics_exporter_test") {
+    testonly = true
+    sources = [ "stdout_metrics_exporter_test.cc" ]
+    deps = [
+      ":metric",
+      ":stdout_metrics_exporter",
+      "../../../api/units:timestamp",
+      "../../../test:test_support",
+    ]
+  }
 }
