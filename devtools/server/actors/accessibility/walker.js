@@ -264,7 +264,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
   get highlighter() {
     if (!this._highlighter) {
-      this._highlighter = CustomHighlighterActor(this, "AccessibleHighlighter");
+      this._highlighter = new CustomHighlighterActor(
+        this,
+        "AccessibleHighlighter"
+      );
 
       this.manage(this._highlighter);
       this._highlighter.on("highlighter-event", this.onHighlighterEvent);
@@ -275,7 +278,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
   get tabbingOrderHighlighter() {
     if (!this._tabbingOrderHighlighter) {
-      this._tabbingOrderHighlighter = CustomHighlighterActor(
+      this._tabbingOrderHighlighter = new CustomHighlighterActor(
         this,
         "TabbingOrderHighlighter"
       );

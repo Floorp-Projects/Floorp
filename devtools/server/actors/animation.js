@@ -649,7 +649,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
 
     for (const animation of animations) {
       const createdTime = this.getCreatedTime(animation);
-      const actor = AnimationPlayerActor(this, animation, createdTime);
+      const actor = new AnimationPlayerActor(this, animation, createdTime);
       this.actors.push(actor);
     }
 
@@ -726,7 +726,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         }
 
         const createdTime = this.getCreatedTime(player);
-        const actor = AnimationPlayerActor(this, player, createdTime);
+        const actor = new AnimationPlayerActor(this, player, createdTime);
         this.actors.push(actor);
         eventData.push({
           type: "added",

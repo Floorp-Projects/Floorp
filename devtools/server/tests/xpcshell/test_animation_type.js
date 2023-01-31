@@ -66,7 +66,7 @@ function run_test() {
 
   for (const { desc, animation, expectedType } of TEST_DATA) {
     info(desc);
-    const actor = AnimationPlayerActor({}, animation);
+    const actor = new AnimationPlayerActor({}, animation);
     Assert.equal(actor.getType(), expectedType);
   }
 }
