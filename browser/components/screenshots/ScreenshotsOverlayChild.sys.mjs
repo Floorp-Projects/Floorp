@@ -311,7 +311,7 @@ class AnonymousContentOverlay {
               <div class="face"></div>
             </div>
             <div class="preview-instructions">${instructions.value}</div>
-            <div class="cancel-shot" id="screenshots-cancel-button">${cancel.value}</div>
+            <button class="cancel-shot" id="screenshots-cancel-button">${cancel.value}</button>
           </div>
         </div>
         <div id="${this.hoverBoxId}"></div>

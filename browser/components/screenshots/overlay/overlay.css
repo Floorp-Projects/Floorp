@@ -64,6 +64,7 @@
   width: fit-content;
   cursor: pointer;
   outline: none;
+  appearance: none;
   border-radius: 3px;
   border: 1px #9b9b9b solid;
   color: #fff;
@@ -71,6 +72,17 @@
   font-size: 16px;
   margin-top: 40px;
   padding: 10px 25px;
+}
+
+:-moz-native-anonymous #screenshots-cancel-button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+:-moz-native-anonymous .screenshots-button:focus-visible,
+:-moz-native-anonymous #screenshots-cancel-button:focus-visible {
+  outline: 2px solid #00ddff;
+  outline-offset: 2px;
 }
 
 @media (forced-colors: active), (prefers-contrast) {
