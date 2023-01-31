@@ -78,7 +78,7 @@
 
 
 {#-
-// Arglist as used in the _UniFFILib function declations.
+// Arglist as used in the _UniFFILib function declarations.
 // Note unfiltered name but ffi_type_name filters.
 -#}
 {%- macro arg_list_ffi_decl(func) %}

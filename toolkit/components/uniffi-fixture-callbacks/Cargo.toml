@@ -7,9 +7,8 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
-uniffi_macros = "0.21"
-uniffi = "0.21"
+uniffi = { workspace = true }
 thiserror = "1.0"
 
 [build-dependencies]
-uniffi_build = "0.21"
+uniffi = { workspace = true, features = ["build"] }

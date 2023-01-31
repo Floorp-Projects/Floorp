@@ -150,22 +150,6 @@ def _get_schema_for_content(
     return _get_schema(schema_url, filepath)
 
 
-def get_parameter_doc(key: str) -> str:
-    """
-    Returns documentation about a specific metric parameter.
-    """
-    schema, _ = _get_schema(METRICS_ID)
-    return schema["definitions"]["metric"]["properties"][key]["description"]
-
-
-def get_ping_parameter_doc(key: str) -> str:
-    """
-    Returns documentation about a specific ping parameter.
-    """
-    schema, _ = _get_schema(PINGS_ID)
-    return schema["additionalProperties"]["properties"][key]["description"]
-
-
 def validate(
     content: Dict[str, util.JSONType], filepath: Union[str, Path] = "<input>"
 ) -> Generator[str, None, None]:

@@ -12,7 +12,7 @@ mod storage;
 mod store;
 mod sync;
 
-uniffi_macros::include_scaffolding!("tabs");
+uniffi::include_scaffolding!("tabs");
 
 // Our UDL uses a `Guid` type.
 use sync_guid::Guid as TabsGuid;

@@ -42,9 +42,9 @@ mod filters {
             Type::String => "String".into(),
             Type::Timestamp => "std::time::SystemTime".into(),
             Type::Duration => "std::time::Duration".into(),
-            Type::Enum(name) | Type::Record(name) | Type::Error(name) => format!("r#{}", name),
-            Type::Object(name) => format!("std::sync::Arc<r#{}>", name),
-            Type::CallbackInterface(name) => format!("Box<dyn r#{}>", name),
+            Type::Enum(name) | Type::Record(name) | Type::Error(name) => format!("r#{name}"),
+            Type::Object(name) => format!("std::sync::Arc<r#{name}>"),
+            Type::CallbackInterface(name) => format!("Box<dyn r#{name}>"),
             Type::Optional(t) => format!("std::option::Option<{}>", type_rs(t)?),
             Type::Sequence(t) => format!("std::vec::Vec<{}>", type_rs(t)?),
             Type::Map(k, v) => format!(
@@ -52,7 +52,7 @@ mod filters {
                 type_rs(k)?,
                 type_rs(v)?
             ),
-            Type::Custom { name, .. } => format!("r#{}", name),
+            Type::Custom { name, .. } => format!("r#{name}"),
             Type::External { .. } => panic!("External types coming to a uniffi near you soon!"),
             Type::Unresolved { .. } => {
                 unreachable!("UDL scaffolding code never contains unresolved types")
@@ -60,22 +60,22 @@ mod filters {
         })
     }
 
-    pub fn type_ffi(type_: &FFIType) -> Result<String, askama::Error> {
+    pub fn type_ffi(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(match type_ {
-            FFIType::Int8 => "i8".into(),
-            FFIType::UInt8 => "u8".into(),
-            FFIType::Int16 => "i16".into(),
-            FFIType::UInt16 => "u16".into(),
-            FFIType::Int32 => "i32".into(),
-            FFIType::UInt32 => "u32".into(),
-            FFIType::Int64 => "i64".into(),
-            FFIType::UInt64 => "u64".into(),
-            FFIType::Float32 => "f32".into(),
-            FFIType::Float64 => "f64".into(),
-            FFIType::RustArcPtr(_) => "*const std::os::raw::c_void".into(),
-            FFIType::RustBuffer => "uniffi::RustBuffer".into(),
-            FFIType::ForeignBytes => "uniffi::ForeignBytes".into(),
-            FFIType::ForeignCallback => "uniffi::ForeignCallback".into(),
+            FfiType::Int8 => "i8".into(),
+            FfiType::UInt8 => "u8".into(),
+            FfiType::Int16 => "i16".into(),
+            FfiType::UInt16 => "u16".into(),
+            FfiType::Int32 => "i32".into(),
+            FfiType::UInt32 => "u32".into(),
+            FfiType::Int64 => "i64".into(),
+            FfiType::UInt64 => "u64".into(),
+            FfiType::Float32 => "f32".into(),
+            FfiType::Float64 => "f64".into(),
+            FfiType::RustArcPtr(_) => "*const std::os::raw::c_void".into(),
+            FfiType::RustBuffer(_) => "uniffi::RustBuffer".into(),
+            FfiType::ForeignBytes => "uniffi::ForeignBytes".into(),
+            FfiType::ForeignCallback => "uniffi::ForeignCallback".into(),
         })
     }
 
@@ -90,7 +90,7 @@ mod filters {
             Type::Timestamp => "std::time::SystemTime".into(),
             Type::Duration => "std::time::Duration".into(),
             // Object is handled by Arc<T>
-            Type::Object(name) => format!("std::sync::Arc<r#{}>", name),
+            Type::Object(name) => format!("std::sync::Arc<r#{name}>"),
             // Other user-defined types are handled by a unit-struct that we generate.  The
             // FfiConverter implementation for this can be found in one of the scaffolding template code.
             //
@@ -114,7 +114,7 @@ mod filters {
             ),
             // External and Wrapped bytes have FfiConverters with a predictable name based on the type name.
             Type::Custom { name, .. } | Type::External { name, .. } => {
-                format!("FfiConverterType{}", name)
+                format!("FfiConverterType{name}")
             }
             // Primitive types / strings are implemented by their rust type
             Type::Int8 => "i8".into(),

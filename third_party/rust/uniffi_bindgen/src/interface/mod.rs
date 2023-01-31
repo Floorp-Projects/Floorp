@@ -44,9 +44,13 @@
 //!
 //!   * Error messages and general developer experience leave a lot to be desired.
 
-use std::{collections::HashSet, convert::TryFrom, iter};
+use std::{
+    collections::{btree_map::Entry, BTreeMap, HashSet},
+    convert::TryFrom,
+    iter,
+};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Result};
 
 pub mod types;
 pub use types::Type;
@@ -71,18 +75,24 @@ mod record;
 pub use record::{Field, Record};
 
 pub mod ffi;
-pub use ffi::{FFIArgument, FFIFunction, FFIType};
-use uniffi_meta::{Checksum, MethodMetadata, ObjectMetadata};
+pub use ffi::{FfiArgument, FfiFunction, FfiType};
+use uniffi_meta::{Checksum, FnMetadata, MethodMetadata, ObjectMetadata};
+
+/// This needs to match the major/minor version of the `uniffi` crate.  See
+/// `docs/uniffi-versioning.md` for details.
+///
+/// Once we get to 1.0, then we should reformat this to only include the major version number.
+const UNIFFI_CONTRACT_VERSION: &str = "0.22";
 
 /// The main public interface for this module, representing the complete details of an interface exposed
 /// by a rust component and the details of consuming it via an extern-C FFI layer.
 ///
 #[derive(Debug, Default, Checksum)]
 pub struct ComponentInterface {
-    /// Every ComponentInterface gets tagged with the version of uniffi used to create it.
-    /// This helps us avoid using a lib compiled with one version together with bindings created
-    /// using a different version, which might introduce unsafety.
-    uniffi_version: String,
+    /// This always points to `UNIFFI_CONTRACT_VERSION`.  By including it in the checksum, we
+    /// prevent consumers from combining scaffolding and bindings that were created with different
+    /// `uniffi` versions.
+    uniffi_version: &'static str,
     /// All of the types used in the interface.
     // We can't checksum `self.types`, but its contents are implied by the other fields
     // anyway, so it's safe to ignore it.
@@ -94,19 +104,19 @@ pub struct ComponentInterface {
     #[checksum_ignore]
     ffi_namespace: String,
     /// The high-level API provided by the component.
-    enums: Vec<Enum>,
-    records: Vec<Record>,
+    enums: BTreeMap<String, Enum>,
+    records: BTreeMap<String, Record>,
     functions: Vec<Function>,
     objects: Vec<Object>,
     callback_interfaces: Vec<CallbackInterface>,
-    errors: Vec<Error>,
+    errors: BTreeMap<String, Error>,
 }
 
 impl ComponentInterface {
     /// Parse a `ComponentInterface` from a string containing a WebIDL definition.
     pub fn from_webidl(idl: &str) -> Result<Self> {
         let mut ci = Self {
-            uniffi_version: "0.21.0".to_string(),
+            uniffi_version: UNIFFI_CONTRACT_VERSION,
             ..Default::default()
         };
         // There's some lifetime thing with the errors returned from weedle::Definitions::parse
@@ -122,7 +132,7 @@ impl ComponentInterface {
             bail!("parse error");
         }
         // Unconditionally add the String type, which is used by the panic handling
-        ci.types.add_known_type(&Type::String);
+        ci.types.add_known_type(&Type::String)?;
         // We process the WebIDL definitions in two passes.
         // First, go through and look for all the named types.
         ci.types.add_type_definitions_from(defns.as_slice())?;
@@ -153,25 +163,23 @@ impl ComponentInterface {
     }
 
     /// Get the definitions for every Enum type in the interface.
-    pub fn enum_definitions(&self) -> &[Enum] {
-        &self.enums
+    pub fn enum_definitions(&self) -> impl Iterator<Item = &Enum> {
+        self.enums.values()
     }
 
     /// Get an Enum definition by name, or None if no such Enum is defined.
     pub fn get_enum_definition(&self, name: &str) -> Option<&Enum> {
-        // TODO: probably we could store these internally in a HashMap to make this easier?
-        self.enums.iter().find(|e| e.name == name)
+        self.enums.get(name)
     }
 
     /// Get the definitions for every Record type in the interface.
-    pub fn record_definitions(&self) -> &[Record] {
-        &self.records
+    pub fn record_definitions(&self) -> impl Iterator<Item = &Record> {
+        self.records.values()
     }
 
     /// Get a Record definition by name, or None if no such Record is defined.
     pub fn get_record_definition(&self, name: &str) -> Option<&Record> {
-        // TODO: probably we could store these internally in a HashMap to make this easier?
-        self.records.iter().find(|r| r.name == name)
+        self.records.get(name)
     }
 
     /// Get the definitions for every Function in the interface.
@@ -208,14 +216,13 @@ impl ComponentInterface {
     }
 
     /// Get the definitions for every Error type in the interface.
-    pub fn error_definitions(&self) -> &[Error] {
-        &self.errors
+    pub fn error_definitions(&self) -> impl Iterator<Item = &Error> {
+        self.errors.values()
     }
 
     /// Get an Error definition by name, or None if no such Error is defined.
     pub fn get_error_definition(&self, name: &str) -> Option<&Error> {
-        // TODO: probably we could store these internally in a HashMap to make this easier?
-        self.errors.iter().find(|e| e.name == name)
+        self.errors.get(name)
     }
 
     /// Should we generate read (and lift) functions for errors?
@@ -346,40 +353,40 @@ impl ComponentInterface {
     /// Builtin FFI function for allocating a new `RustBuffer`.
     /// This is needed so that the foreign language bindings can create buffers in which to pass
     /// complex data types across the FFI.
-    pub fn ffi_rustbuffer_alloc(&self) -> FFIFunction {
-        FFIFunction {
+    pub fn ffi_rustbuffer_alloc(&self) -> FfiFunction {
+        FfiFunction {
             name: format!("ffi_{}_rustbuffer_alloc", self.ffi_namespace()),
-            arguments: vec![FFIArgument {
+            arguments: vec![FfiArgument {
                 name: "size".to_string(),
-                type_: FFIType::Int32,
+                type_: FfiType::Int32,
             }],
-            return_type: Some(FFIType::RustBuffer),
+            return_type: Some(FfiType::RustBuffer(None)),
         }
     }
 
     /// Builtin FFI function for copying foreign-owned bytes
     /// This is needed so that the foreign language bindings can create buffers in which to pass
     /// complex data types across the FFI.
-    pub fn ffi_rustbuffer_from_bytes(&self) -> FFIFunction {
-        FFIFunction {
+    pub fn ffi_rustbuffer_from_bytes(&self) -> FfiFunction {
+        FfiFunction {
             name: format!("ffi_{}_rustbuffer_from_bytes", self.ffi_namespace()),
-            arguments: vec![FFIArgument {
+            arguments: vec![FfiArgument {
                 name: "bytes".to_string(),
-                type_: FFIType::ForeignBytes,
+                type_: FfiType::ForeignBytes,
             }],
-            return_type: Some(FFIType::RustBuffer),
+            return_type: Some(FfiType::RustBuffer(None)),
         }
     }
 
     /// Builtin FFI function for freeing a `RustBuffer`.
     /// This is needed so that the foreign language bindings can free buffers in which they received
     /// complex data types returned across the FFI.
-    pub fn ffi_rustbuffer_free(&self) -> FFIFunction {
-        FFIFunction {
+    pub fn ffi_rustbuffer_free(&self) -> FfiFunction {
+        FfiFunction {
             name: format!("ffi_{}_rustbuffer_free", self.ffi_namespace()),
-            arguments: vec![FFIArgument {
+            arguments: vec![FfiArgument {
                 name: "buf".to_string(),
-                type_: FFIType::RustBuffer,
+                type_: FfiType::RustBuffer(None),
             }],
             return_type: None,
         }
@@ -388,20 +395,20 @@ impl ComponentInterface {
     /// Builtin FFI function for reserving extra space in a `RustBuffer`.
     /// This is needed so that the foreign language bindings can grow buffers used for passing
     /// complex data types across the FFI.
-    pub fn ffi_rustbuffer_reserve(&self) -> FFIFunction {
-        FFIFunction {
+    pub fn ffi_rustbuffer_reserve(&self) -> FfiFunction {
+        FfiFunction {
             name: format!("ffi_{}_rustbuffer_reserve", self.ffi_namespace()),
             arguments: vec![
-                FFIArgument {
+                FfiArgument {
                     name: "buf".to_string(),
-                    type_: FFIType::RustBuffer,
+                    type_: FfiType::RustBuffer(None),
                 },
-                FFIArgument {
+                FfiArgument {
                     name: "additional".to_string(),
-                    type_: FFIType::Int32,
+                    type_: FfiType::Int32,
                 },
             ],
-            return_type: Some(FFIType::RustBuffer),
+            return_type: Some(FfiType::RustBuffer(None)),
         }
     }
 
@@ -409,7 +416,7 @@ impl ComponentInterface {
     ///
     /// The set of FFI functions is derived automatically from the set of higher-level types
     /// along with the builtin FFI helper functions.
-    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = FFIFunction> + '_ {
+    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = FfiFunction> + '_ {
         self.iter_user_ffi_function_definitions()
             .cloned()
             .chain(self.iter_rust_buffer_ffi_function_definitions())
@@ -421,7 +428,7 @@ impl ComponentInterface {
     ///   - Top-level functions
     ///   - Object methods
     ///   - Callback interfaces
-    pub fn iter_user_ffi_function_definitions(&self) -> impl Iterator<Item = &FFIFunction> + '_ {
+    pub fn iter_user_ffi_function_definitions(&self) -> impl Iterator<Item = &FfiFunction> + '_ {
         iter::empty()
             .chain(
                 self.objects
@@ -437,7 +444,7 @@ impl ComponentInterface {
     }
 
     /// List all FFI functions definitions for RustBuffer functionality
-    pub fn iter_rust_buffer_ffi_function_definitions(&self) -> impl Iterator<Item = FFIFunction> {
+    pub fn iter_rust_buffer_ffi_function_definitions(&self) -> impl Iterator<Item = FfiFunction> {
         [
             self.ffi_rustbuffer_alloc(),
             self.ffi_rustbuffer_from_bytes(),
@@ -455,7 +462,7 @@ impl ComponentInterface {
     ///
     /// This method uses the current state of our `TypeUniverse` to turn a weedle type expression
     /// into a concrete `Type` (or error if the type expression is not well defined). It abstracts
-    /// away the complexity of walking weedle's type struct heirarchy by dispatching to the `TypeResolver`
+    /// away the complexity of walking weedle's type struct hierarchy by dispatching to the `TypeResolver`
     /// trait.
     fn resolve_type_expression<T: types::TypeResolver>(&mut self, expr: T) -> Result<Type> {
         self.types.resolve_type_expression(expr)
@@ -494,26 +501,50 @@ impl ComponentInterface {
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed enum definition to the `ComponentInterface`.
-    fn add_enum_definition(&mut self, defn: Enum) {
-        // Note that there will be no duplicates thanks to the previous type-finding pass.
-        self.enums.push(defn);
+    pub(super) fn add_enum_definition(&mut self, defn: Enum) -> Result<()> {
+        match self.enums.entry(defn.name().to_owned()) {
+            Entry::Vacant(v) => {
+                v.insert(defn);
+            }
+            Entry::Occupied(o) => {
+                let existing_def = o.get();
+                if defn != *existing_def {
+                    bail!(
+                        "Mismatching definition for enum `{}`!\n\
+                        existing definition: {existing_def:#?},\n\
+                        new definition: {defn:#?}",
+                        defn.name(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed record definition to the `ComponentInterface`.
-    pub(super) fn add_record_definition(&mut self, defn: Record) {
-        // Note that there will be no duplicates thanks to the previous type-finding pass.
-        self.records.push(defn);
+    pub(super) fn add_record_definition(&mut self, defn: Record) -> Result<()> {
+        match self.records.entry(defn.name().to_owned()) {
+            Entry::Vacant(v) => {
+                v.insert(defn);
+            }
+            Entry::Occupied(o) => {
+                let existing_def = o.get();
+                if defn != *existing_def {
+                    bail!(
+                        "Mismatching definition for record `{}`!\n\
+                         existing definition: {existing_def:#?},\n\
+                         new definition: {defn:#?}",
+                        defn.name(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
     }
 
-    /// Called by `APIBuilder` impls to add a newly-parsed function definition to the `ComponentInterface`.
-    pub(super) fn add_function_definition(&mut self, defn: Function) -> Result<()> {
-        for arg in &defn.arguments {
-            self.types.add_known_type(&arg.type_);
-        }
-        if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty);
-        }
-
+    fn add_function_impl(&mut self, defn: Function) -> Result<()> {
         // Since functions are not a first-class type, we have to check for duplicates here
         // rather than relying on the type-finding pass to catch them.
         if self.functions.iter().any(|f| f.name == defn.name) {
@@ -523,19 +554,29 @@ impl ComponentInterface {
             bail!("Conflicting type definition for \"{}\"", defn.name());
         }
         self.functions.push(defn);
+
         Ok(())
     }
 
-    pub(super) fn add_method_definition(&mut self, meta: MethodMetadata) {
-        let object = get_or_insert_object(&mut self.objects, &meta.self_name);
-
-        let defn: Method = meta.into();
+    /// Called by `APIBuilder` impls to add a newly-parsed function definition to the `ComponentInterface`.
+    fn add_function_definition(&mut self, defn: Function) -> Result<()> {
         for arg in &defn.arguments {
-            self.types.add_known_type(&arg.type_);
+            self.types.add_known_type(&arg.type_)?;
         }
         if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty);
+            self.types.add_known_type(ty)?;
         }
+
+        self.add_function_impl(defn)
+    }
+
+    pub(super) fn add_fn_meta(&mut self, meta: FnMetadata) -> Result<()> {
+        self.add_function_impl(meta.into())
+    }
+
+    pub(super) fn add_method_meta(&mut self, meta: MethodMetadata) {
+        let object = get_or_insert_object(&mut self.objects, &meta.self_name);
+        let defn: Method = meta.into();
         object.methods.push(defn);
     }
 
@@ -557,9 +598,25 @@ impl ComponentInterface {
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed error definition to the `ComponentInterface`.
-    fn add_error_definition(&mut self, defn: Error) {
-        // Note that there will be no duplicates thanks to the previous type-finding pass.
-        self.errors.push(defn);
+    pub(super) fn add_error_definition(&mut self, defn: Error) -> Result<()> {
+        match self.errors.entry(defn.name().to_owned()) {
+            Entry::Vacant(v) => {
+                v.insert(defn);
+            }
+            Entry::Occupied(o) => {
+                let existing_def = o.get();
+                if defn != *existing_def {
+                    bail!(
+                        "Mismatching definition for error `{}`!\n\
+                         existing definition: {existing_def:#?},\n\
+                         new definition: {defn:#?}",
+                        defn.name(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Resolve unresolved types within proc-macro function / method signatures.
@@ -603,7 +660,22 @@ impl ComponentInterface {
             })
         });
 
-        for ty in fn_sig_types.chain(method_sig_types) {
+        let record_fields_types = self
+            .records
+            .values_mut()
+            .flat_map(|r| r.fields.iter_mut().map(|f| &mut f.type_));
+        let enum_fields_types = self.enums.values_mut().flat_map(|e| {
+            e.variants
+                .iter_mut()
+                .flat_map(|r| r.fields.iter_mut().map(|f| &mut f.type_))
+        });
+
+        let possibly_unresolved_types = fn_sig_types
+            .chain(method_sig_types)
+            .chain(record_fields_types)
+            .chain(enum_fields_types);
+
+        for ty in possibly_unresolved_types {
             handle_unresolved_in(ty, |unresolved_ty_name| {
                 match self.types.get_type_definition(unresolved_ty_name) {
                     Some(def) => {
@@ -616,6 +688,11 @@ impl ComponentInterface {
                     None => bail!("Failed to resolve type `{unresolved_ty_name}`"),
                 }
             })?;
+
+            // The proc-macro scanning metadata code doesn't add known types
+            // when they could contain unresolved types, so we have to do it
+            // here after replacing unresolveds.
+            self.types.add_known_type(ty)?;
         }
 
         Ok(())
@@ -630,8 +707,9 @@ impl ComponentInterface {
         if self.namespace.is_empty() {
             bail!("missing namespace definition");
         }
+
         // To keep codegen tractable, enum variant names must not shadow type names.
-        for e in &self.enums {
+        for e in self.enums.values() {
             for variant in &e.variants {
                 if self.types.get_type_definition(variant.name()).is_some() {
                     bail!(
@@ -641,6 +719,34 @@ impl ComponentInterface {
                 }
             }
         }
+
+        for ty in self.iter_types() {
+            match ty {
+                Type::Object(name) => {
+                    ensure!(
+                        self.objects.iter().any(|o| o.name == *name),
+                        "Object `{name}` has no definition",
+                    );
+                }
+                Type::Record(name) => {
+                    ensure!(
+                        self.records.contains_key(name),
+                        "Record `{name}` has no definition",
+                    );
+                }
+                Type::Enum(name) => {
+                    ensure!(
+                        self.enums.contains_key(name),
+                        "Enum `{name}` has no definition",
+                    );
+                }
+                Type::Unresolved { name } => {
+                    bail!("Type `{name}` should be resolved at this point");
+                }
+                _ => {}
+            }
+        }
+
         Ok(())
     }
 
@@ -810,24 +916,24 @@ impl APIBuilder for weedle::Definition<'_> {
                 let attrs = attributes::EnumAttributes::try_from(d.attributes.as_ref())?;
                 if attrs.contains_error_attr() {
                     let err = d.convert(ci)?;
-                    ci.add_error_definition(err);
+                    ci.add_error_definition(err)?;
                 } else {
                     let e = d.convert(ci)?;
-                    ci.add_enum_definition(e);
+                    ci.add_enum_definition(e)?;
                 }
             }
             weedle::Definition::Dictionary(d) => {
                 let rec = d.convert(ci)?;
-                ci.add_record_definition(rec);
+                ci.add_record_definition(rec)?;
             }
             weedle::Definition::Interface(d) => {
                 let attrs = attributes::InterfaceAttributes::try_from(d.attributes.as_ref())?;
                 if attrs.contains_enum_attr() {
                     let e = d.convert(ci)?;
-                    ci.add_enum_definition(e);
+                    ci.add_enum_definition(e)?;
                 } else if attrs.contains_error_attr() {
                     let e = d.convert(ci)?;
-                    ci.add_error_definition(e);
+                    ci.add_error_definition(e)?;
                 } else {
                     let obj = d.convert(ci)?;
                     ci.add_object_definition(obj);
@@ -948,7 +1054,7 @@ mod test {
         for udl in &[UDL1, UDL2] {
             let ci1 = ComponentInterface::from_webidl(udl).unwrap();
             let mut ci2 = ComponentInterface::from_webidl(udl).unwrap();
-            ci2.uniffi_version = String::from("fake-version");
+            ci2.uniffi_version = "99.99";
             assert_ne!(ci1.checksum(), ci2.checksum());
         }
     }
@@ -967,7 +1073,9 @@ mod test {
         let err = ComponentInterface::from_webidl(UDL).unwrap_err();
         assert_eq!(
             err.to_string(),
-            "Conflicting type definition for \"Testing\""
+            "Conflicting type definition for `Testing`! \
+             existing definition: Object(\"Testing\"), \
+             new definition: Record(\"Testing\")"
         );
 
         const UDL2: &str = r#"
@@ -981,7 +1089,9 @@ mod test {
         let err = ComponentInterface::from_webidl(UDL2).unwrap_err();
         assert_eq!(
             err.to_string(),
-            "Conflicting type definition for \"Testing\""
+            "Conflicting type definition for `Testing`! \
+             existing definition: Enum(\"Testing\"), \
+             new definition: Error(\"Testing\")"
         );
 
         const UDL3: &str = r#"

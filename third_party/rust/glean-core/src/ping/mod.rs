@@ -37,7 +37,7 @@ pub struct PingMaker;
 
 fn merge(a: &mut JsonValue, b: &JsonValue) {
     match (a, b) {
-        (&mut JsonValue::Object(ref mut a), &JsonValue::Object(ref b)) => {
+        (&mut JsonValue::Object(ref mut a), JsonValue::Object(b)) => {
             for (k, v) in b {
                 merge(a.entry(k.clone()).or_insert(JsonValue::Null), v);
             }

@@ -17,7 +17,7 @@
 //!
 //! # License
 //!
-//! MIT. Copyright (c) 2021 Jan-Erik Rediger
+//! MIT. Copyright (c) 2021-2022 Jan-Erik Rediger
 //!
 //! Based on:
 //!
@@ -28,7 +28,7 @@
 //! [sysinfo-mit]: https://github.com/GuillaumeGomez/sysinfo/blob/master/LICENSE
 
 #![deny(missing_docs)]
-#![deny(broken_intra_doc_links)]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "macos")] {
@@ -49,6 +49,9 @@ cfg_if::cfg_if! {
 
 pub use system::kernel_version;
 
+#[cfg(target_os = "windows")]
+pub use system::windows_build_number;
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -56,5 +59,12 @@ mod test {
     #[test]
     fn gets_a_version() {
         assert!(kernel_version().is_some());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_windows_build_number() {
+        let build_number = windows::windows_build_number();
+        assert!(build_number.is_some());
     }
 }

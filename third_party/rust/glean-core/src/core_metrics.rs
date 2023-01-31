@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::metrics::{Datetime, DatetimeMetric, StringMetric, TimeUnit, TimespanMetric};
+use crate::metrics::{
+    Datetime, DatetimeMetric, QuantityMetric, StringMetric, TimeUnit, TimespanMetric,
+};
 use crate::{CommonMetricData, Lifetime};
 
 use once_cell::sync::Lazy;
@@ -26,6 +28,8 @@ pub struct ClientInfoMetrics {
     pub channel: Option<String>,
     /// The Android specific SDK version of the software running on this hardware device (e.g. "23").
     pub android_sdk_version: Option<String>,
+    /// The Windows specific OS build version (e.g. 19043)
+    pub windows_build_number: Option<i64>,
     /// The manufacturer of the device the application is running on.
     /// Not set if the device manufacturer can't be determined (e.g. on Desktop).
     pub device_manufacturer: Option<String>,
@@ -50,6 +54,7 @@ impl ClientInfoMetrics {
             os_version: "Unknown".to_string(),
             channel: Some("Unknown".to_string()),
             android_sdk_version: None,
+            windows_build_number: None,
             device_manufacturer: None,
             device_model: None,
             locale: None,
@@ -133,6 +138,17 @@ pub mod internal_metrics {
     pub static android_sdk_version: Lazy<StringMetric> = Lazy::new(|| {
         StringMetric::new(CommonMetricData {
             name: "android_sdk_version".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    pub static windows_build_number: Lazy<QuantityMetric> = Lazy::new(|| {
+        QuantityMetric::new(CommonMetricData {
+            name: "windows_build_number".into(),
             category: "".into(),
             send_in_pings: vec!["glean_client_info".into()],
             lifetime: Lifetime::Application,

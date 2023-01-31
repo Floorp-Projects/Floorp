@@ -27,7 +27,7 @@ class {{ obj.name()|class_name_rb }}
   # object in a place where this type is expected, could lead to memory unsafety.
   def self._uniffi_lower(inst)
     if not inst.is_a? self
-      raise TypeError.new "Expected a {{ obj.name()|class_name_rb }} intance, got #{inst}"
+      raise TypeError.new "Expected a {{ obj.name()|class_name_rb }} instance, got #{inst}"
     end
     return inst.instance_variable_get :@pointer
   end

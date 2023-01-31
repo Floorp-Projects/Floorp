@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_meta"
-version = "0.21.1"
+version = "0.23.0"
 description = "uniffi_meta"
 homepage = "https://mozilla.github.io/uniffi-rs"
 keywords = [
@@ -30,4 +30,4 @@ features = ["derive"]
 version = "0.3"
 
 [dependencies.uniffi_checksum_derive]
-version = "0.21.0"
+version = "0.23.0"

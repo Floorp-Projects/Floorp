@@ -53,7 +53,7 @@
 {%- endmacro %}
 
 {#-
-// Arglist as used in the UniFFILib function declations.
+// Arglist as used in the UniFFILib function declarations.
 // Note unfiltered name but type_ffi filters.
 -#}
 {%- macro arg_list_ffi_decl(func) %}

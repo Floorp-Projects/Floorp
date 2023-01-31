@@ -60,7 +60,7 @@ def py_{{ foreign_callback }}(handle, method, args, buf_ptr):
             {%- match meth.throws_type() %}
             {%- when Some(err) %}
             try:
-                # Sucessful return
+                # Successful return
                 buf_ptr[0] = {{ method_name }}(cb, args)
                 return 1
             except {{ err|type_name }} as e:
@@ -70,7 +70,7 @@ def py_{{ foreign_callback }}(handle, method, args, buf_ptr):
                     buf_ptr[0] = builder.finalize()
                 return -2
             {%- else %}
-            # Sucessful return
+            # Successful return
             buf_ptr[0] = {{ method_name }}(cb, args)
             return 1
             {%- endmatch %}

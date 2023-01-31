@@ -10,7 +10,7 @@
 
 mod common;
 
-use glean::Configuration;
+use glean::ConfigurationBuilder;
 
 /// Some user metrics.
 mod metrics {
@@ -59,17 +59,9 @@ fn simple_lifecycle() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().to_path_buf();
 
-    let cfg = Configuration {
-        data_path: tmpname,
-        application_id: "firefox-desktop".into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-        server_endpoint: Some("invalid-test-host".into()),
-        uploader: None,
-        use_core_mps: false,
-        trim_data_to_registered_pings: false,
-    };
+    let cfg = ConfigurationBuilder::new(true, tmpname, "firefox-desktop")
+        .with_server_endpoint("invalid-test-host")
+        .build();
     common::initialize(cfg);
 
     metrics::initialization.stop();

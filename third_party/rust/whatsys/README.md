@@ -3,7 +3,7 @@
 [![Crates.io version](https://img.shields.io/crates/v/whatsys.svg?style=flat-square)](https://crates.io/crates/whatsys)
 [![docs.rs docs](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/whatsys)
 [![License: MIT](https://img.shields.io/github/license/badboy/whatsys?style=flat-square)](LICENSE)
-[![Build Status](https://img.shields.io/github/workflow/status/badboy/whatsys/CI?style=flat-square)](https://github.com/badboy/whatsys/actions?query=workflow%3ACI)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/badboy/whatsys/ci.yml?branch=main&style=flat-square)](https://github.com/badboy/whatsys/actions/workflows/ci.yml?query=workflow%3ACI)
 
 What kernel version is running?
 

@@ -4,5 +4,5 @@
  */
 
 fn main() {
-    uniffi_build::generate_scaffolding("./src/errorsupport.udl").unwrap();
+    uniffi::generate_scaffolding("./src/errorsupport.udl").unwrap();
 }

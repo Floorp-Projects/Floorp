@@ -343,7 +343,7 @@ mod tests {
     {
         let tmpdir = tempdir().unwrap();
         let path = tmpdir.path().join("source.db");
-        init_source_db(&path, f);
+        init_source_db(path, f);
 
         // now migrate
         let mut db = new_mem_db();

@@ -346,7 +346,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                7, // tabs:tabs_edc9_TabsBridgedEngine_last_sync
+                7, // tabs:tabs_dffd_TabsBridgedEngine_last_sync
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -370,7 +370,7 @@ class TabsBridgedEngine {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                8, // tabs:tabs_edc9_TabsBridgedEngine_set_last_sync
+                8, // tabs:tabs_dffd_TabsBridgedEngine_set_last_sync
                 FfiConverterTypeTabsBridgedEngine.lower(this),
                 FfiConverterI64.lower(lastSync),
             )
@@ -387,7 +387,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                9, // tabs:tabs_edc9_TabsBridgedEngine_sync_id
+                9, // tabs:tabs_dffd_TabsBridgedEngine_sync_id
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -403,7 +403,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                10, // tabs:tabs_edc9_TabsBridgedEngine_reset_sync_id
+                10, // tabs:tabs_dffd_TabsBridgedEngine_reset_sync_id
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -427,7 +427,7 @@ class TabsBridgedEngine {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                11, // tabs:tabs_edc9_TabsBridgedEngine_ensure_current_sync_id
+                11, // tabs:tabs_dffd_TabsBridgedEngine_ensure_current_sync_id
                 FfiConverterTypeTabsBridgedEngine.lower(this),
                 FfiConverterString.lower(newSyncId),
             )
@@ -452,7 +452,7 @@ class TabsBridgedEngine {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                12, // tabs:tabs_edc9_TabsBridgedEngine_prepare_for_sync
+                12, // tabs:tabs_dffd_TabsBridgedEngine_prepare_for_sync
                 FfiConverterTypeTabsBridgedEngine.lower(this),
                 FfiConverterString.lower(clientData),
             )
@@ -469,7 +469,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                13, // tabs:tabs_edc9_TabsBridgedEngine_sync_started
+                13, // tabs:tabs_dffd_TabsBridgedEngine_sync_started
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -493,7 +493,7 @@ class TabsBridgedEngine {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                14, // tabs:tabs_edc9_TabsBridgedEngine_store_incoming
+                14, // tabs:tabs_dffd_TabsBridgedEngine_store_incoming
                 FfiConverterTypeTabsBridgedEngine.lower(this),
                 FfiConverterSequencestring.lower(incomingEnvelopesAsJson),
             )
@@ -510,7 +510,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                15, // tabs:tabs_edc9_TabsBridgedEngine_apply
+                15, // tabs:tabs_dffd_TabsBridgedEngine_apply
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -542,7 +542,7 @@ class TabsBridgedEngine {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                16, // tabs:tabs_edc9_TabsBridgedEngine_set_uploaded
+                16, // tabs:tabs_dffd_TabsBridgedEngine_set_uploaded
                 FfiConverterTypeTabsBridgedEngine.lower(this),
                 FfiConverterI64.lower(newTimestamp),
                 FfiConverterSequenceTypeTabsGuid.lower(uploadedIds),
@@ -560,7 +560,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                17, // tabs:tabs_edc9_TabsBridgedEngine_sync_finished
+                17, // tabs:tabs_dffd_TabsBridgedEngine_sync_finished
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -576,7 +576,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                18, // tabs:tabs_edc9_TabsBridgedEngine_reset
+                18, // tabs:tabs_dffd_TabsBridgedEngine_reset
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -592,7 +592,7 @@ class TabsBridgedEngine {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                19, // tabs:tabs_edc9_TabsBridgedEngine_wipe
+                19, // tabs:tabs_dffd_TabsBridgedEngine_wipe
                 FfiConverterTypeTabsBridgedEngine.lower(this),
             )
         }
@@ -666,7 +666,7 @@ class TabsStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                0, // tabs:tabs_edc9_TabsStore_new
+                0, // tabs:tabs_dffd_TabsStore_new
                 FfiConverterString.lower(path),
             )
         }
@@ -681,7 +681,7 @@ class TabsStore {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                1, // tabs:tabs_edc9_TabsStore_get_all
+                1, // tabs:tabs_dffd_TabsStore_get_all
                 FfiConverterTypeTabsStore.lower(this),
             )
         }
@@ -705,7 +705,7 @@ class TabsStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                2, // tabs:tabs_edc9_TabsStore_set_local_tabs
+                2, // tabs:tabs_dffd_TabsStore_set_local_tabs
                 FfiConverterTypeTabsStore.lower(this),
                 FfiConverterSequenceTypeRemoteTabRecord.lower(remoteTabs),
             )
@@ -722,7 +722,7 @@ class TabsStore {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                3, // tabs:tabs_edc9_TabsStore_register_with_sync_manager
+                3, // tabs:tabs_dffd_TabsStore_register_with_sync_manager
                 FfiConverterTypeTabsStore.lower(this),
             )
         }
@@ -738,7 +738,7 @@ class TabsStore {
         const liftError = (data) => FfiConverterTypeTabsApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                4, // tabs:tabs_edc9_TabsStore_reset
+                4, // tabs:tabs_dffd_TabsStore_reset
                 FfiConverterTypeTabsStore.lower(this),
             )
         }
@@ -794,7 +794,7 @@ class TabsStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                5, // tabs:tabs_edc9_TabsStore_sync
+                5, // tabs:tabs_dffd_TabsStore_sync
                 FfiConverterTypeTabsStore.lower(this),
                 FfiConverterString.lower(keyId),
                 FfiConverterString.lower(accessToken),
@@ -815,7 +815,7 @@ class TabsStore {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                6, // tabs:tabs_edc9_TabsStore_bridged_engine
+                6, // tabs:tabs_dffd_TabsStore_bridged_engine
                 FfiConverterTypeTabsStore.lower(this),
             )
         }

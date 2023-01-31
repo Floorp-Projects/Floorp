@@ -13,7 +13,7 @@ import json
 
 import jinja2
 from glean_parser import util
-from glean_parser.metrics import CowString, Rate
+from glean_parser.metrics import CowString, Event, Rate
 from util import generate_metric_ids, generate_ping_ids, get_metrics
 
 from js import ID_BITS, ID_SIGNAL_BITS
@@ -126,7 +126,7 @@ def type_name(obj):
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
         for name, suffix in generate_enums:
-            if not len(getattr(obj, name)) and suffix == "Keys":
+            if not len(getattr(obj, name)) and isinstance(obj, Event):
                 return class_name(obj.type) + "<NoExtraKeys>"
             else:
                 # we always use the `extra` suffix,

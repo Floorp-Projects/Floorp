@@ -6,11 +6,13 @@
 
 """Console script for glean_parser."""
 
+import datetime
 import io
 from pathlib import Path
 import sys
 
 import click
+import json
 
 
 import glean_parser
@@ -181,6 +183,67 @@ def glinter(input, allow_reserved, allow_missing_files, require_tags):
 
 
 @click.command()
+@click.argument(
+    "input",
+    type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+    nargs=-1,
+)
+@click.option(
+    "--allow-reserved",
+    is_flag=True,
+    help=(
+        "If provided, allow the use of reserved fields. "
+        "Should only be set when building the Glean library itself."
+    ),
+)
+@click.option(
+    "--allow-missing-files",
+    is_flag=True,
+    help=("Do not treat missing input files as an error."),
+)
+@click.option(
+    "--require-tags",
+    is_flag=True,
+    help=("Require tags to be specified for metrics and pings."),
+)
+def dump(input, allow_reserved, allow_missing_files, require_tags):
+    """
+    Dump the list of metrics/pings as JSON to stdout.
+    """
+
+    results = glean_parser.parser.parse_objects(
+        [Path(x) for x in input],
+        {
+            "allow_reserved": allow_reserved,
+            "allow_missing_files": allow_missing_files,
+            "require_tags": require_tags,
+        },
+    )
+    errs = list(results)
+    assert len(errs) == 0
+
+    metrics = {
+        metric.identifier(): metric.serialize()
+        for category, probes in results.value.items()
+        for probe_name, metric in probes.items()
+    }
+
+    def date_serializer(o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat()
+
+    print(
+        json.dumps(
+            metrics,
+            sort_keys=True,
+            indent=2,
+            separators=(",", ": "),
+            default=date_serializer,
+        )
+    )
+
+
+@click.command()
 @click.option(
     "-c",
     "--coverage_file",
@@ -261,6 +324,7 @@ def main(args=None):
 main.add_command(translate)
 main.add_command(check)
 main.add_command(glinter)
+main.add_command(dump)
 main.add_command(coverage)
 main.add_command(data_review_request, "data-review")
 

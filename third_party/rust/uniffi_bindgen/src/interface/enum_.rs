@@ -88,11 +88,11 @@ use super::{APIConverter, ComponentInterface};
 ///
 /// Enums are passed across the FFI by serializing to a bytebuffer, with a
 /// i32 indicating the variant followed by the serialization of each field.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, PartialEq, Eq, Checksum)]
 pub struct Enum {
     pub(super) name: String,
     pub(super) variants: Vec<Variant>,
-    // "Flat" enums do not have, and will never have, variants with associated data.
+    // "Flat" enums do not have variants with associated data.
     pub(super) flat: bool,
 }
 
@@ -102,13 +102,13 @@ impl Enum {
     }
 
     pub fn type_(&self) -> Type {
-        // *sigh* at the clone here, the relationship between a ComponentInterace
+        // *sigh* at the clone here, the relationship between a ComponentInterface
         // and its contained types could use a bit of a cleanup.
         Type::Enum(self.name.clone())
     }
 
-    pub fn variants(&self) -> Vec<&Variant> {
-        self.variants.iter().collect()
+    pub fn variants(&self) -> &[Variant] {
+        &self.variants
     }
 
     pub fn is_flat(&self) -> bool {
@@ -117,6 +117,17 @@ impl Enum {
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.variants.iter().flat_map(Variant::iter_types))
+    }
+}
+
+impl From<uniffi_meta::EnumMetadata> for Enum {
+    fn from(meta: uniffi_meta::EnumMetadata) -> Self {
+        let flat = meta.variants.iter().all(|v| v.fields.is_empty());
+        Self {
+            name: meta.name,
+            variants: meta.variants.into_iter().map(Into::into).collect(),
+            flat,
+        }
     }
 }
 
@@ -148,7 +159,7 @@ impl APIConverter<Enum> for weedle::EnumDefinition<'_> {
 impl APIConverter<Enum> for weedle::InterfaceDefinition<'_> {
     fn convert(&self, ci: &mut ComponentInterface) -> Result<Enum> {
         if self.inheritance.is_some() {
-            bail!("interface inheritence is not supported for enum interfaces");
+            bail!("interface inheritance is not supported for enum interfaces");
         }
         // We don't need to check `self.attributes` here; if calling code has dispatched
         // to this impl then we already know there was an `[Enum]` attribute.
@@ -175,7 +186,7 @@ impl APIConverter<Enum> for weedle::InterfaceDefinition<'_> {
 /// Represents an individual variant in an Enum.
 ///
 /// Each variant has a name and zero or more fields.
-#[derive(Debug, Clone, Default, Checksum)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Checksum)]
 pub struct Variant {
     pub(super) name: String,
     pub(super) fields: Vec<Field>,
@@ -185,8 +196,9 @@ impl Variant {
     pub fn name(&self) -> &str {
         &self.name
     }
-    pub fn fields(&self) -> Vec<&Field> {
-        self.fields.iter().collect()
+
+    pub fn fields(&self) -> &[Field] {
+        &self.fields
     }
 
     pub fn has_fields(&self) -> bool {
@@ -195,6 +207,15 @@ impl Variant {
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.fields.iter().flat_map(Field::iter_types))
+    }
+}
+
+impl From<uniffi_meta::VariantMetadata> for Variant {
+    fn from(meta: uniffi_meta::VariantMetadata) -> Self {
+        Self {
+            name: meta.name,
+            fields: meta.fields.into_iter().map(Into::into).collect(),
+        }
     }
 }
 
@@ -219,7 +240,7 @@ impl APIConverter<Variant> for weedle::interface::OperationInterfaceMember<'_> {
             };
             match &self.return_type {
                 ReturnType::Type(Single(NonAny(Identifier(id)))) => id.type_.0.to_owned(),
-                _ => bail!("enum interface members must have plain identifers as names"),
+                _ => bail!("enum interface members must have plain identifiers as names"),
             }
         };
         Ok(Variant {
@@ -261,7 +282,6 @@ impl APIConverter<Field> for weedle::argument::SingleArgument<'_> {
         Ok(Field {
             name: self.identifier.0.to_string(),
             type_,
-            required: false,
             default: None,
         })
     }
@@ -269,7 +289,7 @@ impl APIConverter<Field> for weedle::argument::SingleArgument<'_> {
 
 #[cfg(test)]
 mod test {
-    use super::super::ffi::FFIType;
+    use super::super::ffi::FfiType;
     use super::*;
 
     #[test]
@@ -281,7 +301,7 @@ mod test {
             enum Testing { "one", "two", "one" };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.enum_definitions().len(), 1);
+        assert_eq!(ci.enum_definitions().count(), 1);
         assert_eq!(
             ci.get_enum_definition("Testing").unwrap().variants().len(),
             3
@@ -314,7 +334,7 @@ mod test {
             };
         "##;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.enum_definitions().len(), 3);
+        assert_eq!(ci.enum_definitions().count(), 3);
         assert_eq!(ci.function_definitions().len(), 4);
 
         // The "flat" enum with no associated data.
@@ -386,12 +406,15 @@ mod test {
         // difficult atop the current factoring of `ComponentInterface` and friends).
         let farg = ci.get_function_definition("takes_an_enum").unwrap();
         assert_eq!(*farg.arguments()[0].type_(), Type::Enum("TestEnum".into()));
-        assert_eq!(farg.ffi_func().arguments()[0].type_(), FFIType::RustBuffer);
+        assert_eq!(
+            farg.ffi_func().arguments()[0].type_(),
+            FfiType::RustBuffer(None)
+        );
         let fret = ci.get_function_definition("returns_an_enum").unwrap();
         assert!(matches!(fret.return_type(), Some(Type::Enum(nm)) if nm == "TestEnum"));
         assert!(matches!(
             fret.ffi_func().return_type(),
-            Some(FFIType::RustBuffer)
+            Some(FfiType::RustBuffer(None))
         ));
 
         // Enums with associated data pass over the FFI as bytebuffers.
@@ -402,14 +425,17 @@ mod test {
             *farg.arguments()[0].type_(),
             Type::Enum("TestEnumWithData".into())
         );
-        assert_eq!(farg.ffi_func().arguments()[0].type_(), FFIType::RustBuffer);
+        assert_eq!(
+            farg.ffi_func().arguments()[0].type_(),
+            FfiType::RustBuffer(None)
+        );
         let fret = ci
             .get_function_definition("returns_an_enum_with_data")
             .unwrap();
         assert!(matches!(fret.return_type(), Some(Type::Enum(nm)) if nm == "TestEnumWithData"));
         assert!(matches!(
             fret.ffi_func().return_type(),
-            Some(FFIType::RustBuffer)
+            Some(FfiType::RustBuffer(None))
         ));
     }
 }

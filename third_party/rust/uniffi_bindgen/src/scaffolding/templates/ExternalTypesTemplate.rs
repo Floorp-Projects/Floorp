@@ -27,7 +27,7 @@ pub struct FfiConverterType{{ name }};
 
 unsafe impl uniffi::FfiConverter for FfiConverterType{{ name }} {
     type RustType = r#{{ name }};
-    type FfiType = {{ FFIType::from(builtin).borrow()|type_ffi }};
+    type FfiType = {{ FfiType::from(builtin).borrow()|type_ffi }};
 
     fn lower(obj: {{ name }} ) -> Self::FfiType {
         <{{ builtin|type_rs }} as uniffi::FfiConverter>::lower(<{{ name }} as UniffiCustomTypeConverter>::from_custom(obj))

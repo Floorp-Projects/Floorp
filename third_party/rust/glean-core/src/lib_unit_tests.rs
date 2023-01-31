@@ -1075,6 +1075,6 @@ fn test_activity_api() {
     // Signal back that client is ianctive.
     glean.handle_client_inactive();
 
-    // Check that we set everything we needed for the 'inactuve' status.
+    // Check that we set everything we needed for the 'inactive' status.
     assert!(!glean.is_dirty_flag_set());
 }

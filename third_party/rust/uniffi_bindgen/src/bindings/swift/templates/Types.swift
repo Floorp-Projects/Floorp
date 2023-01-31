@@ -12,7 +12,7 @@
  # Rust code.
  #
  #   - When adding additional types here, make sure to also add a match arm to that function.
- #   - To keep things managable, let's try to limit ourselves to these 2 mega-matches
+ #   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
  #}
 {%- match type_ %}
 
@@ -84,7 +84,6 @@
 
 {%- when Type::Map(key_type, value_type) %}
 {%- include "MapTemplate.swift" %}
-
 
 {%- else %}
 {%- endmatch %}

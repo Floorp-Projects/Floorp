@@ -4,8 +4,8 @@
 
 use uniffi_meta::MethodMetadata;
 
-use super::convert::{fn_param_metadata, return_type_metadata, type_as_type_path};
-use crate::export::{ExportItem, Method};
+use super::convert::{convert_return_type, fn_param_metadata, type_as_type_path};
+use crate::export::{ExportItem, Method, Signature};
 
 pub(super) fn gen_impl_metadata(
     item: syn::ItemImpl,
@@ -54,8 +54,8 @@ fn gen_method_metadata(
     self_name: &str,
     mod_path: &[String],
 ) -> syn::Result<Method> {
-    let item = match it {
-        syn::ImplItem::Method(m) => m,
+    let sig = match it {
+        syn::ImplItem::Method(m) => Signature::new(m.sig)?,
         _ => {
             return Err(syn::Error::new_spanned(
                 it,
@@ -64,21 +64,30 @@ fn gen_method_metadata(
         }
     };
 
-    let metadata = method_metadata(self_name, &item, mod_path)?;
+    let metadata = method_metadata(self_name, &sig, mod_path)?;
 
-    Ok(Method { item, metadata })
+    Ok(Method { sig, metadata })
 }
 
 fn method_metadata(
     self_name: &str,
-    f: &syn::ImplItemMethod,
+    sig: &Signature,
     mod_path: &[String],
 ) -> syn::Result<MethodMetadata> {
+    let (return_type, throws) = match &sig.output {
+        Some(ret) => (
+            convert_return_type(&ret.ty)?,
+            ret.throws.as_ref().map(ToString::to_string),
+        ),
+        None => (None, None),
+    };
+
     Ok(MethodMetadata {
         module_path: mod_path.to_owned(),
         self_name: self_name.to_owned(),
-        name: f.sig.ident.to_string(),
-        inputs: fn_param_metadata(&f.sig.inputs)?,
-        return_type: return_type_metadata(&f.sig.output)?,
+        name: sig.ident.to_string(),
+        inputs: fn_param_metadata(&sig.inputs)?,
+        return_type,
+        throws,
     })
 }

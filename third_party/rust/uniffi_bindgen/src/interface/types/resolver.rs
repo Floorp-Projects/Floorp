@@ -18,13 +18,13 @@ use super::{Type, TypeUniverse};
 
 /// Trait to help resolving an UDL type node to a [`Type`].
 ///
-/// Ths trait does structural matching against type-related weedle AST nodes from
+/// This trait does structural matching against type-related weedle AST nodes from
 /// a parsed UDL file, turning them into a corresponding [`Type`] struct. It uses the
 /// known type definitions in a [`TypeUniverse`] to resolve names to types.
 ///
 /// As a side-effect, resolving a type expression will grow the type universe with
-/// references to the types seem during traversal. For example resolving the type
-/// expression "sequence<TestRecord>?" will:
+/// references to the types seen during traversal. For example resolving the type
+/// expression `sequence<<TestRecord>?` will:
 ///
 ///   * add `Optional<Sequence<TestRecord>` and `Sequence<TestRecord>` to the
 ///     known types in the universe.
@@ -91,7 +91,7 @@ impl<T: TypeResolver> TypeResolver for weedle::types::MayBeNull<T> {
             None => Ok(type_),
             Some(_) => {
                 let ty = Type::Optional(Box::new(type_));
-                types.add_known_type(&ty);
+                types.add_known_type(&ty)?;
                 Ok(ty)
             }
         }
@@ -120,7 +120,7 @@ impl TypeResolver for weedle::types::SequenceType<'_> {
     fn resolve_type_expression(&self, types: &mut TypeUniverse) -> Result<Type> {
         let t = self.generics.body.as_ref().resolve_type_expression(types)?;
         let ty = Type::Sequence(Box::new(t));
-        types.add_known_type(&ty);
+        types.add_known_type(&ty)?;
         Ok(ty)
     }
 }
@@ -134,7 +134,7 @@ impl TypeResolver for weedle::types::RecordKeyType<'_> {
                  consider using DOMString or string",
             ),
             DOM(_) => {
-                types.add_known_type(&Type::String);
+                types.add_known_type(&Type::String)?;
                 Ok(Type::String)
             }
             NonAny(t) => t.resolve_type_expression(types),
@@ -147,7 +147,7 @@ impl TypeResolver for weedle::types::RecordType<'_> {
         let key_type = self.generics.body.0.resolve_type_expression(types)?;
         let value_type = self.generics.body.2.resolve_type_expression(types)?;
         let map = Type::Map(Box::new(key_type), Box::new(value_type));
-        types.add_known_type(&map);
+        types.add_known_type(&map)?;
         Ok(map)
     }
 }
@@ -156,12 +156,12 @@ impl TypeResolver for weedle::common::Identifier<'_> {
     fn resolve_type_expression(&self, types: &mut TypeUniverse) -> Result<Type> {
         match resolve_builtin_type(self.0) {
             Some(type_) => {
-                types.add_known_type(&type_);
+                types.add_known_type(&type_)?;
                 Ok(type_)
             }
             None => match types.get_type_definition(self.0) {
                 Some(type_) => {
-                    types.add_known_type(&type_);
+                    types.add_known_type(&type_)?;
                     Ok(type_)
                 }
                 None => bail!("unknown type reference: {}", self.0),
@@ -172,7 +172,7 @@ impl TypeResolver for weedle::common::Identifier<'_> {
 
 impl TypeResolver for weedle::term::Boolean {
     fn resolve_type_expression(&self, types: &mut TypeUniverse) -> Result<Type> {
-        types.add_known_type(&Type::Boolean);
+        types.add_known_type(&Type::Boolean)?;
         Ok(Type::Boolean)
     }
 }
@@ -182,7 +182,7 @@ impl TypeResolver for weedle::types::FloatType {
         if self.unrestricted.is_some() {
             bail!("we don't support `unrestricted float`");
         }
-        types.add_known_type(&Type::Float32);
+        types.add_known_type(&Type::Float32)?;
         Ok(Type::Float32)
     }
 }
@@ -192,7 +192,7 @@ impl TypeResolver for weedle::types::DoubleType {
         if self.unrestricted.is_some() {
             bail!("we don't support `unrestricted double`");
         }
-        types.add_known_type(&Type::Float64);
+        types.add_known_type(&Type::Float64)?;
         Ok(Type::Float64)
     }
 }

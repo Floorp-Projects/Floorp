@@ -92,31 +92,20 @@ def type_name(obj: Union[metrics.Metric, pings.Ping]) -> str:
     """
     generate_enums = getattr(obj, "_generate_enums", [])
     if len(generate_enums):
-        template_args = []
+        generic = None
         for member, suffix in generate_enums:
             if len(getattr(obj, member)):
-                # Ugly hack to support the newer event extras API
-                # along the deprecated API.
-                # We need to specify both generic parameters,
-                # but only for event metrics.
-                # Plus `eventExtraKeys` use camelCase (lower),
-                # whereas proper class names should use CamelCase.
-                if suffix == "Extra":
-                    if isinstance(obj, metrics.Event):
-                        template_args.append("NoExtraKeys")
-                    template_args.append(util.Camelize(obj.name) + suffix)
+                if isinstance(obj, metrics.Event):
+                    generic = util.Camelize(obj.name) + suffix
                 else:
-                    template_args.append(util.camelize(obj.name) + suffix)
-                    if isinstance(obj, metrics.Event):
-                        template_args.append("NoExtras")
+                    generic = util.camelize(obj.name) + suffix
             else:
-                if suffix == "Keys":
-                    template_args.append("NoExtraKeys")
-                    template_args.append("NoExtras")
+                if isinstance(obj, metrics.Event):
+                    generic = "NoExtras"
                 else:
-                    template_args.append("No" + suffix)
+                    generic = "No" + suffix
 
-        return "{}<{}>".format(class_name(obj.type), ", ".join(template_args))
+        return "{}<{}>".format(class_name(obj.type), generic)
 
     return class_name(obj.type)
 

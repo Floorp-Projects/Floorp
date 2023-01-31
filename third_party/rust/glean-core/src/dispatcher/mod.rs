@@ -22,10 +22,6 @@
 //! });
 //! ```
 
-// TODO: remove this once bug 1672440 is merged and the code below
-// will actually be used somewhere.
-#![allow(dead_code)]
-
 use std::{
     mem,
     sync::{
@@ -177,6 +173,12 @@ impl DispatchGuard {
         Ok(())
     }
 
+    /// Flushes the pre-init buffer.
+    ///
+    /// This function blocks until tasks queued prior to this call are finished.
+    /// Once the initial queue is empty the dispatcher will wait for new tasks to be launched.
+    ///
+    /// Returns an error if called multiple times.
     fn flush_init(&mut self) -> Result<usize, DispatchError> {
         // We immediately stop queueing in the pre-init buffer.
         let old_val = self.queue_preinit.swap(false, Ordering::SeqCst);
@@ -320,28 +322,15 @@ impl Dispatcher {
         self.guard.clone()
     }
 
-    fn block_on_queue(&self) {
-        self.guard().block_on_queue()
-    }
-
     /// Waits for the worker thread to finish and finishes the dispatch queue.
     ///
     /// You need to call `shutdown` to initiate a shutdown of the queue.
+    #[cfg(test)]
     fn join(mut self) -> Result<(), DispatchError> {
         if let Some(worker) = self.worker.take() {
             worker.join().map_err(|_| DispatchError::WorkerPanic)?;
         }
         Ok(())
-    }
-
-    /// Flushes the pre-init buffer.
-    ///
-    /// This function blocks until tasks queued prior to this call are finished.
-    /// Once the initial queue is empty the dispatcher will wait for new tasks to be launched.
-    ///
-    /// Returns an error if called multiple times.
-    pub fn flush_init(&mut self) -> Result<usize, DispatchError> {
-        self.guard().flush_init()
     }
 }
 
@@ -365,10 +354,11 @@ mod test {
         let main_thread_id = thread::current().id();
         let thread_canary = Arc::new(AtomicBool::new(false));
 
-        let mut dispatcher = Dispatcher::new(100);
+        let dispatcher = Dispatcher::new(100);
 
         // Force the Dispatcher out of the pre-init queue mode.
         dispatcher
+            .guard()
             .flush_init()
             .expect("Failed to get out of preinit queue mode");
 
@@ -384,7 +374,7 @@ mod test {
             })
             .expect("Failed to dispatch the test task");
 
-        dispatcher.block_on_queue();
+        dispatcher.guard().block_on_queue();
         assert!(thread_canary.load(Ordering::SeqCst));
         assert_eq!(main_thread_id, thread::current().id());
     }
@@ -396,7 +386,7 @@ mod test {
         let main_thread_id = thread::current().id();
         let thread_canary = Arc::new(AtomicU8::new(0));
 
-        let mut dispatcher = Dispatcher::new(100);
+        let dispatcher = Dispatcher::new(100);
 
         // Add 3 tasks to queue each one increasing thread_canary by 1 to
         // signal that the tasks ran.
@@ -417,6 +407,7 @@ mod test {
 
         // Flush the queue and wait for the tasks to complete.
         dispatcher
+            .guard()
             .flush_init()
             .expect("Failed to get out of preinit queue mode");
         // Validate that we have the expected canary value.
@@ -427,7 +418,7 @@ mod test {
     fn preinit_tasks_are_processed_after_flush() {
         enable_test_logging();
 
-        let mut dispatcher = Dispatcher::new(10);
+        let dispatcher = Dispatcher::new(10);
 
         let result = Arc::new(Mutex::new(vec![]));
         for i in 1..=5 {
@@ -441,7 +432,7 @@ mod test {
         }
 
         result.lock().unwrap().push(0);
-        dispatcher.flush_init().unwrap();
+        dispatcher.guard().flush_init().unwrap();
         for i in 6..=10 {
             let result = Arc::clone(&result);
             dispatcher
@@ -452,7 +443,7 @@ mod test {
                 .unwrap();
         }
 
-        dispatcher.block_on_queue();
+        dispatcher.guard().block_on_queue();
 
         // This additionally checks that tasks were executed in order.
         assert_eq!(
@@ -465,11 +456,11 @@ mod test {
     fn tasks_after_shutdown_are_not_processed() {
         enable_test_logging();
 
-        let mut dispatcher = Dispatcher::new(10);
+        let dispatcher = Dispatcher::new(10);
 
         let result = Arc::new(Mutex::new(vec![]));
 
-        dispatcher.flush_init().unwrap();
+        dispatcher.guard().flush_init().unwrap();
 
         dispatcher.guard().shutdown().unwrap();
         {
@@ -491,7 +482,7 @@ mod test {
     fn preinit_buffer_fills_up() {
         enable_test_logging();
 
-        let mut dispatcher = Dispatcher::new(5);
+        let dispatcher = Dispatcher::new(5);
 
         let result = Arc::new(Mutex::new(vec![]));
 
@@ -513,7 +504,7 @@ mod test {
             assert_eq!(Err(DispatchError::QueueFull), err);
         }
 
-        dispatcher.flush_init().unwrap();
+        dispatcher.guard().flush_init().unwrap();
 
         {
             let result = Arc::clone(&result);
@@ -525,7 +516,7 @@ mod test {
                 .unwrap();
         }
 
-        dispatcher.block_on_queue();
+        dispatcher.guard().block_on_queue();
 
         assert_eq!(&*result.lock().unwrap(), &[1, 2, 3, 4, 5, 20]);
     }
@@ -538,7 +529,7 @@ mod test {
         // but we can quickly queue more slow tasks than the pre-init buffer holds
         // and then guarantuee they all run.
 
-        let mut dispatcher = Dispatcher::new(5);
+        let dispatcher = Dispatcher::new(5);
 
         let result = Arc::new(Mutex::new(vec![]));
 
@@ -552,7 +543,7 @@ mod test {
                 .unwrap();
         }
 
-        dispatcher.flush_init().unwrap();
+        dispatcher.guard().flush_init().unwrap();
 
         // Queue more than 5 tasks,
         // Each one is slow to process, so we should be faster in queueing

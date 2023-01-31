@@ -59,7 +59,7 @@ use super::{APIConverter, ComponentInterface};
 /// In the FFI these are represented as a byte buffer, which one side explicitly
 /// serializes the data into and the other serializes it out of. So I guess they're
 /// kind of like "pass by clone" values.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, PartialEq, Eq, Checksum)]
 pub struct Record {
     pub(super) name: String,
     pub(super) fields: Vec<Field>,
@@ -71,7 +71,7 @@ impl Record {
     }
 
     pub fn type_(&self) -> Type {
-        // *sigh* at the clone here, the relationship between a ComponentInterace
+        // *sigh* at the clone here, the relationship between a ComponentInterface
         // and its contained types could use a bit of a cleanup.
         Type::Record(self.name.clone())
     }
@@ -100,7 +100,7 @@ impl APIConverter<Record> for weedle::DictionaryDefinition<'_> {
             bail!("dictionary attributes are not supported yet");
         }
         if self.inheritance.is_some() {
-            bail!("dictionary inheritence is not supported");
+            bail!("dictionary inheritance is not supported");
         }
         Ok(Record {
             name: self.identifier.0.to_string(),
@@ -110,11 +110,10 @@ impl APIConverter<Record> for weedle::DictionaryDefinition<'_> {
 }
 
 // Represents an individual field on a Record.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Checksum)]
 pub struct Field {
     pub(super) name: String,
     pub(super) type_: Type,
-    pub(super) required: bool,
     pub(super) default: Option<Literal>,
 }
 
@@ -141,7 +140,6 @@ impl From<uniffi_meta::FieldMetadata> for Field {
         Self {
             name: meta.name,
             type_: convert_type(&meta.ty),
-            required: true,
             default: None,
         }
     }
@@ -160,7 +158,6 @@ impl APIConverter<Field> for weedle::dictionary::DictionaryMember<'_> {
         Ok(Field {
             name: self.identifier.0.to_string(),
             type_,
-            required: self.required.is_some(),
             default,
         })
     }
@@ -186,7 +183,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.record_definitions().len(), 3);
+        assert_eq!(ci.record_definitions().count(), 3);
 
         let record = ci.get_record_definition("Empty").unwrap();
         assert_eq!(record.name(), "Empty");
@@ -197,7 +194,6 @@ mod test {
         assert_eq!(record.fields().len(), 1);
         assert_eq!(record.fields()[0].name(), "field");
         assert_eq!(record.fields()[0].type_().canonical_name(), "u32");
-        assert!(!record.fields()[0].required);
         assert!(record.fields()[0].default_value().is_none());
 
         let record = ci.get_record_definition("Complex").unwrap();
@@ -208,18 +204,15 @@ mod test {
             record.fields()[0].type_().canonical_name(),
             "Optionalstring"
         );
-        assert!(!record.fields()[0].required);
         assert!(record.fields()[0].default_value().is_none());
         assert_eq!(record.fields()[1].name(), "value");
         assert_eq!(record.fields()[1].type_().canonical_name(), "u32");
-        assert!(!record.fields()[1].required);
         assert!(matches!(
             record.fields()[1].default_value(),
             Some(Literal::UInt(0, Radix::Decimal, Type::UInt32))
         ));
         assert_eq!(record.fields()[2].name(), "spin");
         assert_eq!(record.fields()[2].type_().canonical_name(), "bool");
-        assert!(record.fields()[2].required);
         assert!(record.fields()[2].default_value().is_none());
     }
 
@@ -233,7 +226,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.record_definitions().len(), 1);
+        assert_eq!(ci.record_definitions().count(), 1);
         let record = ci.get_record_definition("Testing").unwrap();
         assert_eq!(record.fields().len(), 2);
         assert_eq!(record.fields()[0].name(), "maybe_name");

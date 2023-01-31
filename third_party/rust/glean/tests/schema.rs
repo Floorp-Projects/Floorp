@@ -2,15 +2,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::collections::HashMap;
 use std::io::Read;
 
 use flate2::read::GzDecoder;
+use glean_core::TextMetric;
 use jsonschema_valid::{self, schemas::Draft};
 use serde_json::Value;
 
-//use glean::private::{DenominatorMetric, NumeratorMetric, RateMetric};
 use glean::net::UploadResult;
-use glean::{ClientInfoMetrics, Configuration};
+use glean::private::*;
+use glean::{
+    traits, ClientInfoMetrics, CommonMetricData, Configuration, ConfigurationBuilder,
+    HistogramType, MemoryUnit, TimeUnit,
+};
 
 const SCHEMA_JSON: &str = include_str!("../../../glean.1.schema.json");
 
@@ -20,6 +25,26 @@ fn load_schema() -> Value {
 
 const GLOBAL_APPLICATION_ID: &str = "org.mozilla.glean.test.app";
 
+struct SomeExtras {
+    extra1: Option<String>,
+    extra2: Option<bool>,
+}
+
+impl traits::ExtraKeys for SomeExtras {
+    const ALLOWED_KEYS: &'static [&'static str] = &["extra1", "extra2"];
+
+    fn into_ffi_extra(self) -> HashMap<String, String> {
+        let mut map = HashMap::new();
+
+        self.extra1
+            .and_then(|val| map.insert("extra1".to_string(), val));
+        self.extra2
+            .and_then(|val| map.insert("extra2".to_string(), val.to_string()));
+
+        map
+    }
+}
+
 // Create a new instance of Glean with a temporary directory.
 // We need to keep the `TempDir` alive, so that it's not deleted before we stop using it.
 fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
@@ -28,17 +53,9 @@ fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
 
     let cfg = match configuration {
         Some(c) => c,
-        None => Configuration {
-            data_path: tmpname,
-            application_id: GLOBAL_APPLICATION_ID.into(),
-            upload_enabled: true,
-            max_events: None,
-            delay_ping_lifetime_io: false,
-            server_endpoint: Some("invalid-test-host".into()),
-            uploader: None,
-            use_core_mps: false,
-            trim_data_to_registered_pings: false,
-        },
+        None => ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
+            .with_server_endpoint("invalid-test-host")
+            .build(),
     };
 
     let client_info = ClientInfoMetrics {
@@ -80,75 +97,93 @@ fn validate_against_schema() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().to_path_buf();
 
-    let cfg = Configuration {
-        data_path: tmpname,
-        application_id: GLOBAL_APPLICATION_ID.into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: false,
-        server_endpoint: Some("invalid-test-host".into()),
-        uploader: Some(Box::new(ValidatingUploader { sender: s })),
-        use_core_mps: false,
-        trim_data_to_registered_pings: false,
-    };
+    let cfg = ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
+        .with_server_endpoint("invalid-test-host")
+        .with_uploader(ValidatingUploader { sender: s })
+        .build();
     let _ = new_glean(Some(cfg));
 
     const PING_NAME: &str = "test-ping";
+
+    let common = |name: &str| CommonMetricData {
+        category: "test".into(),
+        name: name.into(),
+        send_in_pings: vec![PING_NAME.into()],
+        ..Default::default()
+    };
 
     // Test each of the metric types, just for basic smoke testing against the
     // schema
 
     // TODO: 1695762 Test all of the metric types against the schema from Rust
 
-    /*
-    let rate_metric: RateMetric = RateMetric::new(CommonMetricData {
-        category: "test".into(),
-        name: "rate".into(),
-        send_in_pings: vec![PING_NAME.into()],
-        ..Default::default()
+    let counter_metric = CounterMetric::new(common("counter"));
+    counter_metric.add(42);
+
+    let bool_metric = BooleanMetric::new(common("bool"));
+    bool_metric.set(true);
+
+    let string_metric = StringMetric::new(common("string"));
+    string_metric.set("test".into());
+
+    let stringlist_metric = StringListMetric::new(common("stringlist"));
+    stringlist_metric.add("one".into());
+    stringlist_metric.add("two".into());
+
+    let timespan_metric = TimespanMetric::new(common("timespan"), TimeUnit::Nanosecond);
+    timespan_metric.start();
+    timespan_metric.stop();
+
+    let timing_dist = TimingDistributionMetric::new(common("timing_dist"), TimeUnit::Nanosecond);
+    let id = timing_dist.start();
+    timing_dist.stop_and_accumulate(id);
+
+    let memory_dist = MemoryDistributionMetric::new(common("memory_dist"), MemoryUnit::Byte);
+    memory_dist.accumulate(100);
+
+    let uuid_metric = UuidMetric::new(common("uuid"));
+    // chosen by fair dic roll (`uuidgen`)
+    uuid_metric.set("3ee4db5f-ee26-4557-9a66-bc7425d7893f".into());
+
+    // We can't test the URL metric,
+    // because the regex used in the schema uses a negative lookahead,
+    // which the regex crate doesn't handle.
+    //
+    //let url_metric = UrlMetric::new(common("url"));
+    //url_metric.set("https://mozilla.github.io/glean/");
+
+    let datetime_metric = DatetimeMetric::new(common("datetime"), TimeUnit::Day);
+    datetime_metric.set(None);
+
+    let event_metric = EventMetric::<SomeExtras>::new(common("event"));
+    event_metric.record(None);
+    event_metric.record(SomeExtras {
+        extra1: Some("test".into()),
+        extra2: Some(false),
     });
+
+    let custom_dist =
+        CustomDistributionMetric::new(common("custom_dist"), 1, 100, 100, HistogramType::Linear);
+    custom_dist.accumulate_samples(vec![50, 51]);
+
+    let quantity_metric = QuantityMetric::new(common("quantity"));
+    quantity_metric.set(0);
+
+    let rate_metric = RateMetric::new(common("rate"));
     rate_metric.add_to_numerator(1);
     rate_metric.add_to_denominator(1);
 
-    let numerator_metric1: NumeratorMetric = NumeratorMetric::new(CommonMetricData {
-        category: "test".into(),
-        name: "num1".into(),
-        send_in_pings: vec![PING_NAME.into()],
-        ..Default::default()
-    });
-    let numerator_metric2: NumeratorMetric = NumeratorMetric::new(CommonMetricData {
-        category: "test".into(),
-        name: "num2".into(),
-        send_in_pings: vec![PING_NAME.into()],
-        ..Default::default()
-    });
-    let denominator_metric: DenominatorMetric = DenominatorMetric::new(
-        CommonMetricData {
-            category: "test".into(),
-            name: "den".into(),
-            send_in_pings: vec![PING_NAME.into()],
-            ..Default::default()
-        },
-        vec![
-            CommonMetricData {
-                category: "test".into(),
-                name: "num1".into(),
-                send_in_pings: vec![PING_NAME.into()],
-                ..Default::default()
-            },
-            CommonMetricData {
-                category: "test".into(),
-                name: "num2".into(),
-                send_in_pings: vec![PING_NAME.into()],
-                ..Default::default()
-            },
-        ],
-    );
+    let numerator_metric1 = NumeratorMetric::new(common("num1"));
+    let numerator_metric2 = NumeratorMetric::new(common("num2"));
+    let denominator_metric =
+        DenominatorMetric::new(common("den"), vec![common("num1"), common("num2")]);
 
     numerator_metric1.add_to_numerator(1);
     numerator_metric2.add_to_numerator(2);
     denominator_metric.add(3);
-    */
+
+    let text_metric = TextMetric::new(common("text"));
+    text_metric.set("loooooong text".repeat(100));
 
     // Define a new ping and submit it.
     let custom_ping = glean::private::PingType::new(PING_NAME, true, true, vec![]);
@@ -174,9 +209,14 @@ fn validate_against_schema() {
     let validation = cfg.validate(&data);
     match validation {
         Ok(()) => {}
-        Err(e) => {
-            let errors = e.map(|e| format!("{}", e)).collect::<Vec<_>>();
-            panic!("Data: {:#?}\nErrors: {:#?}", data, errors);
+        Err(errors) => {
+            let mut msg = format!("Data: {data:#?}\n Errors:\n");
+            for (idx, error) in errors.enumerate() {
+                msg.push_str(&format!("Error {}: ", idx + 1));
+                msg.push_str(&error.to_string());
+                msg.push('\n');
+            }
+            panic!("{}", msg);
         }
     }
 }

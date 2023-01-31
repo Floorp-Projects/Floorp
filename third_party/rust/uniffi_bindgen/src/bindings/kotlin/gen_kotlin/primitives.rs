@@ -11,34 +11,34 @@ fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
         match type_ {
             // Bytes, Shorts and Ints can all be inferred from the type.
             Type::Int8 | Type::Int16 | Type::Int32 => num_str,
-            Type::Int64 => format!("{}L", num_str),
+            Type::Int64 => format!("{num_str}L"),
 
-            Type::UInt8 | Type::UInt16 | Type::UInt32 => format!("{}u", num_str),
-            Type::UInt64 => format!("{}uL", num_str),
+            Type::UInt8 | Type::UInt16 | Type::UInt32 => format!("{num_str}u"),
+            Type::UInt64 => format!("{num_str}uL"),
 
-            Type::Float32 => format!("{}f", num_str),
+            Type::Float32 => format!("{num_str}f"),
             Type::Float64 => num_str,
-            _ => panic!("Unexpected literal: {} is not a number", num_str),
+            _ => panic!("Unexpected literal: {num_str} is not a number"),
         }
     }
 
     match literal {
-        Literal::Boolean(v) => format!("{}", v),
-        Literal::String(s) => format!("\"{}\"", s),
+        Literal::Boolean(v) => format!("{v}"),
+        Literal::String(s) => format!("\"{s}\""),
         Literal::Int(i, radix, type_) => typed_number(
             type_,
             match radix {
-                Radix::Octal => format!("{:#x}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("{i:#x}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
         ),
         Literal::UInt(i, radix, type_) => typed_number(
             type_,
             match radix {
-                Radix::Octal => format!("{:#x}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("{i:#x}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
         ),
         Literal::Float(string, type_) => typed_number(type_, string.clone()),

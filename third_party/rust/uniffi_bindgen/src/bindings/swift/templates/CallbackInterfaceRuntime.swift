@@ -6,17 +6,17 @@ fileprivate extension NSLock {
     }
 }
 
-fileprivate typealias Handle = UInt64
-fileprivate class ConcurrentHandleMap<T> {
-    private var leftMap: [Handle: T] = [:]
-    private var counter: [Handle: UInt64] = [:]
-    private var rightMap: [ObjectIdentifier: Handle] = [:]
+fileprivate typealias UniFFICallbackHandle = UInt64
+fileprivate class UniFFICallbackHandleMap<T> {
+    private var leftMap: [UniFFICallbackHandle: T] = [:]
+    private var counter: [UniFFICallbackHandle: UInt64] = [:]
+    private var rightMap: [ObjectIdentifier: UniFFICallbackHandle] = [:]
 
     private let lock = NSLock()
-    private var currentHandle: Handle = 0
-    private let stride: Handle = 1
+    private var currentHandle: UniFFICallbackHandle = 0
+    private let stride: UniFFICallbackHandle = 1
 
-    func insert(obj: T) -> Handle {
+    func insert(obj: T) -> UniFFICallbackHandle {
         lock.withLock {
             let id = ObjectIdentifier(obj as AnyObject)
             let handle = rightMap[id] ?? {
@@ -31,18 +31,18 @@ fileprivate class ConcurrentHandleMap<T> {
         }
     }
 
-    func get(handle: Handle) -> T? {
+    func get(handle: UniFFICallbackHandle) -> T? {
         lock.withLock {
             leftMap[handle]
         }
     }
 
-    func delete(handle: Handle) {
+    func delete(handle: UniFFICallbackHandle) {
         remove(handle: handle)
     }
 
     @discardableResult
-    func remove(handle: Handle) -> T? {
+    func remove(handle: UniFFICallbackHandle) -> T? {
         lock.withLock {
             defer { counter[handle] = (counter[handle] ?? 1) - 1 }
             guard counter[handle] == 1 else { return leftMap[handle] }

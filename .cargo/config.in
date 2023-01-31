@@ -15,6 +15,11 @@ git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 rev = "a6514854d4518b02f2805719ff6cd74dae7dfde6"
 replace-with = "vendored-sources"
 
+[source."https://github.com/bendk/application-services"]
+git = "https://github.com/bendk/application-services"
+rev = "ecb35df5fc40357c49922f90e86bf4147fa52953"
+replace-with = "vendored-sources"
+
 [source."https://github.com/chris-zen/coremidi.git"]
 git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
@@ -75,11 +80,6 @@ git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "688a6574cf830b4a3adaf9c5d41efc1f7dd4017f"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/application-services"]
-git = "https://github.com/mozilla/application-services"
-rev = "c6370008f53328529e8bcf06aaa5014dffcd298b"
-replace-with = "vendored-sources"
-
 [source."https://github.com/mozilla/audioipc"]
 git = "https://github.com/mozilla/audioipc"
 rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39"
@@ -112,7 +112,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/uniffi-rs.git"]
 git = "https://github.com/mozilla/uniffi-rs.git"
-rev = "846612a1d4fb5d11e246bf0682da4a499409424c"
+rev = "bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"
 replace-with = "vendored-sources"
 
 [source."https://github.com/rust-minidump/minidump-writer.git"]

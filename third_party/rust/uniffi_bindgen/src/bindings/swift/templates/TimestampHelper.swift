@@ -1,9 +1,9 @@
 fileprivate struct FfiConverterTimestamp: FfiConverterRustBuffer {
     typealias SwiftType = Date
 
-    static func read(from buf: Reader) throws -> Date {
-        let seconds: Int64 = try buf.readInt()
-        let nanoseconds: UInt32 = try buf.readInt()
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Date {
+        let seconds: Int64 = try readInt(&buf)
+        let nanoseconds: UInt32 = try readInt(&buf)
         if seconds >= 0 {
             let delta = Double(seconds) + (Double(nanoseconds) / 1.0e9)
             return Date.init(timeIntervalSince1970: delta)
@@ -13,7 +13,7 @@ fileprivate struct FfiConverterTimestamp: FfiConverterRustBuffer {
         }
     }
 
-    static func write(_ value: Date, into buf: Writer) {
+    public static func write(_ value: Date, into buf: inout [UInt8]) {
         var delta = value.timeIntervalSince1970
         var sign: Int64 = 1
         if delta < 0 {
@@ -28,7 +28,7 @@ fileprivate struct FfiConverterTimestamp: FfiConverterRustBuffer {
         }
         let seconds = Int64(delta)
         let nanoseconds = UInt32((delta - Double(seconds)) * 1.0e9)
-        buf.writeInt(sign * seconds)
-        buf.writeInt(nanoseconds)
+        writeInt(&buf, sign * seconds)
+        writeInt(&buf, nanoseconds)
     }
 }

@@ -14,7 +14,7 @@ use crate::MergeWith;
 const RESERVED_WORDS: &[&str] = &[
     "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else",
     "elsif", "END", "end", "ensure", "false", "for", "if", "module", "next", "nil", "not", "or",
-    "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unles",
+    "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless",
     "until", "when", "while", "yield", "__FILE__", "__LINE__",
 ];
 
@@ -80,22 +80,22 @@ impl<'a> RubyWrapper<'a> {
 mod filters {
     use super::*;
 
-    pub fn type_ffi(type_: &FFIType) -> Result<String, askama::Error> {
+    pub fn type_ffi(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(match type_ {
-            FFIType::Int8 => ":int8".to_string(),
-            FFIType::UInt8 => ":uint8".to_string(),
-            FFIType::Int16 => ":int16".to_string(),
-            FFIType::UInt16 => ":uint16".to_string(),
-            FFIType::Int32 => ":int32".to_string(),
-            FFIType::UInt32 => ":uint32".to_string(),
-            FFIType::Int64 => ":int64".to_string(),
-            FFIType::UInt64 => ":uint64".to_string(),
-            FFIType::Float32 => ":float".to_string(),
-            FFIType::Float64 => ":double".to_string(),
-            FFIType::RustArcPtr(_) => ":pointer".to_string(),
-            FFIType::RustBuffer => "RustBuffer.by_value".to_string(),
-            FFIType::ForeignBytes => "ForeignBytes".to_string(),
-            FFIType::ForeignCallback => unimplemented!("Callback interfaces are not implemented"),
+            FfiType::Int8 => ":int8".to_string(),
+            FfiType::UInt8 => ":uint8".to_string(),
+            FfiType::Int16 => ":int16".to_string(),
+            FfiType::UInt16 => ":uint16".to_string(),
+            FfiType::Int32 => ":int32".to_string(),
+            FfiType::UInt32 => ":uint32".to_string(),
+            FfiType::Int64 => ":int64".to_string(),
+            FfiType::UInt64 => ":uint64".to_string(),
+            FfiType::Float32 => ":float".to_string(),
+            FfiType::Float64 => ":double".to_string(),
+            FfiType::RustArcPtr(_) => ":pointer".to_string(),
+            FfiType::RustBuffer(_) => "RustBuffer.by_value".to_string(),
+            FfiType::ForeignBytes => "ForeignBytes".to_string(),
+            FfiType::ForeignCallback => unimplemented!("Callback interfaces are not implemented"),
         })
     }
 
@@ -109,24 +109,24 @@ mod filters {
                 }
             }
             // use the double-quote form to match with the other languages, and quote escapes.
-            Literal::String(s) => format!("\"{}\"", s),
+            Literal::String(s) => format!("\"{s}\""),
             Literal::Null => "nil".into(),
             Literal::EmptySequence => "[]".into(),
             Literal::EmptyMap => "{}".into(),
             Literal::Enum(v, type_) => match type_ {
                 Type::Enum(name) => format!("{}::{}", class_name_rb(name)?, enum_name_rb(v)?),
-                _ => panic!("Unexpected type in enum literal: {:?}", type_),
+                _ => panic!("Unexpected type in enum literal: {type_:?}"),
             },
             // https://docs.ruby-lang.org/en/2.0.0/syntax/literals_rdoc.html
             Literal::Int(i, radix, _) => match radix {
-                Radix::Octal => format!("0o{:o}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("0o{i:o}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
             Literal::UInt(i, radix, _) => match radix {
-                Radix::Octal => format!("0o{:o}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("0o{i:o}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
             Literal::Float(string, _type_) => string.clone(),
         })
@@ -144,7 +144,7 @@ mod filters {
         let nm = nm.to_string();
         let prefix = if is_reserved_word(&nm) { "_" } else { "" };
 
-        Ok(format!("{}{}", prefix, nm.to_snake_case()))
+        Ok(format!("{prefix}{}", nm.to_snake_case()))
     }
 
     pub fn enum_name_rb(nm: &str) -> Result<String, askama::Error> {
@@ -160,20 +160,20 @@ mod filters {
             | Type::Int32
             | Type::UInt32
             | Type::Int64
-            | Type::UInt64 => format!("{}.to_i", nm), // TODO: check max/min value
-            Type::Float32 | Type::Float64 => format!("{}.to_f", nm),
-            Type::Boolean => format!("{} ? true : false", nm),
+            | Type::UInt64 => format!("{nm}.to_i"), // TODO: check max/min value
+            Type::Float32 | Type::Float64 => format!("{nm}.to_f"),
+            Type::Boolean => format!("{nm} ? true : false"),
             Type::Object(_) | Type::Enum(_) | Type::Error(_) | Type::Record(_) => nm.to_string(),
-            Type::String => format!("{}.to_s", nm),
+            Type::String => format!("{nm}.to_s"),
             Type::Timestamp | Type::Duration => nm.to_string(),
             Type::CallbackInterface(_) => panic!("No support for coercing callback interfaces yet"),
-            Type::Optional(t) => format!("({} ? {} : nil)", nm, coerce_rb(nm, t)?),
+            Type::Optional(t) => format!("({nm} ? {} : nil)", coerce_rb(nm, t)?),
             Type::Sequence(t) => {
                 let coerce_code = coerce_rb("v", t)?;
                 if coerce_code == "v" {
                     nm.to_string()
                 } else {
-                    format!("{}.map {{ |v| {} }}", nm, coerce_code)
+                    format!("{nm}.map {{ |v| {coerce_code} }}")
                 }
             }
             Type::Map(_k, t) => {
@@ -191,8 +191,8 @@ mod filters {
             }
             Type::External { .. } => panic!("No support for external types, yet"),
             Type::Custom { .. } => panic!("No support for custom types, yet"),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling coerce_rb")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling coerce_rb")
             }
         })
     }
@@ -209,9 +209,9 @@ mod filters {
             | Type::UInt64
             | Type::Float32
             | Type::Float64 => nm.to_string(),
-            Type::Boolean => format!("({} ? 1 : 0)", nm),
-            Type::String => format!("RustBuffer.allocFromString({})", nm),
-            Type::Object(name) => format!("({}._uniffi_lower {})", class_name_rb(name)?, nm),
+            Type::Boolean => format!("({nm} ? 1 : 0)"),
+            Type::String => format!("RustBuffer.allocFromString({nm})"),
+            Type::Object(name) => format!("({}._uniffi_lower {nm})", class_name_rb(name)?),
             Type::CallbackInterface(_) => panic!("No support for lowering callback interfaces yet"),
             Type::Error(_) => panic!("No support for lowering errors, yet"),
             Type::Enum(_)
@@ -227,8 +227,8 @@ mod filters {
             ),
             Type::External { .. } => panic!("No support for lowering external types, yet"),
             Type::Custom { .. } => panic!("No support for lowering custom types, yet"),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling lower_rb")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling lower_rb")
             }
         })
     }
@@ -242,11 +242,11 @@ mod filters {
             | Type::Int32
             | Type::UInt32
             | Type::Int64
-            | Type::UInt64 => format!("{}.to_i", nm),
-            Type::Float32 | Type::Float64 => format!("{}.to_f", nm),
-            Type::Boolean => format!("1 == {}", nm),
-            Type::String => format!("{}.consumeIntoString", nm),
-            Type::Object(name) => format!("{}._uniffi_allocate({})", class_name_rb(name)?, nm),
+            | Type::UInt64 => format!("{nm}.to_i"),
+            Type::Float32 | Type::Float64 => format!("{nm}.to_f"),
+            Type::Boolean => format!("1 == {nm}"),
+            Type::String => format!("{nm}.consumeIntoString"),
+            Type::Object(name) => format!("{}._uniffi_allocate({nm})", class_name_rb(name)?),
             Type::CallbackInterface(_) => panic!("No support for lifting callback interfaces, yet"),
             Type::Error(_) => panic!("No support for lowering errors, yet"),
             Type::Enum(_)
@@ -262,8 +262,8 @@ mod filters {
             ),
             Type::External { .. } => panic!("No support for lifting external types, yet"),
             Type::Custom { .. } => panic!("No support for lifting custom types, yet"),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling lift_rb")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling lift_rb")
             }
         })
     }

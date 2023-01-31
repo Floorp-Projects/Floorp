@@ -4,7 +4,13 @@
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
-use syn::{spanned::Spanned, visit_mut::VisitMut, Item, Type};
+use syn::{
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    spanned::Spanned,
+    visit_mut::VisitMut,
+    Attribute, Item, Token, Type,
+};
 use uniffi_meta::Metadata;
 
 #[cfg(not(feature = "nightly"))]
@@ -59,7 +65,6 @@ pub fn mod_path() -> syn::Result<Vec<String>> {
 #[cfg(feature = "nightly")]
 pub fn mod_path() -> syn::Result<Vec<String>> {
     use proc_macro::TokenStream;
-    use quote::quote;
 
     let module_path_invoc = TokenStream::from(quote! { ::core::module_path!() });
     // We ask the compiler what `module_path!()` expands to here.
@@ -124,6 +129,15 @@ pub fn rewrite_self_type(item: &mut Item) {
     }
 }
 
+pub fn try_read_field(f: &syn::Field) -> TokenStream {
+    let ident = &f.ident;
+    let ty = &f.ty;
+
+    quote! {
+        #ident: <#ty as ::uniffi::FfiConverter>::try_read(buf)?,
+    }
+}
+
 pub fn create_metadata_static_var(name: &Ident, val: Metadata) -> TokenStream {
     let data: Vec<u8> = bincode::serialize(&val).expect("Error serializing metadata item");
     let count = data.len();
@@ -142,5 +156,68 @@ pub fn assert_type_eq(a: impl ToTokens + Spanned, b: impl ToTokens) -> TokenStre
         const _: () = {
             ::uniffi::deps::static_assertions::assert_type_eq_all!(#a, #b);
         };
+    }
+}
+
+pub fn chain<T>(
+    a: impl IntoIterator<Item = T>,
+    b: impl IntoIterator<Item = T>,
+) -> impl Iterator<Item = T> {
+    a.into_iter().chain(b)
+}
+
+pub trait UniffiAttribute: Default + Parse {
+    fn merge(self, other: Self) -> syn::Result<Self>;
+}
+
+#[derive(Default)]
+struct AttributeNotAllowedHere;
+
+impl Parse for AttributeNotAllowedHere {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        Err(syn::Error::new(
+            input.span(),
+            "UniFFI attributes are not currently recognized in this position",
+        ))
+    }
+}
+
+impl UniffiAttribute for AttributeNotAllowedHere {
+    fn merge(self, _other: Self) -> syn::Result<Self> {
+        Ok(Self)
+    }
+}
+
+pub trait AttributeSliceExt {
+    fn parse_uniffi_attributes<T: UniffiAttribute>(&self) -> syn::Result<T>;
+    fn attributes_not_allowed_here(&self) -> Option<syn::Error>;
+}
+
+impl AttributeSliceExt for [Attribute] {
+    fn parse_uniffi_attributes<T: UniffiAttribute>(&self) -> syn::Result<T> {
+        self.iter()
+            .filter(|attr| attr.path.is_ident("uniffi"))
+            .try_fold(T::default(), |res, attr| {
+                let list: Punctuated<T, Token![,]> =
+                    attr.parse_args_with(Punctuated::parse_terminated)?;
+                list.into_iter().try_fold(res, T::merge)
+            })
+    }
+
+    fn attributes_not_allowed_here(&self) -> Option<syn::Error> {
+        self.parse_uniffi_attributes::<AttributeNotAllowedHere>()
+            .err()
+    }
+}
+
+pub fn either_attribute_arg<T: ToTokens>(a: Option<T>, b: Option<T>) -> syn::Result<Option<T>> {
+    match (a, b) {
+        (None, None) => Ok(None),
+        (Some(val), None) | (None, Some(val)) => Ok(Some(val)),
+        (Some(a), Some(b)) => {
+            let mut error = syn::Error::new_spanned(a, "redundant attribute argument");
+            error.combine(syn::Error::new_spanned(b, "note: first one here"));
+            Err(error)
+        }
     }
 }

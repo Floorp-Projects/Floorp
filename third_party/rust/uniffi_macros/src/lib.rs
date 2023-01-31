@@ -8,19 +8,43 @@
 //! Currently this is just for easily generating integration tests, but maybe
 //! we'll put some other code-annotation helper macros in here at some point.
 
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use proc_macro::TokenStream;
-use quote::{format_ident, quote};
-use std::env;
-use syn::{bracketed, parse_macro_input, punctuated::Punctuated, LitStr, Token};
+use quote::quote;
+use syn::{parse_macro_input, LitStr};
 use util::rewrite_self_type;
 
+mod enum_;
+mod error;
 mod export;
 mod object;
 mod record;
+mod test;
 mod util;
 
-use self::{export::expand_export, object::expand_object, record::expand_record};
+use self::{
+    enum_::expand_enum, error::expand_error, export::expand_export, object::expand_object,
+    record::expand_record,
+};
+
+/// A macro to build testcases for a component's generated bindings.
+///
+/// This macro provides some plumbing to write automated tests for the generated
+/// foreign language bindings of a component. As a component author, you can write
+/// script files in the target foreign language(s) that exercise you component API,
+/// and then call this macro to produce a `cargo test` testcase from each one.
+/// The generated code will execute your script file with appropriate configuration and
+/// environment to let it load the component bindings, and will pass iff the script
+/// exits successfully.
+///
+/// To use it, invoke the macro with the name of a fixture/example crate as the first argument,
+/// then one or more file paths relative to the crate root directory. It will produce one `#[test]`
+/// function per file, in a manner designed to play nicely with `cargo test` and its test filtering
+/// options.
+#[proc_macro]
+pub fn build_foreign_language_testcases(tokens: TokenStream) -> TokenStream {
+    test::build_foreign_language_testcases(tokens)
+}
 
 #[proc_macro_attribute]
 pub fn export(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -59,6 +83,17 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
     expand_record(input, mod_path).into()
 }
 
+#[proc_macro_derive(Enum)]
+pub fn derive_enum(input: TokenStream) -> TokenStream {
+    let mod_path = match util::mod_path() {
+        Ok(p) => p,
+        Err(e) => return e.into_compile_error().into(),
+    };
+    let input = parse_macro_input!(input);
+
+    expand_enum(input, mod_path).into()
+}
+
 #[proc_macro_derive(Object)]
 pub fn derive_object(input: TokenStream) -> TokenStream {
     let mod_path = match util::mod_path() {
@@ -70,109 +105,15 @@ pub fn derive_object(input: TokenStream) -> TokenStream {
     expand_object(input, mod_path).into()
 }
 
-/// A macro to build testcases for a component's generated bindings.
-///
-/// This macro provides some plumbing to write automated tests for the generated
-/// foreign language bindings of a component. As a component author, you can write
-/// script files in the target foreign language(s) that exercise you component API,
-/// and then call this macro to produce a `cargo test` testcase from each one.
-/// The generated code will execute your script file with appropriate configuration and
-/// environment to let it load the component bindings, and will pass iff the script
-/// exits successfully.
-///
-/// To use it, invoke the macro with one or more udl files as the first argument, then
-/// one or more file paths relative to the crate root directory.
-/// It will produce one `#[test]` function per file, in a manner designed to
-/// play nicely with `cargo test` and its test filtering options.
-#[proc_macro]
-pub fn build_foreign_language_testcases(paths: TokenStream) -> TokenStream {
-    let paths = syn::parse_macro_input!(paths as FilePaths);
-    // We resolve each path relative to the crate root directory.
-    let pkg_dir = env::var("CARGO_MANIFEST_DIR")
-        .expect("Missing $CARGO_MANIFEST_DIR, cannot build tests for generated bindings");
-
-    // Create an array of UDL files.
-    let udl_files = &paths
-        .udl_files
-        .iter()
-        .map(|file_path| {
-            let pathbuf: Utf8PathBuf = [&pkg_dir, file_path].iter().collect();
-            let path = pathbuf.to_string();
-            quote! { #path }
-        })
-        .collect::<Vec<proc_macro2::TokenStream>>();
-
-    // For each test file found, generate a matching testcase.
-    let test_functions = paths.test_scripts
-        .iter()
-        .map(|file_path| {
-            let test_file_pathbuf: Utf8PathBuf = [&pkg_dir, file_path].iter().collect();
-            let test_file_path = test_file_pathbuf.to_string();
-            let test_file_name = test_file_pathbuf
-                .file_name()
-                .expect("Test file has no name, cannot build tests for generated bindings");
-            let test_name = format_ident!(
-                "uniffi_foreign_language_testcase_{}",
-                test_file_name.replace(|c: char| !c.is_alphanumeric(), "_")
-            );
-            let maybe_ignore = if should_skip_path(&test_file_pathbuf) {
-                quote! { #[ignore] }
-            } else {
-                quote! { }
-            };
-            quote! {
-                #maybe_ignore
-                #[test]
-                fn #test_name () -> uniffi::deps::anyhow::Result<()> {
-                    uniffi::testing::run_foreign_language_testcase(#pkg_dir, &[ #(#udl_files),* ], #test_file_path)
-                }
-            }
-        })
-        .collect::<Vec<proc_macro2::TokenStream>>();
-    let test_module = quote! {
-        #(#test_functions)*
+#[proc_macro_derive(Error, attributes(uniffi))]
+pub fn derive_error(input: TokenStream) -> TokenStream {
+    let mod_path = match util::mod_path() {
+        Ok(p) => p,
+        Err(e) => return e.into_compile_error().into(),
     };
-    TokenStream::from(test_module)
-}
+    let input = parse_macro_input!(input);
 
-// UNIFFI_TESTS_DISABLE_EXTENSIONS contains a comma-sep'd list of extensions (without leading `.`)
-fn should_skip_path(path: &Utf8Path) -> bool {
-    let ext = path.extension().expect("File has no extension!");
-    env::var("UNIFFI_TESTS_DISABLE_EXTENSIONS")
-        .map(|v| v.split(',').any(|look| look == ext))
-        .unwrap_or(false)
-}
-
-/// Newtype to simplifying parsing a list of file paths from macro input.
-#[derive(Debug)]
-struct FilePaths {
-    udl_files: Vec<String>,
-    test_scripts: Vec<String>,
-}
-
-impl syn::parse::Parse for FilePaths {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let udl_array;
-        bracketed!(udl_array in input);
-        let udl_files = Punctuated::<LitStr, Token![,]>::parse_terminated(&udl_array)?
-            .iter()
-            .map(|s| s.value())
-            .collect();
-
-        let _comma: Token![,] = input.parse()?;
-
-        let scripts_array;
-        bracketed!(scripts_array in input);
-        let test_scripts = Punctuated::<LitStr, Token![,]>::parse_terminated(&scripts_array)?
-            .iter()
-            .map(|s| s.value())
-            .collect();
-
-        Ok(FilePaths {
-            udl_files,
-            test_scripts,
-        })
-    }
+    expand_error(input, mod_path).into()
 }
 
 /// A helper macro to include generated component scaffolding.

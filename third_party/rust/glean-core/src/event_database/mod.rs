@@ -479,6 +479,9 @@ impl EventDatabase {
                     // Adjust things so this group starts 1ms after the previous one.
                     inter_group_offset = highest_ts + 1;
                 }
+            } else if cur_ec == 0 {
+                // bug 1811872 - cur_ec might need initialization.
+                cur_ec = execution_counter;
             }
             event.event.timestamp = event.event.timestamp - intra_group_offset + inter_group_offset;
             if execution_counter != cur_ec {
@@ -1198,5 +1201,91 @@ mod test {
                 ErrorType::InvalidValue
             )
         );
+    }
+
+    #[test]
+    fn normalize_store_non_zero_ec() {
+        // After the first run, execution_counter will likely be non-zero.
+        // Ensure normalizing a store that begins with non-zero ec works.
+        let (glean, _dir) = new_glean(None);
+
+        let store_name = "store-name";
+        let glean_restarted = StoredEvent {
+            event: RecordedEvent {
+                timestamp: 2,
+                category: "glean".into(),
+                name: "restarted".into(),
+                extra: None,
+            },
+            execution_counter: Some(2),
+        };
+        let not_glean_restarted = StoredEvent {
+            event: RecordedEvent {
+                timestamp: 20,
+                category: "category".into(),
+                name: "name".into(),
+                extra: None,
+            },
+            execution_counter: Some(2),
+        };
+        let glean_restarted_2 = StoredEvent {
+            event: RecordedEvent {
+                timestamp: 2,
+                category: "glean".into(),
+                name: "restarted".into(),
+                extra: None,
+            },
+            execution_counter: Some(3),
+        };
+        let mut store = vec![
+            glean_restarted,
+            not_glean_restarted.clone(),
+            glean_restarted_2,
+        ];
+        let glean_start_time = glean.start_time();
+
+        glean
+            .event_storage()
+            .normalize_store(&glean, store_name, &mut store, glean_start_time);
+
+        assert_eq!(1, store.len());
+        assert_eq!(
+            StoredEvent {
+                event: RecordedEvent {
+                    timestamp: 0,
+                    ..not_glean_restarted.event
+                },
+                execution_counter: None
+            },
+            store[0]
+        );
+        // And we should have no InvalidState errors on glean.restarted.
+        assert!(test_get_num_recorded_errors(
+            &glean,
+            &CommonMetricData {
+                name: "restarted".into(),
+                category: "glean".into(),
+                send_in_pings: vec![store_name.into()],
+                lifetime: Lifetime::Ping,
+                ..Default::default()
+            }
+            .into(),
+            ErrorType::InvalidState
+        )
+        .is_err());
+        // (and, just because we're here, double-check there are no InvalidValue either).
+        assert!(test_get_num_recorded_errors(
+            &glean,
+            &CommonMetricData {
+                name: "restarted".into(),
+                category: "glean".into(),
+                send_in_pings: vec![store_name.into()],
+                lifetime: Lifetime::Ping,
+                ..Default::default()
+            }
+            .into(),
+            ErrorType::InvalidValue
+        )
+        .is_err());
     }
 }

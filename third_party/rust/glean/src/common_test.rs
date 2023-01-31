@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ClientInfoMetrics;
-use crate::Configuration;
+use crate::{Configuration, ConfigurationBuilder};
 use std::sync::{Mutex, MutexGuard};
 
 use once_cell::sync::Lazy;
@@ -40,17 +40,9 @@ pub(crate) fn new_glean(
 
     let cfg = match configuration {
         Some(c) => c,
-        None => Configuration {
-            data_path: tmpname,
-            application_id: GLOBAL_APPLICATION_ID.into(),
-            upload_enabled: true,
-            max_events: None,
-            delay_ping_lifetime_io: false,
-            server_endpoint: Some("invalid-test-host".into()),
-            uploader: None,
-            use_core_mps: false,
-            trim_data_to_registered_pings: false,
-        },
+        None => ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
+            .with_server_endpoint("invalid-test-host")
+            .build(),
     };
 
     crate::test_reset_glean(cfg, ClientInfoMetrics::unknown(), clear_stores);

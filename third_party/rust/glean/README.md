@@ -19,15 +19,9 @@ All documentation is available online:
 ## Example
 
 ```rust,no_run
-use glean::{Configuration, Error, metrics::*};
+use glean::{ConfigurationBuilder, Error, metrics::*};
 
-let cfg = Configuration {
-    data_path: "/tmp/data".into(),
-    application_id: "org.mozilla.glean_core.example".into(),
-    upload_enabled: true,
-    max_events: None,
-    delay_ping_lifetime_io: false,
-};
+let cfg = ConfigurationBuilder::new(true, "/tmp/data", "org.mozilla.glean_core.example").build();
 glean::initialize(cfg)?;
 
 let prototype_ping = PingType::new("prototype", true, true, vec![]);

@@ -92,6 +92,27 @@ pub fn generate_bindings(config: &Config, ci: &ComponentInterface) -> Result<Str
         .context("failed to render kotlin bindings")
 }
 
+/// A struct to record a Kotlin import statement.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum ImportRequirement {
+    /// The name we are importing.
+    Import { name: String },
+    /// Import the name with the specified local name.
+    ImportAs { name: String, as_name: String },
+}
+
+impl ImportRequirement {
+    /// Render the Kotlin import statement.
+    fn render(&self) -> String {
+        match &self {
+            ImportRequirement::Import { name } => format!("import {name}"),
+            ImportRequirement::ImportAs { name, as_name } => {
+                format!("import {name} as {as_name}")
+            }
+        }
+    }
+}
+
 /// Renders Kotlin helper code for all types
 ///
 /// This template is a bit different than others in that it stores internal state from the render
@@ -104,7 +125,7 @@ pub struct TypeRenderer<'a> {
     // Track included modules for the `include_once()` macro
     include_once_names: RefCell<HashSet<String>>,
     // Track imports added with the `add_import()` macro
-    imports: RefCell<BTreeSet<String>>,
+    imports: RefCell<BTreeSet<ImportRequirement>>,
 }
 
 impl<'a> TypeRenderer<'a> {
@@ -144,7 +165,20 @@ impl<'a> TypeRenderer<'a> {
     //
     // Returns an empty string so that it can be used inside an askama `{{ }}` block.
     fn add_import(&self, name: &str) -> &str {
-        self.imports.borrow_mut().insert(name.to_owned());
+        self.imports.borrow_mut().insert(ImportRequirement::Import {
+            name: name.to_owned(),
+        });
+        ""
+    }
+
+    // Like add_import, but arranges for `import name as as_name`
+    fn add_import_as(&self, name: &str, as_name: &str) -> &str {
+        self.imports
+            .borrow_mut()
+            .insert(ImportRequirement::ImportAs {
+                name: name.to_owned(),
+                as_name: as_name.to_owned(),
+            });
         ""
     }
 }
@@ -155,7 +189,7 @@ pub struct KotlinWrapper<'a> {
     config: Config,
     ci: &'a ComponentInterface,
     type_helper_code: String,
-    type_imports: BTreeSet<String>,
+    type_imports: BTreeSet<ImportRequirement>,
 }
 
 impl<'a> KotlinWrapper<'a> {
@@ -178,7 +212,7 @@ impl<'a> KotlinWrapper<'a> {
             .collect()
     }
 
-    pub fn imports(&self) -> Vec<String> {
+    pub fn imports(&self) -> Vec<ImportRequirement> {
         self.type_imports.iter().cloned().collect()
     }
 }
@@ -193,7 +227,7 @@ impl KotlinCodeOracle {
     // template code.
     //
     //   - When adding additional types here, make sure to also add a match arm to the `Types.kt` template.
-    //   - To keep things managable, let's try to limit ourselves to these 2 mega-matches
+    //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
     fn create_code_type(&self, type_: TypeIdentifier) -> Box<dyn CodeType> {
         match type_ {
             Type::UInt8 => Box::new(primitives::UInt8CodeType),
@@ -224,8 +258,8 @@ impl KotlinCodeOracle {
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling create_code_type")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling create_code_type")
             }
         }
     }
@@ -266,25 +300,28 @@ impl CodeOracle for KotlinCodeOracle {
         let name = self.class_name(nm);
         match name.strip_suffix("Error") {
             None => name,
-            Some(stripped) => format!("{}Exception", stripped),
+            Some(stripped) => format!("{stripped}Exception"),
         }
     }
 
-    fn ffi_type_label(&self, ffi_type: &FFIType) -> String {
+    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
         match ffi_type {
             // Note that unsigned integers in Kotlin are currently experimental, but java.nio.ByteBuffer does not
             // support them yet. Thus, we use the signed variants to represent both signed and unsigned
             // types from the component API.
-            FFIType::Int8 | FFIType::UInt8 => "Byte".to_string(),
-            FFIType::Int16 | FFIType::UInt16 => "Short".to_string(),
-            FFIType::Int32 | FFIType::UInt32 => "Int".to_string(),
-            FFIType::Int64 | FFIType::UInt64 => "Long".to_string(),
-            FFIType::Float32 => "Float".to_string(),
-            FFIType::Float64 => "Double".to_string(),
-            FFIType::RustArcPtr(_) => "Pointer".to_string(),
-            FFIType::RustBuffer => "RustBuffer.ByValue".to_string(),
-            FFIType::ForeignBytes => "ForeignBytes.ByValue".to_string(),
-            FFIType::ForeignCallback => "ForeignCallback".to_string(),
+            FfiType::Int8 | FfiType::UInt8 => "Byte".to_string(),
+            FfiType::Int16 | FfiType::UInt16 => "Short".to_string(),
+            FfiType::Int32 | FfiType::UInt32 => "Int".to_string(),
+            FfiType::Int64 | FfiType::UInt64 => "Long".to_string(),
+            FfiType::Float32 => "Float".to_string(),
+            FfiType::Float64 => "Double".to_string(),
+            FfiType::RustArcPtr(_) => "Pointer".to_string(),
+            FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
+                Some(suffix) => format!("RustBuffer{}.ByValue", suffix),
+                None => "RustBuffer.ByValue".to_string(),
+            },
+            FfiType::ForeignBytes => "ForeignBytes.ByValue".to_string(),
+            FfiType::ForeignCallback => "ForeignCallback".to_string(),
         }
     }
 }
@@ -338,8 +375,8 @@ pub mod filters {
         Ok(codetype.literal(oracle(), literal))
     }
 
-    /// Get the Kotlin syntax for representing a given low-level `FFIType`.
-    pub fn ffi_type_name(type_: &FFIType) -> Result<String, askama::Error> {
+    /// Get the Kotlin syntax for representing a given low-level `FfiType`.
+    pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(oracle().ffi_type_label(type_))
     }
 

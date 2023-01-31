@@ -209,7 +209,7 @@ assert(op.sinonEnum() == .trois)
 
 // Testing defaulting properties in record types.
 let defaultes = OptionneurDictionnaire()
-let explicite = OptionneurDictionnaire(
+let explicites = OptionneurDictionnaire(
     i8Var: Int8(-8),
     u8Var: UInt8(8),
     i16Var: Int16(-16),
@@ -228,5 +228,5 @@ let explicite = OptionneurDictionnaire(
 )  
 
 // …and makes sure they travel across and back the FFI.
-assert(defaultes == explicite)
+assert(defaultes == explicites)
 [defaultes].affirmAllerRetour(rt.identiqueOptionneurDictionnaire)

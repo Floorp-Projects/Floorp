@@ -10,21 +10,14 @@
 
 mod common;
 
-use glean::Configuration;
+use glean::{Configuration, ConfigurationBuilder};
 use std::path::PathBuf;
 
 fn cfg_new(tmpname: PathBuf) -> Configuration {
-    Configuration {
-        data_path: tmpname,
-        application_id: "firefox-desktop".into(),
-        upload_enabled: true,
-        max_events: None,
-        delay_ping_lifetime_io: true,
-        server_endpoint: Some("invalid-test-host".into()),
-        uploader: None,
-        use_core_mps: false,
-        trim_data_to_registered_pings: false,
-    }
+    ConfigurationBuilder::new(true, tmpname, "firefox-desktop")
+        .with_server_endpoint("invalid-test-host")
+        .with_delay_ping_lifetime_io(true)
+        .build()
 }
 
 /// Test scenario: `persist_ping_lifetime_data` called after shutdown.

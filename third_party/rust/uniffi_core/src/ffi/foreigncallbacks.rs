@@ -133,8 +133,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// * `buf_ptr` is a pointer to where the resulting buffer will be written. UniFFI will allocate a
 ///   buffer to write the result into.
 /// * A callback returns:
-///    - `-2` An error occured that was serialized to buf_ptr
-///    - `-1` An unexpected error ocurred
+///    - `-2` An error occurred that was serialized to buf_ptr
+///    - `-1` An unexpected error occurred
 ///    - `0` is a deprecated way to signal that if the call succeeded, but did not modify buf_ptr
 ///    - `1` If the call succeeded.  For non-void functions the return value should be serialized
 ///      to buf_ptr.

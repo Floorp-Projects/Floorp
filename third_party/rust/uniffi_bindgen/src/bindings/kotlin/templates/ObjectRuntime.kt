@@ -152,7 +152,7 @@ abstract class FFIObject(
         try {
             return block(this.pointer)
         } finally {
-            // This decrement aways matches the increment we performed above.
+            // This decrement always matches the increment we performed above.
             if (this.callCounter.decrementAndGet() == 0L) {
                 this.freeRustArcPtr()
             }

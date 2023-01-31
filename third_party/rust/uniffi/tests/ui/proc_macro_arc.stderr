@@ -2,15 +2,24 @@ error[E0271]: type mismatch resolving `<Arc<child::Foo> as child::_::_::{closure
   --> tests/ui/proc_macro_arc.rs:18:22
    |
 18 |     fn take_foo(foo: Arc<Foo>) {
-   |                      ^^^ type mismatch resolving `<Arc<child::Foo> as child::_::_::{closure#0}::TypeEq>::This == Arc<Foo>`
+   |                      ^^^^^^^^ type mismatch resolving `<Arc<child::Foo> as child::_::_::{closure#0}::TypeEq>::This == Arc<Foo>`
    |
 note: expected this to be `Arc<Foo>`
   --> tests/ui/proc_macro_arc.rs:18:22
    |
 18 |     fn take_foo(foo: Arc<Foo>) {
    |                      ^^^
-   = note: expected struct `Arc<Foo>`
-              found struct `Arc<child::Foo>`
+   = note: enum `child::Foo` and struct `Foo` have similar names, but are actually distinct types
+note: enum `child::Foo` is defined in module `crate::child` of the current crate
+  --> tests/ui/proc_macro_arc.rs:15:5
+   |
+15 |     enum Foo {}
+   |     ^^^^^^^^
+note: struct `Foo` is defined in module `crate` of the current crate
+  --> tests/ui/proc_macro_arc.rs:5:1
+   |
+5  | pub struct Foo;
+   | ^^^^^^^^^^^^^^
 note: required by a bound in `child::_::_::{closure#0}::assert_type_eq_all`
   --> tests/ui/proc_macro_arc.rs:18:22
    |

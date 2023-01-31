@@ -121,6 +121,42 @@ pub fn generate_python_bindings(config: &Config, ci: &ComponentInterface) -> Res
         .context("failed to render python bindings")
 }
 
+/// A struct to record a Python import statement.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum ImportRequirement {
+    /// A simple module import.
+    Module { mod_name: String },
+    /// A single symbol from a module.
+    Symbol {
+        mod_name: String,
+        symbol_name: String,
+    },
+    /// A single symbol from a module with the specified local name.
+    SymbolAs {
+        mod_name: String,
+        symbol_name: String,
+        as_name: String,
+    },
+}
+
+impl ImportRequirement {
+    /// Render the Python import statement.
+    fn render(&self) -> String {
+        match &self {
+            ImportRequirement::Module { mod_name } => format!("import {mod_name}"),
+            ImportRequirement::Symbol {
+                mod_name,
+                symbol_name,
+            } => format!("from {mod_name} import {symbol_name}"),
+            ImportRequirement::SymbolAs {
+                mod_name,
+                symbol_name,
+                as_name,
+            } => format!("from {mod_name} import {symbol_name} as {as_name}"),
+        }
+    }
+}
+
 /// Renders Python helper code for all types
 ///
 /// This template is a bit different than others in that it stores internal state from the render
@@ -133,7 +169,7 @@ pub struct TypeRenderer<'a> {
     // Track included modules for the `include_once()` macro
     include_once_names: RefCell<HashSet<String>>,
     // Track imports added with the `add_import()` macro
-    imports: RefCell<BTreeSet<String>>,
+    imports: RefCell<BTreeSet<ImportRequirement>>,
 }
 
 impl<'a> TypeRenderer<'a> {
@@ -165,7 +201,30 @@ impl<'a> TypeRenderer<'a> {
     //
     // Returns an empty string so that it can be used inside an askama `{{ }}` block.
     fn add_import(&self, name: &str) -> &str {
-        self.imports.borrow_mut().insert(name.to_owned());
+        self.imports.borrow_mut().insert(ImportRequirement::Module {
+            mod_name: name.to_owned(),
+        });
+        ""
+    }
+
+    // Like add_import, but arranges for `from module import name`.
+    fn add_import_of(&self, mod_name: &str, name: &str) -> &str {
+        self.imports.borrow_mut().insert(ImportRequirement::Symbol {
+            mod_name: mod_name.to_owned(),
+            symbol_name: name.to_owned(),
+        });
+        ""
+    }
+
+    // Like add_import, but arranges for `from module import name as other`.
+    fn add_import_of_as(&self, mod_name: &str, symbol_name: &str, as_name: &str) -> &str {
+        self.imports
+            .borrow_mut()
+            .insert(ImportRequirement::SymbolAs {
+                mod_name: mod_name.to_owned(),
+                symbol_name: symbol_name.to_owned(),
+                as_name: as_name.to_owned(),
+            });
         ""
     }
 }
@@ -176,7 +235,7 @@ pub struct PythonWrapper<'a> {
     ci: &'a ComponentInterface,
     config: Config,
     type_helper_code: String,
-    type_imports: BTreeSet<String>,
+    type_imports: BTreeSet<ImportRequirement>,
 }
 impl<'a> PythonWrapper<'a> {
     pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
@@ -191,14 +250,14 @@ impl<'a> PythonWrapper<'a> {
         }
     }
 
-    pub fn imports(&self) -> Vec<String> {
+    pub fn imports(&self) -> Vec<ImportRequirement> {
         self.type_imports.iter().cloned().collect()
     }
 }
 
 fn fixup_keyword(name: String) -> String {
     if KEYWORDS.contains(&name) {
-        format!("_{}", name)
+        format!("_{name}")
     } else {
         name
     }
@@ -214,7 +273,7 @@ impl PythonCodeOracle {
     // template code.
     //
     //   - When adding additional types here, make sure to also add a match arm to the `Types.py` template.
-    //   - To keep things managable, let's try to limit ourselves to these 2 mega-matches
+    //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
     fn create_code_type(&self, type_: TypeIdentifier) -> Box<dyn CodeType> {
         match type_ {
             Type::UInt8 => Box::new(primitives::UInt8CodeType),
@@ -246,8 +305,8 @@ impl PythonCodeOracle {
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling create_code_type")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling create_code_type")
             }
         }
     }
@@ -284,26 +343,29 @@ impl CodeOracle for PythonCodeOracle {
         let name = fixup_keyword(self.class_name(nm));
         match name.strip_suffix("Error") {
             None => name,
-            Some(stripped) => format!("{}Exception", stripped),
+            Some(stripped) => format!("{stripped}Exception"),
         }
     }
 
-    fn ffi_type_label(&self, ffi_type: &FFIType) -> String {
+    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
         match ffi_type {
-            FFIType::Int8 => "ctypes.c_int8".to_string(),
-            FFIType::UInt8 => "ctypes.c_uint8".to_string(),
-            FFIType::Int16 => "ctypes.c_int16".to_string(),
-            FFIType::UInt16 => "ctypes.c_uint16".to_string(),
-            FFIType::Int32 => "ctypes.c_int32".to_string(),
-            FFIType::UInt32 => "ctypes.c_uint32".to_string(),
-            FFIType::Int64 => "ctypes.c_int64".to_string(),
-            FFIType::UInt64 => "ctypes.c_uint64".to_string(),
-            FFIType::Float32 => "ctypes.c_float".to_string(),
-            FFIType::Float64 => "ctypes.c_double".to_string(),
-            FFIType::RustArcPtr(_) => "ctypes.c_void_p".to_string(),
-            FFIType::RustBuffer => "RustBuffer".to_string(),
-            FFIType::ForeignBytes => "ForeignBytes".to_string(),
-            FFIType::ForeignCallback => "FOREIGN_CALLBACK_T".to_string(),
+            FfiType::Int8 => "ctypes.c_int8".to_string(),
+            FfiType::UInt8 => "ctypes.c_uint8".to_string(),
+            FfiType::Int16 => "ctypes.c_int16".to_string(),
+            FfiType::UInt16 => "ctypes.c_uint16".to_string(),
+            FfiType::Int32 => "ctypes.c_int32".to_string(),
+            FfiType::UInt32 => "ctypes.c_uint32".to_string(),
+            FfiType::Int64 => "ctypes.c_int64".to_string(),
+            FfiType::UInt64 => "ctypes.c_uint64".to_string(),
+            FfiType::Float32 => "ctypes.c_float".to_string(),
+            FfiType::Float64 => "ctypes.c_double".to_string(),
+            FfiType::RustArcPtr(_) => "ctypes.c_void_p".to_string(),
+            FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
+                Some(suffix) => format!("RustBuffer{}", suffix),
+                None => "RustBuffer".to_string(),
+            },
+            FfiType::ForeignBytes => "ForeignBytes".to_string(),
+            FfiType::ForeignCallback => "FOREIGN_CALLBACK_T".to_string(),
         }
     }
 }
@@ -354,8 +416,8 @@ pub mod filters {
         Ok(codetype.literal(oracle, literal))
     }
 
-    /// Get the Python syntax for representing a given low-level `FFIType`.
-    pub fn ffi_type_name(type_: &FFIType) -> Result<String, askama::Error> {
+    /// Get the Python syntax for representing a given low-level `FfiType`.
+    pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(oracle().ffi_type_label(type_))
     }
 

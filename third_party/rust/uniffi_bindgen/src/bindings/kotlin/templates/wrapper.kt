@@ -25,8 +25,8 @@ import com.sun.jna.ptr.ByReference
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-{%- for imported_class in self.imports() %}
-import {{ imported_class }}
+{%- for req in self.imports() %}
+{{ req.render() }}
 {%- endfor %}
 
 {% include "RustBufferTemplate.kt" %}

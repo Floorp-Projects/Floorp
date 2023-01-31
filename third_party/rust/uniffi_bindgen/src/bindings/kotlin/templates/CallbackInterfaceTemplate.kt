@@ -50,7 +50,7 @@ internal class {{ foreign_callback }} : ForeignCallback {
                         outBuf.setValue(buffer)
                         -2
                     }
-                    {%- else %} 
+                    {%- else %}
                     val buffer = this.{{ method_name }}(cb, args)
                     // Success
                     outBuf.setValue(buffer)
@@ -73,7 +73,7 @@ internal class {{ foreign_callback }} : ForeignCallback {
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
                 try {
                     // Try to serialize the error into a string
-                    outBuf.setValue({{ Type::String.borrow()|ffi_converter_name }}.lower("Invalid Callaback index"))
+                    outBuf.setValue({{ Type::String.borrow()|ffi_converter_name }}.lower("Invalid Callback index"))
                 } catch (e: Throwable) {
                     // If that fails, then it's time to give up and just return
                 }

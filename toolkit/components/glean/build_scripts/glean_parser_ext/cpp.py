@@ -11,7 +11,7 @@ Outputter to generate C++ code for metrics.
 import json
 
 import jinja2
-from glean_parser import util
+from glean_parser import metrics, util
 from util import generate_metric_ids, generate_ping_ids, get_metrics
 
 
@@ -54,7 +54,7 @@ def type_name(obj):
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
         for name, suffix in generate_enums:
-            if not len(getattr(obj, name)) and suffix == "Keys":
+            if not len(getattr(obj, name)) and isinstance(obj, metrics.Event):
                 return util.Camelize(obj.type) + "Metric<NoExtraKeys>"
             else:
                 # we always use the `extra` suffix,
