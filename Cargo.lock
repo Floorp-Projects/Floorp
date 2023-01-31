@@ -1210,8 +1210,8 @@ dependencies = [
 
 [[package]]
 name = "d3d12"
-version = "0.5.0"
-source = "git+https://github.com/gfx-rs/d3d12-rs?rev=a990c93#a990c93ec64eeab78f2292763d0715da9dba1d59"
+version = "0.6.0"
+source = "git+https://github.com/gfx-rs/d3d12-rs?rev=b940b1d71#b940b1d71ab7083ae80eec697872672dc1f2bd32"
 dependencies = [
  "bitflags",
  "libloading",
@@ -3630,8 +3630,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.10.0"
-source = "git+https://github.com/gfx-rs/naga?rev=1be8024#1be8024bda3594987b417bead5024b98be9ab521"
+version = "0.11.0"
+source = "git+https://github.com/gfx-rs/naga?rev=f0edae8#f0edae8ce9e55eeef489fc53b10dc95fb79561cc"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -6350,8 +6350,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
+version = "0.15.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=48d8666de002c7bfddbe85a2596f7748b4cc18b4#48d8666de002c7bfddbe85a2596f7748b4cc18b4"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6373,8 +6373,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
+version = "0.15.1"
+source = "git+https://github.com/gfx-rs/wgpu?rev=48d8666de002c7bfddbe85a2596f7748b4cc18b4#48d8666de002c7bfddbe85a2596f7748b4cc18b4"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6411,11 +6411,13 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "0.14.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=24a904256e225b20b11fb30f914ef53212a2909e#24a904256e225b20b11fb30f914ef53212a2909e"
+version = "0.15.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=48d8666de002c7bfddbe85a2596f7748b4cc18b4#48d8666de002c7bfddbe85a2596f7748b4cc18b4"
 dependencies = [
  "bitflags",
+ "js-sys",
  "serde",
+ "web-sys",
 ]
 
 [[package]]
