@@ -1053,6 +1053,18 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
 
    private:
     /**
+     * MaybeReplaceSubListWithNewListItem() replaces
+     * mEmptyInclusiveAncestorBlockElement with new list item element
+     * (containing <br>) if:
+     * - mEmptyInclusiveAncestorBlockElement is a list element
+     * - The parent of mEmptyInclusiveAncestorBlockElement is a list element
+     * - The parent becomes empty after deletion
+     * If this does not perform the replacement, returns "ignored".
+     */
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+    MaybeReplaceSubListWithNewListItem(HTMLEditor& aHTMLEditor);
+
+    /**
      * MaybeInsertBRElementBeforeEmptyListItemElement() inserts a `<br>` element
      * if `mEmptyInclusiveAncestorBlockElement` is a list item element which
      * is first editable element in its parent, and its grand parent is not a
@@ -5959,6 +5971,16 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
          HTMLEditUtils::IsRemovableFromParentNode(*editableBlockElement) &&
          !HTMLEditUtils::IsAnyTableElement(editableBlockElement) &&
          HTMLEditUtils::IsEmptyNode(*editableBlockElement)) {
+    // If the removable empty list item is a child of editing host list element,
+    // we should not delete it.
+    if (HTMLEditUtils::IsListItem(editableBlockElement)) {
+      Element* const parentElement = editableBlockElement->GetParentElement();
+      if (parentElement && HTMLEditUtils::IsAnyListElement(parentElement) &&
+          !HTMLEditUtils::IsRemovableFromParentNode(*parentElement) &&
+          HTMLEditUtils::IsEmptyNode(*parentElement)) {
+        break;
+      }
+    }
     mEmptyInclusiveAncestorBlockElement = editableBlockElement;
     editableBlockElement = HTMLEditUtils::GetAncestorElement(
         *mEmptyInclusiveAncestorBlockElement,
@@ -6184,6 +6206,20 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
+  {
+    Result<EditActionResult, nsresult> result =
+        MaybeReplaceSubListWithNewListItem(aHTMLEditor);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING(
+          "AutoEmptyBlockAncestorDeleter::MaybeReplaceSubListWithNewListItem() "
+          "failed");
+      return result;
+    }
+    if (result.inspect().Handled()) {
+      return result;
+    }
+  }
+
   if (HTMLEditUtils::IsListItem(mEmptyInclusiveAncestorBlockElement)) {
     Result<RefPtr<Element>, nsresult> result =
         MaybeInsertBRElementBeforeEmptyListItemElement(aHTMLEditor);
@@ -6221,6 +6257,69 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
       MOZ_KnownLive(*mEmptyInclusiveAncestorBlockElement));
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return Err(rv);
+  }
+  return EditActionResult::HandledResult();
+}
+
+Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+    AutoEmptyBlockAncestorDeleter::MaybeReplaceSubListWithNewListItem(
+        HTMLEditor& aHTMLEditor) {
+  // If we're deleting sublist element and it's the last list item of its parent
+  // list, we should replace it with a list element.
+  if (!HTMLEditUtils::IsAnyListElement(mEmptyInclusiveAncestorBlockElement)) {
+    return EditActionResult::IgnoredResult();
+  }
+  RefPtr<Element> parentElement =
+      mEmptyInclusiveAncestorBlockElement->GetParentElement();
+  if (!parentElement || !HTMLEditUtils::IsAnyListElement(parentElement) ||
+      !HTMLEditUtils::IsEmptyNode(*parentElement)) {
+    return EditActionResult::IgnoredResult();
+  }
+
+  nsCOMPtr<nsINode> nextSibling =
+      mEmptyInclusiveAncestorBlockElement->GetNextSibling();
+  nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(
+      MOZ_KnownLive(*mEmptyInclusiveAncestorBlockElement));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return Err(rv);
+  }
+  Result<CreateElementResult, nsresult> insertListItemResult =
+      aHTMLEditor.CreateAndInsertElement(
+          WithTransaction::Yes,
+          parentElement->IsHTMLElement(nsGkAtoms::dl) ? *nsGkAtoms::dd
+                                                      : *nsGkAtoms::li,
+          !nextSibling || nextSibling->GetParentNode() != parentElement
+              ? EditorDOMPoint::AtEndOf(*parentElement)
+              : EditorDOMPoint(nextSibling),
+          [](HTMLEditor& aHTMLEditor, Element& aNewElement,
+             const EditorDOMPoint& aPointToInsert) -> nsresult {
+            RefPtr<Element> brElement =
+                aHTMLEditor.CreateHTMLContent(nsGkAtoms::br);
+            if (MOZ_UNLIKELY(!brElement)) {
+              NS_WARNING(
+                  "EditorBase::CreateHTMLContent(nsGkAtoms::br) failed, but "
+                  "ignored");
+              return NS_OK;  // Just gives up to insert <br>
+            }
+            IgnoredErrorResult error;
+            aNewElement.AppendChild(*brElement, error);
+            NS_WARNING_ASSERTION(!error.Failed(),
+                                 "nsINode::AppendChild() failed, but ignored");
+            return NS_OK;
+          });
+  if (MOZ_UNLIKELY(insertListItemResult.isErr())) {
+    NS_WARNING("HTMLEditor::CreateAndInsertElement() failed");
+    return insertListItemResult.propagateErr();
+  }
+  CreateElementResult unwrappedInsertListItemResult =
+      insertListItemResult.unwrap();
+  unwrappedInsertListItemResult.IgnoreCaretPointSuggestion();
+  rv = aHTMLEditor.CollapseSelectionTo(
+      EditorRawDOMPoint(unwrappedInsertListItemResult.GetNewNode(), 0u));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::CollapseSelectionTo() failed");
     return Err(rv);
   }
   return EditActionResult::HandledResult();
