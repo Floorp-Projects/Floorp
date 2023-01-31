@@ -3,16 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
-const {
-  createValueGrip,
-} = require("resource://devtools/server/actors/object/utils.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   environmentSpec,
 } = require("resource://devtools/shared/specs/environment.js");
+
+const {
+  createValueGrip,
+} = require("resource://devtools/server/actors/object/utils.js");
 
 /**
  * Creates an EnvironmentActor. EnvironmentActors are responsible for listing
@@ -24,13 +22,13 @@ const {
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this environment.
  */
-const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
-  initialize(environment, threadActor) {
-    Actor.prototype.initialize.call(this, threadActor.conn);
+class EnvironmentActor extends Actor {
+  constructor(environment, threadActor) {
+    super(threadActor.conn, environmentSpec);
 
     this.obj = environment;
     this.threadActor = threadActor;
-  },
+  }
 
   /**
    * When the Environment Actor is destroyed it removes the
@@ -39,8 +37,8 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
    */
   destroy() {
     this.obj.actor = null;
-    Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   /**
    * Return an environment form for use in a protocol message.
@@ -88,7 +86,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     return form;
-  },
+  }
 
   /**
    * Handle a protocol request to fully enumerate the bindings introduced by the
@@ -202,7 +200,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     return bindings;
-  },
-});
+  }
+}
 
 exports.EnvironmentActor = EnvironmentActor;

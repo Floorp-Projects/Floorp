@@ -4,13 +4,14 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
-const {
-  LongStringActor,
-} = require("resource://devtools/server/actors/string.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   styleSheetsSpec,
 } = require("resource://devtools/shared/specs/style-sheets.js");
+
+const {
+  LongStringActor,
+} = require("resource://devtools/server/actors/string.js");
 
 loader.lazyRequireGetter(
   this,
@@ -23,32 +24,32 @@ loader.lazyRequireGetter(
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
  * stylesheets of a document.
  */
-var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
+class StyleSheetsActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, styleSheetsSpec);
+
+    this.parentActor = targetActor;
+  }
+
   /**
    * The window we work with, taken from the parent actor.
    */
   get window() {
     return this.parentActor.window;
-  },
+  }
 
   /**
    * The current content document of the window we work with.
    */
   get document() {
     return this.window.document;
-  },
-
-  initialize(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, targetActor.conn);
-
-    this.parentActor = targetActor;
-  },
+  }
 
   getTraits() {
     return {
       traits: {},
     };
-  },
+  }
 
   destroy() {
     for (const win of this.parentActor.windows) {
@@ -57,8 +58,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       win.document.styleSheetChangeEventsEnabled = false;
     }
 
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   /**
    * Create a new style sheet in the document with the given text.
@@ -74,22 +75,22 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   async addStyleSheet(text, fileName = null) {
     const styleSheetsManager = this._getStyleSheetsManager();
     await styleSheetsManager.addStyleSheet(this.document, text, fileName);
-  },
+  }
 
   _getStyleSheetsManager() {
     return this.parentActor.getStyleSheetsManager();
-  },
+  }
 
   toggleDisabled(resourceId) {
     const styleSheetsManager = this._getStyleSheetsManager();
     return styleSheetsManager.toggleDisabled(resourceId);
-  },
+  }
 
   async getText(resourceId) {
     const styleSheetsManager = this._getStyleSheetsManager();
     const text = await styleSheetsManager.getText(resourceId);
     return new LongStringActor(this.conn, text || "");
-  },
+  }
 
   update(resourceId, text, transition, cause = "") {
     const styleSheetsManager = this._getStyleSheetsManager();
@@ -98,7 +99,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       kind: UPDATE_GENERAL,
       cause,
     });
-  },
-});
+  }
+}
 
 exports.StyleSheetsActor = StyleSheetsActor;

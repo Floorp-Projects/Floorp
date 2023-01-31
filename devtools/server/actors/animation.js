@@ -25,12 +25,12 @@
  *   /dom/webidl/Animation*.webidl
  */
 
-const protocol = require("resource://devtools/shared/protocol.js");
-const { Actor } = protocol;
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   animationPlayerSpec,
   animationsSpec,
 } = require("resource://devtools/shared/specs/animation.js");
+
 const {
   ANIMATION_TYPE_FOR_LONGHANDS,
 } = require("resource://devtools/server/actors/animation-type-longhand.js");
@@ -63,14 +63,14 @@ exports.getAnimationTypeForLonghand = getAnimationTypeForLonghand;
  *
  * This actor also allows playing, pausing and seeking the animation.
  */
-var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
+class AnimationPlayerActor extends Actor {
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
    * @param {Number} Time which animation created
    */
-  initialize(animationsActor, player, createdTime) {
-    Actor.prototype.initialize.call(this, animationsActor.conn);
+  constructor(animationsActor, player, createdTime) {
+    super(animationsActor.conn, animationPlayerSpec);
 
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
 
@@ -95,7 +95,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
 
     this.createdTime = createdTime;
     this.currentTimeAtCreated = player.currentTime;
-  },
+  }
 
   destroy() {
     // Only try to disconnect the observer if it's not already dead (i.e. if the
@@ -105,12 +105,12 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
     this.player = this.observer = this.walker = null;
 
-    Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   get isPseudoElement() {
     return !!this.player.effect.pseudoElement;
-  },
+  }
 
   get pseudoElemenName() {
     if (!this.isPseudoElement) {
@@ -121,7 +121,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       /^::/,
       ""
     )}`;
-  },
+  }
 
   get node() {
     if (!this.isPseudoElement) {
@@ -148,21 +148,21 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       `Pseudo element ${this.player.effect.pseudoElement} is not found`
     );
     return originatingElem;
-  },
+  }
 
   get document() {
     return this.node.ownerDocument;
-  },
+  }
 
   get window() {
     return this.document.defaultView;
-  },
+  }
 
   /**
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release() {},
+  release() {}
 
   form(detail) {
     const data = this.getCurrentState();
@@ -175,15 +175,15 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
 
     return data;
-  },
+  }
 
   isCssAnimation(player = this.player) {
     return player instanceof this.window.CSSAnimation;
-  },
+  }
 
   isCssTransition(player = this.player) {
     return player instanceof this.window.CSSTransition;
-  },
+  }
 
   isScriptAnimation(player = this.player) {
     return (
@@ -193,7 +193,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
         player instanceof this.window.CSSTransition
       )
     );
-  },
+  }
 
   getType() {
     if (this.isCssAnimation()) {
@@ -205,7 +205,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
 
     return ANIMATION_TYPES.UNKNOWN;
-  },
+  }
 
   /**
    * Get the name of this animation. This can be either the animation.id
@@ -223,7 +223,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     }
 
     return "";
-  },
+  }
 
   /**
    * Get the animation duration from this player, in milliseconds.
@@ -231,7 +231,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getDuration() {
     return this.player.effect.getComputedTiming().duration;
-  },
+  }
 
   /**
    * Get the animation delay from this player, in milliseconds.
@@ -239,7 +239,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getDelay() {
     return this.player.effect.getComputedTiming().delay;
-  },
+  }
 
   /**
    * Get the animation endDelay from this player, in milliseconds.
@@ -247,7 +247,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getEndDelay() {
     return this.player.effect.getComputedTiming().endDelay;
-  },
+  }
 
   /**
    * Get the animation iteration count for this player. That is, how many times
@@ -258,7 +258,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   getIterationCount() {
     const iterations = this.player.effect.getComputedTiming().iterations;
     return iterations === Infinity ? null : iterations;
-  },
+  }
 
   /**
    * Get the animation iterationStart from this player, in ratio.
@@ -267,7 +267,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getIterationStart() {
     return this.player.effect.getComputedTiming().iterationStart;
-  },
+  }
 
   /**
    * Get the animation easing from this player.
@@ -275,7 +275,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getEasing() {
     return this.player.effect.getComputedTiming().easing;
-  },
+  }
 
   /**
    * Get the animation fill mode from this player.
@@ -283,7 +283,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getFill() {
     return this.player.effect.getComputedTiming().fill;
-  },
+  }
 
   /**
    * Get the animation direction from this player.
@@ -291,7 +291,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getDirection() {
     return this.player.effect.getComputedTiming().direction;
-  },
+  }
 
   /**
    * Get animation-timing-function from animated element if CSS Animations.
@@ -310,7 +310,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       target = target.element;
     }
     return this.window.getComputedStyle(target, pseudo).animationTimingFunction;
-  },
+  }
 
   getPropertiesCompositorStatus() {
     const properties = this.player.effect.getProperties();
@@ -321,7 +321,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
         warning: prop.warning,
       };
     });
-  },
+  }
 
   /**
    * Return the current start of the Animation.
@@ -365,7 +365,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       currentTimeAtCreated: this.currentTimeAtCreated,
       properties: this.getProperties(),
     };
-  },
+  }
 
   /**
    * Get the current state of the AnimationPlayer (currentTime, playState, ...).
@@ -399,7 +399,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     this.currentState = newState;
 
     return sentState;
-  },
+  }
 
   /**
    * Executed when the current animation changes, used to emit the new state
@@ -443,7 +443,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     if (hasChanged) {
       this.emit("changed", this.getCurrentState());
     }
-  },
+  }
 
   /**
    * Get data about the animated properties of this animation player.
@@ -541,7 +541,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       }
     }
     return properties;
-  },
+  }
 
   /**
    * Get the animation types for a given list of CSS property names.
@@ -554,7 +554,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       animationTypes[propertyName] = getAnimationTypeForLonghand(propertyName);
     }
     return animationTypes;
-  },
+  }
 
   /**
    * Returns the distance of between value1, value2.
@@ -582,17 +582,17 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       // 'auto' keyword and so on.
       return 0;
     }
-  },
-});
+  }
+}
 
 exports.AnimationPlayerActor = AnimationPlayerActor;
 
 /**
  * The Animations actor lists animation players for a given node.
  */
-exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+exports.AnimationsActor = class AnimationsActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, animationsSpec);
     this.targetActor = targetActor;
 
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -602,16 +602,16 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     this.allAnimationsPaused = false;
     this.targetActor.on("will-navigate", this.onWillNavigate);
     this.targetActor.on("navigate", this.onNavigate);
-  },
+  }
 
   destroy() {
-    Actor.prototype.destroy.call(this);
+    super.destroy();
     this.targetActor.off("will-navigate", this.onWillNavigate);
     this.targetActor.off("navigate", this.onNavigate);
 
     this.stopAnimationPlayerUpdates();
     this.targetActor = this.observer = this.actors = this.walker = null;
-  },
+  }
 
   /**
    * Clients can optionally call this with a reference to their WalkerActor.
@@ -623,7 +623,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    */
   setWalkerActor(walker) {
     this.walker = walker;
-  },
+  }
 
   /**
    * Retrieve the list of AnimationPlayerActor actors for currently running
@@ -668,7 +668,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     });
 
     return this.actors;
-  },
+  }
 
   onAnimationMutation(mutations) {
     const eventData = [];
@@ -743,7 +743,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         this.emit("mutations", eventData);
       });
     }
-  },
+  }
 
   /**
    * After the client has called getAnimationPlayersForNode for a given DOM
@@ -754,19 +754,19 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     if (this.observer && !Cu.isDeadWrapper(this.observer)) {
       this.observer.disconnect();
     }
-  },
+  }
 
   onWillNavigate({ isTopLevel }) {
     if (isTopLevel) {
       this.stopAnimationPlayerUpdates();
     }
-  },
+  }
 
   onNavigate({ isTopLevel }) {
     if (isTopLevel) {
       this.allAnimationsPaused = false;
     }
-  },
+  }
 
   /**
    * Pause given animations.
@@ -779,7 +779,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
 
     return this.waitForNextFrame(actors);
-  },
+  }
 
   /**
    * Play given animations.
@@ -792,7 +792,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
 
     return this.waitForNextFrame(actors);
-  },
+  }
 
   /**
    * Set the current time of several animations at the same time.
@@ -816,7 +816,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
 
     return this.waitForNextFrame(players);
-  },
+  }
 
   /**
    * Set the playback rate of several animations at the same time.
@@ -830,7 +830,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         return player.ready;
       })
     );
-  },
+  }
 
   /**
    * Pause given player synchronously.
@@ -839,7 +839,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    */
   pauseSync(player) {
     player.startTime = null;
-  },
+  }
 
   /**
    * Play given player synchronously.
@@ -856,7 +856,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     const currentTime = player.currentTime || 0;
     player.startTime =
       player.timeline.currentTime - currentTime / player.playbackRate;
-  },
+  }
 
   /**
    * Return created fime of given animaiton.
@@ -869,7 +869,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
       animation.timeline.currentTime -
         animation.currentTime / animation.playbackRate
     );
-  },
+  }
 
   /**
    * Wait for next animation frame.
@@ -895,5 +895,5 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     });
 
     return Promise.all(promises);
-  },
-});
+  }
+};

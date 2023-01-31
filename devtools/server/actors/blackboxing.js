@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   blackboxingSpec,
 } = require("resource://devtools/shared/specs/blackboxing.js");
+
 const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
@@ -27,15 +25,11 @@ const { BLACKBOXING } = SUPPORTED_DATA;
  * @constructor
  *
  */
-const BlackboxingActor = ActorClassWithSpec(blackboxingSpec, {
-  initialize(watcherActor) {
+class BlackboxingActor extends Actor {
+  constructor(watcherActor) {
+    super(watcherActor.conn, blackboxingSpec);
     this.watcherActor = watcherActor;
-    Actor.prototype.initialize.call(this, this.watcherActor.conn);
-  },
-
-  destroy(conn) {
-    Actor.prototype.destroy.call(this, conn);
-  },
+  }
 
   /**
    * Request to blackbox a new JS file either completely if no range is passed.
@@ -66,7 +60,7 @@ const BlackboxingActor = ActorClassWithSpec(blackboxingSpec, {
         };
       })
     );
-  },
+  }
 
   /**
    * Request to unblackbox some JS sources.
@@ -90,7 +84,7 @@ const BlackboxingActor = ActorClassWithSpec(blackboxingSpec, {
         };
       })
     );
-  },
-});
+  }
+}
 
 exports.BlackboxingActor = BlackboxingActor;

@@ -24,22 +24,23 @@
  *   These dedicated classes are used by the LayoutChangesObserver.
  */
 
-const protocol = require("resource://devtools/shared/protocol.js");
-const EventEmitter = require("resource://devtools/shared/event-emitter.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const { reflowSpec } = require("resource://devtools/shared/specs/reflow.js");
+
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**
  * The reflow actor tracks reflows and emits events about them.
  */
-exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
-  initialize(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+exports.ReflowActor = class ReflowActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, reflowSpec);
 
     this.targetActor = targetActor;
     this._onReflow = this._onReflow.bind(this);
     this.observer = getLayoutChangesObserver(targetActor);
     this._isStarted = false;
-  },
+  }
 
   destroy() {
     this.stop();
@@ -47,8 +48,8 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
     this.observer = null;
     this.targetActor = null;
 
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   /**
    * Start tracking reflows and sending events to clients about them.
@@ -60,7 +61,7 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
       this.observer.on("reflows", this._onReflow);
       this._isStarted = true;
     }
-  },
+  }
 
   /**
    * Stop tracking reflows and sending events to clients about them.
@@ -72,14 +73,14 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
       this.observer.off("reflows", this._onReflow);
       this._isStarted = false;
     }
-  },
+  }
 
   _onReflow(reflows) {
     if (this._isStarted) {
       this.emit("reflows", reflows);
     }
-  },
-});
+  }
+};
 
 /**
  * Base class for all sorts of observers that need to listen to events on the
@@ -87,22 +88,22 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
  * @param {WindowGlobalTargetActor} targetActor
  * @param {Function} callback Executed everytime the observer observes something
  */
-function Observable(targetActor, callback) {
-  this.targetActor = targetActor;
-  this.callback = callback;
+class Observable {
+  constructor(targetActor, callback) {
+    this.targetActor = targetActor;
+    this.callback = callback;
 
-  this._onWindowReady = this._onWindowReady.bind(this);
-  this._onWindowDestroyed = this._onWindowDestroyed.bind(this);
+    this._onWindowReady = this._onWindowReady.bind(this);
+    this._onWindowDestroyed = this._onWindowDestroyed.bind(this);
 
-  this.targetActor.on("window-ready", this._onWindowReady);
-  this.targetActor.on("window-destroyed", this._onWindowDestroyed);
-}
+    this.targetActor.on("window-ready", this._onWindowReady);
+    this.targetActor.on("window-destroyed", this._onWindowDestroyed);
+  }
 
-Observable.prototype = {
   /**
    * Is the observer currently observing
    */
-  isObserving: false,
+  isObserving = false;
 
   /**
    * Stop observing and detroy this observer instance
@@ -120,7 +121,7 @@ Observable.prototype = {
 
     this.callback = null;
     this.targetActor = null;
-  },
+  }
 
   /**
    * Start observing whatever it is this observer is supposed to observe
@@ -132,7 +133,7 @@ Observable.prototype = {
     this.isObserving = true;
 
     this._startListeners(this.targetActor.windows);
-  },
+  }
 
   /**
    * Stop observing
@@ -147,35 +148,35 @@ Observable.prototype = {
       // It's only worth stopping if the targetActor is still active
       this._stopListeners(this.targetActor.windows);
     }
-  },
+  }
 
   _onWindowReady({ window }) {
     if (this.isObserving) {
       this._startListeners([window]);
     }
-  },
+  }
 
   _onWindowDestroyed({ window }) {
     if (this.isObserving) {
       this._stopListeners([window]);
     }
-  },
+  }
 
   _startListeners(windows) {
     // To be implemented by sub-classes.
-  },
+  }
 
   _stopListeners(windows) {
     // To be implemented by sub-classes.
-  },
+  }
 
   /**
    * To be called by sub-classes when something has been observed
    */
   notifyCallback(...args) {
     this.isObserving && this.callback && this.callback.apply(null, args);
-  },
-};
+  }
+}
 
 /**
  * The LayouChangesObserver will observe reflows as soon as it is started.

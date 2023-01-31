@@ -4,7 +4,11 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  styleRuleSpec,
+} = require("resource://devtools/shared/specs/style-rule.js");
+
 const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const InspectorUtils = require("InspectorUtils");
 const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
@@ -13,9 +17,6 @@ const {
   getTextAtLineColumn,
 } = require("resource://devtools/server/actors/utils/style-utils.js");
 
-const {
-  styleRuleSpec,
-} = require("resource://devtools/shared/specs/style-rule.js");
 const {
   style: { ELEMENT_STYLE },
 } = require("resource://devtools/shared/constants.js");
@@ -80,9 +81,9 @@ const SUPPORTED_RULE_TYPES = [
  * (which have a CSSStyle but no CSSRule) we create a StyleRuleActor
  * with a special rule type (100).
  */
-const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
-  initialize(pageStyle, item) {
-    protocol.Actor.prototype.initialize.call(this, null);
+class StyleRuleActor extends Actor {
+  constructor(pageStyle, item) {
+    super(null, styleRuleSpec);
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
     this._parentSheet = null;
@@ -116,29 +117,29 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         },
       };
     }
-  },
+  }
 
   get conn() {
     return this.pageStyle.conn;
-  },
+  }
 
   destroy() {
     if (!this.rawStyle) {
       return;
     }
-    protocol.Actor.prototype.destroy.call(this);
+    super.destroy();
     this.rawStyle = null;
     this.pageStyle = null;
     this.rawNode = null;
     this.rawRule = null;
     this._declarations = null;
-  },
+  }
 
   // Objects returned by this actor are owned by the PageStyleActor
   // to which this rule belongs.
   get marshallPool() {
     return this.pageStyle;
-  },
+  }
 
   // True if this rule supports as-authored styles, meaning that the
   // rule text can be rewritten using setRuleText.
@@ -155,7 +156,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
         this._parentSheet.href !== "about:PreferenceStyleSheet")
     );
-  },
+  }
 
   /**
    * Return an array with StyleRuleActor instances for each of this rule's ancestor rules
@@ -174,7 +175,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return ancestors;
-  },
+  }
 
   /**
    * Return an object with information about this rule used for tracking changes.
@@ -264,7 +265,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return data;
-  },
+  }
 
   getDocument(sheet) {
     if (!sheet.associatedDocument) {
@@ -273,11 +274,11 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       );
     }
     return sheet.associatedDocument;
-  },
+  }
 
   toString() {
     return "[StyleRuleActor for " + this.rawRule + "]";
-  },
+  }
 
   // eslint-disable-next-line complexity
   form() {
@@ -461,7 +462,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return form;
-  },
+  }
 
   /**
    * Send an event notifying that the location of the rule has
@@ -472,7 +473,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    */
   _notifyLocationChanged(line, column) {
     this.emit("location-changed", line, column);
-  },
+  }
 
   /**
    * Compute the index of this actor's raw rule in its parent style
@@ -510,7 +511,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     this._ruleIndex = result;
-  },
+  }
 
   /**
    * Get the rule corresponding to |this._ruleIndex| from the given
@@ -531,7 +532,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       }
     }
     return currentRule;
-  },
+  }
 
   /**
    * Called from PageStyle actor _onStylesheetUpdated.
@@ -563,7 +564,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       this.line = line;
       this.column = column;
     }
-  },
+  }
 
   /**
    * Return a promise that resolves to the authored form of a rule's
@@ -596,7 +597,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Cache the result on the rule actor to avoid parsing again next time
     this.authoredText = text;
     return this.authoredText;
-  },
+  }
 
   /**
    * Return a promise that resolves to the complete cssText of the rule as authored.
@@ -657,7 +658,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     const { result } = prettifyCSS(text);
     return Promise.resolve(result);
-  },
+  }
 
   /**
    * Set the contents of the rule.  This rewrites the rule in the
@@ -720,7 +721,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Returning this updated actor over the protocol will update its corresponding front
     // and any references to it.
     return this;
-  },
+  }
 
   /**
    * Modify a rule's properties. Passed an array of modifications:
@@ -780,7 +781,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this._pendingDeclarationChanges.push(...modifications);
 
     return this;
-  },
+  }
 
   /**
    * Helper function for modifySelector, inserts the new
@@ -857,7 +858,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return this._getRuleFromIndex(parentStyleSheet);
-  },
+  }
 
   /**
    * Take an object with instructions to modify a CSS declaration and log an object with
@@ -947,7 +948,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     TrackChangeEmitter.trackChange(data);
-  },
+  }
 
   /**
    * Helper method for tracking CSS changes. Logs the change of this rule's selector as
@@ -974,7 +975,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       remove: null,
       selector: newSelector,
     });
-  },
+  }
 
   /**
    * Modify the current rule's selector by inserting a new rule with the new
@@ -1043,7 +1044,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
       return { ruleProps, isMatching };
     });
-  },
+  }
 
   /**
    * Get the eligible query container for a given @container rule and a given node
@@ -1084,7 +1085,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       inlineSize: computedStyle.inlineSize,
       blockSize: computedStyle.blockSize,
     };
-  },
+  }
 
   /**
    * Using the latest computed style applicable to the selected element,
@@ -1120,8 +1121,8 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // The update of the front happens automatically.
       this.emit("rule-updated", this);
     }
-  },
-});
+  }
+}
 exports.StyleRuleActor = StyleRuleActor;
 
 /**

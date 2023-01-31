@@ -4,15 +4,16 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const { changesSpec } = require("resource://devtools/shared/specs/changes.js");
+
 const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 
 /**
  * The ChangesActor stores a stack of changes made by devtools on
  * the document in the associated tab.
  */
-const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
+class ChangesActor extends Actor {
   /**
    * Create a ChangesActor.
    *
@@ -21,8 +22,8 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
    * @param {TargetActor} targetActor
    *    The top-level Actor for this tab.
    */
-  initialize(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+  constructor(conn, targetActor) {
+    super(conn, changesSpec);
     this.targetActor = targetActor;
 
     this.onTrackChange = this.pushChange.bind(this);
@@ -32,14 +33,14 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     this.targetActor.on("will-navigate", this.onWillNavigate);
 
     this.changes = [];
-  },
+  }
 
   destroy() {
     this.clearChanges();
     this.targetActor.off("will-navigate", this.onWillNavigate);
     TrackChangeEmitter.off("track-change", this.onTrackChange);
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   start() {
     /**
@@ -48,11 +49,11 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
      * the front, without triggering side effects, and with a sensible semantic
      * meaning.
      */
-  },
+  }
 
   changeCount() {
     return this.changes.length;
-  },
+  }
 
   change(index) {
     if (index >= 0 && index < this.changes.length) {
@@ -61,7 +62,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     }
     // No change at that index -- return undefined.
     return undefined;
-  },
+  }
 
   allChanges() {
     /**
@@ -72,7 +73,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
      */
     this._changesHaveBeenRequested = true;
     return this.changes.slice();
-  },
+  }
 
   /**
    * Handler for "will-navigate" event from the browsing context. The event is fired for
@@ -94,14 +95,14 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     if (eventData.isTopLevel) {
       this.clearChanges();
     }
-  },
+  }
 
   pushChange(change) {
     this.changes.push(change);
     if (this._changesHaveBeenRequested) {
       this.emit("add-change", change);
     }
-  },
+  }
 
   popChange() {
     const change = this.changes.pop();
@@ -109,14 +110,14 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
       this.emit("remove-change", change);
     }
     return change;
-  },
+  }
 
   clearChanges() {
     this.changes.length = 0;
     if (this._changesHaveBeenRequested) {
       this.emit("clear-changes");
     }
-  },
-});
+  }
+}
 
 exports.ChangesActor = ChangesActor;

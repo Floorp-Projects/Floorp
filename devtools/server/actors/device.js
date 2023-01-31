@@ -4,20 +4,20 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const { deviceSpec } = require("resource://devtools/shared/specs/device.js");
 
 const {
   DevToolsServer,
 } = require("resource://devtools/server/devtools-server.js");
 const { getSystemInfo } = require("resource://devtools/shared/system.js");
-const { deviceSpec } = require("resource://devtools/shared/specs/device.js");
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
-  initialize(conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+exports.DeviceActor = class DeviceActor extends Actor {
+  constructor(conn) {
+    super(conn, deviceSpec);
     // pageshow and pagehide event release wake lock, so we have to acquire
     // wake lock again by pageshow event
     this._onPageShow = this._onPageShow.bind(this);
@@ -25,21 +25,21 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
       this._window.addEventListener("pageshow", this._onPageShow, true);
     }
     this._acquireWakeLock();
-  },
+  }
 
   destroy() {
-    protocol.Actor.prototype.destroy.call(this);
+    super.destroy();
     this._releaseWakeLock();
     if (this._window) {
       this._window.removeEventListener("pageshow", this._onPageShow, true);
     }
-  },
+  }
 
   getDescription() {
     return Object.assign({}, getSystemInfo(), {
       canDebugServiceWorkers: true,
     });
-  },
+  }
 
   _acquireWakeLock() {
     if (AppConstants.platform !== "android") {
@@ -50,7 +50,7 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
       Ci.nsIPowerManagerService
     );
     this._wakelock = pm.newWakeLock("screen", this._window);
-  },
+  }
 
   _releaseWakeLock() {
     if (this._wakelock) {
@@ -61,14 +61,14 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
       }
       this._wakelock = null;
     }
-  },
+  }
 
   _onPageShow() {
     this._releaseWakeLock();
     this._acquireWakeLock();
-  },
+  }
 
   get _window() {
     return Services.wm.getMostRecentWindow(DevToolsServer.chromeWindowType);
-  },
-});
+  }
+};

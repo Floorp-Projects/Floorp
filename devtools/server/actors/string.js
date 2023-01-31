@@ -4,26 +4,26 @@
 
 "use strict";
 
-var {
-  DevToolsServer,
-} = require("resource://devtools/server/devtools-server.js");
-
-var protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   longStringSpec,
 } = require("resource://devtools/shared/specs/string.js");
 
-exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
-  initialize(conn, str) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+const {
+  DevToolsServer,
+} = require("resource://devtools/server/devtools-server.js");
+
+exports.LongStringActor = class LongStringActor extends Actor {
+  constructor(conn, str) {
+    super(conn, longStringSpec);
     this.str = str;
     this.short = this.str.length < DevToolsServer.LONG_STRING_LENGTH;
-  },
+  }
 
   destroy() {
     this.str = null;
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   form() {
     if (this.short) {
@@ -35,11 +35,11 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
       length: this.str.length,
       initial: this.str.substring(0, DevToolsServer.LONG_STRING_INITIAL_LENGTH),
     };
-  },
+  }
 
   substring(start, end) {
     return this.str.substring(start, end);
-  },
+  }
 
-  release() {},
-});
+  release() {}
+};
