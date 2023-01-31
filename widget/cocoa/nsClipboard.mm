@@ -73,7 +73,11 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   NSArray* outputKeys = [pasteboardOutputDict allKeys];
   NSPasteboard* cocoaPasteboard;
   if (aWhichClipboard == kFindClipboard) {
-    cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    if (@available(macOS 10.13, *)) {
+      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
+    } else {
+      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    }
     NSString* stringType = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
     [cocoaPasteboard declareTypes:[NSArray arrayWithObject:stringType] owner:nil];
   } else {
@@ -294,7 +298,11 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
 
   NSPasteboard* cocoaPasteboard;
   if (aWhichClipboard == kFindClipboard) {
-    cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    if (@available(macOS 10.13, *)) {
+      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
+    } else {
+      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    }
   } else {
     cocoaPasteboard = [NSPasteboard generalPasteboard];
   }
@@ -759,7 +767,11 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   if (!mEmptyingForSetData) {
     NSPasteboard* cocoaPasteboard = nullptr;
     if (aWhichClipboard == kFindClipboard) {
-      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+      if (@available(macOS 10.13, *)) {
+        cocoaPasteboard = [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
+      } else {
+        cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+      }
     } else if (aWhichClipboard == kGlobalClipboard) {
       cocoaPasteboard = [NSPasteboard generalPasteboard];
     }
