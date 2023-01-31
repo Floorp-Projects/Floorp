@@ -871,3 +871,141 @@ add_task(async function place() {
     await cleanup();
   }
 });
+
+add_task(async function nullTitle() {
+  await doTitleTest({
+    visits: [
+      {
+        uri: "http://example.com/",
+        // Set title of visits data to an empty string causes
+        // the title to be null in the database.
+        title: "",
+        frecency: 100,
+      },
+      {
+        uri: "https://www.example.com/",
+        title: "high frecency",
+        frecency: 50,
+      },
+      {
+        uri: "http://www.example.com/",
+        title: "low frecency",
+        frecency: 1,
+      },
+    ],
+    input: "example.com",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      matches: context => [
+        makeVisitResult(context, {
+          uri: "http://example.com/",
+          title: "high frecency",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "https://www.example.com/",
+          title: "high frecency",
+        }),
+      ],
+    },
+  });
+});
+
+add_task(async function domainTitle() {
+  await doTitleTest({
+    visits: [
+      {
+        uri: "http://example.com/",
+        title: "example.com",
+        frecency: 100,
+      },
+      {
+        uri: "https://www.example.com/",
+        title: "",
+        frecency: 50,
+      },
+      {
+        uri: "http://www.example.com/",
+        title: "lowest frecency but has title",
+        frecency: 1,
+      },
+    ],
+    input: "example.com",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      matches: context => [
+        makeVisitResult(context, {
+          uri: "http://example.com/",
+          title: "lowest frecency but has title",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "https://www.example.com/",
+          title: "www.example.com",
+        }),
+      ],
+    },
+  });
+});
+
+add_task(async function exactMatchedTitle() {
+  await doTitleTest({
+    visits: [
+      {
+        uri: "http://example.com/",
+        title: "exact match",
+        frecency: 50,
+      },
+      {
+        uri: "https://www.example.com/",
+        title: "high frecency uri",
+        frecency: 100,
+      },
+    ],
+    input: "http://example.com/",
+    expected: {
+      autofilled: "http://example.com/",
+      completed: "http://example.com/",
+      matches: context => [
+        makeVisitResult(context, {
+          uri: "http://example.com/",
+          title: "exact match",
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "https://www.example.com/",
+          title: "high frecency uri",
+        }),
+      ],
+    },
+  });
+});
+
+async function doTitleTest({ visits, input, expected }) {
+  await PlacesTestUtils.addVisits(visits);
+  for (const { uri, frecency } of visits) {
+    // Prepare data.
+    await PlacesUtils.withConnectionWrapper("test::doTitleTest", async db => {
+      await db.execute(
+        `UPDATE moz_places SET frecency = :frecency, recalc_frecency=0 WHERE url = :url`,
+        {
+          frecency,
+          url: uri,
+        }
+      );
+      await db.executeCached("DELETE FROM moz_updateoriginsupdate_temp");
+    });
+  }
+
+  const context = createContext(input, { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: expected.autofilled,
+    completed: expected.completed,
+    matches: expected.matches(context),
+  });
+
+  await cleanup();
+}
