@@ -3,6 +3,13 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+// We're in an xpcshell test but have an eslint browser test env applied;
+// We definitely do need to manually import CustomizableUI.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
+const { CustomizableUI } = ChromeUtils.import(
+  "resource:///modules/CustomizableUI.jsm"
+);
+
 do_get_profile();
 
 // Make Cu.isInAutomation true. This is necessary so that we can use

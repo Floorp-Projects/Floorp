@@ -3,6 +3,12 @@
 
 "use strict";
 
+// window.RemoteAgent is a simple object set in browser.js, and importing
+// RemoteAgent conflicts with that.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
+const { RemoteAgent } = ChromeUtils.importESModule(
+  "chrome://remote/content/components/RemoteAgent.sys.mjs"
+);
 const { RemoteAgentError } = ChromeUtils.importESModule(
   "chrome://remote/content/cdp/Error.sys.mjs"
 );
