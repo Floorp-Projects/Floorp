@@ -69,6 +69,30 @@ add_task(async function testSimpleProjectSearch() {
   );
 });
 
+add_task(async function testSearchDynamicScripts() {
+  const dbg = await initDebugger("doc-minified.html");
+
+  const executeComplete = dbg.commands.scriptCommand.execute(
+    `const foo = 5; debugger; console.log(foo)`
+  );
+  await waitForPaused(dbg);
+
+  await openProjectSearch(dbg);
+  type(dbg, "foo");
+  pressKey(dbg, "Enter");
+
+  const fileResults = await waitForSearchResults(dbg, 1);
+
+  ok(
+    /source\d+/g.test(fileResults[0].innerText),
+    "The search result was found in the eval script."
+  );
+
+  await closeProjectSearch(dbg);
+  await resume(dbg);
+  await executeComplete;
+});
+
 // Tests that minified sources are ignored when the prettyfied versions
 // exist.
 add_task(async function testIgnoreMinifiedSourceForPrettySource() {
