@@ -19,6 +19,7 @@ export class MigrationWizard extends HTMLElement {
   #browserProfileSelector = null;
   #resourceTypeList = null;
   #shadowRoot = null;
+  #importButton = null;
 
   static get markup() {
     return `
@@ -31,47 +32,47 @@ export class MigrationWizard extends HTMLElement {
             <select id="browser-profile-selector">
             </select>
             <fieldset id="resource-type-list">
-              <label id="bookmarks">
+              <label id="bookmarks" data-resource-type="BOOKMARKS"/>
                 <input type="checkbox"/><span data-l10n-id="migration-bookmarks-option-label"></span>
               </label>
-              <label id="logins-and-passwords">
+              <label id="logins-and-passwords" data-resource-type="PASSWORDS">
                 <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
               </label>
-              <label id="history">
+              <label id="history" data-resource-type="HISTORY">
                 <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
               </label>
-              <label id="form-autofill">
+              <label id="form-autofill" data-resource-type="FORMDATA">
                 <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
               </label>
             </fieldset>
             <moz-button-group class="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
-              <button class="primary" data-l10n-id="migration-import-button-label"></button>
+              <button id="import" class="primary" data-l10n-id="migration-import-button-label"></button>
             </moz-button-group>
           </div>
 
           <div name="page-progress">
             <h3 id="progress-header" data-l10n-id="migration-wizard-progress-header"></h3>
             <div class="resource-progress">
-              <div data-resource-type="bookmarks" class="resource-progress-group">
+              <div data-resource-type="BOOKMARKS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-bookmarks-option-label"></span>
                 <span class="success-text">&nbsp;</span>
               </div>
 
-              <div data-resource-type="logins-and-passwords" class="resource-progress-group">
+              <div data-resource-type="PASSWORDS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-logins-and-passwords-option-label"></span>
                 <span class="success-text">&nbsp;</span>
               </div>
 
-              <div data-resource-type="history" class="resource-progress-group">
+              <div data-resource-type="HISTORY" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-history-option-label"></span>
                 <span class="success-text">&nbsp;</span>
               </div>
 
-              <div data-resource-type="form-autofill" class="resource-progress-group">
+              <div data-resource-type="FORMDATA" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-form-autofill-option-label"></span>
                 <span class="success-text">&nbsp;</span>
@@ -129,6 +130,9 @@ export class MigrationWizard extends HTMLElement {
       button.addEventListener("click", this);
     }
 
+    this.#importButton = shadow.querySelector("#import");
+    this.#importButton.addEventListener("click", this);
+
     this.#browserProfileSelector.addEventListener("change", this);
     this.#resourceTypeList = shadow.querySelector("#resource-type-list");
     this.#shadowRoot = shadow;
@@ -180,10 +184,8 @@ export class MigrationWizard extends HTMLElement {
     }
 
     for (let resourceType of resourceTypes) {
-      let resourceID =
-        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES[resourceType];
       let resourceLabel = this.#resourceTypeList.querySelector(
-        `#${resourceID}`
+        `label[data-resource-type="${resourceType}"]`
       );
       if (resourceLabel) {
         resourceLabel.hidden = false;
@@ -324,10 +326,45 @@ export class MigrationWizard extends HTMLElement {
     });
   }
 
+  /**
+   * Takes the current state of the selections page and bundles them
+   * up into a MigrationWizard:BeginMigration event that can be handled
+   * externally to perform the actual migration.
+   */
+  #doImport() {
+    let option = this.#browserProfileSelector.options[
+      this.#browserProfileSelector.selectedIndex
+    ];
+    let key = option.value;
+    let profile = option.profile;
+    let resourceTypeFields = this.#resourceTypeList.querySelectorAll(
+      "label[data-resource-type]"
+    );
+    let resourceTypes = [];
+    for (let resourceTypeField of resourceTypeFields) {
+      if (resourceTypeField.control.checked) {
+        resourceTypes.push(resourceTypeField.dataset.resourceType);
+      }
+    }
+
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:BeginMigration", {
+        bubbles: true,
+        detail: {
+          key,
+          profile,
+          resourceTypes,
+        },
+      })
+    );
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "click": {
-        if (event.target.classList.contains("cancel-close")) {
+        if (event.target == this.#importButton) {
+          this.#doImport();
+        } else if (event.target.classList.contains("cancel-close")) {
           this.dispatchEvent(
             new CustomEvent("MigrationWizard:Close", { bubbles: true })
           );

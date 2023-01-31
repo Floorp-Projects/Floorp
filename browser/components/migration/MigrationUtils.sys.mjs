@@ -103,6 +103,11 @@ const MIGRATOR_MODULES = Object.freeze({
     moduleURI: "resource:///modules/ChromeProfileMigrator.sys.mjs",
     platforms: ["macosx", "win"],
   },
+
+  InternalTestingProfileMigrator: {
+    moduleURI: "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
+    platforms: ["linux", "macosx", "win"],
+  },
 });
 
 /**
