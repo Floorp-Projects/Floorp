@@ -222,6 +222,21 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Importing an ECDSA key as an RSA key should fail",
+  function() {
+    var that = this;
+    var alg = {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256",
+    };
+
+    crypto.subtle.importKey("spki", tv.ecdh_p256.spki, alg, true, ["verify"])
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Refuse to export non-extractable key",
   function() {
     var that = this;
