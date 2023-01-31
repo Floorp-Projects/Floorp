@@ -8,10 +8,6 @@
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test_jsterm_screenshot_command.html";
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-
 // on some machines, such as macOS, dpr is set to 2. This is expected behavior, however
 // to keep tests consistant across OSs we are setting the dpr to 1
 const dpr = "--dpr 1";

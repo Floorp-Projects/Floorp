@@ -96,10 +96,6 @@ add_task(async function() {
   await client.close();
 });
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 async function addTemporaryAddon({ addons, path, openDevTools }) {
   const addonFilePath = getTestFilePath(path);
   info("Installing addon: " + addonFilePath);

@@ -31,10 +31,6 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
       <div></div>
     </body>`;
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-
 add_task(async function() {
   await addTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();

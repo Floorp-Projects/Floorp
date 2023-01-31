@@ -9,10 +9,6 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
-
 const ACCORDION_LABEL_SELECTOR = ".accordion-header-label";
 const ACCORDION_CONTENT_SELECTOR = ".accordion-content";
 

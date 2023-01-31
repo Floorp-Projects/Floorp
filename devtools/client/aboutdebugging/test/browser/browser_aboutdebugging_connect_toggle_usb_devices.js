@@ -6,10 +6,6 @@
 /* import-globals-from helper-adb.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-adb.js", this);
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 /**
  * Check that USB Devices scanning can be enabled and disabled from the connect page.
  */
