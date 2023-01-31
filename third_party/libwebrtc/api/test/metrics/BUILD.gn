@@ -7,6 +7,9 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("../../../webrtc.gni")
+if (rtc_enable_protobuf) {
+  import("//third_party/protobuf/proto_library.gni")
+}
 
 group("metrics") {
   deps = [
@@ -25,6 +28,10 @@ if (rtc_include_tests) {
       ":metrics_logger_and_exporter_test",
       ":stdout_metrics_exporter_test",
     ]
+
+    if (rtc_enable_protobuf) {
+      deps += [ ":metrics_set_proto_file_exporter_test" ]
+    }
   }
 }
 
@@ -84,6 +91,35 @@ rtc_library("metrics_logger_and_exporter") {
   ]
 }
 
+if (rtc_enable_protobuf) {
+  proto_library("metric_proto") {
+    visibility = [ "*" ]
+    sources = [ "proto/metric.proto" ]
+    proto_out_dir = "api/test/metrics/proto"
+    cc_generator_options = "lite"
+  }
+}
+
+rtc_library("metrics_set_proto_file_exporter") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "metrics_set_proto_file_exporter.cc",
+    "metrics_set_proto_file_exporter.h",
+  ]
+  deps = [
+    ":metric",
+    ":metrics_exporter",
+    "../..:array_view",
+    "../../../rtc_base:logging",
+    "../../../test:fileutils",
+  ]
+
+  if (rtc_enable_protobuf) {
+    deps += [ ":metric_proto" ]
+  }
+}
+
 if (rtc_include_tests) {
   rtc_library("stdout_metrics_exporter_test") {
     testonly = true
@@ -108,5 +144,21 @@ if (rtc_include_tests) {
       "../../numerics",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  if (rtc_enable_protobuf) {
+    rtc_library("metrics_set_proto_file_exporter_test") {
+      testonly = true
+      sources = [ "metrics_set_proto_file_exporter_test.cc" ]
+      deps = [
+        ":metric",
+        ":metric_proto",
+        ":metrics_set_proto_file_exporter",
+        "../../../rtc_base:protobuf_utils",
+        "../../../test:fileutils",
+        "../../../test:test_support",
+        "../../units:timestamp",
+      ]
+    }
   }
 }
