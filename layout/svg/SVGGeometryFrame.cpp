@@ -720,21 +720,20 @@ bool SVGGeometryFrame::IsInvisible() const {
     return false;
   }
 
-  const nsStyleSVG* style = StyleSVG();
-  SVGContextPaint* contextPaint =
-      SVGContextPaint::GetContextPaint(GetContent());
-
   // Anything below will round to zero later down the pipeline.
-  float opacity_threshold = 1.0 / 128.0;
+  constexpr float opacity_threshold = 1.0 / 128.0;
 
-  float elemOpacity = StyleEffects()->mOpacity;
-  if (elemOpacity <= opacity_threshold) {
+  if (StyleEffects()->mOpacity <= opacity_threshold) {
     return true;
   }
 
   if (IsSVGImageFrame()) {
     return false;
   }
+
+  const nsStyleSVG* style = StyleSVG();
+  SVGContextPaint* contextPaint =
+      SVGContextPaint::GetContextPaint(GetContent());
 
   if (!style->mFill.kind.IsNone()) {
     float opacity = SVGUtils::GetOpacity(style->mFillOpacity, contextPaint);

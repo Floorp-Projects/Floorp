@@ -3425,12 +3425,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsImageFrameOrSubclass() const;
 
   /**
-   * Returns true if the frame is an instance of SVGGeometryFrame or one
-   * of its subclasses.
-   */
-  inline bool IsSVGGeometryFrameOrSubclass() const;
-
-  /**
    * Get this frame's CSS containing block.
    *
    * The algorithm is defined in

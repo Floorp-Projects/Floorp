@@ -109,6 +109,13 @@ bool SVGAutoRenderState::IsPaintingToWindow(DrawTarget* aDrawTarget) {
   return false;
 }
 
+// Unlike containers, leaf frames do not include GetPosition() in
+// GetCanvasTM().
+static bool FrameDoesNotIncludePositionInTM(const nsIFrame* aFrame) {
+  return aFrame->IsSVGGeometryFrame() || aFrame->IsSVGImageFrame() ||
+         SVGUtils::IsInSVGTextSubtree(aFrame);
+}
+
 nsRect SVGUtils::GetPostFilterInkOverflowRect(nsIFrame* aFrame,
                                               const nsRect& aPreFilterRect) {
   MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
@@ -515,10 +522,7 @@ class MixModeBlender {
       gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(mSourceCtx);
       mSourceCtx->Multiply(aTransform);
       nsRect overflowRect = mFrame->InkOverflowRectRelativeToSelf();
-      if (mFrame->IsSVGGeometryFrameOrSubclass() ||
-          SVGUtils::IsInSVGTextSubtree(mFrame)) {
-        // Unlike containers, leaf frames do not include GetPosition() in
-        // GetCanvasTM().
+      if (FrameDoesNotIncludePositionInTM(mFrame)) {
         overflowRect = overflowRect + mFrame->GetPosition();
       }
       mSourceCtx->Clip(NSRectToSnappedRect(
@@ -576,10 +580,7 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     // We don't do this optimization for nondisplay SVG since nondisplay
     // SVG doesn't maintain bounds/overflow rects.
     nsRect overflowRect = aFrame->InkOverflowRectRelativeToSelf();
-    if (aFrame->IsSVGGeometryFrameOrSubclass() ||
-        SVGUtils::IsInSVGTextSubtree(aFrame)) {
-      // Unlike containers, leaf frames do not include GetPosition() in
-      // GetCanvasTM().
+    if (FrameDoesNotIncludePositionInTM(aFrame)) {
       overflowRect = overflowRect + aFrame->GetPosition();
     }
     int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -1114,8 +1115,7 @@ gfxPoint SVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame* aFrame) {
   }
 
   // Leaf frames apply their own offset inside their user space.
-  if (aFrame->IsSVGGeometryFrameOrSubclass() ||
-      SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (FrameDoesNotIncludePositionInTM(aFrame)) {
     return nsLayoutUtils::RectToGfxRect(aFrame->GetRect(),
                                         AppUnitsPerCSSPixel())
         .TopLeft();

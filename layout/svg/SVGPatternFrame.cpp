@@ -350,7 +350,7 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   // we got at the beginning because it takes care of the
   // referenced pattern situation for us
 
-  if (aSource->IsSVGGeometryFrameOrSubclass()) {
+  if (aSource->IsSVGGeometryFrame()) {
     // Set the geometrical parent of the pattern we are rendering
     patternWithChildren->mSource = static_cast<SVGGeometryFrame*>(aSource);
   }
