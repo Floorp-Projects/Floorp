@@ -95,7 +95,7 @@ module.exports = {
         "client/responsive.html/browser/content.js",
         "server/startup/content-process.js",
         "server/startup/frame.js",
-        "shared/loader/base-loader.js",
+        "shared/loader/base-loader.sys.mjs",
         "shared/loader/browser-loader.js",
         "shared/loader/worker-loader.js",
         "startup/aboutdebugging-registration.js",

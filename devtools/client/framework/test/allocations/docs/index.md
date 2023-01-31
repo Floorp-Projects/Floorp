@@ -203,8 +203,8 @@ Then, when running the test you will get such output:
  0:41.26 GECKO(644653)  # Tracing: Object@my-module:10
  0:40.65 GECKO(644653) ### Path(s) from root:
  0:41.26 GECKO(644653) - other@no-stack:undefined.WeakMap entry value
- 0:41.26 GECKO(644653)  \--> LexicalEnvironment@base-loader.js:160.**UNKNOWN SLOT 1**
- 0:41.26 GECKO(644653)  \--> Object@base-loader.js:155.g
+ 0:41.26 GECKO(644653)  \--> LexicalEnvironment@base-loader.sys.mjs:160.**UNKNOWN SLOT 1**
+ 0:41.26 GECKO(644653)  \--> Object@base-loader.sys.mjs:155.g
  0:41.26 GECKO(644653)  \--> Array@my-module.js:8.objectElements[0]
  0:41.26 GECKO(644653)  \--> Object@my-module.js:14.seeMyCustomAttributeHere
  0:41.26 GECKO(644653)  \--> Object@my-module.js:10
@@ -214,7 +214,7 @@ This output means that `myLeakedObject` was originally allocated from my-module.
 And is being held allocated because it is kept in an Object allocated from my-module.js at line 14.
 This is our custom object we stored in `g` global Array.
 This custom object it hold by the Array allocated at line 8 of my-module.js.
-And this array is held allocated from an Object, itself allocated by base-loader.js at line 155.
+And this array is held allocated from an Object, itself allocated by base-loader.sys.mjs at line 155.
 This is the global of the my-module.js's module, created by DevTools loader.
 Then we see some more low level object up to another global object, which misses its allocation site.
 

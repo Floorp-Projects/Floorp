@@ -4,18 +4,13 @@
 
 /* exported Loader, resolveURI, Module, Require, unload */
 
-"use strict";
-
-this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
-
 const systemPrincipal = Components.Constructor(
   "@mozilla.org/systemprincipal;1",
   "nsIPrincipal"
 )();
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { normalize, dirname } = ChromeUtils.import(
   "resource://gre/modules/osfile/ospath_unix.jsm"
 );
@@ -302,7 +297,7 @@ function compileMapping(paths) {
   };
 }
 
-function resolveURI(id, mapping) {
+export function resolveURI(id, mapping) {
   // Do not resolve if already a resource URI
   if (isAbsoluteURI(id)) {
     return normalizeExt(id);
@@ -315,7 +310,7 @@ function resolveURI(id, mapping) {
 // in the context of the given `loader`. Each module gets own limited copy
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
-function Require(loader, requirer) {
+export function Require(loader, requirer) {
   const { modules, mapping, mappingCache, requireHook } = loader;
 
   function require(id) {
@@ -458,7 +453,7 @@ function Require(loader, requirer) {
 
 // Makes module object that is made available to CommonJS modules when they
 // are evaluated, along with `exports` and `require`.
-function Module(id, uri) {
+export function Module(id, uri) {
   return Object.create(null, {
     id: { enumerable: true, value: id },
     exports: {
@@ -473,7 +468,7 @@ function Module(id, uri) {
 
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
-function unload(loader, reason) {
+export function unload(loader, reason) {
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
@@ -501,7 +496,7 @@ function unload(loader, reason) {
 // - `requireHook`: Optional function used to replace native require function
 //   from loader. This function receive the module path as first argument,
 //   and native require method as second argument.
-function Loader(options) {
+export function Loader(options) {
   let { paths, globals } = options;
   if (!globals) {
     globals = {};
