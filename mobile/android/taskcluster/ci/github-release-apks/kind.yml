@@ -21,6 +21,8 @@ only-for-build-types:
     - focus-beta
     - focus-release
     - klar-release
+    - fenix-beta
+    - fenix-release
 
 task-template:
     description: Create or update a Github release in order to upload APKs
@@ -38,6 +40,8 @@ task-template:
                 focus-beta: true
                 focus-release: false
                 klar-release: false
+                fenix-beta: true
+                fenix-release: false
                 default: true
         release-name:
             by-level:
@@ -46,16 +50,22 @@ task-template:
                         focus-beta: Focus {version}
                         focus-release: Focus {version}
                         klar-release: Klar {version}
+                        fenix-beta: Firefox Beta {version}
+                        fenix-release: Firefox {version}
                 default:
                     by-build-type:
                         focus-beta: Fake Focus {version}
                         focus-release: Fake Focus {version}
                         klar-release: Fake Klar {version}
-
+                        fenix-beta: Fake Firefox Beta {version}
+                        fenix-release: Fake Firefox {version}
     treeherder:
         job-symbol:
             by-build-type:
+                focus-beta: fgh-r
                 focus-release: fgh-r
                 klar-release: klgh-r
+                fenix-beta: Fgh-r
+                fenix-release: Fgh-r
                 default: gh-r
         kind: build
