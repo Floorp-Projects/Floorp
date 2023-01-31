@@ -2556,8 +2556,11 @@ void AppWindow::ApplyChromeFlags() {
 NS_IMETHODIMP
 AppWindow::BeforeStartLayout() {
   ApplyChromeFlags();
-  LoadPersistentWindowState();
+  // Ordering here is important, loading width/height values in
+  // LoadPersistentWindowState() depends on the chromemargin attribute (since
+  // we need to translate outer to inner sizes).
   SyncAttributesToWidget();
+  LoadPersistentWindowState();
   if (mWindow) {
     SizeShell();
   }
