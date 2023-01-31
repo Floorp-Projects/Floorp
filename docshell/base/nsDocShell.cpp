@@ -3956,7 +3956,9 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                                    const char16_t* aDescription,
                                    const char* aCSSClass,
                                    nsIChannel* aFailedChannel) {
-  MOZ_ASSERT(!mIsBeingDestroyed);
+  if (mIsBeingDestroyed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
