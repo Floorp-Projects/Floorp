@@ -21,18 +21,48 @@ export class MigrationWizardChild extends JSWindowActorChild {
    * @returns {Promise}
    */
   async handleEvent(event) {
-    if (event.type == "MigrationWizard:Init") {
-      this.#wizardEl = event.target;
-      let migrators = await this.sendQuery("GetAvailableMigrators");
+    switch (event.type) {
+      case "MigrationWizard:Init": {
+        this.#wizardEl = event.target;
+        let migrators = await this.sendQuery("GetAvailableMigrators");
+        this.setComponentState({
+          migrators,
+          page: MigrationWizardConstants.PAGES.SELECTION,
+        });
+        this.#wizardEl.dispatchEvent(
+          new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
+            bubbles: true,
+          })
+        );
+        break;
+      }
+
+      case "MigrationWizard:BeginMigration": {
+        await this.sendQuery("Migrate", event.detail);
+        this.#wizardEl.dispatchEvent(
+          new this.contentWindow.CustomEvent("MigrationWizard:DoneMigration", {
+            bubbles: true,
+          })
+        );
+        break;
+      }
+    }
+  }
+
+  /**
+   * General message handler function for messages received from the
+   * associated MigrationWizardParent JSWindowActor.
+   *
+   * @param {ReceiveMessageArgument} message
+   *   The message received from the MigrationWizardParent.
+   */
+  receiveMessage(message) {
+    if (message.name == "UpdateProgress") {
+      let progress = message.data;
       this.setComponentState({
-        migrators,
-        page: MigrationWizardConstants.PAGES.SELECTION,
+        page: MigrationWizardConstants.PAGES.PROGRESS,
+        progress,
       });
-      this.#wizardEl.dispatchEvent(
-        new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
-          bubbles: true,
-        })
-      );
     }
   }
 

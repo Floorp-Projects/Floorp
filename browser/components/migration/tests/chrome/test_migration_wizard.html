@@ -102,13 +102,12 @@
         // dropdowns.
         selector.dispatchEvent(new CustomEvent("change", { "bubbles" : true }));
 
-        for (let displayedResourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
-          let resourceTypeID = MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES[displayedResourceType];
-          let node = resourceTypeList.querySelector(`#${resourceTypeID}`);
-          if (migratorInstance.resourceTypes.includes(displayedResourceType)) {
-            ok(!isHidden(node), `Selection for ${displayedResourceType} should be shown.`);
+        for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+          let node = resourceTypeList.querySelector(`label[data-resource-type="${resourceType}"]`);
+          if (migratorInstance.resourceTypes.includes(resourceType)) {
+            ok(!isHidden(node), `Selection for ${resourceType} should be shown.`);
           } else {
-            ok(isHidden(node), `Selection for ${displayedResourceType} should be hidden.`);
+            ok(isHidden(node), `Selection for ${resourceType} should be hidden.`);
           }
         }
       }

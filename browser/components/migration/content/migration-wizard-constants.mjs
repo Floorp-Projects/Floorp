@@ -30,10 +30,17 @@ export const MigrationWizardConstants = Object.freeze({
 
     // COOKIE resource migration is going to be removed, so we don't include
     // it here.
-    HISTORY: "history",
-    FORMDATA: "form-autofill",
-    PASSWORDS: "logins-and-passwords",
-    BOOKMARKS: "bookmarks",
+
+    // This is a little silly, but JavaScript doesn't have a notion of
+    // enums. The advantage of this set-up is that these constants values
+    // can be used to access the MigrationUtils.resourceTypes constants,
+    // are reasonably readable as DOM attributes, and easily serialize /
+    // deserialize.
+    HISTORY: "HISTORY",
+    FORMDATA: "FORMDATA",
+    PASSWORDS: "PASSWORDS",
+    BOOKMARKS: "BOOKMARKS",
+
     // We don't yet show OTHERDATA or SESSION resources.
   }),
 });
