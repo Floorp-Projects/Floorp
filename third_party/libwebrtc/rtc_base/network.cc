@@ -280,7 +280,8 @@ AdapterType GetAdapterTypeFromName(absl::string_view network_name) {
       MatchTypeNameWithIndexPattern(network_name, "rmnet_data") ||
       MatchTypeNameWithIndexPattern(network_name, "v4-rmnet") ||
       MatchTypeNameWithIndexPattern(network_name, "v4-rmnet_data") ||
-      MatchTypeNameWithIndexPattern(network_name, "clat")) {
+      MatchTypeNameWithIndexPattern(network_name, "clat") ||
+      MatchTypeNameWithIndexPattern(network_name, "ccmni")) {
     return ADAPTER_TYPE_CELLULAR;
   }
 #endif
