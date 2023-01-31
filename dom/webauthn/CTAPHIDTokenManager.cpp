@@ -414,6 +414,18 @@ void CTAPHIDTokenManager::HandleRegisterResultCtap2(
     return;
   }
 
+  nsTArray<uint8_t> credentialId;
+  if (!aResult->Ctap2CopyCredentialId(credentialId)) {
+    mRegisterPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    return;
+  }
+
+  CryptoBuffer keyHandle;
+  if (!keyHandle.Assign(credentialId)) {
+    mRegisterPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    return;
+  }
+
   // We would have a copy of the client data stored inside mTransaction,
   // but we need the one from authenticator-rs, as that data is part of
   // the signed payload. If we reorder the JSON-values (e.g. by sorting the
@@ -429,7 +441,7 @@ void CTAPHIDTokenManager::HandleRegisterResultCtap2(
 
   // Dummy-values. Not used with CTAP2.
   nsTArray<WebAuthnExtensionResult> extensions;
-  CryptoBuffer regData, keyHandle;
+  CryptoBuffer regData;
   WebAuthnMakeCredentialResult result(clientData, attObj, keyHandle, regData,
                                       extensions);
   mRegisterPromise.Resolve(std::move(result), __func__);
