@@ -1132,14 +1132,6 @@ bool RTCRtpSender::SeamlessTrackSwitch(
   // queued task after this is done (this happens in
   // SetSenderTrackWithClosedCheck).
 
-  // Let sending be true if transceiver.[[CurrentDirection]] is "sendrecv" or
-  // "sendonly", and false otherwise.
-  bool sending = mTransceiver->IsSending();
-  if (sending && !aWithTrack) {
-    // If sending is true, and withTrack is null, have the sender stop sending.
-    Stop();
-  }
-
   mPipeline->SetTrack(aWithTrack);
 
   MaybeUpdateConduit();
