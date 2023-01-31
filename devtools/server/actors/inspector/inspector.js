@@ -138,7 +138,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._walkerPromise = new Promise(resolve => {
       const domReady = () => {
         const targetActor = this.targetActor;
-        this.walker = WalkerActor(this.conn, targetActor, options);
+        this.walker = new WalkerActor(this.conn, targetActor, options);
         this.manage(this.walker);
         this.walker.once("destroyed", () => {
           this._walkerPromise = null;
@@ -182,7 +182,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     }
 
     this._pageStylePromise = this.getWalker().then(walker => {
-      const pageStyle = PageStyleActor(this);
+      const pageStyle = new PageStyleActor(this);
       this.manage(pageStyle);
       return pageStyle;
     });
@@ -194,7 +194,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._compatibility;
     }
 
-    this._compatibility = CompatibilityActor(this);
+    this._compatibility = new CompatibilityActor(this);
     this.manage(this._compatibility);
     return this._compatibility;
   },
@@ -212,7 +212,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    */
   async getHighlighterByType(typeName) {
     if (isTypeRegistered(typeName)) {
-      const highlighterActor = CustomHighlighterActor(this, typeName);
+      const highlighterActor = new CustomHighlighterActor(this, typeName);
       if (highlighterActor.instance.isReady) {
         await highlighterActor.instance.isReady;
       }
@@ -240,7 +240,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     // imageToImageData waits for the image to load.
     return InspectorActorUtils.imageToImageData(img, maxDim).then(imageData => {
       return {
-        data: LongStringActor(this.conn, imageData.data),
+        data: new LongStringActor(this.conn, imageData.data),
         size: imageData.size,
       };
     });

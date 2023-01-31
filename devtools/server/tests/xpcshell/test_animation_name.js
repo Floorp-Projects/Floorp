@@ -87,7 +87,7 @@ function run_test() {
     for (const key in props) {
       animation[key] = props[key];
     }
-    const actor = AnimationPlayerActor({}, animation);
+    const actor = new AnimationPlayerActor({}, animation);
     Assert.equal(actor.getName(), expectedName);
   }
 }

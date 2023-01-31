@@ -181,7 +181,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     if (this.refMap.has(item)) {
       return this.refMap.get(item);
     }
-    const actor = StyleRuleActor(this, item);
+    const actor = new StyleRuleActor(this, item);
     this.manage(actor);
     this.refMap.set(item, actor);
 
@@ -353,7 +353,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
       // If this font comes from a @font-face rule
       if (font.rule) {
-        const styleActor = StyleRuleActor(this, font.rule);
+        const styleActor = new StyleRuleActor(this, font.rule);
         this.manage(styleActor);
         fontFace.rule = styleActor;
         fontFace.ruleText = font.rule.cssText;
@@ -388,7 +388,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
           opts
         );
         fontFace.preview = {
-          data: LongStringActor(this.conn, dataURL),
+          data: new LongStringActor(this.conn, dataURL),
           size,
         };
       }

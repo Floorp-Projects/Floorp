@@ -1642,7 +1642,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     if (!isNodeDead(node)) {
       html = node.rawNode.innerHTML;
     }
-    return LongStringActor(this.conn, html);
+    return new LongStringActor(this.conn, html);
   },
 
   /**
@@ -1677,7 +1677,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     if (!isNodeDead(node)) {
       outerHTML = node.rawNode.outerHTML;
     }
-    return LongStringActor(this.conn, outerHTML);
+    return new LongStringActor(this.conn, outerHTML);
   },
 
   /**

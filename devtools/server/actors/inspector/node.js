@@ -572,7 +572,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   getImageData(maxDim) {
     return imageToImageData(this.rawNode, maxDim).then(imageData => {
       return {
-        data: LongStringActor(this.conn, imageData.data),
+        data: new LongStringActor(this.conn, imageData.data),
         size: imageData.size,
       };
     });
@@ -687,7 +687,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     };
     const { dataURL, size } = getFontPreviewData(font, doc, options);
 
-    return { data: LongStringActor(this.conn, dataURL), size };
+    return { data: new LongStringActor(this.conn, dataURL), size };
   },
 
   /**
