@@ -64,7 +64,7 @@ class FirstPartyDownloadDialogTest {
             ),
             dialogBinding.title.text,
         )
-        assertEquals("Test", dialogBinding.filename.text)
+        assertEquals("Test", dialogBinding.filename.text.toString())
         assertFalse(wasPositiveActionDone)
         assertFalse(wasNegativeActionDone)
         dialogBinding.downloadButton.callOnClick()
@@ -102,7 +102,7 @@ class FirstPartyDownloadDialogTest {
             testContext.getString(R.string.mozac_feature_downloads_dialog_download),
             dialogBinding.title.text,
         )
-        assertEquals("Test", dialogBinding.filename.text)
+        assertEquals("Test", dialogBinding.filename.text.toString())
         assertFalse(wasPositiveActionDone)
         assertFalse(wasNegativeActionDone)
         dialogBinding.downloadButton.callOnClick()
