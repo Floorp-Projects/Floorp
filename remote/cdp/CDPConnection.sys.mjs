@@ -48,7 +48,7 @@ export class CDPConnection extends WebSocketConnection {
       Services.prefs.getIntPref("fission.webContentIsolationStrategy") !== 0 ||
       Services.prefs.getBoolPref("fission.bfcacheInParent")
     ) {
-      lazy.logger.error(
+      lazy.logger.warn(
         `Invalid browser preferences for CDP. Set "fission.webContentIsolationStrategy"` +
           `to 0 and "fission.bfcacheInParent" to false before Firefox starts.`
       );
