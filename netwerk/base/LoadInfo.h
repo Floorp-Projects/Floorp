@@ -59,7 +59,7 @@ class LoadInfo final : public nsILoadInfo {
   friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
 
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
 
   // Used for TYPE_DOCUMENT load.
