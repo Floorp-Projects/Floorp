@@ -506,17 +506,22 @@ function makeOmniboxResult(
   queryContext,
   { content, description, keyword, heuristic = false }
 ) {
+  let payload = {
+    title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
+    content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
+    keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
+    icon: [UrlbarUtils.ICON.EXTENSION],
+  };
+  if (!heuristic) {
+    payload.blockL10n = { id: "urlbar-result-menu-dismiss-firefox-suggest" };
+  }
   let result = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.OMNIBOX,
     UrlbarUtils.RESULT_SOURCE.ADDON,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
-      content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
-      keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
-      icon: [UrlbarUtils.ICON.EXTENSION],
-    })
+    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
   );
   result.heuristic = heuristic;
+
   return result;
 }
 
