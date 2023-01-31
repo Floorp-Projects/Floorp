@@ -130,6 +130,12 @@ criteria = "safe-to-deploy"
 delta = "4.0.3 -> 4.0.3@git:f6488e35beccb26eb6e85847b02aa78a42cd3d0e"
 notes = "Recorded by bholley, confirmed over slack."
 
+[[audits.async-task]]
+who = "Nika Layzell <nika@thelayzells.com>"
+criteria = "safe-to-deploy"
+delta = "4.0.3 -> 4.3.0"
+notes = "Main addition is the new FallibleTask type, which I implemented. No risky unsafe code changes."
+
 [[audits.async-trait]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

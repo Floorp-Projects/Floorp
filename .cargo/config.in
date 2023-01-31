@@ -125,11 +125,6 @@ git = "https://github.com/servo/rust-cssparser"
 rev = "d3670a89bae26ba3a8db4758eb7976616113987d"
 replace-with = "vendored-sources"
 
-[source."https://github.com/smol-rs/async-task"]
-git = "https://github.com/smol-rs/async-task"
-rev = "f6488e35beccb26eb6e85847b02aa78a42cd3d0e"
-replace-with = "vendored-sources"
-
 
 # Take advantage of the fact that cargo will treat lines starting with #
 # as comments to add preprocessing directives. This file can thus by copied
