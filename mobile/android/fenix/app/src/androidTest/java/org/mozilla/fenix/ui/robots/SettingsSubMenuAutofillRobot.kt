@@ -162,8 +162,11 @@ class SettingsSubMenuAutofillRobot {
     fun clickConfirmDeleteAddressButton() = confirmDeleteAddressButton.click()
 
     fun clickSubRegionOption(subRegion: String) {
-        subRegionOption(subRegion).waitForExists(waitingTime)
-        subRegionOption(subRegion).click()
+        scrollToElementByText(subRegion)
+        subRegionOption(subRegion).also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
     }
     fun clickCountryOption(country: String) {
         countryOption(country).waitForExists(waitingTime)

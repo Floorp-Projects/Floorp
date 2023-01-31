@@ -275,4 +275,42 @@ class AddressAutofillTest {
             verifyAutofilledAddress("Fort Street")
         }
     }
+
+    @Test
+    fun verifySavedAddressCanBeEditedTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+            clickManageAddressesButton()
+            clickSavedAddress("Mozilla")
+            fillAndSaveAddress(
+                "Android",
+                "Test",
+                "Name",
+                "Fort Street",
+                "San Jose",
+                "Arizona",
+                "95141",
+                "United States",
+                "777-7777",
+                "fuu@bar.org",
+            )
+            verifyManageAddressesToolbarTitle()
+        }
+    }
 }
