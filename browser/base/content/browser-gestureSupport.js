@@ -724,6 +724,7 @@ var gHistorySwipeAnimation = {
       box.style.transition = "opacity 0.35s cubic-bezier(.25,.1,0.25,1)";
       box.addEventListener("transitionend", this, true);
       box.style.opacity = 0;
+      window.getComputedStyle(box).opacity;
     } else {
       this._isStoppingAnimation = false;
       this._removeBoxes();
