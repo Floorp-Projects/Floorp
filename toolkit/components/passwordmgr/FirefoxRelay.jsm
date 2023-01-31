@@ -65,21 +65,6 @@ async function getRelayTokenAsync() {
   }
 }
 
-async function createHeadersAsync(browser) {
-  const relayToken = await getRelayTokenAsync();
-  if (!relayToken) {
-    await showErrorAsync(browser, "firefox-relay-must-login-to-fxa");
-    return undefined;
-  }
-
-  return new Headers({
-    Authorization: `Bearer ${relayToken}`,
-    Accept: "application/json",
-    "Accept-Language": Services.locale.requestedLocales,
-    "Content-Type": "application/json",
-  });
-}
-
 async function hasFirefoxAccountAsync() {
   if (!lazy.fxAccounts.constructor.config.isProductionConfig()) {
     return false;
@@ -88,50 +73,83 @@ async function hasFirefoxAccountAsync() {
   return lazy.fxAccounts.hasLocalSession();
 }
 
+async function fetchWithReauth(
+  browser,
+  createRequest,
+  canGetFreshOAuthToken = true
+) {
+  const relayToken = await getRelayTokenAsync();
+  if (!relayToken) {
+    if (browser) {
+      await showErrorAsync(browser, "firefox-relay-must-login-to-fxa");
+    }
+    return undefined;
+  }
+
+  const headers = new Headers({
+    Authorization: `Bearer ${relayToken}`,
+    Accept: "application/json",
+    "Accept-Language": Services.locale.requestedLocales,
+    "Content-Type": "application/json",
+  });
+
+  const request = createRequest(headers);
+  const response = await fetch(request);
+
+  if (canGetFreshOAuthToken && response.status == 401) {
+    await lazy.fxAccounts.removeCachedOAuthToken({ token: relayToken });
+    return fetchWithReauth(browser, createRequest, false);
+  }
+  return response;
+}
+
 async function isRelayUserAsync() {
   if (!(await hasFirefoxAccountAsync())) {
     return false;
   }
 
-  const headers = await createHeadersAsync();
-  if (!headers) {
+  const response = await fetchWithReauth(
+    null,
+    headers => new Request(config.profilesUrl, { headers })
+  );
+  if (!response) {
     return false;
   }
 
-  const request = new Request(config.profilesUrl, { headers });
-  const res = await fetch(request);
-
-  if (!res.ok) {
+  if (!response.ok) {
     lazy.log.error(
-      `failed to check if user is a Relay user: ${res.status}:${
-        res.statusText
-      }:${await res.text()}`
+      `failed to check if user is a Relay user: ${response.status}:${
+        response.statusText
+      }:${await response.text()}`
     );
   }
 
-  return res.ok;
+  return response.ok;
 }
 
 async function getReusableMasksAsync(browser, _origin) {
-  const headers = await createHeadersAsync(browser);
-  if (!headers) {
+  const response = await fetchWithReauth(
+    browser,
+    headers =>
+      new Request(config.addressesUrl, {
+        method: "GET",
+        headers,
+      })
+  );
+
+  if (!response) {
     return undefined;
   }
 
-  const request = new Request(config.addressesUrl, {
-    method: "GET",
-    headers,
-  });
-  const res = await fetch(request);
-  if (res.ok) {
-    return res.json();
+  if (response.ok) {
+    return response.json();
   }
 
   lazy.log.error(
-    `failed to find reusable Relay masks: ${res.status}:${res.statusText}`
+    `failed to find reusable Relay masks: ${response.status}:${response.statusText}`
   );
   await showErrorAsync(browser, "firefox-relay-get-reusable-masks-failed", {
-    status: res.status,
+    status: response.status,
   });
   // Services.telemetry.recordEvent("pwmgr", "make_relay_fail", "relay");
 
@@ -303,44 +321,48 @@ async function showReusableMasksAsync(browser, origin, errorMessage) {
 }
 
 async function generateUsernameAsync(browser, origin) {
-  const headers = await createHeadersAsync(browser);
-  if (!headers) {
-    return undefined;
-  }
   const body = JSON.stringify({
     enabled: true,
     description: origin.substr(0, 64),
     generated_for: origin.substr(0, 255),
     used_on: origin,
   });
-  const request = new Request(config.addressesUrl, {
-    method: "POST",
-    headers,
-    body,
-  });
 
-  const res = await fetch(request);
-  if (res.ok) {
+  const response = await fetchWithReauth(
+    browser,
+    headers =>
+      new Request(config.addressesUrl, {
+        method: "POST",
+        headers,
+        body,
+      })
+  );
+
+  if (!response) {
+    return undefined;
+  }
+
+  if (response.ok) {
     lazy.log.info(`generated Relay mask`);
-    const result = await res.json();
+    const result = await response.json();
     showConfirmation(browser, "confirmation-hint-firefox-relay-mask-generated");
     // Services.telemetry.recordEvent("pwmgr", "make_relay", "relay");
     return result.full_address;
   }
 
-  if (res.status == 403) {
-    const error = await res.json();
+  if (response.status == 403) {
+    const error = await response.json();
     if (error?.error_code == "free_tier_limit") {
       return showReusableMasksAsync(browser, origin, error.detail);
     }
   }
 
   lazy.log.error(
-    `failed to generate Relay mask: ${res.status}:${res.statusText}`
+    `failed to generate Relay mask: ${response.status}:${response.statusText}`
   );
 
   await showErrorAsync(browser, "firefox-relay-mask-generation-failed", {
-    status: res.status,
+    status: response.status,
   });
   // Services.telemetry.recordEvent("pwmgr", "make_relay_fail", "relay");
 
