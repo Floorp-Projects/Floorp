@@ -405,7 +405,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
   uint32_t warmUpCount() const { return icScript_.warmUpCount_; }
-  void incWarmUpCount(uint32_t amount) { icScript_.warmUpCount_ += amount; }
+  void incWarmUpCount() { icScript_.warmUpCount_++; }
   void resetWarmUpCount(uint32_t count);
 
   void prepareForDestruction(Zone* zone);

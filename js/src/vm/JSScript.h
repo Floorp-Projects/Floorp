@@ -1235,9 +1235,9 @@ class ScriptWarmUpData {
     MOZ_ASSERT(isWarmUpCount());
     setWarmUpCount(count);
   }
-  void incWarmUpCount(uint32_t amount) {
+  void incWarmUpCount() {
     MOZ_ASSERT(isWarmUpCount());
-    data_ += uintptr_t(amount) << NumTagBits;
+    data_ += uintptr_t(1) << NumTagBits;
   }
 
   jit::JitScript* toJitScript() const {
@@ -1894,7 +1894,7 @@ class JSScript : public js::BaseScript {
 
  public:
   inline uint32_t getWarmUpCount() const;
-  inline void incWarmUpCounter(uint32_t amount = 1);
+  inline void incWarmUpCounter();
   inline void resetWarmUpCounterForGC();
 
   void resetWarmUpCounterToDelayIonCompilation();
