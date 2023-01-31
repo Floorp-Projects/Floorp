@@ -544,16 +544,6 @@ impl FirefoxOptions {
             }
         }
 
-        // Force Fission disabled until the CDP implementation is compatible,
-        // and preference hasn't been already set
-        if has_debugger_address {
-            let has_fission_pref = rv.prefs.iter().find(|&x| x.0 == "fission.autostart");
-            if has_fission_pref.is_none() {
-                rv.prefs
-                    .push(("fission.autostart".to_owned(), Pref::new(false)));
-            }
-        }
-
         Ok(rv)
     }
 
@@ -1095,11 +1085,6 @@ mod tests {
         } else {
             panic!("CLI arguments for Firefox not found");
         }
-
-        assert!(opts
-            .prefs
-            .iter()
-            .any(|pref| pref == &("fission.autostart".to_owned(), Pref::new(false))));
     }
 
     #[test]
