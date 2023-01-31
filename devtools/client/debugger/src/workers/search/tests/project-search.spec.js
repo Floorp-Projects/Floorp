@@ -11,28 +11,36 @@ const text = `
 `;
 
 describe("project search", () => {
-  const emptyResults = [];
+  const content = {
+    type: "text",
+    value: text,
+    contentType: undefined,
+  };
 
   it("finds matches", () => {
-    const needle = "foo";
-    const content = {
-      type: "text",
-      value: text,
-      contentType: undefined,
-    };
-
-    const matches = findSourceMatches("bar.js", content, needle);
-    expect(matches).toMatchSnapshot();
+    const matches = findSourceMatches("bar.js", content, "foo");
+    expect(matches).toEqual([
+      {
+        column: 11,
+        line: 2,
+        match: "foo",
+        matchIndex: 11,
+        sourceId: "bar.js",
+        value: "  function foo() {",
+      },
+      {
+        column: 4,
+        line: 3,
+        match: "foo",
+        matchIndex: 4,
+        sourceId: "bar.js",
+        value: "    foo();",
+      },
+    ]);
   });
 
   it("finds no matches in source", () => {
-    const needle = "test";
-    const content = {
-      type: "text",
-      value: text,
-      contentType: undefined,
-    };
-    const matches = findSourceMatches("bar.js", content, needle);
-    expect(matches).toEqual(emptyResults);
+    const matches = findSourceMatches("bar.js", content, "test");
+    expect(matches).toEqual([]);
   });
 });

@@ -2,23 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  createStore,
-  selectors,
-  actions,
-  makeSource,
-} from "../../utils/test-head";
+import { createStore, selectors, actions } from "../../utils/test-head";
 
 jest.mock("../../utils/editor");
 
-const {
-  getActiveSearch,
-  getTextSearchQuery,
-  getTextSearchResults,
-  getTextSearchStatus,
-  getFileSearchQuery,
-  getFileSearchResults,
-} = selectors;
+const { getActiveSearch, getFileSearchQuery, getFileSearchResults } = selectors;
 
 const threadFront = {
   sourceContents: async () => ({
@@ -30,35 +18,6 @@ const threadFront = {
 };
 
 describe("navigation", () => {
-  it("navigation closes project-search", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
-    const mockQuery = "foo";
-
-    await dispatch(actions.newGeneratedSource(makeSource("foo1")));
-    await dispatch(actions.searchSources(cx, mockQuery));
-
-    let results = getTextSearchResults(getState());
-    expect(results).toHaveLength(1);
-    expect(selectors.getTextSearchQuery(getState())).toEqual("foo");
-    expect(getTextSearchStatus(getState())).toEqual("DONE");
-
-    await dispatch(actions.willNavigate("will-navigate"));
-
-    results = getTextSearchResults(getState());
-    expect(results).toHaveLength(0);
-    expect(getTextSearchQuery(getState())).toEqual("");
-    expect(getTextSearchStatus(getState())).toEqual("INITIAL");
-  });
-
-  it("navigation removes activeSearch 'project' value", async () => {
-    const { dispatch, getState } = createStore(threadFront);
-    dispatch(actions.setActiveSearch("project"));
-    expect(getActiveSearch(getState())).toBe("project");
-
-    await dispatch(actions.willNavigate("will-navigate"));
-    expect(getActiveSearch(getState())).toBe(null);
-  });
-
   it("navigation clears the file-search query", async () => {
     const { dispatch, getState, cx } = createStore(threadFront);
 

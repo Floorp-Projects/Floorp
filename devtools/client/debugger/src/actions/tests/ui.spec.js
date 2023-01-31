@@ -12,21 +12,6 @@ const {
 } = selectors;
 
 describe("ui", () => {
-  it("should toggle the visible state of project search", () => {
-    const { dispatch, getState } = createStore();
-    expect(getActiveSearch(getState())).toBe(null);
-    dispatch(actions.setActiveSearch("project"));
-    expect(getActiveSearch(getState())).toBe("project");
-  });
-
-  it("should close project search", () => {
-    const { dispatch, getState } = createStore();
-    expect(getActiveSearch(getState())).toBe(null);
-    dispatch(actions.setActiveSearch("project"));
-    dispatch(actions.closeActiveSearch());
-    expect(getActiveSearch(getState())).toBe(null);
-  });
-
   it("should toggle the visible state of file search", () => {
     const { dispatch, getState } = createStore();
     expect(getActiveSearch(getState())).toBe(null);

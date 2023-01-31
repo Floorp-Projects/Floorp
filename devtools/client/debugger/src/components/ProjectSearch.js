@@ -9,7 +9,6 @@ import classnames from "classnames";
 import actions from "../actions";
 
 import { getEditor } from "../utils/editor";
-import { highlightMatches } from "../utils/project-search";
 
 import { statusType } from "../reducers/project-text-search";
 import { getRelativePath } from "../utils/sources-tree/utils";
@@ -131,6 +130,25 @@ export class ProjectSearch extends Component {
     );
   };
 
+  highlightMatches = lineMatch => {
+    const { value, matchIndex, match } = lineMatch;
+    const len = match.length;
+
+    return (
+      <span className="line-value">
+        <span className="line-match" key={0}>
+          {value.slice(0, matchIndex)}
+        </span>
+        <span className="query-match" key={1}>
+          {value.substr(matchIndex, len)}
+        </span>
+        <span className="line-match" key={2}>
+          {value.slice(matchIndex + len, value.length)}
+        </span>
+      </span>
+    );
+  };
+
   getResultCount = () =>
     this.props.results.reduce((count, file) => count + file.matches.length, 0);
 
@@ -209,7 +227,7 @@ export class ProjectSearch extends Component {
         <span className="line-number" key={match.line}>
           {match.line}
         </span>
-        {highlightMatches(match)}
+        {this.highlightMatches(match)}
       </div>
     );
   };
