@@ -37,7 +37,8 @@ RefPtr<AudioDeviceInfo> MakeAudioDeviceInfo(const nsAString& aName,
 RefPtr<MediaDevice> MakeCameraDevice(const nsString& aName,
                                      const nsString& aGroupId) {
   return new MediaDevice(new MediaEngineFake(), dom::MediaSourceEnum::Camera,
-                         aName, u""_ns, aGroupId, MediaDevice::IsScary::No);
+                         aName, u""_ns, aGroupId, MediaDevice::IsScary::No,
+                         MediaDevice::OsPromptable::No);
 }
 
 RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,

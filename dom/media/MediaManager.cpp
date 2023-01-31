@@ -860,7 +860,8 @@ NS_IMPL_ISUPPORTS(LocalMediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
                          const nsString& aRawName, const nsString& aRawID,
-                         const nsString& aRawGroupID, IsScary aIsScary)
+                         const nsString& aRawGroupID, IsScary aIsScary,
+                         const OsPromptable canRequestOsLevelPrompt)
     : mEngine(aEngine),
       mAudioDeviceInfo(nullptr),
       mMediaSource(aMediaSource),
@@ -868,6 +869,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
                 ? MediaDeviceKind::Videoinput
                 : MediaDeviceKind::Audioinput),
       mScary(aIsScary == IsScary::Yes),
+      mCanRequestOsLevelPrompt(canRequestOsLevelPrompt == OsPromptable::Yes),
       mIsFake(mEngine->IsFake()),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
@@ -889,6 +891,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine,
                 ? MediaDeviceKind::Audioinput
                 : MediaDeviceKind::Audiooutput),
       mScary(false),
+      mCanRequestOsLevelPrompt(false),
       mIsFake(false),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
@@ -902,7 +905,8 @@ RefPtr<MediaDevice> MediaDevice::CopyWithNewRawGroupId(
   MOZ_ASSERT(!aOther->mAudioDeviceInfo, "device not supported");
   return new MediaDevice(aOther->mEngine, aOther->mMediaSource,
                          aOther->mRawName, aOther->mRawID, aRawGroupID,
-                         IsScary(aOther->mScary));
+                         IsScary(aOther->mScary),
+                         OsPromptable(aOther->mCanRequestOsLevelPrompt));
 }
 
 MediaDevice::~MediaDevice() = default;
@@ -1026,6 +1030,12 @@ LocalMediaDevice::GetId(nsAString& aID) {
 NS_IMETHODIMP
 LocalMediaDevice::GetScary(bool* aScary) {
   *aScary = mRawDevice->mScary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocalMediaDevice::GetCanRequestOsLevelPrompt(bool* aCanRequestOsLevelPrompt) {
+  *aCanRequestOsLevelPrompt = mRawDevice->mCanRequestOsLevelPrompt;
   return NS_OK;
 }
 
