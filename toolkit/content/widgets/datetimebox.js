@@ -694,6 +694,7 @@ this.DateTimeBoxWidget = class {
         aEvent.preventDefault();
         break;
       }
+      case "Delete":
       case "Backspace": {
         if (aEvent.originalTarget == this.mCalendarButton) {
           // Do not remove Calendar button
@@ -703,9 +704,16 @@ this.DateTimeBoxWidget = class {
         if (this.isEditable()) {
           // TODO(emilio, bug 1571533): These functions should look at
           // defaultPrevented.
-          let targetField = aEvent.originalTarget;
-          this.clearFieldValue(targetField);
-          this.setInputValueFromFields();
+          // Ctrl+Backspace/Delete on non-macOS and
+          // Cmd+Backspace/Delete on macOS to clear the field
+          if (aEvent.getModifierState("Accel")) {
+            // Clear the input's value
+            this.clearInputFields(false);
+          } else {
+            let targetField = aEvent.originalTarget;
+            this.clearFieldValue(targetField);
+            this.setInputValueFromFields();
+          }
           aEvent.preventDefault();
         }
         break;
