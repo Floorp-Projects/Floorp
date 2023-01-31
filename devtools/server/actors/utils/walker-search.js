@@ -19,40 +19,40 @@ loader.lazyRequireGetter(
  * matched.
  */
 
-/**
- * The WalkerIndex class indexes the document (and all subdocs) from
- * a given walker.
- *
- * It is only indexed the first time the data is accessed and will be
- * re-indexed if a mutation happens between requests.
- *
- * @param {Walker} walker The walker to be indexed
- */
-function WalkerIndex(walker) {
-  this.walker = walker;
-  this.clearIndex = this.clearIndex.bind(this);
+class WalkerIndex {
+  /**
+   * The WalkerIndex class indexes the document (and all subdocs) from
+   * a given walker.
+   *
+   * It is only indexed the first time the data is accessed and will be
+   * re-indexed if a mutation happens between requests.
+   *
+   * @param {Walker} walker The walker to be indexed
+   */
+  constructor(walker) {
+    this.walker = walker;
+    this.clearIndex = this.clearIndex.bind(this);
 
-  // Kill the index when mutations occur, the next data get will re-index.
-  this.walker.on("any-mutation", this.clearIndex);
-}
+    // Kill the index when mutations occur, the next data get will re-index.
+    this.walker.on("any-mutation", this.clearIndex);
+  }
 
-WalkerIndex.prototype = {
   /**
    * Destroy this instance, releasing all data and references
    */
   destroy() {
     this.walker.off("any-mutation", this.clearIndex);
-  },
+  }
 
   clearIndex() {
     if (!this.currentlyIndexing) {
       this._data = null;
     }
-  },
+  }
 
   get doc() {
     return this.walker.rootDoc;
-  },
+  }
 
   /**
    * Get the indexed data
@@ -71,7 +71,7 @@ WalkerIndex.prototype = {
     }
 
     return this._data;
-  },
+  }
 
   _addToIndex(type, node, value) {
     // Add an entry for this value if there isn't one
@@ -85,7 +85,7 @@ WalkerIndex.prototype = {
       type,
       node,
     });
-  },
+  }
 
   index() {
     // Handle case where iterating nextNode() with the deepTreeWalker triggers
@@ -131,38 +131,38 @@ WalkerIndex.prototype = {
     }
 
     this.currentlyIndexing = false;
-  },
-};
+  }
+}
 
 exports.WalkerIndex = WalkerIndex;
 
-/**
- * The WalkerSearch class provides a way to search an indexed document as well
- * as find elements that match a given css selector.
- *
- * Usage example:
- * let s = new WalkerSearch(doc);
- * let res = s.search("lang", index);
- * for (let {matched, results} of res) {
- *   for (let {node, type} of results) {
- *     console.log("The query matched a node's " + type);
- *     console.log("Node that matched", node);
- *    }
- * }
- * s.destroy();
- *
- * @param {Walker} the walker to be searched
- */
-function WalkerSearch(walker) {
-  this.walker = walker;
-  this.index = new WalkerIndex(this.walker);
-}
+class WalkerSearch {
+  /**
+   * The WalkerSearch class provides a way to search an indexed document as well
+   * as find elements that match a given css selector.
+   *
+   * Usage example:
+   * let s = new WalkerSearch(doc);
+   * let res = s.search("lang", index);
+   * for (let {matched, results} of res) {
+   *   for (let {node, type} of results) {
+   *     console.log("The query matched a node's " + type);
+   *     console.log("Node that matched", node);
+   *    }
+   * }
+   * s.destroy();
+   *
+   * @param {Walker} the walker to be searched
+   */
+  constructor(walker) {
+    this.walker = walker;
+    this.index = new WalkerIndex(this.walker);
+  }
 
-WalkerSearch.prototype = {
   destroy() {
     this.index.destroy();
     this.walker = null;
-  },
+  }
 
   _addResult(node, type, results) {
     if (!results.has(node)) {
@@ -183,7 +183,7 @@ WalkerSearch.prototype = {
     if (!isKnown) {
       matches.push({ type });
     }
-  },
+  }
 
   _searchIndex(query, options, results) {
     for (const [matched, res] of this.index.data) {
@@ -200,7 +200,7 @@ WalkerSearch.prototype = {
           this._addResult(node, type, results);
         });
     }
-  },
+  }
 
   _searchSelectors(query, options, results) {
     // If the query is just one "word", no need to search because _searchIndex
@@ -214,7 +214,7 @@ WalkerSearch.prototype = {
     for (const node of nodes) {
       this._addResult(node, "selector", results);
     }
-  },
+  }
 
   _searchXPath(query, options, results) {
     if (!options.types.includes("xpath")) {
@@ -229,7 +229,7 @@ WalkerSearch.prototype = {
         this._addResult(node, "xpath", results);
       }
     }
-  },
+  }
 
   /**
    * Search the document
@@ -301,8 +301,8 @@ WalkerSearch.prototype = {
     });
 
     return resultList;
-  },
-};
+  }
+}
 
 WalkerSearch.SEARCH_METHOD_CONTAINS = (query, candidate) => {
   return query && candidate.toLowerCase().includes(query.toLowerCase());

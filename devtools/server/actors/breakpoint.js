@@ -34,17 +34,17 @@ exports.setBreakpointAtEntryPoints = setBreakpointAtEntryPoints;
  * client directly, but encapsulate the DebuggerScript locations where the
  * breakpoint is installed.
  */
-function BreakpointActor(threadActor, location) {
-  // A map from Debugger.Script instances to the offsets which the breakpoint
-  // has been set for in that script.
-  this.scripts = new Map();
+class BreakpointActor {
+  constructor(threadActor, location) {
+    // A map from Debugger.Script instances to the offsets which the breakpoint
+    // has been set for in that script.
+    this.scripts = new Map();
 
-  this.threadActor = threadActor;
-  this.location = location;
-  this.options = null;
-}
+    this.threadActor = threadActor;
+    this.location = location;
+    this.options = null;
+  }
 
-BreakpointActor.prototype = {
   setOptions(options) {
     const oldOptions = this.options;
     this.options = options;
@@ -52,16 +52,16 @@ BreakpointActor.prototype = {
     for (const [script, offsets] of this.scripts) {
       this._newOffsetsOrOptions(script, offsets, oldOptions);
     }
-  },
+  }
 
   destroy() {
     this.removeScripts();
     this.options = null;
-  },
+  }
 
   hasScript(script) {
     return this.scripts.has(script);
-  },
+  }
 
   /**
    * Called when this same breakpoint is added to another Debugger.Script
@@ -75,7 +75,7 @@ BreakpointActor.prototype = {
   addScript(script, offsets) {
     this.scripts.set(script, offsets.concat(this.scripts.get(offsets) || []));
     this._newOffsetsOrOptions(script, offsets, null);
-  },
+  }
 
   /**
    * Remove the breakpoints from associated scripts and clear the script cache.
@@ -85,7 +85,7 @@ BreakpointActor.prototype = {
       script.clearBreakpoint(this);
     }
     this.scripts.clear();
-  },
+  }
 
   /**
    * Called on changes to this breakpoint's script offsets or options.
@@ -101,7 +101,7 @@ BreakpointActor.prototype = {
     for (const offset of offsets) {
       script.setBreakpoint(offset, this);
     }
-  },
+  }
 
   /**
    * Check if this breakpoint has a condition that doesn't error and
@@ -134,7 +134,7 @@ BreakpointActor.prototype = {
     }
     // The evaluation was killed (possibly by the slow script dialog)
     return { result: undefined };
-  },
+  }
 
   /**
    * A function that the engine calls when a breakpoint has been hit.
@@ -202,7 +202,7 @@ BreakpointActor.prototype = {
     }
 
     return this.threadActor._pauseAndRespond(frame, reason);
-  },
+  }
 
   delete() {
     // Remove from the breakpoint store.
@@ -210,7 +210,7 @@ BreakpointActor.prototype = {
     // Remove the actual breakpoint from the associated scripts.
     this.removeScripts();
     this.destroy();
-  },
-};
+  }
+}
 
 exports.BreakpointActor = BreakpointActor;

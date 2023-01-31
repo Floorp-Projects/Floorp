@@ -200,48 +200,46 @@ exports.setIgnoreLayoutChanges = function(ignore, syncReflowNode) {
   gIgnoreLayoutChanges = ignore;
 };
 
-/**
- * The LayoutChangesObserver class is instantiated only once per given tab
- * and is used to track reflows and dom and style changes in that tab.
- * The LayoutActor uses this class to send reflow events to its clients.
- *
- * This class isn't exported on the module because it shouldn't be instantiated
- * to avoid creating several instances per tabs.
- * Use `getLayoutChangesObserver(targetActor)`
- * and `releaseLayoutChangesObserver(targetActor)`
- * which are exported to get and release instances.
- *
- * The observer loops every EVENT_BATCHING_DELAY ms and checks if layout changes
- * have happened since the last loop iteration. If there are, it sends the
- * corresponding events:
- *
- * - "reflows", with an array of all the reflows that occured,
- * - "resizes", with an array of all the resizes that occured,
- *
- * @param {WindowGlobalTargetActor} targetActor
- */
-function LayoutChangesObserver(targetActor) {
-  this.targetActor = targetActor;
+class LayoutChangesObserver extends EventEmitter {
+  /**
+   * The LayoutChangesObserver class is instantiated only once per given tab
+   * and is used to track reflows and dom and style changes in that tab.
+   * The LayoutActor uses this class to send reflow events to its clients.
+   *
+   * This class isn't exported on the module because it shouldn't be instantiated
+   * to avoid creating several instances per tabs.
+   * Use `getLayoutChangesObserver(targetActor)`
+   * and `releaseLayoutChangesObserver(targetActor)`
+   * which are exported to get and release instances.
+   *
+   * The observer loops every EVENT_BATCHING_DELAY ms and checks if layout changes
+   * have happened since the last loop iteration. If there are, it sends the
+   * corresponding events:
+   *
+   * - "reflows", with an array of all the reflows that occured,
+   * - "resizes", with an array of all the resizes that occured,
+   *
+   * @param {WindowGlobalTargetActor} targetActor
+   */
+  constructor(targetActor) {
+    super();
 
-  this._startEventLoop = this._startEventLoop.bind(this);
-  this._onReflow = this._onReflow.bind(this);
-  this._onResize = this._onResize.bind(this);
+    this.targetActor = targetActor;
 
-  // Creating the various observers we're going to need
-  // For now, just the reflow observer, but later we can add markupMutation,
-  // styleSheetChanges and styleRuleChanges
-  this.reflowObserver = new ReflowObserver(this.targetActor, this._onReflow);
-  this.resizeObserver = new WindowResizeObserver(
-    this.targetActor,
-    this._onResize
-  );
+    this._startEventLoop = this._startEventLoop.bind(this);
+    this._onReflow = this._onReflow.bind(this);
+    this._onResize = this._onResize.bind(this);
 
-  EventEmitter.decorate(this);
-}
+    // Creating the various observers we're going to need
+    // For now, just the reflow observer, but later we can add markupMutation,
+    // styleSheetChanges and styleRuleChanges
+    this.reflowObserver = new ReflowObserver(this.targetActor, this._onReflow);
+    this.resizeObserver = new WindowResizeObserver(
+      this.targetActor,
+      this._onResize
+    );
+  }
 
-exports.LayoutChangesObserver = LayoutChangesObserver;
-
-LayoutChangesObserver.prototype = {
   /**
    * How long does this observer waits before emitting batched events.
    * The lower the value, the more event packets will be sent to clients,
@@ -249,7 +247,7 @@ LayoutChangesObserver.prototype = {
    * The higher the value, the more time we'll wait, this is better for
    * performance but has an effect on how soon changes are shown in the toolbox.
    */
-  EVENT_BATCHING_DELAY: 300,
+  EVENT_BATCHING_DELAY = 300;
 
   /**
    * Destroying this instance of LayoutChangesObserver will stop the batched
@@ -265,7 +263,7 @@ LayoutChangesObserver.prototype = {
     this.hasResized = false;
 
     this.targetActor = null;
-  },
+  }
 
   start() {
     if (this.isObserving) {
@@ -280,7 +278,7 @@ LayoutChangesObserver.prototype = {
 
     this.reflowObserver.start();
     this.resizeObserver.start();
-  },
+  }
 
   stop() {
     if (!this.isObserving) {
@@ -295,7 +293,7 @@ LayoutChangesObserver.prototype = {
 
     this.reflowObserver.stop();
     this.resizeObserver.stop();
-  },
+  }
 
   /**
    * Start the event loop, which regularly checks if there are any observer
@@ -325,19 +323,19 @@ LayoutChangesObserver.prototype = {
       this._startEventLoop,
       this.EVENT_BATCHING_DELAY
     );
-  },
+  }
 
   _stopEventLoop() {
     this._clearTimeout(this.eventLoopTimer);
-  },
+  }
 
   // Exposing set/clearTimeout here to let tests override them if needed
   _setTimeout(cb, ms) {
     return setTimeout(cb, ms);
-  },
+  }
   _clearTimeout(t) {
     return clearTimeout(t);
-  },
+  }
 
   /**
    * Executed whenever a reflow is observed. Only stacks the reflow in the
@@ -359,7 +357,7 @@ LayoutChangesObserver.prototype = {
       end,
       isInterruptible,
     });
-  },
+  }
 
   /**
    * Executed whenever a resize is observed. Only store a flag saying that a
@@ -372,8 +370,9 @@ LayoutChangesObserver.prototype = {
     }
 
     this.hasResized = true;
-  },
-};
+  }
+}
+exports.LayoutChangesObserver = LayoutChangesObserver;
 
 /**
  * Get a LayoutChangesObserver instance for a given window. This function makes

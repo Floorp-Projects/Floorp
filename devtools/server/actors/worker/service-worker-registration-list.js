@@ -21,16 +21,16 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIServiceWorkerManager"
 );
 
-function ServiceWorkerRegistrationActorList(conn) {
-  this._conn = conn;
-  this._actors = new Map();
-  this._onListChanged = null;
-  this._mustNotify = false;
-  this.onRegister = this.onRegister.bind(this);
-  this.onUnregister = this.onUnregister.bind(this);
-}
+class ServiceWorkerRegistrationActorList {
+  constructor(conn) {
+    this._conn = conn;
+    this._actors = new Map();
+    this._onListChanged = null;
+    this._mustNotify = false;
+    this.onRegister = this.onRegister.bind(this);
+    this.onUnregister = this.onUnregister.bind(this);
+  }
 
-ServiceWorkerRegistrationActorList.prototype = {
   getList() {
     // Create a set of registrations.
     const registrations = new Set();
@@ -71,11 +71,11 @@ ServiceWorkerRegistrationActorList.prototype = {
     }
 
     return Promise.resolve(actors);
-  },
+  }
 
   get onListchanged() {
     return this._onListchanged;
-  },
+  }
 
   set onListChanged(onListChanged) {
     if (typeof onListChanged !== "function" && onListChanged !== null) {
@@ -91,7 +91,7 @@ ServiceWorkerRegistrationActorList.prototype = {
       }
     }
     this._onListChanged = onListChanged;
-  },
+  }
 
   _notifyListChanged() {
     this._onListChanged();
@@ -100,15 +100,15 @@ ServiceWorkerRegistrationActorList.prototype = {
       swm.removeListener(this);
     }
     this._mustNotify = false;
-  },
+  }
 
   onRegister(registration) {
     this._notifyListChanged();
-  },
+  }
 
   onUnregister(registration) {
     this._notifyListChanged();
-  },
-};
+  }
+}
 
 exports.ServiceWorkerRegistrationActorList = ServiceWorkerRegistrationActorList;

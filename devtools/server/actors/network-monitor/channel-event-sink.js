@@ -17,17 +17,17 @@ const SINK_CLASS_ID = Components.ID("{e89fa076-c845-48a8-8c45-2604729eba1d}");
 const SINK_CONTRACT_ID = "@mozilla.org/network/monitor/channeleventsink;1";
 const SINK_CATEGORY_NAME = "net-channel-event-sinks";
 
-function ChannelEventSink() {
-  this.wrappedJSObject = this;
-  this.collectors = new Set();
-}
+class ChannelEventSink {
+  constructor() {
+    this.wrappedJSObject = this;
+    this.collectors = new Set();
+  }
 
-ChannelEventSink.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink"]),
+  QueryInterface = ChromeUtils.generateQI(["nsIChannelEventSink"]);
 
   registerCollector(collector) {
     this.collectors.add(collector);
-  },
+  }
 
   unregisterCollector(collector) {
     this.collectors.delete(collector);
@@ -35,7 +35,7 @@ ChannelEventSink.prototype = {
     if (this.collectors.size == 0) {
       ChannelEventSinkFactory.unregister();
     }
-  },
+  }
 
   // eslint-disable-next-line no-shadow
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
@@ -50,8 +50,8 @@ ChannelEventSink.prototype = {
       }
     }
     callback.onRedirectVerifyCallback(Cr.NS_OK);
-  },
-};
+  }
+}
 
 const ChannelEventSinkFactory = ComponentUtils.generateSingletonFactory(
   ChannelEventSink

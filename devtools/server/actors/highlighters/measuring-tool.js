@@ -44,27 +44,27 @@ const HANDLER_SIZE = 6;
  * dimensions will be displayed in a tooltip next to it.
  * This allows users to measure distances between elements on a page.
  */
-function MeasuringToolHighlighter(highlighterEnv) {
-  this.env = highlighterEnv;
-  this.markup = new CanvasFrameAnonymousContentHelper(
-    highlighterEnv,
-    this._buildMarkup.bind(this)
-  );
-  this.isReady = this.markup.initialize();
+class MeasuringToolHighlighter {
+  constructor(highlighterEnv) {
+    this.env = highlighterEnv;
+    this.markup = new CanvasFrameAnonymousContentHelper(
+      highlighterEnv,
+      this._buildMarkup.bind(this)
+    );
+    this.isReady = this.markup.initialize();
 
-  this.coords = {
-    x: 0,
-    y: 0,
-  };
+    this.coords = {
+      x: 0,
+      y: 0,
+    };
 
-  const { pageListenerTarget } = highlighterEnv;
+    const { pageListenerTarget } = highlighterEnv;
 
-  // Register the measuring tool instance to all events we're interested in.
-  DOM_EVENTS.forEach(type => pageListenerTarget.addEventListener(type, this));
-}
+    // Register the measuring tool instance to all events we're interested in.
+    DOM_EVENTS.forEach(type => pageListenerTarget.addEventListener(type, this));
+  }
 
-MeasuringToolHighlighter.prototype = {
-  ID_CLASS_PREFIX: "measuring-tool-",
+  ID_CLASS_PREFIX = "measuring-tool-";
 
   _buildMarkup() {
     const prefix = this.ID_CLASS_PREFIX;
@@ -177,7 +177,7 @@ MeasuringToolHighlighter.prototype = {
     }
 
     return container;
-  },
+  }
 
   _update() {
     const { window } = this.env;
@@ -214,14 +214,14 @@ MeasuringToolHighlighter.prototype = {
     setIgnoreLayoutChanges(false, window.document.documentElement);
 
     this._rafID = window.requestAnimationFrame(() => this._update());
-  },
+  }
 
   _cancelUpdate() {
     if (this._rafID) {
       this.env.window.cancelAnimationFrame(this._rafID);
       this._rafID = 0;
     }
-  },
+  }
 
   destroy() {
     this.hide();
@@ -239,7 +239,7 @@ MeasuringToolHighlighter.prototype = {
     this.markup.destroy();
 
     EventEmitter.emit(this, "destroy");
-  },
+  }
 
   show() {
     setIgnoreLayoutChanges(true);
@@ -249,7 +249,7 @@ MeasuringToolHighlighter.prototype = {
     this._update();
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-  },
+  }
 
   hide() {
     setIgnoreLayoutChanges(true);
@@ -262,15 +262,15 @@ MeasuringToolHighlighter.prototype = {
     this._cancelUpdate();
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-  },
+  }
 
   getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
-  },
+  }
 
   setSize(w, h) {
     this.setCoords(undefined, undefined, w, h);
-  },
+  }
 
   setCoords(x, y, w, h) {
     const { coords } = this;
@@ -301,7 +301,7 @@ MeasuringToolHighlighter.prototype = {
     this.updateLabel();
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-  },
+  }
 
   updatePaths() {
     const { x, y, w, h } = this.coords;
@@ -319,7 +319,7 @@ MeasuringToolHighlighter.prototype = {
     this.getElement("box-path").setAttribute("d", dir);
     this.getElement("diagonal-path").setAttribute("d", linedir);
     this.getElement("tool").setAttribute("transform", `translate(${x},${y})`);
-  },
+  }
 
   updateLabel(type) {
     type = type || (this._dragging ? "size" : "position");
@@ -409,7 +409,7 @@ MeasuringToolHighlighter.prototype = {
         );
       }
     }
-  },
+  }
 
   updateViewport() {
     const { devicePixelRatio } = this.env.window;
@@ -431,7 +431,7 @@ MeasuringToolHighlighter.prototype = {
        width:${documentWidth}px;
        height:${documentHeight}px;`
     );
-  },
+  }
 
   updateGuides() {
     const { x, y, w, h } = this.coords;
@@ -463,13 +463,13 @@ MeasuringToolHighlighter.prototype = {
     guide.setAttribute("y1", 0);
     guide.setAttribute("x2", x);
     guide.setAttribute("y2", "100%");
-  },
+  }
 
   setHandlerPosition(handler, x, y) {
     const handlerElement = this.getElement(`handler-${handler}`);
     handlerElement.setAttribute("cx", x);
     handlerElement.setAttribute("cy", y);
-  },
+  }
 
   updateHandlers() {
     const { w, h } = this.coords;
@@ -482,7 +482,7 @@ MeasuringToolHighlighter.prototype = {
     this.setHandlerPosition("bottomleft", 0, h);
     this.setHandlerPosition("left", 0, h / 2);
     this.setHandlerPosition("topleft", 0, 0);
-  },
+  }
 
   showLabel(type) {
     setIgnoreLayoutChanges(true);
@@ -490,7 +490,7 @@ MeasuringToolHighlighter.prototype = {
     this.getElement(`label-${type}`).removeAttribute("hidden");
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-  },
+  }
 
   hideLabel(type) {
     setIgnoreLayoutChanges(true);
@@ -498,7 +498,7 @@ MeasuringToolHighlighter.prototype = {
     this.getElement(`label-${type}`).setAttribute("hidden", "true");
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-  },
+  }
 
   showGuides() {
     const prefix = this.ID_CLASS_PREFIX + "guide-";
@@ -506,7 +506,7 @@ MeasuringToolHighlighter.prototype = {
     for (const side of SIDES) {
       this.markup.removeAttributeForElement(`${prefix + side}`, "hidden");
     }
-  },
+  }
 
   hideGuides() {
     const prefix = this.ID_CLASS_PREFIX + "guide-";
@@ -514,12 +514,12 @@ MeasuringToolHighlighter.prototype = {
     for (const side of SIDES) {
       this.markup.setAttributeForElement(`${prefix + side}`, "hidden", "true");
     }
-  },
+  }
 
   showHandler(id) {
     const prefix = this.ID_CLASS_PREFIX + "handler-";
     this.markup.removeAttributeForElement(prefix + id, "hidden");
-  },
+  }
 
   showHandlers() {
     const prefix = this.ID_CLASS_PREFIX + "handler-";
@@ -527,14 +527,14 @@ MeasuringToolHighlighter.prototype = {
     for (const handler of HANDLERS) {
       this.markup.removeAttributeForElement(prefix + handler, "hidden");
     }
-  },
+  }
 
   hideAll() {
     this.hideLabel("position");
     this.hideLabel("size");
     this.hideGuides();
     this.hideHandlers();
-  },
+  }
 
   showGuidesAndHandlers() {
     // Shows the guides and handlers only if an actual area is selected
@@ -544,7 +544,7 @@ MeasuringToolHighlighter.prototype = {
       this.updateHandlers();
       this.showHandlers();
     }
-  },
+  }
 
   hideHandlers() {
     const prefix = this.ID_CLASS_PREFIX + "handler-";
@@ -552,7 +552,7 @@ MeasuringToolHighlighter.prototype = {
     for (const handler of HANDLERS) {
       this.markup.setAttributeForElement(prefix + handler, "hidden", "true");
     }
-  },
+  }
 
   handleEvent(event) {
     const { target, type } = event;
@@ -605,7 +605,7 @@ MeasuringToolHighlighter.prototype = {
         break;
       }
     }
-  },
+  }
 
   handleMouseDownEvent(event) {
     const { pageX, pageY } = event;
@@ -628,7 +628,7 @@ MeasuringToolHighlighter.prototype = {
     };
 
     this.setCoords(pageX, pageY, 0, 0);
-  },
+  }
 
   handleMouseMoveEvent(event) {
     const { pageX, pageY } = event;
@@ -650,7 +650,7 @@ MeasuringToolHighlighter.prototype = {
     }
 
     this.showLabel(labelType);
-  },
+  }
 
   handleMouseUpEvent() {
     setIgnoreLayoutChanges(true);
@@ -661,7 +661,7 @@ MeasuringToolHighlighter.prototype = {
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
     this._dragging = null;
-  },
+  }
 
   handleResizingMouseDownEvent(event) {
     const { originalTarget, pageX, pageY } = event;
@@ -690,7 +690,7 @@ MeasuringToolHighlighter.prototype = {
       x: pageX,
       y: pageY,
     };
-  },
+  }
 
   handleResizingMouseMoveEvent(event) {
     const { pageX, pageY } = event;
@@ -744,7 +744,7 @@ MeasuringToolHighlighter.prototype = {
     this.getElement("tool").classList.toggle("mirrored", isMirrored);
 
     this.showLabel("size");
-  },
+  }
 
   handleResizingMouseUpEvent() {
     const { handler } = this._dragging;
@@ -758,6 +758,6 @@ MeasuringToolHighlighter.prototype = {
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
     this._dragging = null;
-  },
-};
+  }
+}
 exports.MeasuringToolHighlighter = MeasuringToolHighlighter;

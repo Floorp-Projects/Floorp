@@ -103,37 +103,38 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
   Services.console.logMessage(error);
 }
 
-function CustomizedReload(params) {
-  this.docShell = params.targetActor.window.docShell;
-  this.docShell.QueryInterface(Ci.nsIWebProgress);
+class CustomizedReload {
+  constructor(params) {
+    this.docShell = params.targetActor.window.docShell;
+    this.docShell.QueryInterface(Ci.nsIWebProgress);
 
-  this.inspectedWindowEval = params.inspectedWindowEval;
-  this.callerInfo = params.callerInfo;
+    this.inspectedWindowEval = params.inspectedWindowEval;
+    this.callerInfo = params.callerInfo;
 
-  this.ignoreCache = params.ignoreCache;
-  this.injectedScript = params.injectedScript;
+    this.ignoreCache = params.ignoreCache;
+    this.injectedScript = params.injectedScript;
 
-  this.customizedReloadWindows = new WeakSet();
-}
+    this.customizedReloadWindows = new WeakSet();
+  }
 
-CustomizedReload.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
+  QueryInterface = ChromeUtils.generateQI([
     "nsIWebProgressListener",
     "nsISupportsWeakReference",
-  ]),
+  ]);
+
   get window() {
     return this.docShell.DOMWindow;
-  },
+  }
 
   get webNavigation() {
     return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebNavigation);
-  },
+  }
 
   get browsingContext() {
     return this.docShell.browsingContext;
-  },
+  }
 
   start() {
     if (!this.waitForReloadCompleted) {
@@ -171,7 +172,7 @@ CustomizedReload.prototype = {
     }
 
     return this.waitForReloadCompleted;
-  },
+  }
 
   observe(subject, topic, data) {
     if (topic !== "initial-document-element-inserted") {
@@ -219,7 +220,7 @@ CustomizedReload.prototype = {
         );
       }
     }
-  },
+  }
 
   onStateChange(webProgress, request, state, status) {
     if (webProgress.DOMWindow !== this.window) {
@@ -242,7 +243,7 @@ CustomizedReload.prototype = {
         this.stop();
       }
     }
-  },
+  }
 
   stop(error) {
     if (this.stopped) {
@@ -262,8 +263,8 @@ CustomizedReload.prototype = {
     }
 
     this.stopped = true;
-  },
-};
+  }
+}
 
 class WebExtensionInspectedWindowActor extends Actor {
   /**
