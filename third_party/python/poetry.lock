@@ -365,7 +365,7 @@ six = "*"
 
 [[package]]
 name = "mozilla-repo-urls"
-version = "0.1.0"
+version = "0.1.1"
 description = "Process Mozilla's repository URLs. The intent is to centralize URLs parsing."
 category = "main"
 optional = false
@@ -655,7 +655,7 @@ test = ["pytest", "pytest-cov", "pytest-mock", "httmock", "mock", "setuptools-li
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "3.5.1"
+version = "3.5.2"
 description = "Build taskcluster taskgraphs"
 category = "main"
 optional = false
@@ -797,7 +797,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "16adc4b6292094b504000d2c7b9dd1af8103f0220be93894238b60455d9dc87b"
+content-hash = "a1068ebc7bed961126ecacbb0ca60aa2b67bc73ae1d7d2df3f75ab235d6f0c84"
 
 [metadata.files]
 aiohttp = [
@@ -1034,8 +1034,8 @@ mohawk = [
     {file = "mohawk-0.3.4.tar.gz", hash = "sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3"},
 ]
 mozilla-repo-urls = [
-    {file = "mozilla-repo-urls-0.1.0.tar.gz", hash = "sha256:aa43ebcc4744b4cf20bf27f8dff885e82efee21a0219ba20f6bd99931cabd7b9"},
-    {file = "mozilla_repo_urls-0.1.0-py3-none-any.whl", hash = "sha256:5978abd796ae2b51a66e571754f0c559050cb4a024f2bf401471fa7ac4afd54e"},
+    {file = "mozilla-repo-urls-0.1.1.tar.gz", hash = "sha256:7364da790751db2a060eb45adbf1d7db89a145ed279ba235f3425db9dd255915"},
+    {file = "mozilla_repo_urls-0.1.1-py3-none-any.whl", hash = "sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba"},
 ]
 mozilla-version = [
     {file = "mozilla-version-0.3.4.tar.gz", hash = "sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255"},
@@ -1217,8 +1217,8 @@ taskcluster = [
     {file = "taskcluster-44.2.2.tar.gz", hash = "sha256:0266a6a901e1a2ec838984a7f24e7adb6d58f9f2e221a7f613388f8f23f786fc"},
 ]
 taskcluster-taskgraph = [
-    {file = "taskcluster-taskgraph-3.5.1.tar.gz", hash = "sha256:e08b935175349ef8728ff5f19c7e9866a562256180f5580b291da3217cb5016c"},
-    {file = "taskcluster_taskgraph-3.5.1-py3-none-any.whl", hash = "sha256:dc56b87228fb8eb1ef611750202344817a8cf5d825c0dc7e2dcc0f8b2795cbcd"},
+    {file = "taskcluster-taskgraph-3.5.2.tar.gz", hash = "sha256:62f1a320d6b310f65151904a9992719a9b2c4c41ef8f57be810899fd3c5d2703"},
+    {file = "taskcluster_taskgraph-3.5.2-py3-none-any.whl", hash = "sha256:6a024ba2383f56e11b764500f92837afb825612a49d24bde9791dfa7aa7ddaec"},
 ]
 taskcluster-urls = [
     {file = "taskcluster-urls-13.0.1.tar.gz", hash = "sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367"},

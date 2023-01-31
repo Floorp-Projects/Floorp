@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mozilla-repo-urls
-Version: 0.1.0
+Version: 0.1.1
 Summary: Process Mozilla's repository URLs. The intent is to centralize URLs parsing.
 Home-page: https://github.com/mozilla-releng/mozilla-repo-urls
 Author: Mozilla Release Engineering
