@@ -325,7 +325,7 @@ add_task(async function search_excludes_tags() {
     title: "a bookmark",
   });
   checkBookmarkObject(bm1);
-  PlacesUtils.tagging.tagURI(uri(bm1.url.href), ["Test Tag"]);
+  PlacesUtils.tagging.tagURI(bm1.url.URI, ["Test Tag"]);
 
   let results = await PlacesUtils.bookmarks.search("example.com");
   // If tags are not being excluded, this would return two results, one representing the tag.

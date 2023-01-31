@@ -269,7 +269,7 @@ add_task(async function bookmarkTagsChanged() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
   });
-  let uri = Services.io.newURI(bm.url.href);
+  let uri = bm.url.URI;
   const TAG = "tag";
   let promise = Promise.all([
     gBookmarkSkipObserver.setup([
@@ -538,7 +538,7 @@ add_task(async function bookmarkItemRemoved_bookmark() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
   });
-  let uri = Services.io.newURI(bm.url.href);
+  let uri = bm.url.URI;
   let promise = Promise.all([
     gBookmarkSkipObserver.setup(["bookmark-removed"]),
     gBookmarksObserver.setup([

@@ -66,7 +66,7 @@ function expectNotifications() {
           }
           let args = Array.from(arguments, arg => {
             if (arg && arg instanceof Ci.nsIURI) {
-              return new URL(arg.spec);
+              return URL.fromURI(arg);
             }
             if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
               return new Date(parseInt(arg / 1000));

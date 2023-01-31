@@ -66,7 +66,7 @@ add_task(async function() {
 
   for (let test of gTests) {
     info(test.desc);
-    let pageURI = Services.io.newURI(test.href);
+    let pageURI = PlacesUtils.toURI(test.href);
 
     await test.setup();
 

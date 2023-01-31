@@ -152,7 +152,7 @@ add_task(async function test_insertMany() {
       );
       await inserter(
         "Testing History.insertMany() with a URL object",
-        x => new URL(x.spec),
+        x => URL.fromURI(x),
         useCallbacks
       );
     }
