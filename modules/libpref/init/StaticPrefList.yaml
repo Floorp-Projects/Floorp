@@ -1283,6 +1283,7 @@
   type: String
   value: >-
     Material Icons,
+    Material Icons Extended,
     Material Icons Outlined,
     Material Icons Round,
     Material Icons Sharp,
