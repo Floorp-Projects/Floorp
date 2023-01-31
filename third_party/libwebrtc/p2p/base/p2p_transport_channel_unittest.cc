@@ -16,11 +16,15 @@
 
 #include "absl/strings/string_view.h"
 #include "api/test/mock_async_dns_resolver.h"
+#include "p2p/base/active_ice_controller_factory_interface.h"
+#include "p2p/base/active_ice_controller_interface.h"
 #include "p2p/base/basic_ice_controller.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/fake_port_allocator.h"
 #include "p2p/base/ice_transport_internal.h"
+#include "p2p/base/mock_active_ice_controller.h"
 #include "p2p/base/mock_async_resolver.h"
+#include "p2p/base/mock_ice_controller.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "p2p/base/test_stun_server.h"
 #include "p2p/base/test_turn_server.h"
@@ -56,7 +60,6 @@ using ::testing::DoAll;
 using ::testing::InSequence;
 using ::testing::InvokeArgument;
 using ::testing::InvokeWithoutArgs;
-using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::SaveArg;
@@ -183,18 +186,6 @@ cricket::BasicPortAllocator* CreateBasicPortAllocator(
   allocator->SetConfiguration(stun_servers, turn_servers, 0, webrtc::NO_PRUNE);
   return allocator.release();
 }
-
-class MockIceControllerFactory : public cricket::IceControllerFactoryInterface {
- public:
-  ~MockIceControllerFactory() override = default;
-  std::unique_ptr<cricket::IceControllerInterface> Create(
-      const cricket::IceControllerFactoryArgs& args) override {
-    RecordIceControllerCreated();
-    return std::make_unique<cricket::BasicIceController>(args);
-  }
-
-  MOCK_METHOD(void, RecordIceControllerCreated, ());
-};
 
 // An one-shot resolver factory with default return arguments.
 // Resolution is immediate, always succeeds, and returns nonsense.
@@ -6118,6 +6109,25 @@ TEST(P2PTransportChannel, InjectIceController) {
   webrtc::IceTransportInit init;
   init.set_port_allocator(&pa);
   init.set_ice_controller_factory(&factory);
+  auto dummy =
+      P2PTransportChannel::Create("transport_name",
+                                  /* component= */ 77, std::move(init));
+}
+
+TEST(P2PTransportChannel, InjectActiveIceController) {
+  std::unique_ptr<rtc::SocketServer> socket_server =
+      rtc::CreateDefaultSocketServer();
+  rtc::AutoSocketServerThread main_thread(socket_server.get());
+  rtc::BasicPacketSocketFactory packet_socket_factory(socket_server.get());
+  MockActiveIceControllerFactory factory;
+  FakePortAllocator pa(rtc::Thread::Current(), &packet_socket_factory);
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      "WebRTC-UseActiveIceController/Enabled/");
+  EXPECT_CALL(factory, RecordActiveIceControllerCreated()).Times(1);
+  webrtc::IceTransportInit init;
+  init.set_port_allocator(&pa);
+  init.set_active_ice_controller_factory(&factory);
+  init.set_field_trials(&field_trials);
   auto dummy =
       P2PTransportChannel::Create("transport_name",
                                   /* component= */ 77, std::move(init));
