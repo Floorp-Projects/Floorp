@@ -12548,17 +12548,6 @@
     ],
     "description": "Percentage of the entries with the given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
   },
-  "NETWORK_COOKIE_UNICODE_BYTE" :{
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
-    "bug_numbers": [1797231],
-    "expires_in_version": "120",
-    "kind": "categorical",
-    "releaseChannelCollection": "opt-out",
-    "description": "Records whether a cookie contains unexpected characters",
-    "labels": ["none", "unicodeName", "unicodeValue"]
-  },
   "SSL_TLS13_INTOLERANCE_REASON_PRE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
