@@ -1887,54 +1887,6 @@ int js::StringFindPattern(JSLinearString* text, JSLinearString* pat,
   return StringMatch(text, pat, start);
 }
 
-// When an algorithm does not need a string represented as a single linear
-// array of characters, this range utility may be used to traverse the string a
-// sequence of linear arrays of characters. This avoids flattening ropes.
-class StringSegmentRange {
-  // If malloc() shows up in any profiles from this vector, we can add a new
-  // StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
-  using StackVector = JS::GCVector<JSString*, 16>;
-  Rooted<StackVector> stack;
-  Rooted<JSLinearString*> cur;
-
-  bool settle(JSString* str) {
-    while (str->isRope()) {
-      JSRope& rope = str->asRope();
-      if (!stack.append(rope.rightChild())) {
-        return false;
-      }
-      str = rope.leftChild();
-    }
-    cur = &str->asLinear();
-    return true;
-  }
-
- public:
-  explicit StringSegmentRange(JSContext* cx)
-      : stack(cx, StackVector(cx)), cur(cx) {}
-
-  [[nodiscard]] bool init(JSString* str) {
-    MOZ_ASSERT(stack.empty());
-    return settle(str);
-  }
-
-  bool empty() const { return cur == nullptr; }
-
-  JSLinearString* front() const {
-    MOZ_ASSERT(!cur->isRope());
-    return cur;
-  }
-
-  [[nodiscard]] bool popFront() {
-    MOZ_ASSERT(!empty());
-    if (stack.empty()) {
-      cur = nullptr;
-      return true;
-    }
-    return settle(stack.popCopy());
-  }
-};
-
 typedef Vector<JSLinearString*, 16, SystemAllocPolicy> LinearStringVector;
 
 template <typename TextChar, typename PatChar>

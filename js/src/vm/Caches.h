@@ -8,6 +8,8 @@
 #define vm_Caches_h
 
 #include "mozilla/Array.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MruCache.h"
 
 #include "frontend/ScopeBindingCache.h"
 #include "gc/Tracer.h"
@@ -15,6 +17,7 @@
 #include "js/TypeDecls.h"
 #include "vm/JSScript.h"
 #include "vm/StencilCache.h"  // js::StencilCache
+#include "vm/StringType.h"
 
 namespace js {
 
@@ -344,11 +347,13 @@ class MegamorphicSetPropCache {
   }
 };
 
-// Cache for AtomizeString, mapping JSLinearString* to the corresponding
-// JSAtom*. The cache has two different optimizations:
+// Cache for AtomizeString, mapping JSString* or JS::Latin1Char* to the
+// corresponding JSAtom*. The cache has three different optimizations:
 //
 // * The two most recent lookups are cached. This has a hit rate of 30-65% on
 //   typical web workloads.
+//
+// * MruCache is used for short JS::Latin1Char strings.
 //
 // * For longer strings, there's also a JSLinearString* => JSAtom* HashMap,
 //   because hashing the string characters repeatedly can be slow.
@@ -358,7 +363,7 @@ class MegamorphicSetPropCache {
 class StringToAtomCache {
  public:
   struct LastLookup {
-    JSLinearString* string = nullptr;
+    JSString* string = nullptr;
     JSAtom* atom = nullptr;
 
     static constexpr size_t offsetOfString() {
@@ -371,32 +376,51 @@ class StringToAtomCache {
   };
   static constexpr size_t NumLastLookups = 2;
 
+  struct AtomTableKey {
+    explicit AtomTableKey(const JS::Latin1Char* str, size_t len)
+        : string_(str), length_(len) {
+      hash_ = mozilla::HashString(string_, length_);
+    }
+
+    const JS::Latin1Char* string_;
+    size_t length_;
+    uint32_t hash_;
+  };
+
  private:
-  using Map = HashMap<JSLinearString*, JSAtom*, PointerHasher<JSLinearString*>,
-                      SystemAllocPolicy>;
+  struct RopeAtomCache
+      : public mozilla::MruCache<AtomTableKey, JSAtom*, RopeAtomCache> {
+    static HashNumber Hash(const AtomTableKey& key) { return key.hash_; }
+    static bool Match(const AtomTableKey& key, const JSAtom* val) {
+      JS::AutoCheckCannotGC nogc;
+      return val->length() == key.length_ &&
+             EqualChars(key.string_, val->latin1Chars(nogc), key.length_);
+    }
+  };
+  using Map =
+      HashMap<JSString*, JSAtom*, PointerHasher<JSString*>, SystemAllocPolicy>;
   Map map_;
   mozilla::Array<LastLookup, NumLastLookups> lastLookups_;
+  RopeAtomCache ropeCharCache_;
 
  public:
   // Don't use the HashMap for short strings. Hashing them is less expensive.
-  static constexpr size_t MinStringLength = 30;
+  // But the length needs to long enough to cover common identifiers in React.
+  static constexpr size_t MinStringLength = 39;
 
-  JSAtom* lookupInMap(JSLinearString* s) const {
+  JSAtom* lookupInMap(JSString* s) const {
     MOZ_ASSERT(s->inStringToAtomCache());
     MOZ_ASSERT(s->length() >= MinStringLength);
 
     auto p = map_.lookup(s);
     JSAtom* atom = p ? p->value() : nullptr;
-    MOZ_ASSERT_IF(atom, EqualStrings(s, atom));
     return atom;
   }
 
-  MOZ_ALWAYS_INLINE JSAtom* lookup(JSLinearString* s) const {
+  MOZ_ALWAYS_INLINE JSAtom* lookup(JSString* s) const {
     MOZ_ASSERT(!s->isAtom());
-
     for (const LastLookup& entry : lastLookups_) {
       if (entry.string == s) {
-        MOZ_ASSERT(EqualStrings(s, entry.atom));
         return entry.atom;
       }
     }
@@ -409,12 +433,25 @@ class StringToAtomCache {
     return lookupInMap(s);
   }
 
+  MOZ_ALWAYS_INLINE JSAtom* lookupWithRopeChars(
+      const JS::Latin1Char* str, size_t len,
+      mozilla::Maybe<AtomTableKey>& key) {
+    MOZ_ASSERT(len < MinStringLength);
+    key.emplace(str, len);
+    if (auto p = ropeCharCache_.Lookup(key.value())) {
+      return p.Data();
+    }
+    return nullptr;
+  }
+
   static constexpr size_t offsetOfLastLookups() {
     return offsetof(StringToAtomCache, lastLookups_);
   }
 
-  void maybePut(JSLinearString* s, JSAtom* atom) {
-    MOZ_ASSERT(!s->isAtom());
+  void maybePut(JSString* s, JSAtom* atom, mozilla::Maybe<AtomTableKey>& key) {
+    if (key.isSome()) {
+      ropeCharCache_.Put(key.value(), atom);
+    }
 
     for (size_t i = NumLastLookups - 1; i > 0; i--) {
       lastLookups_[i] = lastLookups_[i - 1];
@@ -437,6 +474,8 @@ class StringToAtomCache {
       entry.string = nullptr;
       entry.atom = nullptr;
     }
+
+    ropeCharCache_.Clear();
   }
 };
 

@@ -556,13 +556,19 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyCharsNonStaticValidLength(
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyChars(
     JSContext* cx, const CharT* chars, size_t length,
-    const Maybe<uint32_t>& indexValue) {
+    const Maybe<uint32_t>& indexValue, const Maybe<js::HashNumber>& hash) {
   if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
     return s;
   }
 
   if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
     return nullptr;
+  }
+
+  if (hash.isSome()) {
+    AtomHasher::Lookup lookup(hash.value(), chars, length);
+    return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(
+        cx, chars, length, lookup, indexValue);
   }
 
   AtomHasher::Lookup lookup(chars, length);
@@ -731,13 +737,37 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
     return &str->asAtom();
   }
 
-  JSLinearString* linear = str->ensureLinear(cx);
-  if (!linear) {
-    return nullptr;
+  if (JSAtom* atom = cx->caches().stringToAtomCache.lookup(str)) {
+    return atom;
   }
 
-  if (JSAtom* atom = cx->caches().stringToAtomCache.lookup(linear)) {
-    return atom;
+  JS::Latin1Char flattenRope[StringToAtomCache::MinStringLength];
+  mozilla::Maybe<StringToAtomCache::AtomTableKey> key;
+  size_t length = str->length();
+  if (!str->isLinear() && length < StringToAtomCache::MinStringLength &&
+      str->hasLatin1Chars()) {
+    StringSegmentRange<StringToAtomCache::MinStringLength> iter(cx);
+    if (iter.init(str)) {
+      JS::AutoCheckCannotGC nogc;
+      size_t index = 0;
+      do {
+        const JSLinearString* s = iter.front();
+        size_t len = s->length();
+        const JS::Latin1Char* latinChars = s->latin1Chars(nogc);
+        memcpy(flattenRope + index, latinChars, len);
+        index += len;
+      } while (iter.popFront() && !iter.empty());
+
+      if (JSAtom* atom = cx->caches().stringToAtomCache.lookupWithRopeChars(
+              flattenRope, length, key)) {
+        // Since this cache lookup is based on a string comparison, not object
+        // identity, need to mark atom explicitly in this case. And this is
+        // not done in lookup() itself, because #including JSContext.h there
+        // causes some non-trivial #include ordering issues.
+        cx->markAtom(atom);
+        return atom;
+      }
+    }
   }
 
   Maybe<uint32_t> indexValue;
@@ -745,17 +775,29 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
     indexValue.emplace(str->getIndexValue());
   }
 
-  JS::AutoCheckCannotGC nogc;
-  JSAtom* atom = linear->hasLatin1Chars()
-                     ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc),
-                                           linear->length(), indexValue)
-                     : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc),
-                                           linear->length(), indexValue);
+  JSAtom* atom = nullptr;
+  if (key.isSome()) {
+    atom = AtomizeAndCopyChars(cx, key.value().string_, key.value().length_,
+                               indexValue, mozilla::Some(key.value().hash_));
+  } else {
+    JSLinearString* linear = str->ensureLinear(cx);
+    if (!linear) {
+      return nullptr;
+    }
+
+    JS::AutoCheckCannotGC nogc;
+    atom = linear->hasLatin1Chars()
+               ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc),
+                                     linear->length(), indexValue, Nothing())
+               : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc),
+                                     linear->length(), indexValue, Nothing());
+  }
+
   if (!atom) {
     return nullptr;
   }
 
-  cx->caches().stringToAtomCache.maybePut(linear, atom);
+  cx->caches().stringToAtomCache.maybePut(str, atom, key);
 
   return atom;
 }
@@ -785,12 +827,12 @@ bool AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
 JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
                     const Maybe<uint32_t>& indexValue) {
   const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
-  return AtomizeAndCopyChars(cx, chars, length, indexValue);
+  return AtomizeAndCopyChars(cx, chars, length, indexValue, Nothing());
 }
 
 template <typename CharT>
 JSAtom* js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length) {
-  return AtomizeAndCopyChars(cx, chars, length, Nothing());
+  return AtomizeAndCopyChars(cx, chars, length, Nothing(), Nothing());
 }
 
 template JSAtom* js::AtomizeChars(JSContext* cx, const Latin1Char* chars,
