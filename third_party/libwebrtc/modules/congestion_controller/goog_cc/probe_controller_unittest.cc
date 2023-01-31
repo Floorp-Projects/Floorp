@@ -470,7 +470,7 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
       "p1:2,p2:5,step_size:3,further_probe_threshold:0.8,"
-      "alloc_p1:2,alloc_p2/");
+      "alloc_p1:2,alloc_p2,min_probe_packets_sent:2/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -479,7 +479,9 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
                                               fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
   EXPECT_EQ(probes[0].target_data_rate.bps(), 600);
+  EXPECT_EQ(probes[0].target_probe_count, 2);
   EXPECT_EQ(probes[1].target_data_rate.bps(), 1500);
+  EXPECT_EQ(probes[1].target_probe_count, 2);
 
   // Repeated probe should only be sent when estimated bitrate climbs above
   // 0.8 * 5 * kStartBitrateBps = 1200.
