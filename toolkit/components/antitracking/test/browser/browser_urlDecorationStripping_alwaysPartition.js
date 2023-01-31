@@ -13,9 +13,6 @@ const { RemoteSettings } = ChromeUtils.import(
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 
 const COLLECTION_NAME = "anti-tracking-url-decoration";
 const PREF_NAME = "privacy.restrict3rdpartystorage.url_decorations";

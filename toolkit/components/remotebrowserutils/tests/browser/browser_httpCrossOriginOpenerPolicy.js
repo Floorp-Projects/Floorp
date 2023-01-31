@@ -1,9 +1,5 @@
 "use strict";
 
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
-
 const COOP_PREF = "browser.tabs.remote.useCrossOriginOpenerPolicy";
 
 async function setPref() {

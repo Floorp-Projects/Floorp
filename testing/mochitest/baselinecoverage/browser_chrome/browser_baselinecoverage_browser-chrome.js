@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
 add_task(async function() {
   requestLongerTimeout(2);
   let newWin = await BrowserTestUtils.openNewBrowserWindow();

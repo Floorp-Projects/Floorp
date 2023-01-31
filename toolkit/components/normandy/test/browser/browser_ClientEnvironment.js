@@ -3,9 +3,7 @@
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+
 const { AddonRollouts } = ChromeUtils.import(
   "resource://normandy/lib/AddonRollouts.jsm"
 );

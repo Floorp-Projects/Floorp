@@ -15,9 +15,7 @@ const { ExperimentManager } = ChromeUtils.import(
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );

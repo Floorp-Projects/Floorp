@@ -4,10 +4,6 @@
 
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
-const { Deprecated } = ChromeUtils.importESModule(
-  "resource://gre/modules/Deprecated.sys.mjs"
-);
-
 // Using this named functions to test deprecation and the properly logged
 // callstacks.
 function basicDeprecatedFunction() {

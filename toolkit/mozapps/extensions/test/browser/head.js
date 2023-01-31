@@ -5,15 +5,13 @@
 
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-let { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
+let { AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-let { Log } = ChromeUtils.importESModule("resource://gre/modules/Log.sys.mjs");
 
 var pathParts = gTestPath.split("/");
 // Drop the test filename

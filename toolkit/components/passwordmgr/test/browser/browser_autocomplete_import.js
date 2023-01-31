@@ -4,9 +4,7 @@ const { ChromeMigrationUtils } = ChromeUtils.import(
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { MigrationUtils } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
+
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 // Dummy migrator to change and detect importable behavior.

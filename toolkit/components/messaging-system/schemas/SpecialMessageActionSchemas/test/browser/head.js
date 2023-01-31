@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"

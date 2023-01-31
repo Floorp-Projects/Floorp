@@ -13,10 +13,6 @@ const TEST_ARTICLE =
 const TEST_ITALIAN_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "AddonManager",

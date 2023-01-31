@@ -1,9 +1,5 @@
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
-
 add_task(async function runTests() {
   const menubar = document.getElementById("toolbar-menubar");
   const autohide = menubar.getAttribute("autohide");

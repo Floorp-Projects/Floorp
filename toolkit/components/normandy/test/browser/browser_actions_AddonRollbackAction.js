@@ -1,8 +1,5 @@
 "use strict";
 
-const { TelemetryEnvironment } = ChromeUtils.importESModule(
-  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
-);
 const { AddonRollbackAction } = ChromeUtils.import(
   "resource://normandy/actions/AddonRollbackAction.jsm"
 );

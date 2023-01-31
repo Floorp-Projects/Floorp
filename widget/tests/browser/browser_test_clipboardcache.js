@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 // Note: widget/tests/test_bug1123480.xhtml checks whether nsTransferable behaves
 // as expected with regards to private browsing mode and the clipboard cache,
 // i.e. that the clipboard is not cached to the disk when private browsing mode

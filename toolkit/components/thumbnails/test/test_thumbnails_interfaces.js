@@ -1,7 +1,5 @@
 "use strict";
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 // need profile so that PageThumbsStorageService can resolve the path to the underlying file
 do_get_profile();
 

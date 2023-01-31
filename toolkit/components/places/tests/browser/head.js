@@ -1,8 +1,3 @@
-var { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
-);
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });

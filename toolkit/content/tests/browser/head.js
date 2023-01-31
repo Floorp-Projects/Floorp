@@ -1,9 +1,5 @@
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 /**
  * Set the findbar value to the given text, start a search for that text, and
  * return a promise that resolves when the find has completed.
