@@ -10,6 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Preferences.h"
 
 #ifdef OS_WIN
 #  include "WinWebAuthnManager.h"
@@ -130,11 +131,15 @@ PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(GlobalObject& aGlobal,
 #ifdef OS_WIN
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     promise->MaybeResolve(true);
-    return promise.forget();
+  } else {
+    promise->MaybeResolve(Preferences::GetBool("security.webauthn.ctap2"));
   }
+#elif defined(MOZ_WIDGET_ANDROID)
+  promise->MaybeResolve(false);
+#else
+  promise->MaybeResolve(Preferences::GetBool("security.webauthn.ctap2"));
 #endif
 
-  promise->MaybeResolve(false);
   return promise.forget();
 }
 
