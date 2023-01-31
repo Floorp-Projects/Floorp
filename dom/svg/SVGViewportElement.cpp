@@ -68,10 +68,6 @@ SVGViewportElement::PreserveAspectRatio() {
   return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(this);
 }
 
-bool SVGViewportElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eUSE_TARGET);
-}
-
 //----------------------------------------------------------------------
 // nsIContent methods
 

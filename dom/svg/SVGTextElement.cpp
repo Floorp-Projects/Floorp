@@ -37,10 +37,6 @@ SVGElement::LengthAttributesInfo SVGTextElement::GetLengthInfo() {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextElement)
 
-bool SVGTextElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eUSE_TARGET);
-}
-
 //----------------------------------------------------------------------
 // nsIContent methods
 

@@ -119,9 +119,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
-  bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual bool IsSVGGraphicsElement() const { return false; }
-
   /**
    * We override the default to unschedule computation of Servo declaration
    * blocks when adopted across documents.
