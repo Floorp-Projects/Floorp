@@ -40,7 +40,6 @@ html|*.addon-webext-perm-list {
 
 .addon-installed-notification-content > checkbox {
   margin: 8px 4px 2px;
-  flex-wrap: wrap;
 }
 
 .addon-webext-name {
