@@ -4514,6 +4514,12 @@
   value: false
   mirror: always
 
+# Are WebGPU indirect draws/dispatches enabled?
+- name: dom.webgpu.indirect-dispatch.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool
