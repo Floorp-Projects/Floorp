@@ -6,6 +6,7 @@ package org.mozilla.fenix.telemetry
 
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.mockk
+import io.mockk.verify
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -32,6 +33,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
@@ -364,6 +366,13 @@ class TelemetryMiddlewareTest {
         ShadowLooper.idleMainLooper()
 
         assertNotNull(Events.formDataFailure.testGetValue())
+    }
+
+    @Test
+    fun `WHEN uri loaded to engine THEN matching event is sent to metrics`() {
+        store.dispatch(EngineAction.LoadUrlAction("", "")).joinBlocking()
+
+        verify { metrics.track(Event.GrowthData.FirstUriLoadForDay) }
     }
 }
 

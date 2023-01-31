@@ -81,6 +81,16 @@ internal class DefaultMetricsStorage(
                     !settings.usageTimeGrowthSent &&
                         settings.usageTimeGrowthData > usageThresholdMillis
                 }
+                Event.GrowthData.FirstAppOpenForDay -> {
+                    currentTime.afterFirstDay() &&
+                        currentTime.duringFirstMonth() &&
+                        settings.resumeGrowthLastSent.hasBeenMoreThanDaySince()
+                }
+                Event.GrowthData.FirstUriLoadForDay -> {
+                    currentTime.afterFirstDay() &&
+                        currentTime.duringFirstMonth() &&
+                        settings.uriLoadGrowthLastSent.hasBeenMoreThanDaySince()
+                }
             }
         }
 
@@ -97,6 +107,12 @@ internal class DefaultMetricsStorage(
             }
             Event.GrowthData.UsageThreshold -> {
                 settings.usageTimeGrowthSent = true
+            }
+            Event.GrowthData.FirstAppOpenForDay -> {
+                settings.resumeGrowthLastSent = System.currentTimeMillis()
+            }
+            Event.GrowthData.FirstUriLoadForDay -> {
+                settings.uriLoadGrowthLastSent = System.currentTimeMillis()
             }
         }
     }
@@ -153,6 +169,10 @@ internal class DefaultMetricsStorage(
     private fun Long.toCalendar(): Calendar = Calendar.getInstance(Locale.US).also { calendar ->
         calendar.timeInMillis = this
     }
+
+    private fun Long.hasBeenMoreThanDaySince() = System.currentTimeMillis() - this > dayMillis
+
+    private fun Long.afterFirstDay() = this > getInstalledTime() + dayMillis
 
     private fun Long.duringFirstDay() = this < getInstalledTime() + dayMillis
 

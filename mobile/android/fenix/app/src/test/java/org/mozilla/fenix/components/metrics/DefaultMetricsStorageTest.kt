@@ -318,6 +318,70 @@ class DefaultMetricsStorageTest {
         assertTrue(slot.captured < stopTime - startTime)
     }
 
+    @Test
+    fun `GIVEN that it has been less than 24 hours since last resumed sent WHEN checked for sending THEN will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        every { settings.resumeGrowthLastSent } returns currentTime
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN that it has been more than 24 hours since last resumed sent WHEN checked for sending THEN will be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis + 1)
+        every { settings.resumeGrowthLastSent } returns currentTime - 1000 * 60 * 60 * 24 * 2
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN last resumed state updated THEN settings updated accordingly`() = runTest(dispatcher) {
+        val updateSlot = slot<Long>()
+        every { settings.resumeGrowthLastSent } returns 0
+        every { settings.resumeGrowthLastSent = capture(updateSlot) } returns Unit
+
+        storage.updateSentState(Event.GrowthData.FirstAppOpenForDay)
+
+        assertTrue(updateSlot.captured > 0)
+    }
+
+    @Test
+    fun `GIVEN that it has been less than 24 hours since uri load sent WHEN checked for sending THEN will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        every { settings.uriLoadGrowthLastSent } returns currentTime
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstUriLoadForDay)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN that it has been more than 24 hours since uri load sent WHEN checked for sending THEN will be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis + 1)
+        every { settings.uriLoadGrowthLastSent } returns currentTime - 1000 * 60 * 60 * 24 * 2
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstUriLoadForDay)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN uri load updated THEN settings updated accordingly`() = runTest(dispatcher) {
+        val updateSlot = slot<Long>()
+        every { settings.uriLoadGrowthLastSent } returns 0
+        every { settings.uriLoadGrowthLastSent = capture(updateSlot) } returns Unit
+
+        storage.updateSentState(Event.GrowthData.FirstUriLoadForDay)
+
+        assertTrue(updateSlot.captured > 0)
+    }
+
     private fun Calendar.copy() = clone() as Calendar
     private fun Calendar.createNextDay() = copy().apply {
         add(Calendar.DAY_OF_MONTH, 1)
