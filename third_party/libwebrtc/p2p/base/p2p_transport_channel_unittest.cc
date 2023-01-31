@@ -241,6 +241,16 @@ class ResolverFactoryFixture : public webrtc::MockAsyncDnsResolverFactory {
   std::function<void()> saved_callback_;
 };
 
+bool HasLocalAddress(const cricket::CandidatePairInterface* pair,
+                     const SocketAddress& address) {
+  return pair->local_candidate().address().EqualIPs(address);
+}
+
+bool HasRemoteAddress(const cricket::CandidatePairInterface* pair,
+                      const SocketAddress& address) {
+  return pair->remote_candidate().address().EqualIPs(address);
+}
+
 }  // namespace
 
 namespace cricket {
@@ -1696,8 +1706,7 @@ TEST_F(P2PTransportChannelTest, PeerReflexiveRemoteCandidateIsSanitized) {
   auto updated_pair_ep1 = ep1_ch1()->GetSelectedCandidatePair();
   ASSERT_TRUE(updated_pair_ep1.has_value());
   EXPECT_EQ(LOCAL_PORT_TYPE, updated_pair_ep1->remote_candidate().type());
-  EXPECT_TRUE(
-      updated_pair_ep1->remote_candidate().address().EqualIPs(kPublicAddrs[1]));
+  EXPECT_TRUE(HasRemoteAddress(&updated_pair_ep1.value(), kPublicAddrs[1]));
 
   ep1_ch1()->GetStats(&ice_transport_stats);
   // Check the candidate pair stats.
@@ -2507,7 +2516,7 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTestBase {
       P2PTransportChannel* channel,
       const SocketAddress& address) {
     for (Connection* conn : channel->connections()) {
-      if (conn->remote_candidate().address().EqualIPs(address)) {
+      if (HasRemoteAddress(conn, address)) {
         return conn;
       }
     }
@@ -2517,7 +2526,7 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTestBase {
   Connection* GetConnectionWithLocalAddress(P2PTransportChannel* channel,
                                             const SocketAddress& address) {
     for (Connection* conn : channel->connections()) {
-      if (conn->local_candidate().address().EqualIPs(address)) {
+      if (HasLocalAddress(conn, address)) {
         return conn;
       }
     }
@@ -2528,12 +2537,31 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTestBase {
                             const SocketAddress& local,
                             const SocketAddress& remote) {
     for (Connection* conn : channel->connections()) {
-      if (conn->local_candidate().address().EqualIPs(local) &&
-          conn->remote_candidate().address().EqualIPs(remote)) {
+      if (HasLocalAddress(conn, local) && HasRemoteAddress(conn, remote)) {
         return conn;
       }
     }
     return nullptr;
+  }
+
+  Connection* GetBestConnection(P2PTransportChannel* channel) {
+    rtc::ArrayView<Connection*> connections = channel->connections();
+    auto it = absl::c_find(connections, channel->selected_connection());
+    if (it == connections.end()) {
+      return nullptr;
+    }
+    return *it;
+  }
+
+  Connection* GetBackupConnection(P2PTransportChannel* channel) {
+    rtc::ArrayView<Connection*> connections = channel->connections();
+    auto it = absl::c_find_if_not(connections, [channel](Connection* conn) {
+      return conn == channel->selected_connection();
+    });
+    if (it == connections.end()) {
+      return nullptr;
+    }
+    return *it;
   }
 
   void DestroyAllButBestConnection(P2PTransportChannel* channel) {
@@ -3011,7 +3039,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPingBackupConnectionRate) {
                    1000);
   auto connections = ep2_ch1()->connections();
   ASSERT_EQ(2U, connections.size());
-  Connection* backup_conn = connections[1];
+  Connection* backup_conn = GetBackupConnection(ep2_ch1());
   EXPECT_TRUE_WAIT(backup_conn->writable(), kMediumTimeout);
   int64_t last_ping_response_ms = backup_conn->last_ping_response_received();
   EXPECT_TRUE_WAIT(
@@ -3052,7 +3080,7 @@ TEST_F(P2PTransportChannelMultihomedTest, TestStableWritableRate) {
                    1000);
   auto connections = ep2_ch1()->connections();
   ASSERT_EQ(2U, connections.size());
-  Connection* conn = connections[0];
+  Connection* conn = GetBestConnection(ep2_ch1());
   EXPECT_TRUE_WAIT(conn->writable(), kMediumTimeout);
 
   int64_t last_ping_response_ms;
@@ -3153,10 +3181,10 @@ TEST_F(P2PTransportChannelMultihomedTest,
   AddAddress(1, wifi[1], "test_wifi1", rtc::ADAPTER_TYPE_WIFI);
   const Connection* conn;
   EXPECT_TRUE_WAIT((conn = ep1_ch1()->selected_connection()) != nullptr &&
-                       conn->remote_candidate().address().EqualIPs(wifi[1]),
+                       HasRemoteAddress(conn, wifi[1]),
                    kDefaultTimeout);
   EXPECT_TRUE_WAIT((conn = ep2_ch1()->selected_connection()) != nullptr &&
-                       conn->local_candidate().address().EqualIPs(wifi[1]),
+                       HasLocalAddress(conn, wifi[1]),
                    kDefaultTimeout);
 
   // Add a new cellular interface on end point 1, we should expect a new
@@ -3164,15 +3192,23 @@ TEST_F(P2PTransportChannelMultihomedTest,
   AddAddress(0, cellular[0], "test_cellular0", rtc::ADAPTER_TYPE_CELLULAR);
   EXPECT_TRUE_WAIT(
       ep1_ch1()->GetState() == IceTransportState::STATE_COMPLETED &&
-          (conn = GetConnectionWithLocalAddress(ep1_ch1(), cellular[0])) !=
-              nullptr &&
-          conn != ep1_ch1()->selected_connection() && conn->writable(),
+          absl::c_any_of(ep1_ch1()->connections(),
+                         [channel = ep1_ch1(),
+                          address = cellular[0]](const Connection* conn) {
+                           return HasLocalAddress(conn, address) &&
+                                  conn != channel->selected_connection() &&
+                                  conn->writable();
+                         }),
       kDefaultTimeout);
   EXPECT_TRUE_WAIT(
       ep2_ch1()->GetState() == IceTransportState::STATE_COMPLETED &&
-          (conn = GetConnectionWithRemoteAddress(ep2_ch1(), cellular[0])) !=
-              nullptr &&
-          conn != ep2_ch1()->selected_connection() && conn->receiving(),
+          absl::c_any_of(ep2_ch1()->connections(),
+                         [channel = ep2_ch1(),
+                          address = cellular[0]](const Connection* conn) {
+                           return HasRemoteAddress(conn, address) &&
+                                  conn != channel->selected_connection() &&
+                                  conn->receiving();
+                         }),
       kDefaultTimeout);
 
   DestroyChannels();
