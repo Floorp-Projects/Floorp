@@ -68,22 +68,12 @@ class Promise : public SupportsWeakPtr {
       PropagateUserInteraction aPropagateUserInteraction =
           eDontPropagateUserInteraction);
 
-  // Same as Promise::Create but never throws, but instead:
-  // 1. Causes crash on OOM (as nearly every other web APIs do)
-  // 2. Silently creates a no-op Promise if the JS context is shut down
-  // This can be useful for implementations that produce promises but do not
-  // care whether the current global is alive to consume them.
-  // Note that PromiseObj() can return a nullptr if created this way.
-  static already_AddRefed<Promise> CreateInfallible(
-      nsIGlobalObject* aGlobal,
-      PropagateUserInteraction aPropagateUserInteraction =
-          eDontPropagateUserInteraction);
-
   // Reports a rejected Promise by sending an error report.
   static void ReportRejectedPromise(JSContext* aCx,
                                     JS::Handle<JSObject*> aPromise);
 
-  using MaybeFunc = void (Promise::*)(JSContext*, JS::Handle<JS::Value>);
+  typedef void (Promise::*MaybeFunc)(JSContext* aCx,
+                                     JS::Handle<JS::Value> aValue);
 
   // Helpers for using Promise from C++.
   // Most DOM objects are handled already.  To add a new type T, add a
@@ -329,8 +319,6 @@ class Promise : public SupportsWeakPtr {
                                           RejectCallback&& aOnReject,
                                           Args&&... aArgs);
 
-  // This can be null if this promise is made after the corresponding JSContext
-  // is dead.
   JSObject* PromiseObj() const { return mPromiseObj; }
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);

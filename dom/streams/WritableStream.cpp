@@ -392,7 +392,10 @@ void WritableStream::StartErroring(JSContext* aCx,
   // Step 8. If writer is not undefined, perform !
   // WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, reason).
   if (writer) {
-    WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, aReason);
+    WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, aReason, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   // Step 9. If ! WritableStreamHasOperationMarkedInFlight(stream) is false
@@ -404,7 +407,7 @@ void WritableStream::StartErroring(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-update-backpressure
-void WritableStream::UpdateBackpressure(bool aBackpressure) {
+void WritableStream::UpdateBackpressure(bool aBackpressure, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[state]] is "writable".
   MOZ_ASSERT(mState == WriterState::Writable);
   // Step 2. Assert: ! WritableStreamCloseQueuedOrInFlight(stream) is false.
@@ -419,8 +422,10 @@ void WritableStream::UpdateBackpressure(bool aBackpressure) {
     // Step 4.1. If backpressure is true, set writer.[[readyPromise]] to a new
     // promise.
     if (aBackpressure) {
-      RefPtr<Promise> promise =
-          Promise::CreateInfallible(writer->GetParentObject());
+      RefPtr<Promise> promise = Promise::Create(writer->GetParentObject(), aRv);
+      if (aRv.Failed()) {
+        return;
+      }
       writer->SetReadyPromise(promise);
     } else {
       // Step 4.2. Otherwise,
@@ -508,8 +513,10 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   // resolved with undefined.
   if (aStream->State() == WritableStream::WriterState::Closed ||
       aStream->State() == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise =
-        Promise::CreateInfallible(aStream->GetParentObject());
+    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
@@ -526,8 +533,10 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   // code and that might have changed the state.
   if (aStream->State() == WritableStream::WriterState::Closed ||
       aStream->State() == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise =
-        Promise::CreateInfallible(aStream->GetParentObject());
+    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
@@ -556,8 +565,10 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   }
 
   // Step 9. Let promise be a new promise.
-  RefPtr<Promise> promise =
-      Promise::CreateInfallible(aStream->GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 10. Set stream.[[pendingAbortRequest]] to a new pending abort request
   // whose promise is promise, reason is reason, and was already erroring is
@@ -617,8 +628,10 @@ already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
   MOZ_ASSERT(!aStream->CloseQueuedOrInFlight());
 
   // Step 5. Let promise be a new promise.
-  RefPtr<Promise> promise =
-      Promise::CreateInfallible(aStream->GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 6. Set stream.[[closeRequest]] to promise.
   aStream->SetCloseRequest(promise);
@@ -720,8 +733,8 @@ already_AddRefed<WritableStreamDefaultWriter> WritableStream::GetWriter(
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-add-write-request
-already_AddRefed<Promise> WritableStreamAddWriteRequest(
-    WritableStream* aStream) {
+already_AddRefed<Promise> WritableStreamAddWriteRequest(WritableStream* aStream,
+                                                        ErrorResult& aRv) {
   // Step 1. Assert: ! IsWritableStreamLocked(stream) is true.
   MOZ_ASSERT(IsWritableStreamLocked(aStream));
 
@@ -729,8 +742,10 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(
   MOZ_ASSERT(aStream->State() == WritableStream::WriterState::Writable);
 
   // Step 3. Let promise be a new promise.
-  RefPtr<Promise> promise =
-      Promise::CreateInfallible(aStream->GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 4. Append promise to stream.[[writeRequests]].
   aStream->AppendWriteRequest(promise);

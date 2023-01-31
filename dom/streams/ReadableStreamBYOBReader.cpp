@@ -60,7 +60,10 @@ void SetUpReadableStreamBYOBReader(ReadableStreamBYOBReader* reader,
   }
 
   // Step 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
-  ReadableStreamReaderGenericInitialize(reader, &stream);
+  ReadableStreamReaderGenericInitialize(reader, &stream, rv);
+  if (rv.Failed()) {
+    return;
+  }
 
   // Step 4. Set reader.[[readIntoRequests]] to a new empty list.
   reader->ReadIntoRequests().clear();
@@ -252,7 +255,10 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
   }
 
   // Step 5.
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 6. Let readIntoRequest be a new read-into request with the following
   // items:

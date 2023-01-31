@@ -177,9 +177,8 @@ class SetUpTransformWritableMessageEventListener final
   // Note: This promise field is shared with the sink algorithms.
   Promise* BackpressurePromise() { return mBackpressurePromise; }
 
-  void CreateBackpressurePromise() {
-    mBackpressurePromise =
-        Promise::CreateInfallible(mController->GetParentObject());
+  void CreateBackpressurePromise(ErrorResult& aRv) {
+    mBackpressurePromise = Promise::Create(mController->GetParentObject(), aRv);
   }
 
  private:
@@ -317,7 +316,10 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
     // promise resolved with undefined.
     // Note: This promise field is shared with the message event listener.
     if (!mListener->BackpressurePromise()) {
-      mListener->CreateBackpressurePromise();
+      mListener->CreateBackpressurePromise(aRv);
+      if (aRv.Failed()) {
+        return nullptr;
+      }
       mListener->BackpressurePromise()->MaybeResolveWithUndefined();
     }
 
@@ -330,7 +332,11 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
                MessagePort* aPort,
                JS::Handle<JS::Value> aChunk) -> already_AddRefed<Promise> {
               // Step 2.1: Set backpressurePromise to a new promise.
-              aListener->CreateBackpressurePromise();
+              aListener->CreateBackpressurePromise(aRv);
+              if (aRv.Failed()) {
+                aPort->Close();
+                return nullptr;
+              }
 
               // Step 2.2: Let result be PackAndPostMessageHandlingError(port,
               // "chunk", chunk).
@@ -443,7 +449,10 @@ MOZ_CAN_RUN_SCRIPT static void SetUpCrossRealmTransformWritable(
 
   // Step 3: Let backpressurePromise be a new promise.
   RefPtr<Promise> backpressurePromise =
-      Promise::CreateInfallible(aWritable->GetParentObject());
+      Promise::Create(aWritable->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
 
   // Step 4: Add a handler for port’s message event with the following steps:
   auto listener = MakeRefPtr<SetUpTransformWritableMessageEventListener>(
