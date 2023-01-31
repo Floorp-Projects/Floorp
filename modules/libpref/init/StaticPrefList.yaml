@@ -11017,6 +11017,12 @@
   value: false
   mirror: always
 
+# If true then any cookies containing unicode will be rejected
+- name: network.cookie.blockUnicode
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # If we should attempt to race the cache and network.
 - name: network.http.rcwn.enabled
   type: bool
