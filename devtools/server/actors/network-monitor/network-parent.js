@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   networkParentSpec,
 } = require("resource://devtools/shared/specs/network-parent.js");
@@ -24,15 +21,15 @@ const {
  * @constructor
  *
  */
-const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
-  initialize(watcherActor) {
+class NetworkParentActor extends Actor {
+  constructor(watcherActor) {
+    super(watcherActor.conn, networkParentSpec);
     this.watcherActor = watcherActor;
-    Actor.prototype.initialize.call(this, this.watcherActor.conn);
-  },
+  }
 
   // Caches the throttling data so that on clearing the
   // current network throttling it can be reset to the previous.
-  defaultThrottleData: undefined,
+  defaultThrottleData = undefined;
 
   isEqual(next, current) {
     // If both objects, check all entries
@@ -42,15 +39,11 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       });
     }
     return false;
-  },
-
-  destroy(conn) {
-    Actor.prototype.destroy.call(this, conn);
-  },
+  }
 
   get networkEventWatcher() {
     return getResourceWatcher(this.watcherActor, NETWORK_EVENT);
-  },
+  }
 
   setNetworkThrottling(throttleData) {
     if (!this.networkEventWatcher) {
@@ -78,7 +71,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
     }
 
     this.networkEventWatcher.setThrottleData(throttleData);
-  },
+  }
 
   getNetworkThrottling() {
     if (!this.networkEventWatcher) {
@@ -93,20 +86,20 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       uploadThroughput: throttleData.uploadBPSMax,
       latency: throttleData.latencyMax,
     };
-  },
+  }
 
   clearNetworkThrottling() {
     if (this.defaultThrottleData !== undefined) {
       this.setNetworkThrottling(this.defaultThrottleData);
     }
-  },
+  }
 
   setSaveRequestAndResponseBodies(save) {
     if (!this.networkEventWatcher) {
       throw new Error("Not listening for network events");
     }
     this.networkEventWatcher.setSaveRequestAndResponseBodies(save);
-  },
+  }
 
   /**
    * Sets the urls to block.
@@ -120,7 +113,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
     }
     this.networkEventWatcher.setBlockedUrls(urls);
     return {};
-  },
+  }
 
   /**
    * Returns the urls that are block
@@ -130,7 +123,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       throw new Error("Not listening for network events");
     }
     return this.networkEventWatcher.getBlockedUrls();
-  },
+  }
 
   /**
    * Blocks the requests based on the filters
@@ -141,7 +134,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       throw new Error("Not listening for network events");
     }
     this.networkEventWatcher.blockRequest(filters);
-  },
+  }
 
   /**
    * Unblocks requests based on the filters
@@ -152,7 +145,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       throw new Error("Not listening for network events");
     }
     this.networkEventWatcher.unblockRequest(filters);
-  },
+  }
 
   setPersist(enabled) {
     // We will always call this method, even if we are still using legacy listener.
@@ -161,7 +154,7 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
       return;
     }
     this.networkEventWatcher.setPersist(enabled);
-  },
-});
+  }
+}
 
 exports.NetworkParentActor = NetworkParentActor;

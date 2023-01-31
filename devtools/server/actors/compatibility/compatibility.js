@@ -4,7 +4,7 @@
 
 "use strict";
 
-var protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   compatibilitySpec,
 } = require("resource://devtools/shared/specs/compatibility.js");
@@ -15,7 +15,7 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
   return new MDNCompatibility(cssPropertiesCompatData);
 });
 
-const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
+class CompatibilityActor extends Actor {
   /**
    * Create a CompatibilityActor.
    * CompatibilityActor is responsible for providing the compatibility information
@@ -32,27 +32,27 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    *
    * @constructor
    */
-  initialize(inspector) {
-    protocol.Actor.prototype.initialize.call(this, inspector.conn);
+  constructor(inspector) {
+    super(inspector.conn, compatibilitySpec);
     this.inspector = inspector;
-  },
+  }
 
   destroy() {
-    protocol.Actor.prototype.destroy.call(this);
+    super.destroy();
     this.inspector = null;
-  },
+  }
 
   form() {
     return {
       actor: this.actorID,
     };
-  },
+  }
 
   getTraits() {
     return {
       traits: {},
     };
-  },
+  }
 
   /**
    * Responsible for computing the compatibility issues for a given CSS declaration block
@@ -96,7 +96,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
       declarationBlock,
       targetBrowsers
     );
-  },
+  }
 
   /**
    * Responsible for computing the compatibility issues in the
@@ -163,9 +163,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
           ? issues
           : [...issues, issue];
       }, []);
-  },
-});
+  }
+}
 
-module.exports = {
-  CompatibilityActor,
-};
+exports.CompatibilityActor = CompatibilityActor;

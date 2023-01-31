@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   responsiveSpec,
 } = require("resource://devtools/shared/specs/responsive.js");
@@ -22,27 +22,27 @@ const {
  * values, so that the absence of a previous value can be distinguished from the value for
  * "no override" for each of the properties.
  */
-const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
-  initialize(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class ResponsiveActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, responsiveSpec);
     this.targetActor = targetActor;
     this.docShell = targetActor.docShell;
-  },
+  }
 
   destroy() {
     this.targetActor = null;
     this.docShell = null;
 
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   get win() {
     return this.docShell.chromeEventHandler.ownerGlobal;
-  },
+  }
 
   /* Touch events override */
 
-  _previousTouchEventsOverride: undefined,
+  _previousTouchEventsOverride = undefined;
 
   /**
    * Set the current element picker state.
@@ -68,7 +68,7 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
    */
   setElementPickerState(state, pickerType) {
     this.targetActor.touchSimulator.setElementPickerState(state, pickerType);
-  },
+  }
 
   /**
    * Dispatches an "orientationchange" event.
@@ -77,7 +77,7 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     const { CustomEvent } = this.win;
     const orientationChangeEvent = new CustomEvent("orientationchange");
     this.win.dispatchEvent(orientationChangeEvent);
-  },
-});
+  }
+}
 
 exports.ResponsiveActor = ResponsiveActor;

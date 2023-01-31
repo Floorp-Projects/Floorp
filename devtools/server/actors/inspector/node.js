@@ -4,15 +4,16 @@
 
 "use strict";
 
-const InspectorUtils = require("InspectorUtils");
-const protocol = require("resource://devtools/shared/protocol.js");
-const {
-  PSEUDO_CLASSES,
-} = require("resource://devtools/shared/css/constants.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   nodeSpec,
   nodeListSpec,
 } = require("resource://devtools/shared/specs/node.js");
+
+const InspectorUtils = require("InspectorUtils");
+const {
+  PSEUDO_CLASSES,
+} = require("resource://devtools/shared/css/constants.js");
 
 loader.lazyRequireGetter(
   this,
@@ -89,9 +90,9 @@ const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 /**
  * Server side of the node actor.
  */
-const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
-  initialize(walker, node) {
-    protocol.Actor.prototype.initialize.call(this, null);
+class NodeActor extends Actor {
+  constructor(walker, node) {
+    super(null, nodeSpec);
     this.walker = walker;
     this.rawNode = node;
     this._eventCollector = new EventCollector(this.walker.targetActor);
@@ -113,13 +114,13 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         this.walker.overflowCausingElementsMap
       );
     }
-  },
+  }
 
   toString() {
     return (
       "[NodeActor " + this.actorID + " for " + this.rawNode.toString() + "]"
     );
-  },
+  }
 
   /**
    * Instead of storing a connection object, the NodeActor gets its connection
@@ -127,17 +128,17 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get conn() {
     return this.walker.conn;
-  },
+  }
 
   isDocumentElement() {
     return (
       this.rawNode.ownerDocument &&
       this.rawNode.ownerDocument.documentElement === this.rawNode
     );
-  },
+  }
 
   destroy() {
-    protocol.Actor.prototype.destroy.call(this);
+    super.destroy();
 
     if (this.mutationObserver) {
       if (!Cu.isDeadWrapper(this.mutationObserver)) {
@@ -182,7 +183,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this._eventCollector = null;
     this.rawNode = null;
     this.walker = null;
-  },
+  }
 
   // Returns the JSON representation of this object over the wire.
   form() {
@@ -256,7 +257,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     form.browsingContextID = this.rawNode.browsingContext?.id;
 
     return form;
-  },
+  }
 
   /**
    * Watch the given document node for mutations using the DOM observer
@@ -281,7 +282,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       subtree: true,
     });
     this.mutationObserver = observer;
-  },
+  }
 
   /**
    * Watch for all "slotchange" events on the node.
@@ -289,7 +290,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   watchSlotchange(callback) {
     this.slotchangeListener = callback;
     this.rawNode.addEventListener("slotchange", this.slotchangeListener);
-  },
+  }
 
   /**
    * Check if the current node represents an element (e.g. an iframe) which has a dedicated
@@ -299,11 +300,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   get useChildTargetToFetchChildren() {
     return isFrameWithChildTarget(this.walker.targetActor, this.rawNode);
-  },
+  }
 
   get isTopLevelDocument() {
     return this.rawNode === this.walker.rootDoc;
-  },
+  }
 
   // Estimate the number of children that the walker will return without making
   // a call to children() if possible.
@@ -341,14 +342,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     return numChildren;
-  },
+  }
 
   get computedStyle() {
     if (!this._computedStyle) {
       this._computedStyle = CssLogic.getComputedStyle(this.rawNode);
     }
     return this._computedStyle;
-  },
+  }
 
   /**
    * Returns the computed display style property value of the node.
@@ -380,7 +381,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     return display;
-  },
+  }
 
   /**
    * Check whether the node currently has scrollbars and is scrollable.
@@ -390,7 +391,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       this.rawNode.nodeType === Node.ELEMENT_NODE &&
       this.rawNode.hasVisibleScrollbars
     );
-  },
+  }
 
   /**
    * Is the node currently displayed?
@@ -406,7 +407,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // Otherwise consider elements to be displayed only if their display-types is other
     // than "none"".
     return type !== "none";
-  },
+  }
 
   /**
    * Are there event listeners that are listening on this node? This method
@@ -418,7 +419,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // otherwise we can't make use of it inside the event-collector module.
     const dbg = this.getParent().targetActor.makeDebugger();
     return this._eventCollector.hasEventListeners(this.rawNode, dbg);
-  },
+  }
 
   writeAttrs() {
     // If the node has no attributes or this.rawNode is the document node and a
@@ -433,7 +434,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return [...this.rawNode.attributes].map(attr => {
       return { namespace: attr.namespace, name: attr.name, value: attr.value };
     });
-  },
+  }
 
   writePseudoClassLocks() {
     if (this.rawNode.nodeType !== Node.ELEMENT_NODE) {
@@ -447,7 +448,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       }
     }
     return ret;
-  },
+  }
 
   /**
    * Retrieve the script location of the custom element definition for this node, when
@@ -501,21 +502,21 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       line: customElementDO.script.startLine,
       column: customElementDO.script.startColumn,
     };
-  },
+  }
 
   /**
    * Returns a LongStringActor with the node's value.
    */
   getNodeValue() {
     return new LongStringActor(this.conn, this.rawNode.nodeValue || "");
-  },
+  }
 
   /**
    * Set the node's value to a given string.
    */
   setNodeValue(value) {
     this.rawNode.nodeValue = value;
-  },
+  }
 
   /**
    * Get a unique selector string for this node.
@@ -525,7 +526,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return "";
     }
     return findCssSelector(this.rawNode);
-  },
+  }
 
   /**
    * Get the full CSS path for this node.
@@ -537,7 +538,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return "";
     }
     return getCssPath(this.rawNode);
-  },
+  }
 
   /**
    * Get the XPath for this node.
@@ -549,14 +550,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return "";
     }
     return getXPath(this.rawNode);
-  },
+  }
 
   /**
    * Scroll the selected node into view.
    */
   scrollIntoView() {
     this.rawNode.scrollIntoView(true);
-  },
+  }
 
   /**
    * Get the node's image data if any (for canvas and img nodes).
@@ -576,7 +577,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         size: imageData.size,
       };
     });
-  },
+  }
 
   /**
    * Get all event listeners that are listening on this node.
@@ -602,7 +603,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       }
     }
     return eventListenersData;
-  },
+  }
 
   /**
    * Disable a specific event listener given its associated id
@@ -617,7 +618,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       throw new Error("Unkown nsEventListenerInfo");
     }
     nsEventListenerInfo.enabled = false;
-  },
+  }
 
   /**
    * (Re-)enable a specific event listener given its associated id
@@ -632,7 +633,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       throw new Error("Unkown nsEventListenerInfo");
     }
     nsEventListenerInfo.enabled = true;
-  },
+  }
 
   /**
    * Modify a node's attributes.  Passed an array of modifications
@@ -669,7 +670,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         rawNode.setAttributeDevtools(change.attributeName, change.newValue);
       }
     }
-  },
+  }
 
   /**
    * Given the font and fill style, get the image data of a canvas with the
@@ -688,7 +689,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     const { dataURL, size } = getFontPreviewData(font, doc, options);
 
     return { data: new LongStringActor(this.conn, dataURL), size };
-  },
+  }
 
   /**
    * Finds the computed background color of the closest parent with a set background
@@ -700,7 +701,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   getClosestBackgroundColor() {
     return getClosestBackgroundColor(this.rawNode);
-  },
+  }
 
   /**
    * Finds the background color range for the parent of a single text node
@@ -713,7 +714,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   getBackgroundColor() {
     return getBackgroundColor(this);
-  },
+  }
 
   /**
    * Returns an object with the width and height of the node's owner window.
@@ -726,7 +727,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       innerWidth: win.innerWidth,
       innerHeight: win.innerHeight,
     };
-  },
+  }
 
   /**
    * If the current node is an iframe, wait for the content window to be loaded.
@@ -796,22 +797,22 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         DOMHelpers.onceDOMReady(this.rawNode.contentWindow, resolve);
       });
     }
-  },
-});
+  }
+}
 
 /**
  * Server side of a node list as returned by querySelectorAll()
  */
-const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
-  initialize(walker, nodeList) {
-    protocol.Actor.prototype.initialize.call(this);
+class NodeListActor extends Actor {
+  constructor(walker, nodeList) {
+    super(null, nodeListSpec);
     this.walker = walker;
     this.nodeList = nodeList || [];
-  },
+  }
 
   destroy() {
-    protocol.Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   /**
    * Instead of storing a connection object, the NodeActor gets its connection
@@ -819,14 +820,14 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
    */
   get conn() {
     return this.walker.conn;
-  },
+  }
 
   /**
    * Items returned by this actor should belong to the parent walker.
    */
   marshallPool() {
     return this.walker;
-  },
+  }
 
   // Returns the JSON representation of this object over the wire.
   form() {
@@ -834,14 +835,14 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
       actor: this.actorID,
       length: this.nodeList ? this.nodeList.length : 0,
     };
-  },
+  }
 
   /**
    * Get a single node from the node list.
    */
   item(index) {
     return this.walker.attachElement(this.nodeList[index]);
-  },
+  }
 
   /**
    * Get a range of the items from the node list.
@@ -851,10 +852,10 @@ const NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
       .call(this.nodeList, start, end)
       .map(item => this.walker._getOrCreateNodeActor(item));
     return this.walker.attachElements(items);
-  },
+  }
 
-  release() {},
-});
+  release() {}
+}
 
 exports.NodeActor = NodeActor;
 exports.NodeListActor = NodeListActor;

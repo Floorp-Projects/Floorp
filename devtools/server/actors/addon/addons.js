@@ -4,23 +4,24 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-const protocol = require("resource://devtools/shared/protocol.js");
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   addonsSpec,
 } = require("resource://devtools/shared/specs/addon/addons.js");
 
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { FileUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
+
 // This actor is not used by DevTools, but is relied on externally by
 // webext-run and the Firefox VS-Code plugin. see bug #1578108
-const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
-  initialize(conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
-  },
+class AddonsActor extends Actor {
+  constructor(conn) {
+    super(conn, addonsSpec);
+  }
 
   async installTemporaryAddon(addonPath, openDevTools) {
     let addonFile;
@@ -63,7 +64,7 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     // with. Provide a flag that the client can use to detect when it
     // gets upgraded to a real actor object.
     return { id: addon.id, actor: false };
-  },
-});
+  }
+}
 
 exports.AddonsActor = AddonsActor;

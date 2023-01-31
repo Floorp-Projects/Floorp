@@ -4,8 +4,9 @@
 
 "use strict";
 
-const protocol = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const { symbolIteratorSpec } = require("resource://devtools/shared/specs/symbol-iterator.js");
+
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 /**
@@ -14,9 +15,9 @@ const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
  * @param objectActor ObjectActor
  *        The object actor.
  */
-const SymbolIteratorActor = protocol.ActorClassWithSpec(symbolIteratorSpec, {
-  initialize(objectActor, conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class SymbolIteratorActor extends Actor {
+  constructor(objectActor, conn) {
+    super(conn, symbolIteratorSpec);
 
     let symbols = [];
     if (DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
@@ -38,7 +39,7 @@ const SymbolIteratorActor = protocol.ActorClassWithSpec(symbolIteratorSpec, {
         };
       },
     };
-  },
+  }
 
   form() {
     return {
@@ -46,7 +47,7 @@ const SymbolIteratorActor = protocol.ActorClassWithSpec(symbolIteratorSpec, {
       actor: this.actorID,
       count: this.iterator.size,
     };
-  },
+  }
 
   slice({ start, count }) {
     const ownSymbols = [];
@@ -56,11 +57,11 @@ const SymbolIteratorActor = protocol.ActorClassWithSpec(symbolIteratorSpec, {
     return {
       ownSymbols,
     };
-  },
+  }
 
   all() {
     return this.slice({ start: 0, count: this.iterator.size });
-  },
-});
+  }
+}
 
 exports.SymbolIteratorActor = SymbolIteratorActor;

@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   webSocketSpec,
 } = require("resource://devtools/shared/specs/websocket.js");
+
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
@@ -24,9 +22,9 @@ const webSocketEventService = Cc[
  *
  * @see devtools/shared/spec/websocket.js for documentation.
  */
-const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+class WebSocketActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, webSocketSpec);
 
     this.targetActor = targetActor;
     this.innerWindowID = null;
@@ -37,20 +35,20 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     // Register for backend events.
     this.onWindowReady = this.onWindowReady.bind(this);
     this.targetActor.on("window-ready", this.onWindowReady);
-  },
+  }
 
   onWindowReady({ isTopLevel }) {
     if (isTopLevel) {
       this.startListening();
     }
-  },
+  }
 
   destroy() {
     this.targetActor.off("window-ready", this.onWindowReady);
 
     this.stopListening();
-    Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   // Actor API
 
@@ -58,7 +56,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     this.stopListening();
     this.innerWindowID = this.targetActor.window.windowGlobalChild.innerWindowId;
     webSocketEventService.addListener(this.innerWindowID, this);
-  },
+  }
 
   stopListening() {
     if (!this.innerWindowID) {
@@ -69,11 +67,11 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     }
 
     this.innerWindowID = null;
-  },
+  }
 
   // nsIWebSocketEventService
 
-  webSocketCreated(webSocketSerialID, uri, protocols) {},
+  webSocketCreated(webSocketSerialID, uri, protocols) {}
 
   webSocketOpened(
     webSocketSerialID,
@@ -91,16 +89,16 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
       protocols,
       extensions
     );
-  },
+  }
 
-  webSocketMessageAvailable(webSocketSerialID, data, messageType) {},
+  webSocketMessageAvailable(webSocketSerialID, data, messageType) {}
 
   webSocketClosed(webSocketSerialID, wasClean, code, reason) {
     const httpChannelId = this.connections.get(webSocketSerialID);
 
     this.connections.delete(webSocketSerialID);
     this.emit("serverWebSocketClosed", httpChannelId, wasClean, code, reason);
-  },
+  }
 
   frameReceived(webSocketSerialID, frame) {
     const httpChannelId = this.connections.get(webSocketSerialID);
@@ -126,7 +124,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
       mask: frame.mask,
       maskBit: frame.maskBit,
     });
-  },
+  }
 
   frameSent(webSocketSerialID, frame) {
     const httpChannelId = this.connections.get(webSocketSerialID);
@@ -151,7 +149,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
       mask: frame.mask,
       maskBit: frame.maskBit,
     });
-  },
-});
+  }
+}
 
 exports.WebSocketActor = WebSocketActor;

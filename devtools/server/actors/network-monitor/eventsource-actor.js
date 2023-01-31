@@ -4,13 +4,11 @@
 
 "use strict";
 
-const {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   eventSourceSpec,
 } = require("resource://devtools/shared/specs/eventsource.js");
+
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
@@ -23,9 +21,9 @@ const eventSourceEventService = Cc[
  * This actor intercepts EventSource traffic for a specific window.
  * @see devtools/shared/spec/eventsource.js for documentation.
  */
-const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+class EventSourceActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, eventSourceSpec);
 
     this.targetActor = targetActor;
     this.innerWindowID = null;
@@ -33,20 +31,20 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
     // Register for backend events.
     this.onWindowReady = this.onWindowReady.bind(this);
     this.targetActor.on("window-ready", this.onWindowReady);
-  },
+  }
 
   onWindowReady({ isTopLevel }) {
     if (isTopLevel) {
       this.startListening();
     }
-  },
+  }
 
   destroy() {
     this.targetActor.off("window-ready", this.onWindowReady);
 
     this.stopListening();
-    Actor.prototype.destroy.call(this);
-  },
+    super.destroy();
+  }
 
   // Actor API.
 
@@ -54,7 +52,7 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
     this.stopListening();
     this.innerWindowID = this.targetActor.window.windowGlobalChild.innerWindowId;
     eventSourceEventService.addListener(this.innerWindowID, this);
-  },
+  }
 
   stopListening() {
     if (!this.innerWindowID) {
@@ -65,15 +63,15 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
     }
 
     this.innerWindowID = null;
-  },
+  }
 
   // Implement functions of nsIEventSourceEventService.
 
-  eventSourceConnectionOpened(httpChannelId) {},
+  eventSourceConnectionOpened(httpChannelId) {}
 
   eventSourceConnectionClosed(httpChannelId) {
     this.emit("serverEventSourceConnectionClosed", httpChannelId);
-  },
+  }
 
   eventReceived(httpChannelId, eventName, lastEventId, data, retry, timeStamp) {
     let payload = new LongStringActor(this.conn, data);
@@ -86,7 +84,7 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
       retry,
       timeStamp,
     });
-  },
-});
+  }
+}
 
 exports.EventSourceActor = EventSourceActor;

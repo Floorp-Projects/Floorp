@@ -12,6 +12,11 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
+const { Actor } = require("resource://devtools/shared/protocol.js");
+const {
+  tabDescriptorSpec,
+} = require("resource://devtools/shared/specs/descriptors/tab.js");
+
 const {
   connectToFrame,
 } = require("resource://devtools/server/connectors/frame-connector.js");
@@ -21,13 +26,7 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
-const {
-  tabDescriptorSpec,
-} = require("resource://devtools/shared/specs/descriptors/tab.js");
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -51,12 +50,12 @@ loader.lazyRequireGetter(
  * @param connection The main RDP connection.
  * @param browser <xul:browser> or <iframe mozbrowser> element to connect to.
  */
-const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
-  initialize(connection, browser) {
-    Actor.prototype.initialize.call(this, connection);
+class TabDescriptorActor extends Actor {
+  constructor(connection, browser) {
+    super(connection, tabDescriptorSpec);
     this._conn = connection;
     this._browser = browser;
-  },
+  }
 
   form() {
     const form = {
@@ -79,7 +78,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     };
 
     return form;
-  },
+  }
 
   _getTitle() {
     // If the content already provides a title, use it.
@@ -99,7 +98,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
 
     // No title available.
     return null;
-  },
+  }
 
   _getUrl() {
     if (!this._browser || !this._browser.browsingContext) {
@@ -108,7 +107,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
 
     const { browsingContext } = this._browser;
     return browsingContext.currentWindowGlobal.documentURI.spec;
-  },
+  }
 
   _getOuterWindowId() {
     if (!this._browser || !this._browser.browsingContext) {
@@ -117,7 +116,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
 
     const { browsingContext } = this._browser;
     return browsingContext.currentWindowGlobal.outerWindowId;
-  },
+  }
 
   get selected() {
     // getMostRecentBrowserWindow will find the appropriate window on Firefox
@@ -133,7 +132,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     }
 
     return this._browser === selectedBrowser;
-  },
+  }
 
   async getTarget() {
     if (!this._conn) {
@@ -182,7 +181,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         });
       }
     });
-  },
+  }
 
   /**
    * Return a Watcher actor, allowing to keep track of targets which
@@ -201,14 +200,14 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       this.manage(this.watcher);
     }
     return this.watcher;
-  },
+  }
 
   get _tabbrowser() {
     if (this._browser && typeof this._browser.getTabBrowser == "function") {
       return this._browser.getTabBrowser();
     }
     return null;
-  },
+  }
 
   async getFavicon() {
     if (!AppConstants.MOZ_PLACES) {
@@ -225,14 +224,14 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       // Favicon unavailable for this url.
       return null;
     }
-  },
+  }
 
   _isZombieTab() {
     // Note: GeckoView doesn't support zombie tabs
     const tabbrowser = this._tabbrowser;
     const tab = tabbrowser ? tabbrowser.getTabForBrowser(this._browser) : null;
     return tab?.hasAttribute && tab.hasAttribute("pending");
-  },
+  }
 
   reloadDescriptor({ bypassCache }) {
     if (!this._browser || !this._browser.browsingContext) {
@@ -244,14 +243,14 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
         : Ci.nsIWebNavigation.LOAD_FLAGS_NONE
     );
-  },
+  }
 
   destroy() {
     this.emit("descriptor-destroyed");
     this._browser = null;
 
-    Actor.prototype.destroy.call(this);
-  },
-});
+    super.destroy();
+  }
+}
 
 exports.TabDescriptorActor = TabDescriptorActor;

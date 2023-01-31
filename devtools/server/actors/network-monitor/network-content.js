@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  ActorClassWithSpec,
-  Actor,
-} = require("resource://devtools/shared/protocol.js");
+const { Actor } = require("resource://devtools/shared/protocol.js");
 const {
   networkContentSpec,
 } = require("resource://devtools/shared/specs/network-content.js");
@@ -43,19 +40,15 @@ const {
  * @constructor
  *
  */
-const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
-  initialize(conn, targetActor) {
-    Actor.prototype.initialize.call(this, conn);
+class NetworkContentActor extends Actor {
+  constructor(conn, targetActor) {
+    super(conn, networkContentSpec);
     this.targetActor = targetActor;
-  },
-
-  destroy(conn) {
-    Actor.prototype.destroy.call(this, conn);
-  },
+  }
 
   get networkEventStackTraceWatcher() {
     return getResourceWatcher(this.targetActor, NETWORK_EVENT_STACKTRACE);
-  },
+  }
 
   /**
    *  Send an HTTP request
@@ -129,7 +122,7 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
         resolve({ channelId: channel.channelId })
       );
     });
-  },
+  }
 
   /**
    * Gets the stacktrace for the specified network resource.
@@ -146,7 +139,7 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
       resourceId
     );
     return WebConsoleUtils.removeFramesAboveDebuggerEval(stacktrace);
-  },
-});
+  }
+}
 
 exports.NetworkContentActor = NetworkContentActor;
