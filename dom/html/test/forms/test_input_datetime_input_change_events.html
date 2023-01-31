@@ -35,7 +35,11 @@ var inputTypes = ["time", "date", "datetime-local"];
 var changeEvents = [0, 0, 0];
 var inputEvents = [0, 0, 0];
 var values = ["10:30", "2017-06-08", "2017-06-08T10:30"];
-var expectedValues = [["09:30", "01:30", "01:25", "", "01:59", "13:59"], ["2017-05-08", "2017-01-08", "2017-01-25", "", "2017-01-31", "2017-01-31"], ["2017-05-08T10:30", "2017-01-08T10:30", "2017-01-25T10:30", "", "2017-01-31T10:30", "2017-01-31T10:30"]];
+var expectedValues = [
+  ["09:30", "01:30", "01:25", "", "01:59", "13:59", ""],
+  ["2017-05-08", "2017-01-08", "2017-01-25", "", "2017-01-31", "2017-01-31", ""],
+  ["2017-05-08T10:30", "2017-01-08T10:30", "2017-01-25T10:30", "", "2017-01-31T10:30", "2017-01-31T10:30", ""]
+];
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
@@ -121,6 +125,15 @@ function test() {
       is(changeEvents[i], 7, "Change event should not be dispatched (7).");
       is(inputEvents[i], 7, "Input event should not be dispatched (7).");
     }
+
+    // Test that change and input events are fired when clearing the value
+    // using a Ctrl/Cmd+Delete/Backspace key combination
+    let events = (i === 0) ? 9 : 8;
+    synthesizeKey("KEY_Backspace", { accelKey: true });
+    // We get one event
+    is(input.value, expectedValues[i][6], "Check that value was cleared out correctly (8).");
+    is(changeEvents[i], events, "Change event should be dispatched (8).");
+    is(inputEvents[i], events, "Input event should be dispatched (8).");
   }
 }
 
