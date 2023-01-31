@@ -387,7 +387,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   using Value = typename Policy::Value;
   using ValueVector = typename Policy::ValueVector;
   using TypeAndValue = TypeAndValueT<Value>;
-  using TypeAndValueStack = Vector<TypeAndValue, 16, SystemAllocPolicy>;
+  using TypeAndValueStack = Vector<TypeAndValue, 32, SystemAllocPolicy>;
   using ControlItem = typename Policy::ControlItem;
   using Control = ControlStackEntry<ControlItem>;
   using ControlStack = Vector<Control, 16, SystemAllocPolicy>;

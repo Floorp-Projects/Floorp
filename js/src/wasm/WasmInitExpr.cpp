@@ -254,7 +254,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
  private:
   FeatureArgs features;
-  RootedValVector stack;
+  RootedValVectorN<48> stack;
   Rooted<WasmInstanceObject*> instanceObj;
   SharedTypeContext types;
 
