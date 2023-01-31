@@ -206,8 +206,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriter::Close(JSContext* aCx,
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-release
 void WritableStreamDefaultWriterRelease(JSContext* aCx,
-                                        WritableStreamDefaultWriter* aWriter,
-                                        ErrorResult& aRv) {
+                                        WritableStreamDefaultWriter* aWriter) {
   // Step 1. Let stream be writer.[[stream]].
   RefPtr<WritableStream> stream = aWriter->GetStream();
 
@@ -229,20 +228,13 @@ void WritableStreamDefaultWriterRelease(JSContext* aCx,
   // Step 5. Perform !
   // WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer,
   // releasedError).
-  WritableStreamDefaultWriterEnsureReadyPromiseRejected(aWriter, releasedError,
-                                                        aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  WritableStreamDefaultWriterEnsureReadyPromiseRejected(aWriter, releasedError);
 
   // Step 6. Perform !
   // WritableStreamDefaultWriterEnsureClosedPromiseRejected(writer,
   // releasedError).
-  WritableStreamDefaultWriterEnsureClosedPromiseRejected(aWriter, releasedError,
-                                                         aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  WritableStreamDefaultWriterEnsureClosedPromiseRejected(aWriter,
+                                                         releasedError);
 
   // Step 7. Set stream.[[writer]] to undefined.
   stream->SetWriter(nullptr);
@@ -252,8 +244,7 @@ void WritableStreamDefaultWriterRelease(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#default-writer-release-lock
-void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx,
-                                              ErrorResult& aRv) {
+void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx) {
   // Step 1. Let stream be this.[[stream]].
   RefPtr<WritableStream> stream = mStream;
 
@@ -267,7 +258,7 @@ void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx,
 
   // Step 4. Perform ! WritableStreamDefaultWriterRelease(this).
   RefPtr<WritableStreamDefaultWriter> thisRefPtr = this;
-  return WritableStreamDefaultWriterRelease(aCx, thisRefPtr, aRv);
+  return WritableStreamDefaultWriterRelease(aCx, thisRefPtr);
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-write
@@ -329,10 +320,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
   MOZ_ASSERT(state == WritableStream::WriterState::Writable);
 
   // Step 11. Let promise be ! WritableStreamAddWriteRequest(stream).
-  RefPtr<Promise> promise = WritableStreamAddWriteRequest(stream, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise = WritableStreamAddWriteRequest(stream);
 
   // Step 12. Perform ! WritableStreamDefaultControllerWrite(controller, chunk,
   // chunkSize).
@@ -469,8 +457,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-closed-promise-rejected
 void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
-    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
-    ErrorResult& aRv) {
+    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError) {
   RefPtr<Promise> closedPromise = aWriter->ClosedPromise();
   // Step 1. If writer.[[closedPromise]].[[PromiseState]] is "pending", reject
   // writer.[[closedPromise]] with error.
@@ -490,8 +477,7 @@ void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
 
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-ready-promise-rejected
 void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
-    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
-    ErrorResult& aRv) {
+    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError) {
   RefPtr<Promise> readyPromise = aWriter->ReadyPromise();
   // Step 1. If writer.[[readyPromise]].[[PromiseState]] is "pending", reject
   // writer.[[readyPromise]] with error.

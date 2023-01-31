@@ -66,7 +66,7 @@ class WritableStreamDefaultWriter final : public nsISupports,
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Close(JSContext* aCx,
                                                      ErrorResult& aRv);
 
-  void ReleaseLock(JSContext* aCx, ErrorResult& aRv);
+  void ReleaseLock(JSContext* aCx);
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Write(
       JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
@@ -84,19 +84,16 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
                                       ErrorResult& aRv);
 
 void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
-    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
-    ErrorResult& aRv);
+    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError);
 
 void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
-    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
-    ErrorResult& aRv);
+    WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError);
 
 Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
     WritableStreamDefaultWriter* aWriter);
 
 void WritableStreamDefaultWriterRelease(JSContext* aCx,
-                                        WritableStreamDefaultWriter* aWriter,
-                                        ErrorResult& aRv);
+                                        WritableStreamDefaultWriter* aWriter);
 
 MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
     JSContext* aCx, WritableStreamDefaultWriter* aWriter,

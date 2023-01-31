@@ -59,8 +59,7 @@ JSObject* ReadableStreamDefaultReader::WrapObject(
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
 bool ReadableStreamReaderGenericInitialize(ReadableStreamGenericReader* aReader,
-                                           ReadableStream* aStream,
-                                           ErrorResult& aRv) {
+                                           ReadableStream* aStream) {
   // Step 1.
   aReader->SetStream(aStream);
 
@@ -121,7 +120,7 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
 
   // Step 2.
   RefPtr<ReadableStream> streamPtr = &aStream;
-  if (!ReadableStreamReaderGenericInitialize(reader, streamPtr, aRv)) {
+  if (!ReadableStreamReaderGenericInitialize(reader, streamPtr)) {
     return nullptr;
   }
 
@@ -407,7 +406,7 @@ void SetUpReadableStreamDefaultReader(ReadableStreamDefaultReader* aReader,
   }
 
   // Step 2.
-  if (!ReadableStreamReaderGenericInitialize(aReader, aStream, aRv)) {
+  if (!ReadableStreamReaderGenericInitialize(aReader, aStream)) {
     return;
   }
 

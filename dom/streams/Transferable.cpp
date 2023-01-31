@@ -177,7 +177,7 @@ class SetUpTransformWritableMessageEventListener final
   // Note: This promise field is shared with the sink algorithms.
   Promise* BackpressurePromise() { return mBackpressurePromise; }
 
-  void CreateBackpressurePromise(ErrorResult& aRv) {
+  void CreateBackpressurePromise() {
     mBackpressurePromise =
         Promise::CreateInfallible(mController->GetParentObject());
   }
@@ -317,10 +317,7 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
     // promise resolved with undefined.
     // Note: This promise field is shared with the message event listener.
     if (!mListener->BackpressurePromise()) {
-      mListener->CreateBackpressurePromise(aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
+      mListener->CreateBackpressurePromise();
       mListener->BackpressurePromise()->MaybeResolveWithUndefined();
     }
 
@@ -333,11 +330,7 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
                MessagePort* aPort,
                JS::Handle<JS::Value> aChunk) -> already_AddRefed<Promise> {
               // Step 2.1: Set backpressurePromise to a new promise.
-              aListener->CreateBackpressurePromise(aRv);
-              if (aRv.Failed()) {
-                aPort->Close();
-                return nullptr;
-              }
+              aListener->CreateBackpressurePromise();
 
               // Step 2.2: Let result be PackAndPostMessageHandlingError(port,
               // "chunk", chunk).
