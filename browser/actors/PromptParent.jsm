@@ -314,18 +314,39 @@ class PromptParent extends JSWindowActorParent {
         if (dialogBox._allowTabFocusByPromptPrincipal) {
           this.addTabSwitchCheckboxToArgs(dialogBox, args);
         }
-
+        if (args.isTopLevelCrossDomainAuth) {
+          // Auth prompt spoofing protection, see bug 791594.
+          // Set up the url bar with the url of the cross domain resource.
+          // onLocationChange will change the url back to the current browsers
+          // if we do not hold the state here.
+          // onLocationChange will favour currentAuthPromptURI over the current browsers uri
+          browser.currentAuthPromptURI = args.channel.URI;
+          if (browser == win.gBrowser.selectedBrowser) {
+            win.gURLBar.setURI();
+          }
+        }
         bag = lazy.PromptUtils.objectToPropBag(args);
-        await dialogBox.open(
-          uri,
-          {
-            features: "resizable=no",
-            modalType: args.modalType,
-            allowFocusCheckbox: args.allowFocusCheckbox,
-            hideContent: args.isTopLevelCrossDomainAuth,
-          },
-          bag
-        ).closedPromise;
+        try {
+          await dialogBox.open(
+            uri,
+            {
+              features: "resizable=no",
+              modalType: args.modalType,
+              allowFocusCheckbox: args.allowFocusCheckbox,
+              hideContent: args.isTopLevelCrossDomainAuth,
+            },
+            bag
+          ).closedPromise;
+        } finally {
+          if (args.isTopLevelCrossDomainAuth) {
+            browser.currentAuthPromptURI = null;
+            // If the user is stopping the page load before answering the prompt, no navigation will happen after the prompt
+            // so we need to reset the uri here to the current browsers for that specific case
+            if (browser == win.gBrowser.selectedBrowser) {
+              win.gURLBar.setURI();
+            }
+          }
+        }
       } else {
         // Ensure we set the correct modal type at this point.
         // If we use window prompts as a fallback it may not be set.
