@@ -880,6 +880,7 @@ interface mixin GPUProgrammablePassEncoder {
 interface GPUComputePassEncoder {
     undefined setPipeline(GPUComputePipeline pipeline);
     undefined dispatchWorkgroups(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
+    [Pref="dom.webgpu.indirect-dispatch.enabled"]
     undefined dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
@@ -907,7 +908,9 @@ interface mixin GPURenderEncoderBase {
                           optional GPUSignedOffset32 baseVertex = 0,
                           optional GPUSize32 firstInstance = 0);
 
+    [Pref="dom.webgpu.indirect-dispatch.enabled"]
     undefined drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    [Pref="dom.webgpu.indirect-dispatch.enabled"]
     undefined drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 };
 
