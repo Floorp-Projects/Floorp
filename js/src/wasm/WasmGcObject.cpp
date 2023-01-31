@@ -443,10 +443,13 @@ WasmArrayObject* WasmArrayObject::createArray(
   // Allocate the outline data before allocating the object so that we can
   // infallibly initialize the pointer on the array object after it is
   // allocated.
-  uint8_t* outlineData = (uint8_t*)js_malloc(outlineBytes.value());
-  if (!outlineData) {
-    ReportOutOfMemory(cx);
-    return nullptr;
+  uint8_t* outlineData = nullptr;
+  if (outlineBytes.value() > 0) {
+    outlineData = (uint8_t*)js_malloc(outlineBytes.value());
+    if (!outlineData) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
   }
 
   Rooted<WasmArrayObject*> arrayObj(cx);
@@ -454,13 +457,17 @@ WasmArrayObject* WasmArrayObject::createArray(
   arrayObj = (WasmArrayObject*)WasmGcObject::create(cx, typeDef, args);
   if (!arrayObj) {
     ReportOutOfMemory(cx);
-    js_free(outlineData);
+    if (outlineData) {
+      js_free(outlineData);
+    }
     return nullptr;
   }
 
   arrayObj->numElements_ = numElements;
   arrayObj->data_ = outlineData;
-  memset(arrayObj->data_, 0, outlineBytes.value());
+  if (arrayObj->data_) {
+    memset(arrayObj->data_, 0, outlineBytes.value());
+  }
 
   return arrayObj;
 }
@@ -468,7 +475,11 @@ WasmArrayObject* WasmArrayObject::createArray(
 /* static */
 void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   WasmArrayObject& arrayObj = object->as<WasmArrayObject>();
-  MOZ_ASSERT(arrayObj.data_);
+  uint8_t* data = arrayObj.data_;
+  if (!data) {
+    MOZ_ASSERT(arrayObj.numElements_ == 0);
+    return;
+  }
 
   MemoryTracingVisitor visitor(trc);
   const auto& typeDef = arrayObj.typeDef();
@@ -477,20 +488,22 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  uint8_t* base = arrayObj.data_;
   uint32_t numElements = arrayObj.numElements_;
+  MOZ_ASSERT(numElements > 0);
+  uint32_t elemSize = arrayType.elementType_.size();
   for (uint32_t i = 0; i < numElements; i++) {
-    visitor.visitReference(base, i * arrayType.elementType_.size());
+    visitor.visitReference(data, i * elemSize);
   }
 }
 
 /* static */
 void WasmArrayObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
   WasmArrayObject& arrayObj = object->as<WasmArrayObject>();
-  MOZ_ASSERT(arrayObj.data_);
-
-  js_free(arrayObj.data_);
-  arrayObj.data_ = nullptr;
+  MOZ_ASSERT((arrayObj.data_ == nullptr) == (arrayObj.numElements_ == 0));
+  if (arrayObj.data_) {
+    js_free(arrayObj.data_);
+    arrayObj.data_ = nullptr;
+  }
 }
 
 void WasmArrayObject::storeVal(const Val& val, uint32_t itemIndex) {

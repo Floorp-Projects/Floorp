@@ -150,9 +150,8 @@ class WasmArrayObject : public WasmGcObject {
   // The number of elements in the array.
   uint32_t numElements_;
 
-  // Owned data pointer, holding `numElements_` entries.  Unlike
-  // WasmStructObject::outlineData_, this can never validly be nullptr, since
-  // WasmArrayObject doesn't have any inline storage area.
+  // Owned data pointer, holding `numElements_` entries.  This is null if
+  // `numElements_` is zero; otherwise it must be non-null.  See bug 1812283.
   uint8_t* data_;
 
   // AllocKind for object creation
