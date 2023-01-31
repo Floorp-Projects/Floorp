@@ -76,10 +76,9 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus", "rtp");
 
-  // The checksum depends on SSE being enabled, the second part is the non-SSE
-  // checksum.
   const std::string output_checksum =
       "fec6827bb9ee0b21770bbbb4a3a6f8823bf537dc|"
+      "3610cc7be4b3407b9c273b1299ab7f8f47cca96b|"
       "c5eb0a8fcf7e8255a40f821cb815e1096619efeb";
 
   const std::string network_stats_checksum =
@@ -100,10 +99,9 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusDtxBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus_dtx", "rtp");
 
-  // The checksum depends on SSE being enabled, the second part is the non-SSE
-  // checksum.
   const std::string output_checksum =
       "b3c4899eab5378ef5e54f2302948872149f6ad5e|"
+      "589e975ec31ea13f302457fea1425be9380ffb96|"
       "e97e32a77355e7ce46a2dc2f43bf1c2805530fcb";
 
   const std::string network_stats_checksum =
