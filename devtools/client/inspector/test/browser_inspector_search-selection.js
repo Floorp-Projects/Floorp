@@ -3,9 +3,6 @@
 "use strict";
 
 // Testing navigation between nodes in search results
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 

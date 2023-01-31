@@ -7,10 +7,6 @@
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "simple.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "simple.css";
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-
 add_task(async function() {
   const htmlFile = await copy(TESTCASE_URI_HTML, "simple.html");
   await copy(TESTCASE_URI_CSS, "simple.css");

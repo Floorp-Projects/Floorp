@@ -7,10 +7,6 @@
 // http rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-
 const FILENAME = "styleeditor-import-test.css";
 const SOURCE = "body{background:red;}";
 
