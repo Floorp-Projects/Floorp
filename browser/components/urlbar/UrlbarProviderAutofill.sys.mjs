@@ -69,10 +69,10 @@ function originQuery(where) {
   let selectTitle;
   let joinBookmarks;
   if (where.includes("bookmarked")) {
-    selectTitle = "ifnull(b.title, h.title)";
+    selectTitle = "ifnull(b.title, iif(h.frecency <> 0, h.title, NULL))";
     joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = h.id";
   } else {
-    selectTitle = "h.title";
+    selectTitle = "iif(h.frecency <> 0, h.title, NULL)";
     joinBookmarks = "";
   }
   return `/* do not warn (bug no): cannot use an index to sort */
@@ -104,14 +104,30 @@ function originQuery(where) {
       ${where}
       ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
       LIMIT 1
+    ),
+    matched_place(host_fixed, url, id, title, frecency) AS (
+      SELECT o.host_fixed, o.url, h.id, h.title, h.frecency
+      FROM matched_origin o
+      LEFT JOIN moz_places h ON h.url_hash IN (
+        hash('https://' || o.host_fixed),
+        hash('https://www.' || o.host_fixed),
+        hash('http://' || o.host_fixed),
+        hash('http://www.' || o.host_fixed)
+      )
+      ORDER BY
+        h.title IS NOT NULL DESC,
+        h.title || '/' <> o.host_fixed DESC,
+        h.url = o.url DESC,
+        h.frecency DESC,
+        h.id DESC
+      LIMIT 1
     )
     SELECT :query_type AS query_type,
            :searchString AS search_string,
-           matched_origin.host_fixed AS host_fixed,
-           matched_origin.url AS url,
+           h.host_fixed AS host_fixed,
+           h.url AS url,
            ${selectTitle} AS title
-    FROM matched_origin
-    LEFT JOIN moz_places h ON h.url_hash = hash(matched_origin.url)
+    FROM matched_place h
     ${joinBookmarks}
   `;
 }
