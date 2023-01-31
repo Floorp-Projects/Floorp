@@ -331,11 +331,8 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 
   // Step 2.
   if (aStream->State() == ReadableStream::ReaderState::Closed) {
-    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-
+    RefPtr<Promise> promise =
+        Promise::CreateInfallible(aStream->GetParentObject());
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
@@ -387,10 +384,7 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 
   // Step 8.
   RefPtr<Promise> promise =
-      Promise::Create(sourceCancelPromise->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+      Promise::CreateInfallible(sourceCancelPromise->GetParentObject());
 
   // ThenWithCycleCollectedArgs will carry promise, keeping it alive until the
   // callback executes.
@@ -894,10 +888,7 @@ already_AddRefed<Promise> ReadableStream::GetNextIterationResult(
   MOZ_ASSERT(reader->GetStream());
 
   // Step 3. Let promise be a new promise.
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
 
   // Step 4. Let readRequest be a new read request with the following items:
   RefPtr<ReadRequest> request = new IteratorReadRequest(promise, reader);

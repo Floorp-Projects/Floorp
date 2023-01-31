@@ -178,7 +178,8 @@ class SetUpTransformWritableMessageEventListener final
   Promise* BackpressurePromise() { return mBackpressurePromise; }
 
   void CreateBackpressurePromise(ErrorResult& aRv) {
-    mBackpressurePromise = Promise::Create(mController->GetParentObject(), aRv);
+    mBackpressurePromise =
+        Promise::CreateInfallible(mController->GetParentObject());
   }
 
  private:
@@ -449,10 +450,7 @@ MOZ_CAN_RUN_SCRIPT static void SetUpCrossRealmTransformWritable(
 
   // Step 3: Let backpressurePromise be a new promise.
   RefPtr<Promise> backpressurePromise =
-      Promise::Create(aWritable->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+      Promise::CreateInfallible(aWritable->GetParentObject());
 
   // Step 4: Add a handler for port’s message event with the following steps:
   auto listener = MakeRefPtr<SetUpTransformWritableMessageEventListener>(

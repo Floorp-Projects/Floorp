@@ -255,10 +255,7 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
   }
 
   // Step 5.
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
 
   // Step 6. Let readIntoRequest be a new read-into request with the following
   // items:
