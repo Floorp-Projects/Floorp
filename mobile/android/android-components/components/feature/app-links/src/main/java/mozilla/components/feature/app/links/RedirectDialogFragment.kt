@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.app.links
 
-import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 
 /**
@@ -29,23 +28,7 @@ abstract class RedirectDialogFragment : DialogFragment() {
      */
     var onCancelRedirect: () -> Unit? = {}
 
-    /**
-     * add the metadata of this download object to the arguments of this fragment.
-     */
-    fun setAppLinkRedirectUrl(url: String) {
-        val args = arguments ?: Bundle()
-        with(args) {
-            putString(KEY_INTENT_URL, url)
-        }
-        arguments = args
-    }
-
     companion object {
-        /**
-         * Key for finding the app link.
-         */
-        const val KEY_INTENT_URL = "KEY_INTENT_URL"
-
         const val FRAGMENT_TAG = "SHOULD_OPEN_APP_LINK_PROMPT_DIALOG"
     }
 }

@@ -23,6 +23,7 @@ import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRA
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
@@ -50,7 +51,7 @@ class AppLinksFeature(
     private val store: BrowserStore,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
-    private var dialog: RedirectDialogFragment? = null,
+    private val dialog: RedirectDialogFragment? = null,
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
     private val failedToLaunchAction: () -> Unit = {},
@@ -103,13 +104,12 @@ class AppLinksFeature(
             )
         }
 
-        if (!tab.content.private || fragmentManager == null) {
+        if (fragmentManager == null) {
             doOpenApp()
             return
         }
 
-        val dialog = getOrCreateDialog()
-        dialog.setAppLinkRedirectUrl(url)
+        val dialog = getOrCreateDialog(tab.content.private, url)
         dialog.onConfirmRedirect = doOpenApp
         dialog.onCancelRedirect = doNotOpenApp
 
@@ -119,16 +119,30 @@ class AppLinksFeature(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getOrCreateDialog(): RedirectDialogFragment {
-        val existingDialog = dialog
-        if (existingDialog != null) {
-            return existingDialog
+    internal fun getOrCreateDialog(isPrivate: Boolean, url: String): RedirectDialogFragment {
+        if (dialog != null) {
+            return dialog
         }
 
-        SimpleRedirectDialogFragment.newInstance().also {
-            dialog = it
-            return it
-        }
+        val message = context.getString(
+            R.string.mozac_feature_applinks_normal_confirm_dialog_message,
+            context.appName,
+        )
+
+        return SimpleRedirectDialogFragment.newInstance(
+            dialogTitleText = if (isPrivate) {
+                R.string.mozac_feature_applinks_confirm_dialog_title
+            } else {
+                R.string.mozac_feature_applinks_normal_confirm_dialog_title
+            },
+            dialogMessageString = if (isPrivate) {
+                url
+            } else {
+                message
+            },
+            positiveButtonText = R.string.mozac_feature_applinks_confirm_dialog_confirm,
+            negativeButtonText = R.string.mozac_feature_applinks_confirm_dialog_deny,
+        )
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

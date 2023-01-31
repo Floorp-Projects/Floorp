@@ -22,7 +22,6 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -37,7 +36,6 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
@@ -142,12 +140,12 @@ class AppLinksFeatureTest {
     }
 
     @Test
-    fun `in non-private mode an external app is opened without a dialog`() {
+    fun `in non-private mode an external app dialog is shown`() {
         val tab = createTab(webUrl)
         feature.handleAppIntent(tab, intentUrl, mock())
 
-        verifyNoMoreInteractions(mockDialog)
-        verify(mockOpenRedirect).invoke(any(), anyBoolean(), any())
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
     }
 
     @Test
@@ -160,22 +158,13 @@ class AppLinksFeatureTest {
     }
 
     @Test
-    fun `reused redirect dialog if exists`() {
-        val tab = createTab(webUrl, private = true)
-        feature.handleAppIntent(tab, intentUrl, mock())
-
-        val dialog = feature.getOrCreateDialog()
-        assertEquals(dialog, feature.getOrCreateDialog())
-    }
-
-    @Test
     fun `redirect dialog is only added once`() {
         val tab = createTab(webUrl, private = true)
         feature.handleAppIntent(tab, intentUrl, mock())
 
         verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
 
-        doReturn(mockDialog).`when`(feature).getOrCreateDialog()
+        doReturn(mockDialog).`when`(feature).getOrCreateDialog(false, "")
         doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(RedirectDialogFragment.FRAGMENT_TAG)
         feature.handleAppIntent(tab, intentUrl, mock())
         verify(mockDialog, times(1)).showNow(mockFragmentManager, RedirectDialogFragment.FRAGMENT_TAG)
