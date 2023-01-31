@@ -43,7 +43,7 @@
 }
 
 #SiteDataRemoveSelectedDialog.multi-entry #removalList {
-  height: 36em;
+  max-height: 20em;
 }
 
 #SiteDataRemoveSelectedDialog > dialog {
