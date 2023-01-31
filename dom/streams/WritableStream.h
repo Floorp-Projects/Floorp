@@ -142,7 +142,7 @@ class WritableStream : public nsISupports, public nsWrapperCache {
                                         ErrorResult& aRv);
 
   // WritableStreamUpdateBackpressure
-  void UpdateBackpressure(bool aBackpressure, ErrorResult& aRv);
+  void UpdateBackpressure(bool aBackpressure);
 
   // [Transferable]
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
@@ -215,8 +215,8 @@ MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WritableStreamAbort(
 MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WritableStreamClose(
     JSContext* aCx, WritableStream* aStream, ErrorResult& aRv);
 
-already_AddRefed<Promise> WritableStreamAddWriteRequest(WritableStream* aStream,
-                                                        ErrorResult& aRv);
+already_AddRefed<Promise> WritableStreamAddWriteRequest(
+    WritableStream* aStream);
 
 already_AddRefed<WritableStreamDefaultWriter>
 AcquireWritableStreamDefaultWriter(WritableStream* aStream, ErrorResult& aRv);

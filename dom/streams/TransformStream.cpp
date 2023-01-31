@@ -137,7 +137,7 @@ void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
   // Step 3: If stream.[[backpressure]] is true, perform !
   // TransformStreamSetBackpressure(stream, false).
   if (aStream->Backpressure()) {
-    aStream->SetBackpressure(false, aRv);
+    aStream->SetBackpressure(false);
   }
 }
 
@@ -460,7 +460,7 @@ class TransformStreamUnderlyingSourceAlgorithms final
     MOZ_ASSERT(mStream->BackpressureChangePromise());
 
     // Step 3: Perform ! TransformStreamSetBackpressure(stream, false).
-    mStream->SetBackpressure(false, aRv);
+    mStream->SetBackpressure(false);
 
     // Step 4: Return stream.[[backpressureChangePromise]].
     return do_AddRef(mStream->BackpressureChangePromise());
@@ -506,7 +506,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceAlgorithmsBase)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
-void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
+void TransformStream::SetBackpressure(bool aBackpressure) {
   // Step 1. Assert: stream.[[backpressure]] is not backpressure.
   MOZ_ASSERT(Backpressure() != aBackpressure);
 
@@ -569,7 +569,7 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   mBackpressureChangePromise = nullptr;
 
   // Step 10. Perform ! TransformStreamSetBackpressure(stream, true).
-  SetBackpressure(true, aRv);
+  SetBackpressure(true);
   if (aRv.Failed()) {
     return;
   }

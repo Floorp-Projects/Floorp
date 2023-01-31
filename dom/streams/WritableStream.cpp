@@ -392,10 +392,7 @@ void WritableStream::StartErroring(JSContext* aCx,
   // Step 8. If writer is not undefined, perform !
   // WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, reason).
   if (writer) {
-    WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, aReason, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, aReason);
   }
 
   // Step 9. If ! WritableStreamHasOperationMarkedInFlight(stream) is false
@@ -407,7 +404,7 @@ void WritableStream::StartErroring(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-update-backpressure
-void WritableStream::UpdateBackpressure(bool aBackpressure, ErrorResult& aRv) {
+void WritableStream::UpdateBackpressure(bool aBackpressure) {
   // Step 1. Assert: stream.[[state]] is "writable".
   MOZ_ASSERT(mState == WriterState::Writable);
   // Step 2. Assert: ! WritableStreamCloseQueuedOrInFlight(stream) is false.
@@ -723,8 +720,8 @@ already_AddRefed<WritableStreamDefaultWriter> WritableStream::GetWriter(
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-add-write-request
-already_AddRefed<Promise> WritableStreamAddWriteRequest(WritableStream* aStream,
-                                                        ErrorResult& aRv) {
+already_AddRefed<Promise> WritableStreamAddWriteRequest(
+    WritableStream* aStream) {
   // Step 1. Assert: ! IsWritableStreamLocked(stream) is true.
   MOZ_ASSERT(IsWritableStreamLocked(aStream));
 

@@ -60,10 +60,7 @@ void SetUpReadableStreamBYOBReader(ReadableStreamBYOBReader* reader,
   }
 
   // Step 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
-  ReadableStreamReaderGenericInitialize(reader, &stream, rv);
-  if (rv.Failed()) {
-    return;
-  }
+  ReadableStreamReaderGenericInitialize(reader, &stream);
 
   // Step 4. Set reader.[[readIntoRequests]] to a new empty list.
   reader->ReadIntoRequests().clear();
