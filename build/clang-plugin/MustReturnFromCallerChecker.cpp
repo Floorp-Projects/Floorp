@@ -113,7 +113,7 @@ bool MustReturnFromCallerChecker::immediatelyReturns(
   }
 
   for (size_t I = FromIdx; I < Block->size(); ++I) {
-    Optional<CFGStmt> S = (*Block)[I].getAs<CFGStmt>();
+    auto S = (*Block)[I].getAs<CFGStmt>();
     if (!S) {
       continue;
     }

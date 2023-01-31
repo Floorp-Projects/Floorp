@@ -25,7 +25,7 @@ std::vector<const Stmt *> getUsageAsRvalue(const ValueDecl *ValueDeclaration,
   for (auto &Block : *StatementCFG) {
     // We iterate through all the statements of the block.
     for (auto &BlockItem : *Block) {
-      Optional<CFGStmt> CFGStatement = BlockItem.getAs<CFGStmt>();
+      auto CFGStatement = BlockItem.getAs<CFGStmt>();
       if (!CFGStatement) {
         continue;
       }
