@@ -1701,6 +1701,9 @@ class ImportRsaKeyTask : public ImportKeyTask {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
+    if (pubKey->keyType != rsaKey) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
     // Extract relevant information from the public key
     mModulusLength = 8 * pubKey->u.rsa.modulus.len;
     if (!mPublicExponent.Assign(&pubKey->u.rsa.publicExponent)) {
@@ -1852,6 +1855,9 @@ class ImportEcKeyTask : public ImportKeyTask {
       }
 
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+        if (pubKey->keyType != ecKey) {
+          return NS_ERROR_DOM_DATA_ERR;
+        }
         if (!CheckEncodedECParameters(&pubKey->u.ec.DEREncodedParams)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
