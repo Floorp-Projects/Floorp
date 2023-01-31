@@ -2328,17 +2328,6 @@ public class GeckoSession {
   }
 
   /**
-   * Checks whether we have a rule for this session. Uses the browsing context or any of its
-   * children, calls nsICookieBannerService.hasRuleForBrowsingContextTree
-   *
-   * @return {@link GeckoResult} with boolean
-   */
-  @AnyThread
-  public @NonNull GeckoResult<Boolean> hasCookieBannerRuleForBrowsingContextTree() {
-    return mEventDispatcher.queryBoolean("GeckoView:HasCookieBannerRuleForBrowsingContextTree");
-  }
-
-  /**
    * Set this GeckoSession as active or inactive, which represents if the session is currently
    * visible or not. Setting a GeckoSession to inactive will significantly reduce its memory
    * footprint, but should only be done if the GeckoSession is not currently visible. Note that a
