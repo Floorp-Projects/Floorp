@@ -2194,6 +2194,8 @@ class nsLayoutUtils {
      * The surface might be different for, e.g., a EXIF-scaled raster image, if
      * we don't rescale during decode. */
     SFE_EXACT_SIZE_SURFACE = 1 << 6,
+    /* Use orientation from image */
+    SFE_ORIENTATION_FROM_IMAGE = 1 << 7
   };
 
   // This function can be called on any thread.
