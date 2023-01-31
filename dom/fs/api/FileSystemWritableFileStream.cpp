@@ -27,7 +27,7 @@ namespace mozilla::dom {
 namespace {
 
 class WritableFileStreamUnderlyingSinkAlgorithms final
-    : public UnderlyingSinkAlgorithmsBase {
+    : public UnderlyingSinkAlgorithmsWrapper {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
       WritableFileStreamUnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
@@ -36,20 +36,14 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
       FileSystemWritableFileStream& aStream)
       : mStream(&aStream) {}
 
-  // Streams algorithms
-  void StartCallback(JSContext* aCx,
-                     WritableStreamDefaultController& aController,
-                     JS::MutableHandle<JS::Value> aRetVal,
-                     ErrorResult& aRv) override;
-
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
+  already_AddRefed<Promise> WriteCallback(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController, ErrorResult& aRv) override;
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
-      JSContext* aCx, ErrorResult& aRv) override;
+  already_AddRefed<Promise> CloseCallbackImpl(JSContext* aCx,
+                                              ErrorResult& aRv) override;
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
+  already_AddRefed<Promise> AbortCallbackImpl(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override;
 
@@ -136,14 +130,11 @@ FileSystemWritableFileStream::~FileSystemWritableFileStream() {
   mozilla::DropJSObjects(this);
 }
 
-// https://streams.spec.whatwg.org/#writablestream-set-up
+// https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 // * This is fallible because of OOM handling of JSAPI. See bug 1762233.
-// * Consider extracting this as UnderlyingSinkAlgorithmsWrapper if more classes
-//   start subclassing WritableStream.
-//   For now this skips step 2 - 4 as they are not required here.
-// XXX(krosylight): _BOUNDARY because SetUpWritableStreamDefaultController here
-// can't run script because StartCallback here is no-op. Can we let the static
-// check automatically detect this situation?
+// XXX(krosylight): _BOUNDARY because SetUpNative here can't run script because
+// StartCallback here is no-op. Can we let the static check automatically detect
+// this situation?
 /* static */
 MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<FileSystemWritableFileStream>
 FileSystemWritableFileStream::Create(
@@ -157,35 +148,32 @@ FileSystemWritableFileStream::Create(
   }
   JSContext* cx = jsapi.cx();
 
-  // Step 5. Perform ! InitializeWritableStream(stream).
-  // (Done by the constructor)
+  // Step 1. Let stream be a new FileSystemWritableFileStream in realm.
+  // Step 2. Set stream.[[file]] to file. (Covered by the constructor)
   RefPtr<FileSystemWritableFileStream> stream =
       new FileSystemWritableFileStream(aGlobal, aManager, std::move(aActor),
                                        aFileDescriptor, aMetadata);
 
-  // Step 1 - 3
+  // Step 3 - 5
   auto algorithms =
       MakeRefPtr<WritableFileStreamUnderlyingSinkAlgorithms>(*stream);
 
-  // Step 6. Let controller be a new WritableStreamDefaultController.
-  auto controller =
-      MakeRefPtr<WritableStreamDefaultController>(aGlobal, *stream);
-
-  // Step 7. Perform ! SetUpWritableStreamDefaultController(stream, controller,
-  // startAlgorithm, writeAlgorithm, closeAlgorithmWrapper,
-  // abortAlgorithmWrapper, highWaterMark, sizeAlgorithm).
+  // Step 8: Set up stream with writeAlgorithm set to writeAlgorithm,
+  // closeAlgorithm set to closeAlgorithm, abortAlgorithm set to abortAlgorithm,
+  // highWaterMark set to highWaterMark, and sizeAlgorithm set to sizeAlgorithm.
   IgnoredErrorResult rv;
-  SetUpWritableStreamDefaultController(
-      cx, stream, controller, algorithms,
-      // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
+  stream->SetUpNative(
+      cx, *algorithms,
       // Step 6. Let highWaterMark be 1.
-      1,
+      Some(1),
       // Step 7. Let sizeAlgorithm be an algorithm that returns 1.
       // (nullptr returns 1, See WritableStream::Constructor for details)
       nullptr, rv);
   if (rv.Failed()) {
     return nullptr;
   }
+
+  // Step 9: Return stream.
   return stream.forget();
 }
 
@@ -640,14 +628,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WritableFileStreamUnderlyingSinkAlgorithms,
                                    UnderlyingSinkAlgorithmsBase, mStream)
 
-void WritableFileStreamUnderlyingSinkAlgorithms::StartCallback(
-    JSContext* aCx, WritableStreamDefaultController& aController,
-    JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 1. Let startAlgorithm be an algorithm that returns undefined.
-  aRetVal.setUndefined();
-}
-
+// Step 3 of
+// https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 already_AddRefed<Promise>
 WritableFileStreamUnderlyingSinkAlgorithms::WriteCallback(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
@@ -655,12 +637,11 @@ WritableFileStreamUnderlyingSinkAlgorithms::WriteCallback(
   return mStream->Write(aCx, aChunk, aRv);
 }
 
+// Step 4 of
+// https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 already_AddRefed<Promise>
-WritableFileStreamUnderlyingSinkAlgorithms::CloseCallback(JSContext* aCx,
-                                                          ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 2. Let closeAlgorithmWrapper be an algorithm that runs these steps:
-
+WritableFileStreamUnderlyingSinkAlgorithms::CloseCallbackImpl(
+    JSContext* aCx, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mStream->GetParentObject(), aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -671,28 +652,26 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallback(JSContext* aCx,
     return promise.forget();
   }
 
-  // XXX The close should be async. For now we have to always fallback to the
-  // Step 2.3 below.
+  // XXX The close should be async. For now we have to always fallback to a
+  // resolved promise.
   mStream->Close();
 
-  // Step 2.3. Return a promise resolved with undefined.
   promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
+// Step 5 of
+// https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 already_AddRefed<Promise>
-WritableFileStreamUnderlyingSinkAlgorithms::AbortCallback(
+WritableFileStreamUnderlyingSinkAlgorithms::AbortCallbackImpl(
     JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
     ErrorResult& aRv) {
-  // https://streams.spec.whatwg.org/#writablestream-set-up
-  // Step 3. Let abortAlgorithmWrapper be an algorithm that runs these steps:
-
   // XXX The close or rather a dedicated abort should be async. For now we have
-  // to always fall back to the Step 3.3 below.
+  // to always fall back to return null.
+  // (Step 3.3 of https://streams.spec.whatwg.org/#readablestream-set-up will
+  // turn it into a resolved promise)
   mStream->Close();
-
-  // Step 3.3. Return a promise resolved with undefined.
-  return Promise::CreateResolvedWithUndefined(mStream->GetParentObject(), aRv);
+  return nullptr;
 }
 
 void WritableFileStreamUnderlyingSinkAlgorithms::ReleaseObjects() {

@@ -754,4 +754,38 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(WritableStream* aStream,
   return promise.forget();
 }
 
+// https://streams.spec.whatwg.org/#writablestream-set-up
+void WritableStream::SetUpNative(JSContext* aCx,
+                                 UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
+                                 Maybe<double> aHighWaterMark,
+                                 QueuingStrategySize* aSizeAlgorithm,
+                                 ErrorResult& aRv) {
+  // an optional number highWaterMark (default 1)
+  double highWaterMark = aHighWaterMark.valueOr(1);
+  // and if given, highWaterMark must be a non-negative, non-NaN number.
+  MOZ_ASSERT(IsNonNegativeNumber(highWaterMark));
+
+  // Step 1: Let startAlgorithm be an algorithm that returns undefined.
+  // Step 2: Let closeAlgorithmWrapper be an algorithm that runs these steps:
+  // Step 3: Let abortAlgorithmWrapper be an algorithm that runs these steps:
+  // (Covered by UnderlyingSinkAlgorithmsWrapper)
+
+  // Step 4: If sizeAlgorithm was not given, then set it to an algorithm that
+  // returns 1. (Callers will treat nullptr as such, see
+  // WritableStream::Constructor for details)
+
+  // Step 5: Perform ! InitializeWritableStream(stream).
+  // (Covered by the constructor)
+
+  // Step 6: Let controller be a new WritableStreamDefaultController.
+  auto controller =
+      MakeRefPtr<WritableStreamDefaultController>(GetParentObject(), *this);
+
+  // Step 7: Perform ! SetUpWritableStreamDefaultController(stream, controller,
+  // startAlgorithm, writeAlgorithm, closeAlgorithmWrapper,
+  // abortAlgorithmWrapper, highWaterMark, sizeAlgorithm).
+  SetUpWritableStreamDefaultController(aCx, this, controller, &aAlgorithms,
+                                       highWaterMark, aSizeAlgorithm, aRv);
+}
+
 }  // namespace mozilla::dom
