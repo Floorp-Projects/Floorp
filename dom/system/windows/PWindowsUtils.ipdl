@@ -4,11 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PWindowsLocation;
+
 namespace mozilla {
 namespace dom {
 
 // Manager of utility actors that run in the windows utility process.
 protocol PWindowsUtils {
+  manages PWindowsLocation;
+
+child:
+  // Proxies the ILocation COM API for geolocation
+  async PWindowsLocation();
 };
 
 }  // namespace dom
