@@ -48,6 +48,7 @@ class JitterEstimator {
           "avg_frame_size_median", &avg_frame_size_median,
           "max_frame_size_percentile", &max_frame_size_percentile,
           "frame_size_window", &frame_size_window,
+          "num_stddev_delay_clamp", &num_stddev_delay_clamp,
           "num_stddev_delay_outlier", &num_stddev_delay_outlier,
           "num_stddev_size_outlier", &num_stddev_size_outlier,
           "congestion_rejection_factor", &congestion_rejection_factor);
@@ -68,6 +69,12 @@ class JitterEstimator {
 
     // The length of the percentile filters' window, in number of frames.
     absl::optional<int> frame_size_window = absl::nullopt;
+
+    // The incoming frame delay variation samples are clamped to be at most
+    // this number of standard deviations away from zero.
+    //
+    // Increasing this value clamps fewer samples.
+    absl::optional<double> num_stddev_delay_clamp = absl::nullopt;
 
     // A (relative) frame delay variation sample is an outlier if its absolute
     // deviation from the Kalman filter model falls outside this number of
