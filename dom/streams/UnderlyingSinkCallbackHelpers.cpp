@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/UnderlyingSinkCallbackHelpers.h"
+#include "StreamUtils.h"
 
 using namespace mozilla::dom;
 
@@ -104,4 +105,26 @@ already_AddRefed<Promise> UnderlyingSinkAlgorithms::AbortCallback(
                            CallbackFunction::eRethrowExceptions);
 
   return promise.forget();
+}
+
+// https://streams.spec.whatwg.org/#writable-set-up
+// Step 2.1: Let closeAlgorithmWrapper be an algorithm that runs these steps:
+already_AddRefed<Promise> UnderlyingSinkAlgorithmsWrapper::CloseCallback(
+    JSContext* aCx, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  return PromisifyAlgorithm(
+      global, [&](ErrorResult& aRv) { return CloseCallbackImpl(aCx, aRv); },
+      aRv);
+}
+
+// https://streams.spec.whatwg.org/#writable-set-up
+// Step 3.1: Let abortAlgorithmWrapper be an algorithm that runs these steps:
+already_AddRefed<Promise> UnderlyingSinkAlgorithmsWrapper::AbortCallback(
+    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  return PromisifyAlgorithm(
+      global,
+      [&](ErrorResult& aRv) { return AbortCallbackImpl(aCx, aReason, aRv); },
+      aRv);
 }

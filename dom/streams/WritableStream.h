@@ -153,12 +153,26 @@ class WritableStream : public nsISupports, public nsWrapperCache {
       JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
       JS::MutableHandle<JSObject*> aReturnObject);
 
+  // Public functions to implement other specs
+  // https://streams.spec.whatwg.org/#other-specs-ws
+
+  // https://streams.spec.whatwg.org/#writablestream-set-up
+ protected:
+  MOZ_CAN_RUN_SCRIPT void SetUpNative(
+      JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
+      Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+      ErrorResult& aRv);
+
+ public:
+  // IDL layer functions
+
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // IDL Methods
+  // IDL methods
+
   // TODO: Use MOZ_CAN_RUN_SCRIPT when IDL constructors can use it (bug 1749042)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WritableStream>
   Constructor(const GlobalObject& aGlobal,

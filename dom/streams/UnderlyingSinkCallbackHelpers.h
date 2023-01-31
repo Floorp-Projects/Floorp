@@ -113,6 +113,46 @@ class UnderlyingSinkAlgorithms final : public UnderlyingSinkAlgorithmsBase {
   MOZ_KNOWN_LIVE RefPtr<UnderlyingSinkAbortCallback> mAbortCallback;
 };
 
+// https://streams.spec.whatwg.org/#writablestream-set-up
+// Wrappers defined by the "Set up" methods in the spec.
+// (closeAlgorithmWrapper, abortAlgorithmWrapper)
+// This helps you just return nullptr when 1) the algorithm is synchronous, or
+// 2) an error occurred, as this wrapper will return a resolved or rejected
+// promise respectively.
+// Note that StartCallback is only for JS consumers to access the
+// controller, and thus is no-op here since native consumers can call
+// `ErrorNative()` etc. without direct controller access.
+class UnderlyingSinkAlgorithmsWrapper : public UnderlyingSinkAlgorithmsBase {
+ public:
+  void StartCallback(JSContext* aCx,
+                     WritableStreamDefaultController& aController,
+                     JS::MutableHandle<JS::Value> aRetVal,
+                     ErrorResult& aRv) final {
+    // Step 1: Let startAlgorithm be an algorithm that returns undefined.
+    aRetVal.setUndefined();
+  }
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
+      JSContext* aCx, ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) final;
+
+  virtual already_AddRefed<Promise> CloseCallbackImpl(JSContext* aCx,
+                                                      ErrorResult& aRv) {
+    // (closeAlgorithm is optional, give null by default)
+    return nullptr;
+  }
+
+  virtual already_AddRefed<Promise> AbortCallbackImpl(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) {
+    // (abortAlgorithm is optional, give null by default)
+    return nullptr;
+  }
+};
+
 }  // namespace mozilla::dom
 
 #endif
