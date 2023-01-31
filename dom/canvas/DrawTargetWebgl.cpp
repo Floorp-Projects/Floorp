@@ -2548,10 +2548,11 @@ static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
 // Get the output vertex buffer using WGR from an input quantized path.
 static Maybe<WGR::VertexBuffer> GeneratePathVertexBuffer(
     const QuantizedPath& aPath, const IntRect& aClipRect,
-    WGR::OutputVertex* aBuffer, size_t aBufferCapacity) {
+    bool aRasterizationTruncates, WGR::OutputVertex* aBuffer,
+    size_t aBufferCapacity) {
   WGR::VertexBuffer vb = WGR::wgr_path_rasterize_to_tri_list(
       &aPath.mPath, aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height,
-      true, false, false, aBuffer, aBufferCapacity);
+      true, false, aRasterizationTruncates, aBuffer, aBufferCapacity);
   if (!vb.len || (aBuffer && vb.len > aBufferCapacity)) {
     WGR::wgr_vertex_buffer_release(vb);
     return Nothing();
@@ -2859,7 +2860,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     if (!aStrokeOptions) {
       wgrVB = GeneratePathVertexBuffer(
           entry->GetPath(), IntRect(-intBounds.TopLeft(), mViewportSize),
-          outputBuffer, outputBufferCapacity);
+          mRasterizationTruncates, outputBuffer, outputBufferCapacity);
     } else {
       if (mPathAAStroke &&
           SupportsAAStroke(aPattern, aOptions, *aStrokeOptions)) {
@@ -2897,7 +2898,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
                     fillPath, quantBounds, currentTransform)) {
               wgrVB = GeneratePathVertexBuffer(
                   *qp, IntRect(-intBounds.TopLeft(), mViewportSize),
-                  outputBuffer, outputBufferCapacity);
+                  mRasterizationTruncates, outputBuffer, outputBufferCapacity);
             }
           }
         }
