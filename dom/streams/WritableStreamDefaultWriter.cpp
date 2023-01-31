@@ -382,10 +382,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
   // Step 5. If state is "writable",
   if (state == WritableStream::WriterState::Writable) {
     RefPtr<Promise> readyPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
 
     // Step 5.1 If ! WritableStreamCloseQueuedOrInFlight(stream) is false and
     // stream.[[backpressure]] is true, set writer.[[readyPromise]] to a new
@@ -401,10 +398,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
 
     // Step 5.3. Set writer.[[closedPromise]] to a new promise.
     RefPtr<Promise> closedPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
     aWriter->SetClosedPromise(closedPromise);
   } else if (state == WritableStream::WriterState::Erroring) {
     // Step 6. Otherwise, if state is "erroring",
@@ -413,10 +407,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
     // stream.[[storedError]].
     JS::Rooted<JS::Value> storedError(RootingCx(), aStream->StoredError());
     RefPtr<Promise> readyPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
     readyPromise->MaybeReject(storedError);
     aWriter->SetReadyPromise(readyPromise);
 
@@ -425,10 +416,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
 
     // Step 6.3. Set writer.[[closedPromise]] to a new promise.
     RefPtr<Promise> closedPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
     aWriter->SetClosedPromise(closedPromise);
   } else if (state == WritableStream::WriterState::Closed) {
     // Step 7. Otherwise, if state is "closed",
@@ -460,10 +448,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
     // Step 8.3. Set writer.[[readyPromise]] to a promise rejected with
     // storedError.
     RefPtr<Promise> readyPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
     readyPromise->MaybeReject(storedError);
     aWriter->SetReadyPromise(readyPromise);
 
@@ -473,10 +458,7 @@ void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
     // Step 8.5. Set writer.[[closedPromise]] to a promise rejected with
     // storedError.
     RefPtr<Promise> closedPromise =
-        Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        Promise::CreateInfallible(aWriter->GetParentObject());
     closedPromise->MaybeReject(storedError);
     aWriter->SetClosedPromise(closedPromise);
 
@@ -497,10 +479,7 @@ void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
   } else {
     // Step 2. Otherwise, set writer.[[closedPromise]] to a promise rejected
     // with error.
-    closedPromise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    closedPromise = Promise::CreateInfallible(aWriter->GetParentObject());
     closedPromise->MaybeReject(aError);
     aWriter->SetClosedPromise(closedPromise);
   }
@@ -521,10 +500,7 @@ void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
   } else {
     // Step 2. Otherwise, set writer.[[readyPromise]] to a promise rejected with
     // error.
-    readyPromise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    readyPromise = Promise::CreateInfallible(aWriter->GetParentObject());
     readyPromise->MaybeReject(aError);
     aWriter->SetReadyPromise(readyPromise);
   }
