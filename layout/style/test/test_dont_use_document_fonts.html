@@ -7,6 +7,15 @@
 <script>
 const content = document.getElementById("content");
 
+// This is just a subset of browser.display.use_document_fonts.icon_font_allowlist
+// that we feel are worth double-checking via this test.  In particular:
+// * Chromium Bug Tracker and https://developers.google.com use "Material Icons"
+// * Google Translate and Google Timeline use "Material Icons Extended"
+// * https://fonts.google.com/icons uses "Material Symbols Outlined"
+// * Google Calendar and Google Contacts use "Google Material Icons"
+const kKnownLigatureIconFonts = "Material Icons, Material Icons Extended, " +
+      "Material Symbols Outlined, Google Material Icons";
+
 setup({explicit_done: true })
 
 content.style.fontFamily = "initial";
@@ -40,8 +49,8 @@ const kTests = [
     description: "Generic is prepended to the font-family if none is found",
   },
   {
-    specified: "Material Icons, Material Symbols Outlined, something-else, sans-serif",
-    computed: "Material Icons, Material Symbols Outlined, sans-serif, something-else",
+    specified: kKnownLigatureIconFonts + ", something-else, sans-serif",
+    computed: kKnownLigatureIconFonts + ", sans-serif, something-else",
     description: "Known ligature-icon fonts remain ahead of the generic",
   },
   {
