@@ -894,7 +894,7 @@ static const CellRenderSettings checkboxSettings = {{
                                                          {0, 1, 0, 1}   // regular
                                                      }}};
 
-static NSCellStateValue CellStateForCheckboxOrRadioState(
+static NSControlStateValue CellStateForCheckboxOrRadioState(
     nsNativeThemeCocoa::CheckboxOrRadioState aState) {
   switch (aState) {
     case nsNativeThemeCocoa::CheckboxOrRadioState::eOff:
@@ -1278,7 +1278,7 @@ void nsNativeThemeCocoa::DrawHelpButton(CGContextRef cgContext, const HIRect& in
 
 void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                               ControlParams aControlParams,
-                                              NSCellStateValue aCellState) {
+                                              NSControlStateValue aCellState) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mDisclosureButtonCell);
