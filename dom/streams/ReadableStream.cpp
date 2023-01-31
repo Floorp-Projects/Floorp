@@ -1003,6 +1003,45 @@ already_AddRefed<ReadableStream> CreateReadableByteStream(
   return stream.forget();
 }
 
+// https://streams.spec.whatwg.org/#readablestream-set-up
+// (except this instead creates a new ReadableStream rather than accepting an
+// existing instance)
+already_AddRefed<ReadableStream> ReadableStream::CreateNative(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
+    mozilla::Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv) {
+  // an optional number highWaterMark (default 1)
+  double highWaterMark = aHighWaterMark.valueOr(1);
+  // and if given, highWaterMark must be a non-negative, non-NaN number.
+  MOZ_ASSERT(IsNonNegativeNumber(highWaterMark));
+
+  // Step 1: Let startAlgorithm be an algorithm that returns undefined.
+  // Step 2: Let pullAlgorithmWrapper be an algorithm that runs these steps:
+  // Step 3: Let cancelAlgorithmWrapper be an algorithm that runs these steps:
+  // (Done by UnderlyingSourceAlgorithmsWrapper)
+
+  // Step 4: If sizeAlgorithm was not given, then set it to an algorithm that
+  // returns 1. (Callers will treat nullptr as such, see
+  // ReadableStream::Constructor for details)
+
+  // Step 5: Perform ! InitializeReadableStream(stream).
+  auto stream = MakeRefPtr<ReadableStream>(aGlobal);
+
+  // Step 6: Let controller be a new ReadableStreamDefaultController.
+  auto controller = MakeRefPtr<ReadableStreamDefaultController>(aGlobal);
+
+  // Step 7: Perform ! SetUpReadableStreamDefaultController(stream, controller,
+  // startAlgorithm, pullAlgorithmWrapper, cancelAlgorithmWrapper,
+  // highWaterMark, sizeAlgorithm).
+  SetUpReadableStreamDefaultController(aCx, stream, controller, &aAlgorithms,
+                                       highWaterMark, aSizeAlgorithm, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return stream.forget();
+}
+
 // https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
 // (except this instead creates a new ReadableStream rather than accepting an
 // existing instance)

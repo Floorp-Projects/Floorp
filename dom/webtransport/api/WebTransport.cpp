@@ -225,8 +225,8 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
       new WebTransportIncomingStreamsAlgorithms(mIncomingBidirectionalPromise,
                                                 false, this);
 
-  mIncomingBidirectionalStreams = CreateReadableStream(
-      cx, global, algorithm, Some(0.0), nullptr, aError);  // XXX
+  mIncomingBidirectionalStreams = ReadableStream::CreateNative(
+      cx, global, *algorithm, Some(0.0), nullptr, aError);  // XXX
   if (aError.Failed()) {
     return;
   }
@@ -245,8 +245,8 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   algorithm = new WebTransportIncomingStreamsAlgorithms(
       mIncomingUnidirectionalPromise, true, this);
 
-  mIncomingUnidirectionalStreams =
-      CreateReadableStream(cx, global, algorithm, Some(0.0), nullptr, aError);
+  mIncomingUnidirectionalStreams = ReadableStream::CreateNative(
+      cx, global, *algorithm, Some(0.0), nullptr, aError);
   if (aError.Failed()) {
     return;
   }
@@ -494,18 +494,13 @@ void WebTransport::Cleanup(WebTransportError* aError,
   }
 
   for (const auto& stream : sendStreams) {
-    RefPtr<WritableStreamDefaultController> controller = stream->Controller();
-    WritableStreamDefaultControllerErrorIfNeeded(cx, controller, errorValue,
-                                                 IgnoreErrors());
+    // This MOZ_KnownLive is redundant, see bug 1620312
+    MOZ_KnownLive(stream)->ErrorNative(cx, errorValue, IgnoreErrors());
   }
   // Step 11: For each receiveStream in receiveStreams, error receiveStream with
   // error.
   for (const auto& stream : receiveStreams) {
-    RefPtr<ReadableStreamDefaultController> controller =
-        stream->Controller()->AsDefault();
-    // XXX replace with ErrorNative() when bug 1809895 lands
-    ReadableStreamDefaultControllerError(cx, controller, errorValue,
-                                         IgnoreErrors());
+    stream->ErrorNative(cx, errorValue, IgnoreErrors());
   }
   // Step 12:
   if (aCloseInfo) {
@@ -527,15 +522,9 @@ void WebTransport::Cleanup(WebTransportError* aError,
     // 13.2: Reject ready with error
     mReady->MaybeReject(errorValue);
     // 13.3: Error incomingBidirectionalStreams with error
-    RefPtr<ReadableStreamDefaultController> controller =
-        mIncomingBidirectionalStreams->Controller()->AsDefault();
-    // XXX replace with ErrorNative() when bug 1809895 lands
-    ReadableStreamDefaultControllerError(cx, controller, errorValue,
-                                         IgnoreErrors());
+    mIncomingBidirectionalStreams->ErrorNative(cx, errorValue, IgnoreErrors());
     // 13.4: Error incomingUnidirectionalStreams with error
-    controller = mIncomingUnidirectionalStreams->Controller()->AsDefault();
-    ReadableStreamDefaultControllerError(cx, controller, errorValue,
-                                         IgnoreErrors());
+    mIncomingUnidirectionalStreams->ErrorNative(cx, errorValue, IgnoreErrors());
   }
   // abort any pending pulls from Incoming*Streams (not in spec)
   mIncomingUnidirectionalPromise->MaybeResolveWithUndefined();
