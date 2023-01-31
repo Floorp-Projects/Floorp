@@ -225,11 +225,11 @@ inline uint32_t JSScript::getWarmUpCount() const {
   return warmUpData_.toJitScript()->warmUpCount();
 }
 
-inline void JSScript::incWarmUpCounter(uint32_t amount) {
+inline void JSScript::incWarmUpCounter() {
   if (warmUpData_.isWarmUpCount()) {
-    warmUpData_.incWarmUpCount(amount);
+    warmUpData_.incWarmUpCount();
   } else {
-    warmUpData_.toJitScript()->incWarmUpCount(amount);
+    warmUpData_.toJitScript()->incWarmUpCount();
   }
 }
 
