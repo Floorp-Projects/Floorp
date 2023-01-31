@@ -13,8 +13,11 @@
 #if !defined(MOZ_GECKO_PROFILER) || !defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
 #  define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable)
 #else
-#  define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable) \
-    mozilla::AutoProfileRunnable PROFILER_RAII(runnable)
+#  define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable)                  \
+    mozilla::Maybe<mozilla::AutoProfileRunnable> raiiRunnableMarker; \
+    if (profiler_thread_is_being_profiled_for_markers()) {           \
+      raiiRunnableMarker.emplace(runnable);                          \
+    }
 
 namespace mozilla {
 
@@ -22,18 +25,10 @@ class MOZ_RAII AutoProfileRunnable {
  public:
   explicit AutoProfileRunnable(Runnable* aRunnable)
       : mStartTime(TimeStamp::Now()) {
-    if (!profiler_thread_is_being_profiled_for_markers()) {
-      return;
-    }
-
     aRunnable->GetName(mName);
   }
   explicit AutoProfileRunnable(nsIRunnable* aRunnable)
       : mStartTime(TimeStamp::Now()) {
-    if (!profiler_thread_is_being_profiled_for_markers()) {
-      return;
-    }
-
     nsCOMPtr<nsIThreadPool> threadPool = do_QueryInterface(aRunnable);
     if (threadPool) {
       // nsThreadPool::Run has its own call to AUTO_PROFILE_FOLLOWING_RUNNABLE,
@@ -50,7 +45,7 @@ class MOZ_RAII AutoProfileRunnable {
       : mStartTime(TimeStamp::Now()), mName(aName) {}
 
   ~AutoProfileRunnable() {
-    if (!profiler_thread_is_being_profiled_for_markers() || mName.IsEmpty()) {
+    if (mName.IsEmpty()) {
       return;
     }
 
