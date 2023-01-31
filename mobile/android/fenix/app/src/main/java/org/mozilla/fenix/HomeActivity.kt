@@ -58,6 +58,7 @@ import mozilla.components.feature.media.ext.findActiveMediaTab
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
+import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -679,6 +680,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
         super.getOnBackPressedDispatcher().onBackPressed()
+    }
+
+    @Deprecated("Deprecated in Java")
+    // https://github.com/mozilla-mobile/fenix/issues/19919
+    final override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
+            if (it is ActivityResultHandler && it.onActivityResult(requestCode, data, resultCode)) {
+                return
+            }
+        }
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun shouldUseCustomBackLongPress(): Boolean {

@@ -88,6 +88,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.sync.autofill.DefaultCreditCardValidationDelegate
 import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
+import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -157,6 +158,7 @@ import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolb
 abstract class BaseBrowserFragment :
     Fragment(),
     UserInteractionHandler,
+    ActivityResultHandler,
     OnBackLongPressedListener,
     AccessibilityManager.AccessibilityStateChangeListener {
 
@@ -256,7 +258,9 @@ abstract class BaseBrowserFragment :
             listOf(
                 promptsFeature,
                 webAuthnFeature,
-            ).any { it.onActivityResult(PIN_REQUEST, result.data, result.resultCode) }
+            ).any {
+                it.onActivityResult(PIN_REQUEST, result.data, result.resultCode)
+            }
         }
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
@@ -1183,6 +1187,16 @@ abstract class BaseBrowserFragment :
             } ?: false ||
             sessionFeature.onBackPressed() ||
             removeSessionIfNeeded()
+    }
+
+    /**
+     * Forwards activity results to the [ActivityResultHandler] features.
+     */
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
+        return listOf(
+            promptsFeature,
+            webAuthnFeature,
+        ).any { it.onActivityResult(requestCode, data, resultCode) }
     }
 
     override fun onBackLongPressed(): Boolean {
