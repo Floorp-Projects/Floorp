@@ -49,9 +49,10 @@ rtc_library("task_queue_test") {
     visibility = []
     visibility = webrtc_default_visibility
     visibility += [
-      # This is the only Chromium target that can depend on this. The reason
-      # behind this is the fact that this is a 'testonly' target and as such
+      # This is the only Chromium targets that can depend on this. The reason
+      # behind this is the fact that these are 'testonly' targets and as such
       # it cannot be part of the WebRTC component.
+      "//components/webrtc:unit_tests",
       "//third_party/blink/renderer/platform:blink_platform_unittests_sources",
     ]
 
