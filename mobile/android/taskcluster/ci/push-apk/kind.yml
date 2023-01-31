@@ -23,13 +23,21 @@ only-for-build-types:
     - focus-release
     - klar-release
     - focus-beta
+    - fenix-nightly
+    - fenix-release
+    - fenix-beta
 
 task-template:
-    description: Publish Focus
+    description: Publish Focus and Fenix APKs
     worker-type: push-apk
     run-on-tasks-for: []
     worker:
-        certificate-alias: focus
+        certificate-alias:
+            by-build-type:
+                fenix-nightly: fenix-production
+                fenix-beta: fennec-beta
+                fenix-release: fennec-production
+                default: focus
         commit: true
         channel:
             by-build-type:
@@ -37,11 +45,17 @@ task-template:
                 focus-release: focus-release
                 klar-release: klar-release
                 focus-beta: beta
+                fenix-nightly: production
+                fenix-release: fennec-production
+                fenix-beta: fennec-beta
         dep:
             by-level:
                 '3': false
                 default: true
-        product: focus-android
+        product:
+            by-build-type:
+                (fenix-nightly|fenix-release|fenix-beta): fenix
+                default: focus-android
     shipping-phase: push     # APKs are sent to testing tracks
     treeherder:
         job-symbol:
