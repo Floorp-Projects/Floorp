@@ -35,7 +35,6 @@ CompiledModules(
     "path.js",
     "prefs.js",
     "preview.js",
-    "project-search.js",
     "quick-open.js",
     "result-list.js",
     "selected-location.js",
