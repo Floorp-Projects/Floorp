@@ -6306,6 +6306,52 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
 
+.. dropdown:: constant-regression
+   :container: + anchor-id-constant-regression-c
+
+   **Owner**: PerfTest Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari, geckoview, fenix
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.constant_value=500
+   * **custom data**: true
+   * **expected**: pass
+   * **fore window**: 1
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **max back window**: 3
+   * **min back window**: 2
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest unit**: ms
+   * **test script**: constant_regression_test.js
+   * **test summary**: flatten
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: score
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-regression-tests-firefox-constant-regression**
+        - ❌
+        - ✅
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: grandprix
    :container: + anchor-id-grandprix-c
 

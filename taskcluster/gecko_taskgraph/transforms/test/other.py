@@ -711,6 +711,11 @@ def apply_raptor_tier_optimization(config, tasks):
             yield task
             continue
 
+        if "regression-tests" in task["test-name"]:
+            # Don't optimize the regression tests
+            yield task
+            continue
+
         if not task["test-platform"].startswith("android-hw"):
             task["optimization"] = {"skip-unless-expanded": None}
             if task["tier"] > 1:
