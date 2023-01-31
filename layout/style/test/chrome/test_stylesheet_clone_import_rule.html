@@ -39,7 +39,7 @@
 
     // Do some sanity checking of our import rules.
     let primaryRules = stylesheet.cssRules;
-    await ContentTaskUtils.waitForCondition(function() {
+    await SimpleTest.promiseWaitForCondition(function() {
       try {
         primaryRules[0].styleSheet.cssRules;
         primaryRules[1].styleSheet.cssRules;

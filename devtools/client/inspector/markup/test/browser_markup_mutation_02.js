@@ -7,6 +7,7 @@
 // corresponding DOM nodes mutate
 
 // Have to use the same timer functions used by the inspector.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 const { clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );

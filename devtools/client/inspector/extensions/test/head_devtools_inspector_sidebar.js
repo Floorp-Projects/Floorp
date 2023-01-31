@@ -54,7 +54,7 @@ async function expectNoSuchActorIDs(client, actors) {
 
 function waitForObjectInspector(panelDoc, waitForNodeWithType = "object") {
   const selector = `.object-inspector .objectBox-${waitForNodeWithType}`;
-  return ContentTaskUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     return !!panelDoc.querySelectorAll(selector).length;
   }, `Wait for objectInspector's node type "${waitForNodeWithType}" to be loaded`);
 }
@@ -62,7 +62,7 @@ function waitForObjectInspector(panelDoc, waitForNodeWithType = "object") {
 // Helper function used inside the sidebar.setExtensionPage test case.
 async function testSetExtensionPageSidebarPanel(panelDoc, expectedURL) {
   const selector = "iframe.inspector-extension-sidebar-page";
-  const iframesCount = await ContentTaskUtils.waitForCondition(() => {
+  const iframesCount = await TestUtils.waitForCondition(() => {
     return panelDoc.querySelectorAll(selector).length;
   }, "Wait for the extension page iframe");
 
@@ -73,7 +73,7 @@ async function testSetExtensionPageSidebarPanel(panelDoc, expectedURL) {
   );
 
   const iframeWindow = panelDoc.querySelector(selector).contentWindow;
-  await ContentTaskUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return iframeWindow.document.readyState === "complete";
   }, "Wait for the extension page iframe to complete to load");
 
@@ -98,7 +98,7 @@ async function testSetExpressionSidebarPanel(panel, expected) {
   );
   const [objectInspector] = objectInspectors;
 
-  await ContentTaskUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return objectInspector.querySelectorAll(".node").length >= nodesLength;
   }, "Wait the objectInspector to have been fully rendered");
 

@@ -1,8 +1,5 @@
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
@@ -17,7 +14,7 @@ async function waitForProcessesScalars(
   aKeyed,
   aAdditionalCondition = data => true
 ) {
-  await ContentTaskUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     const scalars = aKeyed
       ? Services.telemetry.getSnapshotForKeyedScalars("main", false)
       : Services.telemetry.getSnapshotForScalars("main", false);

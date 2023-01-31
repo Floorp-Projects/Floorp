@@ -13,6 +13,9 @@
 const { traceAllJSCalls } = ChromeUtils.importESModule(
   "resource://devtools/shared/test-helpers/thread-helpers.sys.mjs"
 );
+// ESLint thinks this is a browser test, but it's actually an xpcshell
+// test and so `setTimeout` isn't available out of the box.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );

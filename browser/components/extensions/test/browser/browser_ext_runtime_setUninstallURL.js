@@ -1,8 +1,12 @@
 "use strict";
 
-let { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+// testing/mochitest/tests/SimpleTest/ExtensionTestUtils.js loads
+// ExtensionTestCommon, and is slated as part of the SimpleTest
+// environment in tools/lint/eslint/eslint-plugin-mozilla/lib/environments/simpletest.js
+// However, nothing but the ExtensionTestUtils global gets put
+// into the scope, and so although eslint thinks this global is
+// available, it really isn't.
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 let { ExtensionTestCommon } = ChromeUtils.import(
   "resource://testing-common/ExtensionTestCommon.jsm"
 );

@@ -34,8 +34,8 @@ add_task(async function() {
   let pocketPanel = document.getElementById("customizationui-widget-panel");
   let pocketFrame = pocketPanel.querySelector("browser");
 
-  await ContentTaskUtils.waitForCondition(
-    () => pocketFrame.src.split("?")[0] === "about:pocket-home",
+  await TestUtils.waitForCondition(
+    () => pocketFrame.src.startsWith("about:pocket-home?"),
     "pocket home panel is showing"
   );
 

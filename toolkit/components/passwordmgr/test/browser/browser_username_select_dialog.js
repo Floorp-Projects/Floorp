@@ -91,7 +91,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
 
       dialog.acceptDialog();
 
-      await ContentTaskUtils.waitForCondition(() => {
+      await TestUtils.waitForCondition(() => {
         return !getSelectDialogDoc();
       }, "Wait for selection dialog to disappear.");
     }
@@ -154,7 +154,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
 
       dialog.cancelDialog();
 
-      await ContentTaskUtils.waitForCondition(() => {
+      await TestUtils.waitForCondition(() => {
         return !getSelectDialogDoc();
       }, "Wait for selection dialog to disappear.");
     }
