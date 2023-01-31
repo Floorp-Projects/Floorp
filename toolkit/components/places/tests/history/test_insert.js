@@ -182,7 +182,7 @@ add_task(async function test_history_insert() {
           );
           await inserter(
             "Testing History.insert() with a URL object",
-            x => new URL(x.spec),
+            x => URL.fromURI(x),
             referrer,
             date,
             transition

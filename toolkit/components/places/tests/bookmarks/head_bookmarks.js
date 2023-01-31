@@ -27,7 +27,7 @@ function expectNotifications(checkAllArgs) {
         return (...origArgs) => {
           let args = Array.from(origArgs, arg => {
             if (arg && arg instanceof Ci.nsIURI) {
-              return new URL(arg.spec);
+              return URL.fromURI(arg);
             }
             if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
               return PlacesUtils.toDate(arg);

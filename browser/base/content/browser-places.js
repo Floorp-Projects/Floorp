@@ -480,7 +480,7 @@ var PlacesCommandHook = {
    */
   async bookmarkPage() {
     let browser = gBrowser.selectedBrowser;
-    let url = new URL(browser.currentURI.spec);
+    let url = URL.fromURI(browser.currentURI);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;

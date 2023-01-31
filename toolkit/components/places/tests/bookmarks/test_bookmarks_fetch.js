@@ -413,7 +413,7 @@ add_task(async function fetch_byurl() {
   checkBookmarkObject(bm1);
 
   // Also ensure that fecth-by-url excludes the tags folder.
-  PlacesUtils.tagging.tagURI(uri(bm1.url.href), ["Test Tag"]);
+  PlacesUtils.tagging.tagURI(bm1.url.URI, ["Test Tag"]);
 
   let bm2 = await PlacesUtils.bookmarks.fetch(
     { url: bm1.url },
@@ -462,7 +462,7 @@ add_task(async function fetch_byurl() {
   Assert.deepEqual(gAccumulator.results[0], bm5);
 
   // cleanup
-  PlacesUtils.tagging.untagURI(uri(bm1.url.href), ["Test Tag"]);
+  PlacesUtils.tagging.untagURI(bm1.url.URI, ["Test Tag"]);
 });
 
 add_task(async function fetch_concurrent() {

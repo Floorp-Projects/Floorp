@@ -778,7 +778,7 @@ DefineTransaction.childObjectValidate = function(obj) {
 
 DefineTransaction.urlValidate = function(url) {
   if (url instanceof Ci.nsIURI) {
-    return new URL(url.spec);
+    return URL.fromURI(url);
   }
   return new URL(url);
 };
@@ -1083,16 +1083,14 @@ PT.NewBookmark.prototype = Object.seal({
     let info = { parentGuid, index, url, title };
     // Filter tags to exclude already existing ones.
     if (tags.length) {
-      let currentTags = PlacesUtils.tagging.getTagsForURI(
-        Services.io.newURI(url.href)
-      );
+      let currentTags = PlacesUtils.tagging.getTagsForURI(url.URI);
       tags = tags.filter(t => !currentTags.includes(t));
     }
 
     async function createItem() {
       info = await PlacesUtils.bookmarks.insert(info);
       if (tags.length) {
-        PlacesUtils.tagging.tagURI(Services.io.newURI(url.href), tags);
+        PlacesUtils.tagging.tagURI(url.URI, tags);
       }
     }
 
@@ -1102,7 +1100,7 @@ PT.NewBookmark.prototype = Object.seal({
       // Pick up the removed info so we have the accurate last-modified value.
       await PlacesUtils.bookmarks.remove(info);
       if (tags.length) {
-        PlacesUtils.tagging.untagURI(Services.io.newURI(url.href), tags);
+        PlacesUtils.tagging.untagURI(url.URI, tags);
       }
     };
     this.redo = async function() {
@@ -1283,8 +1281,8 @@ PT.EditUrl.prototype = Object.seal({
       throw new Error("Cannot edit url for non-bookmark items");
     }
 
-    let uri = Services.io.newURI(url.href);
-    let originalURI = Services.io.newURI(originalInfo.url.href);
+    let uri = url.URI;
+    let originalURI = originalInfo.url.URI;
     let originalTags = PlacesUtils.tagging.getTagsForURI(originalURI);
     let updatedInfo = { guid, url };
     let newURIAdditionalTags = null;
@@ -1504,7 +1502,7 @@ PT.Tag.prototype = {
         onUndo.unshift(createTxn.undo.bind(createTxn));
         onRedo.push(createTxn.redo.bind(createTxn));
       } else {
-        let uri = Services.io.newURI(url.href);
+        let uri = url.URI;
         let currentTags = PlacesUtils.tagging.getTagsForURI(uri);
         let newTags = tags.filter(t => !currentTags.includes(t));
         if (newTags.length) {
@@ -1545,7 +1543,7 @@ PT.Untag.prototype = {
     let onUndo = [],
       onRedo = [];
     for (let url of urls) {
-      let uri = Services.io.newURI(url.href);
+      let uri = url.URI;
       let tagsToRemove;
       let tagsSet = PlacesUtils.tagging.getTagsForURI(uri);
       if (tags.length) {

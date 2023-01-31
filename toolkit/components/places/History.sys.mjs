@@ -1059,7 +1059,7 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
     const isRemovedFromStore = !page.hasVisits && !page.hasForeign;
     notifications.push(
       new PlacesVisitRemoved({
-        url: Services.io.newURI(page.url.href).spec,
+        url: page.url.href,
         pageGuid: page.guid,
         reason: PlacesVisitRemoved.REASON_DELETED,
         transitionType,
@@ -1645,13 +1645,13 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
   pageInfo.guid = updateInfo.guid;
   pageInfo.title = updateInfo.title;
   if (!pageInfo.url) {
-    pageInfo.url = new URL(updateInfo.uri.spec);
+    pageInfo.url = URL.fromURI(updateInfo.uri);
     pageInfo.title = updateInfo.title;
     pageInfo.visits = updateInfo.visits.map(visit => {
       return {
         date: lazy.PlacesUtils.toDate(visit.visitDate),
         transition: visit.transitionType,
-        referrer: visit.referrerURI ? new URL(visit.referrerURI.spec) : null,
+        referrer: visit.referrerURI ? URL.fromURI(visit.referrerURI) : null,
       };
     });
   }

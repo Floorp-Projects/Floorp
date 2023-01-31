@@ -51,18 +51,13 @@ export var PlacesTestUtils = Object.freeze({
         throw new Error("Unsupported type passed to addVisits");
       }
 
-      let referrer;
+      let referrer = place.referrer
+        ? lazy.PlacesUtils.toURI(place.referrer)
+        : null;
       let info = { url: place.uri || place.url };
       let spec =
         info.url instanceof Ci.nsIURI ? info.url.spec : new URL(info.url).href;
       info.title = "title" in place ? place.title : "test visit for " + spec;
-      if (typeof place.referrer == "string") {
-        referrer = Services.io.newURI(place.referrer);
-      } else if (place.referrer) {
-        referrer = URL.isInstance(place.referrer)
-          ? Services.io.newURI(place.referrer.href)
-          : place.referrer;
-      }
       let visitDate = place.visitDate;
       if (visitDate) {
         if (visitDate.constructor.name != "Date") {
@@ -270,7 +265,7 @@ export var PlacesTestUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   fieldInDB(aURI, field) {
-    let url = aURI instanceof Ci.nsIURI ? new URL(aURI.spec) : new URL(aURI);
+    let url = aURI instanceof Ci.nsIURI ? URL.fromURI(aURI) : new URL(aURI);
     return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils.jsm: fieldInDb",
       async db => {

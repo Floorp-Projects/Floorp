@@ -18,10 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
-});
-
 XPCOMUtils.defineLazyGetter(lazy, "MOZ_ACTION_REGEX", () => {
   return /^moz-action:([^,]+),(.*)$/;
 });
@@ -236,7 +232,7 @@ const BOOKMARK_VALIDATORS = Object.freeze({
       return new URL(v);
     }
     if (v instanceof Ci.nsIURI) {
-      return new URL(v.spec);
+      return URL.fromURI(v);
     }
     return v;
   },
@@ -530,9 +526,13 @@ export var PlacesUtils = {
    * @return nsIURI for the given URL.
    */
   toURI(url) {
-    url = URL.isInstance(url) ? url.href : url;
-
-    return lazy.NetUtil.newURI(url);
+    if (url instanceof Ci.nsIURI) {
+      return url;
+    }
+    if (URL.isInstance(url)) {
+      return url.URI;
+    }
+    return Services.io.newURI(url);
   },
 
   /**
@@ -1224,7 +1224,7 @@ export var PlacesUtils = {
       return key;
     }
     if (key instanceof Ci.nsIURI) {
-      return new URL(key.spec);
+      return URL.fromURI(key);
     }
     throw new TypeError("Invalid url or guid: " + key);
   },
@@ -1710,7 +1710,7 @@ export var PlacesUtils = {
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
           // If this throws due to an invalid url, the item will be skipped.
           try {
-            item.uri = lazy.NetUtil.newURI(aRow.getResultByName("url")).spec;
+            item.uri = new URL(aRow.getResultByName("url")).href;
           } catch (ex) {
             let error = new Error("Invalid bookmark URL");
             error.becauseInvalidURL = true;

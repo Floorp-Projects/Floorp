@@ -1547,7 +1547,7 @@ function tagItem(item, tags) {
   // Removing the last tagged item will also remove the tag. To preserve
   // tag IDs, we temporarily tag a dummy URI, ensuring the tags exist.
   let dummyURI = lazy.PlacesUtils.toURI("about:weave#BStore_tagURI");
-  let bookmarkURI = lazy.PlacesUtils.toURI(item.url.href);
+  let bookmarkURI = lazy.PlacesUtils.toURI(item.url);
   if (newTags && newTags.length) {
     lazy.PlacesUtils.tagging.tagURI(dummyURI, newTags, SOURCE_SYNC);
   }
