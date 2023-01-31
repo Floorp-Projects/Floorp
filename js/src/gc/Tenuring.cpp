@@ -708,8 +708,8 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   // the atom. Don't do this for dependent strings because they're more
   // complicated. See StringRelocationOverlay and DeduplicationStringHasher
   // comments.
-  if (src->inStringToAtomCache() && src->isDeduplicatable() &&
-      !src->hasBase()) {
+  if (src->isLinear() && src->inStringToAtomCache() &&
+      src->isDeduplicatable() && !src->hasBase()) {
     JSLinearString* linear = &src->asLinear();
     JSAtom* atom = runtime()->caches().stringToAtomCache.lookupInMap(linear);
     MOZ_ASSERT(atom, "Why was the cache purged before minor GC?");
