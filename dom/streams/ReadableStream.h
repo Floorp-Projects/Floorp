@@ -103,7 +103,14 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
       JS::MutableHandle<JSObject*> aReturnObject);
 
   // Public functions to implement other specs
-  // https://streams.spec.whatwg.org/#other-specs-rs-create
+  // https://streams.spec.whatwg.org/#other-specs-rs
+
+  // https://streams.spec.whatwg.org/#readablestream-set-up
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateNative(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
+      mozilla::Maybe<double> aHighWaterMark,
+      QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
   // https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
   MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateByteNative(

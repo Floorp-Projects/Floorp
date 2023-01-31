@@ -163,7 +163,15 @@ class WritableStream : public nsISupports, public nsWrapperCache {
       Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
       ErrorResult& aRv);
 
+  // The following definitions must only be used on WritableStream instances
+  // initialized via the above set up algorithm:
+
  public:
+  // https://streams.spec.whatwg.org/#writablestream-error
+  MOZ_CAN_RUN_SCRIPT void ErrorNative(JSContext* aCx,
+                                      JS::Handle<JS::Value> aError,
+                                      ErrorResult& aRv);
+
   // IDL layer functions
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }

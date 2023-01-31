@@ -788,4 +788,15 @@ void WritableStream::SetUpNative(JSContext* aCx,
                                        highWaterMark, aSizeAlgorithm, aRv);
 }
 
+// https://streams.spec.whatwg.org/#writablestream-error
+// To error a WritableStream stream given a JavaScript value e, perform !
+// WritableStreamDefaultControllerErrorIfNeeded(stream.[[controller]], e).
+void WritableStream::ErrorNative(JSContext* aCx, JS::Handle<JS::Value> aError,
+                                 ErrorResult& aRv) {
+  // MOZ_KnownLive here instead of MOZ_KNOWN_LIVE at the field, because
+  // mController is set outside of the constructor
+  WritableStreamDefaultControllerErrorIfNeeded(aCx, MOZ_KnownLive(mController),
+                                               aError, aRv);
+}
+
 }  // namespace mozilla::dom
