@@ -61,8 +61,8 @@
   elt.setAttribute("style",
                    "font-variant-alternates: SWASH(fOo) stYLIStiC(Bar)");
   is(elt.style.getPropertyValue("font-variant-alternates"),
-     "swash(fOo) stylistic(Bar)",
-     "bug-721136 expected case canonicalization of transform functions");
+     "stylistic(Bar) swash(fOo)",
+     "expected case and ordering canonicalization of font-variant-alternates functions");
 
   elt.setAttribute("style", ""); // leave the page in a useful state
 })();
