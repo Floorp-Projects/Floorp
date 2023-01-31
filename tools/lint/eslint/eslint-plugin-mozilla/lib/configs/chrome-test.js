@@ -54,5 +54,8 @@ module.exports = {
     "mozilla/import-content-task-globals": "error",
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",
+    // We mis-predict globals for HTML test files in directories shared
+    // with browser tests.
+    "mozilla/no-redeclare-with-import-autofix": "off",
   },
 };
