@@ -37,7 +37,11 @@ void NonStdMoveChecker::registerMatchers(MatchFinder *AstMatcher) {
       this);
 }
 
+#if CLANG_VERSION_FULL >= 1600
+std::optional<FixItHint>
+#else
 Optional<FixItHint>
+#endif
 NonStdMoveChecker::makeFixItHint(const MatchFinder::MatchResult &Result,
                                  const Expr *const TargetExpr) {
   const auto *MaterializeExpr = Result.Nodes.getNodeAs<Expr>(kMaterializeExpr);

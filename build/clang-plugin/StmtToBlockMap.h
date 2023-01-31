@@ -53,7 +53,7 @@ public:
       : Context(TheContext) {
     for (const auto *B : *TheCFG) {
       for (size_t I = 0; I < B->size(); ++I) {
-        if (Optional<CFGStmt> S = (*B)[I].getAs<CFGStmt>()) {
+        if (auto S = (*B)[I].getAs<CFGStmt>()) {
           Map[S->getStmt()] = std::make_pair(B, I);
         }
       }
