@@ -110,7 +110,8 @@ ProbeControllerConfig::ProbeControllerConfig(
        &min_probe_duration, &network_state_estimate_probing_interval,
        &network_state_estimate_fast_rampup_rate,
        &network_state_estimate_drop_down_rate, &network_state_probe_scale,
-       &network_state_probe_duration, &limit_probe_target_rate_to_loss_bwe},
+       &network_state_probe_duration, &min_probe_packets_sent,
+       &limit_probe_target_rate_to_loss_bwe},
       key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration"));
 
   // Specialized keys overriding subsets of WebRTC-Bwe-ProbingConfiguration

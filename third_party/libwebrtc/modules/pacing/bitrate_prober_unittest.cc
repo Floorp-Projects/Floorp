@@ -146,12 +146,35 @@ TEST(BitrateProberTest, DiscardsDelayedProbes) {
 TEST(BitrateProberTest, DoesntInitializeProbingForSmallPackets) {
   const FieldTrialBasedConfig config;
   BitrateProber prober(config);
-
   prober.SetEnabled(true);
-  EXPECT_FALSE(prober.is_probing());
+  ASSERT_FALSE(prober.is_probing());
 
+  prober.CreateProbeCluster({.at_time = Timestamp::Zero(),
+                             .target_data_rate = DataRate::KilobitsPerSec(1000),
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   prober.OnIncomingPacket(DataSize::Bytes(100));
+
   EXPECT_FALSE(prober.is_probing());
+}
+
+TEST(BitrateProberTest, DoesInitializeProbingForSmallPacketsIfConfigured) {
+  const test::ExplicitKeyValueConfig config(
+      "WebRTC-Bwe-ProbingBehavior/"
+      "min_packet_size:0bytes/");
+  BitrateProber prober(config);
+  prober.SetEnabled(true);
+  ASSERT_FALSE(prober.is_probing());
+
+  prober.CreateProbeCluster({.at_time = Timestamp::Zero(),
+                             .target_data_rate = DataRate::KilobitsPerSec(1000),
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
+  prober.OnIncomingPacket(DataSize::Bytes(10));
+
+  EXPECT_TRUE(prober.is_probing());
 }
 
 TEST(BitrateProberTest, VerifyProbeSizeOnHighBitrate) {

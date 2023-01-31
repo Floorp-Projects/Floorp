@@ -23,11 +23,6 @@
 namespace webrtc {
 
 namespace {
-// The min probe packet size is scaled with the bitrate we're probing at.
-// This defines the max min probe packet size, meaning that on high bitrates
-// we have a min probe packet size of 200 bytes.
-constexpr DataSize kMinProbePacketSize = DataSize::Bytes(200);
-
 constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
 
 }  // namespace
@@ -35,8 +30,9 @@ constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
 BitrateProberConfig::BitrateProberConfig(
     const FieldTrialsView* key_value_config)
     : min_probe_delta("min_probe_delta", TimeDelta::Millis(2)),
-      max_probe_delay("max_probe_delay", TimeDelta::Millis(10)) {
-  ParseFieldTrial({&min_probe_delta, &max_probe_delay},
+      max_probe_delay("max_probe_delay", TimeDelta::Millis(10)),
+      min_packet_size("min_packet_size", DataSize::Bytes(200)) {
+  ParseFieldTrial({&min_probe_delta, &max_probe_delay, &min_packet_size},
                   key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior"));
 }
 
@@ -71,8 +67,11 @@ void BitrateProber::SetEnabled(bool enable) {
 void BitrateProber::OnIncomingPacket(DataSize packet_size) {
   // Don't initialize probing unless we have something large enough to start
   // probing.
+  // Note that the pacer can send several packets at once when sending a probe,
+  // and thus, packets can be smaller than needed for a probe.
   if (probing_state_ == ProbingState::kInactive && !clusters_.empty() &&
-      packet_size >= std::min(RecommendedMinProbeSize(), kMinProbePacketSize)) {
+      packet_size >=
+          std::min(RecommendedMinProbeSize(), config_.min_packet_size.Get())) {
     // Send next probe right away.
     next_probe_time_ = Timestamp::MinusInfinity();
     probing_state_ = ProbingState::kActive;
