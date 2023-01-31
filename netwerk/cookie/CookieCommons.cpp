@@ -204,7 +204,19 @@ bool CookieCommons::CheckName(const CookieStruct& aCookieData) {
       0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
       0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00};
 
-  return aCookieData.name().FindCharInSet(illegalNameCharacters, 0) == -1;
+  const auto* start = aCookieData.name().BeginReading();
+  const auto* end = aCookieData.name().EndReading();
+
+  auto charFilter = [&](unsigned char c) {
+    if (StaticPrefs::network_cookie_blockUnicode() && c >= 0x80) {
+      return true;
+    }
+    return std::find(std::begin(illegalNameCharacters),
+                     std::end(illegalNameCharacters),
+                     c) != std::end(illegalNameCharacters);
+  };
+
+  return std::find_if(start, end, charFilter) == end;
 }
 
 bool CookieCommons::CheckValue(const CookieStruct& aCookieData) {
@@ -216,7 +228,19 @@ bool CookieCommons::CheckValue(const CookieStruct& aCookieData) {
       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0A, 0x0B, 0x0C,
       0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
       0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x3B, 0x7F, 0x00};
-  return aCookieData.value().FindCharInSet(illegalCharacters, 0) == -1;
+
+  const auto* start = aCookieData.value().BeginReading();
+  const auto* end = aCookieData.value().EndReading();
+
+  auto charFilter = [&](unsigned char c) {
+    if (StaticPrefs::network_cookie_blockUnicode() && c >= 0x80) {
+      return true;
+    }
+    return std::find(std::begin(illegalCharacters), std::end(illegalCharacters),
+                     c) != std::end(illegalCharacters);
+  };
+
+  return std::find_if(start, end, charFilter) == end;
 }
 
 // static
