@@ -30,9 +30,9 @@ tasks:
         attributes:
             release-type: beta
         notifications:
-            subject: "Focus {config[params][version]}-build{config[params][build_number]} is available at usual Taskcluster index"
+            subject: "Focus/Fenix {config[params][version]}-build{config[params][build_number]} is available at usual Taskcluster index"
     release:
         attributes:
             release-type: release
         notifications:
-            subject: "Focus/Klar {config[params][version]}-build{config[params][build_number]} are available at usual Taskcluster indices"
+            subject: "Focus/Klar/Fenix {config[params][version]}-build{config[params][build_number]} are available at usual Taskcluster indices"
