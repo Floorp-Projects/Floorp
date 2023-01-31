@@ -326,6 +326,7 @@ function prompt(
       rawId: device.rawId,
       id: device.id,
       mediaSource: device.mediaSource,
+      canRequestOsLevelPrompt: device.canRequestOsLevelPrompt,
     };
     switch (device.type) {
       case "audioinput":

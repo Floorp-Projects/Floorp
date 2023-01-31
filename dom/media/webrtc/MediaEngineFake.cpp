@@ -601,6 +601,7 @@ void MediaEngineFake::EnumerateDevices(
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
   using IsScary = MediaDevice::IsScary;
+  using OsPromptable = MediaDevice::OsPromptable;
 
   if (aMediaSink == MediaSinkEnum::Speaker) {
     NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
@@ -609,16 +610,18 @@ void MediaEngineFake::EnumerateDevices(
   switch (aMediaSource) {
     case MediaSourceEnum::Camera: {
       nsString name = FakeVideoName();
-      aDevices->EmplaceBack(new MediaDevice(
-          this, aMediaSource, name, /*aRawId=*/name,
-          MediaEngineFakeVideoSource::GetGroupId(), IsScary::No));
+      aDevices->EmplaceBack(
+          new MediaDevice(this, aMediaSource, name, /*aRawId=*/name,
+                          MediaEngineFakeVideoSource::GetGroupId(), IsScary::No,
+                          OsPromptable::No));
       return;
     }
     case MediaSourceEnum::Microphone:
-      aDevices->EmplaceBack(new MediaDevice(
-          this, aMediaSource, u"Default Audio Device"_ns,
-          MediaEngineFakeAudioSource::GetUUID(),
-          MediaEngineFakeAudioSource::GetGroupId(), IsScary::No));
+      aDevices->EmplaceBack(
+          new MediaDevice(this, aMediaSource, u"Default Audio Device"_ns,
+                          MediaEngineFakeAudioSource::GetUUID(),
+                          MediaEngineFakeAudioSource::GetGroupId(), IsScary::No,
+                          OsPromptable::No));
       return;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported source type");

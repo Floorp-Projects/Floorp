@@ -33,14 +33,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIOSPermissionRequest"
 );
 
-// Keep in sync with defines at base_capturer_pipewire.cc
-// With PipeWire we can't select which system resource is shared so
-// we don't create a window/screen list. Instead we place these constants
-// as window name/id so frontend code can identify PipeWire backend
-// and does not try to create screen/window preview.
-const PIPEWIRE_PORTAL_NAME = "####_PIPEWIRE_PORTAL_####";
-const PIPEWIRE_ID = 0xaffffff;
-
 class WebRTCParent extends JSWindowActorParent {
   didDestroy() {
     // Media stream tracks end on unload, so call stopRecording() on them early
@@ -885,7 +877,7 @@ function prompt(aActor, aBrowser, aRequest) {
             // user confirms actual window/screen sharing there.
             // Don't mark it as scary as there's an extra confirmation step by
             // PipeWire portal dialog.
-            if (name == PIPEWIRE_PORTAL_NAME && device.rawId == PIPEWIRE_ID) {
+            if (device.canRequestOsLevelPrompt) {
               isPipeWire = true;
               let item = addDeviceToList(
                 menupopup,
