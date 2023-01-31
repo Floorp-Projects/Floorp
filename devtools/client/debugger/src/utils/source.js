@@ -189,9 +189,7 @@ function resolveFileURL(
 }
 
 export function getFormattedSourceId(id) {
-  const firstIndex = id.indexOf("/");
-  const secondIndex = id.indexOf("/", firstIndex);
-  return `SOURCE${id.slice(firstIndex, secondIndex)}`;
+  return id.substring(id.lastIndexOf("/") + 1);
 }
 
 /**
