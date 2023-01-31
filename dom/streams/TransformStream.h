@@ -40,7 +40,7 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   // Internal slot accessors
   bool Backpressure() const { return mBackpressure; }
   Promise* BackpressureChangePromise() { return mBackpressureChangePromise; }
-  void SetBackpressure(bool aBackpressure, ErrorResult& aRv);
+  void SetBackpressure(bool aBackpressure);
   MOZ_KNOWN_LIVE TransformStreamDefaultController* Controller() {
     return mController;
   }

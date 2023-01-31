@@ -22,7 +22,6 @@ interface WritableStreamDefaultWriter {
   [NewObject]
   Promise<undefined> close();
 
-  [Throws]
   undefined releaseLock();
 
   [NewObject]
