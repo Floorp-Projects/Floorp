@@ -6770,7 +6770,7 @@
             gBrowser.featureCallout &&
             (gBrowser.featureCalloutPanelId !==
               gBrowser.selectedTab.linkedPanel ||
-              gBrowser.featureCallout.source !== aLocation.spec)
+              !aLocation.spec.endsWith(".pdf"))
           ) {
             gBrowser.featureCallout._endTour(true);
             gBrowser.featureCallout = null;
