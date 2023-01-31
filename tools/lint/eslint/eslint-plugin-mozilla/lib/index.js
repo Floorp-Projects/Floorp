@@ -55,6 +55,7 @@ module.exports = {
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
     "no-cu-reportError": require("../lib/rules/no-cu-reportError"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
+    "no-redeclare-with-import-autofix": require("../lib/rules/no-redeclare-with-import-autofix"),
     "no-throw-cr-literal": require("../lib/rules/no-throw-cr-literal"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
     "no-useless-removeEventListener": require("../lib/rules/no-useless-removeEventListener"),
