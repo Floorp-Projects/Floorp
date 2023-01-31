@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -130,7 +129,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 ),
                 tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->
-                    requestInPlacePermissions(permissions) { result ->
+                    requestInPlacePermissions(REQUEST_KEY_DOWNLOAD_PERMISSIONS, permissions) { result ->
                         downloadsFeature.get()?.onPermissionsResult(
                             result.keys.toTypedArray(),
                             result.values.map {
@@ -183,7 +182,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 customTabId = sessionId,
                 fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
-                    requestInPlacePermissions(permissions) { result ->
+                    requestInPlacePermissions(REQUEST_KEY_PROMPT_PERMISSIONS, permissions) { result ->
                         promptFeature.get()?.onPermissionsResult(
                             result.keys.toTypedArray(),
                             result.values.map {
@@ -218,7 +217,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 ),
                 onNeedToRequestPermissions = { permissions ->
-                    requestInPlacePermissions(permissions) { result ->
+                    requestInPlacePermissions(REQUEST_KEY_SITE_PERMISSIONS, permissions) { result ->
                         sitePermissionsFeature.get()?.onPermissionsResult(
                             result.keys.toTypedArray(),
                             result.values.map {
@@ -285,6 +284,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
 
     companion object {
         private const val SESSION_ID_KEY = "session_id"
+
+        private const val REQUEST_KEY_DOWNLOAD_PERMISSIONS = "downloadFeature"
+        private const val REQUEST_KEY_PROMPT_PERMISSIONS = "promptFeature"
+        private const val REQUEST_KEY_SITE_PERMISSIONS = "sitePermissionsFeature"
 
         @JvmStatic
         protected fun Bundle.putSessionId(sessionId: String?) {

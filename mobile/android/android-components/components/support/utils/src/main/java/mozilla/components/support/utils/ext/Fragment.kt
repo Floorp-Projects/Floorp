@@ -11,11 +11,12 @@ import androidx.fragment.app.Fragment
  * Requests permissions and handles results inside a [Fragment].
  */
 fun Fragment.requestInPlacePermissions(
+    requestKey: String,
     permissionsToRequest: Array<String>,
     onResult: (Map<String, Boolean>) -> Unit,
 ) {
     requireActivity().activityResultRegistry.register(
-        "permissionsRequest",
+        requestKey,
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         onResult(permissions)
