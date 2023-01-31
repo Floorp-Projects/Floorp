@@ -2621,8 +2621,7 @@ auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {
     return settings;
   }
 
-  if (!HonorPrintBackgroundSettings() ||
-      StyleVisibility()->mPrintColorAdjust == StylePrintColorAdjust::Exact) {
+  if (StyleVisibility()->mPrintColorAdjust == StylePrintColorAdjust::Exact) {
     return {true, true};
   }
 

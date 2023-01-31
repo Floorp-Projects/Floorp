@@ -4143,8 +4143,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsStackingContext(const nsStyleDisplay*, const nsStyleEffects*);
   bool IsStackingContext();
 
-  virtual bool HonorPrintBackgroundSettings() const { return true; }
-
   // Whether we should paint backgrounds or not.
   struct ShouldPaintBackground {
     bool mColor = false;

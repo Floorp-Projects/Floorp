@@ -145,10 +145,6 @@ class nsPageSequenceFrame final : public nsContainerFrame {
 
   nsresult DoPageEnd();
 
-  // We must allow Print Preview UI to have a background, no matter what the
-  // user's settings
-  bool HonorPrintBackgroundSettings() const override { return false; }
-
   ComputeTransformFunction GetTransformGetter() const override;
 
 #ifdef DEBUG_FRAME_DUMP
