@@ -96,7 +96,6 @@ const BINDGEN_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use clap::{Parser, Subcommand};
 use fs_err::{self as fs, File};
 use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
@@ -109,7 +108,6 @@ pub mod interface;
 pub mod macro_metadata;
 pub mod scaffolding;
 
-use bindings::TargetLanguage;
 pub use interface::ComponentInterface;
 use scaffolding::RustScaffolding;
 
@@ -181,7 +179,7 @@ impl<'de> Deserialize<'de> for EmptyBindingGeneratorConfig {
 
 // Load the binding-specific config
 //
-// This function calulates the location of the config TOML file, parses it, and returns the result
+// This function calculates the location of the config TOML file, parses it, and returns the result
 // as a toml::Value
 //
 // If there is an error parsing the file then Err will be returned. If the file is missing or the
@@ -328,61 +326,6 @@ pub fn print_json(library_path: &Utf8Path) -> Result<()> {
     Ok(())
 }
 
-// Run tests against the foreign language bindings (generated and compiled at the same time).
-// Note that the cdylib we're testing against must be built already.
-pub fn run_tests(
-    library_file: impl AsRef<Utf8Path>,
-    udl_files: &[impl AsRef<Utf8Path>],
-    test_scripts: &[impl AsRef<Utf8Path>],
-    config_file_override: Option<&Utf8Path>,
-) -> Result<()> {
-    // XXX - this is just for tests, so one config_file_override for all .udl files doesn't really
-    // make sense, so we don't let tests do this.
-    // "Real" apps will build the .udl files one at a file and can therefore do whatever they want
-    // with overrides, so don't have this problem.
-    assert!(udl_files.len() == 1 || config_file_override.is_none());
-
-    let library_file = library_file.as_ref();
-    let cdylib_dir = library_file
-        .parent()
-        .context("Generated cdylib has no parent directory")?;
-
-    let metadata_items = macro_metadata::extract_from_library(library_file)?;
-
-    // Group the test scripts by language first.
-    let mut language_tests: HashMap<TargetLanguage, Vec<_>> = HashMap::new();
-
-    for test_script in test_scripts {
-        let test_script = test_script.as_ref();
-        let lang: TargetLanguage = test_script
-            .extension()
-            .context("File has no extension!")?
-            .try_into()?;
-        language_tests
-            .entry(lang)
-            .or_default()
-            .push(test_script.to_owned());
-    }
-
-    for (lang, test_scripts) in language_tests {
-        for udl_file in udl_files {
-            let udl_file = udl_file.as_ref();
-            let crate_root = guess_crate_root(udl_file)?;
-            let mut component = parse_udl(udl_file)?;
-            macro_metadata::add_to_ci(&mut component, metadata_items.clone())?;
-
-            let config = get_config(&component, crate_root, config_file_override)?;
-            bindings::write_bindings(&config.bindings, &component, cdylib_dir, lang, true)?;
-            bindings::compile_bindings(&config.bindings, &component, cdylib_dir, lang)?;
-        }
-
-        for test_script in test_scripts {
-            bindings::run_script(cdylib_dir, &test_script, lang)?;
-        }
-    }
-    Ok(())
-}
-
 /// Guess the root directory of the crate from the path of its UDL file.
 ///
 /// For now, we assume that the UDL file is in `./src/something.udl` relative
@@ -503,127 +446,6 @@ impl<V: Clone> MergeWith for HashMap<String, V> {
         }
         merged
     }
-}
-
-// structs to help our cmdline parsing. Note that docstrings below form part
-// of the "help" output.
-/// Scaffolding and bindings generator for Rust
-#[derive(Parser)]
-#[clap(name = "uniffi-bindgen")]
-#[clap(version = clap::crate_version!())]
-#[clap(propagate_version = true)]
-struct Cli {
-    #[clap(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Generate foreign language bindings
-    Generate {
-        /// Foreign language(s) for which to build bindings.
-        #[clap(long, short, possible_values = &["kotlin", "python", "swift", "ruby"])]
-        language: Vec<String>,
-
-        /// Directory in which to write generated files. Default is same folder as .udl file.
-        #[clap(long, short)]
-        out_dir: Option<Utf8PathBuf>,
-
-        /// Do not try to format the generated bindings.
-        #[clap(long, short)]
-        no_format: bool,
-
-        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
-        #[clap(long, short)]
-        config: Option<Utf8PathBuf>,
-
-        /// Extract proc-macro metadata from a native lib (cdylib or staticlib) for this crate.
-        #[clap(long)]
-        lib_file: Option<Utf8PathBuf>,
-
-        /// Path to the UDL file.
-        udl_file: Utf8PathBuf,
-    },
-
-    /// Generate Rust scaffolding code
-    Scaffolding {
-        /// Directory in which to write generated files. Default is same folder as .udl file.
-        #[clap(long, short)]
-        out_dir: Option<Utf8PathBuf>,
-
-        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
-        #[clap(long, short)]
-        config: Option<Utf8PathBuf>,
-
-        /// Do not try to format the generated bindings.
-        #[clap(long, short)]
-        no_format: bool,
-
-        /// Path to the UDL file.
-        udl_file: Utf8PathBuf,
-    },
-
-    /// Run test scripts against foreign language bindings.
-    Test {
-        /// Path to the library the scripts will be testing against.
-        library_file: Utf8PathBuf,
-
-        /// Path to the UDL file.
-        udl_file: Utf8PathBuf,
-
-        /// Foreign language(s) test scripts to run.
-        test_scripts: Vec<Utf8PathBuf>,
-
-        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
-        #[clap(long, short)]
-        config: Option<Utf8PathBuf>,
-    },
-
-    /// Print the JSON representation of the interface from a dynamic library
-    PrintJson {
-        /// Path to the library file (.so, .dll, .dylib, or .a)
-        path: Utf8PathBuf,
-    },
-}
-
-pub fn run_main() -> Result<()> {
-    let cli = Cli::parse();
-    match &cli.command {
-        Commands::Generate {
-            language,
-            out_dir,
-            no_format,
-            config,
-            lib_file,
-            udl_file,
-        } => generate_bindings(
-            udl_file,
-            config.as_deref(),
-            language.iter().map(String::as_str).collect(),
-            out_dir.as_deref(),
-            lib_file.as_deref(),
-            !no_format,
-        ),
-        Commands::Scaffolding {
-            out_dir,
-            config,
-            no_format,
-            udl_file,
-        } => generate_component_scaffolding(
-            udl_file,
-            config.as_deref(),
-            out_dir.as_deref(),
-            !no_format,
-        ),
-        Commands::Test {
-            library_file,
-            udl_file,
-            test_scripts,
-            config,
-        } => run_tests(library_file, &[udl_file], test_scripts, config.as_deref()),
-        Commands::PrintJson { path } => print_json(path),
-    }?;
-    Ok(())
 }
 
 // FIXME(HACK):

@@ -63,23 +63,20 @@ use std::{collections::HashSet, iter};
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
-use super::ffi::{FFIArgument, FFIFunction, FFIType};
+use super::attributes::{Attribute, ConstructorAttributes, InterfaceAttributes, MethodAttributes};
+use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::function::Argument;
 use super::types::{Type, TypeIterator};
-use super::{
-    attributes::{ConstructorAttributes, InterfaceAttributes, MethodAttributes},
-    convert_type,
-};
-use super::{APIConverter, ComponentInterface};
+use super::{convert_type, APIConverter, ComponentInterface};
 
 /// An "object" is an opaque type that can be instantiated and passed around by reference,
 /// have methods called on it, and so on - basically your classic Object Oriented Programming
-/// type of deal, except without elaborate inheritence hierarchies.
+/// type of deal, except without elaborate inheritance hierarchies.
 ///
 /// In UDL these correspond to the `interface` keyword.
 ///
 /// At the FFI layer, objects are represented by an opaque integer handle and a set of functions
-/// a common prefix. The object's constuctors are functions that return new objects by handle,
+/// a common prefix. The object's constructors are functions that return new objects by handle,
 /// and its methods are functions that take a handle as first argument. The foreign language
 /// binding code is expected to stitch these functions back together into an appropriate class
 /// definition (or that language's equivalent thereof).
@@ -96,9 +93,9 @@ pub struct Object {
     //    so excluding it is safe.
     //  - its `name` property includes a checksum derived from  the very
     //    hash value we're trying to calculate here, so excluding it
-    //    avoids a weird circular depenendency in the calculation.
+    //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
-    pub(super) ffi_func_free: FFIFunction,
+    pub(super) ffi_func_free: FfiFunction,
     #[checksum_ignore]
     pub(super) uses_deprecated_threadsafe_attribute: bool,
 }
@@ -151,7 +148,7 @@ impl Object {
         }
     }
 
-    pub fn ffi_object_free(&self) -> &FFIFunction {
+    pub fn ffi_object_free(&self) -> &FfiFunction {
         &self.ffi_func_free
     }
 
@@ -159,7 +156,7 @@ impl Object {
         self.uses_deprecated_threadsafe_attribute
     }
 
-    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = &FFIFunction> {
+    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = &FfiFunction> {
         iter::once(&self.ffi_func_free)
             .chain(self.constructors.iter().map(|f| &f.ffi_func))
             .chain(self.methods.iter().map(|f| &f.ffi_func))
@@ -171,9 +168,9 @@ impl Object {
         if self.ffi_func_free.name().is_empty() {
             self.ffi_func_free.name = format!("ffi_{ci_prefix}_{}_object_free", self.name);
         }
-        self.ffi_func_free.arguments = vec![FFIArgument {
+        self.ffi_func_free.arguments = vec![FfiArgument {
             name: "ptr".to_string(),
-            type_: FFIType::RustArcPtr(self.name().to_string()),
+            type_: FfiType::RustArcPtr(self.name().to_string()),
         }];
         self.ffi_func_free.return_type = None;
 
@@ -201,7 +198,7 @@ impl Object {
 impl APIConverter<Object> for weedle::InterfaceDefinition<'_> {
     fn convert(&self, ci: &mut ComponentInterface) -> Result<Object> {
         if self.inheritance.is_some() {
-            bail!("interface inheritence is not supported");
+            bail!("interface inheritance is not supported");
         }
         let mut object = Object::new(self.identifier.0.to_string());
         let attributes = match &self.attributes {
@@ -248,9 +245,9 @@ pub struct Constructor {
     //    so excluding it is safe.
     //  - its `name` property includes a checksum derived from  the very
     //    hash value we're trying to calculate here, so excluding it
-    //    avoids a weird circular depenendency in the calculation.
+    //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
-    pub(super) ffi_func: FFIFunction,
+    pub(super) ffi_func: FfiFunction,
     pub(super) attributes: ConstructorAttributes,
 }
 
@@ -267,7 +264,7 @@ impl Constructor {
         self.arguments.to_vec()
     }
 
-    pub fn ffi_func(&self) -> &FFIFunction {
+    pub fn ffi_func(&self) -> &FfiFunction {
         &self.ffi_func
     }
 
@@ -292,7 +289,7 @@ impl Constructor {
     fn derive_ffi_func(&mut self, ci_prefix: &str, obj_name: &str) {
         self.ffi_func.name = format!("{ci_prefix}_{obj_name}_{}", self.name);
         self.ffi_func.arguments = self.arguments.iter().map(Into::into).collect();
-        self.ffi_func.return_type = Some(FFIType::RustArcPtr(obj_name.to_string()));
+        self.ffi_func.return_type = Some(FfiType::RustArcPtr(obj_name.to_string()));
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
@@ -329,7 +326,7 @@ impl APIConverter<Constructor> for weedle::interface::ConstructorInterfaceMember
 // Represents an instance method for an object type.
 //
 // The FFI will represent this as a function whose first/self argument is a
-// `FFIType::RustArcPtr` to the instance.
+// `FfiType::RustArcPtr` to the instance.
 #[derive(Debug, Clone, Checksum)]
 pub struct Method {
     pub(super) name: String,
@@ -341,9 +338,9 @@ pub struct Method {
     //    so excluding it is safe.
     //  - its `name` property includes a checksum derived from  the very
     //    hash value we're trying to calculate here, so excluding it
-    //    avoids a weird circular depenendency in the calculation.
+    //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
-    pub(super) ffi_func: FFIFunction,
+    pub(super) ffi_func: FfiFunction,
     pub(super) attributes: MethodAttributes,
 }
 
@@ -377,7 +374,7 @@ impl Method {
         self.return_type.as_ref()
     }
 
-    pub fn ffi_func(&self) -> &FFIFunction {
+    pub fn ffi_func(&self) -> &FfiFunction {
         &self.ffi_func
     }
 
@@ -428,9 +425,9 @@ impl From<uniffi_meta::MethodMetadata> for Method {
         let return_type = meta.return_type.map(|out| convert_type(&out));
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
 
-        let ffi_func = FFIFunction {
+        let ffi_func = FfiFunction {
             name: ffi_name,
-            ..FFIFunction::default()
+            ..FfiFunction::default()
         };
 
         Self {
@@ -439,7 +436,7 @@ impl From<uniffi_meta::MethodMetadata> for Method {
             arguments,
             return_type,
             ffi_func,
-            attributes: Default::default(),
+            attributes: meta.throws.map(Attribute::Throws).into_iter().collect(),
         }
     }
 }

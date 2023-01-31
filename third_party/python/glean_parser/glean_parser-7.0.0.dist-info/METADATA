@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 6.4.0
+Version: 7.0.0
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -8,7 +8,7 @@ Author-email: glean-team@mozilla.com
 License: UNKNOWN
 Keywords: glean_parser
 Platform: UNKNOWN
-Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
@@ -17,6 +17,7 @@ Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
 Description-Content-Type: text/markdown
 Requires-Dist: appdirs (>=1.4)
 Requires-Dist: Click (>=7)
@@ -85,6 +86,15 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 7.0.0
+
+- BUGFIX: Remove internal-only fields from serialized metrics data ([#550](https://github.com/mozilla/glean_parser/pull/550))
+- FEATURE: New subcommand: `dump` to dump the metrics data as JSON ([#550](https://github.com/mozilla/glean_parser/pull/550))
+- BUGFIX: Kotlin: Generate enums with the right generic bound for ping reason codes ([#551](https://github.com/mozilla/glean_parser/pull/551)).
+- **BREAKING CHANGE:** Fully remove support for the old events API ([#549](https://github.com/mozilla/glean_parser/pull/549))
+  Adds a new lint `OLD_EVENT_API` to warn about missing `type` attributes on event extra keys.
+  Note that the Glean SDK already dropped support for the old events API.
 
 ## 6.4.0
 

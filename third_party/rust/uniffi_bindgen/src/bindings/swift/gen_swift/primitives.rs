@@ -23,31 +23,31 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
             | Type::Float64 =>
             // XXX we should pass in the codetype itself.
             {
-                format!("{}({})", oracle.find(type_).type_label(oracle), num_str)
+                format!("{}({num_str})", oracle.find(type_).type_label(oracle))
             }
-            _ => panic!("Unexpected literal: {} is not a number", num_str),
+            _ => panic!("Unexpected literal: {num_str} is not a number"),
         }
     }
 
     match literal {
-        Literal::Boolean(v) => format!("{}", v),
-        Literal::String(s) => format!("\"{}\"", s),
+        Literal::Boolean(v) => format!("{v}"),
+        Literal::String(s) => format!("\"{s}\""),
         Literal::Int(i, radix, type_) => typed_number(
             oracle,
             type_,
             match radix {
-                Radix::Octal => format!("0o{:o}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("0o{i:o}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
         ),
         Literal::UInt(i, radix, type_) => typed_number(
             oracle,
             type_,
             match radix {
-                Radix::Octal => format!("0o{:o}", i),
-                Radix::Decimal => format!("{}", i),
-                Radix::Hexadecimal => format!("{:#x}", i),
+                Radix::Octal => format!("0o{i:o}"),
+                Radix::Decimal => format!("{i}"),
+                Radix::Hexadecimal => format!("{i:#x}"),
             },
         ),
         Literal::Float(string, type_) => typed_number(oracle, type_, string.clone()),

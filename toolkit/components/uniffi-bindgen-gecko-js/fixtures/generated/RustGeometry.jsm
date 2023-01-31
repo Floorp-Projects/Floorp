@@ -485,7 +485,7 @@ function gradient(ln) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                20, // geometry:geometry_1cce_gradient
+                20, // geometry:geometry_f26e_gradient
                 FfiConverterTypeLine.lower(ln),
             )
         }
@@ -519,7 +519,7 @@ function intersection(ln1,ln2) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                21, // geometry:geometry_1cce_intersection
+                21, // geometry:geometry_f26e_intersection
                 FfiConverterTypeLine.lower(ln1),
                 FfiConverterTypeLine.lower(ln2),
             )

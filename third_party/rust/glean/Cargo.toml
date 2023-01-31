@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 name = "glean"
-version = "52.0.1"
+version = "52.2.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -32,6 +33,7 @@ keywords = [
 ]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
+resolver = "1"
 
 [dependencies.chrono]
 version = "0.4.10"
@@ -41,7 +43,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "52.0.1"
+version = "52.2.0"
 
 [dependencies.inherent]
 version = "1"
@@ -70,7 +72,7 @@ version = "1.0"
 features = ["v4"]
 
 [dependencies.whatsys]
-version = "0.1.2"
+version = "0.3.0"
 
 [dev-dependencies.env_logger]
 version = "0.9.0"

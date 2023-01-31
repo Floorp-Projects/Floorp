@@ -14,7 +14,7 @@ use super::types::Type;
 
 // Represents a literal value.
 // Used for e.g. default argument values.
-#[derive(Debug, Clone, Checksum)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Checksum)]
 pub enum Literal {
     Boolean(bool),
     String(String),
@@ -36,7 +36,7 @@ pub enum Literal {
 
 // Represent the radix of integer literal values.
 // We preserve the radix into the generated bindings for readability reasons.
-#[derive(Debug, Clone, Copy, Checksum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Checksum)]
 pub enum Radix {
     Decimal = 10,
     Octal = 8,

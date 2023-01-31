@@ -24,18 +24,6 @@ Jinja2 template is not. Please file bugs! #}
     )
 {% endmacro %}
 
-{% macro enum_decl(obj, name, suffix) %}
-enum {{ obj.name|Camelize }}{{ suffix }}: Int32, ExtraKeys {
-        {% for key in obj|attr(name) %}
-        case {{ key|camelize|variable_name }} = {{ loop.index-1 }}
-        {% endfor %}
-
-        public func index() -> Int32 {
-            return self.rawValue
-        }
-    }
-{% endmacro %}
-
 {% macro struct_decl(obj, name, suffix) %}
 struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
         {% for item, typ in obj|attr(name) %}
@@ -119,11 +107,7 @@ extension {{ namespace }} {
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}
         {% if obj|attr(name)|length %}
-        {% if obj.has_extra_types %}
         {{ struct_decl(obj, name, suffix)|indent }}
-        {% else %}
-        {{ enum_decl(obj, name, suffix)|indent }}
-        {% endif %}
         {% endif %}
         {% endfor %}
         {% endif %}

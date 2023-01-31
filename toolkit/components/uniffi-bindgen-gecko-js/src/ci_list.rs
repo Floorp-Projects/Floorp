@@ -18,7 +18,7 @@ use crate::{Config, ConfigMap};
 use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use uniffi_bindgen::interface::{CallbackInterface, ComponentInterface, FFIFunction, Object};
+use uniffi_bindgen::interface::{CallbackInterface, ComponentInterface, FfiFunction, Object};
 
 pub struct ComponentUniverse {
     pub components: Vec<(ComponentInterface, Config)>,
@@ -117,11 +117,11 @@ impl<'a> FunctionIds<'a> {
         }
     }
 
-    pub fn get(&self, ci: &ComponentInterface, func: &FFIFunction) -> usize {
+    pub fn get(&self, ci: &ComponentInterface, func: &FfiFunction) -> usize {
         return *self.map.get(&(ci.namespace(), func.name())).unwrap();
     }
 
-    pub fn name(&self, ci: &ComponentInterface, func: &FFIFunction) -> String {
+    pub fn name(&self, ci: &ComponentInterface, func: &FfiFunction) -> String {
         format!("{}:{}", ci.namespace(), func.name())
     }
 }

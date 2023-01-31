@@ -14,9 +14,8 @@ name = "uniffi_custom_types"
 anyhow = "1"
 bytes = "1.0"
 serde_json = "1"
-uniffi_macros = "0.21"
-uniffi = "0.21"
+uniffi = { workspace = true }
 url = "2.1"
 
 [build-dependencies]
-uniffi_build = "0.21"
+uniffi = { workspace = true, features = ["build"] }

@@ -34,12 +34,12 @@ Jinja2 template is not. Please file bugs! #}
 {% if lazy %}}{% endif %}
 {%- endmacro -%}
 
-{%- macro enum_decl(obj, name, suffix) -%}
+{%- macro reason_enum_decl(obj, name, suffix) -%}
 @Suppress("ClassNaming", "EnumNaming")
-enum class {{ obj.name|camelize }}{{ suffix }} : EventExtraKey {
+enum class {{ obj.name|camelize }}{{ suffix }} : ReasonCode {
 {% for key in obj|attr(name) %}
     {{ key|camelize }} {
-        override fun keyName(): String = "{{ key }}"
+        override fun code(): Int = {{ loop.index-1 }}
     }{{ "," if not loop.last }}{{ ";" if loop.last }}
 
 {% endfor %}
@@ -71,13 +71,12 @@ data class {{ obj.name|Camelize }}{{ suffix }}(
 package {{ namespace }}
 
 import {{ glean_namespace }}.private.CommonMetricData // ktlint-disable import-ordering no-unused-imports
-import {{ glean_namespace }}.private.EventExtraKey // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.EventExtras // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.HistogramType // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.Lifetime // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.MemoryUnit // ktlint-disable import-ordering no-unused-imports
-import {{ glean_namespace }}.private.NoExtraKeys // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.NoExtras // ktlint-disable import-ordering no-unused-imports
+import {{ glean_namespace }}.private.ReasonCode // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.NoReasonCodes // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.TimeUnit // ktlint-disable import-ordering no-unused-imports
 {% for obj_type in obj_types %}
@@ -89,16 +88,22 @@ import {{ glean_namespace }}.private.LabeledMetricType // ktlint-disable import-
 
 internal object {{ category_name|Camelize }} {
 {% for obj in objs.values() %}
+    {% if obj.type == "ping" %}
     {% if obj|attr("_generate_enums") %}
     {% for name, suffix in obj["_generate_enums"] %}
     {% if obj|attr(name)|length %}
-    {% if obj.has_extra_types %}
-    {{ struct_decl(obj, name, suffix)|indent }}
-    {% else %}
-    {{ enum_decl(obj, name, suffix)|indent }}
-    {% endif %}
+    {{ reason_enum_decl(obj, name, suffix)|indent }}
     {% endif %}
     {% endfor %}
+    {% endif %}
+    {% else %}
+    {% if obj|attr("_generate_enums") %}
+    {% for name, suffix in obj["_generate_enums"] %}
+    {% if obj|attr(name)|length %}
+    {{ struct_decl(obj, name, suffix)|indent }}
+    {% endif %}
+    {% endfor %}
+    {% endif %}
     {% endif %}
 {% endfor %}
 {% for obj in objs.values() %}

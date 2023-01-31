@@ -26,7 +26,7 @@ use super::{Type, TypeUniverse};
 
 /// Trait to help with an early "type discovery" phase when processing the UDL.
 ///
-/// Ths trait does structural matching against weedle AST nodes from a parsed
+/// This trait does structural matching against weedle AST nodes from a parsed
 /// UDL file, looking for all the newly-defined types in the file and accumulating
 /// them in the given `TypeUniverse`.
 pub(in super::super) trait TypeFinder {

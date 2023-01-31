@@ -4,4 +4,4 @@ error[E0080]: evaluation of constant value failed
 2 | uniffi::assert_compatible_version!("0.0.1"); // An error message would go here.
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ attempt to compute `0_usize - 1_usize`, which would overflow
   |
-  = note: this error originates in the macro `uniffi::deps::static_assertions::const_assert` (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `uniffi::deps::static_assertions::const_assert` which comes from the expansion of the macro `uniffi::assert_compatible_version` (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#![allow(clippy::uninlined_format_args)]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(missing_docs)]
 
@@ -18,18 +19,8 @@
 //! Initialize Glean, register a ping and then send it.
 //!
 //! ```rust,no_run
-//! # use glean::{Configuration, ClientInfoMetrics, Error, private::*};
-//! let cfg = Configuration {
-//!     data_path: "/tmp/data".into(),
-//!     application_id: "org.mozilla.glean_core.example".into(),
-//!     upload_enabled: true,
-//!     max_events: None,
-//!     delay_ping_lifetime_io: false,
-//!     server_endpoint: None,
-//!     uploader: None,
-//!     use_core_mps: false,
-//!     trim_data_to_registered_pings: false,
-//! };
+//! # use glean::{ConfigurationBuilder, ClientInfoMetrics, Error, private::*};
+//! let cfg = ConfigurationBuilder::new(true, "/tmp/data", "org.mozilla.glean_core.example").build();
 //! glean::initialize(cfg, ClientInfoMetrics::unknown());
 //!
 //! let prototype_ping = PingType::new("prototype", true, true, vec!());
@@ -40,8 +31,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-pub use configuration::Configuration;
 use configuration::DEFAULT_GLEAN_ENDPOINT;
+pub use configuration::{Builder as ConfigurationBuilder, Configuration};
 pub use core_metrics::ClientInfoMetrics;
 pub use glean_core::{
     metrics::{Datetime, DistributionData, MemoryUnit, Rate, RecordedEvent, TimeUnit, TimerId},

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::hash::Hasher;
+use std::{collections::BTreeMap, hash::Hasher};
 pub use uniffi_checksum_derive::Checksum;
 
 use serde::{Deserialize, Serialize};
@@ -54,6 +54,16 @@ impl<T: Checksum> Checksum for Vec<T> {
     }
 }
 
+impl<K: Checksum, V: Checksum> Checksum for BTreeMap<K, V> {
+    fn checksum<H: Hasher>(&self, state: &mut H) {
+        state.write(&(self.len() as u64).to_le_bytes());
+        for (key, value) in self {
+            Checksum::checksum(key, state);
+            Checksum::checksum(value, state);
+        }
+    }
+}
+
 impl<T: Checksum> Checksum for Option<T> {
     fn checksum<H: Hasher>(&self, state: &mut H) {
         match self {
@@ -79,12 +89,19 @@ impl Checksum for String {
     }
 }
 
+impl Checksum for &str {
+    fn checksum<H: Hasher>(&self, state: &mut H) {
+        (**self).checksum(state)
+    }
+}
+
 #[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct FnMetadata {
     pub module_path: Vec<String>,
     pub name: String,
     pub inputs: Vec<FnParamMetadata>,
     pub return_type: Option<Type>,
+    pub throws: Option<String>,
 }
 
 impl FnMetadata {
@@ -100,6 +117,7 @@ pub struct MethodMetadata {
     pub name: String,
     pub inputs: Vec<FnParamMetadata>,
     pub return_type: Option<Type>,
+    pub throws: Option<String>,
 }
 
 impl MethodMetadata {
@@ -163,6 +181,19 @@ pub struct FieldMetadata {
 }
 
 #[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
+pub struct EnumMetadata {
+    pub module_path: Vec<String>,
+    pub name: String,
+    pub variants: Vec<VariantMetadata>,
+}
+
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
+pub struct VariantMetadata {
+    pub name: String,
+    pub fields: Vec<FieldMetadata>,
+}
+
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct ObjectMetadata {
     pub module_path: Vec<String>,
     pub name: String,
@@ -176,6 +207,14 @@ impl ObjectMetadata {
         let free_name = format!("object_free_{}", self.name);
         fn_ffi_symbol_name(&self.module_path, &free_name, checksum(self))
     }
+}
+
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
+pub struct ErrorMetadata {
+    pub module_path: Vec<String>,
+    pub name: String,
+    pub variants: Vec<VariantMetadata>,
+    pub flat: bool,
 }
 
 /// Returns the last 16 bits of the value's hash as computed with [`SipHasher13`].
@@ -199,7 +238,9 @@ pub enum Metadata {
     Func(FnMetadata),
     Method(MethodMetadata),
     Record(RecordMetadata),
+    Enum(EnumMetadata),
     Object(ObjectMetadata),
+    Error(ErrorMetadata),
 }
 
 impl From<FnMetadata> for Metadata {
@@ -220,8 +261,20 @@ impl From<RecordMetadata> for Metadata {
     }
 }
 
+impl From<EnumMetadata> for Metadata {
+    fn from(e: EnumMetadata) -> Self {
+        Self::Enum(e)
+    }
+}
+
 impl From<ObjectMetadata> for Metadata {
     fn from(v: ObjectMetadata) -> Self {
         Self::Object(v)
+    }
+}
+
+impl From<ErrorMetadata> for Metadata {
+    fn from(v: ErrorMetadata) -> Self {
+        Self::Error(v)
     }
 }

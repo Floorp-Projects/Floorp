@@ -2,11 +2,11 @@ fileprivate struct FfiConverterInt8: FfiConverterPrimitive {
     typealias FfiType = Int8
     typealias SwiftType = Int8
 
-    static func read(from buf: Reader) throws -> Int8 {
-        return try lift(buf.readInt())
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Int8 {
+        return try lift(readInt(&buf))
     }
 
-    static func write(_ value: Int8, into buf: Writer) {
-        buf.writeInt(lower(value))
+    public static func write(_ value: Int8, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
     }
 }

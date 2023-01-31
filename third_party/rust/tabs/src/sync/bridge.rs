@@ -47,71 +47,68 @@ impl BridgedEngineImpl {
 impl BridgedEngine for BridgedEngineImpl {
     type Error = TabsApiError;
 
+    #[handle_error]
     fn last_sync(&self) -> ApiResult<i64> {
-        handle_error! {
-            Ok(self
-                .sync_impl
-                .lock()
-                .unwrap()
-                .get_last_sync()?
-                .unwrap_or_default()
-                .as_millis())
-        }
+        Ok(self
+            .sync_impl
+            .lock()
+            .unwrap()
+            .get_last_sync()?
+            .unwrap_or_default()
+            .as_millis())
     }
 
+    #[handle_error]
     fn set_last_sync(&self, last_sync_millis: i64) -> ApiResult<()> {
-        handle_error! {
-            self.sync_impl.lock().unwrap().set_last_sync(ServerTimestamp::from_millis(last_sync_millis))?;
-            Ok(())
-        }
+        self.sync_impl
+            .lock()
+            .unwrap()
+            .set_last_sync(ServerTimestamp::from_millis(last_sync_millis))?;
+        Ok(())
     }
 
+    #[handle_error]
     fn sync_id(&self) -> ApiResult<Option<String>> {
-        handle_error! {
-            Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
-                EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
-                EngineSyncAssociation::Disconnected => None,
-            })
-        }
+        Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
+            EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
+            EngineSyncAssociation::Disconnected => None,
+        })
     }
 
+    #[handle_error]
     fn reset_sync_id(&self) -> ApiResult<String> {
-        handle_error! {
-            let new_id = SyncGuid::random().to_string();
+        let new_id = SyncGuid::random().to_string();
+        let new_coll_ids = CollSyncIds {
+            global: SyncGuid::empty(),
+            coll: new_id.clone().into(),
+        };
+        self.sync_impl
+            .lock()
+            .unwrap()
+            .reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
+        Ok(new_id)
+    }
+
+    #[handle_error]
+    fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
+        let mut sync_impl = self.sync_impl.lock().unwrap();
+        let assoc = sync_impl.get_sync_assoc()?;
+        if matches!(assoc, EngineSyncAssociation::Connected(c) if c.coll == sync_id) {
+            log::debug!("ensure_current_sync_id is current");
+        } else {
             let new_coll_ids = CollSyncIds {
                 global: SyncGuid::empty(),
-                coll: new_id.clone().into(),
+                coll: sync_id.into(),
             };
-            self.sync_impl
-                .lock()
-                .unwrap()
-                .reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
-            Ok(new_id)
+            sync_impl.reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
         }
+        Ok(sync_id.to_string()) // this is a bit odd, why the result?
     }
 
-    fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
-        handle_error! {
-            let mut sync_impl = self.sync_impl.lock().unwrap();
-            let assoc = sync_impl.get_sync_assoc()?;
-            if matches!(assoc, EngineSyncAssociation::Connected(c) if c.coll == sync_id) {
-                log::debug!("ensure_current_sync_id is current");
-            } else {
-                let new_coll_ids = CollSyncIds {
-                    global: SyncGuid::empty(),
-                    coll: sync_id.into(),
-                };
-                sync_impl.reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
-            }
-            Ok(sync_id.to_string()) // this is a bit odd, why the result?
-        }
-    }
-
+    #[handle_error]
     fn prepare_for_sync(&self, client_data: &str) -> ApiResult<()> {
-        handle_error! {
-            let data: ClientData = serde_json::from_str(client_data)?;
-            self.sync_impl.lock().unwrap().prepare_for_sync(data)
-        }
+        let data: ClientData = serde_json::from_str(client_data)?;
+        self.sync_impl.lock().unwrap().prepare_for_sync(data)
     }
 
     fn sync_started(&self) -> ApiResult<()> {
@@ -119,65 +116,58 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
+    #[handle_error]
     fn store_incoming(&self, incoming: Vec<IncomingBso>) -> ApiResult<()> {
-        handle_error! {
-            // Store the incoming payload in memory so we can use it in apply
-            *(self.incoming.lock().unwrap()) = incoming;
-            Ok(())
-        }
+        // Store the incoming payload in memory so we can use it in apply
+        *(self.incoming.lock().unwrap()) = incoming;
+        Ok(())
     }
 
+    #[handle_error]
     fn apply(&self) -> ApiResult<ApplyResults> {
-        handle_error! {
-            let mut incoming = self.incoming.lock().unwrap();
-            // We've a reference to a Vec<> but it's owned by the mutex - swap the mutex owned
-            // value for an empty vec so we can consume the original.
-            let mut records = Vec::new();
-            std::mem::swap(&mut records, &mut *incoming);
-            let mut telem = sync15::telemetry::Engine::new("tabs");
+        let mut incoming = self.incoming.lock().unwrap();
+        // We've a reference to a Vec<> but it's owned by the mutex - swap the mutex owned
+        // value for an empty vec so we can consume the original.
+        let mut records = Vec::new();
+        std::mem::swap(&mut records, &mut *incoming);
+        let mut telem = sync15::telemetry::Engine::new("tabs");
 
-            let mut sync_impl = self.sync_impl.lock().unwrap();
-            let outgoing = sync_impl.apply_incoming(records, &mut telem)?;
+        let mut sync_impl = self.sync_impl.lock().unwrap();
+        let outgoing = sync_impl.apply_incoming(records, &mut telem)?;
 
-            Ok(ApplyResults {
-                records: outgoing,
-                num_reconciled: Some(0),
-            })
-        }
+        Ok(ApplyResults {
+            records: outgoing,
+            num_reconciled: Some(0),
+        })
     }
 
+    #[handle_error]
     fn set_uploaded(&self, server_modified_millis: i64, ids: &[SyncGuid]) -> ApiResult<()> {
-        handle_error! {
-            self
-                .sync_impl
-                .lock()
-                .unwrap()
-                .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)
-        }
+        self.sync_impl
+            .lock()
+            .unwrap()
+            .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)
     }
 
+    #[handle_error]
     fn sync_finished(&self) -> ApiResult<()> {
-        handle_error! {
-            *(self.incoming.lock().unwrap()) = Vec::default();
-            Ok(())
-        }
+        *(self.incoming.lock().unwrap()) = Vec::default();
+        Ok(())
     }
 
+    #[handle_error]
     fn reset(&self) -> ApiResult<()> {
-        handle_error! {
-            self.sync_impl
-                .lock()
-                .unwrap()
-                .reset(&EngineSyncAssociation::Disconnected)?;
-            Ok(())
-        }
+        self.sync_impl
+            .lock()
+            .unwrap()
+            .reset(&EngineSyncAssociation::Disconnected)?;
+        Ok(())
     }
 
+    #[handle_error]
     fn wipe(&self) -> ApiResult<()> {
-        handle_error! {
-            self.sync_impl.lock().unwrap().wipe()?;
-            Ok(())
-        }
+        self.sync_impl.lock().unwrap().wipe()?;
+        Ok(())
     }
 }
 
@@ -220,25 +210,23 @@ impl TabsBridgedEngine {
     }
 
     // Decode the JSON-encoded IncomingBso's that UniFFI passes to us
+    #[handle_error]
     fn convert_incoming_bsos(&self, incoming: Vec<String>) -> ApiResult<Vec<IncomingBso>> {
-        handle_error! {
-            let mut bsos = Vec::with_capacity(incoming.len());
-            for inc in incoming {
-                bsos.push(serde_json::from_str::<IncomingBso>(&inc)?);
-            }
-            Ok(bsos)
+        let mut bsos = Vec::with_capacity(incoming.len());
+        for inc in incoming {
+            bsos.push(serde_json::from_str::<IncomingBso>(&inc)?);
         }
+        Ok(bsos)
     }
 
     // Encode OutgoingBso's into JSON for UniFFI
+    #[handle_error]
     fn convert_outgoing_bsos(&self, outgoing: Vec<OutgoingBso>) -> ApiResult<Vec<String>> {
-        handle_error! {
-            let mut bsos = Vec::with_capacity(outgoing.len());
-            for e in outgoing {
-                bsos.push(serde_json::to_string(&e)?);
-            }
-            Ok(bsos)
+        let mut bsos = Vec::with_capacity(outgoing.len());
+        for e in outgoing {
+            bsos.push(serde_json::to_string(&e)?);
         }
+        Ok(bsos)
     }
 
     pub fn store_incoming(&self, incoming: Vec<String>) -> ApiResult<()> {

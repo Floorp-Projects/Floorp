@@ -64,7 +64,7 @@ be reported or not, which type name to report it with, etc. Eventually we also
 hope to allow expected errors to be counted in telemetry (think things like
 network errors, shutdown errors, etc.).
 
-To assist this conversion, the `handle_error!` macro can be used to
+To assist this conversion, the `handle_error` procedural macro can be used to
 automatically convert between `Result` and `ApiResult` using
 `GetErrorHandling`.  Note that this depends on having the `Result` type
 imported in your module with a `use` statement.

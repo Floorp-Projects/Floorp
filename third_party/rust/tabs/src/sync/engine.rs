@@ -261,7 +261,7 @@ impl TabsSyncImpl {
     pub fn set_last_sync(&self, last_sync: ServerTimestamp) -> Result<()> {
         let mut storage = self.store.storage.lock().unwrap();
         log::debug!("Updating last sync to {}", last_sync);
-        let last_sync_millis = last_sync.as_millis() as i64;
+        let last_sync_millis = last_sync.as_millis();
         storage.put_meta(schema::LAST_SYNC_META_KEY, &last_sync_millis)
     }
 

@@ -47,6 +47,10 @@ exclude = [
 # This is required for 'third_party/rust/wgpu-hal'
 resolver = "2"
 
+[workspace.dependencies]
+# Shared across multiple UniFFI consumers.
+uniffi = "0.23"
+
 # Explicitly specify what our profiles use.  The opt-level setting here is
 # a total fiction; see the setup of MOZ_RUST_DEFAULT_FLAGS for what the
 # opt-level setting will be as a result of various other configure flags.
@@ -164,31 +168,21 @@ warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef
 cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "d3670a89bae26ba3a8db4758eb7976616113987d" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c6370008f53328529e8bcf06aaa5014dffcd298b" }
+interrupt-support = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+sql-support = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+sync15 = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+tabs = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+viaduct = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+webext-storage = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio-0.6.23"
 
-# These are used to test UniFFI functionality.  We haven't figured out how we
-# want to publish these yet, so they are only accessible via git.  This works
-# okay, but it means that their dependencies on UniFFI crates will normally
-# also be the git versions.  Patch them to use the published versions to avoid
-# duplicate crates.
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "=0.21.1"
-#uniffi_bindgen = "=0.21.1"
-uniffi_build = "=0.21.1"
-uniffi_macros = "=0.21.1"
+uniffi = "=0.23.0"
+uniffi_bindgen = "=0.23.0"
+uniffi_build = "=0.23.0"
+uniffi_macros = "=0.23.0"
 weedle2 = "=4.0.0"
-
-# Patched to use uniffi_version = 0.21.0 for checksums and with
-# https://github.com/mozilla/uniffi-rs/pull/1405
-[patch.crates-io.uniffi_bindgen]
-path = "third_party/rust/uniffi_bindgen"

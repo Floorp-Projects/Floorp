@@ -372,7 +372,7 @@ fn seen_labels_get_reloaded_from_disk() {
     {
         // Set the maximum number of labels
         for i in 1..=16 {
-            let label = format!("label{}", i);
+            let label = format!("label{i}");
             labeled.get(label).add_sync(&glean, i);
         }
 
@@ -382,7 +382,7 @@ fn seen_labels_get_reloaded_from_disk() {
 
         // Check that the data is there
         for i in 1..=16 {
-            let label = format!("label{}", i);
+            let label = format!("label{i}");
             assert_eq!(
                 i,
                 snapshot["labeled_counter"]["telemetry.labeled_metric"][&label]
@@ -405,7 +405,7 @@ fn seen_labels_get_reloaded_from_disk() {
 
         // Check that the old data is still there
         for i in 1..=16 {
-            let label = format!("label{}", i);
+            let label = format!("label{i}");
             assert_eq!(
                 i,
                 snapshot["labeled_counter"]["telemetry.labeled_metric"][&label]
@@ -438,7 +438,7 @@ fn caching_metrics_with_dynamic_labels() {
     // Create multiple metric instances and cache them for later use.
     let metrics = (1..=20)
         .map(|i| {
-            let label = format!("label{}", i);
+            let label = format!("label{i}");
             labeled.get(label)
         })
         .collect::<Vec<_>>();
@@ -472,7 +472,7 @@ fn caching_metrics_with_dynamic_labels_across_pings() {
     // Create multiple metric instances and cache them for later use.
     let metrics = (1..=20)
         .map(|i| {
-            let label = format!("label{}", i);
+            let label = format!("label{i}");
             labeled.get(label)
         })
         .collect::<Vec<_>>();

@@ -24,7 +24,7 @@ uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::E
 {% include "ErrorTemplate.rs" %}
 {% endfor %}
 
-// Enum defitions, corresponding to `enum` in UDL.
+// Enum definitions, corresponding to `enum` in UDL.
 {% for e in ci.enum_definitions() %}
 {% include "EnumTemplate.rs" %}
 {% endfor %}

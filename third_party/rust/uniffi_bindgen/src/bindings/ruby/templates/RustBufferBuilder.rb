@@ -113,8 +113,17 @@ class RustBufferBuilder
     seconds = v.tv_sec
     nanoseconds = v.tv_nsec
 
-    if seconds < 0
+    # UniFFi conventions assume that nanoseconds part has to represent nanoseconds portion of
+    # duration between epoch and the timestamp moment. Ruby `Time#tv_nsec` returns the number of
+    # nanoseconds for the subsecond part, which is sort of opposite to "duration" meaning.
+    # Hence we need to convert value returned by `Time#tv_nsec` back and forth with the following
+    # logic:
+    if seconds < 0 && nanoseconds != 0
+      # In order to get duration nsec we shift by 1 second:
       nanoseconds = ONE_SECOND_IN_NANOSECONDS - nanoseconds
+
+      # Then we compensate 1 second shift:
+      seconds += 1
     end
 
     pack_into 8, 'q>', seconds

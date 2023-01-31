@@ -33,6 +33,7 @@ impl From<ClientInfoMetrics> for glean_core::ClientInfoMetrics {
             app_display_version: metrics.app_display_version,
             channel: metrics.channel,
             os_version: system::get_os_version(),
+            windows_build_number: system::get_windows_build_number(),
             architecture: system::ARCH.to_string(),
             ..Default::default()
         }

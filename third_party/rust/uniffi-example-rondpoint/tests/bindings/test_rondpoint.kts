@@ -128,7 +128,7 @@ listOf(0L, 1L, -1L, Long.MIN_VALUE, Long.MAX_VALUE).affirmEnchaine(st::toStringI
 listOf(0u, 1u, ULong.MIN_VALUE, ULong.MAX_VALUE).affirmEnchaine(st::toStringU64)
 
 // Floats
-// MIN_VAUE is 1.4E-45. Accuracy and formatting get weird at small sizes.
+// MIN_VALUE is 1.4E-45. Accuracy and formatting get weird at small sizes.
 listOf(0.0F, 1.0F, -1.0F, Float.MIN_VALUE, Float.MAX_VALUE).affirmEnchaine(st::toStringFloat) { s, n -> s.toFloat() == n }
 
 // Doubles
@@ -224,7 +224,7 @@ op.destroy()
 
 // Testing defaulting properties in record types.
 val defaultes = OptionneurDictionnaire()
-val explicite = OptionneurDictionnaire(
+val explicites = OptionneurDictionnaire(
     i8Var = -8,
     u8Var = 8u,
     i16Var = -16,
@@ -241,7 +241,7 @@ val explicite = OptionneurDictionnaire(
     enumerationVar = Enumeration.DEUX,
     dictionnaireVar = null
 )
-assert(defaultes == explicite)
+assert(defaultes == explicites)
 
 // …and makes sure they travel across and back the FFI.
 val rt2 = Retourneur()

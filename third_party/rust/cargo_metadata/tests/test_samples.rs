@@ -4,7 +4,7 @@ extern crate semver;
 extern crate serde_json;
 
 use camino::Utf8PathBuf;
-use cargo_metadata::{CargoOpt, DependencyKind, Metadata, MetadataCommand};
+use cargo_metadata::{CargoOpt, DependencyKind, Edition, Metadata, MetadataCommand};
 
 #[test]
 fn old_minimal() {
@@ -81,8 +81,8 @@ fn old_minimal() {
     assert_eq!(dep.source, None);
     assert_eq!(dep.req, semver::VersionReq::parse("^1.0").unwrap());
     assert_eq!(dep.kind, DependencyKind::Normal);
-    assert_eq!(dep.optional, false);
-    assert_eq!(dep.uses_default_features, true);
+    assert!(!dep.optional);
+    assert!(dep.uses_default_features);
     assert_eq!(dep.features.len(), 0);
     assert!(dep.target.is_none());
     assert_eq!(dep.rename, None);
@@ -94,10 +94,10 @@ fn old_minimal() {
     assert_eq!(target.crate_types, vec!["bin"]);
     assert_eq!(target.required_features.len(), 0);
     assert_eq!(target.src_path, "/foo/src/main.rs");
-    assert_eq!(target.edition, "2015");
-    assert_eq!(target.doctest, true);
-    assert_eq!(target.test, true);
-    assert_eq!(target.doc, true);
+    assert_eq!(target.edition, Edition::E2015);
+    assert!(target.doctest);
+    assert!(target.test);
+    assert!(target.doc);
     assert_eq!(pkg.features.len(), 0);
     assert_eq!(pkg.manifest_path, "/foo/Cargo.toml");
     assert_eq!(pkg.categories.len(), 0);
@@ -106,7 +106,7 @@ fn old_minimal() {
     assert_eq!(pkg.repository, None);
     assert_eq!(pkg.homepage, None);
     assert_eq!(pkg.documentation, None);
-    assert_eq!(pkg.edition, "2015");
+    assert_eq!(pkg.edition, Edition::E2015);
     assert_eq!(pkg.metadata, serde_json::Value::Null);
     assert_eq!(pkg.links, None);
     assert_eq!(pkg.publish, None);
@@ -224,7 +224,7 @@ fn all_the_fields() {
         bitflags.source,
         Some("registry+https://github.com/rust-lang/crates.io-index".to_string())
     );
-    assert_eq!(bitflags.optional, true);
+    assert!(bitflags.optional);
     assert_eq!(bitflags.req, semver::VersionReq::parse("^1.0").unwrap());
 
     let path_dep = all
@@ -251,7 +251,7 @@ fn all_the_fields() {
         .find(|d| d.name == "featdep")
         .unwrap();
     assert_eq!(featdep.features, vec!["i128"]);
-    assert_eq!(featdep.uses_default_features, false);
+    assert!(!featdep.uses_default_features);
 
     let renamed = all
         .dependencies
@@ -297,28 +297,28 @@ fn all_the_fields() {
         vec!["cdylib", "rlib", "staticlib"]
     );
     assert_eq!(lib.required_features.len(), 0);
-    assert_eq!(lib.edition, "2018");
-    assert_eq!(lib.doctest, true);
-    assert_eq!(lib.test, true);
-    assert_eq!(lib.doc, true);
+    assert_eq!(lib.edition, Edition::E2018);
+    assert!(lib.doctest);
+    assert!(lib.test);
+    assert!(lib.doc);
 
     let main = get_file_name!("main.rs");
     assert_eq!(main.crate_types, vec!["bin"]);
     assert_eq!(main.kind, vec!["bin"]);
-    assert_eq!(main.doctest, false);
-    assert_eq!(main.test, true);
-    assert_eq!(main.doc, true);
+    assert!(!main.doctest);
+    assert!(main.test);
+    assert!(main.doc);
 
     let otherbin = get_file_name!("otherbin.rs");
-    assert_eq!(otherbin.edition, "2015");
-    assert_eq!(otherbin.doc, false);
+    assert_eq!(otherbin.edition, Edition::E2015);
+    assert!(!otherbin.doc);
 
     let reqfeat = get_file_name!("reqfeat.rs");
     assert_eq!(reqfeat.required_features, vec!["feat2"]);
 
     let ex1 = get_file_name!("ex1.rs");
     assert_eq!(ex1.kind, vec!["example"]);
-    assert_eq!(ex1.test, false);
+    assert!(!ex1.test);
 
     let t1 = get_file_name!("t1.rs");
     assert_eq!(t1.kind, vec!["test"]);
@@ -344,6 +344,7 @@ fn all_the_fields() {
     assert_eq!(all.categories, vec!["command-line-utilities"]);
     assert_eq!(all.keywords, vec!["cli"]);
     assert_eq!(all.readme, Some(Utf8PathBuf::from("README.md")));
+    assert!(all.readme().unwrap().ends_with("tests/all/README.md"));
     assert_eq!(
         all.repository,
         Some("https://github.com/oli-obk/cargo_metadata/".to_string())
@@ -356,7 +357,7 @@ fn all_the_fields() {
         all.documentation,
         Some("https://docs.rs/cargo_metadata/".to_string())
     );
-    assert_eq!(all.edition, "2018");
+    assert_eq!(all.edition, Edition::E2018);
     assert_eq!(
         all.metadata,
         json!({
@@ -532,9 +533,9 @@ fn current_dir() {
 fn parse_stream_is_robust() {
     // Proc macros can print stuff to stdout, which naturally breaks JSON messages.
     // Let's check that we don't die horribly in this case, and report an error.
-    let json_output = r##"{"reason":"compiler-artifact","package_id":"chatty 0.1.0 (path+file:///chatty-macro/chatty)","target":{"kind":["proc-macro"],"crate_types":["proc-macro"],"name":"chatty","src_path":"/chatty-macro/chatty/src/lib.rs","edition":"2018","doctest":true},"profile":{"opt_level":"0","debuginfo":2,"debug_assertions":true,"overflow_checks":true,"test":false},"features":[],"filenames":["/chatty-macro/target/debug/deps/libchatty-f2adcff24cdf3bb2.so"],"executable":null,"fresh":false}
+    let json_output = r##"{"reason":"compiler-artifact","package_id":"chatty 0.1.0 (path+file:///chatty-macro/chatty)","manifest_path":"chatty-macro/Cargo.toml","target":{"kind":["proc-macro"],"crate_types":["proc-macro"],"name":"chatty","src_path":"/chatty-macro/chatty/src/lib.rs","edition":"2018","doctest":true},"profile":{"opt_level":"0","debuginfo":2,"debug_assertions":true,"overflow_checks":true,"test":false},"features":[],"filenames":["/chatty-macro/target/debug/deps/libchatty-f2adcff24cdf3bb2.so"],"executable":null,"fresh":false}
 Evil proc macro was here!
-{"reason":"compiler-artifact","package_id":"chatty-macro 0.1.0 (path+file:///chatty-macro)","target":{"kind":["lib"],"crate_types":["lib"],"name":"chatty-macro","src_path":"/chatty-macro/src/lib.rs","edition":"2018","doctest":true},"profile":{"opt_level":"0","debuginfo":2,"debug_assertions":true,"overflow_checks":true,"test":false},"features":[],"filenames":["/chatty-macro/target/debug/libchatty_macro.rlib","/chatty-macro/target/debug/deps/libchatty_macro-cb5956ed52a11fb6.rmeta"],"executable":null,"fresh":false}
+{"reason":"compiler-artifact","package_id":"chatty-macro 0.1.0 (path+file:///chatty-macro)","manifest_path":"chatty-macro/Cargo.toml","target":{"kind":["lib"],"crate_types":["lib"],"name":"chatty-macro","src_path":"/chatty-macro/src/lib.rs","edition":"2018","doctest":true},"profile":{"opt_level":"0","debuginfo":2,"debug_assertions":true,"overflow_checks":true,"test":false},"features":[],"filenames":["/chatty-macro/target/debug/libchatty_macro.rlib","/chatty-macro/target/debug/deps/libchatty_macro-cb5956ed52a11fb6.rmeta"],"executable":null,"fresh":false}
 "##;
     let mut n_messages = 0;
     let mut text = String::new();
@@ -621,4 +622,26 @@ fn depkind_to_string() {
     assert_eq!(DependencyKind::Development.to_string(), "dev");
     assert_eq!(DependencyKind::Build.to_string(), "build");
     assert_eq!(DependencyKind::Unknown.to_string(), "Unknown");
+}
+
+#[test]
+fn basic_workspace_root_package_exists() {
+    // First try with dependencies
+    let meta = MetadataCommand::new()
+        .manifest_path("tests/basic_workspace/Cargo.toml")
+        .exec()
+        .unwrap();
+    assert_eq!(meta.root_package().unwrap().name, "ex_bin");
+    // Now with no_deps, it should still work exactly the same
+    let meta = MetadataCommand::new()
+        .manifest_path("tests/basic_workspace/Cargo.toml")
+        .no_deps()
+        .exec()
+        .unwrap();
+    assert_eq!(
+        meta.root_package()
+            .expect("workspace root still exists when no_deps used")
+            .name,
+        "ex_bin"
+    );
 }

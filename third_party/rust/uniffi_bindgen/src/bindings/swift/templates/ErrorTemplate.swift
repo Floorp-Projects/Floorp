@@ -15,18 +15,18 @@ public enum {{ type_name }} {
     {%- endif %}
 }
 
-fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
+public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     typealias SwiftType = {{ type_name }}
 
-    static func read(from buf: Reader) throws -> {{ type_name }} {
-        let variant: Int32 = try buf.readInt()
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> {{ type_name }} {
+        let variant: Int32 = try readInt(&buf)
         switch variant {
 
         {% if e.is_flat() %}
 
         {% for variant in e.variants() %}
         case {{ loop.index }}: return .{{ variant.name()|class_name }}(
-            message: try {{ Type::String.borrow()|read_fn }}(from: buf)
+            message: try {{ Type::String.borrow()|read_fn }}(from: &buf)
         )
         {% endfor %}
 
@@ -35,7 +35,7 @@ fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         {% for variant in e.variants() %}
         case {{ loop.index }}: return .{{ variant.name()|class_name }}{% if variant.has_fields() -%}(
             {% for field in variant.fields() -%}
-            {{ field.name()|var_name }}: try {{ field|read_fn }}(from: buf)
+            {{ field.name()|var_name }}: try {{ field|read_fn }}(from: &buf)
             {%- if !loop.last %}, {% endif %}
             {% endfor -%}
         ){% endif -%}
@@ -46,15 +46,15 @@ fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         }
     }
 
-    static func write(_ value: {{ type_name }}, into buf: Writer) {
+    public static func write(_ value: {{ type_name }}, into buf: inout [UInt8]) {
         switch value {
 
         {% if e.is_flat() %}
 
         {% for variant in e.variants() %}
         case let .{{ variant.name()|class_name }}(message):
-            buf.writeInt(Int32({{ loop.index }}))
-            {{ Type::String.borrow()|write_fn }}(message, into: buf)
+            writeInt(&buf, Int32({{ loop.index }}))
+            {{ Type::String.borrow()|write_fn }}(message, into: &buf)
         {%- endfor %}
 
         {% else %}
@@ -62,13 +62,13 @@ fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         {% for variant in e.variants() %}
         {% if variant.has_fields() %}
         case let .{{ variant.name()|class_name }}({% for field in variant.fields() %}{{ field.name()|var_name }}{%- if loop.last -%}{%- else -%},{%- endif -%}{% endfor %}):
-            buf.writeInt(Int32({{ loop.index }}))
+            writeInt(&buf, Int32({{ loop.index }}))
             {% for field in variant.fields() -%}
-            {{ field|write_fn }}({{ field.name()|var_name }}, into: buf)
+            {{ field|write_fn }}({{ field.name()|var_name }}, into: &buf)
             {% endfor -%}
         {% else %}
         case .{{ variant.name()|class_name }}:
-            buf.writeInt(Int32({{ loop.index }}))
+            writeInt(&buf, Int32({{ loop.index }}))
         {% endif %}
         {%- endfor %}
 

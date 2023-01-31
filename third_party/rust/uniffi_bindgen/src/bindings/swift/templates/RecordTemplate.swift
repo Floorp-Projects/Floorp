@@ -32,19 +32,31 @@ extension {{ type_name }}: Equatable, Hashable {
 }
 {% endif %}
 
-fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
-    fileprivate static func read(from buf: Reader) throws -> {{ type_name }} {
+public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> {{ type_name }} {
         return try {{ type_name }}(
             {%- for field in rec.fields() %}
-            {{ field.name()|var_name }}: {{ field|read_fn }}(from: buf)
+            {{ field.name()|var_name }}: {{ field|read_fn }}(from: &buf)
             {%- if !loop.last %}, {% endif %}
             {%- endfor %}
         )
     }
 
-    fileprivate static func write(_ value: {{ type_name }}, into buf: Writer) {
+    public static func write(_ value: {{ type_name }}, into buf: inout [UInt8]) {
         {%- for field in rec.fields() %}
-        {{ field|write_fn }}(value.{{ field.name()|var_name }}, into: buf)
+        {{ field|write_fn }}(value.{{ field.name()|var_name }}, into: &buf)
         {%- endfor %}
     }
+}
+
+{#
+We always write these public functions just in case the struct is used as
+an external type by another crate.
+#}
+public func {{ ffi_converter_name }}_lift(_ buf: RustBuffer) throws -> {{ type_name }} {
+    return try {{ ffi_converter_name }}.lift(buf)
+}
+
+public func {{ ffi_converter_name }}_lower(_ value: {{ type_name }}) -> RustBuffer {
+    return {{ ffi_converter_name }}.lower(value)
 }

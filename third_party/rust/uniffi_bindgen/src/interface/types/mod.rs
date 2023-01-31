@@ -13,13 +13,13 @@
 //! The Rust code that implements a component, and the foreign language bindings that consume it,
 //! will both typically deal with such types as their core concern.
 //!
-//! The set of all [`Type`]s used in a component interface is represented by a [`TypeUniverse`],
+//! The set of all [`Type`]s used in a component interface is represented by a `TypeUniverse`,
 //! which can be used by the bindings generator code to determine what type-related helper
 //! functions to emit for a given component.
 //!
 //! As a developer working on UniFFI itself, you're likely to spend a fair bit of time thinking
 //! about how these API-level types map into the lower-level types of the FFI layer as represented
-//! by the [`ffi::FFIType`](super::ffi::FFIType) enum, but that's a detail that is invisible to end users.
+//! by the [`ffi::FfiType`](super::ffi::FfiType) enum, but that's a detail that is invisible to end users.
 
 use std::{collections::hash_map::Entry, collections::BTreeSet, collections::HashMap, iter};
 
@@ -27,7 +27,7 @@ use anyhow::{bail, Result};
 use heck::ToUpperCamelCase;
 use uniffi_meta::Checksum;
 
-use super::ffi::FFIType;
+use super::ffi::FfiType;
 
 mod finder;
 pub(super) use finder::TypeFinder;
@@ -122,13 +122,13 @@ impl Type {
             ),
             // A type that exists externally.
             Type::External { name, .. } | Type::Custom { name, .. } => format!("Type{name}"),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before calling canonical_name")
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before calling canonical_name")
             }
         }
     }
 
-    pub fn ffi_type(&self) -> FFIType {
+    pub fn ffi_type(&self) -> FfiType {
         self.into()
     }
 
@@ -143,33 +143,33 @@ impl Type {
 }
 
 /// When passing data across the FFI, each `Type` value will be lowered into a corresponding
-/// `FFIType` value. This conversion tells you which one.
+/// `FfiType` value. This conversion tells you which one.
 ///
-/// Note that the conversion is one-way - given an FFIType, it is not in general possible to
+/// Note that the conversion is one-way - given an FfiType, it is not in general possible to
 /// tell what the corresponding Type is that it's being used to represent.
-impl From<&Type> for FFIType {
-    fn from(t: &Type) -> FFIType {
+impl From<&Type> for FfiType {
+    fn from(t: &Type) -> FfiType {
         match t {
             // Types that are the same map to themselves, naturally.
-            Type::UInt8 => FFIType::UInt8,
-            Type::Int8 => FFIType::Int8,
-            Type::UInt16 => FFIType::UInt16,
-            Type::Int16 => FFIType::Int16,
-            Type::UInt32 => FFIType::UInt32,
-            Type::Int32 => FFIType::Int32,
-            Type::UInt64 => FFIType::UInt64,
-            Type::Int64 => FFIType::Int64,
-            Type::Float32 => FFIType::Float32,
-            Type::Float64 => FFIType::Float64,
+            Type::UInt8 => FfiType::UInt8,
+            Type::Int8 => FfiType::Int8,
+            Type::UInt16 => FfiType::UInt16,
+            Type::Int16 => FfiType::Int16,
+            Type::UInt32 => FfiType::UInt32,
+            Type::Int32 => FfiType::Int32,
+            Type::UInt64 => FfiType::UInt64,
+            Type::Int64 => FfiType::Int64,
+            Type::Float32 => FfiType::Float32,
+            Type::Float64 => FfiType::Float64,
             // Booleans lower into an Int8, to work around a bug in JNA.
-            Type::Boolean => FFIType::Int8,
+            Type::Boolean => FfiType::Int8,
             // Strings are always owned rust values.
             // We might add a separate type for borrowed strings in future.
-            Type::String => FFIType::RustBuffer,
+            Type::String => FfiType::RustBuffer(None),
             // Objects are pointers to an Arc<>
-            Type::Object(name) => FFIType::RustArcPtr(name.to_owned()),
+            Type::Object(name) => FfiType::RustArcPtr(name.to_owned()),
             // Callback interfaces are passed as opaque integer handles.
-            Type::CallbackInterface(_) => FFIType::UInt64,
+            Type::CallbackInterface(_) => FfiType::UInt64,
             // Other types are serialized into a bytebuffer and deserialized on the other side.
             Type::Enum(_)
             | Type::Error(_)
@@ -178,18 +178,18 @@ impl From<&Type> for FFIType {
             | Type::Sequence(_)
             | Type::Map(_, _)
             | Type::Timestamp
-            | Type::Duration
-            | Type::External { .. } => FFIType::RustBuffer,
-            Type::Custom { builtin, .. } => FFIType::from(builtin.as_ref()),
-            Type::Unresolved { .. } => {
-                unreachable!("Type must be resolved before lowering to FFIType")
+            | Type::Duration => FfiType::RustBuffer(None),
+            Type::External { name, .. } => FfiType::RustBuffer(Some(name.clone())),
+            Type::Custom { builtin, .. } => FfiType::from(builtin.as_ref()),
+            Type::Unresolved { name } => {
+                unreachable!("Type `{name}` must be resolved before lowering to FfiType")
             }
         }
     }
 }
 
 // Needed for rust scaffolding askama template
-impl From<&&Type> for FFIType {
+impl From<&&Type> for FfiType {
     fn from(ty: &&Type) -> Self {
         (*ty).into()
     }
@@ -225,15 +225,36 @@ impl TypeUniverse {
     ///
     /// This will fail if you try to add a name for which an existing type definition exists.
     pub fn add_type_definition(&mut self, name: &str, type_: Type) -> Result<()> {
+        if let Type::Unresolved { name: name_ } = &type_ {
+            assert_eq!(name, name_);
+            bail!("attempted to add type definition of Unresolved for `{name}`");
+        }
+
         if resolve_builtin_type(name).is_some() {
             bail!(
                 "please don't shadow builtin types ({name}, {})",
                 type_.canonical_name(),
             );
         }
-        self.add_known_type(&type_);
+        self.add_known_type(&type_)?;
         match self.type_definitions.entry(name.to_string()) {
-            Entry::Occupied(_) => bail!("Conflicting type definition for \"{name}\""),
+            Entry::Occupied(o) => {
+                let existing_def = o.get();
+                if type_ == *existing_def
+                    && matches!(type_, Type::Record(_) | Type::Enum(_) | Type::Error(_))
+                {
+                    // UDL and proc-macro metadata are allowed to define the same record, enum and
+                    // error types, if the definitions match (fields and variants are checked in
+                    // add_{record,enum,error}_definition)
+                    Ok(())
+                } else {
+                    bail!(
+                        "Conflicting type definition for `{name}`! \
+                         existing definition: {existing_def:?}, \
+                         new definition: {type_:?}"
+                    );
+                }
+            }
             Entry::Vacant(e) => {
                 e.insert(type_);
                 Ok(())
@@ -255,11 +276,10 @@ impl TypeUniverse {
     }
 
     /// Add a [Type] to the set of all types seen in the component interface.
-    pub fn add_known_type(&mut self, type_: &Type) {
-        // Don't add unresolved types, they are only useful as placeholders
-        // inside function / method signatures.
+    pub fn add_known_type(&mut self, type_: &Type) -> Result<()> {
+        // Adding potentially-unresolved types is a footgun, make sure we don't do that.
         if matches!(type_, Type::Unresolved { .. }) {
-            return;
+            bail!("Unresolved types must be resolved before being added to known types");
         }
 
         // Types are more likely to already be known than not, so avoid unnecessary cloning.
@@ -271,15 +291,17 @@ impl TypeUniverse {
             // this is important if the inner type isn't ever mentioned outside one of these
             // generic builtin types.
             match type_ {
-                Type::Optional(t) => self.add_known_type(t),
-                Type::Sequence(t) => self.add_known_type(t),
+                Type::Optional(t) => self.add_known_type(t)?,
+                Type::Sequence(t) => self.add_known_type(t)?,
                 Type::Map(k, v) => {
-                    self.add_known_type(k);
-                    self.add_known_type(v);
+                    self.add_known_type(k)?;
+                    self.add_known_type(v)?;
                 }
                 _ => {}
             }
         }
+
+        Ok(())
     }
 
     /// Iterator over all the known types in this universe.

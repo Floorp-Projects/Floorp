@@ -85,6 +85,7 @@ dictionary ClientInfoMetrics {
     string? device_manufacturer = null;
     string? device_model = null;
     string? android_sdk_version = null;
+    i64? windows_build_number = null;
 };
 
 [Error]

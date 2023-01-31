@@ -132,6 +132,10 @@ fn metadata_deps() {
 
     assert_eq!(this.name, "cargo_metadata");
 
+    let workspace_packages = metadata.workspace_packages();
+    assert_eq!(workspace_packages.len(), 1);
+    assert_eq!(&workspace_packages[0].id, this_id);
+
     let lib = this
         .targets
         .iter()

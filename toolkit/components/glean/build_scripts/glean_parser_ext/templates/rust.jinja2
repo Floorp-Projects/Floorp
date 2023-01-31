@@ -13,11 +13,7 @@ Jinja2 template is not. Please file bugs! #}
 {# we always use the `extra` suffix, because we only expose the new event API #}
 {% set suffix = "Extra" %}
 {% if obj|attr(name)|length %}
-    {% if obj.has_extra_types %}
     {{ extra_keys_with_types(obj, name, suffix)|indent }}
-    {% else %}
-    compile_error!("Untyped event extras not supported. Please annotate event extras with a type. See documentation for details. (Metric: {{obj.category}}.{{obj.name}}, defined in: {{obj.defined_in['filepath']}}:{{obj.defined_in['line']}})");
-    {% endif %}
 {% endif %}
 {% endfor %}
 {%- endmacro -%}

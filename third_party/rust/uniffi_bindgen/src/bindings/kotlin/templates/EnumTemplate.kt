@@ -1,5 +1,5 @@
 {#
-// Kotlin's `enum class` constuct doesn't support variants with associated data,
+// Kotlin's `enum class` construct doesn't support variants with associated data,
 // but is a little nicer for consumers than its `sealed class` enum pattern.
 // So, we switch here, using `enum class` for enums with no associated data
 // and `sealed class` for the general case.

@@ -1,0 +1,16 @@
+# Note that this `release.toml` exists to capture things that must only be
+# done once for `cargo release-backend-crates`.
+#
+# [../uniffi/release.toml](../uniffi/release.toml) captures things that must only be done for `cargo release-uniffi`
+#
+# All other config exists in [../release.toml](../release.toml).
+
+tag = false
+
+# This is how we manage the sections in CHANGELOG.md
+pre-release-replacements = [
+  {file="../CHANGELOG.md", search="\\[\\[UnreleasedBackendVersion\\]\\]", replace="v{{version}}", exactly=1},
+  {file="../CHANGELOG.md", search="\\[\\[ReleaseDate\\]\\]", replace="{{date}}", exactly=1},
+  {file="../CHANGELOG.md", search="\\.\\.\\.HEAD\\)", replace="...{{tag_name}})", exactly=1},
+  {file="../CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n\n## [[UnreleasedUniFFIVersion]] (backend crates: [[UnreleasedBackendVersion]]) - (_[[ReleaseDate]]_)\n\n[All changes in [[UnreleasedVersion]]](https://github.com/mozilla/uniffi-rs/compare/v{{version}}...HEAD).", exactly=1},
+]

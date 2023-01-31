@@ -177,6 +177,8 @@ class Metric:
                 d[key] = [x.name for x in val]
         del d["name"]
         del d["category"]
+        d.pop("_config", None)
+        d.pop("_generate_enums", None)
         return d
 
     def _serialize_input(self) -> Dict[str, util.JSONType]:
@@ -305,14 +307,11 @@ class Event(Metric):
 
     default_store_names = ["events"]
 
-    _generate_enums = [("allowed_extra_keys", "Keys")]
-
     def __init__(self, *args, **kwargs):
         self.extra_keys = kwargs.pop("extra_keys", {})
         self.validate_extra_keys(self.extra_keys, kwargs.get("_config", {}))
-        if self.has_extra_types:
-            self._generate_enums = [("allowed_extra_keys_with_types", "Extra")]
         super().__init__(*args, **kwargs)
+        self._generate_enums = [("allowed_extra_keys_with_types", "Extra")]
 
     @property
     def allowed_extra_keys(self):
@@ -326,14 +325,6 @@ class Event(Metric):
             [(k, v.get("type", "string")) for (k, v) in self.extra_keys.items()],
             key=lambda x: x[0],
         )
-
-    @property
-    def has_extra_types(self):
-        """
-        If any extra key has a `type` specified,
-        we generate the new struct/object-based API.
-        """
-        return any("type" in x for x in self.extra_keys.values())
 
     @staticmethod
     def validate_extra_keys(extra_keys: Dict[str, str], config: Dict[str, Any]) -> None:

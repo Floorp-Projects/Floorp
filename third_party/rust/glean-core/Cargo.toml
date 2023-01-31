@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 name = "glean-core"
-version = "52.0.1"
+version = "52.2.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -32,9 +33,10 @@ readme = "README.md"
 keywords = ["telemetry"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
+resolver = "1"
 
 [package.metadata.glean]
-glean-parser = "6.4.0"
+glean-parser = "7.0.0"
 
 [dependencies.bincode]
 version = "1.2.1"
@@ -45,6 +47,11 @@ features = ["serde"]
 
 [dependencies.crossbeam-channel]
 version = "0.5"
+
+[dependencies.env_logger]
+version = "0.9.0"
+optional = true
+default-features = false
 
 [dependencies.flate2]
 version = "1.0.19"
@@ -77,17 +84,12 @@ version = "1.0.4"
 version = "0.1.40"
 
 [dependencies.uniffi]
-version = "0.21.0"
-
-[dependencies.uniffi_macros]
-version = "0.21.0"
+version = "0.23.0"
+default-features = false
 
 [dependencies.uuid]
 version = "1.0"
 features = ["v4"]
-
-[dependencies.whatsys]
-version = "0.1.2"
 
 [dependencies.zeitstempel]
 version = "0.1.0"
@@ -110,16 +112,14 @@ version = "0.4"
 [dev-dependencies.tempfile]
 version = "3.1.0"
 
-[build-dependencies.uniffi_build]
-version = "0.21.0"
-features = ["builtin-bindgen"]
+[build-dependencies.uniffi]
+version = "0.23.0"
+features = ["build"]
+default-features = false
 
 [features]
+enable_env_logger = ["env_logger"]
 preinit_million_queue = []
-
-[target."cfg(not(target_os = \"android\"))".dependencies.env_logger]
-version = "0.9.0"
-default-features = false
 
 [target."cfg(target_os = \"android\")".dependencies.android_logger]
 version = "0.11.0"

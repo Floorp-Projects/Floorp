@@ -353,7 +353,7 @@ function gradient(value) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                110, // external_types:external_types_54cc_gradient
+                110, // external_types:external_types_c083_gradient
                 FfiConverterOptionalTypeLine.lower(value),
             )
         }

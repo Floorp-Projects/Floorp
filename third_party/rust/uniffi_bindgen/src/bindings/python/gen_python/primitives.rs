@@ -15,17 +15,17 @@ fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
                 "False".into()
             }
         }
-        Literal::String(s) => format!("\"{}\"", s),
+        Literal::String(s) => format!("\"{s}\""),
         // https://docs.python.org/3/reference/lexical_analysis.html#integer-literals
         Literal::Int(i, radix, _) => match radix {
-            Radix::Octal => format!("int(0o{:o})", i),
-            Radix::Decimal => format!("{}", i),
-            Radix::Hexadecimal => format!("{:#x}", i),
+            Radix::Octal => format!("int(0o{i:o})"),
+            Radix::Decimal => format!("{i}"),
+            Radix::Hexadecimal => format!("{i:#x}"),
         },
         Literal::UInt(i, radix, _) => match radix {
-            Radix::Octal => format!("0o{:o}", i),
-            Radix::Decimal => format!("{}", i),
-            Radix::Hexadecimal => format!("{:#x}", i),
+            Radix::Octal => format!("0o{i:o}"),
+            Radix::Decimal => format!("{i}"),
+            Radix::Hexadecimal => format!("{i:#x}"),
         },
         Literal::Float(string, _type_) => string.clone(),
 

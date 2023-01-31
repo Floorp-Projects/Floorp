@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 fn main() {
-    uniffi_build::generate_scaffolding("./src/arithmetic.udl").unwrap();
+    uniffi::generate_scaffolding("./src/arithmetic.udl").unwrap();
 }

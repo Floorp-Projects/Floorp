@@ -333,7 +333,7 @@ class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                86, // sprites:sprites_accb_Sprite_new
+                86, // sprites:sprites_3c8d_Sprite_new
                 FfiConverterOptionalTypePoint.lower(initialPosition),
             )
         }
@@ -369,7 +369,7 @@ class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                87, // sprites:sprites_accb_Sprite_new_relative_to
+                87, // sprites:sprites_3c8d_Sprite_new_relative_to
                 FfiConverterTypePoint.lower(reference),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -385,7 +385,7 @@ class Sprite {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                88, // sprites:sprites_accb_Sprite_get_position
+                88, // sprites:sprites_3c8d_Sprite_get_position
                 FfiConverterTypeSprite.lower(this),
             )
         }
@@ -409,7 +409,7 @@ class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                89, // sprites:sprites_accb_Sprite_move_to
+                89, // sprites:sprites_3c8d_Sprite_move_to
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypePoint.lower(position),
             )
@@ -434,7 +434,7 @@ class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                90, // sprites:sprites_accb_Sprite_move_by
+                90, // sprites:sprites_3c8d_Sprite_move_by
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -689,7 +689,7 @@ function translate(position,direction) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                91, // sprites:sprites_accb_translate
+                91, // sprites:sprites_3c8d_translate
                 FfiConverterTypePoint.lower(position),
                 FfiConverterTypeVector.lower(direction),
             )

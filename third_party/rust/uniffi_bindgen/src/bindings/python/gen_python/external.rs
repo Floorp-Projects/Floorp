@@ -23,7 +23,7 @@ impl CodeType for ExternalCodeType {
         format!("Type{}", self.name)
     }
 
-    fn coerce(&self, _oracle: &dyn CodeOracle, _nm: &str) -> String {
-        panic!("should not be necessary to coerce External types");
+    fn coerce(&self, _oracle: &dyn CodeOracle, nm: &str) -> String {
+        nm.into()
     }
 }

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::{CodeType, TypeIdentifier};
-use crate::interface::FFIType;
+use crate::interface::FfiType;
 
 /// An object to look up a foreign language code specific renderer for a given type used.
 /// Every `Type` referred to in the `ComponentInterface` should map to a corresponding
@@ -31,5 +31,5 @@ pub trait CodeOracle {
     /// Get the idiomatic rendering of an error name.
     fn error_name(&self, nm: &str) -> String;
 
-    fn ffi_type_label(&self, ffi_type: &FFIType) -> String;
+    fn ffi_type_label(&self, ffi_type: &FfiType) -> String;
 }

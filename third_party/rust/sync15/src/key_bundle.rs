@@ -194,7 +194,7 @@ mod test {
         let s = key_bundle.decrypt(&ciphertext, IV_B64, HMAC_B16).unwrap();
 
         let cleartext =
-            String::from_utf8(base64::decode(&CLEARTEXT_B64_PIECES.join("")).unwrap()).unwrap();
+            String::from_utf8(base64::decode(CLEARTEXT_B64_PIECES.join("")).unwrap()).unwrap();
         assert_eq!(&cleartext, &s);
     }
 
@@ -203,7 +203,7 @@ mod test {
         let key_bundle = KeyBundle::from_base64(ENC_KEY_B64, HMAC_KEY_B64).unwrap();
         let iv = base64::decode(IV_B64).unwrap();
 
-        let cleartext_bytes = base64::decode(&CLEARTEXT_B64_PIECES.join("")).unwrap();
+        let cleartext_bytes = base64::decode(CLEARTEXT_B64_PIECES.join("")).unwrap();
         let (enc_base64, _hmac_base16) = key_bundle
             .encrypt_bytes_with_iv(&cleartext_bytes, &iv)
             .unwrap();

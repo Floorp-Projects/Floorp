@@ -1,20 +1,20 @@
 fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     typealias SwiftType = {{ type_name }}
 
-    static func write(_ value: {{ type_name }}, into buf: Writer) {
+    public static func write(_ value: {{ type_name }}, into buf: inout [UInt8]) {
         let len = Int32(value.count)
-        buf.writeInt(len)
+        writeInt(&buf, len)
         for item in value {
-            {{ inner_type|write_fn }}(item, into: buf)
+            {{ inner_type|write_fn }}(item, into: &buf)
         }
     }
 
-    static func read(from buf: Reader) throws -> {{ type_name }} {
-        let len: Int32 = try buf.readInt()
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> {{ type_name }} {
+        let len: Int32 = try readInt(&buf)
         var seq = {{ type_name }}()
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
-            seq.append(try {{ inner_type|read_fn }}(from: buf))
+            seq.append(try {{ inner_type|read_fn }}(from: &buf))
         }
         return seq
     }

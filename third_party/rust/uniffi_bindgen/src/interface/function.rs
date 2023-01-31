@@ -36,14 +36,11 @@ use std::convert::TryFrom;
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
-use super::ffi::{FFIArgument, FFIFunction};
+use super::attributes::{ArgumentAttributes, Attribute, FunctionAttributes};
+use super::ffi::{FfiArgument, FfiFunction};
 use super::literal::{convert_default_value, Literal};
 use super::types::{Type, TypeIterator};
-use super::{
-    attributes::{ArgumentAttributes, FunctionAttributes},
-    convert_type,
-};
-use super::{APIConverter, ComponentInterface};
+use super::{convert_type, APIConverter, ComponentInterface};
 
 /// Represents a standalone function.
 ///
@@ -61,9 +58,9 @@ pub struct Function {
     //    so excluding it is safe.
     //  - its `name` property includes a checksum derived from  the very
     //    hash value we're trying to calculate here, so excluding it
-    //    avoids a weird circular depenendency in the calculation.
+    //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
-    pub(super) ffi_func: FFIFunction,
+    pub(super) ffi_func: FfiFunction,
     pub(super) attributes: FunctionAttributes,
 }
 
@@ -84,7 +81,7 @@ impl Function {
         self.return_type.as_ref()
     }
 
-    pub fn ffi_func(&self) -> &FFIFunction {
+    pub fn ffi_func(&self) -> &FfiFunction {
         &self.ffi_func
     }
 
@@ -134,9 +131,9 @@ impl From<uniffi_meta::FnMetadata> for Function {
         let return_type = meta.return_type.map(|out| convert_type(&out));
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
 
-        let ffi_func = FFIFunction {
+        let ffi_func = FfiFunction {
             name: ffi_name,
-            ..FFIFunction::default()
+            ..FfiFunction::default()
         };
 
         Self {
@@ -144,7 +141,7 @@ impl From<uniffi_meta::FnMetadata> for Function {
             arguments,
             return_type,
             ffi_func,
-            attributes: Default::default(),
+            attributes: meta.throws.map(Attribute::Throws).into_iter().collect(),
         }
     }
 }
@@ -208,9 +205,9 @@ impl Argument {
     }
 }
 
-impl From<&Argument> for FFIArgument {
-    fn from(a: &Argument) -> FFIArgument {
-        FFIArgument {
+impl From<&Argument> for FfiArgument {
+    fn from(a: &Argument) -> FfiArgument {
+        FfiArgument {
             name: a.name.clone(),
             type_: (&a.type_).into(),
         }

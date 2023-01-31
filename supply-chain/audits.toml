@@ -232,6 +232,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.9 -> 1.1.1"
 
+[[audits.cargo_metadata]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.15.2"
+notes = "I reviewed the whole code base. Parser for the output of cargo-metadata, relying mostly on serde. No unsafe code used."
+
 [[audits.chardetng]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"
 criteria = "safe-to-deploy"
@@ -905,6 +911,12 @@ criteria = "safe-to-deploy"
 delta = "52.0.0 -> 52.0.1"
 notes = "Maintained by the Glean team at Mozilla"
 
+[[audits.glean]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "52.0.1 -> 52.2.0"
+notes = "Maintained by the Glean team at Mozilla"
+
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -986,6 +998,12 @@ notes = "Maintained by the Glean team at Mozilla"
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "52.0.0 -> 52.0.1"
+notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean-core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "52.0.1 -> 52.2.0"
 notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.goblin]]
@@ -2279,6 +2297,12 @@ criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "No changes."
 
+[[audits.uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
+
 [[audits.uniffi_bindgen]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2308,6 +2332,12 @@ criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "I authored the changes in this version."
 
+[[audits.uniffi_bindgen]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
+
 [[audits.uniffi_build]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2336,6 +2366,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "No changes."
+
+[[audits.uniffi_build]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
 
 [[audits.uniffi_checksum_derive]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2343,6 +2379,18 @@ criteria = "safe-to-deploy"
 version = "0.21.1"
 notes = "I authored this crate."
 
+[[audits.uniffi_checksum_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
+
+[[audits.uniffi_core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.23.0"
+notes = "Maintained by the Glean and Application Services teams."
+
 [[audits.uniffi_macros]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2371,6 +2419,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "No changes."
+
+[[audits.uniffi_macros]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
 
 [[audits.uniffi_meta]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
@@ -2394,6 +2448,18 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.21.0 -> 0.21.1"
 notes = "I authored the changes in this version."
+
+[[audits.uniffi_meta]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.21.1 -> 0.23.0"
+notes = "Maintained by the Glean and Application Services team."
+
+[[audits.uniffi_testing]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.23.0"
+notes = "Maintained by the Glean and Application Services team."
 
 [[audits.uuid]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
@@ -2642,6 +2708,12 @@ Contains platform-specific FFI code for apple, mac, and windows. The windows cod
 also contains a small C file compiled at build-time. I audited all of it and it
 looks correct.
 """
+
+[[audits.whatsys]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.3.1"
+notes = "Maintained by me. I have written or reviewed all of the code."
 
 [[audits.winreg]]
 who = "Ray Kraesig <rkraesig@mozilla.com>"

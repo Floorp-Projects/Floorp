@@ -273,6 +273,21 @@ def check_expired_metric(
         yield ("Metric has expired. Please consider removing it.")
 
 
+def check_old_event_api(
+    metric: metrics.Metric, parser_config: Dict[str, Any]
+) -> LintGenerator:
+    # Glean v52.0.0 removed the old events API.
+    # The metrics-2-0-0 schema still supports it.
+    # We want to warn about it.
+    # This can go when we introduce 3-0-0
+
+    if not isinstance(metric, metrics.Event):
+        return
+
+    if not all("type" in x for x in metric.extra_keys.values()):
+        yield ("The old event API is gone. Extra keys require a type.")
+
+
 def check_redundant_ping(
     pings: pings.Ping, parser_config: Dict[str, Any]
 ) -> LintGenerator:
@@ -318,6 +333,7 @@ METRIC_CHECKS: Dict[
     "EXPIRATION_DATE_TOO_FAR": (check_expired_date, CheckType.warning),
     "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
     "EXPIRED": (check_expired_metric, CheckType.warning),
+    "OLD_EVENT_API": (check_old_event_api, CheckType.warning),
 }
 
 
