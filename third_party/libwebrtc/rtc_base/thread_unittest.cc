@@ -579,37 +579,6 @@ TEST(ThreadManager, ProcessAllMessageQueuesWithClearedQueue) {
   ThreadManager::ProcessAllMessageQueuesForTesting();
 }
 
-class RefCountedHandler : public MessageHandler, public rtc::RefCountInterface {
- public:
-  ~RefCountedHandler() override { ThreadManager::Clear(this); }
-
-  void OnMessage(Message* msg) override {}
-};
-
-class EmptyHandler : public MessageHandler {
- public:
-  ~EmptyHandler() override { ThreadManager::Clear(this); }
-
-  void OnMessage(Message* msg) override {}
-};
-
-TEST(ThreadManager, ClearReentrant) {
-  std::unique_ptr<Thread> t(Thread::Create());
-  EmptyHandler handler;
-  RefCountedHandler* inner_handler(
-      new rtc::RefCountedObject<RefCountedHandler>());
-  // When the empty handler is destroyed, it will clear messages queued for
-  // itself. The message to be cleared itself wraps a MessageHandler object
-  // (RefCountedHandler) so this will cause the message queue to be cleared
-  // again in a re-entrant fashion, which previously triggered a DCHECK.
-  // The inner handler will be removed in a re-entrant fashion from the
-  // message queue of the thread while the outer handler is removed, verifying
-  // that the iterator is not invalidated in "Thread::Clear".
-  t->Post(RTC_FROM_HERE, inner_handler, 0);
-  t->Post(RTC_FROM_HERE, &handler, 0,
-          new ScopedRefMessageData<RefCountedHandler>(inner_handler));
-}
-
 void WaitAndSetEvent(Event* wait_event, Event* set_event) {
   wait_event->Wait(Event::kForever);
   set_event->Set();

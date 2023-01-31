@@ -196,20 +196,6 @@ void ThreadManager::RegisterSendAndCheckForCycles(Thread* source,
 #endif
 
 // static
-void ThreadManager::Clear(MessageHandler* handler) {
-  return Instance()->ClearInternal(handler);
-}
-void ThreadManager::ClearInternal(MessageHandler* handler) {
-  // Deleted objects may cause re-entrant calls to ClearInternal. This is
-  // allowed as the list of message queues does not change while queues are
-  // cleared.
-  MarkProcessingCritScope cs(&crit_, &processing_);
-  for (Thread* queue : message_queues_) {
-    queue->Clear(handler);
-  }
-}
-
-// static
 void ThreadManager::ProcessAllMessageQueuesForTesting() {
   return Instance()->ProcessAllMessageQueuesInternal();
 }

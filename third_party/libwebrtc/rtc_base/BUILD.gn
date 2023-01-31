@@ -933,7 +933,6 @@ rtc_library("threading") {
     "async_resolver.h",
     "internal/default_socket_server.cc",
     "internal/default_socket_server.h",
-    "message_handler.cc",
     "message_handler.h",
     "network_monitor.cc",
     "network_monitor.h",
