@@ -305,6 +305,7 @@ tests.push({
   region: "US",
   distribution: "mint-001",
   test: engines =>
+    hasParams(engines, "DuckDuckGo", "searchbar", "t=lm") &&
     hasParams(engines, "Google", "searchbar", "client=firefox-b-1-lm") &&
     hasDefault(engines, "Google") &&
     hasEnginesFirst(engines, ["Google"]) &&
@@ -316,6 +317,7 @@ tests.push({
   region: "GB",
   distribution: "mint-001",
   test: engines =>
+    hasParams(engines, "DuckDuckGo", "searchbar", "t=lm") &&
     hasParams(engines, "Google", "searchbar", "client=firefox-b-lm") &&
     hasDefault(engines, "Google") &&
     hasEnginesFirst(engines, ["Google"]) &&
