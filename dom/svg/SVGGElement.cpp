@@ -27,10 +27,6 @@ SVGGElement::SVGGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGGElement)
 
-bool SVGGElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eUSE_TARGET);
-}
-
 //----------------------------------------------------------------------
 // nsIContent methods
 

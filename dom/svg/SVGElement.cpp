@@ -931,8 +931,6 @@ nsChangeHint SVGElement::GetAttributeChangeHint(const nsAtom* aAttribute,
   return retval;
 }
 
-bool SVGElement::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 void SVGElement::NodeInfoChanged(Document* aOldDoc) {
   SVGElementBase::NodeInfoChanged(aOldDoc);
   aOldDoc->UnscheduleSVGForPresAttrEvaluation(this);

@@ -14,9 +14,9 @@
 #include "mozilla/SVGUseFrame.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGGraphicsElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"
@@ -89,10 +89,6 @@ namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // nsINode methods
-
-bool SVGUseElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eUSE_TARGET);
-}
 
 void SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID,
                                            nsAtom* aAttribute) {
@@ -365,7 +361,8 @@ void SVGUseElement::UpdateShadowTree() {
   }
   MOZ_ASSERT(shadow);
 
-  Element* targetElement = mReferencedElementTracker.get();
+  auto* targetElement =
+      SVGGraphicsElement::FromNodeOrNull(mReferencedElementTracker.get());
   RefPtr<Element> newElement;
 
   auto UpdateShadowTree = mozilla::MakeScopeExit([&]() {
@@ -381,7 +378,7 @@ void SVGUseElement::UpdateShadowTree() {
   });
 
   // make sure target is valid type for <use>
-  if (!targetElement || !targetElement->IsNodeOfType(nsINode::eUSE_TARGET)) {
+  if (!targetElement) {
     return;
   }
 

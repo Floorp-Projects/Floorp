@@ -383,8 +383,6 @@ class nsINode : public mozilla::dom::EventTarget {
   enum {
     /** form control elements */
     eHTML_FORM_CONTROL = 1 << 6,
-    /** SVG use targets */
-    eUSE_TARGET = 1 << 9,
     /** SVG shapes such as lines and polygons, but not images */
     eSHAPE = 1 << 12
   };
@@ -821,6 +819,8 @@ class nsINode : public mozilla::dom::EventTarget {
   inline bool IsAnyOfSVGElements(First aFirst, Args... aArgs) const {
     return IsSVGElement() && IsNodeInternal(aFirst, aArgs...);
   }
+
+  virtual bool IsSVGGraphicsElement() const { return false; }
 
   inline bool IsXULElement() const {
     return IsElement() && IsInNamespace(kNameSpaceID_XUL);
