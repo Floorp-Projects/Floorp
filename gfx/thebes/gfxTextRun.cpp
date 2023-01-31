@@ -25,13 +25,12 @@
 #include "mozilla/Likely.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalError
+#include "mozilla/intl/String.h"
 #include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "SharedFontList-impl.h"
 #include "TextDrawTarget.h"
-
-#include <unicode/unorm2.h>
 
 #ifdef XP_WIN
 #  include "gfxWindowsPlatform.h"
@@ -3080,12 +3079,9 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
     if (aPrevMatchedFont->HasCharacter(aCh) || IsDefaultIgnorable(aCh)) {
       return do_AddRef(aPrevMatchedFont);
     }
-    // Get the singleton NFC normalizer; this does not need to be deleted.
-    static UErrorCode err = U_ZERO_ERROR;
-    static const UNormalizer2* nfc = unorm2_getNFCInstance(&err);
     // Check if this char and preceding char can compose; if so, is the
     // combination supported by the current font.
-    int32_t composed = unorm2_composePair(nfc, aPrevCh, aCh);
+    uint32_t composed = intl::String::ComposePairNFC(aPrevCh, aCh);
     if (composed > 0 && aPrevMatchedFont->HasCharacter(composed)) {
       return do_AddRef(aPrevMatchedFont);
     }
