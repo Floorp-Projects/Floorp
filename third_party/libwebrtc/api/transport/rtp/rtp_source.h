@@ -33,19 +33,6 @@ class RtpSource {
 
   RtpSource() = delete;
 
-  // TODO(bugs.webrtc.org/10739): Remove this constructor once all clients
-  // migrate to the version with absolute capture time.
-  RtpSource(int64_t timestamp_ms,
-            uint32_t source_id,
-            RtpSourceType source_type,
-            absl::optional<uint8_t> audio_level,
-            uint32_t rtp_timestamp)
-      : RtpSource(timestamp_ms,
-                  source_id,
-                  source_type,
-                  rtp_timestamp,
-                  {audio_level, absl::nullopt}) {}
-
   RtpSource(int64_t timestamp_ms,
             uint32_t source_id,
             RtpSourceType source_type,
