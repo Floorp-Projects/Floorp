@@ -127,12 +127,8 @@ locales = [
     l10n = "{l}browser/**"
 
 [[paths]]
-    reference = "browser/branding/*/locales/en-US/**"
-    l10n = "{l}browser/branding/*/**"
-
-[[paths]]
-    reference = "floorp/browser/branding/*/locales/en-US/**"
-    l10n = "{l}floorp/browser/branding/*/**"
+    reference = "browser/branding/official/locales/en-US/**"
+    l10n = "{l}browser/branding/official/**"
 
 [[paths]]
     reference = "browser/extensions/formautofill/locales/en-US/**"
@@ -152,6 +148,9 @@ locales = [
 
 [[includes]]
     path = "devtools/client/locales/l10n.toml"
+
+[[includes]]
+    path = "floorp/browser/locales/l10n.toml"
 
 [[paths]]
     reference = "devtools/startup/locales/en-US/**"
