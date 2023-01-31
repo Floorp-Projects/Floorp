@@ -89,7 +89,7 @@ function test() {
   sendKeys("KEY_ArrowRight");
   sendKeys("KEY_Backspace");
   sendKeys("KEY_ArrowRight");
-  sendKeys("KEY_Backspace");
+  sendKeys("KEY_Delete");
   elem.blur();
   checkValidity(elem, false);
 
@@ -97,6 +97,17 @@ function test() {
   sendKeys("02292017");
   elem.blur();
   checkValidity(elem, true);
+
+  // Clearing all fields should clear bad input validity state as well.
+  elem.focus();
+  synthesizeKey("KEY_Backspace", { accelKey: true });
+  checkValidity(elem, false);
+
+  sendKeys("22334444");
+  elem.blur();
+  elem.focus();
+  synthesizeKey("KEY_Delete", { accelKey: true });
+  checkValidity(elem, false);
 }
 
 </script>
