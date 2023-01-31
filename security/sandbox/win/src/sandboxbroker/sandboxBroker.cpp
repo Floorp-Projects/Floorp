@@ -999,14 +999,14 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
 
-  // The GPU process needs to write to a shader cache for performance reasons
-  if (sProfileDir) {
-    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     sProfileDir, u"\\shader-cache"_ns);
-
-    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                     sProfileDir, u"\\shader-cache\\*"_ns);
-  }
+  // TEMPORARY WORKAROUND - Blocking access to the filesystem breaks Raptor
+  // tests and any other piece of software that uses screen recording, which
+  // may hinder developers that are developing/testing on Firefox
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY, L"*");
+  MOZ_RELEASE_ASSERT(
+      sandbox::SBOX_ALL_OK == result,
+      "With these static arguments AddRule should never fail, what happened?");
 
   // The process needs to be able to duplicate shared memory handles,
   // which are Section handles, to the broker process and other child processes.
