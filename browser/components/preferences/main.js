@@ -786,6 +786,15 @@ var gMainPane = {
     });
   },
 
+  handleSubcategory(subcategory) {
+    if (subcategory == "migrate") {
+      this.showMigrationWizardSubDialog();
+      return true;
+    }
+
+    return false;
+  },
+
   // CONTAINERS
 
   /*
@@ -1700,6 +1709,21 @@ var gMainPane = {
         }
       }
     })().catch(console.error);
+  },
+
+  /**
+   * Displays the migration wizard dialog in a subdialog.
+   */
+  showMigrationWizardSubDialog() {
+    let dialog = gSubDialog.open(
+      "chrome://browser/content/migration/migration-dialog.html",
+      { features: "resizable=no" },
+      {
+        onResize() {
+          dialog.resizeVertically();
+        },
+      }
+    );
   },
 
   /**

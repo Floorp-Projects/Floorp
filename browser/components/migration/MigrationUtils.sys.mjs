@@ -507,31 +507,21 @@ class MigrationUtils {
    *   True if the source selection page of the wizard should be skipped.
    * @param {string} [aOptions.profileId]
    *   An identifier for the profile to use when migrating.
+   * @returns {Promise<undefined>}
+   *   If the new content-modal migration dialog is enabled and an
+   *   about:preferences tab can be opened, this will resolve when
+   *   that tab has been switched to. Otherwise, this will resolve
+   *   just after opening the dialog window.
    */
   showMigrationWizard(aOpener, aOptions) {
     if (
       Services.prefs.getBoolPref("browser.migrate.content-modal.enabled", false)
     ) {
-      const DIALOG_URL =
-        "chrome://browser/content/migration/migration-dialog.html";
-      if (aOpener?.gBrowser) {
-        const { gBrowser } = aOpener;
-        const { selectedBrowser } = gBrowser;
-        const { dialog } = gBrowser.getTabDialogBox(selectedBrowser).open(
-          DIALOG_URL,
-          { features: "resizable=no" },
-          {
-            onResize: () => {
-              dialog.resizeVertically();
-            },
-            options: aOptions,
-          }
-        );
-      } else {
+      let openStandaloneWindow = () => {
         const FEATURES = "dialog,centerscreen,resizable=no";
         const win = Services.ww.openWindow(
           aOpener,
-          DIALOG_URL,
+          "chrome://browser/content/migration/migration-dialog.html",
           "_blank",
           FEATURES,
           {
@@ -541,23 +531,38 @@ class MigrationUtils {
             options: aOptions,
           }
         );
+        return Promise.resolve();
+      };
+
+      if (aOptions.isStartupMigration) {
+        openStandaloneWindow();
+        return Promise.resolve();
       }
-    } else {
-      // Legacy migration dialog
-      const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
-      let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
-      if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
-        let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
-        if (win) {
-          win.focus();
-          return;
-        }
-        // On mac, the migration wiazrd should only be modal in the case of
-        // startup-migration.
-        features = "centerscreen,chrome,resizable=no";
+
+      if (aOpener?.openPreferences) {
+        return aOpener.openPreferences("general-migrate");
       }
-      Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, aOptions);
+
+      // If somehow we failed to open about:preferences, fall back to opening
+      // the top-level window.
+      openStandaloneWindow();
+      return Promise.resolve();
     }
+    // Legacy migration dialog
+    const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
+    let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
+    if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
+      let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+      if (win) {
+        win.focus();
+        return Promise.resolve();
+      }
+      // On mac, the migration wiazrd should only be modal in the case of
+      // startup-migration.
+      features = "centerscreen,chrome,resizable=no";
+    }
+    Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, aOptions);
+    return Promise.resolve();
   }
 
   /**

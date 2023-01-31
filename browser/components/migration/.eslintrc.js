@@ -28,7 +28,7 @@ module.exports = {
 
   overrides: [
     {
-      files: "tests/unit/head*.js",
+      files: ["tests/browser/head.js", "tests/unit/head*.js"],
       rules: {
         "no-unused-vars": [
           "error",

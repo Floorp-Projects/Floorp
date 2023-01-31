@@ -33,6 +33,7 @@ const MigrationDialog = {
   onLoad() {
     this._wiz = document.getElementById("wizard");
     this._wiz.addEventListener("MigrationWizard:Close", this);
+    document.addEventListener("keypress", this);
 
     let args = window.arguments[0];
     // When opened via nsIWindowWatcher.openWindow, the arguments are
@@ -56,6 +57,12 @@ const MigrationDialog = {
     switch (event.type) {
       case "load": {
         this.onLoad();
+        break;
+      }
+      case "keypress": {
+        if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+          window.close();
+        }
         break;
       }
       case "MigrationWizard:Close": {
