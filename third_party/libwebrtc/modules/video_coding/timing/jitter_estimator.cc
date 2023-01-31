@@ -263,9 +263,6 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // the frame size also is large the deviation is probably due to an incorrect
   // line slope.
   if (abs_delay_is_not_outlier || size_is_positive_outlier) {
-    // Update the variance of the deviation from the line given by the Kalman
-    // filter.
-    EstimateRandomJitter(delay_deviation_ms);
     // Prevent updating with frames which have been congested by a large frame,
     // and therefore arrives almost at the same time as that frame.
     // This can occur when we receive a large frame (key frame) which has been
@@ -276,14 +273,25 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
         config_.MaxFrameSizePercentileEnabled()
             ? max_frame_size_bytes_percentile_.GetFilteredValue()
             : max_frame_size_bytes_;
-    if (delta_frame_bytes >
-        GetCongestionRejectionFactor() * filtered_max_frame_size_bytes) {
-      // Update the Kalman filter with the new data
+    bool is_not_congested =
+        delta_frame_bytes >
+        GetCongestionRejectionFactor() * filtered_max_frame_size_bytes;
+
+    if (is_not_congested || config_.estimate_noise_when_congested) {
+      // Update the variance of the deviation from the line given by the Kalman
+      // filter.
+      EstimateRandomJitter(delay_deviation_ms);
+    }
+    if (is_not_congested) {
+      // Neither a delay outlier nor a congested frame, so we can safely update
+      // the Kalman filter with the sample.
       kalman_filter_.PredictAndUpdate(frame_delay.ms(), delta_frame_bytes,
                                       filtered_max_frame_size_bytes,
                                       var_noise_ms2_);
     }
   } else {
+    // Delay outliers affect the noise estimate through a value equal to the
+    // outlier rejection threshold.
     double num_stddev = (delay_deviation_ms >= 0) ? num_stddev_delay_outlier
                                                   : -num_stddev_delay_outlier;
     EstimateRandomJitter(num_stddev * sqrt(var_noise_ms2_));
