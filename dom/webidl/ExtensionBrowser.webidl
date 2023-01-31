@@ -40,6 +40,11 @@ interface ExtensionBrowser {
    Func="mozilla::extensions::ExtensionDns::IsAllowed"]
   readonly attribute ExtensionDns dns;
 
+  // `browser.proxy` API namespace
+  [Replaceable, SameObject, BinaryName="GetExtensionProxy",
+   Func="mozilla::extensions::ExtensionProxy::IsAllowed"]
+  readonly attribute ExtensionProxy proxy;
+
   // `browser.runtime` API namespace
   [Replaceable, SameObject, BinaryName="GetExtensionRuntime",
    Func="mozilla::extensions::ExtensionRuntime::IsAllowed"]
