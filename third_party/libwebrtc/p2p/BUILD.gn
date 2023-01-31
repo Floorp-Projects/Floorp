@@ -199,7 +199,9 @@ if (rtc_include_tests) {
     sources = [
       "base/fake_dtls_transport.h",
       "base/fake_packet_transport.h",
+      "base/mock_active_ice_controller.h",
       "base/mock_async_resolver.h",
+      "base/mock_ice_controller.h",
       "base/mock_ice_transport.h",
       "base/test_stun_server.cc",
       "base/test_stun_server.h",
