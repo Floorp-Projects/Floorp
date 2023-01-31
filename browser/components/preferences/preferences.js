@@ -138,6 +138,7 @@ XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
 var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
 
+var gCategoryModules = new Map();
 var gCategoryInits = new Map();
 function init_category_if_required(category) {
   let categoryInfo = gCategoryInits.get(category);
@@ -153,6 +154,7 @@ function init_category_if_required(category) {
 }
 
 function register_module(categoryName, categoryObject) {
+  gCategoryModules.set(categoryName, categoryObject);
   gCategoryInits.set(categoryName, {
     inited: false,
     async init() {
@@ -401,7 +403,14 @@ async function gotoPref(
     document.querySelector(".main-content").scrollTop = 0;
   }
 
-  spotlight(subcategory, category);
+  // Check to see if the category module wants to do any special
+  // handling of the subcategory - for example, opening a SubDialog.
+  //
+  // If not, just do a normal spotlight on the subcategory.
+  let categoryModule = gCategoryModules.get(category);
+  if (!categoryModule.handleSubcategory?.(subcategory)) {
+    spotlight(subcategory, category);
+  }
 
   // Record which category is shown
   Services.telemetry.recordEvent(

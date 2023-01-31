@@ -148,11 +148,9 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     return {
       key: migrator.constructor.key,
-      displayName: await lazy.gFluentStrings.formatValues([
-        {
-          id: migrator.constructor.displayNameL10nID,
-        },
-      ]),
+      displayName: await lazy.gFluentStrings.formatValue(
+        migrator.constructor.displayNameL10nID
+      ),
       resourceTypes: availableResourceTypes,
       profile: profileObj,
     };

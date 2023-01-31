@@ -3,40 +3,23 @@
 
 "use strict";
 
-const DIALOG_URL = "chrome://browser/content/migration/migration-dialog.html";
-
 /**
  * Tests that pressing "Cancel" from the selection page of the migration
- * dialog closes the dialog when opened in a tab dialog.
+ * dialog closes the dialog when opened in about:preferences as a subdialog.
  */
 add_task(async function test_cancel_close() {
-  let dialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
-  let wizardReady = BrowserTestUtils.waitForEvent(
-    window,
-    "MigrationWizard:Ready"
-  );
-  let dialogPromise = dialogBox.open(DIALOG_URL, {}, { onResize: () => {} });
-  let dialogs = dialogBox.getTabDialogManager()._dialogs;
-
-  Assert.equal(dialogs.length, 1, "Dialog manager has a dialog.");
-  let dialog = dialogs[0];
-
-  info("Waiting for dialogs to open.");
-  await dialog._dialogReady;
-  await wizardReady;
-
-  let dialogBody = dialog._frame.contentDocument.body;
-
-  let wizard = dialogBody.querySelector("#wizard");
-  let shadow = wizard.openOrClosedShadowRoot;
-  let cancelButton = shadow.querySelector(
-    'div[name="page-selection"] .cancel-close'
-  );
-
-  cancelButton.click();
-  await dialogPromise.closedPromise;
-
-  Assert.equal(dialogs.length, 0, "No dialogs remain open.");
+  await withMigrationWizardSubdialog(async subdialogWin => {
+    let dialogBody = subdialogWin.document.body;
+    let wizard = dialogBody.querySelector("#wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let cancelButton = shadow.querySelector(
+      'div[name="page-selection"] .cancel-close'
+    );
+    let dialogClosed = BrowserTestUtils.waitForEvent(window, "dialogclose");
+    cancelButton.click();
+    await dialogClosed;
+    Assert.ok(true, "Clicking the cancel button closed the dialog.");
+  });
 });
 
 /**
