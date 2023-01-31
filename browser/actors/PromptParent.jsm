@@ -319,7 +319,16 @@ class PromptParent extends JSWindowActorParent {
         let currentLocationsTabLabel;
 
         let targetTab = win.gBrowser.getTabForBrowser(browser);
-        if (args.isTopLevelCrossDomainAuth) {
+        if (
+          !Services.prefs.getBoolPref(
+            "privacy.authPromptSpoofingProtection",
+            false
+          )
+        ) {
+          args.isTopLevelCrossDomainAuth = false;
+        }
+        // Auth prompt spoofing protection, see bug 791594.
+        if (args.isTopLevelCrossDomainAuth && targetTab) {
           // Set up the url bar with the url of the cross domain resource.
           // onLocationChange will change the url back to the current browsers
           // if we do not hold the state here.

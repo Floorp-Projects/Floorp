@@ -23,6 +23,9 @@ const AUTH_URL = TEST_PATH_AUTH + "auth-route.sjs";
  *
  */
 async function trigger401AndHandle() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.authPromptSpoofingProtection", true]],
+  });
   let dialogShown = waitForDialogAndCopyURL();
   await BrowserTestUtils.withNewTab(CROSS_DOMAIN_URL, async function() {
     await dialogShown;
