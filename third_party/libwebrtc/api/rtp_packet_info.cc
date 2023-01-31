@@ -18,6 +18,15 @@ namespace webrtc {
 RtpPacketInfo::RtpPacketInfo()
     : ssrc_(0), rtp_timestamp_(0), receive_time_(Timestamp::MinusInfinity()) {}
 
+RtpPacketInfo::RtpPacketInfo(uint32_t ssrc,
+                             std::vector<uint32_t> csrcs,
+                             uint32_t rtp_timestamp,
+                             Timestamp receive_time)
+    : ssrc_(ssrc),
+      csrcs_(std::move(csrcs)),
+      rtp_timestamp_(rtp_timestamp),
+      receive_time_(receive_time) {}
+
 RtpPacketInfo::RtpPacketInfo(
     uint32_t ssrc,
     std::vector<uint32_t> csrcs,
@@ -28,9 +37,9 @@ RtpPacketInfo::RtpPacketInfo(
     : ssrc_(ssrc),
       csrcs_(std::move(csrcs)),
       rtp_timestamp_(rtp_timestamp),
+      receive_time_(receive_time),
       audio_level_(audio_level),
-      absolute_capture_time_(absolute_capture_time),
-      receive_time_(receive_time) {}
+      absolute_capture_time_(absolute_capture_time) {}
 
 RtpPacketInfo::RtpPacketInfo(const RTPHeader& rtp_header,
                              Timestamp receive_time)
@@ -69,11 +78,10 @@ RtpPacketInfo::RtpPacketInfo(const RTPHeader& rtp_header,
 bool operator==(const RtpPacketInfo& lhs, const RtpPacketInfo& rhs) {
   return (lhs.ssrc() == rhs.ssrc()) && (lhs.csrcs() == rhs.csrcs()) &&
          (lhs.rtp_timestamp() == rhs.rtp_timestamp()) &&
+         (lhs.receive_time() == rhs.receive_time()) &&
          (lhs.audio_level() == rhs.audio_level()) &&
          (lhs.absolute_capture_time() == rhs.absolute_capture_time()) &&
-         (lhs.receive_time() == rhs.receive_time() &&
-          (lhs.local_capture_clock_offset() ==
-           rhs.local_capture_clock_offset()));
+         (lhs.local_capture_clock_offset() == rhs.local_capture_clock_offset());
 }
 
 }  // namespace webrtc
