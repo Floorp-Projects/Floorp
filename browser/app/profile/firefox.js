@@ -939,6 +939,10 @@ pref("privacy.panicButton.enabled",         true);
 // Time until temporary permissions expire, in ms
 pref("privacy.temporary_permission_expire_time_ms",  3600000);
 
+// Enables protection mechanism against password spoofing for cross domain auh requests
+// See bug 791594
+pref("privacy.authPromptSpoofingProtection",         true);
+
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
 // simple gestures support
