@@ -61,10 +61,6 @@ For each crate:
    [supply-chain/] folder, which can be found in the repositories root folder.
    Use a commit message like `Bug XYZ - [rust-<name>] Release version <version>`.
 
-Once all crates have been published observe the `/target/package/` folder under
-the root of the mozilla-central repository and remove all the folders related
-to the above published packages (it will save ~1GB disk space).
-
 [semantic versioning rules]: https://semver.org/
 [audit criteria]: https://mozilla.github.io/cargo-vet/audit-criteria.html
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
@@ -86,11 +82,12 @@ It is good practice to also include relevant information from the
 since these are the most important dependencies of geckodriver and a lot
 of its functionality is implemented there.
 
-To get a list of all the changes for one of the above crates the following
-Mercurial command can be used:
+To get a list of all the changes for one of the above crates one of the following
+commands can be used:
 
 ```shell
 % hg log -M -r <revision>::central --template "{node|short}\t{desc|firstline}\n" <path>
+% git log --reverse $(git cinnabar hg2git <revision>)..HEAD --pretty="%s" <path>
 ```
 
 where `<revision>` is the changeset of the last geckodriver release and `<path>`
@@ -167,6 +164,10 @@ Note that if a crate has an in-tree dependency make sure to first
 change the dependency information.
 
 Do not release the geckodriver crate yet!
+
+Once all crates have been published observe the `/target/package/` folder under
+the root of the mozilla-central repository and remove all the folders related
+to the above published packages (it will save ~1GB disk space).
 
 ## Export to GitHub
 
