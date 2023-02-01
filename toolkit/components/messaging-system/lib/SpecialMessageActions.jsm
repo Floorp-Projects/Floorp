@@ -192,6 +192,7 @@ const SpecialMessageActions = {
       "browser.pdfjs.feature-tour",
       "cookiebanners.service.mode",
       "cookiebanners.service.mode.privateBrowsing",
+      "cookiebanners.service.detectOnly",
     ];
 
     if (!allowedPrefs.includes(pref.name)) {

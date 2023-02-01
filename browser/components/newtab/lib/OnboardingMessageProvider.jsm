@@ -927,15 +927,15 @@ const BASE_MESSAGES = () => [
       icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
       icon_class: "cfr-doorhanger-small-icon",
       heading_text: {
-        string_id: "cfr-cookie-banner-handling-header",
+        string_id: "cfr-cookiebanner-header",
       },
       text: {
-        string_id: "cfr-cookie-banner-handling-body",
+        string_id: "cfr-cookiebanner-body",
       },
       buttons: {
         primary: {
           label: {
-            string_id: "cfr-cookie-banner-accept-button",
+            string_id: "cfr-cookiebanner-accept-button",
           },
           action: {
             type: "MULTI_ACTION",
@@ -959,6 +959,15 @@ const BASE_MESSAGES = () => [
                     },
                   },
                 },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.detectOnly",
+                      value: false,
+                    },
+                  },
+                },
               ],
             },
           },
@@ -966,7 +975,7 @@ const BASE_MESSAGES = () => [
         secondary: [
           {
             label: {
-              string_id: "cfr-cookie-banner-reject-button",
+              string_id: "cfr-cookiebanner-reject-button",
             },
             action: {
               type: "CANCEL",
@@ -983,7 +992,7 @@ const BASE_MESSAGES = () => [
     trigger: {
       id: "cookieBannerDetected",
     },
-    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.mode'|preferenceValue == 3`,
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true`,
   },
 ];
 
