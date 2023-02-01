@@ -3252,6 +3252,15 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
       *aMatchType = t;
       return true;
     }
+    // If the character was a TextDefault char, but the next char is VS16,
+    // and the font is a COLR font that supports both these codepoints, then
+    // we'll assume it knows what it is doing (eg Twemoji Mozilla keycap
+    // sequences).
+    // TODO: reconsider all this as part of any fix for bug 543200.
+    if (aNextCh == kVariationSelector16 && emojiPresentation == TextDefault &&
+        f->HasCharacter(aNextCh) && f->GetFontEntry()->TryGetColorGlyphs()) {
+      return true;
+    }
     // Otherwise, remember the first potential fallback, but keep searching.
     if (!candidateFont) {
       candidateFont = f;
