@@ -41,7 +41,6 @@
 #include "test/pc/e2e/stats_poller.h"
 #include "test/pc/e2e/test_peer_factory.h"
 #include "test/testsupport/file_utils.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -736,24 +735,12 @@ void PeerConnectionE2EQualityTest::TearDownCall() {
 }
 
 void PeerConnectionE2EQualityTest::ReportGeneralTestResults() {
-  if (metrics_logger_ == nullptr) {
-    test::PrintResult(*alice_->params().name + "_connected", "",
-                      test_case_name_, alice_connected_, "unitless",
-                      /*important=*/false,
-                      test::ImproveDirection::kBiggerIsBetter);
-    test::PrintResult(*bob_->params().name + "_connected", "", test_case_name_,
-                      bob_connected_, "unitless",
-                      /*important=*/false,
-                      test::ImproveDirection::kBiggerIsBetter);
-  } else {
-    metrics_logger_->LogSingleValueMetric(
-        *alice_->params().name + "_connected", test_case_name_,
-        alice_connected_, Unit::kUnitless,
-        ImprovementDirection::kBiggerIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        *bob_->params().name + "_connected", test_case_name_, bob_connected_,
-        Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
-  }
+  metrics_logger_->LogSingleValueMetric(
+      *alice_->params().name + "_connected", test_case_name_, alice_connected_,
+      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      *bob_->params().name + "_connected", test_case_name_, bob_connected_,
+      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
 }
 
 Timestamp PeerConnectionE2EQualityTest::Now() const {
