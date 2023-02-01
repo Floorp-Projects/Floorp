@@ -9,12 +9,14 @@ import android.content.res.Resources
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
@@ -24,6 +26,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.focus.R
 import org.mozilla.focus.ext.disableDynamicBehavior
 import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.hide
@@ -286,7 +289,13 @@ internal class FullScreenIntegrationTest {
 
     @Test
     fun `WHEN entering fullscreen THEN put browser in fullscreen, hide system bars and enter immersive mode`() {
-        val toolbar: BrowserToolbar = mock()
+        // Without this the calls regarding the snackbar would throw
+        // "Caused by: java.lang.IllegalArgumentException:
+        // The style on this component requires your app theme to be Theme.AppCompat (or a descendant)"
+        testContext.setTheme(R.style.AppTheme)
+        val layoutParent = FrameLayout(testContext)
+        val toolbar = BrowserToolbar(testContext)
+        layoutParent.addView(toolbar)
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
         val settings: Settings = mock()
