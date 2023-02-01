@@ -61,16 +61,10 @@ using namespace mozilla::widget;
 static int gLastGdkError;
 
 // Return widget scale factor of the monitor where the window is located by the
-// most part.
-// We prefer the root widget scale since it doesn't account for text scale
-// factor, this is the same scrollbars do in GTK.
+// most part. We intentionally honor the text scale factor here in order to
+// have consistent scaling with other UI elements.
 static inline CSSToLayoutDeviceScale GetWidgetScaleFactor(nsIFrame* aFrame) {
-  nsPresContext* pc = aFrame->PresContext();
-  nsIWidget* rootWidget = pc->GetRootWidget();
-  auto scale =
-      rootWidget ? rootWidget->GetDefaultScale() : pc->CSSToDevPixelScale();
-  scale.scale = std::max(1.0f, std::round(scale.scale));
-  return scale;
+  return aFrame->PresContext()->CSSToDevPixelScale();
 }
 
 nsNativeThemeGTK::nsNativeThemeGTK() : Theme(ScrollbarStyle()) {
