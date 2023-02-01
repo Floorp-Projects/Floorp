@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/metrics/metrics_logger_and_exporter.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/clock.h"
@@ -25,6 +26,23 @@ namespace {
 MetricsLoggerAndExporter* global_metrics_logger_and_exporter = nullptr;
 
 }  // namespace
+
+MetricsLogger* GetGlobalMetricsLogger() {
+  static MetricsLogger* logger_ =
+      new DefaultMetricsLogger(Clock::GetRealTimeClock());
+  return logger_;
+}
+
+bool ExportPerfMetric(MetricsLogger& logger,
+                      std::vector<std::unique_ptr<MetricsExporter>> exporters) {
+  std::vector<Metric> metrics = logger.GetCollectedMetrics();
+  bool success = true;
+  for (auto& exporter : exporters) {
+    bool export_result = exporter->Export(metrics);
+    success = success && export_result;
+  }
+  return success;
+}
 
 MetricsLoggerAndExporter* GetGlobalMetricsLoggerAndExporter() {
   return global_metrics_logger_and_exporter;
