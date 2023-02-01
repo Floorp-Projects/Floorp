@@ -56,6 +56,10 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla tárepinen islep  shıǵılǵan.</string>
 
+    <string name="private_browsing_common_myths">
+       Jeke kóriw haqqında tarqalǵan jalǵanlar
+    </string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Bas ekrannan jeke betlerdi ashıw ushın operativ buyrıq qosıń.</string>
@@ -89,8 +93,12 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Variantlardı kóriw</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Jabıw</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Eki hápte dawamında kórilmegen betler, bul jerge kóshiriledi.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">Sazlawlarda óshiriń</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Bir aydan soń avtomatikalıq jabılsın ba?</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
@@ -210,18 +218,30 @@
     <string name="search_suggestions_onboarding_title">Jeke seanslarda izlew usınısına ruxsat berilsinbe?</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s izlew</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Tuwrıdan-tuwrı mánzil qatarınan izlew</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Izlew sazlawları</string>
 
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Jeke internetke xosh kelipsiz</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Ekranlardı almastırıw aldınǵıdan da ańsatraq</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Baslaw</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Kiriw</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Ótkizip jiberiw</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Betler sáykeslestirilmekte! Jumıstı qalǵan jerinen basqa  qurılmada dawam etiń.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Jabıw</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Xabarnamalar sizge %s penen kóbirek nárseler islewge járdem beredi</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Dawam etiw</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -270,10 +290,12 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Siltemelerdi jeke bette ashıw</string>
 
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Jeke bette skrinshot alıwǵa ruqsat beriw</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Qupıya kóriw operativ buyrıǵın qosıw</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
-    <string name="preferences_https_only_title">Tek ǵana HTTPS rejimi</string>
+    <string name="preferences_https_only_title">Tek HTTPS rejimi</string>
 
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
@@ -958,6 +980,8 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d mánzil</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Siz kóp saytlardan shıǵıp ketesiz</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sayt ruqsatnamaları</string>
     <!-- Title for the downloads item in Delete browsing data -->
@@ -1036,6 +1060,10 @@
     <string name="enhanced_tracking_protection_blocked">Bloklanǵan</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ruqsat etildi</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Bul sayt ushın qorǵanıw qosıwlı</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Bul sayt ushın qorǵanıw óshirilgen</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Tolıǵıraq úyreniw</string>
 
@@ -1074,6 +1102,8 @@
     <string name="preferences_passwords_save_logins">Login hám parollerdi saqlaw</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Heshqashan saqlamaw</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Basqa baǵdarlamalarda avtomatikalıq toltırıw</string>
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Login qosıw</string>
 
@@ -1129,17 +1159,22 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Qurılmańızdı bloktan shıǵarıń</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">Barlıq veb saytlarda kólemin úlkeytiw</string>
+    <string name="preference_accessibility_force_enable_zoom">Barlıq veb-saytlarda kólemin úlkeytiw</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Sońǵı qollanılǵan</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Loginlerdi sortlaw menyusi</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Avtomatikalıq toltırıw</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Mánziller</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Bank kartaları</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Kartalardı saqlaw hám avtomatikalıq toltırıw</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kartalardı sáykeslestiriw</string>
     <!-- Preference option for adding a credit card -->
@@ -1151,6 +1186,9 @@
 
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Mánzillerdi basqarıw</string>
+
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Mánzillerdi saqlaw hám avtomatikalıq toltırıw</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Karta qosıw</string>
@@ -1254,6 +1292,8 @@
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Izlew sistemasınıń atın kirgiziń</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Izlew qatarın kirgiziń</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s jaratıldı</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1277,6 +1317,9 @@
     <string name="browser_menu_add_to_shortcuts">Operativ buyrıqlarǵa qosıw</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
     <string name="browser_menu_remove_from_shortcuts">Operativ buyrıqlardan alıp tastaw</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Tastıyıqlawshı: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Óshiriw</string>
     <!-- Login overflow menu edit button -->

@@ -67,12 +67,12 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Embojuaju jeike pya’eha embojuruja hag̃ua tendayke ñemi ne mba’erechaha ñepyrũgua guive.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Embojuaju jeike pya’eha embojuruja hag̃ua tendayke ñemi ne mba’erechaha ñepyrũgua guive.</string>
 
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Emoñepyrũ tendayke ñemigua peteĩ jekutúpe.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Embojuaju jeike pya’eha</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Embojuaju jeike pya’eha</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Embojuaju mba’erechaha ñepyrũháre</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -173,6 +173,8 @@
     <string name="browser_menu_stop">Pyta</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Moĩmbaha</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Mba’ete marandu</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ndaipóri moĩmbaha ápe</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -263,7 +265,7 @@
     <string name="search_settings_menu_item">Mba’epytyvõrã jeheka</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Eheka peteĩjey:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Eheka peteĩjey:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Ko’ág̃a eheka amo:</string>
@@ -356,13 +358,19 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Emomichĩ kookie banner</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Mboguepyre</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Hendypyre</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_summary" tools:ignore="UnusedResources">Firefox omboykese ijehegui kookie mba’ejerure kookie banner ndive. Ndaipóriramo emboykekuaa hag̃ua, Firefox omoneĩkuaa opaite kookie omboyke hag̃ua pe banner.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox omboykese ijehegui kookie mba’ejerure kookie banner ndive. Ndaipóriramo emboykekuaa hag̃ua, Firefox omoneĩkuaa opaite kookie omboyke hag̃ua pe banner.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ogue ko tendápe</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Hendy ko tendápe</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Tenda ko’ág̃a ojokupyty’ỹva</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">¿Emyandy kookie ñemurã momichĩ %1$s peg̃uarã?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -371,10 +379,10 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s omboguéta kookie ko tendagua ha omyanyhẽjeýta kuatiarogue. Emboguepaitérõ kookie ombotykuaa ne rembiapo térã omonandi ne mba’ejoguakue.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string moz:RemovedIn="110" name="reduce_cookie_banner_details_panel_description_on_for_site" tools:ignore="UnusedResources">%1$s omboykese ijehegui kookie mba’ejerure. Ndaipórirõ jeporavorã emboykekuaa hag̃ua, %2$s omoneĩkuaa opaite kookie omboty hag̃ua pe ñemurã.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s omboykese ijehegui kookie mba’ejerure. Ndaipórirõ jeporavorã emboykekuaa hag̃ua, %2$s omoneĩkuaa opaite kookie omboty hag̃ua pe ñemurã.</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">¡Opáma banners kookie rehegua!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">¡Opáma banners kookie rehegua!</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ani ko’ág̃a</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -393,7 +401,7 @@
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Eñeha’ã eike hag̃ua tendakuérape eipurúvo pe taperekoite HTTPS ipapapýva tekorosãverã.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="preferences_https_only_on" tools:ignore="UnusedResources">Hendy</string>
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Hendy</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Mboguepyre</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1046,7 +1054,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Oĩ’ỹva</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string moz:removedIn="111" name="tracking_protection_on" tools:ignore="UnusedResources">Hendypyre</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Hendypyre</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Mboguepyre</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1813,7 +1821,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Jehekaha juajuha eipurútava</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Emoambue porandu “%s” ndive. Techapyrã:https://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Emoambue porandu “%s” ndive. Techapyrã:https://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Mba’emimi jehekaha mongu’eha mboavapyre</string>

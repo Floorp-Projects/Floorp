@@ -67,11 +67,11 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Gehitu lasterbidea fitxa pribatuak zure hasierako pantailatik irekitzeko.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Gehitu lasterbidea fitxa pribatuak zure hasierako pantailatik irekitzeko.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message">Sakatu behin hurrengo fitxa pribatua abiarazteko.</string>
     <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Gehitu lasterbidea</string>
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Gehitu lasterbidea</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Gehitu hasierako pantailan</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -171,6 +171,8 @@
     <string name="browser_menu_stop">Gelditu</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Gehigarriak</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Kontuaren informazioa</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Gehigarririk ez hemen</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -263,7 +265,7 @@
     <string name="search_settings_menu_item">Bilaketa-ezarpenak</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Oraingoan, bilatu:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Oraingoan, bilatu:</string>
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Oraingoan, bilatu honekin:</string>
 
@@ -294,14 +296,14 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title" tools:ignore="UnusedResources">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
+    <string name="onboarding_home_enable_notifications_title">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description" tools:ignore="UnusedResources">Sinkronizatu zure fitxak gailuen artean, kudeatu deskargak, jaso aholkuak %s(r)en pribatutasun-babesari zuku gehien ateratzeko, eta gehiago.</string>
+    <string name="onboarding_home_enable_notifications_description">Sinkronizatu zure fitxak gailuen artean, kudeatu deskargak, jaso aholkuak %s(r)en pribatutasun-babesari zuku gehien ateratzeko, eta gehiago.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button" tools:ignore="UnusedResources">Jarraitu</string>
+    <string name="onboarding_home_enable_notifications_positive_button">Jarraitu</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button" tools:ignore="UnusedResources">Une honetan ez</string>
+    <string name="onboarding_home_enable_notifications_negative_button">Une honetan ez</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -358,8 +360,12 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Murriztu cookie iragarki-bandak</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Desaktibatuta</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Aktibatuta</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox automatikoki saiatzen da cookie iragarki-bandetako eskaerak ukatzen. Ukatzeko aukera ez badago erabilgarri, Firefoxek cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox automatikoki saiatzen da cookie iragarki-bandetako eskaerak ukatzen. Ukatzeko aukera ez badago erabilgarri, Firefoxek cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Desaktibatuta gune honetarako</string>
@@ -372,12 +378,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s(e)k gune honetako cookieak garbitu eta orria berrituko du. Cookie guztiak garbitzean, saioak amaitu edo erosketa-orgak hustu litezke.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site">%1$s saia daiteke cookie iragarki-bandetako eskaerak automatikoki ukatzen. Ukatzeko aukera ez badago erabilgarri, %2$s(e)k cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s saia daiteke cookie iragarki-bandetako eskaerak automatikoki ukatzen. Ukatzeko aukera ez badago erabilgarri, %2$s(e)k cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s automatikoki saia daiteke cookie-eskaerak ukatzen.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Cookie iragarki-bandak kanpora!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie iragarki-bandak kanpora!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" tools:ignore="UnusedResources">Ahal bada, ukatu automatikoki cookie eskaerak. Bestela, onartu cookie guztiak iragarki-bandak baztertzeko.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Ahal bada, ukatu automatikoki cookie eskaerak. Bestela, onartu cookie guztiak iragarki-bandak baztertzeko.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Une honetan ez</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -388,21 +396,21 @@
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Ikusi cookie laster-leiho gutxiago</string>
 
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k, edo ezin bada, guztiak onartuko ditu.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k, edo ezin bada, guztiak onartuko ditu.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Baztertu laster-leihoak</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie iragarki-banden murrizpena</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body">Baimendu %1$s(e)k gune baten cookie onespen-eskaera ukatzea edo ezin bada, baimendu cookietarako sarbidea?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Baimendu %1$s(e)k gune baten cookie onespen-eskaera ukatzea edo ezin bada, baimendu cookietarako sarbidea?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Baimendu</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikoki saiatzen da guneetara konektatzen HTTPS zifratze-protokoloa erabiliz, segurtasun gehiago lortzeko.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Aktibatuta</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Aktibatuta</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Desaktibatuta</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Argibide gehiago</string>
@@ -482,6 +490,11 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Jakinarazpenak</string>
 
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Baimenduta</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Ez dago baimenduta</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Gehigarrien bilduma pertsonalizatua</string>
@@ -504,8 +517,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Bisitatutako azkenak</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Hausnartzeko moduko istorioak</string>
@@ -765,6 +776,13 @@
     <string name="close_tabs_after_one_week_summary">Itxi astebete ondoren</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Itxi hilabete ondoren</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Ireki hasiera-orrian</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Ireki azken fitxan</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Ireki hasiera-orrian lau ordu ondoren</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1031,10 +1049,16 @@
     <string name="preference_exceptions">Salbuespenak</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Aktibatuta</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Aktibatuta</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desaktibatuta</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Oinarrizkoa</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Zorrotza</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Pertsonalizatua</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Baimendu audioa eta bideoa</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1772,7 +1796,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Erabili beharreko bilaketa-katea</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Bilaketa-motor pertsonalizatuaren xehetasunak</string>
@@ -1973,8 +1997,6 @@
     <string name="pocket_stories_categories_header">Gaiaren araberako istorioak</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Aurkitu gehiago</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Pocket-ek hornitua.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">%s(e)k hornitua.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
