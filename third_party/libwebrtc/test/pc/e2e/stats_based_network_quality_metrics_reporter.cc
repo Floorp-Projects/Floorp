@@ -278,7 +278,7 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
       Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "average_send_rate", GetTestCaseName(pc_label),
-      (pc_stats.total_sent / (end_time - start_time_)).kbps(),
+      (pc_stats.total_sent / (end_time - start_time_)).kbps<double>(),
       Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "bytes_received", GetTestCaseName(pc_label),
@@ -289,7 +289,7 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
       Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "average_receive_rate", GetTestCaseName(pc_label),
-      (pc_stats.total_received / (end_time - start_time_)).kbps(),
+      (pc_stats.total_received / (end_time - start_time_)).kbps<double>(),
       Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "sent_packets_loss", GetTestCaseName(pc_label), packet_loss,
