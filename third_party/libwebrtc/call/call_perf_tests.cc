@@ -15,9 +15,12 @@
 
 #include "absl/strings/string_view.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "api/test/simulated_network.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/video_bitrate_allocation.h"
@@ -49,7 +52,6 @@
 #include "test/null_transport.h"
 #include "test/rtp_rtcp_observer.h"
 #include "test/testsupport/file_utils.h"
-#include "test/testsupport/perf_test.h"
 #include "test/video_encoder_proxy_factory.h"
 #include "video/transport_adapter.h"
 
@@ -57,9 +59,15 @@ using webrtc::test::DriftingClock;
 
 namespace webrtc {
 namespace {
+
+using ::webrtc::test::GetGlobalMetricsLogger;
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
+
 enum : int {  // The first valid value is 1.
   kTransportSequenceNumberExtensionId = 1,
 };
+
 }  // namespace
 
 class CallPerfTest : public test::CallTest {
@@ -133,15 +141,16 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
     if (std::abs(stats.sync_offset_ms) < kInSyncThresholdMs) {
       if (first_time_in_sync_ == -1) {
         first_time_in_sync_ = now_ms;
-        webrtc::test::PrintResult("sync_convergence_time", test_label_,
-                                  "synchronization", time_since_creation, "ms",
-                                  false);
+        GetGlobalMetricsLogger()->LogSingleValueMetric(
+            "sync_convergence_time" + test_label_, "synchronization",
+            time_since_creation, Unit::kMilliseconds,
+            ImprovementDirection::kSmallerIsBetter);
       }
       if (time_since_creation > kMinRunTimeMs)
         observation_complete_.Set();
     }
     if (first_time_in_sync_ != -1)
-      sync_offset_ms_list_.push_back(stats.sync_offset_ms);
+      sync_offset_ms_list_.AddSample(stats.sync_offset_ms);
   }
 
   void set_receive_stream(VideoReceiveStreamInterface* receive_stream) {
@@ -151,8 +160,9 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
   }
 
   void PrintResults() {
-    test::PrintResultList("stream_offset", test_label_, "synchronization",
-                          sync_offset_ms_list_, "ms", false);
+    GetGlobalMetricsLogger()->LogMetric(
+        "stream_offset" + test_label_, "synchronization", sync_offset_ms_list_,
+        Unit::kMilliseconds, ImprovementDirection::kNeitherIsBetter);
   }
 
  private:
@@ -161,7 +171,7 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
   const int64_t creation_time_ms_;
   int64_t first_time_in_sync_ = -1;
   VideoReceiveStreamInterface* receive_stream_ = nullptr;
-  std::vector<double> sync_offset_ms_list_;
+  SamplesStatsCounter sync_offset_ms_list_;
   TaskQueueBase* const task_queue_;
 };
 
@@ -451,7 +461,7 @@ void CallPerfTest::TestCaptureNtpTime(
       uint32_t real_capture_timestamp = iter->second;
       int time_offset_ms = real_capture_timestamp - estimated_capture_timestamp;
       time_offset_ms = time_offset_ms / 90;
-      time_offset_ms_list_.push_back(time_offset_ms);
+      time_offset_ms_list_.AddSample(time_offset_ms);
 
       EXPECT_TRUE(std::abs(time_offset_ms) < threshold_ms_);
     }
@@ -495,8 +505,9 @@ void CallPerfTest::TestCaptureNtpTime(
     void PerformTest() override {
       EXPECT_TRUE(Wait()) << "Timed out while waiting for estimated capture "
                              "NTP time to be within bounds.";
-      test::PrintResultList("capture_ntp_time", "", "real - estimated",
-                            time_offset_ms_list_, "ms", true);
+      GetGlobalMetricsLogger()->LogMetric(
+          "capture_ntp_time", "real - estimated", time_offset_ms_list_,
+          Unit::kMilliseconds, ImprovementDirection::kNeitherIsBetter);
     }
 
     Mutex mutex_;
@@ -511,7 +522,7 @@ void CallPerfTest::TestCaptureNtpTime(
     uint32_t rtp_start_timestamp_;
     typedef std::map<uint32_t, uint32_t> FrameCaptureTimeList;
     FrameCaptureTimeList capture_time_list_ RTC_GUARDED_BY(&mutex_);
-    std::vector<double> time_offset_ms_list_;
+    SamplesStatsCounter time_offset_ms_list_;
   } test(net_config, threshold_ms, start_time_ms, run_time_ms);
 
   RunBaseTest(&test);
@@ -696,7 +707,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
               observation_complete_.Set();
           }
           if (converged_)
-            bitrate_kbps_list_.push_back(bitrate_kbps);
+            bitrate_kbps_list_.AddSample(bitrate_kbps);
         }
       }));
       return SEND_PACKET;
@@ -723,11 +734,12 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
 
     void PerformTest() override {
       EXPECT_TRUE(Wait()) << "Timeout while waiting for send-bitrate stats.";
-      test::PrintResultList(
-          "bitrate_stats_",
-          (pad_to_min_bitrate_ ? "min_transmit_bitrate"
-                               : "without_min_transmit_bitrate"),
-          "bitrate_kbps", bitrate_kbps_list_, "kbps", false);
+      GetGlobalMetricsLogger()->LogMetric(
+          std::string("bitrate_stats_") +
+              (pad_to_min_bitrate_ ? "min_transmit_bitrate"
+                                   : "without_min_transmit_bitrate"),
+          "bitrate_kbps", bitrate_kbps_list_, Unit::kKilobitsPerSecond,
+          ImprovementDirection::kNeitherIsBetter);
     }
 
     VideoSendStream* send_stream_;
@@ -736,7 +748,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
     const int min_acceptable_bitrate_;
     const int max_acceptable_bitrate_;
     int num_bitrate_observations_in_range_;
-    std::vector<double> bitrate_kbps_list_;
+    SamplesStatsCounter bitrate_kbps_list_;
     TaskQueueBase* task_queue_;
     rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_;
   } test(pad_to_min_bitrate, task_queue());
@@ -1003,8 +1015,9 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
       }
       EXPECT_GT(last_passed_test_bitrate, -1)
           << "Minimum supported bitrate out of the test scope";
-      webrtc::test::PrintResult("min_test_bitrate_", "", "min_bitrate",
-                                last_passed_test_bitrate, "kbps", false);
+      GetGlobalMetricsLogger()->LogSingleValueMetric(
+          "min_test_bitrate_", "min_bitrate", last_passed_test_bitrate,
+          Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
     }
 
     void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -1130,11 +1143,14 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
         input_fps = std::max(configured_framerate.second, input_fps);
       }
       for (const auto& encode_frame_rate_list : encode_frame_rate_lists_) {
-        const std::vector<double>& values = encode_frame_rate_list.second;
-        test::PrintResultList("substream", "", "encode_frame_rate", values,
-                              "fps", false);
-        double average_fps =
-            std::accumulate(values.begin(), values.end(), 0.0) / values.size();
+        const SamplesStatsCounter& values = encode_frame_rate_list.second;
+        GetGlobalMetricsLogger()->LogMetric(
+            "substream_fps", "encode_frame_rate", values, Unit::kUnitless,
+            ImprovementDirection::kNeitherIsBetter);
+        if (values.IsEmpty()) {
+          continue;
+        }
+        double average_fps = values.GetAverage();
         uint32_t ssrc = encode_frame_rate_list.first;
         double expected_fps = configured_framerates_.find(ssrc)->second;
         if (expected_fps != input_fps)
@@ -1149,7 +1165,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
         task_queue_->PostTask([this, now]() {
           VideoSendStream::Stats stats = send_stream_->GetStats();
           for (const auto& stat : stats.substreams) {
-            encode_frame_rate_lists_[stat.first].push_back(
+            encode_frame_rate_lists_[stat.first].AddSample(
                 stat.second.encode_frame_rate);
           }
           if (now - start_time_ > kMinRunTime) {
@@ -1169,7 +1185,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
     const Timestamp start_time_;
     Timestamp last_getstats_time_;
     VideoSendStream* send_stream_;
-    std::map<uint32_t, std::vector<double>> encode_frame_rate_lists_;
+    std::map<uint32_t, SamplesStatsCounter> encode_frame_rate_lists_;
     std::map<uint32_t, double> configured_framerates_;
   } test(encoder_factory, payload_name, max_framerates, task_queue());
 
