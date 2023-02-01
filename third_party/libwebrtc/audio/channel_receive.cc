@@ -23,6 +23,7 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "audio/audio_level.h"
 #include "audio/channel_receive_frame_transformer_delegate.h"
 #include "audio/channel_send.h"
@@ -48,6 +49,7 @@
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
+#include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
 namespace voe {
@@ -465,14 +467,19 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
   // Fill in local capture clock offset in `audio_frame->packet_infos_`.
   RtpPacketInfos::vector_type packet_infos;
   for (auto& packet_info : audio_frame->packet_infos_) {
-    absl::optional<int64_t> local_capture_clock_offset;
+    absl::optional<int64_t> local_capture_clock_offset_q32x32;
     if (packet_info.absolute_capture_time().has_value()) {
-      local_capture_clock_offset =
+      local_capture_clock_offset_q32x32 =
           capture_clock_offset_updater_.AdjustEstimatedCaptureClockOffset(
               packet_info.absolute_capture_time()
                   ->estimated_capture_clock_offset);
     }
     RtpPacketInfo new_packet_info(packet_info);
+    absl::optional<TimeDelta> local_capture_clock_offset;
+    if (local_capture_clock_offset_q32x32.has_value()) {
+      local_capture_clock_offset = TimeDelta::Millis(
+          UQ32x32ToInt64Ms(*local_capture_clock_offset_q32x32));
+    }
     new_packet_info.set_local_capture_clock_offset(local_capture_clock_offset);
     packet_infos.push_back(std::move(new_packet_info));
   }

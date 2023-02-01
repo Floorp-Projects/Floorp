@@ -9,6 +9,7 @@
  */
 
 #include "api/rtp_packet_infos.h"
+#include "api/units/time_delta.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -186,7 +187,7 @@ TEST(RtpPacketInfoTest, AbsoluteCaptureTime) {
 }
 
 TEST(RtpPacketInfoTest, LocalCaptureClockOffset) {
-  constexpr absl::optional<int64_t> kValue = 10;
+  constexpr TimeDelta kValue = TimeDelta::Micros(8868963877546349045LL);
 
   RtpPacketInfo lhs;
   RtpPacketInfo rhs;

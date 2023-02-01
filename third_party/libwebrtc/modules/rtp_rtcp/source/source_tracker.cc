@@ -27,7 +27,7 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
   int64_t now_ms = clock_->TimeInMilliseconds();
   MutexLock lock_scope(&lock_);
 
-  for (const auto& packet_info : packet_infos) {
+  for (const RtpPacketInfo& packet_info : packet_infos) {
     for (uint32_t csrc : packet_info.csrcs()) {
       SourceKey key(RtpSourceType::CSRC, csrc);
       SourceEntry& entry = UpdateEntry(key);
@@ -36,6 +36,8 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
       entry.timestamp_ms = packet_time ? packet_time : now_ms;
       entry.audio_level = packet_info.audio_level();
       entry.absolute_capture_time = packet_info.absolute_capture_time();
+      entry.local_capture_clock_offset =
+          packet_info.local_capture_clock_offset();
       entry.rtp_timestamp = packet_info.rtp_timestamp();
     }
 
@@ -45,6 +47,7 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
     entry.timestamp_ms = now_ms;
     entry.audio_level = packet_info.audio_level();
     entry.absolute_capture_time = packet_info.absolute_capture_time();
+    entry.local_capture_clock_offset = packet_info.local_capture_clock_offset();
     entry.rtp_timestamp = packet_info.rtp_timestamp();
   }
 
@@ -65,7 +68,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
 
     sources.emplace_back(
         entry.timestamp_ms, key.source, key.source_type, entry.rtp_timestamp,
-        RtpSource::Extensions{entry.audio_level, entry.absolute_capture_time});
+        RtpSource::Extensions{
+            .audio_level = entry.audio_level,
+            .absolute_capture_time = entry.absolute_capture_time,
+            .local_capture_clock_offset = entry.local_capture_clock_offset});
   }
 
   std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
