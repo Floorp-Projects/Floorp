@@ -24,6 +24,19 @@
 
 namespace webrtc {
 namespace test {
+namespace {
+
+Metric::Stats ToStats(const SamplesStatsCounter& values) {
+  if (values.IsEmpty()) {
+    return Metric::Stats();
+  }
+  return Metric::Stats{.mean = values.GetAverage(),
+                       .stddev = values.GetStandardDeviation(),
+                       .min = values.GetMin(),
+                       .max = values.GetMax()};
+}
+
+}  // namespace
 
 MetricsLoggerAndExporter::~MetricsLoggerAndExporter() {
   bool export_result = Export();
@@ -72,17 +85,13 @@ void MetricsLoggerAndExporter::LogMetric(
                                    .sample_metadata = sample.metadata});
   }
 
-  metrics_.push_back(
-      Metric{.name = std::string(name),
-             .unit = unit,
-             .improvement_direction = improvement_direction,
-             .test_case = std::string(test_case_name),
-             .metric_metadata = std::move(metadata),
-             .time_series = std::move(time_series),
-             .stats = Metric::Stats{.mean = values.GetAverage(),
-                                    .stddev = values.GetStandardDeviation(),
-                                    .min = values.GetMin(),
-                                    .max = values.GetMax()}});
+  metrics_.push_back(Metric{.name = std::string(name),
+                            .unit = unit,
+                            .improvement_direction = improvement_direction,
+                            .test_case = std::string(test_case_name),
+                            .metric_metadata = std::move(metadata),
+                            .time_series = std::move(time_series),
+                            .stats = ToStats(values)});
 }
 
 void MetricsLoggerAndExporter::LogMetric(

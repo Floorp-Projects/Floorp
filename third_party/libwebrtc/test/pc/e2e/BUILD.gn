@@ -35,6 +35,7 @@ if (!build_with_chromium) {
 
       deps = [
         ":default_video_quality_analyzer_frames_comparator_test",
+        ":default_video_quality_analyzer_metric_names_test",
         ":default_video_quality_analyzer_stream_state_test",
         ":default_video_quality_analyzer_test",
         ":multi_reader_queue_test",
@@ -564,6 +565,29 @@ if (!build_with_chromium) {
       ]
     }
 
+    rtc_library("default_video_quality_analyzer_metric_names_test") {
+      testonly = true
+      sources = [
+        "analyzer/video/default_video_quality_analyzer_metric_names_test.cc",
+      ]
+      deps = [
+        ":default_video_quality_analyzer",
+        ":default_video_quality_analyzer_shared",
+        "../..:test_support",
+        "../../../api:create_frame_generator",
+        "../../../api:rtp_packet_info",
+        "../../../api/test/metrics:metric",
+        "../../../api/test/metrics:metrics_logger_and_exporter",
+        "../../../api/test/metrics:stdout_metrics_exporter",
+        "../../../api/video:encoded_image",
+        "../../../api/video:video_frame",
+        "../../../common_video",
+        "../../../rtc_base:stringutils",
+        "../../../rtc_tools:video_quality_analysis",
+        "../../../system_wrappers",
+      ]
+    }
+
     rtc_library("default_video_quality_analyzer_frames_comparator_test") {
       testonly = true
       sources = [ "analyzer/video/default_video_quality_analyzer_frames_comparator_test.cc" ]
@@ -719,6 +743,8 @@ if (!build_with_chromium) {
       "../../../api:array_view",
       "../../../api:video_quality_analyzer_api",
       "../../../api/numerics",
+      "../../../api/test/metrics:metric",
+      "../../../api/test/metrics:metrics_logger_and_exporter",
       "../../../api/units:data_size",
       "../../../api/units:time_delta",
       "../../../api/units:timestamp",
