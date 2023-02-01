@@ -376,6 +376,7 @@ void ProbeController::SetNetworkStateEstimate(
     send_probe_on_next_process_interval_ = true;
   }
   if (config_.network_state_estimate_drop_down_rate > 0 && network_estimate_ &&
+      !estimate.link_capacity_upper.IsZero() &&
       (estimated_bitrate_ > estimate.link_capacity_upper ||
        bwe_limited_due_to_packet_loss_) &&
       estimate.link_capacity_upper <=
@@ -470,8 +471,11 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     max_probe_bitrate = std::min(estimated_bitrate_, max_bitrate_);
   }
   if (config_.network_state_estimate_probing_interval->IsFinite() &&
-      network_estimate_ &&
-      network_estimate_->link_capacity_upper > DataRate::Zero()) {
+      network_estimate_ && network_estimate_->link_capacity_upper.IsFinite()) {
+    if (network_estimate_->link_capacity_upper.IsZero()) {
+      RTC_LOG(LS_INFO) << "Not sending probe, Network state estimate is zero";
+      return {};
+    }
     max_probe_bitrate =
         std::min(max_probe_bitrate, network_estimate_->link_capacity_upper *
                                         config_.network_state_probe_scale);
