@@ -1441,12 +1441,13 @@ if (rtc_include_tests) {
       ":neteq_test_support",
       ":neteq_test_tools",
       "../../api/audio_codecs/opus:audio_encoder_opus",
+      "../../api/test/metrics:global_metrics_logger_and_exporter",
+      "../../api/test/metrics:metric",
       "../../rtc_base:macromagic",
       "../../rtc_base:timeutils",
       "../../system_wrappers",
       "../../system_wrappers:field_trial",
       "../../test:fileutils",
-      "../../test:perf_test",
       "../../test:test_support",
     ]
   }
