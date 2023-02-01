@@ -271,44 +271,48 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
     ReportResult("sent_packets_loss", pc_label, packet_loss, "unitless");
   } else {
     metrics_logger_->LogSingleValueMetric(
-        "bytes_discarded_no_receiver", pc_label,
+        "bytes_discarded_no_receiver", GetTestCaseName(pc_label),
         network_layer_stats.stats->BytesDropped().bytes(), Unit::kBytes,
         ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "packets_discarded_no_receiver", pc_label,
+        "packets_discarded_no_receiver", GetTestCaseName(pc_label),
         network_layer_stats.stats->PacketsDropped(), Unit::kUnitless,
         ImprovementDirection::kNeitherIsBetter);
 
     metrics_logger_->LogSingleValueMetric(
-        "payload_bytes_received", pc_label, pc_stats.payload_received.bytes(),
-        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+        "payload_bytes_received", GetTestCaseName(pc_label),
+        pc_stats.payload_received.bytes(), Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "payload_bytes_sent", pc_label, pc_stats.payload_sent.bytes(),
-        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+        "payload_bytes_sent", GetTestCaseName(pc_label),
+        pc_stats.payload_sent.bytes(), Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter);
 
     metrics_logger_->LogSingleValueMetric(
-        "bytes_sent", pc_label, pc_stats.total_sent.bytes(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
+        "bytes_sent", GetTestCaseName(pc_label), pc_stats.total_sent.bytes(),
+        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "packets_sent", pc_label, pc_stats.packets_sent, Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
+        "packets_sent", GetTestCaseName(pc_label), pc_stats.packets_sent,
+        Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "average_send_rate", pc_label,
+        "average_send_rate", GetTestCaseName(pc_label),
         (pc_stats.total_sent / (end_time - start_time_)).kbps(),
         Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "bytes_received", pc_label, pc_stats.total_received.bytes(),
-        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+        "bytes_received", GetTestCaseName(pc_label),
+        pc_stats.total_received.bytes(), Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "packets_received", pc_label, pc_stats.packets_received,
-        Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+        "packets_received", GetTestCaseName(pc_label),
+        pc_stats.packets_received, Unit::kUnitless,
+        ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "average_receive_rate", pc_label,
+        "average_receive_rate", GetTestCaseName(pc_label),
         (pc_stats.total_received / (end_time - start_time_)).kbps(),
         Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
     metrics_logger_->LogSingleValueMetric(
-        "sent_packets_loss", pc_label, packet_loss, Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
+        "sent_packets_loss", GetTestCaseName(pc_label), packet_loss,
+        Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
   }
 }
 
@@ -361,8 +365,9 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
                    stats.stats->SentPacketsSizeCounter(), "sizeInBytes");
     } else {
       metrics_logger_->LogMetric(
-          "sent_packets_size", peer_name, stats.stats->SentPacketsSizeCounter(),
-          Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+          "sent_packets_size", GetTestCaseName(peer_name),
+          stats.stats->SentPacketsSizeCounter(), Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter);
     }
   }
   if (!stats.stats->ReceivedPacketsSizeCounter().IsEmpty()) {
@@ -370,10 +375,10 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
       ReportResult("received_packets_size", peer_name,
                    stats.stats->ReceivedPacketsSizeCounter(), "sizeInBytes");
     } else {
-      metrics_logger_->LogMetric("received_packets_size", peer_name,
-                                 stats.stats->ReceivedPacketsSizeCounter(),
-                                 Unit::kBytes,
-                                 ImprovementDirection::kNeitherIsBetter);
+      metrics_logger_->LogMetric(
+          "received_packets_size", GetTestCaseName(peer_name),
+          stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter);
     }
   }
   if (!stats.stats->DroppedPacketsSizeCounter().IsEmpty()) {
@@ -381,10 +386,10 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
       ReportResult("dropped_packets_size", peer_name,
                    stats.stats->DroppedPacketsSizeCounter(), "sizeInBytes");
     } else {
-      metrics_logger_->LogMetric("dropped_packets_size", peer_name,
-                                 stats.stats->DroppedPacketsSizeCounter(),
-                                 Unit::kBytes,
-                                 ImprovementDirection::kNeitherIsBetter);
+      metrics_logger_->LogMetric(
+          "dropped_packets_size", GetTestCaseName(peer_name),
+          stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter);
     }
   }
   if (!stats.stats->SentPacketsQueueWaitTimeUs().IsEmpty()) {
@@ -392,10 +397,10 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
       ReportResult("sent_packets_queue_wait_time_us", peer_name,
                    stats.stats->SentPacketsQueueWaitTimeUs(), "unitless");
     } else {
-      metrics_logger_->LogMetric("sent_packets_queue_wait_time_us", peer_name,
-                                 stats.stats->SentPacketsQueueWaitTimeUs(),
-                                 Unit::kUnitless,
-                                 ImprovementDirection::kNeitherIsBetter);
+      metrics_logger_->LogMetric(
+          "sent_packets_queue_wait_time_us", GetTestCaseName(peer_name),
+          stats.stats->SentPacketsQueueWaitTimeUs(), Unit::kUnitless,
+          ImprovementDirection::kNeitherIsBetter);
     }
   }
 
@@ -422,7 +427,8 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
                      stats.stats->SentPacketsSizeCounter(), "sizeInBytes");
       } else {
         metrics_logger_->LogMetric(
-            "sent_packets_size", peer_name + "/" + entry.first.ToString(),
+            "sent_packets_size",
+            GetTestCaseName(peer_name + "/" + entry.first.ToString()),
             stats.stats->SentPacketsSizeCounter(), Unit::kBytes,
             ImprovementDirection::kNeitherIsBetter);
       }
@@ -454,7 +460,8 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
                      stats.stats->ReceivedPacketsSizeCounter(), "sizeInBytes");
       } else {
         metrics_logger_->LogMetric(
-            "received_packets_size", peer_name + "/" + entry.first.ToString(),
+            "received_packets_size",
+            GetTestCaseName(peer_name + "/" + entry.first.ToString()),
             stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
             ImprovementDirection::kNeitherIsBetter);
       }
@@ -466,7 +473,8 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
                      stats.stats->DroppedPacketsSizeCounter(), "sizeInBytes");
       } else {
         metrics_logger_->LogMetric(
-            "dropped_packets_size", peer_name + "/" + entry.first.ToString(),
+            "dropped_packets_size",
+            GetTestCaseName(peer_name + "/" + entry.first.ToString()),
             stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
             ImprovementDirection::kNeitherIsBetter);
       }
