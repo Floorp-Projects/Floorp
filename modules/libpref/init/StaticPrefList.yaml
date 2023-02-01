@@ -13327,7 +13327,7 @@
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Block Worker/SharedWorker scripts with wrong MIME type.
