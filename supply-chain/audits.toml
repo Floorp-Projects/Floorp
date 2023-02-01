@@ -2620,6 +2620,16 @@ criteria = "safe-to-deploy"
 version = "0.46.0"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[audits.webdriver]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-deploy"
+delta = "0.46.0 -> 0.47.0"
+
+[[audits.webdriver]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-deploy"
+delta = "0.47.0 -> 0.47.1"
+
 [[audits.webrtc-sdp]]
 who = "Byron Campen <docfaraday@gmail.com>"
 criteria = "safe-to-deploy"
