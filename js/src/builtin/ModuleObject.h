@@ -188,10 +188,8 @@ class IndirectBindingMap {
 
 // Vector of atoms representing the names exported from a module namespace.
 //
-// Barriers are not required because this is either used as a root, or a
-// non-mutable field of ModuleNamespaceObject. Don't change this without adding
-// barriers.
-using ExportNameVector = GCVector<JSAtom*, 0, SystemAllocPolicy>;
+// This is used both on the stack and in the heap.
+using ExportNameVector = GCVector<HeapPtr<JSAtom*>, 0, SystemAllocPolicy>;
 
 class ModuleNamespaceObject : public ProxyObject {
  public:

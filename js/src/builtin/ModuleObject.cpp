@@ -594,10 +594,7 @@ void ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc,
   auto& self = proxy->as<ModuleNamespaceObject>();
 
   if (self.hasExports()) {
-    for (JSAtom*& name : self.mutableExports()) {
-      TraceManuallyBarrieredEdge(trc, &name,
-                                 "ModuleNamespaceObject export name");
-    }
+    self.mutableExports().trace(trc);
   }
 
   if (self.hasBindings()) {
