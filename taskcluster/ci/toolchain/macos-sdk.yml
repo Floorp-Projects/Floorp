@@ -33,26 +33,6 @@ macosx64-sdk-11.0:
             - /Applications/Xcode-12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX11.0.sdk.tar.zst
 
-macosx64-sdk-11.3:
-    description: "MacOSX11.3 SDK"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TM(sdk11.3)
-    worker-type: b-linux-gcp
-    run:
-        script: unpack-sdk.py
-        arguments:
-            - https://swcdn.apple.com/content/downloads/52/17/002-41708-A_E8MFK7B2PK/6p55tbmh0qttgbt4cy94uuvnacy6tkw435/CLTools_macOSLMOS_SDK.pkg
-            - b075d3d2f3b066607209a5bbf7cf727a40b98fe65629c5b6abc17f156897af4a
-            - Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
-        toolchain-artifact: project/gecko/mac-sdk/MacOSX11.3.sdk.tar.zst
-        toolchain-alias:
-            - MacOSX11.3.sdk
-        resources:
-            - python/mozbuild/mozpack/macpkg.py
-            - taskcluster/scripts/misc/unpack-sdk.py
-
 macosx64-sdk-13.0:
     description: "MacOSX13.0 SDK"
     attributes:
