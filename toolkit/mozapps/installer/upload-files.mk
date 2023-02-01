@@ -373,14 +373,6 @@ ifneq ($(filter-out en-US,$(AB_CD)),)
     $(call QUOTED_WILDCARD,$(topobjdir)/$(MOZ_BUILD_APP)/installer/windows/l10ngen/setup-stub.exe)
 endif
 
-ifdef MOZ_NORMANDY
-ifndef CROSS_COMPILE
-ifndef FUZZING_SNAPSHOT
-  UPLOAD_FILES += $(call QUOTED_WILDCARD,$(MOZ_NORMANDY_JSON))
-endif
-endif
-endif
-
 ifdef MOZ_CODE_COVERAGE
   UPLOAD_FILES += \
     $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip) \
