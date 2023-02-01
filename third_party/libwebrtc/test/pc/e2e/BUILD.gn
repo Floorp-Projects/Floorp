@@ -849,6 +849,8 @@ if (!build_with_chromium) {
       "../../../api:rtc_stats_api",
       "../../../api:scoped_refptr",
       "../../../api/numerics",
+      "../../../api/test/metrics:metric",
+      "../../../api/test/metrics:metrics_logger_and_exporter",
       "../../../api/test/network_emulation",
       "../../../api/units:data_rate",
       "../../../api/units:data_size",
