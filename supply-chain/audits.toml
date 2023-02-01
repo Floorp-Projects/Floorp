@@ -1222,6 +1222,12 @@ examine at the time, so I examined it now. I didn't perform a full logic review
 but convinced myself that any generated code will be entirely safe to deploy.
 """
 
+[[audits.marionette]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-run"
+version = "0.2.1"
+notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
+
 [[audits.matches]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
