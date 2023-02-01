@@ -4293,18 +4293,36 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
 
 Maybe<GdkWindowEdge> nsWindow::CheckResizerEdge(
     const LayoutDeviceIntPoint& aPoint) {
-  // We only need to handle resizers for PIP window.
-  if (!mIsPIPWindow) {
+  const bool canResize = [&] {
+    // Don't allow resizing maximized/fullscreen windows.
+    if (mSizeMode != nsSizeMode_Normal) {
+      return false;
+    }
+    if (mIsPIPWindow) {
+      // Note that since we do show resizers on left/right sides on PIP windows,
+      // we still want the resizers there, even when tiled.
+      return true;
+    }
+    if (mDrawInTitlebar) {
+      // If we show top resizers on a (non-PIP) tiled window on GNOME, it
+      // doesn't really work, since the window is "stuck" to the top and
+      // bottom, so don't show them in that case.
+      return !mIsTiled;
+    }
+    // If we're not a PIP window nor drawing to the titlebar, we don't need to
+    // add resizers.
+    return false;
+  }();
+
+  if (!canResize) {
     return {};
   }
 
-  // Don't allow resizing maximized/fullscreen windows.
-  if (mSizeMode != nsSizeMode_Normal) {
-    return {};
-  }
+  // If we're not in a PiP window, allow 1px resizer edge from the top edge,
+  // and nothing else.
+  // This is to allow resizes of tiled windows on KDE, see bug 1813554.
+  const int resizerSize = (mIsPIPWindow ? 15 : 1) * GdkCeiledScaleFactor();
 
-#define RESIZER_SIZE 15
-  const int resizerSize = RESIZER_SIZE * GdkCeiledScaleFactor();
   const int topDist = aPoint.y;
   const int leftDist = aPoint.x;
   const int rightDist = mBounds.width - aPoint.x;
@@ -4318,6 +4336,10 @@ Maybe<GdkWindowEdge> nsWindow::CheckResizerEdge(
       return Some(GDK_WINDOW_EDGE_NORTH_WEST);
     }
     return Some(GDK_WINDOW_EDGE_NORTH);
+  }
+
+  if (!mIsPIPWindow) {
+    return {};
   }
 
   if (bottomDist <= resizerSize) {
