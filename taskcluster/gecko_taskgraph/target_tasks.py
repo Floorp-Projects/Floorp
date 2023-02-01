@@ -564,7 +564,7 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
 
     def filter(task):
         # Bug 1758507 - geckoview ships in the promote phase
-        if "mozilla-esr" not in parameters["project"] and is_geckoview(
+        if not parameters["release_type"].startswith("esr") and is_geckoview(
             task, parameters
         ):
             return True
