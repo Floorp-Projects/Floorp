@@ -10,7 +10,7 @@
 
 proxy-title = Stay safe on public Wi-Fi
 proxy-header-content = { -secure-proxy-brand-name } makes wireless hotspots more secure to protect you from hackers.
-get-proxy-extension-link = Get the Extension
+get-proxy-extension-link = Get the extension
 
 vpn-title = Take privacy protections beyond the browser
 vpn-header-content = Protect your entire device with { -mozilla-vpn-brand-name }. One tap encrypts all traffic and hides your location.
