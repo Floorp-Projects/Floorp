@@ -47,6 +47,7 @@ using ScreenShareConfig = ::webrtc::webrtc_pc_e2e::
 using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 using ::cricket::kAv1CodecName;
+using ::cricket::kH264CodecName;
 using ::cricket::kVp8CodecName;
 using ::cricket::kVp9CodecName;
 using ::testing::Combine;
@@ -310,7 +311,22 @@ INSTANTIATE_TEST_SUITE_P(
             Values(UseDependencyDescriptor::Disabled,
                    UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
-#if RTC_ENABLE_VP9
+
+#if defined(WEBRTC_USE_H264)
+INSTANTIATE_TEST_SUITE_P(
+    SvcTestH264,
+    SvcTest,
+    Combine(ValuesIn({
+                SvcTestParameters{kH264CodecName, "L1T1", 1, 1},
+                // SvcTestParameters{kH264CodecName, "L1T2", 1, 2},
+                // SvcTestParameters{kH264CodecName, "L1T3", 1, 3},
+            }),
+            Values(UseDependencyDescriptor::Disabled,
+                   UseDependencyDescriptor::Enabled)),
+    SvcTestNameGenerator);
+#endif
+
+#if defined(RTC_ENABLE_VP9)
 INSTANTIATE_TEST_SUITE_P(
     SvcTestVP9,
     SvcTest,
