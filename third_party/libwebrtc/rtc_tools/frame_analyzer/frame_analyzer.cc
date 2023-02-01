@@ -19,6 +19,7 @@
 #include "absl/flags/parse.h"
 #include "absl/strings/match.h"
 #include "api/scoped_refptr.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_tools/frame_analyzer/video_color_aligner.h"
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
@@ -159,7 +160,8 @@ int main(int argc, char* argv[]) {
   results.decode_errors_ref = 0;
   results.decode_errors_test = 0;
 
-  webrtc::test::PrintAnalysisResults(absl::GetFlag(FLAGS_label), &results);
+  webrtc::test::PrintAnalysisResults(absl::GetFlag(FLAGS_label), results,
+                                     *webrtc::test::GetGlobalMetricsLogger());
 
   std::string chartjson_result_file =
       absl::GetFlag(FLAGS_chartjson_result_file);
