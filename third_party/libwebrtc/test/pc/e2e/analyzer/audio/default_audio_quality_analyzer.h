@@ -17,7 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/test/audio_quality_analyzer_interface.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/track_id_stream_info_map.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -40,7 +40,7 @@ class DefaultAudioQualityAnalyzer : public AudioQualityAnalyzerInterface {
   DefaultAudioQualityAnalyzer()
       : DefaultAudioQualityAnalyzer(/*metrics_logger=*/nullptr) {}
   explicit DefaultAudioQualityAnalyzer(
-      test::MetricsLoggerAndExporter* const metrics_logger)
+      test::MetricsLogger* const metrics_logger)
       : metrics_logger_(metrics_logger) {}
 
   void Start(std::string test_case_name,
@@ -72,7 +72,7 @@ class DefaultAudioQualityAnalyzer : public AudioQualityAnalyzerInterface {
                     const std::string& unit,
                     webrtc::test::ImproveDirection improve_direction) const;
 
-  test::MetricsLoggerAndExporter* const metrics_logger_;
+  test::MetricsLogger* const metrics_logger_;
 
   std::string test_case_name_;
   TrackIdStreamInfoMap* analyzer_helper_;

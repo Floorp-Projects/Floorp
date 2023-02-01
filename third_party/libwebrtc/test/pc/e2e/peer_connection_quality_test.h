@@ -18,7 +18,7 @@
 #include "absl/strings/string_view.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/audio_quality_analyzer_interface.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/time_controller.h"
 #include "api/units/time_delta.h"
@@ -62,7 +62,7 @@ class PeerConnectionE2EQualityTest
       TimeController& time_controller,
       std::unique_ptr<AudioQualityAnalyzerInterface> audio_quality_analyzer,
       std::unique_ptr<VideoQualityAnalyzerInterface> video_quality_analyzer,
-      test::MetricsLoggerAndExporter* metrics_logger);
+      test::MetricsLogger* metrics_logger);
 
   ~PeerConnectionE2EQualityTest() override = default;
 
@@ -124,7 +124,7 @@ class PeerConnectionE2EQualityTest
   std::unique_ptr<EncodedImageDataPropagator> encoded_image_data_propagator_;
   std::unique_ptr<AudioQualityAnalyzerInterface> audio_quality_analyzer_;
   std::unique_ptr<TestActivitiesExecutor> executor_;
-  test::MetricsLoggerAndExporter* const metrics_logger_;
+  test::MetricsLogger* const metrics_logger_;
 
   std::vector<std::unique_ptr<PeerConfigurerImpl>> peer_configurations_;
   std::vector<PeerHandleImpl> peer_handles_;

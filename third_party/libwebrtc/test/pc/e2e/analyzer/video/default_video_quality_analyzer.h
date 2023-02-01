@@ -22,7 +22,7 @@
 
 #include "api/array_view.h"
 #include "api/numerics/samples_stats_counter.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
@@ -51,7 +51,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
       webrtc::Clock* clock,
       DefaultVideoQualityAnalyzerOptions options = {});
   DefaultVideoQualityAnalyzer(webrtc::Clock* clock,
-                              test::MetricsLoggerAndExporter* metrics_logger,
+                              test::MetricsLogger* metrics_logger,
                               DefaultVideoQualityAnalyzerOptions options = {});
   ~DefaultVideoQualityAnalyzer() override;
 
@@ -152,7 +152,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   const DefaultVideoQualityAnalyzerOptions options_;
   webrtc::Clock* const clock_;
-  test::MetricsLoggerAndExporter* const metrics_logger_;
+  test::MetricsLogger* const metrics_logger_;
 
   std::string test_label_;
 

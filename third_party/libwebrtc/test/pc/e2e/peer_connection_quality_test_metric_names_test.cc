@@ -12,7 +12,7 @@
 
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/create_peer_connection_quality_test_frame_generator.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/metrics/stdout_metrics_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
@@ -28,10 +28,10 @@ namespace {
 
 using ::testing::UnorderedElementsAre;
 
+using ::webrtc::test::DefaultMetricsLogger;
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Metric;
 using ::webrtc::test::MetricsExporter;
-using ::webrtc::test::MetricsLoggerAndExporter;
 using ::webrtc::test::StdoutMetricsExporter;
 using ::webrtc::test::Unit;
 using RunParams =
@@ -103,10 +103,8 @@ TEST(PeerConnectionE2EQualityTestMetricNamesTest,
      ExportedMetricsHasCorrectName) {
   std::unique_ptr<NetworkEmulationManager> network_emulation =
       CreateNetworkEmulationManager(TimeMode::kSimulated);
-  std::vector<std::unique_ptr<MetricsExporter>> exporters;
-  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
-  MetricsLoggerAndExporter metrics_logger(
-      network_emulation->time_controller()->GetClock(), std::move(exporters));
+  DefaultMetricsLogger metrics_logger(
+      network_emulation->time_controller()->GetClock());
   PeerConnectionE2EQualityTest fixture(
       "test_case", *network_emulation->time_controller(),
       /*audio_quality_analyzer=*/nullptr, /*video_quality_analyzer=*/nullptr,
