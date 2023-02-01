@@ -66,3 +66,8 @@ if (rtc_include_tests) {
     }
   }
 }
+
+rtc_library("encoder_config") {
+  sources = [ "video_encoder_config.h" ]
+  deps = [ "../../api/video_codecs:video_codecs_api" ]
+}
