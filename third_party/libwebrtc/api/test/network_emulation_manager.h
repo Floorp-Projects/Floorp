@@ -14,6 +14,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "api/array_view.h"
@@ -337,6 +338,11 @@ class NetworkEmulationManager {
   // - GetPeerEndpoint() - the endpoint that is "connected to the internet".
   virtual EmulatedTURNServerInterface* CreateTURNServer(
       EmulatedTURNServerConfig config) = 0;
+
+  // Create a pair of EmulatedNetworkManagerInterfaces connected to each other.
+  std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
+  CreateEndpointPairWithTwoWayRoutes(
+      const BuiltInNetworkBehaviorConfig& config);
 };
 
 }  // namespace webrtc

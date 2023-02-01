@@ -54,24 +54,6 @@ std::string GetMetricTestCaseName() {
   return test_case_prefix + "_" + test_info->name();
 }
 
-std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
-CreateTwoNetworkLinks(NetworkEmulationManager* emulation,
-                      const BuiltInNetworkBehaviorConfig& config) {
-  auto* alice_node = emulation->CreateEmulatedNode(config);
-  auto* bob_node = emulation->CreateEmulatedNode(config);
-
-  auto* alice_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-  auto* bob_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-
-  emulation->CreateRoute(alice_endpoint, {alice_node}, bob_endpoint);
-  emulation->CreateRoute(bob_endpoint, {bob_node}, alice_endpoint);
-
-  return {
-      emulation->CreateEmulatedNetworkManagerInterface({alice_endpoint}),
-      emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint}),
-  };
-}
-
 std::unique_ptr<webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture>
 CreateTestFixture(absl::string_view test_case_name,
                   TimeController& time_controller,
@@ -135,8 +117,8 @@ TEST(PCLowBandwidthAudioTest, PCGoodNetworkHighBitrate) {
       CreateNetworkEmulationManager();
   auto fixture = CreateTestFixture(
       GetMetricTestCaseName(), *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(),
-                            BuiltInNetworkBehaviorConfig()),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(
+          BuiltInNetworkBehaviorConfig()),
       [](PeerConfigurer* alice) {
         AudioConfig audio;
         audio.stream_label = "alice-audio";
@@ -162,7 +144,7 @@ TEST(PCLowBandwidthAudioTest, PC40kbpsNetwork) {
   config.loss_percent = 1;
   auto fixture = CreateTestFixture(
       GetMetricTestCaseName(), *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(), config),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(config),
       [](PeerConfigurer* alice) {
         AudioConfig audio;
         audio.stream_label = "alice-audio";
