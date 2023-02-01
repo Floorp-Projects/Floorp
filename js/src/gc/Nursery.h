@@ -60,6 +60,7 @@ class HeapSlot;
 class JSONPrinter;
 class MapObject;
 class SetObject;
+class Sprinter;
 class TenuringTracer;
 
 namespace gc {
@@ -687,7 +688,8 @@ class Nursery {
   void maybeClearProfileDurations();
   void startProfile(ProfileKey key);
   void endProfile(ProfileKey key);
-  static void printProfileDurations(FILE* file, const ProfileDurations& times);
+  static bool printProfileDurations(const ProfileDurations& times,
+                                    Sprinter& sprinter);
 
   mozilla::TimeStamp collectionStartTime() const;
   mozilla::TimeStamp lastCollectionEndTime() const;

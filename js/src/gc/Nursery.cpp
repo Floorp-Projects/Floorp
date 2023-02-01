@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
 #include <algorithm>
@@ -30,6 +31,7 @@
 #include "util/GetPidProvider.h"  // getpid()
 #include "util/Poison.h"
 #include "vm/JSONPrinter.h"
+#include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
 
@@ -908,41 +910,94 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   json.endObject();
 }
 
+// The following macros define nursery GC profile metadata fields that are
+// printed before the timing information defined by
+// FOR_EACH_NURSERY_PROFILE_TIME.
+
+#define FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_) \
+  _("PID", 7, "%7zu", pid)                          \
+  _("Runtime", 14, "0x%12p", runtime)
+
+#define FOR_EACH_NURSERY_PROFILE_METADATA(_)          \
+  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_)         \
+  _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
+  _("Reason", 20, "%-20.20s", reasonStr)              \
+  _("PRate", 6, "%5.1f%%", promotionRatePercent)      \
+  _("OldKB", 6, "%6zu", oldSizeKB)                    \
+  _("NewKB", 6, "%6zu", newSizeKB)                    \
+  _("Dedup", 6, "%6zu", dedupCount)
+
+#define FOR_EACH_NURSERY_PROFILE_TOTALS_METADATA(_) \
+  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_)       \
+  _("CollectionCount", 59, "%-59s", collections)
+
 void js::Nursery::printCollectionProfile(JS::GCReason reason,
                                          double promotionRate) {
   stats().maybePrintProfileHeaders();
 
-  TimeDuration ts = collectionStartTime() - stats().creationTime();
+  Sprinter sprinter;
+  if (!sprinter.init() || !sprinter.put(gcstats::MinorGCProfilePrefix)) {
+    return;
+  }
 
-  FILE* file = stats().profileFile();
-  fprintf(
-      file, "MinorGC: %7zu %14p %10.6f %-20.20s %5.1f%% %6zu %6zu %6" PRIu32,
-      size_t(getpid()), runtime(), ts.ToSeconds(), JS::ExplainGCReason(reason),
-      promotionRate * 100, previousGC.nurseryCapacity / 1024, capacity() / 1024,
-      stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
+  size_t pid = getpid();
+  JSRuntime* runtime = gc->rt;
+  TimeDuration timestamp = collectionStartTime() - stats().creationTime();
+  const char* reasonStr = ExplainGCReason(reason);
+  double promotionRatePercent = promotionRate * 100;
+  size_t oldSizeKB = previousGC.nurseryCapacity / 1024;
+  size_t newSizeKB = capacity() / 1024;
+  size_t dedupCount = stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED);
 
-  printProfileDurations(file, profileDurations_);
+#define PRINT_FIELD_VALUE(_1, _2, format, value) \
+  if (!sprinter.jsprintf(" " format, value)) {   \
+    return;                                      \
+  }
+  FOR_EACH_NURSERY_PROFILE_METADATA(PRINT_FIELD_VALUE)
+#undef PRINT_FIELD_VALUE
+
+  printProfileDurations(profileDurations_, sprinter);
+
+  fputs(sprinter.string(), stats().profileFile());
 }
 
 void js::Nursery::printProfileHeader() {
-  FILE* file = stats().profileFile();
-  fprintf(
-      file,
-      "MinorGC: PID     Runtime        Timestamp  Reason               PRate  "
-      "OldKB  NewKB  Dedup ");
-#define PRINT_HEADER(name, text) fprintf(file, " %-6.6s", text);
-  FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
-#undef PRINT_HEADER
-  fprintf(file, "\n");
+  Sprinter sprinter;
+  if (!sprinter.init() || !sprinter.put(gcstats::MinorGCProfilePrefix)) {
+    return;
+  }
+
+#define PRINT_FIELD_NAME(name, width, _1, _2)     \
+  if (!sprinter.jsprintf(" %-*s", width, name)) { \
+    return;                                       \
+  }
+  FOR_EACH_NURSERY_PROFILE_METADATA(PRINT_FIELD_NAME)
+#undef PRINT_FIELD_NAME
+
+#define PRINT_PROFILE_NAME(_1, text)         \
+  if (!sprinter.jsprintf(" %-6.6s", text)) { \
+    return;                                  \
+  }
+  FOR_EACH_NURSERY_PROFILE_TIME(PRINT_PROFILE_NAME)
+#undef PRINT_PROFILE_NAME
+
+  if (!sprinter.put("\n")) {
+    return;
+  }
+
+  fputs(sprinter.string(), stats().profileFile());
 }
 
 // static
-void js::Nursery::printProfileDurations(FILE* file,
-                                        const ProfileDurations& times) {
+bool js::Nursery::printProfileDurations(const ProfileDurations& times,
+                                        Sprinter& sprinter) {
   for (auto time : times) {
-    fprintf(file, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
+    if (!sprinter.jsprintf(" %6zu", size_t(time.ToMicroseconds()))) {
+      return false;
+    }
   }
-  fprintf(file, "\n");
+
+  return sprinter.put("\n");
 }
 
 void js::Nursery::printTotalProfileTimes() {
@@ -950,13 +1005,31 @@ void js::Nursery::printTotalProfileTimes() {
     return;
   }
 
-  FILE* file = stats().profileFile();
-  fprintf(file,
-          "MinorGC: %7zu %14p TOTALS: %7" PRIu64
-          " collections:               %16" PRIu64,
-          size_t(getpid()), runtime(), gc->stringStats.deduplicatedStrings,
-          gc->minorGCCount());
-  printProfileDurations(file, totalDurations_);
+  Sprinter sprinter;
+  if (!sprinter.init() || !sprinter.put(gcstats::MinorGCProfilePrefix)) {
+    return;
+  }
+
+  size_t pid = getpid();
+  JSRuntime* runtime = gc->rt;
+
+  char collections[32];
+  DebugOnly<int> r = SprintfLiteral(
+      collections, "TOTALS: %7zu collections:", gc->minorGCCount());
+  MOZ_ASSERT(r > 0 && r < int(sizeof(collections)));
+
+#define PRINT_FIELD_VALUE(_1, _2, format, value) \
+  if (!sprinter.jsprintf(" " format, value)) {   \
+    return;                                      \
+  }
+  FOR_EACH_NURSERY_PROFILE_TOTALS_METADATA(PRINT_FIELD_VALUE)
+#undef PRINT_FIELD_VALUE
+
+  if (!printProfileDurations(totalDurations_, sprinter)) {
+    return;
+  }
+
+  fputs(sprinter.string(), stats().profileFile());
 }
 
 void js::Nursery::maybeClearProfileDurations() {
