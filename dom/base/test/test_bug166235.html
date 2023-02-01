@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
     window.getSelection().selectAllChildren(document.getElementById(id));
     documentViewer.copySelection();
 
-    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1), true);
+    is(clipboard.hasDataMatchingFlavors(["text/plain"], 1), true);
     is(clipboard.hasDataMatchingFlavors(["text/html"], 1), true);
   }
   function getClipboardData(mime) {
@@ -110,7 +110,7 @@ var clipboardHTML = [
   '<p id=\"test5\">This<span style=\"user-select: all\"> text should</span> be copied.</p>',
 ];
 
-// expected results for clipboard text/unicode
+// expected results for clipboard text/plain
 var clipboardUnicode = [
   'This text should be copied.',
   'This text should be copied.',
@@ -145,7 +145,7 @@ for (var i = 0; i < originalStrings.length; i++) {
   copyChildrenToClipboard(id);
   is(window.getSelection().toString(), originalStrings[i], id + ' Selection.toString()');
   testHtmlClipboardValue("text/html", clipboardHTML[i], id);
-  testClipboardValue("text/unicode", clipboardUnicode[i], id);
+  testClipboardValue("text/plain", clipboardUnicode[i], id);
   testInnerHTML(id, innerHTMLStrings[i]);
   testPasteText(textareaStrings[i], id + '.innerHTML');
 }

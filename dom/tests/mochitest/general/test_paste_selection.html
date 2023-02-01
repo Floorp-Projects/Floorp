@@ -20,8 +20,8 @@ var supportsSelectionClipboard = SpecialPowers.supportsSelectionClipboard();
 function checkSelectionClipboardText(count)
 {
   if ((!supportsSelectionClipboard ||
-       SpecialPowers.getClipboardData("text/unicode", SpecialPowers.Ci.nsIClipboard.kSelectionClipboard) == "COPY TEXT") &&
-      SpecialPowers.getClipboardData("text/unicode", SpecialPowers.Ci.nsIClipboard.kGlobalClipboard) == "CLIPBOARD") {
+       SpecialPowers.getClipboardData("text/plain", SpecialPowers.Ci.nsIClipboard.kSelectionClipboard) == "COPY TEXT") &&
+      SpecialPowers.getClipboardData("text/plain", SpecialPowers.Ci.nsIClipboard.kGlobalClipboard) == "CLIPBOARD") {
     pasteArea();
     return;
   }

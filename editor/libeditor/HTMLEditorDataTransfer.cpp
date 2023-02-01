@@ -1463,10 +1463,10 @@ void HTMLEditor::HTMLTransferablePreparer::AddDataFlavorsInBestOrder(
         break;
     }
   }
-  DebugOnly<nsresult> rvIgnored = aTransferable.AddDataFlavor(kUnicodeMime);
+  DebugOnly<nsresult> rvIgnored = aTransferable.AddDataFlavor(kTextMime);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
-      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
+      "nsITransferable::AddDataFlavor(kTextMime) failed, but ignored");
   rvIgnored = aTransferable.AddDataFlavor(kMozTextInternal);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
@@ -2035,7 +2035,7 @@ nsresult HTMLEditor::InsertFromTransferableAtSelection(
       }
     }
     if (bestFlavor.EqualsLiteral(kHTMLMime) ||
-        bestFlavor.EqualsLiteral(kUnicodeMime) ||
+        bestFlavor.EqualsLiteral(kTextMime) ||
         bestFlavor.EqualsLiteral(kMozTextInternal)) {
       nsAutoString stuffToPaste;
       if (!GetString(genericDataObj, stuffToPaste)) {
@@ -2542,8 +2542,8 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
 // The following arrays contain the MIME types that we can paste. The arrays
 // are used by CanPaste() and CanPasteTransferable() below.
 
-static const char* textEditorFlavors[] = {kUnicodeMime};
-static const char* textHtmlEditorFlavors[] = {kUnicodeMime,   kHTMLMime,
+static const char* textEditorFlavors[] = {kTextMime};
+static const char* textHtmlEditorFlavors[] = {kTextMime,      kHTMLMime,
                                               kJPEGImageMime, kJPGImageMime,
                                               kPNGImageMime,  kGIFImageMime};
 
@@ -2792,10 +2792,10 @@ nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {
                        "nsITransferable::Init() failed, but ignored");
 
   // We only handle plaintext pastes here
-  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
+  rvIgnored = transferable->AddDataFlavor(kTextMime);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
-      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
+      "nsITransferable::AddDataFlavor(kTextMime) failed, but ignored");
 
   // Get the Data from the clipboard
   rvIgnored = clipboard->GetData(transferable, aSelectionType);
@@ -2813,7 +2813,7 @@ nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {
     return rv;
   }
 
-  if (!flavor.EqualsLiteral(kUnicodeMime)) {
+  if (!flavor.EqualsLiteral(kTextMime)) {
     return NS_OK;
   }
 

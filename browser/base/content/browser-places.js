@@ -1379,7 +1379,7 @@ var PlacesToolbarHelper = {
     }
 
     addData(PlacesUtils.TYPE_X_MOZ_URL, 0);
-    addData(PlacesUtils.TYPE_UNICODE, 0);
+    addData(PlacesUtils.TYPE_PLAINTEXT, 0);
     addData(PlacesUtils.TYPE_HTML, 0);
   },
 };

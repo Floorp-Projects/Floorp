@@ -60,7 +60,7 @@ add_task(async function() {
   }
 
   let primaryAsText = SpecialPowers.getClipboardData(
-    "text/unicode",
+    "text/plain",
     SpecialPowers.Ci.nsIClipboard.kSelectionClipboard
   );
   Assert.equal(primaryAsText, TEXT_FOR_PRIMARY);

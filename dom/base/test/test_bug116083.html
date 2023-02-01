@@ -59,8 +59,8 @@ function hasExpectedFlavors() {
   var cb = Cc["@mozilla.org/widget/clipboard;1"].
            getService(Ci.nsIClipboard);
 
-  ok(cb.hasDataMatchingFlavors(["text/unicode"], cb.kGlobalClipboard),
-     "The clipboard has text/unicode");
+  ok(cb.hasDataMatchingFlavors(["text/plain"], cb.kGlobalClipboard),
+     "The clipboard has text/plain");
 
   ok(cb.hasDataMatchingFlavors(["text/html"], cb.kGlobalClipboard),
      "The clipboard has text/html");

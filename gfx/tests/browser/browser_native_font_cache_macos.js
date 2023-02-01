@@ -68,7 +68,7 @@ add_task(async () => {
             dump("********************\n");
             resolve("");
           },
-          "text/unicode",
+          "text/plain",
           REPORT_TIMEOUT_MS
         );
       });

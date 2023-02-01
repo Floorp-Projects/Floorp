@@ -1693,7 +1693,7 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTr
   }
 
   NSString* pString = nil;
-  if (aFlavor.EqualsLiteral(kUnicodeMime)) {
+  if (aFlavor.EqualsLiteral(kTextMime)) {
     pString = nsCocoaUtils::GetStringForTypeFromPasteboardItem(
         aItem, [UTIHelper stringFromPboardType:NSPasteboardTypeString]);
   } else if (aFlavor.EqualsLiteral(kHTMLMime)) {
@@ -1720,7 +1720,8 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTr
   }
   if (pString) {
     NSData* stringData;
-    if (aFlavor.EqualsLiteral(kRTFMime)) {
+    bool isRTF = aFlavor.EqualsLiteral(kRTFMime);
+    if (isRTF) {
       stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
     } else {
       stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
@@ -1734,8 +1735,7 @@ void nsCocoaUtils::SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTr
 
     // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
     int32_t signedDataLength = dataLength;
-    nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(aFlavor, &clipboardDataPtr,
-                                                       &signedDataLength);
+    nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(isRTF, &clipboardDataPtr, &signedDataLength);
     dataLength = signedDataLength;
 
     // skip BOM (Byte Order Mark to distinguish little or big endian)

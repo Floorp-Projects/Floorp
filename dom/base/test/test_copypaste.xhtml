@@ -6,10 +6,10 @@ This test is different from test_copypaste.html in two ways:
 
   1. The text/html clipboard flavor isn't tested, since nsCopySupport doesn't
      produce it for XHTML.
-  2. The text/unicode flavor isn't tested when the selection is in hidden
+  2. The text/plain flavor isn't tested when the selection is in hidden
      elements, since nsCopySupport doesn't produce text/plain for hidden
      elements, and unlike HTML, neither does it produce text/_moz_htmlcontext
-     and text/_moz_htmlinfo, which the clipboard converts to text/unicode.
+     and text/_moz_htmlinfo, which the clipboard converts to text/plain.
 -->
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>

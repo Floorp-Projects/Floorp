@@ -50,8 +50,8 @@ async function testCopyPaste(isXHTML) {
     );
     if (!suppressUnicodeCheck) {
       ok(
-        clipboard.hasDataMatchingFlavors(["text/unicode"], 1),
-        "check text/unicode"
+        clipboard.hasDataMatchingFlavors(["text/plain"], 1),
+        "check text/plain"
       );
     }
     if (!suppressHTMLCheck) {
@@ -159,7 +159,7 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("draggable");
   testSelectionToString("This is a draggable bit of text.");
-  testClipboardValue("text/unicode", "This is a draggable bit of text.");
+  testClipboardValue("text/plain", "This is a draggable bit of text.");
   testHtmlClipboardValue(
     "text/html",
     '<div id="draggable" title="title to have a long HTML line">This is a <em>draggable</em> bit of text.</div>'
@@ -168,7 +168,7 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("alist");
   testSelectionToString(" bla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/unicode", " bla\n\n    foo\n    bar\n\n");
+  testClipboardValue("text/plain", " bla\n\n    foo\n    bar\n\n");
   testHtmlClipboardValue(
     "text/html",
     '<div id="alist">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>'
@@ -177,7 +177,7 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("blist");
   testSelectionToString(" mozilla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/unicode", " mozilla\n\n    foo\n    bar\n\n");
+  testClipboardValue("text/plain", " mozilla\n\n    foo\n    bar\n\n");
   testHtmlClipboardValue(
     "text/html",
     '<div id="blist">\n    mozilla\n    <ol>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ol>\n  </div>'
@@ -187,7 +187,7 @@ async function testCopyPaste(isXHTML) {
   await copyChildrenToClipboard("clist");
   testSelectionToString(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
   testClipboardValue(
-    "text/unicode",
+    "text/plain",
     " mzla\n\n    foo\n        bazzinga!\n    bar\n\n"
   );
   testHtmlClipboardValue(
@@ -198,7 +198,7 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("div4");
   testSelectionToString(" Tt t t ");
-  testClipboardValue("text/unicode", " Tt t t ");
+  testClipboardValue("text/plain", " Tt t t ");
   if (isXHTML) {
     testHtmlClipboardValue(
       "text/html",
@@ -219,7 +219,7 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("div5");
   testSelectionToString(" T     ");
-  testClipboardValue("text/unicode", " T     ");
+  testClipboardValue("text/plain", " T     ");
   if (isXHTML) {
     testHtmlClipboardValue(
       "text/html",
@@ -248,7 +248,7 @@ async function testCopyPaste(isXHTML) {
   testSelectionToString("");
   // START Disabled due to bug 564688
   if (false) {
-    testClipboardValue("text/unicode", "");
+    testClipboardValue("text/plain", "");
     testClipboardValue("text/html", "");
   }
   // END Disabled due to bug 564688
@@ -264,7 +264,7 @@ async function testCopyPaste(isXHTML) {
   testSelectionToString("");
   // START Disabled due to bug 564688
   if (false) {
-    testClipboardValue("text/unicode", "");
+    testClipboardValue("text/plain", "");
     testClipboardValue("text/html", "");
   }
   // END Disabled due to bug 564688
@@ -280,7 +280,7 @@ async function testCopyPaste(isXHTML) {
   testSelectionToString("");
   // START Disabled due to bug 564688
   if (false) {
-    testClipboardValue("text/unicode", "");
+    testClipboardValue("text/plain", "");
     testClipboardValue("text/html", "");
   }
   // END Disabled due to bug 564688
@@ -294,7 +294,7 @@ async function testCopyPaste(isXHTML) {
     suppressUnicodeCheckIfHidden
   );
   testSelectionToString("div9");
-  testClipboardValue("text/unicode", "div9");
+  testClipboardValue("text/plain", "div9");
   testHtmlClipboardValue("text/html", "div9");
   testInnerHTML("div9", "div9");
 
@@ -462,20 +462,20 @@ async function testCopyPaste(isXHTML) {
 
   await copyChildrenToClipboard("div13");
   testSelectionToString("__");
-  testClipboardValue("text/unicode", "__");
+  testClipboardValue("text/plain", "__");
   testHtmlClipboardValue("text/html", '<div id="div13">__</div>');
   testPasteText("__");
 
   // ============ converting cell boundaries to tabs in tables
 
   await copyToClipboard($("tr1"));
-  testClipboardValue("text/unicode", "foo\tbar");
+  testClipboardValue("text/plain", "foo\tbar");
 
   if (!isXHTML) {
     // ============ spanning multiple rows
 
     await copyRangeToClipboard($("tr2"), 0, $("tr3"), 0);
-    testClipboardValue("text/unicode", "1\t2\n3\t4\n");
+    testClipboardValue("text/plain", "1\t2\n3\t4\n");
     testHtmlClipboardValue(
       "text/html",
       '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>'
@@ -487,7 +487,7 @@ async function testCopyPaste(isXHTML) {
     addRange($("tr2"), 0, $("tr2"), 2);
     addRange($("tr3"), 0, $("tr3"), 2);
     await copySelectionToClipboard();
-    testClipboardValue("text/unicode", "1\t2\n5\t6");
+    testClipboardValue("text/plain", "1\t2\n5\t6");
     testHtmlClipboardValue(
       "text/html",
       '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>'
@@ -502,7 +502,7 @@ async function testCopyPaste(isXHTML) {
     $("div11").childNodes[1],
     2
   );
-  testClipboardValue("text/unicode", "Xdiv11");
+  testClipboardValue("text/plain", "Xdiv11");
   testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>11</p></div>");
 
   await new Promise(resolve => {
@@ -520,7 +520,7 @@ async function testCopyPaste(isXHTML) {
     2
   );
 
-  testClipboardValue("text/unicode", "Xdiv12");
+  testClipboardValue("text/plain", "Xdiv12");
   testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
   await new Promise(resolve => {
     setTimeout(resolve, 0);
@@ -539,18 +539,18 @@ async function testCopyPaste(isXHTML) {
 
     // Ruby annotation is included when selecting inside ruby.
     await copyRangeToClipboard(ruby1, 0, ruby1, 6);
-    testClipboardValue("text/unicode", "aabb(AABB)");
+    testClipboardValue("text/plain", "aabb(AABB)");
 
     // Ruby annotation is ignored when selecting across ruby.
     await copyRangeToClipboard(ruby1Container, 0, ruby1Container, 3);
-    testClipboardValue("text/unicode", "XaabbY");
+    testClipboardValue("text/plain", "XaabbY");
 
     // ... unless converter.html2txt.always_include_ruby is set
     await SpecialPowers.pushPrefEnv({
       set: [["converter.html2txt.always_include_ruby", true]],
     });
     await copyRangeToClipboard(ruby1Container, 0, ruby1Container, 3);
-    testClipboardValue("text/unicode", "Xaabb(AABB)Y");
+    testClipboardValue("text/plain", "Xaabb(AABB)Y");
     await SpecialPowers.popPrefEnv();
   }
 }

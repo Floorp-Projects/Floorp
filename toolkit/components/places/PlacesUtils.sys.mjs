@@ -430,7 +430,7 @@ export var PlacesUtils = {
   // Place entries formatted as HTML anchors
   TYPE_HTML: "text/html",
   // Place entries as raw URL text
-  TYPE_UNICODE: "text/unicode",
+  TYPE_PLAINTEXT: "text/plain",
   // Used to track the action that populated the clipboard.
   TYPE_X_MOZ_PLACE_ACTION: "text/x-moz-place-action",
 
@@ -1102,7 +1102,7 @@ export var PlacesUtils = {
       }
     }
 
-    // Otherwise, we wrap as TYPE_UNICODE.
+    // Otherwise, we wrap as TYPE_PLAINTEXT.
     return gatherDataFromNode(aNode, gatherDataText);
   },
 
@@ -1158,11 +1158,11 @@ export var PlacesUtils = {
         }
         break;
       }
-      case this.TYPE_UNICODE: {
+      case this.TYPE_PLAINTEXT: {
         let parts = blob.split("\n");
         for (let i = 0; i < parts.length; i++) {
           let uriString = parts[i];
-          // text/uri-list is converted to TYPE_UNICODE but it could contain
+          // text/uri-list is converted to TYPE_PLAINTEXT but it could contain
           // comments line prepended by #, we should skip them, as well as
           // empty uris.
           if (uriString.substr(0, 1) == "\x23" || uriString == "") {

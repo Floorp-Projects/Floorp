@@ -20,9 +20,9 @@ add_task(function() {
       PlacesUtils.TYPE_X_MOZ_URL,
     ],
     // Single url.
-    ["place:type=0&sort=1:", PlacesUtils.TYPE_UNICODE],
+    ["place:type=0&sort=1:", PlacesUtils.TYPE_PLAINTEXT],
     // Multiple urls.
-    ["place:type=0&sort=1:\nplace:type=0&sort=1", PlacesUtils.TYPE_UNICODE],
+    ["place:type=0&sort=1:\nplace:type=0&sort=1", PlacesUtils.TYPE_PLAINTEXT],
   ];
   for (let [blob, type] of tests) {
     Assert.deepEqual(

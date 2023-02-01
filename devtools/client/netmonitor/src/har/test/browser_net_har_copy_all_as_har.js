@@ -155,7 +155,7 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
     connector
   );
 
-  const jsonString = SpecialPowers.getClipboardData("text/unicode");
+  const jsonString = SpecialPowers.getClipboardData("text/plain");
   const har = JSON.parse(jsonString);
   is(har.log.entries.length, 2, "There must be two requests");
   is(
@@ -233,6 +233,6 @@ async function reloadAndCopyAllAsHar({
     connector
   );
 
-  const jsonString = SpecialPowers.getClipboardData("text/unicode");
+  const jsonString = SpecialPowers.getClipboardData("text/plain");
   return JSON.parse(jsonString);
 }

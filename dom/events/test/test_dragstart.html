@@ -142,13 +142,14 @@ function doDragStartSelection(event)
   is(dt.getData("text/html"), "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> bit of text.</div>",
      "initial selection text/html");
 
-  // text/unicode and Text are available for compatibility. They retrieve the
-  // text/plain data
-  is(dt.getData("text/unicode"), "This is a draggable bit of text.", "initial selection text/unicode");
+  // text/plain and Text are available for compatibility. They retrieve the
+  // text/plain data. text/unicode is also for compatibility and retreives the plain text.
+  is(dt.getData("text/plain"), "This is a draggable bit of text.", "initial selection text/plain");
   is(dt.getData("Text"), "This is a draggable bit of text.", "initial selection Text");
   is(dt.getData("TEXT"), "This is a draggable bit of text.", "initial selection TEXT");
-  is(dt.getData("text/UNICODE"), "This is a draggable bit of text.", "initial selection text/UNICODE"); 
-
+  is(dt.getData("text/PLAIN"), "This is a draggable bit of text.", "initial selection text/PLAIN");
+  is(dt.getData("text/unicode"), "This is a draggable bit of text.", "initial selection text/unicode");
+  
   is(SpecialPowers.wrap(dt).mozItemCount, 1, "initial selection item count");
 
   dt.clearData("text/plain");

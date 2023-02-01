@@ -111,8 +111,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       var Suppstr = nsSupportsString();
       Suppstr.data = Ipsum;
       Transfer.init(Loadctx);
-      Transfer.addDataFlavor("text/unicode");
-      Transfer.setTransferData("text/unicode", Suppstr);
+      Transfer.addDataFlavor("text/plain");
+      Transfer.setTransferData("text/plain", Suppstr);
 
       // Enabled private browsing mode should not cache any selection to disk; disabled should
       if (private) {
@@ -132,7 +132,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       // Sanitize the environment.
       Suppstr = nsSupportsString();
       Suppstr.data = SHORT_STRING_NO_CACHE;
-      Transfer.setTransferData("text/unicode", Suppstr);
+      Transfer.setTransferData("text/plain", Suppstr);
       await new Promise(resolve => setTimeout(resolve, 0));
       is(getClipboardCacheFDCount(), initialFdCount, "should drop the cache file, if any.");
 

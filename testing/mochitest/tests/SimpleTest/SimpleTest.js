@@ -1063,7 +1063,7 @@ const kTextHtmlSuffixClipboardDataWindows =
  * Polls the clipboard waiting for the expected value. A known value different than
  * the expected value is put on the clipboard first (and also polled for) so we
  * can be sure the value we get isn't just the expected value because it was already
- * on the clipboard. This only uses the global clipboard and only for text/unicode
+ * on the clipboard. This only uses the global clipboard and only for text/plain
  * values.
  *
  * @param {String|Function} aExpectedStringOrValidatorFn
@@ -1087,7 +1087,7 @@ const kTextHtmlSuffixClipboardDataWindows =
  * @param {Function} aFailureFn
  *        A function called if the expected value isn't found on the clipboard
  *        within 5s. It can also be called if the known value can't be found.
- * @param {String} [aFlavor="text/unicode"]
+ * @param {String} [aFlavor="text/plain"]
  *        The flavor to look for.
  * @param {Number} [aTimeout=5000]
  *        The timeout (in milliseconds) to wait for a clipboard change.
@@ -1131,7 +1131,7 @@ SimpleTest.promiseClipboardChange = async function(
   aExpectFailure,
   aDontInitializeClipboardIfExpectFailure
 ) {
-  let requestedFlavor = aFlavor || "text/unicode";
+  let requestedFlavor = aFlavor || "text/plain";
 
   // The known value we put on the clipboard before running aSetupFn
   let initialVal = "waitForClipboard-known-value-" + Math.random();
@@ -1223,7 +1223,7 @@ SimpleTest.promiseClipboardChange = async function(
       function(aData) {
         return aData == preExpectedVal;
       },
-      "text/unicode",
+      "text/plain",
       false
     );
 

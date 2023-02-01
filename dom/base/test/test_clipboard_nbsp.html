@@ -80,7 +80,7 @@ async function clipboardTextForElementId(aDomId, aExpectedString) {
     function setup() {
       synthesizeKey("C", {accelKey: true});
     },
-    "text/unicode");
+    "text/plain");
   return copiedText;
 }
 

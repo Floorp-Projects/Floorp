@@ -10,13 +10,13 @@ function getString(clipboard) {
     Ci.nsITransferable
   );
   trans.init(null);
-  trans.addDataFlavor("text/unicode");
+  trans.addDataFlavor("text/plain");
 
   clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
 
   try {
     var data = {};
-    trans.getTransferData("text/unicode", data);
+    trans.getTransferData("text/plain", data);
 
     if (data) {
       data = data.value.QueryInterface(Ci.nsISupportsString);

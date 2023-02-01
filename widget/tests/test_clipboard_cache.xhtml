@@ -58,17 +58,17 @@ clipboardTypes.forEach(function(type) {
     add_task(function test_clipboard_hasDataMatchingFlavors() {
       info(`Test write data to clipboard type ${type}`);
 
-      // Write text/unicode data to main clipboard.
-      writeStringToClipboard(GenerateRandomString(), "text/unicode", clipboard.kGlobalClipboard);
-      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
-         "Should have text/unicode flavor");
+      // Write text/plain data to main clipboard.
+      writeStringToClipboard(GenerateRandomString(), "text/plain", clipboard.kGlobalClipboard);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
+         "Should have text/plain flavor");
       ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
          "Should not have text/html flavor");
 
       // Write text/html data to other clipboard.
       writeStringToClipboard(GenerateRandomString(), "text/html", type);
-      ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
-         "Should have text/unicode flavor");
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
+         "Should have text/plain flavor");
       ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
          "Should not have text/html flavor");
 

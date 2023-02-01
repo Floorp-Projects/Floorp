@@ -821,12 +821,12 @@ export function GetClipboardSearchString(aLoadContext) {
       Ci.nsITransferable
     );
     trans.init(aLoadContext);
-    trans.addDataFlavor("text/unicode");
+    trans.addDataFlavor("text/plain");
 
     Services.clipboard.getData(trans, Ci.nsIClipboard.kFindClipboard);
 
     let data = {};
-    trans.getTransferData("text/unicode", data);
+    trans.getTransferData("text/plain", data);
     if (data.value) {
       data = data.value.QueryInterface(Ci.nsISupportsString);
       searchString = data.toString();

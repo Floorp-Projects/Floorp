@@ -82,7 +82,7 @@ waitUntilApzStable().then(async function() {
       let element = doc.getElementById(id);
       dragSelect(element, 0, 60);
       await copySelectionToClipboard();
-      testClipboardValue("text/unicode", element.value.substr(0, 3));
+      testClipboardValue("text/plain", element.value.substr(0, 3));
     }
   }
 

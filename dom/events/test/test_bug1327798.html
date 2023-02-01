@@ -26,8 +26,8 @@ SimpleTest.waitForFocus(() => {
   //--------- now check the content of the clipboard
   var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
                                .getService(SpecialPowers.Ci.nsIClipboard);
-  // does the clipboard contain text/unicode data ?
-  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard),
+  // does the clipboard contain text/plain data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
      "clipboard contains unicode text");
   // does the clipboard contain text/html data ?
   ok(clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),

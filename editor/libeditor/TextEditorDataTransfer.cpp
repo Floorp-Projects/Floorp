@@ -53,7 +53,7 @@ nsresult TextEditor::InsertTextFromTransferable(
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "nsITransferable::GetAnyDataTransferData() failed, but ignored");
-  if (NS_SUCCEEDED(rv) && (bestFlavor.EqualsLiteral(kUnicodeMime) ||
+  if (NS_SUCCEEDED(rv) && (bestFlavor.EqualsLiteral(kTextMime) ||
                            bestFlavor.EqualsLiteral(kMozTextInternal))) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
@@ -271,8 +271,7 @@ bool TextEditor::CanPaste(int32_t aClipboardType) const {
   }
 
   // the flavors that we can deal with
-  AutoTArray<nsCString, 1> textEditorFlavors = {
-      nsDependentCString(kUnicodeMime)};
+  AutoTArray<nsCString, 1> textEditorFlavors = {nsDependentCString(kTextMime)};
 
   bool haveFlavors;
   rv = clipboard->HasDataMatchingFlavors(textEditorFlavors, aClipboardType,
@@ -294,10 +293,9 @@ bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   }
 
   nsCOMPtr<nsISupports> data;
-  nsresult rv =
-      aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(data));
+  nsresult rv = aTransferable->GetTransferData(kTextMime, getter_AddRefs(data));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "nsITransferable::GetTransferData(kUnicodeMime) failed");
+                       "nsITransferable::GetTransferData(kTextMime) failed");
   return NS_SUCCEEDED(rv) && data;
 }
 

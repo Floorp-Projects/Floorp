@@ -16,12 +16,12 @@ function setClipboard(path) {
   trans.addDataFlavor("application/x-moz-file");
   trans.setTransferData("application/x-moz-file", file);
 
-  trans.addDataFlavor("text/unicode");
+  trans.addDataFlavor("text/plain");
   const str = Cc["@mozilla.org/supports-string;1"].createInstance(
     Ci.nsISupportsString
   );
   str.data = "Alternate";
-  trans.setTransferData("text/unicode", str);
+  trans.setTransferData("text/plain", str);
 
   // Write to clipboard.
   Services.clipboard.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);

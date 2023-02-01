@@ -7785,9 +7785,7 @@ void nsContentUtils::CallOnAllRemoteChildren(
 bool nsContentUtils::IPCDataTransferItemHasKnownFlavor(
     const IPCDataTransferItem& aItem) {
   // Unknown types are converted to kCustomTypesMime.
-  // FIXME(bug 1776879) text/plain is converted to text/unicode still.
-  if (aItem.flavor().EqualsASCII(kCustomTypesMime) ||
-      aItem.flavor().EqualsASCII(kUnicodeMime)) {
+  if (aItem.flavor().EqualsASCII(kCustomTypesMime)) {
     return true;
   }
 

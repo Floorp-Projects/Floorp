@@ -97,7 +97,7 @@ void Clipboard::ReadRequest::Answer() {
               // Mandatory data types defined in
               // https://w3c.github.io/clipboard-apis/#mandatory-data-types-x
               AutoTArray<nsCString, 3>{nsDependentCString(kHTMLMime),
-                                       nsDependentCString(kUnicodeMime),
+                                       nsDependentCString(kTextMime),
                                        nsDependentCString(kPNGImageMime)},
               nsIClipboard::kGlobalClipboard)
           ->Then(
@@ -123,10 +123,7 @@ void Clipboard::ReadRequest::Answer() {
 
                   RefPtr<ClipboardItem::ItemEntry> entry =
                       MakeRefPtr<ClipboardItem::ItemEntry>(
-                          format.EqualsLiteral(kUnicodeMime)
-                              ? NS_ConvertUTF8toUTF16(kTextMime)
-                              : NS_ConvertUTF8toUTF16(format),
-                          format);
+                          NS_ConvertUTF8toUTF16(format), format);
                   entry->LoadData(*global, *trans);
                   entries.AppendElement(std::move(entry));
                 }
@@ -152,7 +149,7 @@ void Clipboard::ReadRequest::Answer() {
       }
 
       trans->Init(nullptr);
-      trans->AddDataFlavor(kUnicodeMime);
+      trans->AddDataFlavor(kTextMime);
       clipboardService->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
           ->Then(
               GetMainThreadSerialEventTarget(), __func__,
@@ -160,7 +157,7 @@ void Clipboard::ReadRequest::Answer() {
               [trans, p]() {
                 nsCOMPtr<nsISupports> data;
                 nsresult rv =
-                    trans->GetTransferData(kUnicodeMime, getter_AddRefs(data));
+                    trans->GetTransferData(kTextMime, getter_AddRefs(data));
 
                 nsAutoString str;
                 if (!NS_WARN_IF(NS_FAILED(rv))) {
@@ -681,7 +678,7 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
 
   nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
   items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), nsLiteralCString(kUnicodeMime),
+      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), nsLiteralCString(kTextMime),
       std::move(data)));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;

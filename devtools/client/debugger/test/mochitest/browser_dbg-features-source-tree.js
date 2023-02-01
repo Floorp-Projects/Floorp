@@ -110,7 +110,7 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
   info("Test the copy to clipboard context menu");
   const mathMinTreeNode = findSourceNodeWithText(dbg, "math.min.js");
   await triggerCopySourceContextMenu(dbg, mathMinTreeNode);
-  const clipboardData = SpecialPowers.getClipboardData("text/unicode");
+  const clipboardData = SpecialPowers.getClipboardData("text/plain");
   is(
     clipboardData,
     EXAMPLE_URL + "math.min.js",

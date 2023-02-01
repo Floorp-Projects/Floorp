@@ -451,13 +451,6 @@ NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   if (!aDataFlavor || !mDataObject || !_retval) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG
-  if (strcmp(aDataFlavor, kTextMime) == 0)
-    NS_WARNING(
-        "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode "
-        "INSTEAD");
-#endif
-
   *_retval = false;
 
   FORMATETC fe;
@@ -494,12 +487,12 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
       // We haven't found the exact flavor the client asked for, but
       // maybe we can still find it from something else that's on the
       // clipboard
-      if (strcmp(aDataFlavor, kUnicodeMime) == 0) {
-        // client asked for unicode and it wasn't present, check if we
+      if (strcmp(aDataFlavor, kTextMime) == 0) {
+        // If unicode wasn't there, it might exist as CF_TEXT, client asked
+        // for unicode and it wasn't present, check if we
         // have CF_TEXT.  We'll handle the actual data substitution in
         // the data object.
-        format = nsClipboard::GetFormat(kTextMime);
-        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
+        SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
         if (mDataObject->QueryGetData(&fe) == S_OK)
           *_retval = true;  // found it!

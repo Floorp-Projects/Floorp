@@ -282,8 +282,8 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
     nsCString& flavorStr = flavors[i];
     LOGCLIP("    processing target %s\n", flavorStr.get());
 
-    // Special case text/unicode since we can handle all of the string types.
-    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+    // Special case text/plain since we can handle all of the string types.
+    if (flavorStr.EqualsLiteral(kTextMime)) {
       LOGCLIP("    adding TEXT targets\n");
       gtk_target_list_add_text_targets(list, 0);
       continue;
@@ -473,7 +473,7 @@ static bool TransferableSetHTML(nsITransferable* aTransferable,
                                 Span<const char> aData) {
   nsLiteralCString mimeType(kHTMLMime);
 
-  // Convert text/html into our unicode format
+  // Convert text/html into our text format
   nsAutoCString charset;
   if (!GetHTMLCharset(aData, charset)) {
     // Fall back to utf-8 in case html/data is missing kHTMLMarkupPrefix.
@@ -577,27 +577,27 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       return NS_OK;
     }
 
-    // Special case text/unicode since we can convert any
-    // string into text/unicode
-    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-      LOGCLIP("    Getting unicode %s MIME clipboard data\n", flavorStr.get());
+    // Special case text/plain since we can convert any
+    // string into text/plain
+    if (flavorStr.EqualsLiteral(kTextMime)) {
+      LOGCLIP("    Getting text %s MIME clipboard data\n", flavorStr.get());
 
       auto clipboardData = mContext->GetClipboardText(aWhichClipboard);
       if (!clipboardData) {
-        LOGCLIP("    failed to get unicode data\n");
-        // If the type was text/unicode and we couldn't get
+        LOGCLIP("    failed to get text data\n");
+        // If the type was text/plain and we couldn't get
         // text off the clipboard, run the next loop
         // iteration.
         continue;
       }
 
-      // Convert utf-8 into our unicode format.
+      // Convert utf-8 into our text format.
       NS_ConvertUTF8toUTF16 ucs2string(clipboardData.get());
       SetTransferableData(aTransferable, flavorStr,
                           (const char*)ucs2string.BeginReading(),
                           ucs2string.Length() * 2);
 
-      LOGCLIP("    got unicode data, length %zd\n", ucs2string.Length());
+      LOGCLIP("    got text data, length %zd\n", ucs2string.Length());
       return NS_OK;
     }
 
@@ -706,14 +706,14 @@ static RefPtr<GenericPromise> AsyncGetTextImpl(nsITransferable* aTransferable,
 
         // Convert utf-8 into our unicode format.
         NS_ConvertUTF8toUTF16 utf16string(aText, dataLength);
-        nsLiteralCString flavor(kUnicodeMime);
+        nsLiteralCString flavor(kTextMime);
         SetTransferableData(ref->mTransferable, flavor,
                             (const char*)utf16string.BeginReading(),
                             utf16string.Length() * 2);
         LOGCLIP("  text is set, length = %d", (int)dataLength);
         ref->mDataPromise->Resolve(true, __func__);
       },
-      new DataPromiseHandler(aTransferable, dataPromise, kUnicodeMime));
+      new DataPromiseHandler(aTransferable, dataPromise, kTextMime));
 
   return dataPromise;
 }
@@ -812,9 +812,9 @@ static RefPtr<GenericPromise> AsyncGetDataFlavor(nsITransferable* aTransferable,
     return AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
                             DATATYPE_IMAGE);
   }
-  // Special case text/unicode since we can convert any
-  // string into text/unicode
-  if (aFlavorStr.EqualsLiteral(kUnicodeMime)) {
+  // Special case text/plain since we can convert any
+  // string into text/plain
+  if (aFlavorStr.EqualsLiteral(kTextMime)) {
     LOGCLIP("  Getting unicode clipboard data");
     return AsyncGetTextImpl(aTransferable, aWhichClipboard);
   }
@@ -984,12 +984,12 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   // Walk through the provided types and try to match it to a
   // provided type.
   for (auto& flavor : aFlavorList) {
-    // We special case text/unicode here.
-    if (flavor.EqualsLiteral(kUnicodeMime) &&
+    // We special case text/plain here.
+    if (flavor.EqualsLiteral(kTextMime) &&
         gtk_targets_include_text(targets.AsSpan().data(),
                                  targets.AsSpan().Length())) {
       *_retval = true;
-      LOGCLIP("    has kUnicodeMime\n");
+      LOGCLIP("    has kTextMime\n");
       return NS_OK;
     }
     for (const auto& target : targets.AsSpan()) {
@@ -1041,11 +1041,10 @@ RefPtr<DataFlavorsPromise> nsClipboard::AsyncHasDataMatchingFlavors(
         if (targetsNum) {
           for (auto& flavor : handler->mAcceptedFlavorList) {
             LOGCLIP("  looking for %s", flavor.get());
-            // We can convert any text to unicode.
-            if (flavor.EqualsLiteral(kUnicodeMime) &&
+            if (flavor.EqualsLiteral(kTextMime) &&
                 gtk_targets_include_text(targets, targetsNum)) {
               results.AppendElement(flavor);
-              LOGCLIP("    has kUnicodeMime\n");
+              LOGCLIP("    has kTextMime\n");
               continue;
             }
             for (int i = 0; i < targetsNum; i++) {
@@ -1085,7 +1084,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
                                     GtkSelectionData* aSelectionData) {
   // Someone has asked us to hand them something.  The first thing
   // that we want to do is see if that something includes text.  If
-  // it does, try to give it text/unicode after converting it to
+  // it does, try to give it text/plain after converting it to
   // utf-8.
 
   int32_t whichClipboard;
@@ -1119,13 +1118,13 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
 
   // Check to see if the selection data is some text type.
   if (gtk_targets_include_text(&selectionTarget, 1)) {
-    LOGCLIP("  providing text/unicode data\n");
+    LOGCLIP("  providing text/plain data\n");
     // Try to convert our internal type into a text string.  Get
     // the transferable for this clipboard and try to get the
-    // text/unicode type for it.
-    rv = trans->GetTransferData("text/unicode", getter_AddRefs(item));
+    // text/plain type for it.
+    rv = trans->GetTransferData("text/plain", getter_AddRefs(item));
     if (NS_FAILED(rv) || !item) {
-      LOGCLIP("  GetTransferData() failed to get text/unicode!\n");
+      LOGCLIP("  GetTransferData() failed to get text/plain!\n");
       return;
     }
 
