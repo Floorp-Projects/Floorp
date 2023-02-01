@@ -2502,6 +2502,11 @@
   value: false
   mirror: always
 
+- name: dom.events.dataTransfer.imageAsFile.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # User interaction timer interval, in ms
 - name: dom.events.user_interaction_interval
   type: uint32_t
