@@ -2137,6 +2137,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/audio_codecs:audio_codecs_api",
       "../api/audio_codecs:builtin_audio_decoder_factory",
       "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/test/metrics:global_metrics_logger_and_exporter",
+      "../api/test/metrics:metric",
       "../api/video_codecs:builtin_video_decoder_factory",
       "../api/video_codecs:builtin_video_encoder_factory",
       "../api/video_codecs:video_codecs_api",
@@ -2154,7 +2156,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../system_wrappers",
-      "../test:perf_test",
       "../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
