@@ -1756,7 +1756,19 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     }
 
     if (isDone) {
-      PostDecodeDone(-1);
+      switch (mParser->GetInfo().loop_mode) {
+        case MP4PARSE_AVIF_LOOP_MODE_LOOP_BY_COUNT: {
+          auto loopCount = mParser->GetInfo().loop_count;
+          PostDecodeDone(
+              loopCount > INT32_MAX ? -1 : static_cast<int32_t>(loopCount));
+          break;
+        }
+        case MP4PARSE_AVIF_LOOP_MODE_LOOP_INFINITELY:
+        case MP4PARSE_AVIF_LOOP_MODE_NO_EDITS:
+        default:
+          PostDecodeDone(-1);
+          break;
+      }
       return DecodeResult(NonDecoderResult::Complete);
     }
 
