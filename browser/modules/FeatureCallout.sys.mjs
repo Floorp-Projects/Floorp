@@ -30,10 +30,9 @@ export class FeatureCallout {
     this.renderObserver = null;
     this.savedActiveElement = null;
     this.ready = false;
-    this.listenersRegistered = false;
+    this._positionListenersRegistered = false;
     this.AWSetup = false;
     this.page = page;
-    this.focusHandler = this._focusHandler.bind(this);
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -74,35 +73,30 @@ export class FeatureCallout {
     // any other instances of the parent page. This does not apply when
     // the Callout is shown in the browser chrome.
     if (this.page !== "chrome") {
-      this.win.addEventListener(
-        "visibilitychange",
-        this._handlePrefChange.bind(this)
-      );
+      this.win.addEventListener("visibilitychange", this);
     }
+  }
 
-    const positionCallout = this._positionCallout.bind(this);
+  _addPositionListeners() {
+    if (!this._positionListenersRegistered) {
+      this.win.addEventListener("resize", this);
+      const parentEl = this.doc.querySelector(
+        this.currentScreen?.parent_selector
+      );
+      parentEl?.addEventListener("toggle", this);
+      this._positionListenersRegistered = true;
+    }
+  }
 
-    this._addPositionListeners = () => {
-      if (!this.listenersRegistered) {
-        this.win.addEventListener("resize", positionCallout);
-        const parentEl = this.doc.querySelector(
-          this.currentScreen?.parent_selector
-        );
-        parentEl?.addEventListener("toggle", positionCallout);
-        this.listenersRegistered = true;
-      }
-    };
-
-    this._removePositionListeners = () => {
-      if (this.listenersRegistered) {
-        this.win.removeEventListener("resize", positionCallout);
-        const parentEl = this.doc.querySelector(
-          this.currentScreen?.parent_selector
-        );
-        parentEl?.removeEventListener("toggle", positionCallout);
-        this.listenersRegistered = false;
-      }
-    };
+  _removePositionListeners() {
+    if (this._positionListenersRegistered) {
+      this.win.removeEventListener("resize", this);
+      const parentEl = this.doc.querySelector(
+        this.currentScreen?.parent_selector
+      );
+      parentEl?.removeEventListener("toggle", this);
+      this._positionListenersRegistered = false;
+    }
   }
 
   async _handlePrefChange() {
@@ -131,7 +125,7 @@ export class FeatureCallout {
     // End the tour according to the tour progress pref or if the user disabled
     // contextual feature recommendations.
     if (prefVal.complete || !this.cfrFeaturesUserPref) {
-      this._endTour();
+      this.endTour();
       this.currentScreen = null;
     } else if (prefVal.screen !== this.currentScreen?.id) {
       this.ready = false;
@@ -147,6 +141,76 @@ export class FeatureCallout {
       }, TRANSITION_MS);
     }
   }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "focus": {
+        let container = this.doc.getElementById(CONTAINER_ID);
+        if (!container) {
+          return;
+        }
+        // If focus has fired on the feature callout window itself, or on something
+        // contained in that window, ignore it, as we can't possibly place the focus
+        // on it after the callout is closd.
+        if (
+          event.target.id === CONTAINER_ID ||
+          (Node.isInstance(event.target) && container.contains(event.target))
+        ) {
+          return;
+        }
+        // Save this so that if the next focus event is re-entering the popup,
+        // then we'll put the focus back here where the user left it once we exit
+        // the feature callout series.
+        this.savedActiveElement = this.doc.activeElement;
+        break;
+      }
+
+      case "keypress": {
+        if (event.key !== "Escape") {
+          return;
+        }
+        let container = this.doc.getElementById(CONTAINER_ID);
+        if (!container) {
+          return;
+        }
+        let focusedElement =
+          this.page === "chrome"
+            ? Services.focus.focusedElement
+            : this.doc.activeElement;
+        // If the window has a focused element, let it handle the ESC key instead.
+        if (
+          !focusedElement ||
+          focusedElement === this.doc.body ||
+          focusedElement === this.browser ||
+          container.contains(focusedElement)
+        ) {
+          this.win.AWSendEventTelemetry?.({
+            event: "DISMISS",
+            event_context: {
+              source: `KEY_${event.key}`,
+              page: this.page,
+            },
+            message_id: this.config?.id.toUpperCase(),
+          });
+          this._dismiss();
+          event.preventDefault();
+        }
+        break;
+      }
+
+      case "visibilitychange":
+        this._handlePrefChange();
+        break;
+
+      case "resize":
+      case "toggle":
+        this._positionCallout();
+        break;
+
+      default:
+    }
+  }
+
   _addCalloutLinkElements() {
     const addStylesheet = href => {
       if (this.doc.querySelector(`link[href="${href}"]`)) {
@@ -588,7 +652,7 @@ export class FeatureCallout {
     );
     this.win.AWSendToParent = (name, data) => receive(name)(data);
     this.win.AWFinish = () => {
-      this._endTour();
+      this.endTour();
     };
     this.AWSetup = true;
   }
@@ -606,12 +670,14 @@ export class FeatureCallout {
     windowFuncs.forEach(func => delete this.win[func]);
   }
 
-  _endTour(skipFadeOut = false) {
-    // We don't want focus events that happen during teardown to effect
+  endTour(skipFadeOut = false) {
+    // We don't want focus events that happen during teardown to affect
     // this.savedActiveElement
-    this.win.removeEventListener("focus", this.focusHandler, {
+    this.win.removeEventListener("focus", this, {
       capture: true,
+      passive: true,
     });
+    this.win.removeEventListener("keypress", this, { capture: true });
     this.win.pageEventManager?.clear();
 
     // We're deleting featureTourProgress here to ensure that the
@@ -636,6 +702,15 @@ export class FeatureCallout {
       },
       skipFadeOut ? 0 : TRANSITION_MS
     );
+  }
+
+  _dismiss() {
+    let action = this.currentScreen?.content.dismiss_button?.action;
+    if (action?.type) {
+      this.win.AWSendToParent("SPECIAL_ACTION", action);
+    } else {
+      this.endTour();
+    }
   }
 
   async _addScriptsAndRender() {
@@ -724,28 +799,6 @@ export class FeatureCallout {
     }
   }
 
-  _focusHandler(e) {
-    let container = this.doc.getElementById(CONTAINER_ID);
-    if (!container) {
-      return;
-    }
-
-    // If focus has fired on the feature callout window itself, or on something
-    // contained in that window, ignore it, as we can't possibly place the focus
-    // on it after the callout is closd.
-    if (
-      e.target.id === CONTAINER_ID ||
-      (Node.isInstance(e.target) && container.contains(e.target))
-    ) {
-      return;
-    }
-
-    // Save this so that if the next focus event is re-entering the popup,
-    // then we'll put the focus back here where the user left it once we exit
-    // the feature callout series.
-    this.savedActiveElement = this.doc.activeElement;
-  }
-
   /**
    * For each member of the screen's page_event_listeners array, add a listener.
    * @param {Array<PageEventListener>} listeners An array of listeners to set up
@@ -811,7 +864,7 @@ export class FeatureCallout {
         event_context: { source: `PAGE_EVENT:${source}`, page },
         message_id,
       });
-      this._endTour();
+      this._dismiss();
     }
   }
 
@@ -867,11 +920,13 @@ export class FeatureCallout {
             this._attachPageEventListeners(
               this.currentScreen?.content?.page_event_listeners
             );
+            this.win.addEventListener("keypress", this, { capture: true });
             this._positionCallout();
             let container = this.doc.getElementById(CONTAINER_ID);
             container.focus();
-            this.win.addEventListener("focus", this.focusHandler, {
+            this.win.addEventListener("focus", this, {
               capture: true, // get the event before retargeting
+              passive: true,
             });
           });
         });

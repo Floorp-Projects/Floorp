@@ -329,7 +329,7 @@
       return this._featureCalloutPanelId;
     },
 
-    _instantiateFeatureCalloutTour(location, panelId) {
+    _instantiateFeatureCalloutTour(browser, panelId) {
       this._featureCalloutPanelId = panelId;
       const { FeatureCallout } = ChromeUtils.importESModule(
         "resource:///modules/FeatureCallout.sys.mjs"
@@ -338,6 +338,7 @@
       // only use PDF.js pref value when navigating to PDF viewer
       this._featureCallout = new FeatureCallout({
         win: window,
+        browser,
         prefName: "browser.pdfjs.feature-tour",
         page: "chrome",
       });
@@ -1079,7 +1080,7 @@
         this._featureCallout &&
         this._featureCalloutPanelId !== newTab.linkedPanel
       ) {
-        this._featureCallout._endTour(true);
+        this._featureCallout.endTour(true);
         this._featureCallout = null;
       }
 
@@ -1090,10 +1091,7 @@
         !this._featureCallout &&
         newBrowser.currentURI.spec.endsWith(".pdf")
       ) {
-        this._instantiateFeatureCalloutTour(
-          newBrowser.currentURI,
-          newTab.linkedPanel
-        );
+        this._instantiateFeatureCalloutTour(newBrowser, newTab.linkedPanel);
         window.gBrowser.featureCallout.showFeatureCallout();
       }
 
@@ -6758,7 +6756,7 @@
               gBrowser.selectedTab.linkedPanel ||
               !aLocation.spec.endsWith(".pdf"))
           ) {
-            gBrowser.featureCallout._endTour(true);
+            gBrowser.featureCallout.endTour(true);
             gBrowser.featureCallout = null;
           }
 
@@ -6767,7 +6765,7 @@
           // for callout messages on every change of tab location.
           if (!gBrowser.featureCallout && aLocation.spec.endsWith(".pdf")) {
             gBrowser.instantiateFeatureCalloutTour(
-              aLocation,
+              gBrowser.selectedBrowser,
               gBrowser.selectedTab.linkedPanel
             );
             gBrowser.featureCallout.showFeatureCallout();
