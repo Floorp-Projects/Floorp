@@ -19430,7 +19430,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
         }
 
-        key.SetFromInteger(autoIncrementNum);
+        QM_TRY(key.SetFromInteger(autoIncrementNum));
       } else if (key.IsFloat()) {
         double numericKey = key.ToFloat();
         numericKey = std::min(numericKey, double(1LL << 53));
