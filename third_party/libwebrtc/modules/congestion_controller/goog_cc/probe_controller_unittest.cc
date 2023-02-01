@@ -909,5 +909,32 @@ TEST(ProbeControllerTest, SendsProbeIfNetworkStateEstimateLowerThanMaxProbe) {
   EXPECT_FALSE(probes.empty());
 }
 
+TEST(ProbeControllerTest, DontSendProbeIfNetworkStateEstimateIsZero) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "network_state_interval:5s,network_state_drop_down_rate:0.5,limit_probe_"
+      "target_rate_to_loss_bwe:true/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  probes = probe_controller->SetEstimatedBitrate(
+      kStartBitrate, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = kStartBitrate});
+  // Need to wait at least one second before process can trigger a new probe.
+  fixture.AdvanceTime(TimeDelta::Millis(1100));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  ASSERT_TRUE(probes.empty());
+
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = DataRate::Zero()});
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+  fixture.AdvanceTime(TimeDelta::Seconds(6));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+}
 }  // namespace test
 }  // namespace webrtc
