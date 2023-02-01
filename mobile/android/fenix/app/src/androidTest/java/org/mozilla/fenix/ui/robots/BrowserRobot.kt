@@ -524,6 +524,9 @@ class BrowserRobot {
 
     fun clickStreetAddressTextBox() = clickPageObject(webPageItemWithResourceId("streetAddress"))
 
+    fun setTextForApartmentTextBox(apartment: String) =
+        webPageItemWithResourceId("apartment").setText(apartment)
+
     fun clearAddressForm() {
         webPageItemWithResourceId("streetAddress").clearTextField()
         webPageItemWithResourceId("city").clearTextField()
@@ -620,6 +623,14 @@ class BrowserRobot {
         mDevice.waitForObjects(webPageItemContainingTextAndResourceId("streetAddress", streetAddress))
         assertTrue(
             webPageItemContainingTextAndResourceId("streetAddress", streetAddress)
+                .waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyManuallyFilledAddress(apartment: String) {
+        mDevice.waitForObjects(webPageItemContainingTextAndResourceId("apartment", apartment))
+        assertTrue(
+            webPageItemContainingTextAndResourceId("apartment", apartment)
                 .waitForExists(waitingTime),
         )
     }

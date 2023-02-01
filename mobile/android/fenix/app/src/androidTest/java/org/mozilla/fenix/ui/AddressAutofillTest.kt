@@ -329,4 +329,41 @@ class AddressAutofillTest {
             verifyStateOption("Alberta")
         }
     }
+
+    @Test
+    fun verifyFormFieldCanBeFilledManuallyTest() {
+        val addressFormPage =
+            TestAssetHelper.getAddressFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+        }
+
+        exitMenu()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(addressFormPage.url) {
+            clickStreetAddressTextBox()
+            clickSelectAddressButton()
+            clickAddressSuggestion("Harrison Street")
+            verifyAutofilledAddress("Harrison Street")
+            setTextForApartmentTextBox("Ap. 07")
+            verifyManuallyFilledAddress("Ap. 07")
+        }
+    }
 }
