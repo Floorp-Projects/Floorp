@@ -288,8 +288,6 @@ rtc_library("perf_test") {
   visibility = [ "*" ]
   testonly = true
   sources = [
-    "testsupport/perf_result_reporter.cc",
-    "testsupport/perf_result_reporter.h",
     "testsupport/perf_test.cc",
     "testsupport/perf_test.h",
     "testsupport/perf_test_histogram_writer.h",
