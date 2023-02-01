@@ -661,7 +661,11 @@ def main():
         extra_cflags2 = []
         extra_cxxflags2 = []
         extra_asmflags = []
+        # It's unfortunately required to specify the linker used here because
+        # the linker flags are used in LLVM's configure step before
+        # -DLLVM_ENABLE_LLD is actually processed.
         extra_ldflags = [
+            "-fuse-ld=lld",
             "-Wl,-dead_strip",
         ]
     elif is_linux(target):
