@@ -95,16 +95,23 @@ with only_when(host_is_osx | target_is_osx):
             )
         return Version(obj["Version"])
 
-    @depends("--with-macos-sdk", host)
+    def sdk_min_version():
+        return "11.3"
+
+    @depends(
+        "--with-macos-sdk",
+        host,
+        bootstrap_path(
+            "MacOSX{}.sdk".format(sdk_min_version()),
+            when=depends("--with-macos-sdk")(lambda x: not x),
+        ),
+    )
     @imports(_from="__builtin__", _import="Exception")
     @imports(_from="os.path", _import="isdir")
     @imports(_from="os", _import="listdir")
-    def macos_sdk(sdk, host):
-        # When we change the SDK we build with, please update the manual SDK
-        # installation docs:
-        # https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported
-        sdk_min_version = Version("11.3")
-
+    def macos_sdk(sdk, host, bootstrapped):
+        if bootstrapped:
+            sdk = [bootstrapped]
         if sdk:
             sdk = sdk[0]
             try:
@@ -144,13 +151,10 @@ with only_when(host_is_osx | target_is_osx):
                 "tools are selected during the Xcode/Developer Tools installation."
                 % sdk
             )
-        sdk_installation_docs_url = "https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported"
-        if version < sdk_min_version:
+        if version < Version(sdk_min_version()):
             die(
                 'SDK version "%s" is too old. Please upgrade to at least %s. Try '
-                "updating your system Xcode. If that's not sufficient, see the manual "
-                "SDK installation docs: %s"
-                % (version, sdk_min_version, sdk_installation_docs_url)
+                "updating your system Xcode." % (version, sdk_min_version())
             )
         return sdk
 

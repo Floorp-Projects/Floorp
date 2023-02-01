@@ -7,8 +7,8 @@ Apple distributes SDKs as part of the Xcode app bundle. Each Xcode version comes
 the SDK for the most recent released version of macOS at the time of the Xcode release.
 The SDK is located at `/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk`.
 
-Compiling Firefox for macOS requires a macOS SDK. The build system uses the SDK from Xcode.app by
-default, and you can select a different SDK using the `mozconfig` option `--with-macos-sdk`:
+Compiling Firefox for macOS requires a macOS SDK. The build system bootstraps an adequate SDK by
+default, but you can select a different SDK using the `mozconfig` option `--with-macos-sdk`:
 
 ```text
 ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX11.3.sdk

@@ -47,6 +47,8 @@ macosx64-sdk-11.3:
             - b075d3d2f3b066607209a5bbf7cf727a40b98fe65629c5b6abc17f156897af4a
             - Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX11.3.sdk.tar.zst
+        toolchain-alias:
+            - MacOSX11.3.sdk
         resources:
             - python/mozbuild/mozpack/macpkg.py
             - taskcluster/scripts/misc/unpack-sdk.py
@@ -68,6 +70,7 @@ macosx64-sdk-13.0:
         toolchain-alias:
             - macosx64-sdk
             - macosx64-sdk-toolchain
+            - MacOSX13.0.sdk
         resources:
             - python/mozbuild/mozpack/macpkg.py
             - taskcluster/scripts/misc/unpack-sdk.py
