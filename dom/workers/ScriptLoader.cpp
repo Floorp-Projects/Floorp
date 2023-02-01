@@ -155,6 +155,7 @@ nsresult ChannelFromScriptURL(
 
     // We must have a loadGroup with a load context for the principal to
     // traverse the channel correctly.
+
     MOZ_ASSERT(loadGroup);
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
 
@@ -234,7 +235,12 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  if (aIsMainScript) {
+  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+    if (!StaticPrefs::dom_workers_modules_enabled()) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+    MOZ_ASSERT(aIsMainScript);
     // Module Load
     RefPtr<JS::loader::ScriptLoadRequest> mainScript = loader->GetMainScript();
     if (mainScript && mainScript->IsModuleRequest()) {
@@ -245,6 +251,7 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
       return;
     }
   }
+
   if (loader->DispatchLoadScripts()) {
     syncLoop.Run();
   }
@@ -485,6 +492,10 @@ WorkerScriptLoader::WorkerScriptLoader(
   mController = global->GetController();
   // Set up the module loader, if it has not been yet.
   // TODO: Implement this for classic scripts when dynamic imports are added.
+
+  if (!StaticPrefs::dom_workers_modules_enabled()) {
+    return;
+  }
   if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
     InitModuleLoader();
   }
@@ -533,6 +544,9 @@ bool WorkerScriptLoader::CreateScriptRequests(
   for (const nsString& scriptURL : aScriptURLs) {
     RefPtr<ScriptLoadRequest> request =
         CreateScriptLoadRequest(scriptURL, aDocumentEncoding, aIsMainScript);
+    if (!request) {
+      return false;
+    }
     mLoadingRequests.AppendElement(request);
   }
 
@@ -618,6 +632,10 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     // implementation, so we are defaulting the fetchOptions object defined
     // above. This behavior is handled fully in GetModuleSecFlags.
 
+    if (!StaticPrefs::dom_workers_modules_enabled()) {
+      mRv.ThrowTypeError("Modules in workers are currently disallowed.");
+      return nullptr;
+    }
     RefPtr<WorkerModuleLoader::ModuleLoaderBase> moduleLoader =
         GetGlobal()->GetModuleLoader(nullptr);
 

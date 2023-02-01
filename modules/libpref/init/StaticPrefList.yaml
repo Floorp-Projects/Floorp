@@ -3892,6 +3892,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Is support for modules (new Worker(..., {type: "module">)) enabled for workers?
+- name: dom.workers.modules.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: dom.workers.requestAnimationFrame
   type: RelaxedAtomicBool
   value: true
