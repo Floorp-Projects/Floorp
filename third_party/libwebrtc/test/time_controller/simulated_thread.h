@@ -37,21 +37,11 @@ class SimulatedThread : public rtc::Thread,
 
   // Thread interface
   void BlockingCall(rtc::FunctionView<void()> functor) override;
-  void Post(const rtc::Location& posted_from,
-            rtc::MessageHandler* phandler,
-            uint32_t id,
-            rtc::MessageData* pdata,
-            bool time_sensitive) override;
-  void PostDelayed(const rtc::Location& posted_from,
-                   int delay_ms,
-                   rtc::MessageHandler* phandler,
-                   uint32_t id,
-                   rtc::MessageData* pdata) override;
-  void PostAt(const rtc::Location& posted_from,
-              int64_t target_time_ms,
-              rtc::MessageHandler* phandler,
-              uint32_t id,
-              rtc::MessageData* pdata) override;
+  void PostTask(absl::AnyInvocable<void() &&> task) override;
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       TimeDelta delay) override;
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    TimeDelta delay) override;
 
   void Stop() override;
 

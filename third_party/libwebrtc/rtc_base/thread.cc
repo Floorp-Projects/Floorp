@@ -76,25 +76,6 @@ namespace {
 
 using ::webrtc::TimeDelta;
 
-struct AnyInvocableMessage final : public MessageData {
-  explicit AnyInvocableMessage(absl::AnyInvocable<void() &&> task)
-      : task(std::move(task)) {}
-  absl::AnyInvocable<void() &&> task;
-};
-
-class AnyInvocableMessageHandler final : public MessageHandler {
- public:
-  void OnMessage(Message* msg) override {
-    std::move(static_cast<AnyInvocableMessage*>(msg->pdata)->task)();
-    delete msg->pdata;
-  }
-};
-
-MessageHandler* GetAnyInvocableMessageHandler() {
-  static MessageHandler* const handler = new AnyInvocableMessageHandler;
-  return handler;
-}
-
 class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
  public:
   MarkProcessingCritScope(const RecursiveCriticalSection* cs,
@@ -407,7 +388,9 @@ void Thread::DoDestroy() {
     ss_->SetMessageQueue(nullptr);
   }
   ThreadManager::Remove(this);
-  ClearInternal(nullptr, MQID_ANY, nullptr);
+  // Clear.
+  messages_ = {};
+  delayed_messages_ = {};
 }
 
 SocketServer* Thread::socketserver() {
@@ -431,7 +414,7 @@ void Thread::Restart() {
   stop_.store(0, std::memory_order_release);
 }
 
-bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
+absl::AnyInvocable<void() &&> Thread::Get(int cmsWait) {
   // Get w/wait + timer scan / dispatch + socket / event multiplexer dispatch
 
   int64_t cmsTotal = cmsWait;
@@ -448,19 +431,19 @@ bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
       // Check for delayed messages that have been triggered and calculate the
       // next trigger time.
       while (!delayed_messages_.empty()) {
-        if (msCurrent < delayed_messages_.top().run_time_ms_) {
+        if (msCurrent < delayed_messages_.top().run_time_ms) {
           cmsDelayNext =
-              TimeDiff(delayed_messages_.top().run_time_ms_, msCurrent);
+              TimeDiff(delayed_messages_.top().run_time_ms, msCurrent);
           break;
         }
-        messages_.push_back(delayed_messages_.top().msg_);
+        messages_.push(std::move(delayed_messages_.top().functor));
         delayed_messages_.pop();
       }
       // Pull a message off the message queue, if available.
       if (!messages_.empty()) {
-        *pmsg = messages_.front();
-        messages_.pop_front();
-        return true;
+        absl::AnyInvocable<void()&&> task = std::move(messages_.front());
+        messages_.pop();
+        return task;
       }
     }
 
@@ -482,8 +465,8 @@ bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
       // Wait and multiplex in the meantime
       if (!ss_->Wait(cmsNext == kForever ? SocketServer::kForever
                                          : webrtc::TimeDelta::Millis(cmsNext),
-                     process_io))
-        return false;
+                     /*process_io=*/true))
+        return nullptr;
     }
 
     // If the specified timeout expired, return
@@ -492,20 +475,14 @@ bool Thread::Get(Message* pmsg, int cmsWait, bool process_io) {
     cmsElapsed = TimeDiff(msCurrent, msStart);
     if (cmsWait != kForever) {
       if (cmsElapsed >= cmsWait)
-        return false;
+        return nullptr;
     }
   }
-  return false;
+  return nullptr;
 }
 
-void Thread::Post(const Location& posted_from,
-                  MessageHandler* phandler,
-                  uint32_t id,
-                  MessageData* pdata,
-                  bool time_sensitive) {
-  RTC_DCHECK(!time_sensitive);
+void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
   if (IsQuitting()) {
-    delete pdata;
     return;
   }
 
@@ -515,42 +492,14 @@ void Thread::Post(const Location& posted_from,
 
   {
     CritScope cs(&crit_);
-    Message msg;
-    msg.posted_from = posted_from;
-    msg.phandler = phandler;
-    msg.message_id = id;
-    msg.pdata = pdata;
-    messages_.push_back(msg);
+    messages_.push(std::move(task));
   }
   WakeUpSocketServer();
 }
 
-void Thread::PostDelayed(const Location& posted_from,
-                         int delay_ms,
-                         MessageHandler* phandler,
-                         uint32_t id,
-                         MessageData* pdata) {
-  return DoDelayPost(posted_from, delay_ms, TimeAfter(delay_ms), phandler, id,
-                     pdata);
-}
-
-void Thread::PostAt(const Location& posted_from,
-                    int64_t run_at_ms,
-                    MessageHandler* phandler,
-                    uint32_t id,
-                    MessageData* pdata) {
-  return DoDelayPost(posted_from, TimeUntil(run_at_ms), run_at_ms, phandler, id,
-                     pdata);
-}
-
-void Thread::DoDelayPost(const Location& posted_from,
-                         int64_t delay_ms,
-                         int64_t run_at_ms,
-                         MessageHandler* phandler,
-                         uint32_t id,
-                         MessageData* pdata) {
+void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                          webrtc::TimeDelta delay) {
   if (IsQuitting()) {
-    delete pdata;
     return;
   }
 
@@ -558,15 +507,14 @@ void Thread::DoDelayPost(const Location& posted_from,
   // Add to the priority queue. Gets sorted soonest first.
   // Signal for the multiplexer to return.
 
+  int64_t delay_ms = delay.RoundUpTo(webrtc::TimeDelta::Millis(1)).ms<int>();
+  int64_t run_time_ms = TimeAfter(delay_ms);
   {
     CritScope cs(&crit_);
-    Message msg;
-    msg.posted_from = posted_from;
-    msg.phandler = phandler;
-    msg.message_id = id;
-    msg.pdata = pdata;
-    DelayedMessage delayed(delay_ms, run_at_ms, delayed_next_num_, msg);
-    delayed_messages_.push(delayed);
+    delayed_messages_.push({.delay_ms = delay_ms,
+                            .run_time_ms = run_time_ms,
+                            .message_number = delayed_next_num_,
+                            .functor = std::move(task)});
     // If this message queue processes 1 message every millisecond for 50 days,
     // we will wrap this number.  Even then, only messages with identical times
     // will be misordered, and then only briefly.  This is probably ok.
@@ -583,7 +531,7 @@ int Thread::GetDelay() {
     return 0;
 
   if (!delayed_messages_.empty()) {
-    int delay = TimeUntil(delayed_messages_.top().run_time_ms_);
+    int delay = TimeUntil(delayed_messages_.top().run_time_ms);
     if (delay < 0)
       delay = 0;
     return delay;
@@ -592,56 +540,16 @@ int Thread::GetDelay() {
   return kForever;
 }
 
-void Thread::ClearInternal(MessageHandler* phandler,
-                           uint32_t id,
-                           MessageList* removed) {
-  // Remove from ordered message queue
-
-  for (auto it = messages_.begin(); it != messages_.end();) {
-    if (it->Match(phandler, id)) {
-      if (removed) {
-        removed->push_back(*it);
-      } else {
-        delete it->pdata;
-      }
-      it = messages_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-
-  // Remove from priority queue. Not directly iterable, so use this approach
-
-  auto new_end = delayed_messages_.container().begin();
-  for (auto it = new_end; it != delayed_messages_.container().end(); ++it) {
-    if (it->msg_.Match(phandler, id)) {
-      if (removed) {
-        removed->push_back(it->msg_);
-      } else {
-        delete it->msg_.pdata;
-      }
-    } else {
-      *new_end++ = *it;
-    }
-  }
-  delayed_messages_.container().erase(new_end,
-                                      delayed_messages_.container().end());
-  delayed_messages_.reheap();
-}
-
-void Thread::Dispatch(Message* pmsg) {
-  TRACE_EVENT2("webrtc", "Thread::Dispatch", "src_file",
-               pmsg->posted_from.file_name(), "src_func",
-               pmsg->posted_from.function_name());
+void Thread::Dispatch(absl::AnyInvocable<void() &&> task) {
+  TRACE_EVENT0("webrtc", "Thread::Dispatch");
   RTC_DCHECK_RUN_ON(this);
   int64_t start_time = TimeMillis();
-  pmsg->phandler->OnMessage(pmsg);
+  std::move(task)();
   int64_t end_time = TimeMillis();
   int64_t diff = TimeDiff(end_time, start_time);
   if (diff >= dispatch_warning_ms_) {
     RTC_LOG(LS_INFO) << "Message to " << name() << " took " << diff
-                     << "ms to dispatch. Posted from: "
-                     << pmsg->posted_from.ToString();
+                     << "ms to dispatch.";
     // To avoid log spew, move the warning limit to only give warning
     // for delays that are larger than the one observed.
     dispatch_warning_ms_ = diff + 1;
@@ -986,37 +894,14 @@ void Thread::Delete() {
   delete this;
 }
 
-void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
-  // Though Post takes MessageData by raw pointer (last parameter), it still
-  // takes it with ownership.
-  Post(RTC_FROM_HERE, GetAnyInvocableMessageHandler(),
-       /*id=*/0, new AnyInvocableMessage(std::move(task)));
-}
-
 void Thread::PostDelayedTask(absl::AnyInvocable<void() &&> task,
                              webrtc::TimeDelta delay) {
   // This implementation does not support low precision yet.
   PostDelayedHighPrecisionTask(std::move(task), delay);
 }
 
-void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                          webrtc::TimeDelta delay) {
-  int delay_ms = delay.RoundUpTo(webrtc::TimeDelta::Millis(1)).ms<int>();
-  // Though PostDelayed takes MessageData by raw pointer (last parameter),
-  // it still takes it with ownership.
-  PostDelayed(RTC_FROM_HERE, delay_ms, GetAnyInvocableMessageHandler(),
-              /*id=*/0, new AnyInvocableMessage(std::move(task)));
-}
-
 bool Thread::IsProcessingMessagesForTesting() {
   return (owned_ || IsCurrent()) && !IsQuitting();
-}
-
-void Thread::Clear(MessageHandler* phandler,
-                   uint32_t id,
-                   MessageList* removed) {
-  CritScope cs(&crit_);
-  ClearInternal(phandler, id, removed);
 }
 
 bool Thread::ProcessMessages(int cmsLoop) {
@@ -1032,10 +917,10 @@ bool Thread::ProcessMessages(int cmsLoop) {
 #if defined(WEBRTC_MAC)
     ScopedAutoReleasePool pool;
 #endif
-    Message msg;
-    if (!Get(&msg, cmsNext))
+    absl::AnyInvocable<void()&&> task = Get(cmsNext);
+    if (!task)
       return !IsQuitting();
-    Dispatch(&msg);
+    Dispatch(std::move(task));
 
     if (cmsLoop != kForever) {
       cmsNext = static_cast<int>(TimeUntil(msEnd));
