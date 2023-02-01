@@ -29,6 +29,7 @@ EXPORTS.mozilla.extensions += [
 UNIFIED_SOURCES += [
     "ExtensionAlarms.cpp",
     "ExtensionDns.cpp",
+    "ExtensionProxy.cpp",
     "ExtensionRuntime.cpp",
     "ExtensionScripting.cpp",
     "ExtensionTest.cpp",
@@ -37,6 +38,7 @@ UNIFIED_SOURCES += [
 EXPORTS.mozilla.extensions += [
     "ExtensionAlarms.h",
     "ExtensionDns.h",
+    "ExtensionProxy.h",
     "ExtensionRuntime.h",
     "ExtensionScripting.h",
     "ExtensionTest.h",
