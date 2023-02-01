@@ -19,6 +19,7 @@
 #include "absl/strings/string_view.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/test/metrics/metric.h"
+#include "api/test/metrics/metrics_accumulator.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
 
@@ -90,16 +91,16 @@ class DefaultMetricsLogger : public MetricsLogger {
                  ImprovementDirection improvement_direction,
                  std::map<std::string, std::string> metadata = {}) override;
 
-  // Returns all metrics collected by this logger.
-  std::vector<Metric> GetCollectedMetrics() const override {
-    MutexLock lock(&mutex_);
-    return metrics_;
-  }
+  // Returns all metrics collected by this logger and its `MetricsAccumulator`.
+  std::vector<Metric> GetCollectedMetrics() const override;
+
+  MetricsAccumulator* GetMetricsAccumulator() { return &metrics_accumulator_; }
 
  private:
   webrtc::Timestamp Now();
 
   webrtc::Clock* const clock_;
+  MetricsAccumulator metrics_accumulator_;
 
   mutable Mutex mutex_;
   std::vector<Metric> metrics_ RTC_GUARDED_BY(mutex_);

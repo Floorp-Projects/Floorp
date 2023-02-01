@@ -21,7 +21,7 @@ namespace webrtc {
 namespace test {
 
 // Returns non-null global `MetricsLogger` to log metrics.
-MetricsLogger* GetGlobalMetricsLogger();
+DefaultMetricsLogger* GetGlobalMetricsLogger();
 
 bool ExportPerfMetric(MetricsLogger& logger,
                       std::vector<std::unique_ptr<MetricsExporter>> exporters);

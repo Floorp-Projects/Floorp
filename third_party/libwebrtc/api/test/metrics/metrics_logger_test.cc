@@ -27,6 +27,7 @@ namespace {
 
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::SizeIs;
 
 std::map<std::string, std::string> DefaultMetadata() {
   return std::map<std::string, std::string>{{"key", "value"}};
@@ -40,7 +41,7 @@ TEST(DefaultMetricsLoggerTest, LogSingleValueMetricRecordsMetric) {
       std::map<std::string, std::string>{{"key", "value"}});
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(1lu));
+  ASSERT_THAT(metrics, SizeIs(1));
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
@@ -49,7 +50,7 @@ TEST(DefaultMetricsLoggerTest, LogSingleValueMetricRecordsMetric) {
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
               Eq(std::map<std::string, std::string>{{"key", "value"}}));
-  ASSERT_THAT(metric.time_series.samples.size(), Eq(1lu));
+  ASSERT_THAT(metric.time_series.samples, SizeIs(1));
   EXPECT_THAT(metric.time_series.samples[0].value, Eq(10.0));
   EXPECT_THAT(metric.time_series.samples[0].sample_metadata,
               Eq(std::map<std::string, std::string>{}));
@@ -78,7 +79,7 @@ TEST(DefaultMetricsLoggerTest, LogMetricWithSamplesStatsCounterRecordsMetric) {
                    std::map<std::string, std::string>{{"key", "value"}});
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(1lu));
+  ASSERT_THAT(metrics, SizeIs(1));
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
@@ -87,7 +88,7 @@ TEST(DefaultMetricsLoggerTest, LogMetricWithSamplesStatsCounterRecordsMetric) {
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
               Eq(std::map<std::string, std::string>{{"key", "value"}}));
-  ASSERT_THAT(metric.time_series.samples.size(), Eq(2lu));
+  ASSERT_THAT(metric.time_series.samples, SizeIs(2));
   EXPECT_THAT(metric.time_series.samples[0].value, Eq(10.0));
   EXPECT_THAT(metric.time_series.samples[0].sample_metadata,
               Eq(std::map<std::string, std::string>{{"point_key1", "value1"}}));
@@ -108,7 +109,7 @@ TEST(DefaultMetricsLoggerTest,
                    ImprovementDirection::kBiggerIsBetter, DefaultMetadata());
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(1lu));
+  ASSERT_THAT(metrics, SizeIs(1));
   EXPECT_THAT(metrics[0].name, Eq("metric_name"));
   EXPECT_THAT(metrics[0].test_case, Eq("test_case_name"));
   EXPECT_THAT(metrics[0].time_series.samples, IsEmpty());
@@ -126,7 +127,7 @@ TEST(DefaultMetricsLoggerTest, LogMetricWithStatsRecordsMetric) {
                    std::map<std::string, std::string>{{"key", "value"}});
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(1lu));
+  ASSERT_THAT(metrics, SizeIs(1));
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
@@ -135,7 +136,7 @@ TEST(DefaultMetricsLoggerTest, LogMetricWithStatsRecordsMetric) {
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
               Eq(std::map<std::string, std::string>{{"key", "value"}}));
-  ASSERT_THAT(metric.time_series.samples.size(), Eq(0lu));
+  ASSERT_THAT(metric.time_series.samples, IsEmpty());
   ASSERT_THAT(metric.stats.mean, absl::optional<double>(15.0));
   ASSERT_THAT(metric.stats.stddev, absl::optional<double>(5.0));
   ASSERT_THAT(metric.stats.min, absl::optional<double>(10.0));
@@ -155,7 +156,7 @@ TEST(DefaultMetricsLoggerTest, LogSingleValueMetricRecordsMultipleMetrics) {
                               DefaultMetadata());
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(2lu));
+  ASSERT_THAT(metrics, SizeIs(2));
   EXPECT_THAT(metrics[0].name, Eq("metric_name1"));
   EXPECT_THAT(metrics[0].test_case, Eq("test_case_name1"));
   EXPECT_THAT(metrics[1].name, Eq("metric_name2"));
@@ -183,7 +184,7 @@ TEST(DefaultMetricsLoggerTest,
                    DefaultMetadata());
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(2lu));
+  ASSERT_THAT(metrics, SizeIs(2));
   EXPECT_THAT(metrics[0].name, Eq("metric_name1"));
   EXPECT_THAT(metrics[0].test_case, Eq("test_case_name1"));
   EXPECT_THAT(metrics[1].name, Eq("metric_name2"));
@@ -202,7 +203,7 @@ TEST(DefaultMetricsLoggerTest, LogMetricWithStatsRecordsMultipleMetrics) {
                    DefaultMetadata());
 
   std::vector<Metric> metrics = logger.GetCollectedMetrics();
-  ASSERT_THAT(metrics.size(), Eq(2lu));
+  ASSERT_THAT(metrics, SizeIs(2));
   EXPECT_THAT(metrics[0].name, Eq("metric_name1"));
   EXPECT_THAT(metrics[0].test_case, Eq("test_case_name1"));
   EXPECT_THAT(metrics[1].name, Eq("metric_name2"));
@@ -242,6 +243,82 @@ TEST(DefaultMetricsLoggerTest,
   EXPECT_THAT(metrics[1].test_case, Eq("test_case_name2"));
   EXPECT_THAT(metrics[2].name, Eq("metric_name3"));
   EXPECT_THAT(metrics[2].test_case, Eq("test_case_name3"));
+}
+
+TEST(DefaultMetricsLoggerTest, AccumulatedMetricsReturnedInCollectedMetrics) {
+  DefaultMetricsLogger logger(Clock::GetRealTimeClock());
+  logger.GetMetricsAccumulator()->AddSample(
+      "metric_name", "test_case_name",
+      /*value=*/10, Timestamp::Seconds(1),
+      /*point_metadata=*/std::map<std::string, std::string>{{"key", "value"}});
+
+  std::vector<Metric> metrics = logger.GetCollectedMetrics();
+  ASSERT_THAT(metrics, SizeIs(1));
+  const Metric& metric = metrics[0];
+  EXPECT_THAT(metric.name, Eq("metric_name"));
+  EXPECT_THAT(metric.test_case, Eq("test_case_name"));
+  EXPECT_THAT(metric.unit, Eq(Unit::kUnitless));
+  EXPECT_THAT(metric.improvement_direction,
+              Eq(ImprovementDirection::kNeitherIsBetter));
+  EXPECT_THAT(metric.metric_metadata, IsEmpty());
+  ASSERT_THAT(metric.time_series.samples, SizeIs(1));
+  EXPECT_THAT(metric.time_series.samples[0].value, Eq(10.0));
+  EXPECT_THAT(metric.time_series.samples[0].timestamp,
+              Eq(Timestamp::Seconds(1)));
+  EXPECT_THAT(metric.time_series.samples[0].sample_metadata,
+              Eq(std::map<std::string, std::string>{{"key", "value"}}));
+  ASSERT_THAT(metric.stats.mean, absl::optional<double>(10.0));
+  ASSERT_THAT(metric.stats.stddev, absl::optional<double>(0.0));
+  ASSERT_THAT(metric.stats.min, absl::optional<double>(10.0));
+  ASSERT_THAT(metric.stats.max, absl::optional<double>(10.0));
+}
+
+TEST(DefaultMetricsLoggerTest,
+     AccumulatedMetricsReturnedTogetherWithLoggedMetrics) {
+  DefaultMetricsLogger logger(Clock::GetRealTimeClock());
+  logger.LogSingleValueMetric(
+      "metric_name1", "test_case_name1",
+      /*value=*/10, Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
+      std::map<std::string, std::string>{{"key_m", "value_m"}});
+  logger.GetMetricsAccumulator()->AddSample(
+      "metric_name2", "test_case_name2",
+      /*value=*/10, Timestamp::Seconds(1),
+      /*point_metadata=*/
+      std::map<std::string, std::string>{{"key_s", "value_s"}});
+
+  std::vector<Metric> metrics = logger.GetCollectedMetrics();
+  ASSERT_THAT(metrics, SizeIs(2));
+  EXPECT_THAT(metrics[0].name, Eq("metric_name2"));
+  EXPECT_THAT(metrics[0].test_case, Eq("test_case_name2"));
+  EXPECT_THAT(metrics[0].unit, Eq(Unit::kUnitless));
+  EXPECT_THAT(metrics[0].improvement_direction,
+              Eq(ImprovementDirection::kNeitherIsBetter));
+  EXPECT_THAT(metrics[0].metric_metadata, IsEmpty());
+  ASSERT_THAT(metrics[0].time_series.samples, SizeIs(1));
+  EXPECT_THAT(metrics[0].time_series.samples[0].value, Eq(10.0));
+  EXPECT_THAT(metrics[0].time_series.samples[0].timestamp,
+              Eq(Timestamp::Seconds(1)));
+  EXPECT_THAT(metrics[0].time_series.samples[0].sample_metadata,
+              Eq(std::map<std::string, std::string>{{"key_s", "value_s"}}));
+  ASSERT_THAT(metrics[0].stats.mean, absl::optional<double>(10.0));
+  ASSERT_THAT(metrics[0].stats.stddev, absl::optional<double>(0.0));
+  ASSERT_THAT(metrics[0].stats.min, absl::optional<double>(10.0));
+  ASSERT_THAT(metrics[0].stats.max, absl::optional<double>(10.0));
+  EXPECT_THAT(metrics[1].name, Eq("metric_name1"));
+  EXPECT_THAT(metrics[1].test_case, Eq("test_case_name1"));
+  EXPECT_THAT(metrics[1].unit, Eq(Unit::kMilliseconds));
+  EXPECT_THAT(metrics[1].improvement_direction,
+              Eq(ImprovementDirection::kBiggerIsBetter));
+  EXPECT_THAT(metrics[1].metric_metadata,
+              Eq(std::map<std::string, std::string>{{"key_m", "value_m"}}));
+  ASSERT_THAT(metrics[1].time_series.samples, SizeIs(1));
+  EXPECT_THAT(metrics[1].time_series.samples[0].value, Eq(10.0));
+  EXPECT_THAT(metrics[1].time_series.samples[0].sample_metadata,
+              Eq(std::map<std::string, std::string>{}));
+  ASSERT_THAT(metrics[1].stats.mean, absl::optional<double>(10.0));
+  ASSERT_THAT(metrics[1].stats.stddev, absl::nullopt);
+  ASSERT_THAT(metrics[1].stats.min, absl::optional<double>(10.0));
+  ASSERT_THAT(metrics[1].stats.max, absl::optional<double>(10.0));
 }
 
 }  // namespace

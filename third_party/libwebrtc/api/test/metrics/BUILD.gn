@@ -15,6 +15,7 @@ group("metrics") {
   deps = [
     ":global_metrics_logger_and_exporter",
     ":metric",
+    ":metrics_accumulator",
     ":metrics_exporter",
     ":metrics_logger",
     ":metrics_logger_and_exporter",
@@ -28,6 +29,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":global_metrics_logger_and_exporter_test",
+      ":metrics_accumulator_test",
       ":metrics_logger_and_exporter_test",
       ":metrics_logger_test",
       ":print_result_proxy_metrics_exporter_test",
@@ -61,10 +63,27 @@ rtc_library("metrics_logger") {
   ]
   deps = [
     ":metric",
+    ":metrics_accumulator",
     "../..:array_view",
     "../../../rtc_base/synchronization:mutex",
     "../../../system_wrappers",
     "../../numerics",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
+rtc_library("metrics_accumulator") {
+  visibility = [ "*" ]
+  sources = [
+    "metrics_accumulator.cc",
+    "metrics_accumulator.h",
+  ]
+  deps = [
+    ":metric",
+    "../../../rtc_base:macromagic",
+    "../../../rtc_base/synchronization:mutex",
+    "../../numerics",
+    "../../units:timestamp",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
@@ -205,6 +224,18 @@ if (rtc_include_tests) {
       "../../../system_wrappers",
       "../../../test:test_support",
       "../../numerics",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  rtc_library("metrics_accumulator_test") {
+    testonly = true
+    sources = [ "metrics_accumulator_test.cc" ]
+    deps = [
+      ":metric",
+      ":metrics_accumulator",
+      "../../../test:test_support",
+      "../../units:timestamp",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
