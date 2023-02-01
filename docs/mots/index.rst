@@ -3326,6 +3326,30 @@ Mozilla Developer Tools
     * - Bugzilla Components
       - DevTools
 
+JavaScript usage, tools, and style
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Aspects of JavaScript use such as language feature usage, tooling such as lint configurations, formatting and naming style.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Dave Townsend (mossop) <https://people.mozilla.org/s?query=mossop>`__
+    * - Peer(s)
+      -
+        | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
+        | `Mark Banner (standard8) <https://people.mozilla.org/s?query=standard8>`__
+        | `Jan de Mooij (jandem) <https://people.mozilla.org/s?query=jandem>`__
+    * - Includes
+      -
+        | `.eslintrc-test-paths.js <https://searchfox.org/mozilla-central/search?q=&path=.eslintrc-test-paths.js>`__
+        | `\*\*/.eslintignore <https://searchfox.org/mozilla-central/search?q=&path=\*\*/.eslintignore>`__
+        | `\*\*/.eslintrc.js <https://searchfox.org/mozilla-central/search?q=&path=\*\*/.eslintrc.js>`__
+        | `tools/lint/eslint/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/lint/eslint/\*\*/\*>`__
+
 Marionette
 ~~~~~~~~~~
 Marionette is a remote protocol that lets out-of-process programs communicate with, instrument, and control Gecko-based browsers. Combined with geckodriver, this forms our WebDriver implementation.

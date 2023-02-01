@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-01T13:43:21.330760'
+updated_at: '2023-02-01T13:45:46.744362'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3543,6 +3543,23 @@ modules:
       url: http://firefox-dev.tools/
       components:
         - DevTools
+  - machine_name: javascript_usage
+    name: JavaScript usage, tools, and style
+    description: Aspects of JavaScript use such as language feature usage, tooling
+      such as lint configurations, formatting and naming style.
+    includes:
+      - .eslintrc-test-paths.js
+      - '**/.eslintignore'
+      - '**/.eslintrc.js'
+      - tools/lint/eslint/**/*
+    excludes: []
+    owners:
+      - *mossop
+    peers:
+      - *Gijs
+      - *standard8
+      - *jandem
+    meta:
   - machine_name: marionette
     name: Marionette
     description: Marionette is a remote protocol that lets out-of-process programs
@@ -3914,5 +3931,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d3cc17e53121af4bd963d0303c7e631807abdf73
-  export: 94d9f6854f7793c63600b9c2459da5920b3fa4af
+  config: 8209f49523a804df62b97420eae97d2ae800fe43
+  export: 103d4cf72381d53b62ea681e0288dba6e246a95a
