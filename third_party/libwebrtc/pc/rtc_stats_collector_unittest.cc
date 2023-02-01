@@ -677,6 +677,18 @@ class RTCStatsCollectorTest : public ::testing::Test {
     }
   }
 
+  const RTCCertificateStats* GetCertificateStatsFromFingerprint(
+      const rtc::scoped_refptr<const RTCStatsReport>& report,
+      const std::string& fingerprint) {
+    auto certificates = report->GetStatsOfType<RTCCertificateStats>();
+    for (const auto* certificate : certificates) {
+      if (*certificate->fingerprint == fingerprint) {
+        return certificate;
+      }
+    }
+    return nullptr;
+  }
+
   struct ExampleStatsGraph {
     rtc::scoped_refptr<RtpSenderInternal> sender;
     rtc::scoped_refptr<RtpReceiverInternal> receiver;
@@ -1358,6 +1370,124 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCertificateStatsChain) {
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   ExpectReportContainsCertificateInfo(report, *local_certinfo);
   ExpectReportContainsCertificateInfo(report, *remote_certinfo);
+}
+
+TEST_F(RTCStatsCollectorTest, CertificateStatsCache) {
+  const char kTransportName[] = "transport";
+  rtc::ScopedFakeClock fake_clock;
+
+  pc_->AddVoiceChannel("audio", kTransportName);
+
+  // Set local and remote cerificates.
+  std::unique_ptr<CertificateInfo> initial_local_certinfo =
+      CreateFakeCertificateAndInfoFromDers({"LocalCertA", "LocalCertB"});
+  pc_->SetLocalCertificate(kTransportName, initial_local_certinfo->certificate);
+  std::unique_ptr<CertificateInfo> initial_remote_certinfo =
+      CreateFakeCertificateAndInfoFromDers({"RemoteCertA", "RemoteCertB"});
+  pc_->SetRemoteCertChain(
+      kTransportName,
+      initial_remote_certinfo->certificate->GetSSLCertificateChain().Clone());
+  ASSERT_EQ(initial_local_certinfo->fingerprints.size(), 2u);
+  ASSERT_EQ(initial_remote_certinfo->fingerprints.size(), 2u);
+
+  rtc::scoped_refptr<const RTCStatsReport> first_report =
+      stats_->GetStatsReport();
+  const auto* first_local_cert0 = GetCertificateStatsFromFingerprint(
+      first_report, initial_local_certinfo->fingerprints[0]);
+  const auto* first_local_cert1 = GetCertificateStatsFromFingerprint(
+      first_report, initial_local_certinfo->fingerprints[1]);
+  const auto* first_remote_cert0 = GetCertificateStatsFromFingerprint(
+      first_report, initial_remote_certinfo->fingerprints[0]);
+  const auto* first_remote_cert1 = GetCertificateStatsFromFingerprint(
+      first_report, initial_remote_certinfo->fingerprints[1]);
+  ASSERT_TRUE(first_local_cert0);
+  ASSERT_TRUE(first_local_cert1);
+  ASSERT_TRUE(first_remote_cert0);
+  ASSERT_TRUE(first_remote_cert1);
+  EXPECT_EQ(first_local_cert0->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(first_local_cert1->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(first_remote_cert0->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(first_remote_cert1->timestamp_us(), rtc::TimeMicros());
+
+  // Replace all certificates.
+  std::unique_ptr<CertificateInfo> updated_local_certinfo =
+      CreateFakeCertificateAndInfoFromDers(
+          {"UpdatedLocalCertA", "UpdatedLocalCertB"});
+  pc_->SetLocalCertificate(kTransportName, updated_local_certinfo->certificate);
+  std::unique_ptr<CertificateInfo> updated_remote_certinfo =
+      CreateFakeCertificateAndInfoFromDers(
+          {"UpdatedRemoteCertA", "UpdatedRemoteCertB"});
+  pc_->SetRemoteCertChain(
+      kTransportName,
+      updated_remote_certinfo->certificate->GetSSLCertificateChain().Clone());
+  // This test assumes fingerprints are different for the old and new
+  // certificates.
+  EXPECT_NE(initial_local_certinfo->fingerprints,
+            updated_local_certinfo->fingerprints);
+  EXPECT_NE(initial_remote_certinfo->fingerprints,
+            updated_remote_certinfo->fingerprints);
+
+  // Advance time to ensure a fresh stats report, but don't clear the
+  // certificate stats cache.
+  fake_clock.AdvanceTime(TimeDelta::Seconds(1));
+  rtc::scoped_refptr<const RTCStatsReport> second_report =
+      stats_->GetStatsReport();
+  // We expect to see the same certificates as before due to not clearing the
+  // certificate cache.
+  const auto* second_local_cert0 =
+      second_report->GetAs<RTCCertificateStats>(first_local_cert0->id());
+  const auto* second_local_cert1 =
+      second_report->GetAs<RTCCertificateStats>(first_local_cert1->id());
+  const auto* second_remote_cert0 =
+      second_report->GetAs<RTCCertificateStats>(first_remote_cert0->id());
+  const auto* second_remote_cert1 =
+      second_report->GetAs<RTCCertificateStats>(first_remote_cert1->id());
+  ASSERT_TRUE(second_local_cert0);
+  ASSERT_TRUE(second_local_cert1);
+  ASSERT_TRUE(second_remote_cert0);
+  ASSERT_TRUE(second_remote_cert1);
+  // The information in the certificate stats are obsolete.
+  EXPECT_EQ(*second_local_cert0->fingerprint,
+            initial_local_certinfo->fingerprints[0]);
+  EXPECT_EQ(*second_local_cert1->fingerprint,
+            initial_local_certinfo->fingerprints[1]);
+  EXPECT_EQ(*second_remote_cert0->fingerprint,
+            initial_remote_certinfo->fingerprints[0]);
+  EXPECT_EQ(*second_remote_cert1->fingerprint,
+            initial_remote_certinfo->fingerprints[1]);
+  // But timestamps are up-to-date, because this is a fresh stats report.
+  EXPECT_EQ(second_local_cert0->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(second_local_cert1->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(second_remote_cert0->timestamp_us(), rtc::TimeMicros());
+  EXPECT_EQ(second_remote_cert1->timestamp_us(), rtc::TimeMicros());
+  // The updated certificates are not part of the report yet.
+  EXPECT_FALSE(GetCertificateStatsFromFingerprint(
+      second_report, updated_local_certinfo->fingerprints[0]));
+  EXPECT_FALSE(GetCertificateStatsFromFingerprint(
+      second_report, updated_local_certinfo->fingerprints[1]));
+  EXPECT_FALSE(GetCertificateStatsFromFingerprint(
+      second_report, updated_remote_certinfo->fingerprints[0]));
+  EXPECT_FALSE(GetCertificateStatsFromFingerprint(
+      second_report, updated_remote_certinfo->fingerprints[1]));
+
+  // Clear the cache, including the cached certificates.
+  stats_->stats_collector()->ClearCachedStatsReport();
+  rtc::scoped_refptr<const RTCStatsReport> third_report =
+      stats_->GetStatsReport();
+  // Now the old certificates stats should be deleted.
+  EXPECT_FALSE(third_report->Get(first_local_cert0->id()));
+  EXPECT_FALSE(third_report->Get(first_local_cert1->id()));
+  EXPECT_FALSE(third_report->Get(first_remote_cert0->id()));
+  EXPECT_FALSE(third_report->Get(first_remote_cert1->id()));
+  // And updated certificates exist.
+  EXPECT_TRUE(GetCertificateStatsFromFingerprint(
+      third_report, updated_local_certinfo->fingerprints[0]));
+  EXPECT_TRUE(GetCertificateStatsFromFingerprint(
+      third_report, updated_local_certinfo->fingerprints[1]));
+  EXPECT_TRUE(GetCertificateStatsFromFingerprint(
+      third_report, updated_remote_certinfo->fingerprints[0]));
+  EXPECT_TRUE(GetCertificateStatsFromFingerprint(
+      third_report, updated_remote_certinfo->fingerprints[1]));
 }
 
 TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
