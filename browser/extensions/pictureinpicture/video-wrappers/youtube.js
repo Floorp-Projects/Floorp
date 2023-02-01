@@ -5,6 +5,9 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
+  isLive(video) {
+    return !!document.querySelector(".ytp-live");
+  }
   setMuted(video, shouldMute) {
     let muteButton = document.querySelector("#player .ytp-mute-button");
 
@@ -13,6 +16,12 @@ class PictureInPictureVideoWrapper {
     } else {
       video.muted = shouldMute;
     }
+  }
+  getDuration(video) {
+    if (this.isLive(video)) {
+      return Infinity;
+    }
+    return video.duration;
   }
   setCaptionContainerObserver(video, updateCaptionsFunction) {
     let container = document.getElementById("ytp-caption-window-container");
