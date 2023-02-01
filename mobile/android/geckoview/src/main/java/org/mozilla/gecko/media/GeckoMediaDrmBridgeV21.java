@@ -58,6 +58,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
   private HashSet<ByteBuffer> mSessionIds;
   private HashMap<ByteBuffer, String> mSessionMIMETypes;
   private ArrayDeque<PendingCreateSessionData> mPendingCreateSessionDataQueue;
+  private PendingKeyRequest mPendingKeyRequest;
   private GeckoMediaDrm.Callbacks mCallbacks;
 
   private MediaCrypto mCrypto;
@@ -79,6 +80,18 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
       mToken = token;
       mPromiseId = promiseId;
       mInitData = initData;
+      mMimeType = mimeType;
+    }
+  }
+
+  private static class PendingKeyRequest {
+    public final ByteBuffer mSession;
+    public final byte[] mData;
+    public final String mMimeType;
+
+    private PendingKeyRequest(final ByteBuffer session, final byte[] data, final String mimeType) {
+      mSession = session;
+      mData = data;
       mMimeType = mimeType;
     }
   }
@@ -268,6 +281,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
       onRejectPromise(mProvisioningPromiseId, "Releasing ... reject provisioning session.");
       mProvisioningPromiseId = 0;
     }
+    if (mPendingKeyRequest != null) {
+      mPendingKeyRequest = null;
+    }
     while (!mPendingCreateSessionDataQueue.isEmpty()) {
       final PendingCreateSessionData pendingData = mPendingCreateSessionDataQueue.poll();
       if (pendingData != null) {
@@ -383,7 +399,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
       final ByteBuffer aSession, final byte[] data, final String mimeType)
       throws android.media.NotProvisionedException {
     if (mProvisioningPromiseId > 0) {
-      // Now provisioning.
+      if (DEBUG) Log.d(LOGTAG, "Now provisioning");
       return null;
     }
 
@@ -422,8 +438,21 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
           if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_PROVISION_REQUIRED");
           break;
         case MediaDrm.EVENT_KEY_REQUIRED:
-          if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_KEY_REQUIRED");
-          // No need to handle here if we're not in privacy mode.
+          if (DEBUG)
+            Log.d(
+                LOGTAG,
+                "MediaDrm.EVENT_KEY_REQUIRED, sessionId=" + new String(session.array(), UTF_8));
+          final String mimeType = mSessionMIMETypes.get(session);
+          MediaDrm.KeyRequest request = null;
+          try {
+            request = getKeyRequest(session, data, mimeType);
+          } catch (final android.media.NotProvisionedException e) {
+            Log.w(LOGTAG, "MediaDrm.EVENT_KEY_REQUIRED, Device not provisioned.", e);
+            startProvisioning(MAX_PROMISE_ID);
+            mPendingKeyRequest = new PendingKeyRequest(session, data, mimeType);
+            return;
+          }
+          requestLicense(sessionArray, request);
           break;
         case MediaDrm.EVENT_KEY_EXPIRED:
           if (DEBUG)
@@ -619,9 +648,40 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         new Runnable() {
           @Override
           public void run() {
-            processPendingCreateSessionData();
+            if (mPendingKeyRequest != null) {
+              MediaDrm.KeyRequest request = null;
+              try {
+                request =
+                    getKeyRequest(
+                        mPendingKeyRequest.mSession,
+                        mPendingKeyRequest.mData,
+                        mPendingKeyRequest.mMimeType);
+              } catch (final NotProvisionedException e) {
+                Log.e(LOGTAG, "Cannot get key request after provisioning!");
+                return;
+              } finally {
+                mPendingKeyRequest = null;
+              }
+              requestLicense(mPendingKeyRequest.mSession.array(), request);
+            } else {
+              processPendingCreateSessionData();
+            }
           }
         });
+  }
+
+  private void requestLicense(final byte[] session, final MediaDrm.KeyRequest request) {
+    if (request == null) {
+      Log.e(LOGTAG, "null key request when requesting license");
+      return;
+    }
+    // The EME spec says the messageType is only for optimization and optional.
+    // Send 'License_request' as default when it's not available.
+    int requestType = LICENSE_REQUEST_INITIAL;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      requestType = request.getRequestType();
+    }
+    onSessionMessage(session, requestType, request.getData());
   }
 
   // Only triggered when failed on {openSession, getKeyRequest}
