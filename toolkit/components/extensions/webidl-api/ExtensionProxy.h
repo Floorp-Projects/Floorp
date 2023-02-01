@@ -23,6 +23,7 @@ class nsIGlobalObject;
 namespace mozilla::extensions {
 
 class ExtensionEventManager;
+class ExtensionSetting;
 
 class ExtensionProxy final : public nsISupports,
                              public nsWrapperCache,
@@ -51,8 +52,7 @@ class ExtensionProxy final : public nsISupports,
   ExtensionEventManager* OnRequest();
   ExtensionEventManager* OnError();
 
-  // TODO: add methods for the property getters if any.
-  void GetSettings(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {}
+  ExtensionSetting* Settings();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionProxy)
@@ -64,6 +64,7 @@ class ExtensionProxy final : public nsISupports,
   RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnRequestEventMgr;
   RefPtr<ExtensionEventManager> mOnErrorEventMgr;
+  RefPtr<ExtensionSetting> mSettingsMgr;
 };
 
 }  // namespace mozilla::extensions
