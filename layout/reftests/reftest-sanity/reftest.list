@@ -213,3 +213,6 @@ pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == reftest-resolution.htm
 == reftest-no-flush.html reftest-no-flush-ref.html
 
 skip-if(Android) HTTP == exampleorg-1.html exampleorg-1-ref.html
+
+== page-backgrounds.html page-backgrounds-ref.html
+!= page-backgrounds.html page-backgrounds-notref.html
