@@ -35,11 +35,13 @@ macosx64-sdk-11.0:
 
 macosx64-sdk-11.3:
     description: "MacOSX11.3 SDK"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TM(sdk11.3)
     worker-type: b-linux-gcp
     run:
-        script: pack-macos-sdk.sh
+        script: unpack-sdk.py
         arguments:
             - https://swcdn.apple.com/content/downloads/52/17/002-41708-A_E8MFK7B2PK/6p55tbmh0qttgbt4cy94uuvnacy6tkw435/CLTools_macOSLMOS_SDK.pkg
             - b075d3d2f3b066607209a5bbf7cf727a40b98fe65629c5b6abc17f156897af4a
@@ -51,11 +53,13 @@ macosx64-sdk-11.3:
 
 macosx64-sdk-13.0:
     description: "MacOSX13.0 SDK"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TM(sdk13.0)
     worker-type: b-linux-gcp
     run:
-        script: pack-macos-sdk.sh
+        script: unpack-sdk.py
         arguments:
             - https://swdist.apple.com/content/downloads/38/50/012-70652-A_2ZHIRHCHLN/f8b81s6tzlzrj0z67ynydjx4x1lwhr08ab/CLTools_macOSNMOS_SDK.pkg
             - 06f4a045854c456a553a5ee6acf678fbe26c06296fc68054ae918c206134aa20
