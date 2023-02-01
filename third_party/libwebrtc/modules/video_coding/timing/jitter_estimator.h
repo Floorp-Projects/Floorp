@@ -143,11 +143,6 @@ class JitterEstimator {
   Config GetConfigForTest() const;
 
  private:
-  // These functions return values that could be overriden through the config.
-  double GetNumStddevDelayOutlier() const;
-  double GetNumStddevSizeOutlier() const;
-  double GetCongestionRejectionFactor() const;
-
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.
   //
