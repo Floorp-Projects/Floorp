@@ -313,7 +313,12 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest, MetricNamesForP2PAreCorrect) {
               .test_case = "test_case/alice_video",
               .name = "recv_delta_frame_size_bytes",
               .unit = Unit::kCount,
-              .improvement_direction = ImprovementDirection::kBiggerIsBetter}));
+              .improvement_direction = ImprovementDirection::kBiggerIsBetter},
+          MetricValidationInfo{.test_case = "test_case",
+                               .name = "cpu_usage",
+                               .unit = Unit::kPercent,
+                               .improvement_direction =
+                                   ImprovementDirection::kSmallerIsBetter}));
 }
 
 TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
@@ -607,7 +612,12 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
               .test_case = "test_case/alice_video_alice_charlie",
               .name = "recv_delta_frame_size_bytes",
               .unit = Unit::kCount,
-              .improvement_direction = ImprovementDirection::kBiggerIsBetter}));
+              .improvement_direction = ImprovementDirection::kBiggerIsBetter},
+          MetricValidationInfo{.test_case = "test_case",
+                               .name = "cpu_usage",
+                               .unit = Unit::kPercent,
+                               .improvement_direction =
+                                   ImprovementDirection::kSmallerIsBetter}));
 }
 
 TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
@@ -639,10 +649,11 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
 
   std::vector<std::string> metrics =
       ToTestCases(metrics_logger.GetCollectedMetrics());
-  EXPECT_THAT(metrics, SizeIs(52));
+  EXPECT_THAT(metrics, SizeIs(53));
   EXPECT_THAT(metrics, Contains("test_case/alice_video_alice_bob").Times(26));
   EXPECT_THAT(metrics,
               Contains("test_case/alice_video_alice_charlie").Times(26));
+  EXPECT_THAT(metrics, Contains("test_case").Times(1));
 }
 
 }  // namespace

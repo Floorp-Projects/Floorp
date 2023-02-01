@@ -898,8 +898,15 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
     ReportResults(GetTestCaseName(ToMetricName(item.first)), item.second,
                   stream_frame_counters_.at(item.first));
   }
-  test::PrintResult("cpu_usage", "", test_label_.c_str(), GetCpuUsagePercent(),
-                    "%", false, ImproveDirection::kSmallerIsBetter);
+  if (metrics_logger_ == nullptr) {
+    test::PrintResult("cpu_usage", "", test_label_.c_str(),
+                      GetCpuUsagePercent(), "%", false,
+                      ImproveDirection::kSmallerIsBetter);
+  } else {
+    metrics_logger_->LogSingleValueMetric(
+        "cpu_usage", test_label_, GetCpuUsagePercent(), Unit::kPercent,
+        ImprovementDirection::kSmallerIsBetter);
+  }
   LogFrameCounters("Global", frame_counters_);
   if (!unknown_sender_frame_counters_.empty()) {
     RTC_LOG(LS_INFO) << "Received frame counters with unknown frame id:";
