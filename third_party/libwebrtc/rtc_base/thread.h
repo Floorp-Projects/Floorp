@@ -38,6 +38,7 @@
 #include "rtc_base/location.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -270,7 +271,7 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
 
   bool empty() const { return size() == 0u; }
   size_t size() const {
-    CritScope cs(&crit_);
+    webrtc::MutexLock lock(&mutex_);
     return messages_.size() + delayed_messages_.size();
   }
 
@@ -429,7 +430,7 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
 
   // Perform cleanup; subclasses must call this from the destructor,
   // and are not expected to actually hold the lock.
-  void DoDestroy() RTC_EXCLUSIVE_LOCKS_REQUIRED(&crit_);
+  void DoDestroy() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void WakeUpSocketServer();
 
@@ -482,16 +483,16 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // Called by the ThreadManager when being unset as the current thread.
   void ClearCurrentTaskQueue();
 
-  std::queue<absl::AnyInvocable<void() &&>> messages_ RTC_GUARDED_BY(crit_);
-  std::priority_queue<DelayedMessage> delayed_messages_ RTC_GUARDED_BY(crit_);
-  uint32_t delayed_next_num_ RTC_GUARDED_BY(crit_);
+  std::queue<absl::AnyInvocable<void() &&>> messages_ RTC_GUARDED_BY(mutex_);
+  std::priority_queue<DelayedMessage> delayed_messages_ RTC_GUARDED_BY(mutex_);
+  uint32_t delayed_next_num_ RTC_GUARDED_BY(mutex_);
 #if RTC_DCHECK_IS_ON
   uint32_t blocking_call_count_ RTC_GUARDED_BY(this) = 0;
   uint32_t could_be_blocking_call_count_ RTC_GUARDED_BY(this) = 0;
   std::vector<Thread*> allowed_threads_ RTC_GUARDED_BY(this);
   bool invoke_policy_enabled_ RTC_GUARDED_BY(this) = false;
 #endif
-  RecursiveCriticalSection crit_;
+  mutable webrtc::Mutex mutex_;
   bool fInitialized_;
   bool fDestroyed_;
 

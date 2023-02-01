@@ -41,6 +41,7 @@
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/null_socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 
@@ -74,6 +75,7 @@ class ScopedAutoReleasePool {
 namespace rtc {
 namespace {
 
+using ::webrtc::MutexLock;
 using ::webrtc::TimeDelta;
 
 class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
@@ -426,8 +428,8 @@ absl::AnyInvocable<void() &&> Thread::Get(int cmsWait) {
     int64_t cmsDelayNext = kForever;
     {
       // All queue operations need to be locked, but nothing else in this loop
-      // can happen inside the crit.
-      CritScope cs(&crit_);
+      // can happen while holding the `mutex_`.
+      MutexLock lock(&mutex_);
       // Check for delayed messages that have been triggered and calculate the
       // next trigger time.
       while (!delayed_messages_.empty()) {
@@ -491,7 +493,7 @@ void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
   // Signal for the multiplexer to return
 
   {
-    CritScope cs(&crit_);
+    MutexLock lock(&mutex_);
     messages_.push(std::move(task));
   }
   WakeUpSocketServer();
@@ -510,7 +512,7 @@ void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
   int64_t delay_ms = delay.RoundUpTo(webrtc::TimeDelta::Millis(1)).ms<int>();
   int64_t run_time_ms = TimeAfter(delay_ms);
   {
-    CritScope cs(&crit_);
+    MutexLock lock(&mutex_);
     delayed_messages_.push({.delay_ms = delay_ms,
                             .run_time_ms = run_time_ms,
                             .message_number = delayed_next_num_,
@@ -525,7 +527,7 @@ void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
 }
 
 int Thread::GetDelay() {
-  CritScope cs(&crit_);
+  MutexLock lock(&mutex_);
 
   if (!messages_.empty())
     return 0;
@@ -786,8 +788,10 @@ void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
   absl::Cleanup cleanup = [this, &ready, current_thread,
                            done = done_event.get()] {
     if (current_thread) {
-      CritScope cs(&crit_);
-      ready = true;
+      {
+        MutexLock lock(&mutex_);
+        ready = true;
+      }
       current_thread->socketserver()->WakeUp();
     } else {
       done->Set();
@@ -796,14 +800,14 @@ void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
   PostTask([functor, cleanup = std::move(cleanup)] { functor(); });
   if (current_thread) {
     bool waited = false;
-    crit_.Enter();
+    mutex_.Lock();
     while (!ready) {
-      crit_.Leave();
+      mutex_.Unlock();
       current_thread->socketserver()->Wait(SocketServer::kForever, false);
       waited = true;
-      crit_.Enter();
+      mutex_.Lock();
     }
-    crit_.Leave();
+    mutex_.Unlock();
 
     // Our Wait loop above may have consumed some WakeUp events for this
     // Thread, that weren't relevant to this Send.  Losing these WakeUps can
