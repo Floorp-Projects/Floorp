@@ -84,6 +84,7 @@ rtc_library("video_codecs_api") {
     "../units:data_rate",
     "../video:encoded_image",
     "../video:render_resolution",
+    "../video:resolution",
     "../video:video_bitrate_allocation",
     "../video:video_codec_constants",
     "../video:video_frame",

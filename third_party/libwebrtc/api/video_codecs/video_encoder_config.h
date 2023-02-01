@@ -18,6 +18,7 @@
 
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
+#include "api/video/resolution.h"
 #include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
@@ -32,10 +33,11 @@ struct VideoStream {
   VideoStream(const VideoStream& other);
   std::string ToString() const;
 
-  // Width in pixels.
+  // Width/Height in pixels.
+  // This is the actual width and height used to configure encoder,
+  // which might be less than `requested_resolution` due to adaptation
+  // or due to the source providing smaller frames than requested.
   size_t width;
-
-  // Height in pixels.
   size_t height;
 
   // Frame rate in fps.
@@ -69,6 +71,17 @@ struct VideoStream {
 
   // If this stream is enabled by the user, or not.
   bool active;
+
+  // An optional user supplied max_frame_resolution
+  // than can be set independently of (adapted) VideoSource.
+  // This value is set from RtpEncodingParameters::requested_resolution
+  // (i.e. used for signaling app-level settings).
+  //
+  // The actual encode resolution is in `width` and `height`,
+  // which can be lower than requested_resolution,
+  // e.g. if source only provides lower resolution or
+  // if resource adaptation is active.
+  absl::optional<Resolution> requested_resolution;
 };
 
 class VideoEncoderConfig {

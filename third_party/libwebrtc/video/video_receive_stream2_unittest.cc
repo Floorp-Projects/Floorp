@@ -158,7 +158,7 @@ class FakeVideoRenderer : public rtc::VideoSinkInterface<VideoFrame> {
   TimeController* const time_controller_;
 };
 
-MATCHER_P2(Resolution, w, h, "") {
+MATCHER_P2(MatchResolution, w, h, "") {
   return arg.resolution().width == w && arg.resolution().height == h;
 }
 
@@ -740,8 +740,9 @@ TEST_P(VideoReceiveStream2Test,
       /*generate_key_frame=*/false);
 
   InSequence s;
-  EXPECT_CALL(callback, Call(Resolution(test::FakeDecoder::kDefaultWidth,
-                                        test::FakeDecoder::kDefaultHeight)));
+  EXPECT_CALL(callback,
+              Call(MatchResolution(test::FakeDecoder::kDefaultWidth,
+                                   test::FakeDecoder::kDefaultHeight)));
   EXPECT_CALL(callback, Call);
 
   video_receive_stream_->OnCompleteFrame(
@@ -763,7 +764,7 @@ TEST_P(VideoReceiveStream2Test,
       /*generate_key_frame=*/false);
 
   InSequence s;
-  EXPECT_CALL(callback, Call(Resolution(1080u, 720u)));
+  EXPECT_CALL(callback, Call(MatchResolution(1080u, 720u)));
   EXPECT_CALL(callback, Call);
 
   video_receive_stream_->OnCompleteFrame(
