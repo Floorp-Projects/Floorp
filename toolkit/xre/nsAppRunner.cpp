@@ -1572,6 +1572,14 @@ nsXULAppInfo::GetDrawInTitlebar(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetDesktopEnvironment(nsACString& aDesktopEnvironment) {
+#ifdef MOZ_WIDGET_GTK
+  aDesktopEnvironment.Assign(GetDesktopEnvironmentIdentifier());
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetProcessStartupShortcut(nsAString& aShortcut) {
 #if defined(XP_WIN)
   if (XRE_IsParentProcess()) {

@@ -564,6 +564,7 @@ var dataProviders = {
       Promise.all(promises).then(() => done(data));
     }
 
+    data.desktopEnvironment = Services.appinfo.desktopEnvironment;
     data.numTotalWindows = 0;
     data.numAcceleratedWindows = 0;
 
@@ -644,7 +645,6 @@ var dataProviders = {
       cleartypeParameters: "clearTypeParameters",
       TargetFrameRate: "targetFrameRate",
       windowProtocol: null,
-      desktopEnvironment: null,
     };
 
     for (let prop in gfxInfoProps) {
