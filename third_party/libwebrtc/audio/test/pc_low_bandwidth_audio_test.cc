@@ -15,7 +15,10 @@
 #include "absl/strings/string_view.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/create_peerconnection_quality_test_fixture.h"
+#include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/stdout_metrics_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
@@ -24,7 +27,6 @@
 #include "test/gtest.h"
 #include "test/pc/e2e/network_quality_metrics_reporter.h"
 #include "test/testsupport/file_utils.h"
-#include "test/testsupport/perf_test.h"
 
 ABSL_DECLARE_FLAG(std::string, test_case_prefix);
 ABSL_DECLARE_FLAG(int, sample_rate_hz);
@@ -99,7 +101,12 @@ std::string PerfResultsOutputFile() {
 
 void LogTestResults() {
   std::string perf_results_output_file = PerfResultsOutputFile();
-  EXPECT_TRUE(webrtc::test::WritePerfResults(perf_results_output_file));
+  std::vector<std::unique_ptr<MetricsExporter>> exporters;
+  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
+  exporters.push_back(std::make_unique<ChromePerfDashboardMetricsExporter>(
+      perf_results_output_file));
+  EXPECT_TRUE(
+      ExportPerfMetric(*GetGlobalMetricsLogger(), std::move(exporters)));
 
   const ::testing::TestInfo* const test_info =
       ::testing::UnitTest::GetInstance()->current_test_info();
