@@ -23,6 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
     <img id="finitepng" src="restore-previous.png">
     <img id="finitegif" src="animated-gif.gif">
     <img id="finitewebp" src="keep.webp">
+    <img id="finiteavif" src="animated-avif.avif">
   </div>
 </div>
 <pre id="test">
@@ -45,7 +46,7 @@ window.onload = function() {
 }
 
 var gImgs = ['infinitepng', 'infinitegif', 'infinitewebp', 'infiniteavif',
-             'finitepng',   'finitegif',   'finitewebp'];
+             'finitepng',   'finitegif',   'finitewebp', 'finiteavif'];
 // If we are currently counting frame updates.
 var gCountingFrameUpdates = false;
 // The number of frame update notifications for the images in gImgs that happen
