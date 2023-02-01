@@ -18,7 +18,10 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
+
+using testing::HasSubstr;
 
 namespace webrtc {
 namespace {
@@ -114,6 +117,36 @@ TEST(SequenceCheckerTest, DetachFromTaskQueueInDebug) {
   TaskQueueForTest queue2;
   queue2.SendTask(
       [&] { EXPECT_EQ(sequence_checker.IsCurrent(), !RTC_DCHECK_IS_ON); });
+}
+
+TEST(SequenceCheckerTest, ExpectationToString) {
+  TaskQueueForTest queue1;
+
+  SequenceChecker sequence_checker;
+  sequence_checker.Detach();
+
+  rtc::Event blocker;
+  queue1.PostTask([&blocker, &sequence_checker]() {
+    (void)sequence_checker.IsCurrent();
+    blocker.Set();
+  });
+
+  blocker.Wait(rtc::Event::kForever);
+
+#if RTC_DCHECK_IS_ON
+
+  EXPECT_THAT(ExpectationToString(&sequence_checker),
+              HasSubstr("# Expected: TQ:"));
+
+  // Test for the base class
+  webrtc_sequence_checker_internal::SequenceCheckerImpl* sequence_checker_base =
+      &sequence_checker;
+  EXPECT_THAT(ExpectationToString(sequence_checker_base),
+              HasSubstr("# Expected: TQ:"));
+
+#else
+  GTEST_ASSERT_EQ(ExpectationToString(&sequence_checker), "");
+#endif
 }
 
 class TestAnnotations {
