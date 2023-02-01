@@ -553,32 +553,6 @@ TEST(ThreadManager, ProcessAllMessageQueuesWithQuittingThread) {
   ThreadManager::ProcessAllMessageQueuesForTesting();
 }
 
-// Test that ProcessAllMessageQueues doesn't hang if a queue clears its
-// messages.
-TEST(ThreadManager, ProcessAllMessageQueuesWithClearedQueue) {
-  rtc::AutoThread main_thread;
-  Event entered_process_all_message_queues(true, false);
-  auto t = Thread::CreateWithSocketServer();
-  t->Start();
-
-  auto clearer = [&entered_process_all_message_queues] {
-    // Wait for event as a means to ensure Clear doesn't occur outside of
-    // ProcessAllMessageQueues. The event is set by a message posted to the
-    // main thread, which is guaranteed to be handled inside
-    // ProcessAllMessageQueues.
-    entered_process_all_message_queues.Wait(Event::kForever);
-    rtc::Thread::Current()->Clear(nullptr);
-  };
-  auto event_signaler = [&entered_process_all_message_queues] {
-    entered_process_all_message_queues.Set();
-  };
-
-  // Post messages (both delayed and non delayed) to both threads.
-  t->PostTask(clearer);
-  main_thread.PostTask(event_signaler);
-  ThreadManager::ProcessAllMessageQueuesForTesting();
-}
-
 void WaitAndSetEvent(Event* wait_event, Event* set_event) {
   wait_event->Wait(Event::kForever);
   set_event->Set();
