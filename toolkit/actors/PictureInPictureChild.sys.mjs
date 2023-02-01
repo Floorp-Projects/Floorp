@@ -2239,7 +2239,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
         break;
     }
 
-    const isVideoStreaming = this.videoWrapper.getDuration(video) == +Infinity;
+    const isVideoStreaming = this.videoWrapper.isLive(video);
     var oldval, newval;
 
     try {
@@ -2296,10 +2296,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
-          if (
-            isVideoStreaming ||
-            !this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)
-          ) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -2313,10 +2310,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
-          if (
-            isVideoStreaming ||
-            !this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)
-          ) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -2831,6 +2825,22 @@ class PictureInPictureChildVideoWrapper {
       name: "shouldHideToggle",
       args: [video],
       fallback: () => false,
+      validateRetVal: retVal => this.#isBoolean(retVal),
+    });
+  }
+
+  /**
+   * OVERRIDABLE - calls the isLive() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to get if the
+   * video is a live stream.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   */
+  isLive(video) {
+    return this.#callWrapperMethod({
+      name: "isLive",
+      args: [video],
+      fallback: () => video.duration === Infinity,
       validateRetVal: retVal => this.#isBoolean(retVal),
     });
   }
