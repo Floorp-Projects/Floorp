@@ -16,6 +16,8 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "api/test/simulated_network.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/encoded_image.h"
@@ -66,7 +68,6 @@
 #include "test/gtest.h"
 #include "test/null_transport.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/testsupport/perf_test.h"
 #include "test/video_encoder_proxy_factory.h"
 #include "video/send_statistics_proxy.h"
 #include "video/transport_adapter.h"
@@ -1514,9 +1515,11 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
           EXPECT_EQ(1u, stats.substreams.size());
           int total_bitrate_bps =
               stats.substreams.begin()->second.total_bitrate_bps;
-          test::PrintResult(
-              "bitrate_stats_", "min_transmit_bitrate_low_remb", "bitrate_bps",
-              static_cast<size_t>(total_bitrate_bps), "bps", false);
+          test::GetGlobalMetricsLogger()->LogSingleValueMetric(
+              "bitrate_stats_min_transmit_bitrate_low_remb", "bitrate_bps",
+              static_cast<size_t>(total_bitrate_bps) / 1000.0,
+              test::Unit::kKilobitsPerSecond,
+              test::ImprovementDirection::kNeitherIsBetter);
           if (total_bitrate_bps > kHighBitrateBps) {
             rtp_rtcp_->SetRemb(kRembBitrateBps, {ssrc});
             bitrate_capped_ = true;
