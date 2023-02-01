@@ -121,7 +121,7 @@ sealed class Crash {
 
             /**
              * Indicates a crash occurred in a foreground child process. The application may be
-             * able to recover from this crash, but it was likely noticable to the user.
+             * able to recover from this crash, but it was likely noticeable to the user.
              */
             const val PROCESS_TYPE_FOREGROUND_CHILD = "FOREGROUND_CHILD"
 

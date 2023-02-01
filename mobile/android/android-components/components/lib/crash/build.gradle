@@ -13,6 +13,7 @@ buildscript {
         dependencies {
             classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
             classpath ComponentsDependencies.plugin_ksp
+            classpath ComponentsDependencies.plugin_serialization
         }
     }
 }
@@ -24,6 +25,7 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'com.google.devtools.ksp'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -61,6 +63,7 @@ android {
 
 dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_json
 
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout
@@ -70,7 +73,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
 
-    implementation Dependencies.androidx_room_runtime
+    implementation ComponentsDependencies.androidx_room_runtime
     ksp ComponentsDependencies.androidx_room_compiler
 
     // We only compile against GeckoView and Glean. It's up to the app to add those dependencies if it wants to

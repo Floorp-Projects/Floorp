@@ -18,8 +18,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 import java.io.File
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
+import mozilla.components.lib.crash.GleanMetrics.Crash as GleanCrash
+import mozilla.components.lib.crash.GleanMetrics.Pings as GleanPings
 
 @RunWith(AndroidJUnit4::class)
 class GleanCrashReporterServiceTest {
@@ -29,205 +33,87 @@ class GleanCrashReporterServiceTest {
     @get:Rule
     val gleanRule = GleanTestRule(context)
 
-    @Test
-    fun `GleanCrashReporterService records main process native code crashes`() {
-        // Because of how Glean is implemented, it can potentially persist information between
-        // tests or even between test classes, so we compensate by capturing the initial value
-        // to compare to.
-        val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
-        } catch (e: NullPointerException) {
-            0
-        }
+    private fun crashCountJson(key: String): String = "{\"type\":\"count\",\"label\":\"$key\"}"
 
-        run {
-            val service = spy(GleanCrashReporterService(context))
-
-            assertFalse("No previous persisted crashes must exist", service.file.exists())
-
-            val crash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_MAIN, arrayListOf())
-            service.record(crash)
-
-            verify(service).record(crash)
-
-            assertTrue("Persistence file must exist", service.file.exists())
-            val lines = service.file.readLines()
-            assertEquals(
-                "Must be main process native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines.first(),
-            )
-        }
-
-        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
-        run {
-            GleanCrashReporterService(context)
-
-            assertEquals(
-                "Glean must record correct value",
-                1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
-            )
-        }
-    }
+    private fun crashPingJson(uptime: Long, type: String, time: Long, startup: Boolean): String =
+        "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"$type\"," +
+            "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\"}"
 
     @Test
-    fun `GleanCrashReporterService records foreground child process native code crashes`() {
-        // Because of how Glean is implemented, it can potentially persist information between
-        // tests or even between test classes, so we compensate by capturing the initial value
-        // to compare to.
-        val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
-        } catch (e: NullPointerException) {
-            0
-        }
+    fun `GleanCrashReporterService records all crash types`() {
+        val crashTypes = hashMapOf(
+            GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY to Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+                arrayListOf(),
+            ),
+            GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY to Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+                arrayListOf(),
+            ),
+            GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY to Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+                arrayListOf(),
+            ),
+            GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY to Crash.UncaughtExceptionCrash(
+                0,
+                RuntimeException("Test"),
+                arrayListOf(),
+            ),
+            GleanCrashReporterService.CAUGHT_EXCEPTION_KEY to RuntimeException("Test"),
+        )
 
-        run {
-            val service = spy(GleanCrashReporterService(context))
+        for ((type, crash) in crashTypes) {
+            // Because of how Glean is implemented, it can potentially persist information between
+            // tests or even between test classes, so we compensate by capturing the initial value
+            // to compare to.
+            val initialValue = try {
+                CrashMetrics.crashCount[type].testGetValue()!!
+            } catch (e: NullPointerException) {
+                0
+            }
 
-            assertFalse("No previous persisted crashes must exist", service.file.exists())
+            run {
+                val service = spy(GleanCrashReporterService(context))
 
-            val crash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
-            service.record(crash)
+                assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            assertTrue("Persistence file must exist", service.file.exists())
-            val lines = service.file.readLines()
-            assertEquals(
-                "Must be foreground child process native code crash",
-                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines.first(),
-            )
-        }
+                when (crash) {
+                    is Crash.NativeCodeCrash -> service.record(crash)
+                    is Crash.UncaughtExceptionCrash -> service.record(crash)
+                    is Throwable -> service.record(crash)
+                }
 
-        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
-        run {
-            GleanCrashReporterService(context)
+                assertTrue("Persistence file must exist", service.file.exists())
+                val lines = service.file.readLines()
+                assertEquals(
+                    "Must be $type",
+                    crashCountJson(type),
+                    lines.first(),
+                )
+            }
 
-            assertEquals(
-                "Glean must record correct value",
-                1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
-            )
-        }
-    }
+            // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
+            run {
+                GleanCrashReporterService(context)
 
-    @Test
-    fun `GleanCrashReporterService records background child process native code crashes`() {
-        // Because of how Glean is implemented, it can potentially persist information between
-        // tests or even between test classes, so we compensate by capturing the initial value
-        // to compare to.
-        val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
-        } catch (e: NullPointerException) {
-            0
-        }
-
-        run {
-            val service = spy(GleanCrashReporterService(context))
-
-            assertFalse("No previous persisted crashes must exist", service.file.exists())
-
-            val crash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD, arrayListOf())
-            service.record(crash)
-
-            assertTrue("Persistence file must exist", service.file.exists())
-            val lines = service.file.readLines()
-            assertEquals(
-                "Must be background child process native code crash",
-                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines.first(),
-            )
-        }
-
-        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
-        run {
-            GleanCrashReporterService(context)
-
-            assertEquals(
-                "Glean must record correct value",
-                1,
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
-            )
-        }
-    }
-
-    @Test
-    fun `GleanCrashReporterService records uncaught exceptions`() {
-        // Because of how Glean is implemented, it can potentially persist information between
-        // tests or even between test classes, so we compensate by capturing the initial value
-        // to compare to.
-        val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!!
-        } catch (e: NullPointerException) {
-            0
-        }
-
-        run {
-            val service = spy(GleanCrashReporterService(context))
-
-            assertFalse("No previous persisted crashes must exist", service.file.exists())
-
-            val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
-            service.record(crash)
-
-            assertTrue("Persistence file must exist", service.file.exists())
-            val lines = service.file.readLines()
-            assertEquals(
-                "Must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
-                lines.first(),
-            )
-        }
-
-        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
-        run {
-            GleanCrashReporterService(context)
-
-            assertEquals(
-                "Glean must record correct value",
-                1,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue,
-            )
-        }
-    }
-
-    @Test
-    fun `GleanCrashReporterService records caught exceptions`() {
-        // Because of how Glean is implemented, it can potentially persist information between
-        // tests or even between test classes, so we compensate by capturing the initial value
-        // to compare to.
-        val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!!
-        } catch (e: NullPointerException) {
-            0
-        }
-
-        run {
-            val service = spy(GleanCrashReporterService(context))
-
-            assertFalse("No previous persisted crashes must exist", service.file.exists())
-
-            val throwable = RuntimeException("Test")
-            service.record(throwable)
-
-            assertTrue("Persistence file must exist", service.file.exists())
-            val lines = service.file.readLines()
-            assertEquals(
-                "Must be caught exception",
-                GleanCrashReporterService.CAUGHT_EXCEPTION_KEY,
-                lines.first(),
-            )
-        }
-
-        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
-        run {
-            GleanCrashReporterService(context)
-
-            assertEquals(
-                "Glean must record correct value",
-                1,
-                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue,
-            )
+                assertEquals(
+                    "Glean must record correct value",
+                    1,
+                    CrashMetrics.crashCount[type].testGetValue()!! - initialValue,
+                )
+            }
         }
     }
 
@@ -261,10 +147,32 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
-            val mainProcessNativeCodeCrash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_MAIN, arrayListOf())
-            val foregroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
-            val backgroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD, arrayListOf())
+            val uncaughtExceptionCrash =
+                Crash.UncaughtExceptionCrash(0, RuntimeException("Test"), arrayListOf())
+            val mainProcessNativeCodeCrash = Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+                arrayListOf(),
+            )
+            val foregroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+                arrayListOf(),
+            )
+            val backgroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+                arrayListOf(),
+            )
 
             // Record some crashes
             service.record(uncaughtExceptionCrash)
@@ -277,33 +185,48 @@ class GleanCrashReporterServiceTest {
             assertTrue("Persistence file must exist", service.file.exists())
 
             // Get the file lines
-            val lines = service.file.readLines()
-            assertEquals(5, lines.count())
+            val lines = service.file.readLines().iterator()
             assertEquals(
                 "First element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
-                lines[0],
+                crashCountJson(GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY),
+                lines.next(),
             )
             assertEquals(
                 "Second element must be main process native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines[1],
+                crashCountJson(GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY),
+                lines.next(),
             )
             assertEquals(
-                "Third element must be uncaught exception",
-                GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY,
-                lines[2],
+                "Third element must be main process crash ping",
+                crashPingJson(0, "main", 0, false),
+                lines.next(),
             )
             assertEquals(
-                "Fourth element must be foreground child process native code crash",
-                GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines[3],
+                "Fourth element must be uncaught exception",
+                crashCountJson(GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY),
+                lines.next(), // skip crash ping line in this test
             )
             assertEquals(
-                "Fifth element must be background child process native code crash",
-                GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
-                lines[4],
+                "Fifth element must be foreground child process native code crash",
+                crashCountJson(GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY),
+                lines.next(),
             )
+            assertEquals(
+                "Third element must be foreground process crash ping",
+                crashPingJson(0, "content", 0, false),
+                lines.next(),
+            )
+            assertEquals(
+                "Sixth element must be background child process native code crash",
+                crashCountJson(GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY),
+                lines.next(), // skip crash ping line
+            )
+            assertEquals(
+                "Third element must be background process crash ping",
+                crashPingJson(0, "utility", 0, false),
+                lines.next(),
+            )
+            assertFalse(lines.hasNext())
         }
 
         // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
@@ -335,7 +258,8 @@ class GleanCrashReporterServiceTest {
 
     @Test
     fun `GleanCrashReporterService does not crash if it can't write to it's file`() {
-        val file = spy(File(context.applicationInfo.dataDir, GleanCrashReporterService.CRASH_FILE_NAME))
+        val file =
+            spy(File(context.applicationInfo.dataDir, GleanCrashReporterService.CRASH_FILE_NAME))
         whenever(file.canWrite()).thenReturn(false)
         val service = spy(GleanCrashReporterService(context, file))
 
@@ -355,7 +279,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
+            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -365,7 +289,11 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_MAIN, arrayListOf())
+            val crash = Crash.UncaughtExceptionCrash(
+                0,
+                RuntimeException("Test"),
+                arrayListOf(),
+            )
             service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
@@ -376,7 +304,7 @@ class GleanCrashReporterServiceTest {
             val lines = service.file.readLines()
             assertEquals(
                 "First must be native code crash",
-                GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY,
+                "{\"type\":\"count\",\"label\":\"${GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY}\"}",
                 lines.first(),
             )
             assertEquals("bad data in here", lines[1])
@@ -388,8 +316,57 @@ class GleanCrashReporterServiceTest {
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue,
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue,
             )
+        }
+    }
+
+    @Test
+    fun `GleanCrashReporterService sends crash pings`() {
+        val service = spy(GleanCrashReporterService(context))
+
+        val crash = Crash.NativeCodeCrash(
+            12340000,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+            arrayListOf(),
+        )
+
+        service.record(crash)
+
+        assertTrue("Persistence file must exist", service.file.exists())
+
+        val lines = service.file.readLines()
+        assertEquals(
+            "First element must be main process native code crash",
+            crashCountJson(GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY),
+            lines[0],
+        )
+        assertEquals(
+            "Second element must be main process crash ping",
+            crashPingJson(0, "main", 12340000, false),
+            lines[1],
+        )
+
+        run {
+            var pingReceived = false
+            GleanPings.crash.testBeforeNextSubmit { _ ->
+                val date = GregorianCalendar().apply {
+                    time = Date(12340000)
+                }
+                date.set(Calendar.SECOND, 0)
+                date.set(Calendar.MILLISECOND, 0)
+                assertEquals(date.time, GleanCrash.time.testGetValue())
+                assertEquals(0L, GleanCrash.uptime.testGetValue())
+                assertEquals("main", GleanCrash.processType.testGetValue())
+                assertEquals(false, GleanCrash.startup.testGetValue())
+                pingReceived = true
+            }
+
+            GleanCrashReporterService(context)
+            assertTrue("Expected ping to be sent", pingReceived)
         }
     }
 }

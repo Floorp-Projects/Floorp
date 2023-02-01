@@ -75,6 +75,9 @@ permalink: /changelog/
   * 🚒 Bug fixed [Bug 1802620](https://bugzilla.mozilla.org/show_bug.cgi?id=1802620). Handles `ForegroundServiceStartNotAllowedException`.
   * 🚒 Bug fixed [Bug 1813416](https://bugzilla.mozilla.org/show_bug.cgi?id=1813416). Clear `FLAG_KEEP_SCREEN_ON` when playing media is finished.
 
+* **lib-crash**
+  * 🌟 Added support for Glean crash pings in the `GleanCrashReporterService`. [Bug 1810951](https://bugzilla.mozilla.org/show_bug.cgi?id=1810951)
+
 # 110.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v109.0.0...v110.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

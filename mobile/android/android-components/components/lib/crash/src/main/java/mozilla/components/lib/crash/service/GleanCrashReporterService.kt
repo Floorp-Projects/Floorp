@@ -5,13 +5,26 @@
 package mozilla.components.lib.crash.service
 
 import android.content.Context
+import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.DecodeSequenceMode
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeToSequence
+import kotlinx.serialization.json.encodeToStream
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.GleanMetrics.CrashMetrics
+import mozilla.components.lib.crash.GleanMetrics.Pings
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Date
+import mozilla.components.lib.crash.GleanMetrics.Crash as GleanCrash
 
 /**
  * A [CrashReporterService] implementation for recording metrics with Glean.  The purpose of this
@@ -46,7 +59,49 @@ class GleanCrashReporterService(
         const val NONFATAL_NATIVE_CODE_CRASH_KEY = "nonfatal_native_code_crash"
     }
 
+    /**
+     * The subclasses of GleanCrashAction are used to persist Glean actions to handle them later
+     * (in the application which has Glean initialized). They are serialized to JSON objects and
+     * appended to a file, in case multiple crashes occur prior to being able to submit the metrics
+     * to Glean.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Serializable
+    internal sealed class GleanCrashAction {
+        /**
+         * Submit the glean metrics/pings.
+         */
+        abstract fun submit()
+
+        @Serializable
+        @SerialName("count")
+        data class Count(val label: String) : GleanCrashAction() {
+            override fun submit() {
+                CrashMetrics.crashCount[label].add()
+            }
+        }
+
+        @Serializable
+        @SerialName("ping")
+        data class Ping(
+            val uptimeNanos: Long,
+            val processType: String,
+            val timeMillis: Long,
+            val startup: Boolean,
+            val reason: Pings.crashReasonCodes,
+        ) : GleanCrashAction() {
+            override fun submit() {
+                GleanCrash.uptime.setRawNanos(uptimeNanos)
+                GleanCrash.processType.set(processType)
+                GleanCrash.time.set(Date(timeMillis))
+                GleanCrash.startup.set(startup)
+                Pings.crash.submit(reason)
+            }
+        }
+    }
+
     private val logger = Logger("glean/GleanCrashReporterService")
+    private val creationTime = SystemClock.elapsedRealtimeNanos()
 
     init {
         run {
@@ -74,6 +129,12 @@ class GleanCrashReporterService(
     }
 
     /**
+     * Calculates the application uptime based on the creation time of this class (assuming it is
+     * created in the application's `OnCreate`).
+     */
+    private fun uptime() = SystemClock.elapsedRealtimeNanos() - creationTime
+
+    /**
      * Checks the file conditions to ensure it can be opened and read.
      *
      * @return True if the file exists and is able to be read, otherwise false
@@ -97,21 +158,17 @@ class GleanCrashReporterService(
     }
 
     /**
-     * Parses the crashes collected in the persisted crash file.  The format of this file is simple,
-     * each line may contain [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY],
-     * [MAIN_PROCESS_NATIVE_CODE_CRASH_KEY], [FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] or
-     * [BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] followed by a newline character.
+     * Parses the crashes collected in the persisted crash file. The format of this file is simple,
+     * a stream of serialized JSON GleanCrashAction objects.
      *
      * Example:
      *
      * <--Beginning of file-->
-     * uncaught_exception\n
-     * uncaught_exception\n
-     * main_process_native_code_crash\n
-     * uncaught_exception\n
-     * caught_exception\n
-     * foreground_child_process_native_code_crash\n
-     * background_child_process_native_code_crash\n
+     * {"type":"count","label":"uncaught_exception"}\n
+     * {"type":"count","label":"uncaught_exception"}\n
+     * {"type":"count","label":"main_process_native_code_crash"}\n
+     * {"type":"ping","uptimeNanos":2000000,"processType":"main","timeMillis":42000000000,
+     *  "startup":false}\n
      * <--End of file-->
      *
      * It is unlikely that there will be more than one crash in a file, but not impossible.  This
@@ -121,64 +178,21 @@ class GleanCrashReporterService(
     @Suppress("ComplexMethod")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun parseCrashFile() {
-        val lines = try {
-            file.readLines()
+        try {
+            @OptIn(ExperimentalSerializationApi::class)
+            val actionSequence = Json.decodeToSequence<GleanCrashAction>(
+                file.inputStream(),
+                DecodeSequenceMode.WHITESPACE_SEPARATED,
+            )
+            for (action in actionSequence) {
+                action.submit()
+            }
         } catch (e: IOException) {
             logger.error("Error reading crash file", e)
             return
-        }
-
-        var uncaughtExceptionCount = 0
-        var caughtExceptionCount = 0
-        var mainProcessNativeCodeCrashCount = 0
-        var foregroundChildProcessNativeCodeCrashCount = 0
-        var backgroundChildProcessNativeCodeCrashCount = 0
-        // These keys are deprecated and should be removed after a period to allow for persisted
-        // crashes to be submitted.
-        var fatalNativeCodeCrashCount = 0
-        var nonfatalNativeCodeCrashCount = 0
-
-        // It's possible that there was more than one crash recorded in the file so process each
-        // line and accumulate the crash counts.
-        lines.forEach { line ->
-            when (line) {
-                UNCAUGHT_EXCEPTION_KEY -> ++uncaughtExceptionCount
-                CAUGHT_EXCEPTION_KEY -> ++caughtExceptionCount
-                MAIN_PROCESS_NATIVE_CODE_CRASH_KEY -> ++mainProcessNativeCodeCrashCount
-                FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY -> ++foregroundChildProcessNativeCodeCrashCount
-                BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY -> ++backgroundChildProcessNativeCodeCrashCount
-                FATAL_NATIVE_CODE_CRASH_KEY -> ++fatalNativeCodeCrashCount
-                NONFATAL_NATIVE_CODE_CRASH_KEY -> ++nonfatalNativeCodeCrashCount
-            }
-        }
-
-        // Now, record the crash counts into Glean
-        if (uncaughtExceptionCount > 0) {
-            CrashMetrics.crashCount[UNCAUGHT_EXCEPTION_KEY].add(uncaughtExceptionCount)
-        }
-        if (caughtExceptionCount > 0) {
-            CrashMetrics.crashCount[CAUGHT_EXCEPTION_KEY].add(caughtExceptionCount)
-        }
-        if (mainProcessNativeCodeCrashCount > 0) {
-            CrashMetrics.crashCount[MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                mainProcessNativeCodeCrashCount,
-            )
-        }
-        if (foregroundChildProcessNativeCodeCrashCount > 0) {
-            CrashMetrics.crashCount[FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                foregroundChildProcessNativeCodeCrashCount,
-            )
-        }
-        if (backgroundChildProcessNativeCodeCrashCount > 0) {
-            CrashMetrics.crashCount[BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].add(
-                backgroundChildProcessNativeCodeCrashCount,
-            )
-        }
-        if (fatalNativeCodeCrashCount > 0) {
-            CrashMetrics.crashCount[FATAL_NATIVE_CODE_CRASH_KEY].add(fatalNativeCodeCrashCount)
-        }
-        if (nonfatalNativeCodeCrashCount > 0) {
-            CrashMetrics.crashCount[NONFATAL_NATIVE_CODE_CRASH_KEY].add(nonfatalNativeCodeCrashCount)
+        } catch (e: SerializationException) {
+            logger.error("Error deserializing crash file", e)
+            return
         }
     }
 
@@ -191,13 +205,10 @@ class GleanCrashReporterService(
      * and from lib-crash's own process, it is unlikely that this would be called from more than one
      * place at the same time.
      *
-     * @param crash Pass in the correct crash label to write to the file
-     * [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY], [MAIN_PROCESS_NATIVE_CODE_CRASH_KEY],
-     * [FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY] or
-     * [BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY]
+     * @param action Pass in the crash action to record.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun recordCrash(crash: String) {
+    internal fun recordCrashAction(action: GleanCrashAction) {
         // Persist the crash in a file so that it can be recorded on the next application start. We
         // cannot directly record to Glean here because CrashHandler process is not the same process
         // as Glean is initialized in.
@@ -213,7 +224,9 @@ class GleanCrashReporterService(
         // Add a line representing the crash that was received
         if (file.canWrite()) {
             try {
-                file.appendText(crash + "\n")
+                @OptIn(ExperimentalSerializationApi::class)
+                Json.encodeToStream(action, FileOutputStream(file, true))
+                file.appendText("\n")
             } catch (e: IOException) {
                 logger.error("Failed to write to crash file", e)
             }
@@ -221,21 +234,43 @@ class GleanCrashReporterService(
     }
 
     override fun record(crash: Crash.UncaughtExceptionCrash) {
-        recordCrash(UNCAUGHT_EXCEPTION_KEY)
+        recordCrashAction(GleanCrashAction.Count(UNCAUGHT_EXCEPTION_KEY))
     }
 
     override fun record(crash: Crash.NativeCodeCrash) {
         when (crash.processType) {
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN ->
-                recordCrash(MAIN_PROCESS_NATIVE_CODE_CRASH_KEY)
+                recordCrashAction(GleanCrashAction.Count(MAIN_PROCESS_NATIVE_CODE_CRASH_KEY))
             Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD ->
-                recordCrash(FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY)
+                recordCrashAction(
+                    GleanCrashAction.Count(
+                        FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                    ),
+                )
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD ->
-                recordCrash(BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY)
+                recordCrashAction(
+                    GleanCrashAction.Count(
+                        BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY,
+                    ),
+                )
         }
+        recordCrashAction(
+            GleanCrashAction.Ping(
+                uptimeNanos = uptime(),
+                processType = when (crash.processType) {
+                    Crash.NativeCodeCrash.PROCESS_TYPE_MAIN -> "main"
+                    Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD -> "utility"
+                    Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD -> "content"
+                    else -> "main"
+                },
+                timeMillis = crash.timestamp,
+                startup = false,
+                reason = Pings.crashReasonCodes.crash,
+            ),
+        )
     }
 
     override fun record(throwable: Throwable) {
-        recordCrash(CAUGHT_EXCEPTION_KEY)
+        recordCrashAction(GleanCrashAction.Count(CAUGHT_EXCEPTION_KEY))
     }
 }
