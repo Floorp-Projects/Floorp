@@ -661,29 +661,9 @@ def main():
         extra_cflags2 = []
         extra_cxxflags2 = []
         extra_asmflags = []
-        extra_ldflags = []
-        if is_cross_compile(target):
-            extra_flags = [
-                "-mlinker-version=137",
-                "-B",
-                "%s/bin" % os.getenv("CROSS_CCTOOLS_PATH"),
-                "-isysroot",
-                os.getenv("CROSS_SYSROOT"),
-                # technically the sysroot flag there should be enough to deduce this,
-                # but clang needs some help to figure this out.
-                "-I%s/usr/include" % os.getenv("CROSS_SYSROOT"),
-                "-iframework",
-                "%s/System/Library/Frameworks" % os.getenv("CROSS_SYSROOT"),
-            ]
-            extra_cflags += extra_flags
-            extra_cxxflags += extra_flags
-            extra_cflags2 += extra_flags
-            extra_cxxflags2 += extra_flags
-            extra_asmflags += extra_flags
-            extra_ldflags = [
-                "-Wl,-syslibroot,%s" % os.getenv("CROSS_SYSROOT"),
-                "-Wl,-dead_strip",
-            ]
+        extra_ldflags = [
+            "-Wl,-dead_strip",
+        ]
     elif is_linux(target):
         extra_cflags = []
         extra_cxxflags = []
