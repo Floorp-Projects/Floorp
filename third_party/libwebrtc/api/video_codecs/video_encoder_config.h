@@ -158,6 +158,9 @@ class VideoEncoderConfig {
   VideoCodecType codec_type;
   SdpVideoFormat video_format;
 
+  // Note: This factory can be unset, and VideoStreamEncoder will
+  // then use the EncoderStreamFactory. The factory is only set by
+  // tests.
   rtc::scoped_refptr<VideoStreamFactoryInterface> video_stream_factory;
   std::vector<SpatialLayer> spatial_layers;
   ContentType content_type;
@@ -188,6 +191,11 @@ class VideoEncoderConfig {
 
   // Indicates whether quality scaling can be used or not.
   bool is_quality_scaling_allowed;
+
+  // Maximum Quantization Parameter.
+  // This value is fed into EncoderStreamFactory that
+  // apply it to all simulcast layers/spatial layers.
+  int max_qp;
 
  private:
   // Access to the copy constructor is private to force use of the Copy()

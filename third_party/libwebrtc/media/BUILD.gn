@@ -363,7 +363,6 @@ rtc_library("rtc_audio_video") {
     "../rtc_base/third_party/base64",
     "../system_wrappers",
     "../system_wrappers:metrics",
-    "../video/config:streams_config",
   ]
   if (build_with_mozilla) {
     deps -= [ "../api:libjingle_peerconnection_api" ]
@@ -564,6 +563,7 @@ if (rtc_include_tests) {
       "../rtc_base/third_party/sigslot",
       "../test:scoped_key_value_config",
       "../test:test_support",
+      "../video/config:streams_config",
       "//testing/gtest",
     ]
     absl_deps = [

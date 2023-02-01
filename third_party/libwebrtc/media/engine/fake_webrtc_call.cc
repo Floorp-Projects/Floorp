@@ -19,6 +19,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/thread.h"
+#include "video/config/encoder_stream_factory.h"
 
 namespace cricket {
 
@@ -241,8 +242,23 @@ void FakeVideoSendStream::OnFrame(const webrtc::VideoFrame& frame) {
   if (!last_frame_ || frame.width() != last_frame_->width() ||
       frame.height() != last_frame_->height() ||
       frame.rotation() != last_frame_->rotation()) {
-    video_streams_ = encoder_config_.video_stream_factory->CreateEncoderStreams(
-        frame.width(), frame.height(), encoder_config_);
+    if (encoder_config_.video_stream_factory) {
+      // Note: only tests set their own EncoderStreamFactory...
+      video_streams_ =
+          encoder_config_.video_stream_factory->CreateEncoderStreams(
+              frame.width(), frame.height(), encoder_config_);
+    } else {
+      rtc::scoped_refptr<
+          webrtc::VideoEncoderConfig::VideoStreamFactoryInterface>
+          factory = rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+              encoder_config_.video_format.name, encoder_config_.max_qp,
+              encoder_config_.content_type ==
+                  webrtc::VideoEncoderConfig::ContentType::kScreen,
+              encoder_config_.legacy_conference_mode);
+
+      video_streams_ = factory->CreateEncoderStreams(
+          frame.width(), frame.height(), encoder_config_);
+    }
   }
   last_frame_ = frame;
 }
@@ -265,8 +281,21 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
   } else {
     width = height = 0;
   }
-  video_streams_ =
-      config.video_stream_factory->CreateEncoderStreams(width, height, config);
+  if (config.video_stream_factory) {
+    // Note: only tests set their own EncoderStreamFactory...
+    video_streams_ = config.video_stream_factory->CreateEncoderStreams(
+        width, height, config);
+  } else {
+    rtc::scoped_refptr<webrtc::VideoEncoderConfig::VideoStreamFactoryInterface>
+        factory = rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+            config.video_format.name, config.max_qp,
+            config.content_type ==
+                webrtc::VideoEncoderConfig::ContentType::kScreen,
+            config.legacy_conference_mode);
+
+    video_streams_ = factory->CreateEncoderStreams(width, height, config);
+  }
+
   if (config.encoder_specific_settings != nullptr) {
     const unsigned char num_temporal_layers = static_cast<unsigned char>(
         video_streams_.back().num_temporal_layers.value_or(1));

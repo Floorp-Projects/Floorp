@@ -434,6 +434,7 @@ rtc_library("video_stream_encoder_impl") {
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
     "adaptation:video_adaptation",
+    "config:streams_config",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
