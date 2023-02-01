@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-01-31T11:22:46.154655'
+updated_at: '2023-02-01T13:38:55.081756'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -139,6 +139,10 @@ people:
     bmo_id: 458623
     name: Bob Owen
     nick: bobowen
+  - &bomsy
+    bmo_id: 656417
+    name: Hubert Boma Manilla
+    nick: bomsy
   - &boris
     bmo_id: 500786
     name: Boris Chiou
@@ -381,6 +385,10 @@ people:
     bmo_id: 693369
     name: Heitor Neiva
     nick: hneiva
+  - &Honza
+    bmo_id: 303767
+    name: Jan Honza Odvarko
+    nick: Honza
   - &hsivonen
     bmo_id: 5490
     name: Henri Sivonen
@@ -683,6 +691,10 @@ people:
     bmo_id: 422187
     name: Nicolas B
     nick: nbp
+  - &nchevobbe
+    bmo_id: 557153
+    name: Nicolas Chevobbe
+    nick: nchevobbe
   - &nical
     bmo_id: 438998
     name: Nicolas Silva
@@ -703,6 +715,10 @@ people:
     bmo_id: 499343
     name: ''
     nick: nohlmeier
+  - &ochameau
+    bmo_id: 283262
+    name: Alexandre Poirot
+    nick: ochameau
   - &owlish
     bmo_id: 579431
     name: ''
@@ -3440,6 +3456,65 @@ modules:
         machine_name: windows_installer
     machine_name: desktop_firefox
 
+  - machine_name: devtools
+    name: DevTools
+    description: Mozilla Developer Tools
+    includes:
+      - devtools/**/*
+    excludes: []
+    owners:
+      - *Honza
+    peers:
+      - *ochameau
+      - *jdescottes
+      - *nchevobbe
+      - *bomsy
+      - *whimboo
+    meta:
+      owners_emeritus:
+        - Patrick Brosset
+        - Joe Walker
+        - Dave Camp
+        - Rob Campbell
+      peers_emeritus:
+        - Mihai Șucan
+        - Heather Arthur
+        - Anton Kovalyov
+        - Brandon Benvie
+        - Eddy Bruel
+        - James Long
+        - Matteo Ferretti
+        - Steve Fink (heapsnapshot code)
+        - Jaroslav Šnajdr
+        - Tom Tromey
+        - Paul Rouget
+        - Victor Porof
+        - Lin Clark
+        - Jan Keromnes
+        - Jordan Santell
+        - Soledad Penadés
+        - Mike Ratcliffe
+        - Panagiotis Astithas
+        - Tim Nguyen
+        - Brian Grinstead
+        - J. Ryan Stinnett
+        - Jason Laster
+        - David Walsh
+        - Greg Tatum
+        - Gabriel Luong
+        - Brad Werth
+        - Daisuke Akatsuka
+        - Yulia Startsev
+        - Logan Smyth
+        - Julien Wajsberg
+        - Razvan Caliman
+        - Micah Tigley
+        - Nick Fitzgerald
+        - Jim Blandy
+        - Belén Albeza
+      url: http://firefox-dev.tools/
+      components:
+        - DevTools
   - machine_name: marionette
     name: Marionette
     description: Marionette is a remote protocol that lets out-of-process programs
@@ -3745,5 +3820,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 9f677ec0857bcf73217e6aa0bc01dcdb7b97be66
-  export: 45fdc64af455b15cae5f2d82edc8f467a07fee97
+  config: 51ff077ccacc432ea40b89c237313a685af1c9d6
+  export: 1bc07edac79178f35b380b256bd7f00f47cc9a1e
