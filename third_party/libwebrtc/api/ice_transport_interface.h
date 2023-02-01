@@ -99,8 +99,10 @@ struct IceTransportInit final {
   //      constructed and used.
   //
   //   2. If the field trial is enabled
-  //      - then an active ICE controller factory must be supplied and is used.
-  //      - the legacy ICE controller factory is not used in this case.
+  //      a. If an active ICE controller factory is supplied, it is used and
+  //      the legacy ICE controller factory is not used.
+  //      b. If not, a default active ICE controller is used, wrapping over the
+  //      supplied or the default legacy ICE controller.
   void set_active_ice_controller_factory(
       cricket::ActiveIceControllerFactoryInterface*
           active_ice_controller_factory) {
