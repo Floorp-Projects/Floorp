@@ -91,8 +91,7 @@ class nsNativeThemeGTK final : public mozilla::widget::Theme {
   bool GetGtkWidgetAndState(StyleAppearance aAppearance, nsIFrame* aFrame,
                             WidgetNodeType& aGtkWidgetType,
                             GtkWidgetState* aState, gint* aWidgetFlags);
-  bool GetExtraSizeForWidget(nsIFrame* aFrame, StyleAppearance aAppearance,
-                             nsIntMargin* aExtra);
+  mozilla::CSSIntMargin GetExtraSizeForWidget(nsIFrame*, StyleAppearance);
   bool IsWidgetVisible(StyleAppearance aAppearance);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
@@ -109,11 +108,11 @@ class nsNativeThemeGTK final : public mozilla::widget::Theme {
   // Because moz_gtk_get_widget_border can be slow, we cache its results
   // by widget type.  Each bit in mBorderCacheValid says whether the
   // corresponding entry in mBorderCache is valid.
-  void GetCachedWidgetBorder(nsIFrame* aFrame, StyleAppearance aAppearance,
-                             GtkTextDirection aDirection,
-                             LayoutDeviceIntMargin* aResult);
+  mozilla::CSSIntMargin GetCachedWidgetBorder(nsIFrame* aFrame,
+                                              StyleAppearance aAppearance,
+                                              GtkTextDirection aDirection);
   uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];
-  LayoutDeviceIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
+  mozilla::CSSIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
 };
 
 #endif
