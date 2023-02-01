@@ -243,8 +243,7 @@ bool nsCSPContext::permitsInternal(
 
 /* ===== nsISupports implementation ========== */
 
-NS_IMPL_CLASSINFO(nsCSPContext, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
-                  NS_CSPCONTEXT_CID)
+NS_IMPL_CLASSINFO(nsCSPContext, nullptr, 0, NS_CSPCONTEXT_CID)
 
 NS_IMPL_ISUPPORTS_CI(nsCSPContext, nsIContentSecurityPolicy, nsISerializable)
 

@@ -181,8 +181,7 @@ SubstitutingJARURI::Write(nsIObjectOutputStream* aStream) {
   return NS_OK;
 }
 
-NS_IMPL_CLASSINFO(SubstitutingJARURI, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
-                  NS_SUBSTITUTINGJARURI_CID)
+NS_IMPL_CLASSINFO(SubstitutingJARURI, nullptr, 0, NS_SUBSTITUTINGJARURI_CID)
 
 NS_IMPL_ADDREF(SubstitutingJARURI)
 NS_IMPL_RELEASE(SubstitutingJARURI)
