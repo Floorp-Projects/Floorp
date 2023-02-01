@@ -601,6 +601,11 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
 
 nsIFrame* LocalAccessible::FindNearestAccessibleAncestorFrame() {
   nsIFrame* frame = GetFrame();
+  if (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+      nsLayoutUtils::IsReallyFixedPos(frame)) {
+    return mDoc->PresShellPtr()->GetRootFrame();
+  }
+
   if (IsDoc()) {
     // We bound documents by their own frame, which is their PresShell's root
     // frame. We cache the document offset elsewhere in BundleFieldsForCache
@@ -650,15 +655,23 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       }
     }
 
+    if (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+        nsLayoutUtils::IsReallyFixedPos(frame)) {
+      // If we're dealing with a fixed position frame, we've already made it
+      // relative to the document which should have gotten rid of its scroll
+      // offset.
+      return result;
+    }
+
     if (nsIScrollableFrame* sf =
             mParent == mDoc
                 ? mDoc->PresShellPtr()->GetRootScrollFrameAsScrollable()
                 : boundingFrame->GetScrollTargetFrame()) {
       // If boundingFrame has a scroll position, result is currently relative
       // to that. Instead, we want result to remain the same regardless of
-      // scrolling. We then subtract the scroll position later when calculating
-      // absolute bounds. We do this because we don't want to push cache
-      // updates for the bounds of all descendants every time we scroll.
+      // scrolling. We then subtract the scroll position later when
+      // calculating absolute bounds. We do this because we don't want to push
+      // cache updates for the bounds of all descendants every time we scroll.
       nsPoint scrollPos = sf->GetScrollPosition().ApplyResolution(
           mDoc->PresShellPtr()->GetResolution());
       result.MoveBy(scrollPos.x, scrollPos.y);
@@ -3592,6 +3605,14 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
     }
+
+    if (frame &&
+        frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+        nsLayoutUtils::IsReallyFixedPos(frame)) {
+      fields->SetAttribute(nsGkAtoms::position, nsGkAtoms::fixed);
+    } else if (aUpdateType != CacheUpdateType::Initial) {
+      fields->SetAttribute(nsGkAtoms::position, DeleteEntry());
+    }
   }
 
   if (aCacheDomain & CacheDomain::Table) {
@@ -3810,6 +3831,19 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       // CacheDomain::Style covers both display and opacity, so if
       // either property has changed, send an update for the entire domain.
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+    }
+
+    nsAutoCString oldPosition, newPosition;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_position,
+                                                oldPosition);
+    newStyle->GetComputedPropertyValue(eCSSProperty_position, newPosition);
+
+    if (oldPosition != newPosition) {
+      RefPtr<nsAtom> oldAtom = NS_Atomize(oldPosition);
+      RefPtr<nsAtom> newAtom = NS_Atomize(newPosition);
+      if (oldAtom == nsGkAtoms::fixed || newAtom == nsGkAtoms::fixed) {
+        mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+      }
     }
 
     bool newHasValidTransformStyle =

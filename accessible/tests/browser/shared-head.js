@@ -913,4 +913,6 @@ async function testBoundsWithContent(iframeDocAcc, id, browser) {
     isWithinExpected(accBounds),
     `${accBounds} fuzzily matches expected ${expectedBounds}`
   );
+
+  return accBounds;
 }
