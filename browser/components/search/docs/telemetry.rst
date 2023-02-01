@@ -14,18 +14,43 @@ telemetry is relevant to Firefox as well as other consumers of Toolkit. See
 
    telemetry
 
+Glossary
+--------
+
+SAP
+  Search Access Point, a search that a user performs by visiting
+  via one of Firefox's access points using the associated partner codes.
+
+SERP
+  A search engine results page.
+
+Persisted Search
+  When a user has the following preference values:
+
+    - ``browser.urlbar.showSearchTerms.enabled``: ``true``
+    - ``browser.urlbar.showSearchTerms.featureGate``: ``true``
+    - ``browser.search.widget.inNavBar``: ``false``
+
+  and does the following:
+
+    - Starts a search from the urlbar or context menu.
+    - Loads the default search engine results page.
+
+  the search term will persist in the Urlbar, causing it to enter a Persisted Search state.
+
 Definitions
 -----------
 
-  * ``organic`` is a search that a user performs by visiting a search engine
-    directly.
-  * ``SAP`` (search access point) is a search that a user performs by visiting
-    via one of Firefox's access points, using the associated partner codes.
-  * ``sap-follow-on`` is a SAP search where the user has first accessed the site
-    via a SAP, and then performed an additional search.
-  * ``tagged`` refers to a page that is tagged with an associated partner code.
-    It may or may not have originated via an SAP.
-  * ``SERP`` refers to a search engine result page.
+``organic``
+  A search that a user performs by visiting a search engine directly.
+
+``tagged``
+  Refers to a page that is tagged with an associated partner code.
+  It may or may not have originated via a SAP.
+
+``tagged-follow-on``
+  Refers to a page that is tagged with an associated partner code and has been identified
+  as a follow-on search. It may or may not have originated via a SAP.
 
 Search probes relevant to front-end searches
 --------------------------------------------
@@ -57,6 +82,8 @@ SEARCH_COUNTS - SAP usage
     - ``system``
     - ``urlbar`` Except aliases and search mode.
     - ``urlbar-handoff`` Used when searching from about:newtab.
+    - ``urlbar-persisted`` Used when searching from the Urlbar while it
+      was in a Persisted Search state.
     - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
 
@@ -69,11 +96,8 @@ browser.engagement.navigation.*
 
     - ``urlbar``  Except search mode.
     - ``urlbar_handoff`` Used when searching from about:newtab.
-    - ``urlbar_persisted`` When `browser.urlbar.showSearchTerms.enabled` is `true`, and the
-      search bar is disabled, and a user conducts a search with their default search engine, the
-      terms used for the search will persist in the urlbar. When a user does a search with the
-      default search engine from the urlbar, and then from the context of the SERP, does
-      another search using the urlbar with their default search engine, this SAP will be used.
+    - ``urlbar_persisted`` Used when searching from the Urlbar while it
+      was in a Persisted Search state.
     - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
     - ``searchbar``
     - ``about_home``
@@ -115,17 +139,12 @@ browser.search.content.*
   These keyed scalar track counts of SERP page loads. The key format is
   ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|other|none]``.
 
-  These will eventually replace the SEARCH_COUNTS - SERP results.
-
   They are broken down by the originating SAP where known:
 
   - ``urlbar``  Except search mode.
   - ``urlbar_handoff`` Used when searching from about:newtab.
-  - ``urlbar_persisted`` When `browser.urlbar.showSearchTerms.enabled` is `true`, and the
-    search bar is disabled, and a user conducts a search with their default search engine, the
-    terms used for the search will persist in the urlbar. When a user does a search with the
-    default search engine from the urlbar, and then from the context of the SERP, does
-    another search using the urlbar with their default search engine, this SAP will be used.
+  - ``urlbar_persisted`` Used when searching from the Urlbar while it
+    was in a Persisted Search state.
   - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
   - ``searchbar``
   - ``about_home``
