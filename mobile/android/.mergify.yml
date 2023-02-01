@@ -26,8 +26,8 @@ pull_request_rules:
     conditions:
       - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
       - status-success=complete-pr
-      - files~=^(android-components|focus-android)/(.+/strings\.xml|l10n\.toml)
-      - -files~=^(?!(android-components|focus-android)/(.+/strings\.xml|l10n\.toml)).+$
+      - files~=^(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)
+      - -files~=^(?!(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)).+$
     actions:
       review:
         type: APPROVE
