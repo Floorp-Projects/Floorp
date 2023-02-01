@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -28,6 +29,9 @@
 #include "prenv.h"
 #include "WidgetUtilsGtk.h"
 #include "MediaCodecsSupport.h"
+
+// How long we wait for data from glxtest process in milliseconds.
+#define GLXTEST_TIMEOUT 4000
 
 #define EXIT_STATUS_BUFFER_TOO_SMALL 2
 #ifdef DEBUG
@@ -99,12 +103,28 @@ void GfxInfo::GetData() {
   // information in a separate process to protect against bad drivers.
 
   // if glxtest_pipe == -1, that means that we already read the information
-  if (glxtest_pipe == -1) return;
+  if (glxtest_pipe == -1) {
+    return;
+  }
+
+  const TimeStamp deadline =
+      TimeStamp::Now() + TimeDuration::FromMilliseconds(GLXTEST_TIMEOUT);
 
   enum { buf_size = 2048 };
   char buf[buf_size];
-  ssize_t bytesread = read(glxtest_pipe, &buf,
-                           buf_size - 1);  // -1 because we'll append a zero
+  ssize_t bytesread = 0;
+
+  struct pollfd pfd {};
+  pfd.fd = glxtest_pipe;
+  pfd.events = POLLIN;
+  auto ret = poll(&pfd, 1, GLXTEST_TIMEOUT);
+  if (ret <= 0) {
+    gfxCriticalNote << "glxtest: failed to read data from glxtest, we may "
+                       "fallback to software rendering\n";
+  } else {
+    // -1 because we'll append a zero
+    bytesread = read(glxtest_pipe, &buf, buf_size - 1);
+  }
   close(glxtest_pipe);
   glxtest_pipe = -1;
 
@@ -129,9 +149,9 @@ void GfxInfo::GetData() {
   int waitpid_errno = 0;
   while (wait_for_glxtest_process) {
     wait_for_glxtest_process = false;
-    if (waitpid(glxtest_pid, &glxtest_status, 0) == -1) {
+    if (waitpid(glxtest_pid, &glxtest_status, WNOHANG) == -1) {
       waitpid_errno = errno;
-      if (waitpid_errno == EINTR) {
+      if (waitpid_errno == EAGAIN || waitpid_errno == EINTR) {
         wait_for_glxtest_process = true;
       } else {
         // Bug 718629
@@ -141,6 +161,15 @@ void GfxInfo::GetData() {
         // outcome would be to blocklist anyway.
         waiting_for_glxtest_process_failed = (waitpid_errno != ECHILD);
       }
+    }
+    if (wait_for_glxtest_process) {
+      if (TimeStamp::Now() > deadline) {
+        gfxCriticalNote << "glxtest: glxtest process hangs\n";
+        waiting_for_glxtest_process_failed = true;
+        break;
+      }
+      // Wait 100ms to another waitpid() check.
+      usleep(100000);
     }
   }
 
