@@ -1299,6 +1299,11 @@ criteria = "safe-to-deploy"
 version = "0.15.0"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[audits.mozrunner]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-deploy"
+delta = "0.15.0 -> 0.15.1"
+
 [[audits.mozversion]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-run"
