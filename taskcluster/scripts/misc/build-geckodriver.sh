@@ -25,6 +25,7 @@ case "$TARGET" in
 # OSX cross builds are a bit harder
 *-apple-darwin)
   export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
+  export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
   if test "$TARGET" = "aarch64-apple-darwin"; then
       export MACOSX_DEPLOYMENT_TARGET=11.0
