@@ -87,6 +87,7 @@ rtc_library("audio") {
     "../rtc_base:audio_format_to_string",
     "../rtc_base:buffer",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:race_checker",

@@ -474,6 +474,8 @@ void LocalAudioSinkAdapter::OnData(
     size_t number_of_channels,
     size_t number_of_frames,
     absl::optional<int64_t> absolute_capture_timestamp_ms) {
+  TRACE_EVENT2("webrtc", "LocalAudioSinkAdapter::OnData", "sample_rate",
+               sample_rate, "number_of_frames", number_of_frames);
   MutexLock lock(&lock_);
   if (sink_) {
     sink_->OnData(audio_data, bits_per_sample, sample_rate, number_of_channels,
