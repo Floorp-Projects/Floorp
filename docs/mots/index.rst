@@ -3295,6 +3295,37 @@ The installer for Windows.
       - Firefox::Installer
 
 
+DevTools
+~~~~~~~~
+Mozilla Developer Tools
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Jan Honza Odvarko (Honza) <https://people.mozilla.org/s?query=Honza>`__
+    * - Peer(s)
+      -
+        | `Alexandre Poirot (ochameau) <https://people.mozilla.org/s?query=ochameau>`__
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `Nicolas Chevobbe (nchevobbe) <https://people.mozilla.org/s?query=nchevobbe>`__
+        | `Hubert Boma Manilla (bomsy) <https://people.mozilla.org/s?query=bomsy>`__
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Owner(s) Emeritus
+      - Patrick Brosset, Joe Walker, Dave Camp, Rob Campbell
+    * - Peer(s) Emeritus
+      - Mihai Șucan, Heather Arthur, Anton Kovalyov, Brandon Benvie, Eddy Bruel, James Long, Matteo Ferretti, Steve Fink (heapsnapshot code), Jaroslav Šnajdr, Tom Tromey, Paul Rouget, Victor Porof, Lin Clark, Jan Keromnes, Jordan Santell, Soledad Penadés, Mike Ratcliffe, Panagiotis Astithas, Tim Nguyen, Brian Grinstead, J. Ryan Stinnett, Jason Laster, David Walsh, Greg Tatum, Gabriel Luong, Brad Werth, Daisuke Akatsuka, Yulia Startsev, Logan Smyth, Julien Wajsberg, Razvan Caliman, Micah Tigley, Nick Fitzgerald, Jim Blandy, Belén Albeza
+    * - Includes
+      -
+        | `devtools/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=devtools/\*\*/\*>`__
+    * - URL
+      - http://firefox-dev.tools/
+    * - Bugzilla Components
+      - DevTools
+
 Marionette
 ~~~~~~~~~~
 Marionette is a remote protocol that lets out-of-process programs communicate with, instrument, and control Gecko-based browsers. Combined with geckodriver, this forms our WebDriver implementation.
