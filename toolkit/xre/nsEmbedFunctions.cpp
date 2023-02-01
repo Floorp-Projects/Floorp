@@ -779,7 +779,7 @@ TestShellParent* GetOrCreateTestShellParent() {
     RefPtr<ContentParent> parent =
         ContentParent::GetNewOrUsedBrowserProcess(DEFAULT_REMOTE_TYPE);
     parent.forget(&gContentParent);
-  } else if (!gContentParent->IsAlive()) {
+  } else if (gContentParent->IsShuttingDown()) {
     return nullptr;
   }
   TestShellParent* tsp = gContentParent->GetTestShellSingleton();

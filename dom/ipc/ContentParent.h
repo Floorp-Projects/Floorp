@@ -391,6 +391,9 @@ class ContentParent final : public PContentParent,
   bool IsSignaledImpendingShutdown() const {
     return mIsSignaledImpendingShutdown;
   }
+  bool IsShuttingDown() const {
+    return !IsAlive() || IsSignaledImpendingShutdown();
+  }
   bool IsDead() const { return mLifecycleState == LifecycleState::DEAD; }
 
   bool IsForBrowser() const { return mIsForBrowser; }
