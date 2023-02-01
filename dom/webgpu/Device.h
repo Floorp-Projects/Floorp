@@ -96,7 +96,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
       const layers::RemoteTextureOwnerId aOwnerId, gfx::SurfaceFormat aFormat,
-      gfx::IntSize* aDefaultSize);
+      gfx::IntSize aDefaultSize);
   bool CheckNewWarning(const nsACString& aMessage);
 
   void CleanupUnregisteredInParent();

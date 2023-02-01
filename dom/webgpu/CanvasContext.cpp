@@ -67,7 +67,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   gfx::IntSize actualSize(mWidth, mHeight);
   mRemoteTextureOwnerId = Some(layers::RemoteTextureOwnerId::GetNext());
   mTexture = aDesc.mDevice->InitSwapChain(aDesc, *mRemoteTextureOwnerId,
-                                          mGfxFormat, &actualSize);
+                                          mGfxFormat, actualSize);
   if (!mTexture) {
     Unconfigure();
     return;
@@ -75,7 +75,6 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
 
   mTexture->mTargetContext = this;
   mBridge = aDesc.mDevice->GetBridge();
-  mGfxSize = actualSize;
 
   ForceNewFrame();
 }
@@ -151,7 +150,7 @@ bool CanvasContext::InitializeCanvasRenderer(
 
   layers::CanvasRendererData data;
   data.mContext = this;
-  data.mSize = mGfxSize;
+  data.mSize = gfx::IntSize{mWidth, mHeight};
   data.mIsOpaque = false;
   data.mRemoteTextureOwnerIdOfPushCallback = mRemoteTextureOwnerId;
 
