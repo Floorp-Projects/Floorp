@@ -132,7 +132,7 @@ void NetworkQualityMetricsReporter::ReportStats(
       Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "average_send_rate", GetTestCaseName(network_label),
-      stats->PacketsSent() >= 2 ? stats->AverageSendRate().kbps() : 0,
+      stats->PacketsSent() >= 2 ? stats->AverageSendRate().kbps<double>() : 0,
       Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "bytes_discarded_no_receiver", GetTestCaseName(network_label),
@@ -152,7 +152,8 @@ void NetworkQualityMetricsReporter::ReportStats(
       ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "average_receive_rate", GetTestCaseName(network_label),
-      stats->PacketsReceived() >= 2 ? stats->AverageReceiveRate().kbps() : 0,
+      stats->PacketsReceived() >= 2 ? stats->AverageReceiveRate().kbps<double>()
+                                    : 0,
       Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
   metrics_logger_->LogSingleValueMetric(
       "sent_packets_loss", GetTestCaseName(network_label), packet_loss,
