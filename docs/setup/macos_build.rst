@@ -49,7 +49,7 @@ both ``hg`` and ``moz-phab`` will be easily accessible:
 
 .. code-block:: shell
 
-    echo "export PATH=\"$(python3 -m site --user-base)/bin:$PATH\"" >> ~/.zshenv
+    echo 'export PATH="'"$(python3 -m site --user-base)"'/bin:$PATH"' >> ~/.zshenv
     python3 -m pip install --user mercurial==6.1.4
 
 Now, restart your shell so that the ``PATH`` change took effect.
