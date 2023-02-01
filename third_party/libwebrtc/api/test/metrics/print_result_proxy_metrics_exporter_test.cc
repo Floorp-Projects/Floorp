@@ -71,6 +71,40 @@ TEST(PrintResultProxyMetricsExporterTest,
 }
 
 TEST(PrintResultProxyMetricsExporterTest,
+     ExportMetricsWithTimeSeriesOfSingleValueFormatCorrect) {
+  Metric metric1{
+      .name = "test_metric1",
+      .unit = Unit::kMilliseconds,
+      .improvement_direction = ImprovementDirection::kBiggerIsBetter,
+      .test_case = "test_case_name1",
+      .metric_metadata = DefaultMetadata(),
+      .time_series = Metric::TimeSeries{.samples = std::vector{Sample(10)}},
+      .stats =
+          Metric::Stats{.mean = 10.0, .stddev = 0.0, .min = 10.0, .max = 10.0}};
+  Metric metric2{
+      .name = "test_metric2",
+      .unit = Unit::kKilobitsPerSecond,
+      .improvement_direction = ImprovementDirection::kSmallerIsBetter,
+      .test_case = "test_case_name2",
+      .metric_metadata = DefaultMetadata(),
+      .time_series = Metric::TimeSeries{.samples = std::vector{Sample(20)}},
+      .stats =
+          Metric::Stats{.mean = 20.0, .stddev = 0.0, .min = 20.0, .max = 20.0}};
+
+  testing::internal::CaptureStdout();
+  PrintResultProxyMetricsExporter exporter;
+
+  std::string expected =
+      "RESULT test_metric1: test_case_name1= 10 "
+      "msBestFitFormat_biggerIsBetter\n"
+      "RESULT test_metric2: test_case_name2= 2500 "
+      "bytesPerSecond_smallerIsBetter\n";
+
+  EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric1, metric2}));
+  EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
+}
+
+TEST(PrintResultProxyMetricsExporterTest,
      ExportMetricsWithStatsOnlyFormatCorrect) {
   Metric metric1{.name = "test_metric1",
                  .unit = Unit::kMilliseconds,
