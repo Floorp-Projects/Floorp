@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-01T13:38:55.081756'
+updated_at: '2023-02-01T13:40:18.437741'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -107,6 +107,10 @@ people:
     bmo_id: 23402
     name: Bob Clary
     nick: bc
+  - &bdk
+    bmo_id: 683100
+    name: Ben Dean-Kawamura
+    nick: bdk
   - &beurdouche
     bmo_id: 622637
     name: Benjamin Beurdouche
@@ -568,10 +572,18 @@ people:
     bmo_id: 582393
     name: Dzmitry Malyshau
     nick: kvark
+  - &lina
+    bmo_id: 506322
+    name: Lina Butler
+    nick: lina
   - &longsonr
     bmo_id: 218550
     name: Robert Longson
     nick: longsonr
+  - &lougenia
+    bmo_id: 649193
+    name: Lougenia Bailey
+    nick: lougenia
   - &luke
     bmo_id: 347312
     name: Luke Wagner
@@ -596,6 +608,10 @@ people:
     bmo_id: 125983
     name: Ed Lee
     nick: Mardak
+  - &markh
+    bmo_id: 16943
+    name: Mark Hammond
+    nick: markh
   - &masayuki
     bmo_id: 34283
     name: Masayuki Nakano
@@ -807,6 +823,10 @@ people:
     bmo_id: 639827
     name: Shravan Narayan
     nick: shravanrn
+  - &skhamis
+    bmo_id: 683894
+    name: Sammy Khamis
+    nick: skhamis
   - &smaug
     bmo_id: 39966
     name: Olli Pettay
@@ -854,6 +874,10 @@ people:
     bmo_id: 586681
     name: Ted Campbell
     nick: tcampbell
+  - &teshaq
+    bmo_id: 663555
+    name: Tarik Eshaq
+    nick: teshaq
   - &tgiles
     bmo_id: 666930
     name: Tim Giles
@@ -3571,6 +3595,26 @@ modules:
     meta:
       components:
         - 'Developer Infrastructure :: Lint and Formatting'
+  - machine_name: sync
+    name: Sync
+    description: Firefox Sync client
+    includes:
+      - services/sync/**/*
+    excludes: []
+    owners:
+      - *markh
+    peers:
+      - *lougenia
+      - *teshaq
+      - *bdk
+      - *skhamis
+      - *lina
+    meta:
+      owners_emeritus:
+        - Ryan Kelly
+      url: https://wiki.mozilla.org/Services/Process/Code_Review
+      components:
+        - Sync
   - machine_name: testing_firefox_ui
     name: firefox-ui
     description: Firefox UI test framework.
@@ -3820,5 +3864,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 51ff077ccacc432ea40b89c237313a685af1c9d6
-  export: 1bc07edac79178f35b380b256bd7f00f47cc9a1e
+  config: 10fcdbc7ed75b36d0843e5b31b1b33dbf1a60062
+  export: 7d184a6074a60914f8f2c07cb9b1b056726c3347
