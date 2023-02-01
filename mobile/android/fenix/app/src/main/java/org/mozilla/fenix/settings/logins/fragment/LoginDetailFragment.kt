@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.logins.fragment
 
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -13,7 +14,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
@@ -89,8 +89,10 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = savedLoginsStore,
+                clipboardHandler = requireContext().components.clipboardHandler,
             ),
         )
+
         interactor.onFetchLoginList(args.savedLoginId)
 
         consumeFrom(savedLoginsStore) {
@@ -145,14 +147,18 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
         }
 
         binding.usernameText.text = login?.username
-        binding.copyUsername.setOnClickListener(
-            CopyButtonListener(login?.username, R.string.logins_username_copied),
-        )
+        binding.copyUsername.setOnClickListener {
+            interactor.onCopyUsername(args.savedLoginId)
+            showCopiedSnackbar(view = it, copiedItem = it.context.getString(R.string.logins_username_copied))
+            Logins.copyLogin.record(NoExtras())
+        }
 
         binding.passwordText.text = login?.password
-        binding.copyPassword.setOnClickListener(
-            CopyButtonListener(login?.password, R.string.logins_password_copied),
-        )
+        binding.copyPassword.setOnClickListener {
+            interactor.onCopyPassword(args.savedLoginId)
+            showCopiedSnackbar(view = it, copiedItem = it.context.getString(R.string.logins_password_copied))
+            Logins.copyLogin.record(NoExtras())
+        }
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -170,6 +176,17 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
             true
         }
         else -> false
+    }
+
+    private fun showCopiedSnackbar(view: View, copiedItem: String) {
+        // Only show a toast for Android 12 and lower.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            FenixSnackbar.make(
+                view,
+                duration = Snackbar.LENGTH_SHORT,
+                isDisplayedWithBrowserToolbar = false,
+            ).setText(copiedItem).show()
+        }
     }
 
     private fun navigateToBrowser(address: String) {
@@ -203,33 +220,6 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
                 }
                 create()
             }.show()
-        }
-    }
-
-    /**
-     * Click listener for a textview's copy button.
-     * @param value Value to be copied
-     * @param snackbarText Text to display in snackbar after copying.
-     */
-    private inner class CopyButtonListener(
-        private val value: String?,
-        @StringRes private val snackbarText: Int,
-    ) : View.OnClickListener {
-        override fun onClick(view: View) {
-            val clipboard = view.context.components.clipboardHandler
-            clipboard.text = value
-            showCopiedSnackbar(view.context.getString(snackbarText))
-            Logins.copyLogin.record(NoExtras())
-        }
-
-        private fun showCopiedSnackbar(copiedItem: String) {
-            view?.let {
-                FenixSnackbar.make(
-                    view = it,
-                    duration = Snackbar.LENGTH_SHORT,
-                    isDisplayedWithBrowserToolbar = false,
-                ).setText(copiedItem).show()
-            }
         }
     }
 

@@ -82,6 +82,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = loginsFragmentStore,
+                clipboardHandler = requireContext().components.clipboardHandler,
             ),
         )
 

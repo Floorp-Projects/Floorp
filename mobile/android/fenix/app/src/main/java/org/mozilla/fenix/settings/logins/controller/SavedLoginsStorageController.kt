@@ -26,6 +26,7 @@ import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.fragment.AddLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.mapToSavedLogin
+import org.mozilla.fenix.utils.ClipboardHandler
 
 /**
  * Controller for all saved logins interactions with the password storage component
@@ -37,6 +38,7 @@ open class SavedLoginsStorageController(
     private val navController: NavController,
     private val loginsFragmentStore: LoginsFragmentStore,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val clipboardHandler: ClipboardHandler,
 ) {
 
     fun delete(loginId: String) {
@@ -251,5 +253,23 @@ open class SavedLoginsStorageController(
                 deferredLogins?.cancel()
             }
         }
+    }
+
+    /**
+     * Copy login username to clipboard
+     * @param loginId id of the login entry to copy username from
+     */
+    fun copyUsername(loginId: String) = lifecycleScope.launch {
+        val login = passwordsStorage.get(loginId)
+        clipboardHandler.text = login?.username
+    }
+
+    /**
+     * Copy login password to clipboard
+     * @param loginId id of the login entry to copy password from
+     */
+    fun copyPassword(loginId: String) = lifecycleScope.launch {
+        val login = passwordsStorage.get(loginId)
+        clipboardHandler.sensitiveText = login?.password
     }
 }

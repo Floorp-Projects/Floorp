@@ -21,4 +21,20 @@ class LoginDetailInteractor(
     fun onDeleteLogin(loginId: String) {
         savedLoginsController.delete(loginId)
     }
+
+    /**
+     * for the copy username button
+     * @param loginId id of the login entry to copy username from
+     */
+    fun onCopyUsername(loginId: String) {
+        savedLoginsController.copyUsername(loginId)
+    }
+
+    /**
+     * for the copy password button
+     * @param loginId id of the login entry to copy password from
+     */
+    fun onCopyPassword(loginId: String) {
+        savedLoginsController.copyPassword(loginId)
+    }
 }

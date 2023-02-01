@@ -75,6 +75,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = loginsFragmentStore,
+                clipboardHandler = requireContext().components.clipboardHandler,
             ),
         )
 

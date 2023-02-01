@@ -8,6 +8,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
+import android.os.PersistableBundle
 import android.view.textclassifier.TextClassifier
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
@@ -47,7 +48,39 @@ class ClipboardHandler(val context: Context) {
             return null
         }
         set(value) {
-            clipboard.setPrimaryClip(ClipData.newPlainText("Text", value))
+            val clipData = ClipData.newPlainText("Text", value)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                clipData.apply {
+                    description.extras = PersistableBundle().apply {
+                        putBoolean("android.content.extra.IS_SENSITIVE", false)
+                    }
+                }
+            }
+            clipboard.setPrimaryClip(clipData)
+        }
+
+    /**
+     * Provides access to the sensitive content of the clipboard, be aware this is a sensitive
+     * API as from Android 12 and above, accessing it will trigger a notification letting the user
+     * know the app has accessed the clipboard, make sure when you call this API that users are
+     * completely aware that we are accessing the clipboard.
+     * See for more details https://github.com/mozilla-mobile/fenix/issues/22271.
+     *
+     */
+    var sensitiveText: String?
+        get() {
+            return text
+        }
+        set(value) {
+            val clipData = ClipData.newPlainText("Text", value)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                clipData.apply {
+                    description.extras = PersistableBundle().apply {
+                        putBoolean("android.content.extra.IS_SENSITIVE", true)
+                    }
+                }
+            }
+            clipboard.setPrimaryClip(clipData)
         }
 
     /**

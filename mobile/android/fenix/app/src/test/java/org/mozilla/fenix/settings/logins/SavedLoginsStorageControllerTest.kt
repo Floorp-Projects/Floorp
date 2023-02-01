@@ -26,6 +26,7 @@ import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
+import org.mozilla.fenix.utils.ClipboardHandler
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsStorageControllerTest {
@@ -38,6 +39,7 @@ class SavedLoginsStorageControllerTest {
     private lateinit var controller: SavedLoginsStorageController
     private val navController: NavController = mockk(relaxed = true)
     private val loginsFragmentStore: LoginsFragmentStore = mockk(relaxed = true)
+    private val clipboardHandler: ClipboardHandler = mockk(relaxed = true)
     private val loginMock: Login = mockk(relaxed = true)
 
     @Before
@@ -54,6 +56,7 @@ class SavedLoginsStorageControllerTest {
             navController = navController,
             loginsFragmentStore = loginsFragmentStore,
             ioDispatcher = ioDispatcher,
+            clipboardHandler = clipboardHandler,
         )
     }
 

@@ -88,6 +88,7 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                 lifecycleScope = viewLifecycleOwner.lifecycleScope,
                 navController = findNavController(),
                 loginsFragmentStore = savedLoginsStore,
+                clipboardHandler = requireContext().components.clipboardHandler,
             )
 
         savedLoginsInteractor =
