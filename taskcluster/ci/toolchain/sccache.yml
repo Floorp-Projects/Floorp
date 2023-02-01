@@ -47,6 +47,7 @@ macosx64-sccache:
         toolchain:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
+            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 macosx64-aarch64-sccache:
@@ -63,6 +64,7 @@ macosx64-aarch64-sccache:
         toolchain:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
+            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 win64-sccache:

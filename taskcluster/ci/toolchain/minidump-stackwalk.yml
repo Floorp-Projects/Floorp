@@ -38,6 +38,7 @@ macosx64-minidump-stackwalk:
         toolchain:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
+            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 macosx64-aarch64-minidump-stackwalk:
@@ -49,6 +50,7 @@ macosx64-aarch64-minidump-stackwalk:
         toolchain:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
+            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 win32-minidump-stackwalk:

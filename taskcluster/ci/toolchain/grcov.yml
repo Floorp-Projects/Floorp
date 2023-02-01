@@ -34,6 +34,7 @@ macosx64-grcov:
         toolchain:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
+            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 win64-grcov:

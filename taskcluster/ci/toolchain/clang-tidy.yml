@@ -58,6 +58,7 @@ macosx64-clang-tidy:
             - 'build/build-clang/macosx64.json'
     fetches:
         toolchain:
+            - linux64-cctools-port
             - linux64-clang-15
             - macosx64-sdk-toolchain
 
@@ -79,6 +80,7 @@ macosx64-arch64-clang-tidy:
             - 'build/build-clang/macosx64-aarch64.json'
     fetches:
         toolchain:
+            - linux64-cctools-port
             - linux64-clang-15
             - macosx64-sdk-toolchain
 
