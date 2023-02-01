@@ -66,9 +66,9 @@ namespace {
 constexpr TimeDelta kMinBaseMinimumDelay = TimeDelta::Zero();
 constexpr TimeDelta kMaxBaseMinimumDelay = TimeDelta::Seconds(10);
 
-// Create a decoder for the preferred codec before the stream starts and any
-// other decoder lazily on demand.
-constexpr int kDefaultMaximumPreStreamDecoders = 1;
+// Create no decoders before the stream starts. All decoders are created on
+// demand when we receive payload data of the corresponding type.
+constexpr int kDefaultMaximumPreStreamDecoders = 0;
 
 // Concrete instance of RecordableEncodedFrame wrapping needed content
 // from EncodedFrame.
