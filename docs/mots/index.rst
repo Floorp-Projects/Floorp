@@ -3411,6 +3411,35 @@ Aspects of Python use such as tooling, formatting and naming style
     * - Bugzilla Components
       - Developer Infrastructure :: Lint and Formatting
 
+Sync
+~~~~
+Firefox Sync client
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Mark Hammond (markh) <https://people.mozilla.org/s?query=markh>`__
+    * - Peer(s)
+      -
+        | `Lougenia Bailey (lougenia) <https://people.mozilla.org/s?query=lougenia>`__
+        | `Tarik Eshaq (teshaq) <https://people.mozilla.org/s?query=teshaq>`__
+        | `Ben Dean-Kawamura (bdk) <https://people.mozilla.org/s?query=bdk>`__
+        | `Sammy Khamis (skhamis) <https://people.mozilla.org/s?query=skhamis>`__
+        | `Lina Butler (lina) <https://people.mozilla.org/s?query=lina>`__
+    * - Owner(s) Emeritus
+      - Ryan Kelly
+    * - Includes
+      -
+        | `services/sync/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=services/sync/\*\*/\*>`__
+    * - URL
+      - https://wiki.mozilla.org/Services/Process/Code_Review
+    * - Bugzilla Components
+      - Sync
+
 firefox-ui
 ~~~~~~~~~~
 Firefox UI test framework.
