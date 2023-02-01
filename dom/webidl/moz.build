@@ -1118,6 +1118,7 @@ WEBIDL_FILES += [
     "ExtensionProxy.webidl",
     "ExtensionRuntime.webidl",
     "ExtensionScripting.webidl",
+    "ExtensionSetting.webidl",
     "ExtensionTest.webidl",
 ]
 
