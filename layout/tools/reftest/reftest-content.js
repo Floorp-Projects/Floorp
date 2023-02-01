@@ -195,7 +195,7 @@ function doPrintMode(contentRootElement) {
     }
 }
 
-function setupPrintMode() {
+function setupPrintMode(contentRootElement) {
     var PSSVC =
         Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
     var ps = PSSVC.createNewPrintSettings();
@@ -215,8 +215,12 @@ function setupPrintMode() {
     ps.footerStrCenter = "";
     ps.footerStrRight = "";
 
-    ps.printBGColors = true;
-    ps.printBGImages = true;
+    const printBackgrounds = (() => {
+        const attr = contentRootElement.getAttribute("reftest-paged-backgrounds");
+        return !attr || attr != "false";
+    })();
+    ps.printBGColors = printBackgrounds;
+    ps.printBGImages = printBackgrounds;
 
     docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
 }
@@ -737,7 +741,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
 
             if (!inPrintMode && doPrintMode(contentRootElement)) {
                 LogInfo("MakeProgress: setting up print mode");
-                setupPrintMode();
+                setupPrintMode(contentRootElement);
             }
 
             if (hasReftestWait && !shouldWaitForReftestWaitRemoval(contentRootElement)) {
@@ -1014,7 +1018,7 @@ async function OnDocumentLoad(uri)
     } else {
         if (doPrintMode(contentRootElement)) {
             LogInfo("OnDocumentLoad setting up print mode");
-            setupPrintMode();
+            setupPrintMode(contentRootElement);
             inPrintMode = true;
         }
 
