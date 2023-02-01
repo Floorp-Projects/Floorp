@@ -335,11 +335,12 @@ INSTANTIATE_TEST_SUITE_P(
     SvcTest,
     Combine(ValuesIn({
                 SvcTestParameters::Create(kH264CodecName, "L1T1"),
-                // SSvcTestParameters::Create(kH264CodecName, "L1T2"),
-                // SSvcTestParameters::Create(kH264CodecName, "L1T3"),
+                SvcTestParameters::Create(kH264CodecName, "L1T2"),
+                SvcTestParameters::Create(kH264CodecName, "L1T3"),
             }),
-            Values(UseDependencyDescriptor::Disabled,
-                   UseDependencyDescriptor::Enabled)),
+            // Like AV1, H.264 RTP format does not include SVC related
+            // information, so always use Dependency Descriptor.
+            Values(UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
 #endif
 

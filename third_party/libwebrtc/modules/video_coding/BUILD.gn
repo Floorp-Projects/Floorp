@@ -530,6 +530,8 @@ rtc_library("webrtc_h264") {
     "../../rtc_base/system:rtc_export",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
+    "svc:scalability_structures",
+    "svc:scalable_video_controller",
     "//third_party/libyuv",
   ]
   if (build_with_mozilla) {
