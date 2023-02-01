@@ -49,7 +49,7 @@ class MetricsLoggerAndExporter {
                             double value,
                             Unit unit,
                             ImprovementDirection improvement_direction,
-                            std::map<std::string, std::string> metadata);
+                            std::map<std::string, std::string> metadata = {});
 
   // Adds metrics with a time series created based on the provided `values`.
   // `metadata` - metric's level metadata to add.
@@ -58,7 +58,7 @@ class MetricsLoggerAndExporter {
                  const SamplesStatsCounter& values,
                  Unit unit,
                  ImprovementDirection improvement_direction,
-                 std::map<std::string, std::string> metadata);
+                 std::map<std::string, std::string> metadata = {});
 
   // Adds metric with a time series with only stats object and without actual
   // collected values.
@@ -68,7 +68,7 @@ class MetricsLoggerAndExporter {
                  const Metric::Stats& metric_stats,
                  Unit unit,
                  ImprovementDirection improvement_direction,
-                 std::map<std::string, std::string> metadata);
+                 std::map<std::string, std::string> metadata = {});
 
   // Returns all metrics collected by this logger.
   std::vector<Metric> GetCollectedMetrics() const {

@@ -12,12 +12,23 @@
 
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/metrics/metric.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+namespace {
+
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
+
+SamplesStatsCounter BytesPerSecondToKbps(const SamplesStatsCounter& counter) {
+  return counter * 0.008;
+}
+
+}  // namespace
 
 void VideoQualityMetricsReporter::Start(
     absl::string_view test_case_name,
@@ -111,12 +122,27 @@ std::string VideoQualityMetricsReporter::GetTestCaseName(
 void VideoQualityMetricsReporter::ReportVideoBweResults(
     const std::string& test_case_name,
     const VideoBweStats& video_bwe_stats) {
-  ReportResult("available_send_bandwidth", test_case_name,
-               video_bwe_stats.available_send_bandwidth, "bytesPerSecond");
-  ReportResult("transmission_bitrate", test_case_name,
-               video_bwe_stats.transmission_bitrate, "bytesPerSecond");
-  ReportResult("retransmission_bitrate", test_case_name,
-               video_bwe_stats.retransmission_bitrate, "bytesPerSecond");
+  if (metrics_logger_ == nullptr) {
+    ReportResult("available_send_bandwidth", test_case_name,
+                 video_bwe_stats.available_send_bandwidth, "bytesPerSecond");
+    ReportResult("transmission_bitrate", test_case_name,
+                 video_bwe_stats.transmission_bitrate, "bytesPerSecond");
+    ReportResult("retransmission_bitrate", test_case_name,
+                 video_bwe_stats.retransmission_bitrate, "bytesPerSecond");
+  } else {
+    metrics_logger_->LogMetric(
+        "available_send_bandwidth", test_case_name,
+        BytesPerSecondToKbps(video_bwe_stats.available_send_bandwidth),
+        Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+    metrics_logger_->LogMetric(
+        "transmission_bitrate", test_case_name,
+        BytesPerSecondToKbps(video_bwe_stats.transmission_bitrate),
+        Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+    metrics_logger_->LogMetric(
+        "retransmission_bitrate", test_case_name,
+        BytesPerSecondToKbps(video_bwe_stats.retransmission_bitrate),
+        Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  }
 }
 
 void VideoQualityMetricsReporter::ReportResult(
