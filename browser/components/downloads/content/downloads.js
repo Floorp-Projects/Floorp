@@ -471,7 +471,7 @@ var DownloadsPanel = {
       Ci.nsITransferable
     );
     trans.init(null);
-    let flavors = ["text/x-moz-url", "text/unicode"];
+    let flavors = ["text/x-moz-url", "text/plain"];
     flavors.forEach(trans.addDataFlavor);
     Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
     // Getting the data or creating the nsIURI might fail

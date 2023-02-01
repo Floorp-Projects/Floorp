@@ -622,8 +622,8 @@ already_AddRefed<DataTransfer> DataTransfer::MozCloneForEvent(
 // The order of the types matters. `kFileMime` needs to be one of the first two
 // types.
 static const char* kNonPlainTextExternalFormats[] = {
-    kCustomTypesMime, kFileMime,    kHTMLMime,     kRTFMime,  kURLMime,
-    kURLDataMime,     kUnicodeMime, kPNGImageMime, kPDFJSMime};
+    kCustomTypesMime, kFileMime, kHTMLMime,     kRTFMime,  kURLMime,
+    kURLDataMime,     kTextMime, kPNGImageMime, kPDFJSMime};
 
 /* static */
 void DataTransfer::GetExternalClipboardFormats(const int32_t& aWhichClipboard,
@@ -643,12 +643,12 @@ void DataTransfer::GetExternalClipboardFormats(const int32_t& aWhichClipboard,
 
   if (aPlainTextOnly) {
     bool hasType;
-    AutoTArray<nsCString, 1> unicodeMime = {nsDependentCString(kUnicodeMime)};
-    nsresult rv = clipboard->HasDataMatchingFlavors(unicodeMime,
-                                                    aWhichClipboard, &hasType);
+    AutoTArray<nsCString, 1> textMime = {nsDependentCString(kTextMime)};
+    nsresult rv =
+        clipboard->HasDataMatchingFlavors(textMime, aWhichClipboard, &hasType);
     NS_SUCCEEDED(rv);
     if (hasType) {
-      aResult->AppendElement(kUnicodeMime);
+      aResult->AppendElement(kTextMime);
     }
     return;
   }
@@ -685,9 +685,9 @@ void DataTransfer::GetExternalTransferableFormats(
   aTransferable->FlavorsTransferableCanExport(flavors);
 
   if (aPlainTextOnly) {
-    auto index = flavors.IndexOf(nsLiteralCString(kUnicodeMime));
+    auto index = flavors.IndexOf(nsLiteralCString(kTextMime));
     if (index != flavors.NoIndex) {
-      aResult->AppendElement(nsLiteralCString(kUnicodeMime));
+      aResult->AppendElement(nsLiteralCString(kTextMime));
     }
     return;
   }
@@ -1084,27 +1084,20 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
           continue;
         }
 
-        // The underlying drag code uses text/unicode, so use that instead of
-        // text/plain
-        const char* format;
-        NS_ConvertUTF16toUTF8 utf8format(type);
-        if (utf8format.EqualsLiteral(kTextMime)) {
-          format = kUnicodeMime;
-        } else {
-          format = utf8format.get();
-        }
+        NS_ConvertUTF16toUTF8 format(type);
 
         // If a converter is set for a format, set the converter for the
         // transferable and don't add the item
         nsCOMPtr<nsIFormatConverter> converter =
             do_QueryInterface(convertedData);
         if (converter) {
-          transferable->AddDataFlavor(format);
+          transferable->AddDataFlavor(format.get());
           transferable->SetConverter(converter);
           continue;
         }
 
-        nsresult rv = transferable->SetTransferData(format, convertedData);
+        nsresult rv =
+            transferable->SetTransferData(format.get(), convertedData);
         if (NS_FAILED(rv)) {
           return nullptr;
         }
@@ -1225,7 +1218,7 @@ void DataTransfer::SetDataWithPrincipalFromOtherProcess(
 
 void DataTransfer::GetRealFormat(const nsAString& aInFormat,
                                  nsAString& aOutFormat) const {
-  // treat text/unicode as equivalent to text/plain
+  // For compatibility, treat text/unicode as equivalent to text/plain
   nsAutoString lowercaseFormat;
   nsContentUtils::ASCIIToLower(aInFormat, lowercaseFormat);
   if (lowercaseFormat.EqualsLiteral("text") ||
@@ -1248,7 +1241,7 @@ nsresult DataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex,
   ErrorResult rv;
   RefPtr<DataTransferItem> item;
 
-  if (strcmp(aFormat, kUnicodeMime) == 0) {
+  if (strcmp(aFormat, kTextMime) == 0) {
     item = mItems->SetDataWithPrincipal(u"text/plain"_ns, nullptr, aIndex,
                                         aPrincipal, false, aHidden, rv);
     if (NS_WARN_IF(rv.Failed())) {
@@ -1298,8 +1291,8 @@ void DataTransfer::CacheExternalDragFormats() {
   // XXXndeakin there are some other formats but those are platform specific.
   // NOTE: kFileMime must have index 0
   // TODO: should this be `kNonPlainTextExternalFormats` instead?
-  static const char* formats[] = {kFileMime,    kHTMLMime,    kURLMime,
-                                  kURLDataMime, kUnicodeMime, kPNGImageMime};
+  static const char* formats[] = {kFileMime,    kHTMLMime, kURLMime,
+                                  kURLDataMime, kTextMime, kPNGImageMime};
 
   uint32_t count;
   dragSession->GetNumDropItems(&count);
@@ -1350,10 +1343,10 @@ void DataTransfer::CacheExternalClipboardFormats(bool aPlainTextOnly) {
   }
 
   if (aPlainTextOnly) {
-    // The only thing that will be in types is kUnicodeMime
+    // The only thing that will be in types is kTextMime
     MOZ_ASSERT(typesArray.IsEmpty() || typesArray.Length() == 1);
     if (typesArray.Length() == 1) {
-      CacheExternalData(kUnicodeMime, 0, sysPrincipal, false);
+      CacheExternalData(kTextMime, 0, sysPrincipal, false);
     }
     return;
   }

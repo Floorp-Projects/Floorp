@@ -221,10 +221,10 @@ EditorUtils::CreateTransferableForPlainText(const Document& aDocument) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "nsITransferable::Init() failed, but ignored");
 
-  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
+  rvIgnored = transferable->AddDataFlavor(kTextMime);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
-      "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
+      "nsITransferable::AddDataFlavor(kTextMime) failed, but ignored");
   rvIgnored = transferable->AddDataFlavor(kMozTextInternal);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),

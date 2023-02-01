@@ -330,7 +330,7 @@ async function disableProperty(view, index) {
 }
 
 function checkClipboardData(expectedPattern) {
-  const actual = SpecialPowers.getClipboardData("text/unicode");
+  const actual = SpecialPowers.getClipboardData("text/plain");
   const expectedRegExp = new RegExp(expectedPattern, "g");
   return expectedRegExp.test(actual);
 }
@@ -342,7 +342,7 @@ function failedClipboard(expectedPattern) {
   expectedPattern = expectedPattern.replace(/\\\(/g, "(");
   expectedPattern = expectedPattern.replace(/\\\)/g, ")");
 
-  let actual = SpecialPowers.getClipboardData("text/unicode");
+  let actual = SpecialPowers.getClipboardData("text/plain");
 
   // Trim the right hand side of our strings. This is because expectedPattern
   // accounts for windows sometimes adding a newline to our copied data.

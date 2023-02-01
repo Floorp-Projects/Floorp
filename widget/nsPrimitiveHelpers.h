@@ -45,7 +45,7 @@ class nsLinebreakHelpers {
   // taken care of internally, see the note below).
   //
   // NOTE: this assumes that it can use 'free' to dispose of the old buffer.
-  static nsresult ConvertPlatformToDOMLinebreaks(const nsACString& inFlavor,
+  static nsresult ConvertPlatformToDOMLinebreaks(bool aIsSingleByteChars,
                                                  void** ioData,
                                                  int32_t* ioLengthInBytes);
 

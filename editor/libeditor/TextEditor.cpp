@@ -593,8 +593,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  if (!flav.EqualsLiteral(kUnicodeMime) &&
-      !flav.EqualsLiteral(kMozTextInternal)) {
+  if (!flav.EqualsLiteral(kTextMime) && !flav.EqualsLiteral(kMozTextInternal)) {
     return NS_OK;
   }
 

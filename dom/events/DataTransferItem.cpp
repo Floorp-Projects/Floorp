@@ -150,9 +150,7 @@ void DataTransferItem::FillInExternalData() {
 
   NS_ConvertUTF16toUTF8 utf8format(mType);
   const char* format = utf8format.get();
-  if (strcmp(format, "text/plain") == 0) {
-    format = kUnicodeMime;
-  } else if (strcmp(format, "text/uri-list") == 0) {
+  if (strcmp(format, "text/uri-list") == 0) {
     format = kURLDataMime;
   }
 

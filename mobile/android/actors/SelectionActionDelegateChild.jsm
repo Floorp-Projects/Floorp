@@ -72,7 +72,7 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       predicate: e =>
         e.selectionEditable &&
         Services.clipboard.hasDataMatchingFlavors(
-          ["text/unicode"],
+          ["text/plain"],
           Ci.nsIClipboard.kGlobalClipboard
         ),
       perform: _ => this._performPaste(),

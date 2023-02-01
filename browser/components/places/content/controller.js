@@ -168,7 +168,7 @@ PlacesController.prototype = {
       case "cmd_paste":
       case "placesCmd_paste":
         // If the clipboard contains a Places flavor it is definitely pasteable,
-        // otherwise we also allow pasting "text/unicode" and "text/x-moz-url" data.
+        // otherwise we also allow pasting "text/plain" and "text/x-moz-url" data.
         // We don't check if the data is valid here, because the clipboard may
         // contain very large blobs that would largely slowdown commands updating.
         // Of course later paste() should ignore any invalid data.
@@ -178,7 +178,7 @@ PlacesController.prototype = {
             [
               ...PlacesUIUtils.PLACES_FLAVORS,
               PlacesUtils.TYPE_X_MOZ_URL,
-              PlacesUtils.TYPE_UNICODE,
+              PlacesUtils.TYPE_PLAINTEXT,
             ],
             Ci.nsIClipboard.kGlobalClipboard
           )
@@ -1049,7 +1049,7 @@ PlacesController.prototype = {
 
     function addURIData(index) {
       addData(PlacesUtils.TYPE_X_MOZ_URL, index);
-      addData(PlacesUtils.TYPE_UNICODE, index);
+      addData(PlacesUtils.TYPE_PLAINTEXT, index);
       addData(PlacesUtils.TYPE_HTML, index);
     }
 
@@ -1131,7 +1131,7 @@ PlacesController.prototype = {
       { type: PlacesUtils.TYPE_X_MOZ_PLACE, entries: [] },
       { type: PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
       { type: PlacesUtils.TYPE_HTML, entries: [] },
-      { type: PlacesUtils.TYPE_UNICODE, entries: [] },
+      { type: PlacesUtils.TYPE_PLAINTEXT, entries: [] },
     ];
 
     // Avoid handling descendants of a copied node, the transactions take care
@@ -1264,7 +1264,7 @@ PlacesController.prototype = {
     [
       PlacesUtils.TYPE_X_MOZ_PLACE,
       PlacesUtils.TYPE_X_MOZ_URL,
-      PlacesUtils.TYPE_UNICODE,
+      PlacesUtils.TYPE_PLAINTEXT,
     ].forEach(type => xferable.addDataFlavor(type));
 
     Services.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
@@ -1494,13 +1494,6 @@ var PlacesControllerDragHelper = {
       }
     }
 
-    // If no supported flavor is found, check if data includes text/plain
-    // contents.  If so, request them as text/unicode, a conversion will happen
-    // automatically.
-    if (aFlavors.contains("text/plain")) {
-      return PlacesUtils.TYPE_UNICODE;
-    }
-
     return null;
   },
 
@@ -1623,7 +1616,7 @@ var PlacesControllerDragHelper = {
 
     // Following flavors may contain duplicated data.
     let duplicable = new Map();
-    duplicable.set(PlacesUtils.TYPE_UNICODE, new Set());
+    duplicable.set(PlacesUtils.TYPE_PLAINTEXT, new Set());
     duplicable.set(PlacesUtils.TYPE_X_MOZ_URL, new Set());
 
     // Collect all data from the DataTransfer before processing it, as the

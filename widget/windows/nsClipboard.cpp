@@ -99,8 +99,6 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime) {
   UINT format;
 
   if (strcmp(aMimeStr, kTextMime) == 0) {
-    format = CF_TEXT;
-  } else if (strcmp(aMimeStr, kUnicodeMime) == 0) {
     format = CF_UNICODETEXT;
   } else if (strcmp(aMimeStr, kRTFMime) == 0) {
     format = ::RegisterClipboardFormat(L"Rich Text Format");
@@ -210,9 +208,9 @@ nsresult nsClipboard::SetupNativeDataObject(
     // Do various things internal to the implementation, like map one
     // flavor to another or add additional flavors based on what's required
     // for the win32 impl.
-    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-      // if we find text/unicode, also advertise text/plain (which we will
-      // convert on our own in nsDataObj::GetText().
+    if (flavorStr.EqualsLiteral(kTextMime)) {
+      // if we find text/plain, also add CF_TEXT, but we can add it for
+      // text/plain as well.
       FORMATETC textFE;
       SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
       dObj->AddDataFlavor(kTextMime, &textFE);
@@ -888,7 +886,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject* aDataObject,
     // when directly asking for the flavor. Let's try digging around in other
     // flavors to help satisfy our craving for data.
     if (!dataFound) {
-      if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+      if (flavorStr.EqualsLiteral(kTextMime)) {
         dataFound =
             FindUnicodeFromPlainText(aDataObject, anIndex, &data, &dataLen);
       } else if (flavorStr.EqualsLiteral(kURLMime)) {
@@ -954,14 +952,15 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject* aDataObject,
       } else {
         // Treat custom types as a string of bytes.
         if (!flavorStr.EqualsLiteral(kCustomTypesMime)) {
+          bool isRTF = flavorStr.EqualsLiteral(kRTFMime);
           // we probably have some form of text. The DOM only wants LF, so
           // convert from Win32 line endings to DOM line endings.
           int32_t signedLen = static_cast<int32_t>(dataLen);
-          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &data,
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(isRTF, &data,
                                                              &signedLen);
           dataLen = signedLen;
 
-          if (flavorStr.EqualsLiteral(kRTFMime)) {
+          if (isRTF) {
             // RTF on Windows is known to sometimes deliver an extra null byte.
             if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0') {
               dataLen--;
@@ -1049,20 +1048,21 @@ bool nsClipboard ::FindPlatformHTML(IDataObject* inDataObject, UINT inIndex,
 //
 // FindUnicodeFromPlainText
 //
-// we are looking for text/unicode and we failed to find it on the clipboard
-// first, try again with text/plain. If that is present, convert it to unicode.
+// Looks for CF_TEXT on the clipboard and converts it into an UTF-16 string
+// if present. Returns this string in outData, and its length in outDataLen.
+// XXXndeakin Windows converts between CF_UNICODE and CF_TEXT automatically
+// so it doesn't seem like this is actually needed.
 //
 bool nsClipboard ::FindUnicodeFromPlainText(IDataObject* inDataObject,
                                             UINT inIndex, void** outData,
                                             uint32_t* outDataLen) {
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
-  // we are looking for text/unicode and we failed to find it on the clipboard
-  // first, try again with text/plain. If that is present, convert it to
+  // We are looking for text/plain and we failed to find it on the clipboard
+  // first, so try again with CF_TEXT. If that is present, convert it to
   // unicode.
-  nsresult rv =
-      GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kTextMime),
-                                nullptr, outData, outDataLen);
+  nsresult rv = GetNativeDataOffClipboard(inDataObject, inIndex, CF_TEXT,
+                                          nullptr, outData, outDataLen);
   if (NS_FAILED(rv) || !*outData) {
     return false;
   }
@@ -1303,30 +1303,10 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
   }
 
   for (auto& flavor : aFlavorList) {
-#ifdef DEBUG
-    if (flavor.EqualsLiteral(kTextMime)) {
-      NS_WARNING(
-          "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode "
-          "INSTEAD");
-    }
-#endif
-
     UINT format = GetFormat(flavor.get());
     if (IsClipboardFormatAvailable(format)) {
       *_retval = true;
       break;
-    } else {
-      // We haven't found the exact flavor the client asked for, but maybe we
-      // can still find it from something else that's on the clipboard...
-      if (flavor.EqualsLiteral(kUnicodeMime)) {
-        // client asked for unicode and it wasn't present, check if we have
-        // CF_TEXT. We'll handle the actual data substitution in the data
-        // object.
-        if (IsClipboardFormatAvailable(GetFormat(kTextMime))) {
-          *_retval = true;
-          break;
-        }
-      }
     }
   }
 

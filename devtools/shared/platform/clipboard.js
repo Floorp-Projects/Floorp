@@ -15,12 +15,12 @@ function copyString(string) {
 }
 
 /**
- * Retrieve the current clipboard data matching the flavor "text/unicode".
+ * Retrieve the current clipboard data matching the flavor "text/plain".
  *
  * @return {String} Clipboard text content, null if no text clipboard data is available.
  */
 function getText() {
-  const flavor = "text/unicode";
+  const flavor = "text/plain";
 
   const xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(
     Ci.nsITransferable

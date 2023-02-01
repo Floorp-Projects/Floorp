@@ -432,7 +432,7 @@ class EditorUtils final {
                                  const nsINode& aParentNode, uint32_t aOffset);
 
   /**
-   * Create an nsITransferable instance which has kUnicodeMime and
+   * Create an nsITransferable instance which has kTextMime and
    * kMozTextInternal flavors.
    */
   static Result<nsCOMPtr<nsITransferable>, nsresult>

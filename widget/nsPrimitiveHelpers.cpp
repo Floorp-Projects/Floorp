@@ -43,8 +43,7 @@ void nsPrimitiveHelpers ::CreatePrimitiveForData(const nsACString& aFlavor,
                                                  nsISupports** aPrimitive) {
   if (!aPrimitive) return;
 
-  if (aFlavor.EqualsLiteral(kTextMime) ||
-      aFlavor.EqualsLiteral(kNativeHTMLMime) ||
+  if (aFlavor.EqualsLiteral(kNativeHTMLMime) ||
       aFlavor.EqualsLiteral(kRTFMime) ||
       aFlavor.EqualsLiteral(kCustomTypesMime)) {
     nsCOMPtr<nsISupportsCString> primitive =
@@ -97,8 +96,7 @@ void nsPrimitiveHelpers ::CreatePrimitiveForCFHTML(const void* aDataBuff,
   void* utf8 = moz_xmalloc(*aDataLen);
   memcpy(utf8, aDataBuff, *aDataLen);
   int32_t signedLen = static_cast<int32_t>(*aDataLen);
-  nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(
-      nsDependentCString(kTextMime), &utf8, &signedLen);
+  nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(true, &utf8, &signedLen);
   *aDataLen = signedLen;
 
   nsAutoString str(
@@ -125,8 +123,7 @@ void nsPrimitiveHelpers::CreateDataFromPrimitive(const nsACString& aFlavor,
   *aDataBuff = nullptr;
   *aDataLen = 0;
 
-  if (aFlavor.EqualsLiteral(kTextMime) ||
-      aFlavor.EqualsLiteral(kCustomTypesMime)) {
+  if (aFlavor.EqualsLiteral(kCustomTypesMime)) {
     nsCOMPtr<nsISupportsCString> plainText(do_QueryInterface(aPrimitive));
     if (plainText) {
       nsAutoCString data;
@@ -156,13 +153,14 @@ void nsPrimitiveHelpers::CreateDataFromPrimitive(const nsACString& aFlavor,
 // NOTE: this assumes that it can use 'free' to dispose of the old buffer.
 //
 nsresult nsLinebreakHelpers ::ConvertPlatformToDOMLinebreaks(
-    const nsACString& inFlavor, void** ioData, int32_t* ioLengthInBytes) {
+    bool aIsSingleByteChars, void** ioData, int32_t* ioLengthInBytes) {
   NS_ASSERTION(ioData && *ioData && ioLengthInBytes, "Bad Params");
   if (!(ioData && *ioData && ioLengthInBytes)) return NS_ERROR_INVALID_ARG;
 
   nsresult retVal = NS_OK;
 
-  if (inFlavor.EqualsLiteral(kTextMime) || inFlavor.EqualsLiteral(kRTFMime)) {
+  // RTF and CF_HTML on Windows are transfered as single-byte characters.
+  if (aIsSingleByteChars) {
     char* buffAsChars = reinterpret_cast<char*>(*ioData);
     char* oldBuffer = buffAsChars;
     retVal = nsLinebreakConverter::ConvertLineBreaksInSitu(
@@ -174,8 +172,6 @@ nsresult nsLinebreakHelpers ::ConvertPlatformToDOMLinebreaks(
         free(oldBuffer);
       *ioData = buffAsChars;
     }
-  } else if (inFlavor.EqualsLiteral("image/jpeg")) {
-    // I'd assume we don't want to do anything for binary data....
   } else {
     char16_t* buffAsUnichar = reinterpret_cast<char16_t*>(*ioData);
     char16_t* oldBuffer = buffAsUnichar;

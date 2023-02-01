@@ -24,10 +24,6 @@
     "resource://gre/modules/PlacesUtils.jsm"
   );
 
-  // Some of the clipboard code requires reading or writing "text/unicode" when
-  // actually "text/plain" is desired.
-  const kTextUnicodeMimeType = "text/unicode";
-
   const kTextPlainMimeType = "text/plain";
 
   function clearClipboard() {
@@ -38,7 +34,7 @@
     let expected = "x";
     await SimpleTest.promiseClipboardChange(expected, () => {
       SpecialPowers.clipboardCopyString(expected);
-    }, kTextUnicodeMimeType);
+    }, kTextPlainMimeType);
     let items = await navigator.clipboard.read();
     is(items.length, 1, "read() read exactly one item");
     const actual = await items[0].getType(kTextPlainMimeType).then(blob => blob.text());
@@ -54,7 +50,7 @@
     // eslint-disable-next-line no-undef
     let item = new ClipboardItem({[kTextPlainMimeType]: expected});
     await navigator.clipboard.write([item]);
-    let actual = SpecialPowers.getClipboardData(kTextUnicodeMimeType);
+    let actual = SpecialPowers.getClipboardData(kTextPlainMimeType);
     is(actual, expected, "write() wrote the right thing");
   }
 
@@ -62,7 +58,7 @@
     let expected = "x";
     await SimpleTest.promiseClipboardChange(expected, () => {
       SpecialPowers.clipboardCopyString(expected);
-    }, kTextUnicodeMimeType);
+    }, kTextPlainMimeType);
     let actual = await navigator.clipboard.readText();
     is(actual, expected, "readText() read the right thing");
   }
@@ -74,7 +70,7 @@
 
     let expected = "x";
     await navigator.clipboard.writeText(expected);
-    let actual = SpecialPowers.getClipboardData(kTextUnicodeMimeType);
+    let actual = SpecialPowers.getClipboardData(kTextPlainMimeType);
     is(actual, expected, "writeText() wrote the right thing");
   }
 

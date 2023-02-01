@@ -49,7 +49,7 @@ function paste(str) {
   trans.init(getLoadContext());
   var s = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
   s.data = str;
-  trans.setTransferData("text/unicode", s);
+  trans.setTransferData("text/plain", s);
 
   let beforeInputEvent = null;
   let inputEvent = null;

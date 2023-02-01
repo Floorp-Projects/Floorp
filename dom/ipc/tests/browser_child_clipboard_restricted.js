@@ -23,8 +23,8 @@ add_task(async function() {
     trans.addDataFlavor("text/unknown");
     trans.setTransferData("text/unknown", string);
 
-    trans.addDataFlavor("text/unicode");
-    trans.setTransferData("text/unicode", string);
+    trans.addDataFlavor("text/plain");
+    trans.setTransferData("text/plain", string);
 
     // Write to clipboard.
     Services.clipboard.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
@@ -34,7 +34,7 @@ add_task(async function() {
   for (var i = 0; i < 20; i++) {
     if (
       Services.clipboard.hasDataMatchingFlavors(
-        ["text/unicode"],
+        ["text/plain"],
         Services.clipboard.kGlobalClipboard
       )
     ) {
@@ -57,16 +57,16 @@ add_task(async function() {
 
   ok(
     Services.clipboard.hasDataMatchingFlavors(
-      ["text/unicode"],
+      ["text/plain"],
       Services.clipboard.kGlobalClipboard
     ),
-    "clipboard should have text/unicode"
+    "clipboard should have text/plain"
   );
 
   is(
-    readClipboard("text/unicode"),
+    readClipboard("text/plain"),
     "blablabla",
-    "matching string for text/unicode"
+    "matching string for text/plain"
   );
 
   ok(

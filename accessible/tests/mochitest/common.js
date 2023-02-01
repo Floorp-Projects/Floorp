@@ -847,11 +847,11 @@ function getTextFromClipboard() {
     return "";
   }
 
-  trans.addDataFlavor("text/unicode");
+  trans.addDataFlavor("text/plain");
   Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
   var str = {};
-  trans.getTransferData("text/unicode", str);
+  trans.getTransferData("text/plain", str);
 
   if (str) {
     str = str.value.QueryInterface(Ci.nsISupportsString);

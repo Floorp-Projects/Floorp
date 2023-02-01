@@ -50,7 +50,7 @@
         // differences.
         synthesizeKey("A", {accelKey: true});
         synthesizeKey("C", {accelKey: true});
-        let actual = SpecialPowers.getClipboardData("text/unicode");
+        let actual = SpecialPowers.getClipboardData("text/plain");
         actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
 
         if (actual.trim() === aExpected.trim()) {

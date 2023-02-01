@@ -1428,26 +1428,19 @@ HRESULT nsDataObj::GetText(const nsACString& aDataFlavor, FORMATETC& aFE,
                            STGMEDIUM& aSTG) {
   void* data = nullptr;
 
-  // if someone asks for text/plain, look up text/unicode instead in the
-  // transferable.
-  const char* flavorStr;
-  const nsPromiseFlatCString& flat = PromiseFlatCString(aDataFlavor);
-  if (aDataFlavor.EqualsLiteral("text/plain"))
-    flavorStr = kUnicodeMime;
-  else
-    flavorStr = flat.get();
+  const nsPromiseFlatCString& flavorStr = PromiseFlatCString(aDataFlavor);
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
   nsresult rv = mTransferable->GetTransferData(
-      flavorStr, getter_AddRefs(genericDataWrapper));
+      flavorStr.get(), getter_AddRefs(genericDataWrapper));
   if (NS_FAILED(rv) || !genericDataWrapper) {
     return E_FAIL;
   }
 
   uint32_t len;
-  nsPrimitiveHelpers::CreateDataFromPrimitive(nsDependentCString(flavorStr),
-                                              genericDataWrapper, &data, &len);
+  nsPrimitiveHelpers::CreateDataFromPrimitive(
+      nsDependentCString(flavorStr.get()), genericDataWrapper, &data, &len);
   if (!data) return E_FAIL;
 
   HGLOBAL hGlobalMemory = nullptr;

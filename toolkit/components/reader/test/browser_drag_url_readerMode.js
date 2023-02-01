@@ -45,7 +45,7 @@ add_task(async function test_readerModeURLDrag() {
       urlBarContainer.click();
       urlbar.dispatchEvent(urlEvent);
 
-      let newUrl = urlEvent.dataTransfer.getData("text/unicode");
+      let newUrl = urlEvent.dataTransfer.getData("text/plain");
       ok(!newUrl.includes("about:reader"), "URL does not contain about:reader");
 
       Assert.equal(newUrl, oldUrl, "URL is the same");

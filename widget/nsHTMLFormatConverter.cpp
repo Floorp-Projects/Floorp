@@ -46,7 +46,7 @@ nsHTMLFormatConverter::GetInputDataFlavors(nsTArray<nsCString>& aFlavors) {
 NS_IMETHODIMP
 nsHTMLFormatConverter::GetOutputDataFlavors(nsTArray<nsCString>& aFlavors) {
   aFlavors.AppendElement(nsLiteralCString(kHTMLMime));
-  aFlavors.AppendElement(nsLiteralCString(kUnicodeMime));
+  aFlavors.AppendElement(nsLiteralCString(kTextMime));
   return NS_OK;
 }
 
@@ -63,10 +63,11 @@ nsHTMLFormatConverter::CanConvert(const char* aFromDataFlavor,
 
   *_retval = false;
   if (!nsCRT::strcmp(aFromDataFlavor, kHTMLMime)) {
-    if (!nsCRT::strcmp(aToDataFlavor, kHTMLMime))
+    if (!nsCRT::strcmp(aToDataFlavor, kHTMLMime)) {
       *_retval = true;
-    else if (!nsCRT::strcmp(aToDataFlavor, kUnicodeMime))
+    } else if (!nsCRT::strcmp(aToDataFlavor, kTextMime)) {
       *_retval = true;
+    }
 #if NOT_NOW
     // pinkerton
     // no one uses this flavor right now, so it's just slowing things down. If
@@ -120,7 +121,7 @@ nsHTMLFormatConverter::Convert(const char* aFromDataFlavor,
     dataWrapper0->GetData(dataStr);  // COPY #1
     // note: conversion to text/plain is done inside the clipboard. we do not
     // need to worry about it here.
-    if (toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime)) {
+    if (toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kTextMime)) {
       nsresult res;
       if (toFlavor.Equals(kHTMLMime)) {
         int32_t dataLen = dataStr.Length() * 2;

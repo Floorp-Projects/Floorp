@@ -692,7 +692,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mInfoString);
     }
-    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(supports));
+    rv = transferable->GetTransferData(kTextMime, getter_AddRefs(supports));
     data = do_QueryInterface(supports);
     NS_ENSURE_SUCCESS(rv, rv);  // require plain text at a minimum
     data->GetData(mTitleString);

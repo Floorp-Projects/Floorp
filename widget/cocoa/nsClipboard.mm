@@ -146,7 +146,9 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
       }
 
       NSData* stringData;
-      if ([pboardType isEqualToString:[UTIHelper stringFromPboardType:NSPasteboardTypeRTF]]) {
+      bool isRTF =
+          [pboardType isEqualToString:[UTIHelper stringFromPboardType:NSPasteboardTypeRTF]];
+      if (isRTF) {
         stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
       } else {
         stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
@@ -160,7 +162,7 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
 
       // The DOM only wants LF, so convert from MacOS line endings to DOM line endings.
       int32_t signedDataLength = dataLength;
-      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &clipboardDataPtr,
+      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(isRTF, &clipboardDataPtr,
                                                          &signedDataLength);
       dataLength = signedDataLength;
 
@@ -700,7 +702,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
 }
 
 bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPboardType) {
-  if (aMIMEType.EqualsLiteral(kUnicodeMime)) {
+  if (aMIMEType.EqualsLiteral(kTextMime)) {
     *aPboardType = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
     return true;
   } else if (aMIMEType.EqualsLiteral(kRTFMime)) {

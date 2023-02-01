@@ -365,7 +365,7 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                  DataTransfer** aResult);
 
   // converts some formats used for compatibility in aInFormat into aOutFormat.
-  // Text and text/unicode become text/plain, and URL becomes text/uri-list
+  // Text becomes text/plain, and URL becomes text/uri-list
   void GetRealFormat(const nsAString& aInFormat, nsAString& aOutFormat) const;
 
   static bool PrincipalMaySetData(const nsAString& aFormat, nsIVariant* aData,

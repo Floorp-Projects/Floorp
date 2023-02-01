@@ -73,7 +73,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   }
 
   // Add the text data flavor to the transferable
-  rv = trans->AddDataFlavor(kUnicodeMime);
+  rv = trans->AddDataFlavor(kTextMime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get wStrings to hold clip data
@@ -93,7 +93,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_TRUE(genericData, NS_ERROR_FAILURE);
 
   // set the transfer data
-  rv = trans->SetTransferData(kUnicodeMime, genericData);
+  rv = trans->SetTransferData(kTextMime, genericData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard

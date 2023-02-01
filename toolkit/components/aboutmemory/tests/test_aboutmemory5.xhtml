@@ -105,7 +105,7 @@
         // differences.
         synthesizeKey("A", {accelKey: true});
         synthesizeKey("C", {accelKey: true});
-        let actual = SpecialPowers.getClipboardData("text/unicode");
+        let actual = SpecialPowers.getClipboardData("text/plain");
 
         // If we have more than 1000 chars, we've probably successfully
         // copy+pasted.

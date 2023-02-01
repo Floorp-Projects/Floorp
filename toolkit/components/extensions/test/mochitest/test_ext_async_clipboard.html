@@ -179,7 +179,7 @@ add_task(async function test_contentscript_clipboard_permission_writetext() {
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
-  const actual = SpecialPowers.getClipboardData("text/unicode");
+  const actual = SpecialPowers.getClipboardData("text/plain");
   is(actual, "HI", "right string copied by write");
   win.close();
   await extension.unload();
@@ -219,7 +219,7 @@ add_task(async function test_contentscript_clipboard_permission_readtext() {
   };
   await SimpleTest.promiseClipboardChange("HI", () => {
     SpecialPowers.clipboardCopyString("HI");
-  }, "text/unicode");
+  }, "text/plain");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
@@ -262,7 +262,7 @@ add_task(async function test_contentscript_clipboard_permission_write() {
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");
   await extension.awaitMessage("ready");
-  const actual = SpecialPowers.getClipboardData("text/unicode");
+  const actual = SpecialPowers.getClipboardData("text/plain");
   is(actual, "HI", "right string copied by write");
   win.close();
   await extension.unload();
@@ -303,7 +303,7 @@ add_task(async function test_contentscript_clipboard_permission_read() {
   };
   await SimpleTest.promiseClipboardChange("HELLO", () => {
     SpecialPowers.clipboardCopyString("HELLO");
-  }, "text/unicode");
+  }, "text/plain");
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html");

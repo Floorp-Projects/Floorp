@@ -91,7 +91,7 @@ function cutCopyAll(
         aSetup,
         aNext,
         aNext,
-        "text/unicode",
+        "text/plain",
         WATCH_TIMEOUT,
         true
       );

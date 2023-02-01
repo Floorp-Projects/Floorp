@@ -60,7 +60,7 @@ add_task(async function test_selectByKey() {
 
 function assertClipboard() {
   Assert.equal(
-    SpecialPowers.getClipboardData("text/unicode"),
+    SpecialPowers.getClipboardData("text/plain"),
     "100 cm",
     "The result of conversion is copied to clipboard"
   );

@@ -146,7 +146,7 @@ async function startTest() {
   info("cut");
   await synthesizeKey(VK.X, { accelKey: true }, "x", "input");
   await checkElement(input, 0, 0, "");
-  let text = SpecialPowers.getClipboardData("text/unicode");
+  let text = SpecialPowers.getClipboardData("text/plain");
   is(text, "Test text", "Should have cut to the clipboard");
   SpecialPowers.clipboardCopyString("New text");
 

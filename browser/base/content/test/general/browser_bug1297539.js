@@ -29,7 +29,7 @@ function getTransferableFromClipboard(asHTML) {
   if (asHTML) {
     trans.addDataFlavor("text/html");
   } else {
-    trans.addDataFlavor("text/unicode");
+    trans.addDataFlavor("text/plain");
   }
   Services.clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
   return trans;

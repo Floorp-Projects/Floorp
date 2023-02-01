@@ -1551,7 +1551,7 @@ nsHTMLCopyEncoder::Init(Document* aDocument, const nsAString& aMimeType,
   mIsCopying = true;
   mDocument = aDocument;
 
-  // Hack, hack! Traditionally, the caller passes text/unicode, which is
+  // Hack, hack! Traditionally, the caller passes text/plain, which is
   // treated as "guess text/html or text/plain" in this context. (It has a
   // different meaning in other contexts. Sigh.) From now on, "text/plain"
   // means forcing text/plain instead of guessing.

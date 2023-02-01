@@ -93,9 +93,9 @@ add_task(async function test_contenteditable() {
     "text/html",
     PlacesUtils.toISupportsString("<strong>Bold text</strong>")
   );
-  xferable.addDataFlavor("text/unicode");
+  xferable.addDataFlavor("text/plain");
   xferable.setTransferData(
-    "text/unicode",
+    "text/plain",
     PlacesUtils.toISupportsString("Bold text")
   );
   Services.clipboard.setData(

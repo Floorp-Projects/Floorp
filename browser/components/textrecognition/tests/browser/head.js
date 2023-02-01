@@ -19,11 +19,11 @@ function getTextFromClipboard() {
     Ci.nsITransferable
   );
   transferable.init(window.docShell.QueryInterface(Ci.nsILoadContext));
-  transferable.addDataFlavor("text/unicode");
+  transferable.addDataFlavor("text/plain");
   Services.clipboard.getData(transferable, Services.clipboard.kGlobalClipboard);
 
   const results = {};
-  transferable.getTransferData("text/unicode", results);
+  transferable.getTransferData("text/plain", results);
   return results.value.QueryInterface(Ci.nsISupportsString)?.data ?? "";
 }
 

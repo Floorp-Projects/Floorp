@@ -24,12 +24,12 @@
   function assignTextToTransferable(transferable, string) {
     var Suppstr = nsSupportsString();
     Suppstr.data = string;
-    transferable.setTransferData("text/unicode", Suppstr);
+    transferable.setTransferData("text/plain", Suppstr);
   }
 
   function checkTransferableText(transferable, expectedString, description) {
     var data = {};
-    transferable.getTransferData("text/unicode", data);
+    transferable.getTransferData("text/plain", data);
     var actualValue = data.value.QueryInterface(Ci.nsISupportsString).data;
     // Use ok + shortenString instead of is(...) to avoid dumping millions of characters in the output.
     ok(actualValue === expectedString, description + ": text should match. " +
@@ -89,7 +89,7 @@
     var Loadctx = PrivateBrowsingUtils.privacyContextFromWindow(win);
     var Transfer = nsTransferable();
     Transfer.init(Loadctx);
-    Transfer.addDataFlavor("text/unicode");
+    Transfer.addDataFlavor("text/plain");
     var initialFdCount = isFDCountingSupported() ? getClipboardCacheFDCount() : -1;
 
     assignTextToTransferable(Transfer, BIG_STRING);
@@ -117,7 +117,7 @@
 
     var Transfer2 = nsTransferable();
     Transfer2.init(Loadctx);
-    Transfer2.addDataFlavor("text/unicode");
+    Transfer2.addDataFlavor("text/plain");
 
     // Iniitalize with a small string, so we can see that mData -> mCacheFD works.
     assignTextToTransferable(Transfer2, SMALL_STRING);

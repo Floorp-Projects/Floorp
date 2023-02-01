@@ -797,7 +797,13 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   // format. SetTransferData() implicitly handles conversions.
   for (uint32_t i = 0; i < flavors.Length(); ++i) {
     nsCString& flavorStr = flavors[i];
-    GdkAtom gdkFlavor = gdk_atom_intern(flavorStr.get(), FALSE);
+
+    GdkAtom gdkFlavor;
+    if (flavorStr.EqualsLiteral(kTextMime)) {
+      gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
+    } else {
+      gdkFlavor = gdk_atom_intern(flavorStr.get(), FALSE);
+    }
     LOGDRAGSERVICE("  we're getting data %s (gdk flavor %p)\n", flavorStr.get(),
                    gdkFlavor);
     bool dataFound = false;
@@ -854,46 +860,15 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
         }
       }
 
-      // if we are looking for text/unicode and we fail to find it
-      // on the clipboard first, try again with text/plain. If that
-      // is present, convert it to unicode.
-      if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-        LOGDRAGSERVICE("  conversion %s => %s", kUnicodeMime,
-                       gTextPlainUTF8Type);
-        gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
+      // If we are looking for text/plain, try again with non utf-8 text.
+      if (flavorStr.EqualsLiteral(kTextMime)) {
+        LOGDRAGSERVICE("  conversion %s => %s", kTextMime, kTextMime);
+        gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
         GetTargetDragData(gdkFlavor, dragFlavors);
         if (mTargetDragData) {
-          const char* castedText = reinterpret_cast<char*>(mTargetDragData);
-          char16_t* convertedText = nullptr;
-          NS_ConvertUTF8toUTF16 ucs2string(castedText, mTargetDragDataLen);
-          convertedText = ToNewUnicode(ucs2string, mozilla::fallible);
-          if (convertedText) {
-            // out with the old, in with the new
-            g_free(mTargetDragData);
-            mTargetDragData = convertedText;
-            mTargetDragDataLen = ucs2string.Length() * 2;
-            dataFound = true;
-          }  // if plain text data on clipboard
-        } else {
-          LOGDRAGSERVICE("  conversion %s => %s", kUnicodeMime, kTextMime);
-          gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
-          if (mTargetDragData) {
-            const char* castedText = reinterpret_cast<char*>(mTargetDragData);
-            char16_t* convertedText = nullptr;
-            uint32_t convertedTextLen = 0;
-            UTF8ToNewUTF16(castedText, mTargetDragDataLen, &convertedText,
-                           &convertedTextLen);
-            if (convertedText) {
-              // out with the old, in with the new
-              g_free(mTargetDragData);
-              mTargetDragData = convertedText;
-              mTargetDragDataLen = convertedTextLen * 2;
-              dataFound = true;
-            }  // if plain text data on clipboard
-          }    // if plain text flavor present
-        }      // if plain text charset=utf-8 flavor present
-      }        // if looking for text/unicode
+          dataFound = true;
+        }  // if plain text flavor present
+      }    // if looking for text/plain
 
       // if we are looking for text/x-moz-url and we failed to find
       // it on the clipboard, try again with text/uri-list, and then
@@ -945,6 +920,18 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       LOGDRAGSERVICE("  actual data found %s\n",
                      GUniquePtr<gchar>(gdk_atom_name(gdkFlavor)).get());
 
+      if (flavorStr.EqualsLiteral(kTextMime)) {
+        // The text is in UTF-8, so convert the text into UTF-16
+        const char* text = static_cast<char*>(mTargetDragData);
+        NS_ConvertUTF8toUTF16 ucs2string(text, mTargetDragDataLen);
+        char16_t* convertedText = ToNewUnicode(ucs2string, mozilla::fallible);
+        if (convertedText) {
+          g_free(mTargetDragData);
+          mTargetDragData = convertedText;
+          mTargetDragDataLen = ucs2string.Length() * 2;
+        }
+      }
+
       if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
           flavorStr.EqualsLiteral(kJPGImageMime) ||
           flavorStr.EqualsLiteral(kPNGImageMime) ||
@@ -963,7 +950,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
         // the DOM only wants LF, so convert from MacOS line endings
         // to DOM line endings.
         nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(
-            flavorStr, &mTargetDragData,
+            flavorStr.EqualsLiteral(kRTFMime), &mTargetDragData,
             reinterpret_cast<int*>(&mTargetDragDataLen));
       }
 
@@ -1060,11 +1047,6 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
     else if (strcmp(name.get(), gMozUrlType) == 0 &&
              (strcmp(aDataFlavor, kURLMime) == 0)) {
-      *_retval = true;
-    }
-    // check for auto text/plain -> text/unicode mapping
-    else if (strcmp(name.get(), kTextMime) == 0 &&
-             (strcmp(aDataFlavor, kUnicodeMime) == 0)) {
       *_retval = true;
     }
 
@@ -1374,13 +1356,9 @@ GtkTargetList* nsDragService::GetSourceList(void) {
         if (flavorStr.EqualsLiteral(kFileMime)) {
           TargetArrayAddTarget(targetArray, gTextUriListType);
         }
-        // Check to see if this is text/unicode.
-        // If it is, add text/plain
-        // since we automatically support text/plain
-        // if we support text/unicode.
-        else if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+        // Check to see if this is text/plain.
+        else if (flavorStr.EqualsLiteral(kTextMime)) {
           TargetArrayAddTarget(targetArray, gTextPlainUTF8Type);
-          TargetArrayAddTarget(targetArray, kTextMime);
         }
         // Check to see if this is the x-moz-url type.
         // If it is, add _NETSCAPE_URL
@@ -2051,7 +2029,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
 
   if (mimeFlavor.EqualsLiteral(kTextMime) ||
       mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
-    SourceDataGetText(item, nsDependentCString(kUnicodeMime),
+    SourceDataGetText(item, nsDependentCString(kTextMime),
                       /* aNeedToDoConversionToPlainText */ true,
                       aSelectionData);
     // no fallback for text mime types

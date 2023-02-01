@@ -60,7 +60,7 @@ async function runTest() {
     if (asHTML) {
       trans.addDataFlavor("text/html");
     } else {
-      trans.addDataFlavor("text/unicode");
+      trans.addDataFlavor("text/plain");
     }
     var clip = SpecialPowers.Services.clipboard;
     clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
@@ -103,9 +103,9 @@ async function runTest() {
   //     ssData.data = doc.body.innerHTML;
   //     trans.setTransferData("text/html", ssData);
   //   } else {
-  //     trans.addDataFlavor("text/unicode");
+  //     trans.addDataFlavor("text/plain");
   //     ssData.data = doc.body.innerHTML;
-  //     trans.setTransferData("text/unicode", ssData);
+  //     trans.setTransferData("text/plain", ssData);
   //   }
   //
   //   return trans;

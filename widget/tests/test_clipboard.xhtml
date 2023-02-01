@@ -31,11 +31,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
     let trans = Cc['@mozilla.org/widget/transferable;1']
                 .createInstance(Ci.nsITransferable);
     trans.init(getLoadContext());
-    trans.addDataFlavor("text/unicode");
+    trans.addDataFlavor("text/plain");
     clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
     let str = {};
     try {
-      trans.getTransferData('text/unicode', str);
+      trans.getTransferData('text/plain', str);
     } catch (e) {
       str = '';
     }

@@ -1793,7 +1793,7 @@ export var PlacesUIUtils = {
           let contents = [
             { type: lazy.PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
             { type: lazy.PlacesUtils.TYPE_HTML, entries: [] },
-            { type: lazy.PlacesUtils.TYPE_UNICODE, entries: [] },
+            { type: lazy.PlacesUtils.TYPE_PLAINTEXT, entries: [] },
           ];
 
           contents.forEach(function(content) {
@@ -2034,7 +2034,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "URI_FLAVORS", () => {
   return [
     lazy.PlacesUtils.TYPE_X_MOZ_URL,
     TAB_DROP_TYPE,
-    lazy.PlacesUtils.TYPE_UNICODE,
+    lazy.PlacesUtils.TYPE_PLAINTEXT,
   ];
 });
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
@@ -2271,7 +2271,7 @@ function getTransactionsForCopy(items, insertionIndex, insertionParentGuid) {
       });
     } else {
       let title =
-        item.type != lazy.PlacesUtils.TYPE_UNICODE ? item.title : item.uri;
+        item.type != lazy.PlacesUtils.TYPE_PLAINTEXT ? item.title : item.uri;
       transaction = lazy.PlacesTransactions.NewBookmark({
         index,
         parentGuid: insertionParentGuid,

@@ -22,15 +22,7 @@ NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mData,
 
 ClipboardItem::ItemEntry::ItemEntry(const nsAString& aType,
                                     const nsACString& aFormat)
-    : mType(aType), mFormat(aFormat) {
-  // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=1776879.
-  // In most of cases, the mType and mFormat are the same, execpt for plain
-  // text. We expose it as "text/plain" to the web, but we use "text/unicode"
-  // internally to retrieve from system clipboard.
-  MOZ_ASSERT_IF(
-      !mType.Equals(NS_ConvertUTF8toUTF16(mFormat)),
-      mType.EqualsLiteral(kTextMime) && mFormat.EqualsLiteral(kUnicodeMime));
-}
+    : mType(aType), mFormat(aFormat) {}
 
 void ClipboardItem::ItemEntry::SetData(already_AddRefed<Blob>&& aBlob) {
   // XXX maybe we could consider adding a method to check whether the union
@@ -190,9 +182,7 @@ already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
 
   nsTArray<RefPtr<ItemEntry>> items;
   for (const auto& entry : aItems.Entries()) {
-    nsAutoCString format = entry.mKey.EqualsLiteral(kTextMime)
-                               ? nsAutoCString(kUnicodeMime)
-                               : NS_ConvertUTF16toUTF8(entry.mKey);
+    nsAutoCString format = NS_ConvertUTF16toUTF8(entry.mKey);
     items.AppendElement(
         MakeRefPtr<ItemEntry>(entry.mKey, format, entry.mValue));
   }

@@ -190,7 +190,7 @@
       info("cut");
       await synthesizeKey(VK.X, { accelKey: true }, "x");
       await checkElement(editor, 0, "", "");
-      let text = SpecialPowers.getClipboardData("text/unicode");
+      let text = SpecialPowers.getClipboardData("text/plain");
       is(text, "Test text", "Should have cut to the clipboard");
       SpecialPowers.clipboardCopyString("New text");
 

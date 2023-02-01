@@ -57,15 +57,15 @@ function testCopyImage () {
 
   //--------- Let's check the content of the clipboard now.
 
-  // Does the clipboard contain text/unicode data ?
-  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], clipboard.kGlobalClipboard), "clipboard contains unicode text");
+  // Does the clipboard contain text/plain data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard), "clipboard contains unicode text");
   // Does the clipboard contain text/html data ?
   ok(clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard), "clipboard contains html text");
   // Does the clipboard contain image data ?
   ok(clipboard.hasDataMatchingFlavors(["image/png"], clipboard.kGlobalClipboard), "clipboard contains image");
 
-  // Is the text/uncodie data correct ?
-  testClipboardValue('text/unicode', 'about:logo');
+  // Is the text/plain data correct ?
+  testClipboardValue('text/plain', 'about:logo');
   // Is the text/html data correct ?
   var expected = '<img id="logo" src="about:logo">';
   if (navigator.platform.includes("Win")) {

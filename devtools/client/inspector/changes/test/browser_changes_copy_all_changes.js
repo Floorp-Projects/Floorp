@@ -48,6 +48,6 @@ add_task(async function() {
 });
 
 function checkClipboardData(expected) {
-  const actual = SpecialPowers.getClipboardData("text/unicode");
+  const actual = SpecialPowers.getClipboardData("text/plain");
   return decodeURIComponent(actual).trim() === expected.trim();
 }

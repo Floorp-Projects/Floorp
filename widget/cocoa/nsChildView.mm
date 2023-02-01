@@ -4513,7 +4513,7 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
   if (NS_FAILED(rv)) return NO;
   trans->Init(nullptr);
 
-  trans->AddDataFlavor(kUnicodeMime);
+  trans->AddDataFlavor(kTextMime);
   trans->AddDataFlavor(kHTMLMime);
 
   rv = nsClipboard::TransferableFromPasteboard(trans, pboard);

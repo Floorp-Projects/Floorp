@@ -83,7 +83,7 @@ function checkPrimarySelection(expectedVal = "") {
     )
   ) {
     let primaryAsText = SpecialPowers.getClipboardData(
-      "text/unicode",
+      "text/plain",
       SpecialPowers.Ci.nsIClipboard.kSelectionClipboard
     );
     Assert.equal(primaryAsText, expectedVal);
