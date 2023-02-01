@@ -59,30 +59,6 @@ using ::testing::UnitTest;
 using ::testing::Values;
 using ::testing::ValuesIn;
 
-EmulatedNetworkNode* CreateEmulatedNodeWithConfig(
-    NetworkEmulationManager* emulation,
-    const BuiltInNetworkBehaviorConfig& config) {
-  return emulation->CreateEmulatedNode(config);
-}
-
-std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
-CreateTwoNetworkLinks(NetworkEmulationManager* emulation,
-                      const BuiltInNetworkBehaviorConfig& config) {
-  auto* alice_node = CreateEmulatedNodeWithConfig(emulation, config);
-  auto* bob_node = CreateEmulatedNodeWithConfig(emulation, config);
-
-  auto* alice_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-  auto* bob_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-
-  emulation->CreateRoute(alice_endpoint, {alice_node}, bob_endpoint);
-  emulation->CreateRoute(bob_endpoint, {bob_node}, alice_endpoint);
-
-  return {
-      emulation->CreateEmulatedNetworkManagerInterface({alice_endpoint}),
-      emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint}),
-  };
-}
-
 std::unique_ptr<webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture>
 CreateTestFixture(absl::string_view test_case_name,
                   TimeController& time_controller,
@@ -329,8 +305,8 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
   auto fixture = CreateTestFixture(
       UnitTest::GetInstance()->current_test_info()->name(),
       *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(),
-                            BuiltInNetworkBehaviorConfig()),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(
+          BuiltInNetworkBehaviorConfig()),
       [this](PeerConfigurer* alice) {
         VideoConfig video(/*stream_label=*/"alice-video", /*width=*/1850,
                           /*height=*/1110, /*fps=*/30);
