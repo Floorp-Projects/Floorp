@@ -4,9 +4,11 @@ set -x
 set -e
 set -o pipefail
 
+script=$1
+shift
 artifact=$(basename $TOOLCHAIN_ARTIFACT)
 dir=${artifact%.tar.*}
 
-$GECKO_PATH/mach python $(dirname $0)/unpack-sdk.py "$@" $dir
+$GECKO_PATH/mach python $(dirname $0)/$script "$@" $dir
 
 $(dirname $0)/pack.sh $dir

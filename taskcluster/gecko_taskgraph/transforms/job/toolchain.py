@@ -168,13 +168,33 @@ def common_toolchain(config, job, taskdesc, is_docker):
 
     # Toolchains that are used for local development need to be built on a
     # level-3 branch to be installable via `mach bootstrap`.
-    if taskdesc["attributes"].get("local-toolchain"):
+    local_toolchain = taskdesc["attributes"].get("local-toolchain")
+    if local_toolchain:
         if taskdesc.get("run-on-projects"):
             raise Exception(
                 "Toolchain {} used for local developement must not have"
                 " run-on-projects set".format(taskdesc["label"])
             )
         taskdesc["run-on-projects"] = ["integration", "release"]
+
+    script = run.pop("script")
+    arguments = run.pop("arguments", [])
+    if local_toolchain and not attributes["toolchain-artifact"].startswith("public/"):
+        # Local toolchains with private artifacts are expected to have a script that
+        # fill a directory given as a final command line argument. That script, and the
+        # arguments provided, are used by the build system bootstrap code, and for the
+        # corresponding CI tasks, the command is wrapped with a script that creates an
+        # artifact based on that filled directory.
+        # We prefer automatic wrapping rather than manual wrapping in the yaml because
+        # it makes the index independent of the wrapper script, which is irrelevant.
+        # Also, an attribute is added for the bootstrap code to be able to easily parse
+        # the command.
+        attributes["toolchain-command"] = {
+            "script": script,
+            "arguments": list(arguments),
+        }
+        arguments.insert(0, script)
+        script = "private_local_toolchain.sh"
 
     run["using"] = "run-task"
     if is_docker:
@@ -187,8 +207,8 @@ def common_toolchain(config, job, taskdesc, is_docker):
     if is_docker:
         run["cwd"] = run["workdir"]
     run["command"] = [
-        "{}/taskcluster/scripts/misc/{}".format(gecko_path, run.pop("script"))
-    ] + run.pop("arguments", [])
+        "{}/taskcluster/scripts/misc/{}".format(gecko_path, script)
+    ] + arguments
     if not is_docker:
         # Don't quote the first item in the command because it purposely contains
         # an environment variable that is not meant to be quoted.
