@@ -7699,7 +7699,8 @@ class _ContextMenuItem extends (external_React_default()).PureComponent {
       onClick: this.onClick,
       onKeyDown: this.onKeyDown,
       onKeyUp: this.onKeyUp,
-      ref: option.first ? this.focusFirst : null
+      ref: option.first ? this.focusFirst : null,
+      "aria-haspopup": option.id === "newtab-menu-edit-topsites" ? "dialog" : null
     }, /*#__PURE__*/external_React_default().createElement("span", {
       "data-l10n-id": option.string_id || option.id
     })));
@@ -11678,7 +11679,7 @@ class TopSiteFormInput extends (external_React_default()).PureComponent {
       "data-l10n-id": this.props.placeholderId // Set focus on error if the url field is valid or when the input is first rendered and is empty
       // eslint-disable-next-line jsx-a11y/no-autofocus
       ,
-      autoFocus: this.props.shouldFocus,
+      autoFocus: this.props.autoFocusOnOpen,
       disabled: this.props.loading
     }), this.renderLoadingOrCloseButton(), validationError && /*#__PURE__*/external_React_default().createElement("aside", {
       className: "error-tooltip",
@@ -12386,7 +12387,7 @@ class TopSitePlaceholder extends (external_React_default()).PureComponent {
       className: `placeholder ${this.props.className || ""}`,
       isDraggable: false
     }), /*#__PURE__*/external_React_default().createElement("button", {
-      "aria-haspopup": "true",
+      "aria-haspopup": "dialog",
       className: "context-menu-button edit-button icon",
       "data-l10n-id": "newtab-menu-topsites-placeholder-tooltip",
       onClick: this.onEditButtonClick
@@ -12865,7 +12866,8 @@ class TopSiteForm extends (external_React_default()).PureComponent {
       onChange: this.onLabelChange,
       value: this.state.label,
       titleId: "newtab-topsites-title-label",
-      placeholderId: "newtab-topsites-title-input"
+      placeholderId: "newtab-topsites-title-input",
+      autoFocusOnOpen: true
     }), /*#__PURE__*/external_React_default().createElement(TopSiteFormInput, {
       onChange: this.onUrlChange,
       shouldFocus: this.state.validationError && !this.validateUrl(this.state.url),

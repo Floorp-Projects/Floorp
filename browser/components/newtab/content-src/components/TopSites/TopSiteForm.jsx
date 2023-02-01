@@ -260,6 +260,7 @@ export class TopSiteForm extends React.PureComponent {
                 value={this.state.label}
                 titleId="newtab-topsites-title-label"
                 placeholderId="newtab-topsites-title-input"
+                autoFocusOnOpen={true}
               />
               <TopSiteFormInput
                 onChange={this.onUrlChange}

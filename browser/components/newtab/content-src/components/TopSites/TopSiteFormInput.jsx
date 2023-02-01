@@ -88,7 +88,7 @@ export class TopSiteFormInput extends React.PureComponent {
             data-l10n-id={this.props.placeholderId}
             // Set focus on error if the url field is valid or when the input is first rendered and is empty
             // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus={this.props.shouldFocus}
+            autoFocus={this.props.autoFocusOnOpen}
             disabled={this.props.loading}
           />
           {this.renderLoadingOrCloseButton()}

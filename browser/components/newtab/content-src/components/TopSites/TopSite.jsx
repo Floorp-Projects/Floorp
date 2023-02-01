@@ -593,7 +593,7 @@ export class TopSitePlaceholder extends React.PureComponent {
         isDraggable={false}
       >
         <button
-          aria-haspopup="true"
+          aria-haspopup="dialog"
           className="context-menu-button edit-button icon"
           data-l10n-id="newtab-menu-topsites-placeholder-tooltip"
           onClick={this.onEditButtonClick}
