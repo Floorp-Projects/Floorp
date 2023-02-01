@@ -218,15 +218,6 @@ rtc_library("histogram_percentile_counter") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-rtc_library("location") {
-  visibility = [ "*" ]
-  sources = [
-    "location.cc",
-    "location.h",
-  ]
-  deps = [ "system:rtc_export" ]
-}
-
 rtc_library("race_checker") {
   visibility = [ "*" ]
   sources = [
@@ -957,7 +948,6 @@ rtc_library("threading") {
     ":criticalsection",
     ":event_tracer",
     ":ip_address",
-    ":location",
     ":logging",
     ":macromagic",
     ":network_constants",
@@ -1092,7 +1082,6 @@ rtc_library("rtc_base") {
     ":checks",
     ":copy_on_write_buffer",
     ":ip_address",
-    ":location",
     ":logging",
     ":macromagic",
     ":network_constants",
@@ -1450,7 +1439,6 @@ rtc_library("rtc_base_tests_utils") {
     ":byte_buffer",
     ":checks",
     ":ip_address",
-    ":location",
     ":logging",
     ":macromagic",
     ":rtc_base",
