@@ -34,7 +34,6 @@ macosx64-fix-stacks:
         arguments: ['x86_64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-toolchain
             - macosx64-sdk-toolchain
@@ -46,7 +45,6 @@ macosx64-aarch64-fix-stacks:
         arguments: ['aarch64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-toolchain
             - macosx64-sdk-toolchain
