@@ -8,7 +8,41 @@ This means you might have to go searching through the dependency tree to get a f
 
 # Pings
 
+- [crash](#crash)
 - [metrics](#metrics)
+
+## crash
+
+A ping to report crash information. This information is sent as soon as possible after a crash occurs (whether the crash is a background/content process or the main process). It is expected to be used for crash report analysis and to reduce blind spots in crash reporting.
+
+
+This ping includes the [client id](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section).
+
+**Data reviews for this ping:**
+
+- <https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12>
+
+**Bugs related to this ping:**
+
+- <https://bugzilla.mozilla.org/show_bug.cgi?id=1790569>
+
+**Reasons this ping may be sent:**
+
+- `crash`: A process crashed and a ping was immediately sent.
+
+- `event_found`: A process crashed and produced a crash event, which was later found and sent in a ping.
+
+
+All Glean pings contain built-in metrics in the [`ping_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-ping_info-section) and [`client_info`](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section) sections.
+
+In addition to those built-in metrics, the following metrics are added to the ping:
+
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
+| crash.process_type |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The type of process that experienced a crash. See the full list of options [here](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/crash-ping.html#process-types).  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
+| crash.startup |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |If true, the crash occurred during process startup.  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
+| crash.time |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The time at which the crash occurred.  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
+| crash.uptime |[timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) |The application uptime. This is equivalent to the legacy crash ping's `UptimeTS` field.  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
 
 ## metrics
 

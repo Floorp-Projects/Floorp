@@ -8,8 +8,11 @@ buildscript {
             url "https://maven.mozilla.org/maven2"
         }
 
+        gradlePluginPortal()
+
         dependencies {
             classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+            classpath ComponentsDependencies.plugin_ksp
         }
     }
 }
@@ -19,9 +22,8 @@ plugins {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.google.devtools.ksp'
 apply plugin: 'kotlin-android'
-
-apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -39,10 +41,8 @@ android {
         }
     }
 
-    kapt {
-        arguments {
-            arg("room.schemaLocation", "$projectDir/schemas".toString())
-        }
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas".toString())
     }
 
     buildTypes {
@@ -70,8 +70,8 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
 
-    implementation ComponentsDependencies.androidx_room_runtime
-    kapt ComponentsDependencies.androidx_room_compiler
+    implementation Dependencies.androidx_room_runtime
+    ksp ComponentsDependencies.androidx_room_compiler
 
     // We only compile against GeckoView and Glean. It's up to the app to add those dependencies if it wants to
     // send crash reports to Socorro (GV).

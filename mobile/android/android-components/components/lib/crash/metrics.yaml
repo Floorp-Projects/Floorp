@@ -43,3 +43,78 @@ crash_metrics:
       - android-probes@mozilla.com
       - jnicol@mozilla.com
     expires: never
+
+crash:
+  uptime:
+    type: timespan
+    description: >
+      The application uptime. This is equivalent to the legacy crash ping's
+      `UptimeTS` field.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  process_type:
+    type: string
+    # yamllint disable
+    description: >
+      The type of process that experienced a crash. See the full list of
+      options
+      [here](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/crash-ping.html#process-types).
+    # yamllint enable
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  time:
+    type: datetime
+    time_unit: minute
+    description: >
+      The time at which the crash occurred.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
+  startup:
+    type: boolean
+    description: >
+      If true, the crash occurred during process startup.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
