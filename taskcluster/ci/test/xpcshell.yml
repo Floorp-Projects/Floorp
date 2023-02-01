@@ -132,9 +132,6 @@ xpcshell:
                     - macosx64-node-12
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
-                win.*aarch64.*:
-                    - win32-node-12
-                    - win32-minidump-stackwalk
                 win.*-64.*:
                     - win64-node-12
                     - win32-minidump-stackwalk

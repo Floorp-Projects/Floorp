@@ -417,10 +417,7 @@ browsertime-youtube-playback:
         by-subtest:
             youtube-playback-hfr: 3600
             youtube-playback-widevine.*: 3600
-            default:
-                by-test-platform:
-                    windows10-aarch64/opt: 3600
-                    default: 2700
+            default: 2700
 
 browsertime-tp6-live:
     <<: *tp6-defaults

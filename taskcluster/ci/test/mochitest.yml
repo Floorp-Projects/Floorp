@@ -629,7 +629,6 @@ mochitest-media:
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
                     (android|linux|windows10-64-2004|macos)(?!.*-qr).*: []
-                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     default: built-projects
     loopback-video: true
     chunks:
@@ -658,7 +657,6 @@ mochitest-media:
             .*ccov.*: 2
             android-em.*: 1
             android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            windows10-aarch64-qr.*: 2
             android-hw.*: 1
             default: default
 
