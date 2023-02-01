@@ -901,18 +901,13 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   // GTK themes can only draw an integer number of pixels
   // (even when not snapped).
   nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
-  nsIntRect overflowRect(widgetRect);
-  nsIntMargin extraSize;
-  if (GetExtraSizeForWidget(aFrame, aAppearance, &extraSize)) {
-    overflowRect.Inflate(extraSize);
-  }
 
   // This is the rectangle that will actually be drawn, in gdk pixels
   nsIntRect drawingRect(int32_t(dirtyRect.X()), int32_t(dirtyRect.Y()),
                         int32_t(dirtyRect.Width()),
                         int32_t(dirtyRect.Height()));
   if (widgetRect.IsEmpty() ||
-      !drawingRect.IntersectRect(overflowRect, drawingRect)) {
+      !drawingRect.IntersectRect(widgetRect, drawingRect)) {
     return NS_OK;
   }
 
