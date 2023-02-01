@@ -9,7 +9,7 @@ import {
 import { Themes } from "content-src/aboutwelcome/components/Themes";
 import React from "react";
 import { shallow, mount } from "enzyme";
-import { DEFAULT_WELCOME_CONTENT } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
+import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
 import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils";
 
 describe("MultiStageAboutWelcome module", () => {
@@ -17,7 +17,7 @@ describe("MultiStageAboutWelcome module", () => {
   let sandbox;
 
   const DEFAULT_PROPS = {
-    screens: DEFAULT_WELCOME_CONTENT.screens,
+    screens: AboutWelcomeDefaults.getDefaults().screens,
     metricsFlowUri: "http://localhost/",
     message_id: "DEFAULT_ABOUTWELCOME",
     utm_term: "default",
@@ -212,7 +212,7 @@ describe("MultiStageAboutWelcome module", () => {
 
   describe("WelcomeScreen component", () => {
     describe("get started screen", () => {
-      const screen = DEFAULT_WELCOME_CONTENT.screens.find(
+      const screen = AboutWelcomeDefaults.getDefaults().screens.find(
         s => s.id === "AW_PIN_FIREFOX"
       );
 
