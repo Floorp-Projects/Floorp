@@ -5,12 +5,15 @@
 
 #include "ExtensionTest.h"
 #include "ExtensionEventManager.h"
+#include "ExtensionAPICallFunctionNoReturn.h"
 
 #include "js/Equality.h"            // JS::StrictlyEqual
 #include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "mozilla/dom/ExtensionTestBinding.h"
 #include "nsIGlobalObject.h"
 #include "js/RegExp.h"
+#include "mozilla/dom/WorkerScope.h"
+#include "prenv.h"
 
 namespace mozilla {
 namespace extensions {
