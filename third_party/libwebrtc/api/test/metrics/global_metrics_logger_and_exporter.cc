@@ -22,8 +22,8 @@
 namespace webrtc {
 namespace test {
 
-MetricsLogger* GetGlobalMetricsLogger() {
-  static MetricsLogger* logger_ =
+DefaultMetricsLogger* GetGlobalMetricsLogger() {
+  static DefaultMetricsLogger* logger_ =
       new DefaultMetricsLogger(Clock::GetRealTimeClock());
   return logger_;
 }

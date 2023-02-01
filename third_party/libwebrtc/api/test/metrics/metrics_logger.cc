@@ -99,6 +99,13 @@ void DefaultMetricsLogger::LogMetric(
                             .stats = std::move(metric_stats)});
 }
 
+std::vector<Metric> DefaultMetricsLogger::GetCollectedMetrics() const {
+  std::vector<Metric> out = metrics_accumulator_.GetCollectedMetrics();
+  MutexLock lock(&mutex_);
+  out.insert(out.end(), metrics_.begin(), metrics_.end());
+  return out;
+}
+
 Timestamp DefaultMetricsLogger::Now() {
   return clock_->CurrentTime();
 }
