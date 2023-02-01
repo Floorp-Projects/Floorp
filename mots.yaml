@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-01T13:42:10.620050'
+updated_at: '2023-02-01T13:43:21.330760'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -369,6 +369,10 @@ people:
   - bmo_id: 561658
     name: Greg Tatum
     nick: gregtatum
+  - &groovecoder
+    bmo_id: 403306
+    name: Luke Crouch
+    nick: groovecoder
   - &gsvelto
     bmo_id: 448747
     name: Gabriele Svelto
@@ -3886,6 +3890,29 @@ modules:
           - *willdurand
         machine_name: webextensions
     machine_name: toolkit
+  - machine_name: url_classifier
+    name: URL Classifier
+    description: Database and list-based classification of URL resources, such as
+      Tracking Protection and SafeBrowsing.
+    includes:
+      - toolkit/components/url-classifier/**/*
+      - netwerk/url-classifier/**/*
+    excludes: []
+    owners:
+      - *dlee
+      - *groovecoder
+    peers:
+      - *timhuang
+      - *gcp
+    meta:
+      url: https://github.com/mozilla-services/shavar https://wiki.mozilla.org/Phishing_Protection
+        https://wiki.mozilla.org/Security/Tracking_protection https://wiki.mozilla.org/Security/Application_Reputation
+      owners_emeritus:
+        - François Marier
+      peers_emeritus:
+        - Henry Chang
+        - Ryan Tilder
+      group: dev-platform
 hashes:
-  config: 911a9e7df0837dfe1ccec941c6e9a5514d4247b5
-  export: 44fa3ad0e5a7146c0d058600278f4cf56f3475d1
+  config: d3cc17e53121af4bd963d0303c7e631807abdf73
+  export: 94d9f6854f7793c63600b9c2459da5920b3fa4af
