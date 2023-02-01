@@ -426,8 +426,8 @@ TEST(PeerConnectionE2EQualityTestMetricNamesTest,
               .improvement_direction = ImprovementDirection::kNeitherIsBetter},
           MetricValidationInfo{
               .test_case = "test_case",
-              .name = "cpu_usage",
-              .unit = Unit::kPercent,
+              .name = "cpu_usage_%",
+              .unit = Unit::kUnitless,
               .improvement_direction = ImprovementDirection::kSmallerIsBetter},
 
           // Metrics from StatsBasedNetworkQualityMetricsReporter

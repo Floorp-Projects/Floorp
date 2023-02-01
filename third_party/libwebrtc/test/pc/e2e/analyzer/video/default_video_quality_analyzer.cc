@@ -904,7 +904,7 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
                       ImproveDirection::kSmallerIsBetter);
   } else {
     metrics_logger_->LogSingleValueMetric(
-        "cpu_usage", test_label_, GetCpuUsagePercent(), Unit::kPercent,
+        "cpu_usage_%", test_label_, GetCpuUsagePercent(), Unit::kUnitless,
         ImprovementDirection::kSmallerIsBetter);
   }
   LogFrameCounters("Global", frame_counters_);
