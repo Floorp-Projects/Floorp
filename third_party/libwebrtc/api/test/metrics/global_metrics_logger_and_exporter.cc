@@ -21,11 +21,6 @@
 
 namespace webrtc {
 namespace test {
-namespace {
-
-MetricsLoggerAndExporter* global_metrics_logger_and_exporter = nullptr;
-
-}  // namespace
 
 MetricsLogger* GetGlobalMetricsLogger() {
   static MetricsLogger* logger_ =
@@ -42,22 +37,6 @@ bool ExportPerfMetric(MetricsLogger& logger,
     success = success && export_result;
   }
   return success;
-}
-
-MetricsLoggerAndExporter* GetGlobalMetricsLoggerAndExporter() {
-  return global_metrics_logger_and_exporter;
-}
-
-void SetupGlobalMetricsLoggerAndExporter(
-    std::vector<std::unique_ptr<MetricsExporter>> exporters) {
-  RTC_CHECK(global_metrics_logger_and_exporter == nullptr);
-  global_metrics_logger_and_exporter = new MetricsLoggerAndExporter(
-      Clock::GetRealTimeClock(), std::move(exporters));
-}
-
-void ExportAndDestroyGlobalMetricsLoggerAndExporter() {
-  RTC_CHECK(global_metrics_logger_and_exporter != nullptr);
-  delete global_metrics_logger_and_exporter;
 }
 
 }  // namespace test
