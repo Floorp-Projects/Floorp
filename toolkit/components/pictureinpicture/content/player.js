@@ -492,6 +492,10 @@ let Player = {
   setScrubberPosition(value) {
     this.scrubber.value = value;
     this.scrubber.hidden = value === undefined;
+
+    // Also hide the seek buttons when we hide the scrubber
+    this.seekBackward.hidden = value === undefined;
+    this.seekForward.hidden = value === undefined;
   },
 
   setTimestamp(timestamp) {
@@ -968,6 +972,16 @@ let Player = {
   get controlsBottom() {
     delete this.controlsBottom;
     return (this.controlsBottom = document.getElementById("controls-bottom"));
+  },
+
+  get seekBackward() {
+    delete this.seekBackward;
+    return (this.seekBackward = document.getElementById("seekBackward"));
+  },
+
+  get seekForward() {
+    delete this.seekForward;
+    return (this.seekForward = document.getElementById("seekForward"));
   },
 
   _isPlaying: false,
