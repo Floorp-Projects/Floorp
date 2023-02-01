@@ -10,7 +10,7 @@ permissions:
 
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
 
             git checkout -B "$branch"
             git add .
-            git commit -m "Import l10n."
+            git commit -m "Import translations from android-l10n"
             git push -f origin "$branch"
 
             # Create pull request if there isn't one open yet, use the last
