@@ -26,6 +26,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":metrics_logger_and_exporter_test",
+      ":print_result_proxy_metrics_exporter_test",
       ":stdout_metrics_exporter_test",
     ]
 
@@ -143,6 +144,21 @@ rtc_library("metrics_set_proto_file_exporter") {
   }
 }
 
+rtc_library("print_result_proxy_metrics_exporter") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "print_result_proxy_metrics_exporter.cc",
+    "print_result_proxy_metrics_exporter.h",
+  ]
+  deps = [
+    ":metric",
+    ":metrics_exporter",
+    "../..:array_view",
+    "../../../test:perf_test",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("stdout_metrics_exporter_test") {
     testonly = true
@@ -150,6 +166,17 @@ if (rtc_include_tests) {
     deps = [
       ":metric",
       ":stdout_metrics_exporter",
+      "../../../test:test_support",
+      "../../units:timestamp",
+    ]
+  }
+
+  rtc_library("print_result_proxy_metrics_exporter_test") {
+    testonly = true
+    sources = [ "print_result_proxy_metrics_exporter_test.cc" ]
+    deps = [
+      ":metric",
+      ":print_result_proxy_metrics_exporter",
       "../../../test:test_support",
       "../../units:timestamp",
     ]
