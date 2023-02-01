@@ -3569,10 +3569,15 @@ void nsWindow::CaptureRollupEvents(bool aDoCapture) {
     // not grabbing the pointer triggers rollup when the mouse enters the popup
     // and leaves the main window, see bug 1807482.
     //
+    // FVWM is also affected but less severely: the pointer can enter the
+    // popup, but if it briefly moves out of the popup and over the main window
+    // then we see a focus change and roll up the popup.
+    //
     // We don't do it for most common desktops, if only because it causes X11
     // crashes like bug 1607713.
     const auto& desktop = GetDesktopEnvironmentIdentifier();
-    return desktop.EqualsLiteral("twm") || desktop.EqualsLiteral("sawfish");
+    return desktop.EqualsLiteral("twm") || desktop.EqualsLiteral("sawfish") ||
+           StringBeginsWith(desktop, "fvwm"_ns);
   }();
 
   const bool grabPointer = [] {
