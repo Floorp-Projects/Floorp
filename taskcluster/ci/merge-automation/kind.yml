@@ -69,3 +69,4 @@ jobs:
                         }]
                     default: null
         run-on-projects: []
+        expiration-policy: long
