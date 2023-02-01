@@ -218,17 +218,12 @@ PASTEMO_MAX_CONTENT_LENGTH = 250 * 1024 * 1024
 
 PASTEMO_URL = "https://paste.mozilla.org/api/"
 
-MACH_PASTEBIN_DESCRIPTION = """
-Command line interface to paste.mozilla.org.
 
-Takes either a filename whose content should be pasted, or reads
-content from standard input. If a highlighter is specified it will
-be used, otherwise the file name will be used to determine an
-appropriate highlighter.
-"""
-
-
-@Command("pastebin", category="misc", description=MACH_PASTEBIN_DESCRIPTION)
+@Command(
+    "pastebin",
+    category="misc",
+    description="Command line interface to paste.mozilla.org.",
+)
 @CommandArgument(
     "--list-highlighters",
     action="store_true",
@@ -255,6 +250,14 @@ appropriate highlighter.
     help="Path to file for upload to paste.mozilla.org",
 )
 def pastebin(command_context, list_highlighters, highlighter, expires, verbose, path):
+    """Command line interface to `paste.mozilla.org`.
+
+    Takes either a filename whose content should be pasted, or reads
+    content from standard input. If a highlighter is specified it will
+    be used, otherwise the file name will be used to determine an
+    appropriate highlighter.
+    """
+
     import requests
 
     def verbose_print(*args, **kwargs):
