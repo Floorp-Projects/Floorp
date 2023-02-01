@@ -196,12 +196,13 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
   void OnFrameEncoded(absl::string_view peer_name,
                       uint16_t frame_id,
                       const EncodedImage& encoded_image,
-                      const EncoderStats& stats) override {
+                      const EncoderStats& stats,
+                      bool discarded) override {
     absl::optional<int> spatial_id = encoded_image.SpatialIndex();
     absl::optional<int> temporal_id = encoded_image.TemporalIndex();
     encoder_layers_seen_[spatial_id.value_or(0)][temporal_id.value_or(0)]++;
-    DefaultVideoQualityAnalyzer::OnFrameEncoded(peer_name, frame_id,
-                                                encoded_image, stats);
+    DefaultVideoQualityAnalyzer::OnFrameEncoded(
+        peer_name, frame_id, encoded_image, stats, discarded);
   }
 
   void OnFramePreDecode(absl::string_view peer_name,

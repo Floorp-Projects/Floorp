@@ -290,7 +290,8 @@ EncodedImageCallback::Result QualityAnalyzingVideoEncoder::OnEncodedImage(
   VideoQualityAnalyzerInterface::EncoderStats stats;
   stats.encoder_name = codec_name;
   stats.target_encode_bitrate = target_encode_bitrate;
-  analyzer_->OnFrameEncoded(peer_name_, frame_id, encoded_image, stats);
+  analyzer_->OnFrameEncoded(peer_name_, frame_id, encoded_image, stats,
+                            discard);
 
   // Image data injector injects frame id and discard flag into provided
   // EncodedImage and returns the image with a) modified original buffer (in

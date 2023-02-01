@@ -295,7 +295,10 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     absl::string_view peer_name,
     uint16_t frame_id,
     const webrtc::EncodedImage& encoded_image,
-    const EncoderStats& stats) {
+    const EncoderStats& stats,
+    bool discarded) {
+  if (discarded)
+    return;
   MutexLock lock(&mutex_);
   RTC_CHECK_EQ(state_, State::kActive)
       << "DefaultVideoQualityAnalyzer has to be started before use";

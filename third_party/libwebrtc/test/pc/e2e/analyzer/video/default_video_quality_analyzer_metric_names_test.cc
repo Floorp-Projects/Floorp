@@ -101,7 +101,8 @@ void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
     frame.set_id(frame_id);
     analyzer.OnFramePreEncode(sender, frame);
     analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats());
+                            VideoQualityAnalyzerInterface::EncoderStats(),
+                            false);
     for (absl::string_view receiver : receivers) {
       VideoFrame received_frame = DeepCopy(frame);
       analyzer.OnFramePreDecode(receiver, received_frame.id(),
