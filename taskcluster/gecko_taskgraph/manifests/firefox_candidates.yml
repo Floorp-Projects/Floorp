@@ -180,13 +180,6 @@ mapping:
         description: "Results for running the xpcshell testing framework to enable XPConnect console application"
         pretty_name: firefox-${version}.xpcshell.tests.tar.gz
         checksums_path: ${path_platform}/${locale}/firefox-${version}.xpcshell.tests.tar.gz
-    target.normandy.json:
-        <<: *default
-        description: "Metadata about the Normandy client of this build"
-        only_for_platforms:
-            - linux64-shippable
-        pretty_name: firefox-${version}.normandy.json
-        checksums_path: ${path_platform}/${locale}/target.normandy.json
     target_info.txt:
         <<: *default
         description: "File containing the buildID"
