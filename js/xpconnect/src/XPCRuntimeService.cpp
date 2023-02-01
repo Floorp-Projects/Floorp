@@ -164,7 +164,7 @@ BackstagePass::GetClassID(nsCID** aClassID) {
 
 NS_IMETHODIMP
 BackstagePass::GetFlags(uint32_t* aFlags) {
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+  *aFlags = 0;
   return NS_OK;
 }
 

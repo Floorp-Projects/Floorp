@@ -42,8 +42,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_CLASSINFO(ContentPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
-                  NS_PRINCIPAL_CID)
+NS_IMPL_CLASSINFO(ContentPrincipal, nullptr, 0, NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(ContentPrincipal, nsIPrincipal)
 NS_IMPL_CI_INTERFACE_GETTER(ContentPrincipal, nsIPrincipal)
 

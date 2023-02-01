@@ -14,8 +14,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_CLASSINFO(ExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
-                  NS_EXPANDEDPRINCIPAL_CID)
+NS_IMPL_CLASSINFO(ExpandedPrincipal, nullptr, 0, NS_EXPANDEDPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal, nsIPrincipal,
                            nsIExpandedPrincipal)
 NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal, nsIPrincipal,

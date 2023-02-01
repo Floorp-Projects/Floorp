@@ -17,8 +17,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_CLASSINFO(SystemPrincipal, nullptr,
-                  nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
+NS_IMPL_CLASSINFO(SystemPrincipal, nullptr, nsIClassInfo::SINGLETON,
                   NS_SYSTEMPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(SystemPrincipal, nsIPrincipal, nsISerializable)
 NS_IMPL_CI_INTERFACE_GETTER(SystemPrincipal, nsIPrincipal, nsISerializable)
