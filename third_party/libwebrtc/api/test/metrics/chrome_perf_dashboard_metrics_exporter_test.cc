@@ -212,6 +212,37 @@ TEST_F(ChromePerfDashboardMetricsExporterTest,
   EXPECT_THAT(actual_histogram_set.histograms(0).running().variance(), Eq(0));
 }
 
+TEST_F(ChromePerfDashboardMetricsExporterTest,
+       ExportMetricWithOnlyStatsConvertsMeanValuesWhenRequired) {
+  Metric metric{.name = "test_metric",
+                .unit = Unit::kKilobitsPerSecond,
+                .improvement_direction = ImprovementDirection::kBiggerIsBetter,
+                .test_case = "test_case_name",
+                .metric_metadata = DefaultMetadata(),
+                .time_series = Metric::TimeSeries{.samples = {}},
+                .stats = Metric::Stats{
+                    .mean = 15.0, .stddev = 5.0, .min = 10.0, .max = 20.0}};
+
+  ChromePerfDashboardMetricsExporter exporter(temp_filename_);
+
+  ASSERT_TRUE(exporter.Export(std::vector<Metric>{metric}));
+  proto::HistogramSet actual_histogram_set;
+  actual_histogram_set.ParseFromString(ReadFileAsString(temp_filename_));
+  EXPECT_THAT(actual_histogram_set.histograms().size(), Eq(1));
+
+  // Validate values for `metric`
+  EXPECT_THAT(actual_histogram_set.histograms(0).sample_values().size(), Eq(1));
+  EXPECT_THAT(actual_histogram_set.histograms(0).sample_values(0), Eq(1875.0));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().count(), Eq(1));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().max(), Eq(1875));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().meanlogs(),
+              DoubleNear(7.53636, 0.1));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().mean(), Eq(1875));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().min(), Eq(1875));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().sum(), Eq(1875));
+  EXPECT_THAT(actual_histogram_set.histograms(0).running().variance(), Eq(0));
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace webrtc
