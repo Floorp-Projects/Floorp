@@ -320,54 +320,11 @@ class PeerConnectionE2EQualityTestFixture {
     // each RtpEncodingParameters of RtpParameters of corresponding
     // RtpSenderInterface for this video stream.
     absl::optional<int> temporal_layers_count;
-    // DEPRECATED: use input_dump_options instead. If specified the input stream
-    // will be also copied to specified file. It is actually one of the test's
-    // output file, which contains copy of what was captured during the test for
-    // this video stream on sender side. It is useful when generator is used as
-    // input.
-    absl::optional<std::string> input_dump_file_name;
-    // DEPRECATED: use input_dump_options instead. Used only if
-    // `input_dump_file_name` is set. Specifies the module for the video frames
-    // to be dumped. Modulo equals X means every Xth frame will be written to
-    // the dump file. The value must be greater than 0.
-    int input_dump_sampling_modulo = 1;
     // If specified defines how input should be dumped. It is actually one of
     // the test's output file, which contains copy of what was captured during
     // the test for this video stream on sender side. It is useful when
     // generator is used as input.
     absl::optional<VideoDumpOptions> input_dump_options;
-    // DEPRECATED: use output_dump_options instead. If specified this file will
-    // be used as output on the receiver side for this stream.
-    //
-    // If multiple output streams will be produced by this stream (e.g. when the
-    // stream represented by this `VideoConfig` is received by more than one
-    // peer), output files will be appended with receiver names. If the second
-    // and other receivers will be added in the middle of the call after the
-    // first frame for this stream has been already written to the output file,
-    // then only dumps for newly added peers will be appended with receiver
-    // name, the dump for the first receiver will have name equal to the
-    // specified one. For example:
-    //   * If we have peers A and B and A has `VideoConfig` V_a with
-    //     V_a.output_dump_file_name = "/foo/a_output.yuv", then the stream
-    //     related to V_a will be written into "/foo/a_output.yuv".
-    //   * If we have peers A, B and C and A has `VideoConfig` V_a with
-    //     V_a.output_dump_file_name = "/foo/a_output.yuv", then the stream
-    //     related to V_a will be written for peer B into "/foo/a_output.yuv.B"
-    //     and for peer C into "/foo/a_output.yuv.C"
-    //   * If we have peers A and B and A has `VideoConfig` V_a with
-    //     V_a.output_dump_file_name = "/foo/a_output.yuv", then if after B
-    //     received the first frame related to V_a peer C joined the call, then
-    //     the stream related to V_a will be written for peer B into
-    //     "/foo/a_output.yuv" and for peer C into "/foo/a_output.yuv.C"
-    //
-    // The produced files contains what was rendered for this video stream on
-    // receiver side.
-    absl::optional<std::string> output_dump_file_name;
-    // DEPRECATED: use output_dump_options instead. Used only if
-    // `output_dump_file_name` is set. Specifies the module for the video frames
-    // to be dumped. Modulo equals X means every Xth frame will be written to
-    // the dump file. The value must be greater than 0.
-    int output_dump_sampling_modulo = 1;
     // If specified defines how output should be dumped on the receiver side for
     // this stream. The produced files contain what was rendered for this video
     // stream on receiver side per each receiver.
