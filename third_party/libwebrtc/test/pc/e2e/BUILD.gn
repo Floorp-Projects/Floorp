@@ -853,6 +853,8 @@ if (!build_with_chromium) {
       "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:rtc_stats_api",
       "../../../api:track_id_stream_info_map",
+      "../../../api/test/metrics:metric",
+      "../../../api/test/metrics:metrics_logger_and_exporter",
       "../../../api/units:data_size",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:rtc_event",
