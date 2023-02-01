@@ -516,7 +516,6 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCStatsMember<uint64_t> bytes_sent;
   RTCStatsMember<uint64_t> header_bytes_sent;
   RTCStatsMember<uint64_t> retransmitted_bytes_sent;
-  // TODO(https://crbug.com/webrtc/13394): Also collect this metric for video.
   RTCStatsMember<double> target_bitrate;
   RTCStatsMember<uint32_t> frames_encoded;
   RTCStatsMember<uint32_t> key_frames_encoded;
