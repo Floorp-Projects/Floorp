@@ -25,14 +25,34 @@
 #include "pc/peer_connection_wrapper.h"
 #include "pc/session_description.h"
 #include "pc/test/fake_audio_capture_module.h"
+#include "pc/test/frame_generator_capturer_video_track_source.h"
 #include "pc/test/peer_connection_test_wrapper.h"
+#include "rtc_base/gunit.h"
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
 
+#ifdef WEBRTC_ANDROID
+#include "pc/test/android_test_initializer.h"
+#endif
+
 namespace webrtc {
+
+namespace {
+static const int kDefaultTimeoutMs = 5000;
+
+bool AddIceCandidates(PeerConnectionWrapper* peer,
+                      std::vector<const IceCandidateInterface*> candidates) {
+  for (const auto candidate : candidates) {
+    if (!peer->pc()->AddIceCandidate(candidate)) {
+      return false;
+    }
+  }
+  return true;
+}
+}  // namespace
 
 using RTCConfiguration = PeerConnectionInterface::RTCConfiguration;
 
@@ -41,8 +61,12 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
   typedef std::unique_ptr<PeerConnectionWrapper> WrapperPtr;
 
   PeerConnectionFieldTrialTest()
-      : socket_server_(rtc::CreateDefaultSocketServer()),
+      : clock_(Clock::GetRealTimeClock()),
+        socket_server_(rtc::CreateDefaultSocketServer()),
         main_thread_(socket_server_.get()) {
+#ifdef WEBRTC_ANDROID
+    InitializeAndroidObjects();
+#endif
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     config_.servers.push_back(ice_server);
@@ -54,8 +78,6 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
   void CreatePCFactory(std::unique_ptr<FieldTrialsView> field_trials) {
     PeerConnectionFactoryDependencies pcf_deps;
     pcf_deps.signaling_thread = rtc::Thread::Current();
-    pcf_deps.worker_thread = rtc::Thread::Current();
-    pcf_deps.network_thread = rtc::Thread::Current();
     pcf_deps.trials = std::move(field_trials);
     pcf_deps.task_queue_factory = CreateDefaultTaskQueueFactory();
     pcf_deps.call_factory = webrtc::CreateCallFactory();
@@ -66,6 +88,13 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
     webrtc::SetMediaEngineDefaults(&media_deps);
     pcf_deps.media_engine = cricket::CreateMediaEngine(std::move(media_deps));
     pc_factory_ = CreateModularPeerConnectionFactory(std::move(pcf_deps));
+
+    // Allow ADAPTER_TYPE_LOOPBACK to create PeerConnections with loopback in
+    // this test.
+    RTC_DCHECK(pc_factory_);
+    PeerConnectionFactoryInterface::Options options;
+    options.network_ignore_mask = 0;
+    pc_factory_->SetOptions(options);
   }
 
   WrapperPtr CreatePeerConnection() {
@@ -79,6 +108,7 @@ class PeerConnectionFieldTrialTest : public ::testing::Test {
         pc_factory_, result.MoveValue(), std::move(observer));
   }
 
+  Clock* const clock_;
   std::unique_ptr<rtc::SocketServer> socket_server_;
   rtc::AutoSocketServerThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;
@@ -186,6 +216,52 @@ TEST_F(PeerConnectionFieldTrialTest, InjectDependencyDescriptor) {
                                          RtpExtension::kDependencyDescriptorUri;
                                 }) != rtp_header_extensions2.end();
   EXPECT_TRUE(found2);
+}
+
+// Test that the ability to emulate degraded networks works without crashing.
+TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
+  std::unique_ptr<test::ScopedKeyValueConfig> field_trials =
+      std::make_unique<test::ScopedKeyValueConfig>(
+          "WebRTC-FakeNetworkSendConfig/link_capacity_kbps:500/"
+          "WebRTC-FakeNetworkReceiveConfig/loss_percent:1/");
+
+  CreatePCFactory(std::move(field_trials));
+
+  WrapperPtr caller = CreatePeerConnection();
+  FrameGeneratorCapturerVideoTrackSource::Config config;
+  auto video_track_source =
+      rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(
+          config, clock_, /*is_screencast=*/false);
+  caller->AddTrack(
+      pc_factory_->CreateVideoTrack("v", video_track_source.get()));
+  WrapperPtr callee = CreatePeerConnection();
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+
+  // Do the SDP negotiation, and also exchange ice candidates.
+  ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
+  ASSERT_TRUE_WAIT(
+      caller->signaling_state() == PeerConnectionInterface::kStable,
+      kDefaultTimeoutMs);
+  ASSERT_TRUE_WAIT(caller->IsIceGatheringDone(), kDefaultTimeoutMs);
+  ASSERT_TRUE_WAIT(callee->IsIceGatheringDone(), kDefaultTimeoutMs);
+
+  // Connect an ICE candidate pairs.
+  ASSERT_TRUE(
+      AddIceCandidates(callee.get(), caller->observer()->GetAllCandidates()));
+  ASSERT_TRUE(
+      AddIceCandidates(caller.get(), callee->observer()->GetAllCandidates()));
+
+  // This means that ICE and DTLS are connected.
+  ASSERT_TRUE_WAIT(callee->IsIceConnected(), kDefaultTimeoutMs);
+  ASSERT_TRUE_WAIT(caller->IsIceConnected(), kDefaultTimeoutMs);
+
+  // Send packets for kDefaultTimeoutMs
+  // For now, whether this field trial works or not is checked by
+  // whether a crash occurs. Additional validation can be added later.
+  WAIT(false, kDefaultTimeoutMs);
 }
 
 }  // namespace webrtc

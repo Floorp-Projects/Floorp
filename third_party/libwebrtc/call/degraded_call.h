@@ -122,7 +122,7 @@ class DegradedCall : public Call, private PacketReceiver {
    public:
     FakeNetworkPipeOnTaskQueue(
         TaskQueueBase* task_queue,
-        const ScopedTaskSafety& task_safety,
+        rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive,
         Clock* clock,
         std::unique_ptr<NetworkBehaviorInterface> network_behavior);
 
@@ -142,9 +142,28 @@ class DegradedCall : public Call, private PacketReceiver {
 
     Clock* const clock_;
     TaskQueueBase* const task_queue_;
-    const ScopedTaskSafety& task_safety_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive_;
     FakeNetworkPipe pipe_;
     absl::optional<int64_t> next_process_ms_ RTC_GUARDED_BY(&task_queue_);
+  };
+
+  class ThreadedPacketReceiver : public PacketReceiver {
+   public:
+    ThreadedPacketReceiver(webrtc::TaskQueueBase* worker_thread,
+                           webrtc::TaskQueueBase* network_thread,
+                           rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive,
+                           PacketReceiver* receiver);
+    ~ThreadedPacketReceiver() override;
+
+    DeliveryStatus DeliverPacket(MediaType media_type,
+                                 rtc::CopyOnWriteBuffer packet,
+                                 int64_t packet_time_us) override;
+
+   private:
+    webrtc::TaskQueueBase* const worker_thread_;
+    webrtc::TaskQueueBase* const network_thread_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive_;
+    webrtc::PacketReceiver* const receiver_;
   };
 
   // For audio/video send stream, a TransportAdapter instance is used to
@@ -178,7 +197,8 @@ class DegradedCall : public Call, private PacketReceiver {
 
   Clock* const clock_;
   const std::unique_ptr<Call> call_;
-  ScopedTaskSafety task_safety_;
+  // For cancelling tasks on the network thread when DegradedCall is destroyed
+  rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive_;
   size_t send_config_index_;
   const std::vector<TimeScopedNetworkConfig> send_configs_;
   SimulatedNetwork* send_simulated_network_;
@@ -192,6 +212,7 @@ class DegradedCall : public Call, private PacketReceiver {
   const std::vector<TimeScopedNetworkConfig> receive_configs_;
   SimulatedNetwork* receive_simulated_network_;
   std::unique_ptr<FakeNetworkPipe> receive_pipe_;
+  std::unique_ptr<ThreadedPacketReceiver> packet_receiver_;
 };
 
 }  // namespace webrtc
