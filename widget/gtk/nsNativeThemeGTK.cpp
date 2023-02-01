@@ -829,23 +829,6 @@ bool nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame,
       aExtra->bottom = aExtra->top;
       break;
     }
-    case StyleAppearance::Tab: {
-      if (!IsSelectedTab(aFrame)) return false;
-
-      gint gap_height = moz_gtk_get_tab_thickness(
-          IsBottomTab(aFrame) ? MOZ_GTK_TAB_BOTTOM : MOZ_GTK_TAB_TOP);
-      if (!gap_height) return false;
-
-      int32_t extra = gap_height - GetTabMarginPixels(aFrame);
-      if (extra <= 0) return false;
-
-      if (IsBottomTab(aFrame)) {
-        aExtra->top = extra;
-      } else {
-        aExtra->bottom = extra;
-      }
-      return false;
-    }
     default:
       return false;
   }
