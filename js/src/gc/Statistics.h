@@ -24,6 +24,7 @@
 
 namespace js {
 
+class Sprinter;
 class JSONPrinter;
 
 namespace gcstats {
@@ -104,6 +105,8 @@ struct Trigger {
 };
 
 #define FOR_EACH_GC_PROFILE_TIME(_)                                 \
+  _(Total, "total", PhaseKind::NONE)                                \
+  _(Background, "bgwrk", PhaseKind::NONE)                           \
   _(BeginCallback, "bgnCB", PhaseKind::GC_BEGIN)                    \
   _(MinorForMajor, "evct4m", PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC) \
   _(WaitBgThread, "waitBG", PhaseKind::WAIT_BACKGROUND_THREAD)      \
@@ -114,6 +117,9 @@ struct Trigger {
   _(EndCallback, "endCB", PhaseKind::GC_END)                        \
   _(MinorGC, "minor", PhaseKind::MINOR_GC)                          \
   _(EvictNursery, "evict", PhaseKind::EVICT_NURSERY)
+
+static const char* MajorGCProfilePrefix = "MajorGC:";
+static const char* MinorGCProfilePrefix = "MinorGC:";
 
 const char* ExplainAbortReason(GCAbortReason reason);
 
@@ -444,11 +450,9 @@ struct Statistics {
   /* Profiling data. */
 
   enum class ProfileKey {
-    Total,
-    Background,
-#define DEFINE_TIME_KEY(name, text, phase) name,
-    FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
-#undef DEFINE_TIME_KEY
+#define DEFINE_PROFILE_KEY(name, _1, _2) name,
+    FOR_EACH_GC_PROFILE_TIME(DEFINE_PROFILE_KEY)
+#undef DEFINE_PROFILE_KEY
         KeyCount
   };
 
@@ -460,6 +464,9 @@ struct Statistics {
   TimeDuration profileThreshold_;
   ProfileDurations totalTimes_;
   uint64_t sliceCount_;
+
+  char formatBuffer_[32];
+  static constexpr int FormatBufferLength = sizeof(formatBuffer_);
 
   JSContext* context();
 
@@ -499,7 +506,14 @@ struct Statistics {
   double computeMMU(TimeDuration resolution) const;
 
   void printSliceProfile();
-  void printProfileTimes(const ProfileDurations& times);
+  ProfileDurations getProfileTimes(const SliceData& slice) const;
+  void updateTotalProfileTimes(const ProfileDurations& times);
+  const char* formatGCStates(const SliceData& slice);
+  const char* formatGCFlags(const SliceData& slice);
+  const char* formatBudget(const SliceData& slice);
+  const char* formatTotalSlices();
+  static bool printProfileTimes(const ProfileDurations& times,
+                                Sprinter& sprinter);
 };
 
 struct MOZ_RAII AutoGCSlice {
