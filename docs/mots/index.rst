@@ -3825,3 +3825,34 @@ Webextension APIs and integration.
       -
         | `browser/components/extensions/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/extensions/\*\*/\*>`__
         | `toolkit/components/extensions/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/extensions/\*\*/\*>`__
+
+
+URL Classifier
+~~~~~~~~~~~~~~
+Database and list-based classification of URL resources, such as Tracking Protection and SafeBrowsing.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
+        | `Luke Crouch (groovecoder) <https://people.mozilla.org/s?query=groovecoder>`__
+    * - Peer(s)
+      -
+        | `Tim Huang (timhuang) <https://people.mozilla.org/s?query=timhuang>`__
+        | `Gian-Carlo Pascutto (gcp) <https://people.mozilla.org/s?query=gcp>`__
+    * - Owner(s) Emeritus
+      - François Marier
+    * - Peer(s) Emeritus
+      - Henry Chang, Ryan Tilder
+    * - Includes
+      -
+        | `toolkit/components/url-classifier/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/url-classifier/\*\*/\*>`__
+        | `netwerk/url-classifier/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/url-classifier/\*\*/\*>`__
+    * - Group
+      - dev-platform
+    * - URL
+      - https://github.com/mozilla-services/shavar https://wiki.mozilla.org/Phishing_Protection https://wiki.mozilla.org/Security/Tracking_protection https://wiki.mozilla.org/Security/Application_Reputation
