@@ -69,9 +69,9 @@ TEST(StdoutMetricsExporterTest, ExportMetricFormatCorrect) {
   StdoutMetricsExporter exporter;
 
   std::string expected =
-      "RESULT: test_case_name1/test_metric1= "
+      "RESULT: test_case_name1 / test_metric1= "
       "{mean=15, stddev=5} Milliseconds (BiggerIsBetter)\n"
-      "RESULT: test_case_name2/test_metric2= "
+      "RESULT: test_case_name2 / test_metric2= "
       "{mean=30, stddev=10} KilobitsPerSecond (SmallerIsBetter)\n";
 
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric1, metric2}));
@@ -84,7 +84,7 @@ TEST(StdoutMetricsExporterNumberFormatTest, PositiveNumberMaxPrecision) {
 
   Metric metric = PsnrForTestFoo(15.00000001, 0.00000001);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=15.00000001, stddev=0.00000001} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -97,7 +97,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(15.12345, 0.12);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=15.12345, stddev=0.12} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -110,7 +110,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(15.123450000, 0.120000000);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=15.12345, stddev=0.12} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -123,7 +123,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(15.000000009, 0.999999999);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=15.00000001, stddev=1} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -136,7 +136,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(15.0000000049, 0.9999999949);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=15, stddev=0.99999999} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -148,7 +148,7 @@ TEST(StdoutMetricsExporterNumberFormatTest, NegativeNumberMaxPrecision) {
 
   Metric metric = PsnrForTestFoo(-15.00000001, -0.00000001);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=-15.00000001, stddev=-0.00000001} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -161,7 +161,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(-15.12345, -0.12);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=-15.12345, stddev=-0.12} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -174,7 +174,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(-15.123450000, -0.120000000);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=-15.12345, stddev=-0.12} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -187,7 +187,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(-15.000000009, -0.999999999);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=-15.00000001, stddev=-1} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
@@ -200,7 +200,7 @@ TEST(StdoutMetricsExporterNumberFormatTest,
 
   Metric metric = PsnrForTestFoo(-15.0000000049, -0.9999999949);
   std::string expected =
-      "RESULT: foo/psnr= "
+      "RESULT: foo / psnr= "
       "{mean=-15, stddev=-0.99999999} Unitless (BiggerIsBetter)\n";
   EXPECT_TRUE(exporter.Export(std::vector<Metric>{metric}));
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());

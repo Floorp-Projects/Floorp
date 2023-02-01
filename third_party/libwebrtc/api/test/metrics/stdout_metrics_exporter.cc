@@ -79,7 +79,7 @@ bool StdoutMetricsExporter::Export(rtc::ArrayView<const Metric> metrics) {
 
 void StdoutMetricsExporter::PrintMetric(const Metric& metric) {
   rtc::StringBuilder value_stream;
-  value_stream << metric.test_case << "/" << metric.name << "= {mean=";
+  value_stream << metric.test_case << " / " << metric.name << "= {mean=";
   if (metric.stats.mean.has_value()) {
     AppendWithPrecision(*metric.stats.mean, 8, value_stream);
   } else {
