@@ -148,10 +148,7 @@ fn build_configuration(
         String::from(SERVER)
     };
 
-    // In the event that this isn't "firefox.desktop", we don't use core's MPS.
-    let mut use_core_mps = false;
     let application_id = if app_id_override.is_empty() {
-        use_core_mps = true;
         "firefox.desktop".to_string()
     } else {
         app_id_override.to_utf8().to_string()
@@ -165,7 +162,7 @@ fn build_configuration(
         delay_ping_lifetime_io: true,
         server_endpoint: Some(server),
         uploader: None,
-        use_core_mps,
+        use_core_mps: true,
         trim_data_to_registered_pings: true,
     };
 
