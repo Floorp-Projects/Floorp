@@ -19,6 +19,8 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "call/fake_network_pipe.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -28,7 +30,6 @@
 #include "rtc_base/time_utils.h"
 #include "test/encoder_settings.h"
 #include "test/gtest.h"
-#include "test/testsupport/perf_test.h"
 
 ABSL_FLAG(std::string,
           ramp_dump_name,
@@ -37,6 +38,10 @@ ABSL_FLAG(std::string,
 
 namespace webrtc {
 namespace {
+
+using ::webrtc::test::GetGlobalMetricsLogger;
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
 
 constexpr TimeDelta kPollInterval = TimeDelta::Millis(20);
 static const int kExpectedHighVideoBitrateBps = 80000;
@@ -52,6 +57,7 @@ std::vector<uint32_t> GenerateSsrcs(size_t num_streams, uint32_t ssrc_offset) {
     ssrcs.push_back(static_cast<uint32_t>(ssrc_offset + i));
   return ssrcs;
 }
+
 }  // namespace
 
 RampUpTester::RampUpTester(size_t num_video_streams,
@@ -332,12 +338,12 @@ void RampUpTester::PollStats() {
 void RampUpTester::ReportResult(
     absl::string_view measurement,
     size_t value,
-    absl::string_view units,
-    test::ImproveDirection improve_direction) const {
-  webrtc::test::PrintResult(
-      measurement, "",
+    Unit unit,
+    ImprovementDirection improvement_direction) const {
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      measurement,
       ::testing::UnitTest::GetInstance()->current_test_info()->name(), value,
-      units, false);
+      unit, improvement_direction);
 }
 
 void RampUpTester::AccumulateStats(const VideoSendStream::StreamStats& stream,
@@ -392,21 +398,21 @@ void RampUpTester::TriggerTestDone() {
   }
 
   if (report_perf_stats_) {
-    ReportResult("ramp-up-media-sent", media_sent, "bytes",
-                 test::ImproveDirection::kBiggerIsBetter);
-    ReportResult("ramp-up-padding-sent", padding_sent, "bytes",
-                 test::ImproveDirection::kSmallerIsBetter);
-    ReportResult("ramp-up-rtx-media-sent", rtx_media_sent, "bytes",
-                 test::ImproveDirection::kBiggerIsBetter);
-    ReportResult("ramp-up-rtx-padding-sent", rtx_padding_sent, "bytes",
-                 test::ImproveDirection::kSmallerIsBetter);
+    ReportResult("ramp-up-media-sent", media_sent, Unit::kBytes,
+                 ImprovementDirection::kBiggerIsBetter);
+    ReportResult("ramp-up-padding-sent", padding_sent, Unit::kBytes,
+                 ImprovementDirection::kSmallerIsBetter);
+    ReportResult("ramp-up-rtx-media-sent", rtx_media_sent, Unit::kBytes,
+                 ImprovementDirection::kBiggerIsBetter);
+    ReportResult("ramp-up-rtx-padding-sent", rtx_padding_sent, Unit::kBytes,
+                 ImprovementDirection::kSmallerIsBetter);
     if (ramp_up_finished_ms_ >= 0) {
       ReportResult("ramp-up-time", ramp_up_finished_ms_ - test_start_ms_,
-                   "milliseconds", test::ImproveDirection::kSmallerIsBetter);
+                   Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter);
     }
     ReportResult("ramp-up-average-network-latency",
-                 send_transport_->GetAverageDelayMs(), "milliseconds",
-                 test::ImproveDirection::kSmallerIsBetter);
+                 send_transport_->GetAverageDelayMs(), Unit::kMilliseconds,
+                 ImprovementDirection::kSmallerIsBetter);
   }
 }
 
@@ -531,10 +537,10 @@ void RampUpDownUpTester::EvolveTestState(int bitrate_bps, bool suspended) {
       EXPECT_FALSE(suspended);
       if (bitrate_bps >= GetExpectedHighBitrate()) {
         if (report_perf_stats_) {
-          webrtc::test::PrintResult("ramp_up_down_up", GetModifierString(),
-                                    "first_rampup", now - state_start_ms_, "ms",
-                                    false,
-                                    test::ImproveDirection::kSmallerIsBetter);
+          GetGlobalMetricsLogger()->LogSingleValueMetric(
+              "ramp_up_down_up" + GetModifierString(), "first_rampup",
+              now - state_start_ms_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
         }
         // Apply loss during the transition between states if FEC is enabled.
         forward_transport_config_.loss_percent = loss_rates_[test_state_];
@@ -548,10 +554,10 @@ void RampUpDownUpTester::EvolveTestState(int bitrate_bps, bool suspended) {
       if (bitrate_bps < kLowBandwidthLimitBps + kLowBitrateMarginBps &&
           suspended == check_suspend_state) {
         if (report_perf_stats_) {
-          webrtc::test::PrintResult("ramp_up_down_up", GetModifierString(),
-                                    "rampdown", now - state_start_ms_, "ms",
-                                    false,
-                                    test::ImproveDirection::kSmallerIsBetter);
+          GetGlobalMetricsLogger()->LogSingleValueMetric(
+              "ramp_up_down_up" + GetModifierString(), "rampdown",
+              now - state_start_ms_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
         }
         // Apply loss during the transition between states if FEC is enabled.
         forward_transport_config_.loss_percent = loss_rates_[test_state_];
@@ -563,13 +569,14 @@ void RampUpDownUpTester::EvolveTestState(int bitrate_bps, bool suspended) {
     case kSecondRampup:
       if (bitrate_bps >= GetExpectedHighBitrate() && !suspended) {
         if (report_perf_stats_) {
-          webrtc::test::PrintResult("ramp_up_down_up", GetModifierString(),
-                                    "second_rampup", now - state_start_ms_,
-                                    "ms", false,
-                                    test::ImproveDirection::kSmallerIsBetter);
+          GetGlobalMetricsLogger()->LogSingleValueMetric(
+              "ramp_up_down_up" + GetModifierString(), "second_rampup",
+              now - state_start_ms_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
           ReportResult("ramp-up-down-up-average-network-latency",
-                       send_transport_->GetAverageDelayMs(), "milliseconds",
-                       test::ImproveDirection::kSmallerIsBetter);
+                       send_transport_->GetAverageDelayMs(),
+                       Unit::kMilliseconds,
+                       ImprovementDirection::kSmallerIsBetter);
         }
         // Apply loss during the transition between states if FEC is enabled.
         forward_transport_config_.loss_percent = loss_rates_[test_state_];
@@ -729,4 +736,5 @@ TEST_F(RampUpTest, AudioTransportSequenceNumber) {
                     false, task_queue());
   RunBaseTest(&test);
 }
+
 }  // namespace webrtc
