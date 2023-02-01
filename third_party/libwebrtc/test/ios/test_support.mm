@@ -93,6 +93,8 @@ static absl::optional<std::vector<std::string>> g_metrics_to_plot;
 - (int)runGoogleTests {
   rtc::test::ConfigureCoverageReportPath();
 
+  int exitStatus = g_test_suite();
+
   std::vector<std::unique_ptr<webrtc::test::MetricsExporter>> exporters;
   if (g_export_perf_results_new_api) {
     exporters.push_back(std::make_unique<webrtc::test::StdoutMetricsExporter>());
@@ -111,11 +113,7 @@ static absl::optional<std::vector<std::string>> g_metrics_to_plot;
   } else {
     exporters.push_back(std::make_unique<webrtc::test::PrintResultProxyMetricsExporter>());
   }
-  webrtc::test::SetupGlobalMetricsLoggerAndExporter(std::move(exporters));
-
-  int exitStatus = g_test_suite();
-
-  webrtc::test::ExportAndDestroyGlobalMetricsLoggerAndExporter();
+  webrtc::test::ExportPerfMetric(*webrtc::test::GetGlobalMetricsLogger(), std::move(exporters));
   if (!g_export_perf_results_new_api) {
     if (g_write_perf_output) {
       // Stores data into a proto file under the app's document directory.

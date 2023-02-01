@@ -58,7 +58,7 @@ class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
     network_emulation_ = CreateNetworkEmulationManager();
     auto video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
         network_emulation_->time_controller()->GetClock(),
-        test::GetGlobalMetricsLoggerAndExporter());
+        test::GetGlobalMetricsLogger());
     video_quality_analyzer_ = video_quality_analyzer.get();
     fixture_ = CreatePeerConnectionE2EQualityTestFixture(
         testing::UnitTest::GetInstance()->current_test_info()->name(),
@@ -185,7 +185,7 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
           std::map<std::string, std::vector<EmulatedEndpoint*>>(
               {{"alice", network_links.first->endpoints()},
                {"charlie", network_links.second->endpoints()}}),
-          network_emulation(), test::GetGlobalMetricsLoggerAndExporter()));
+          network_emulation(), test::GetGlobalMetricsLogger()));
   RunParams run_params(TimeDelta::Seconds(2));
   run_params.enable_flex_fec_support = true;
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
@@ -237,7 +237,7 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, SmokeH264) {
           std::map<std::string, std::vector<EmulatedEndpoint*>>(
               {{"alice", network_links.first->endpoints()},
                {"charlie", network_links.second->endpoints()}}),
-          network_emulation(), test::GetGlobalMetricsLoggerAndExporter()));
+          network_emulation(), test::GetGlobalMetricsLogger()));
   RunParams run_params(TimeDelta::Seconds(2));
   run_params.enable_flex_fec_support = true;
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
@@ -304,7 +304,7 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
           std::map<std::string, std::vector<EmulatedEndpoint*>>(
               {{"alice", alice_network->endpoints()},
                {"bob", bob_network->endpoints()}}),
-          network_emulation(), test::GetGlobalMetricsLoggerAndExporter()));
+          network_emulation(), test::GetGlobalMetricsLogger()));
 
   fixture()->ExecuteAt(TimeDelta::Seconds(1), [alice_node](TimeDelta) {
     BuiltInNetworkBehaviorConfig config;

@@ -29,7 +29,7 @@ CreatePeerConnectionE2EQualityTestFixture(
   return std::make_unique<PeerConnectionE2EQualityTest>(
       std::move(test_case_name), time_controller,
       std::move(audio_quality_analyzer), std::move(video_quality_analyzer),
-      test::GetGlobalMetricsLoggerAndExporter());
+      test::GetGlobalMetricsLogger());
 }
 
 }  // namespace webrtc_pc_e2e
