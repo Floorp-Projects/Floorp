@@ -17,7 +17,6 @@
 #include <utility>
 
 #include "rtc_base/checks.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/ssl_identity.h"
 
 namespace rtc {

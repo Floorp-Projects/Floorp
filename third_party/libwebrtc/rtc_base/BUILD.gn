@@ -933,7 +933,6 @@ rtc_library("threading") {
     "async_resolver.h",
     "internal/default_socket_server.cc",
     "internal/default_socket_server.h",
-    "message_handler.h",
     "network_monitor.cc",
     "network_monitor.h",
     "network_monitor_factory.cc",
@@ -942,7 +941,6 @@ rtc_library("threading") {
     "physical_socket_server.h",
     "thread.cc",
     "thread.h",
-    "thread_message.h",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
