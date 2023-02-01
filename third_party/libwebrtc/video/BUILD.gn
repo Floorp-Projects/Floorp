@@ -483,6 +483,8 @@ if (rtc_include_tests) {
         "../api/rtc_event_log:rtc_event_log_factory",
         "../api/task_queue",
         "../api/task_queue:default_task_queue_factory",
+        "../api/test/metrics:global_metrics_logger_and_exporter",
+        "../api/test/metrics:metric",
         "../api/video:builtin_video_bitrate_allocator_factory",
         "../api/video:video_bitrate_allocator_factory",
         "../api/video:video_frame",
@@ -520,7 +522,6 @@ if (rtc_include_tests) {
         "../system_wrappers",
         "../test:fake_video_codecs",
         "../test:fileutils",
-        "../test:perf_test",
         "../test:platform_video_capturer",
         "../test:rtp_test_utils",
         "../test:test_common",
@@ -534,6 +535,7 @@ if (rtc_include_tests) {
         "//third_party/abseil-cpp/absl/algorithm:container",
         "//third_party/abseil-cpp/absl/flags:flag",
         "//third_party/abseil-cpp/absl/flags:parse",
+        "//third_party/abseil-cpp/absl/strings",
       ]
 
       if (is_mac || is_ios) {
