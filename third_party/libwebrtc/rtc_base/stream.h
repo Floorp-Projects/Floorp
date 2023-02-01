@@ -14,7 +14,6 @@
 #include <memory>
 
 #include "rtc_base/buffer.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"

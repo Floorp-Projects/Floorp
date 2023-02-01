@@ -26,7 +26,6 @@
 #include "p2p/base/stun_request.h"
 #include "p2p/base/transport_description.h"
 #include "rtc_base/async_packet_socket.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/network.h"
 #include "rtc_base/numerics/event_based_exponential_moving_average.h"
 #include "rtc_base/rate_tracker.h"
