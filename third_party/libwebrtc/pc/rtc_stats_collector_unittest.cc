@@ -1095,7 +1095,7 @@ TEST_F(RTCStatsCollectorTest, InvalidSsrcCollisionDoesNotCrash) {
   // should look. We only care about not crashing.
 }
 
-TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
+TEST_F(RTCStatsCollectorTest, CollectRTCCodecStatsOnlyIfReferenced) {
   // Audio
   cricket::VoiceMediaInfo voice_media_info;
 
@@ -1117,8 +1117,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   outbound_audio_codec.num_channels = 2;
   voice_media_info.send_codecs.insert(
       std::make_pair(outbound_audio_codec.payload_type, outbound_audio_codec));
-
-  pc_->AddVoiceChannel("AudioMid", "TransportName", voice_media_info);
 
   // Video
   cricket::VideoMediaInfo video_media_info;
@@ -1142,7 +1140,31 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   video_media_info.send_codecs.insert(
       std::make_pair(outbound_video_codec.payload_type, outbound_video_codec));
 
-  pc_->AddVideoChannel("VideoMid", "TransportName", video_media_info);
+  // Ensure the above codecs are referenced.
+  cricket::VoiceReceiverInfo inbound_audio_info;
+  inbound_audio_info.add_ssrc(10);
+  inbound_audio_info.codec_payload_type = 1;
+  voice_media_info.receivers.push_back(inbound_audio_info);
+
+  cricket::VoiceSenderInfo outbound_audio_info;
+  outbound_audio_info.add_ssrc(20);
+  outbound_audio_info.codec_payload_type = 2;
+  voice_media_info.senders.push_back(outbound_audio_info);
+
+  cricket::VideoReceiverInfo inbound_video_info;
+  inbound_video_info.add_ssrc(30);
+  inbound_video_info.codec_payload_type = 3;
+  video_media_info.receivers.push_back(inbound_video_info);
+
+  cricket::VideoSenderInfo outbound_video_info;
+  outbound_video_info.add_ssrc(40);
+  outbound_video_info.codec_payload_type = 4;
+  video_media_info.senders.push_back(outbound_video_info);
+
+  FakeVoiceMediaChannelForStats* audio_channel =
+      pc_->AddVoiceChannel("AudioMid", "TransportName", voice_media_info);
+  FakeVideoMediaChannelForStats* video_channel =
+      pc_->AddVideoChannel("VideoMid", "TransportName", video_media_info);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
@@ -1200,6 +1222,22 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   EXPECT_EQ(expected_outbound_video_codec,
             report->Get(expected_outbound_video_codec.id())
                 ->cast_to<RTCCodecStats>());
+
+  // Now remove all the RTP streams such that there are no live codecId
+  // references to the codecs, this should result in none of the RTCCodecStats
+  // being exposed, despite `send_codecs` and `receive_codecs` still being set.
+  voice_media_info.senders.clear();
+  voice_media_info.receivers.clear();
+  audio_channel->SetStats(voice_media_info);
+  video_media_info.senders.clear();
+  video_media_info.receivers.clear();
+  video_channel->SetStats(video_media_info);
+  stats_->stats_collector()->ClearCachedStatsReport();
+  report = stats_->GetStatsReport();
+  EXPECT_FALSE(report->Get(expected_inbound_audio_codec.id()));
+  EXPECT_FALSE(report->Get(expected_outbound_audio_codec.id()));
+  EXPECT_FALSE(report->Get(expected_inbound_video_codec.id()));
+  EXPECT_FALSE(report->Get(expected_outbound_video_codec.id()));
 }
 
 TEST_F(RTCStatsCollectorTest, CodecStatsAreCollectedPerTransport) {
@@ -1217,17 +1255,35 @@ TEST_F(RTCStatsCollectorTest, CodecStatsAreCollectedPerTransport) {
   outbound_codec_pt11.name = "VP8";
   outbound_codec_pt11.clock_rate = 9000;
 
+  // Insert codecs into `send_codecs` and ensure the PTs are referenced by RTP
+  // streams.
   cricket::VideoMediaInfo info_pt10;
   info_pt10.send_codecs.insert(
       std::make_pair(outbound_codec_pt10.payload_type, outbound_codec_pt10));
+  info_pt10.senders.emplace_back();
+  info_pt10.senders[0].add_ssrc(42);
+  info_pt10.senders[0].codec_payload_type = outbound_codec_pt10.payload_type;
+
   cricket::VideoMediaInfo info_pt11;
   info_pt11.send_codecs.insert(
       std::make_pair(outbound_codec_pt11.payload_type, outbound_codec_pt11));
+  info_pt11.senders.emplace_back();
+  info_pt11.senders[0].add_ssrc(43);
+  info_pt11.senders[0].codec_payload_type = outbound_codec_pt11.payload_type;
+
   cricket::VideoMediaInfo info_pt10_pt11;
   info_pt10_pt11.send_codecs.insert(
       std::make_pair(outbound_codec_pt10.payload_type, outbound_codec_pt10));
   info_pt10_pt11.send_codecs.insert(
       std::make_pair(outbound_codec_pt11.payload_type, outbound_codec_pt11));
+  info_pt10_pt11.senders.emplace_back();
+  info_pt10_pt11.senders[0].add_ssrc(44);
+  info_pt10_pt11.senders[0].codec_payload_type =
+      outbound_codec_pt10.payload_type;
+  info_pt10_pt11.senders.emplace_back();
+  info_pt10_pt11.senders[1].add_ssrc(45);
+  info_pt10_pt11.senders[1].codec_payload_type =
+      outbound_codec_pt11.payload_type;
 
   // First two mids contain subsets, the third one contains all PTs.
   pc_->AddVideoChannel("Mid1", "FirstTransport", info_pt10);
@@ -1269,11 +1325,19 @@ TEST_F(RTCStatsCollectorTest, SamePayloadTypeButDifferentFmtpLines) {
       std::make_pair("useinbandfec", "1"));
 
   cricket::VideoMediaInfo info_nofec;
-  info_nofec.send_codecs.insert(std::make_pair(
+  info_nofec.receive_codecs.insert(std::make_pair(
       inbound_codec_pt111_nofec.payload_type, inbound_codec_pt111_nofec));
+  info_nofec.receivers.emplace_back();
+  info_nofec.receivers[0].add_ssrc(123);
+  info_nofec.receivers[0].codec_payload_type =
+      inbound_codec_pt111_nofec.payload_type;
   cricket::VideoMediaInfo info_fec;
-  info_fec.send_codecs.insert(std::make_pair(
+  info_fec.receive_codecs.insert(std::make_pair(
       inbound_codec_pt111_fec.payload_type, inbound_codec_pt111_fec));
+  info_fec.receivers.emplace_back();
+  info_fec.receivers[0].add_ssrc(321);
+  info_fec.receivers[0].codec_payload_type =
+      inbound_codec_pt111_fec.payload_type;
 
   // First two mids contain subsets, the third one contains all PTs.
   pc_->AddVideoChannel("Mid1", "BundledTransport", info_nofec);
@@ -1285,6 +1349,10 @@ TEST_F(RTCStatsCollectorTest, SamePayloadTypeButDifferentFmtpLines) {
   auto codec_stats = report->GetStatsOfType<RTCCodecStats>();
   EXPECT_EQ(codec_stats.size(), 2u);
 
+  // Ensure SSRC uniqueness before the next AddVideoChannel() call. SSRCs need
+  // to be unique on different m= sections when using BUNDLE.
+  info_nofec.receivers[0].local_stats[0].ssrc = 12;
+  info_fec.receivers[0].local_stats[0].ssrc = 21;
   // Adding more m= sections that does have the same FMTP lines does not result
   // in duplicates.
   pc_->AddVideoChannel("Mid3", "BundledTransport", info_nofec);
@@ -1304,8 +1372,12 @@ TEST_F(RTCStatsCollectorTest, SamePayloadTypeButDifferentFmtpLines) {
   inbound_codec_pt112_fec.parameters.insert(
       std::make_pair("useinbandfec", "1"));
   cricket::VideoMediaInfo info_fec_pt112;
-  info_fec_pt112.send_codecs.insert(std::make_pair(
+  info_fec_pt112.receive_codecs.insert(std::make_pair(
       inbound_codec_pt112_fec.payload_type, inbound_codec_pt112_fec));
+  info_fec_pt112.receivers.emplace_back();
+  info_fec_pt112.receivers[0].add_ssrc(112);
+  info_fec_pt112.receivers[0].codec_payload_type =
+      inbound_codec_pt112_fec.payload_type;
   pc_->AddVideoChannel("Mid5", "BundledTransport", info_fec_pt112);
   stats_->stats_collector()->ClearCachedStatsReport();
   report = stats_->GetStatsReport();
