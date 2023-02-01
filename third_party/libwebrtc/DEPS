@@ -207,17 +207,6 @@ deps = {
       'condition': 'host_os == "linux" and checkout_android',
       'dep_type': 'cipd',
   },
-  'src/third_party/jdk/extras': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/jdk/extras',
-              'version': '-7m_pvgICYN60yQI3qmTj_8iKjtnT4NXicT0G_jJPqsC',
-          },
-      ],
-      # Needed on Linux for use on chromium_presubmit (for checkstyle).
-      'condition': 'checkout_android or checkout_linux',
-      'dep_type': 'cipd',
-  },
  'src/third_party/jsoncpp/source':
     'https://chromium.googlesource.com/external/github.com/open-source-parsers/jsoncpp.git@42e892d96e47b1f6e29844cc705e148ec4856448', # from svn 248
   'src/third_party/junit/src': {
@@ -279,16 +268,6 @@ deps = {
           {
               'package': 'chromium/third_party/r8',
               'version': 'xSIcikL1PDal0LfVuHAK-q1NOalVeNp3x9KaFZ8Yju4C',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-  'src/third_party/proguard': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/proguard',
-              'version': 'Fd91BJFVlmiO6c46YMTsdy7n2f5Sk2hVVGlzPLvqZPsC',
           },
       ],
       'condition': 'checkout_android',
