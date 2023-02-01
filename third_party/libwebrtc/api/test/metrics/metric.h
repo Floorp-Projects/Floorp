@@ -22,9 +22,9 @@ namespace webrtc {
 namespace test {
 
 enum class Unit {
-  kTimeMs,
+  kMilliseconds,
   kPercent,
-  kSizeInBytes,
+  kBytes,
   kKilobitsPerSecond,
   kHertz,
   // General unitless value. Can be used either for dimensionless quantities
