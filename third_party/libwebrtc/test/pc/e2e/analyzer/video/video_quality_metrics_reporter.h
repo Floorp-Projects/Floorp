@@ -22,7 +22,6 @@
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -36,12 +35,8 @@ struct VideoBweStats {
 class VideoQualityMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
-  explicit VideoQualityMetricsReporter(Clock* const clock)
-      : VideoQualityMetricsReporter(clock, /*metrics_logger=*/nullptr) {}
-  explicit VideoQualityMetricsReporter(
-      Clock* const clock,
-      test::MetricsLogger* const metrics_logger)
-      : clock_(clock), metrics_logger_(metrics_logger) {}
+  VideoQualityMetricsReporter(Clock* const clock,
+                              test::MetricsLogger* const metrics_logger);
   ~VideoQualityMetricsReporter() override = default;
 
   void Start(absl::string_view test_case_name,
@@ -63,13 +58,6 @@ class VideoQualityMetricsReporter
   std::string GetTestCaseName(const std::string& stream_label) const;
   void ReportVideoBweResults(const std::string& test_case_name,
                              const VideoBweStats& video_bwe_stats);
-  // Report result for single metric for specified stream.
-  static void ReportResult(const std::string& metric_name,
-                           const std::string& test_case_name,
-                           const SamplesStatsCounter& counter,
-                           const std::string& unit,
-                           webrtc::test::ImproveDirection improve_direction =
-                               webrtc::test::ImproveDirection::kNone);
   Timestamp Now() const { return clock_->CurrentTime(); }
 
   Clock* const clock_;

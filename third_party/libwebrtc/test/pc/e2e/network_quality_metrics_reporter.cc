@@ -14,9 +14,9 @@
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/test/metrics/metric.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "system_wrappers/include/field_trial.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -31,6 +31,17 @@ constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 // sent/received per stream.  If enabled, padding and headers are not included
 // in bytes sent or received.
 constexpr char kUseStandardBytesStats[] = "WebRTC-UseStandardBytesStats";
+
+}  // namespace
+
+NetworkQualityMetricsReporter::NetworkQualityMetricsReporter(
+    EmulatedNetworkManagerInterface* alice_network,
+    EmulatedNetworkManagerInterface* bob_network,
+    test::MetricsLogger* metrics_logger)
+    : alice_network_(alice_network),
+      bob_network_(bob_network),
+      metrics_logger_(metrics_logger) {
+  RTC_CHECK(metrics_logger_);
 }
 
 void NetworkQualityMetricsReporter::Start(
@@ -113,93 +124,49 @@ void NetworkQualityMetricsReporter::ReportStats(
     const std::string& network_label,
     std::unique_ptr<EmulatedNetworkStats> stats,
     int64_t packet_loss) {
-  if (metrics_logger_ == nullptr) {
-    ReportResult("bytes_sent", network_label, stats->BytesSent().bytes(),
-                 "sizeInBytes");
-    ReportResult("packets_sent", network_label, stats->PacketsSent(),
-                 "unitless");
-    ReportResult("average_send_rate", network_label,
-                 stats->PacketsSent() >= 2
-                     ? stats->AverageSendRate().bytes_per_sec()
-                     : 0,
-                 "bytesPerSecond");
-    ReportResult("bytes_discarded_no_receiver", network_label,
-                 stats->BytesDropped().bytes(), "sizeInBytes");
-    ReportResult("packets_discarded_no_receiver", network_label,
-                 stats->PacketsDropped(), "unitless");
-    ReportResult("bytes_received", network_label,
-                 stats->BytesReceived().bytes(), "sizeInBytes");
-    ReportResult("packets_received", network_label, stats->PacketsReceived(),
-                 "unitless");
-    ReportResult("average_receive_rate", network_label,
-                 stats->PacketsReceived() >= 2
-                     ? stats->AverageReceiveRate().bytes_per_sec()
-                     : 0,
-                 "bytesPerSecond");
-    ReportResult("sent_packets_loss", network_label, packet_loss, "unitless");
-  } else {
-    metrics_logger_->LogSingleValueMetric(
-        "bytes_sent", GetTestCaseName(network_label),
-        stats->BytesSent().bytes(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "packets_sent", GetTestCaseName(network_label), stats->PacketsSent(),
-        Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "average_send_rate", GetTestCaseName(network_label),
-        stats->PacketsSent() >= 2 ? stats->AverageSendRate().kbps() : 0,
-        Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "bytes_discarded_no_receiver", GetTestCaseName(network_label),
-        stats->BytesDropped().bytes(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "packets_discarded_no_receiver", GetTestCaseName(network_label),
-        stats->PacketsDropped(), Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "bytes_received", GetTestCaseName(network_label),
-        stats->BytesReceived().bytes(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "packets_received", GetTestCaseName(network_label),
-        stats->PacketsReceived(), Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "average_receive_rate", GetTestCaseName(network_label),
-        stats->PacketsReceived() >= 2 ? stats->AverageReceiveRate().kbps() : 0,
-        Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "sent_packets_loss", GetTestCaseName(network_label), packet_loss,
-        Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
-  }
+  metrics_logger_->LogSingleValueMetric(
+      "bytes_sent", GetTestCaseName(network_label), stats->BytesSent().bytes(),
+      Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "packets_sent", GetTestCaseName(network_label), stats->PacketsSent(),
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "average_send_rate", GetTestCaseName(network_label),
+      stats->PacketsSent() >= 2 ? stats->AverageSendRate().kbps() : 0,
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "bytes_discarded_no_receiver", GetTestCaseName(network_label),
+      stats->BytesDropped().bytes(), Unit::kBytes,
+      ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "packets_discarded_no_receiver", GetTestCaseName(network_label),
+      stats->PacketsDropped(), Unit::kUnitless,
+      ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "bytes_received", GetTestCaseName(network_label),
+      stats->BytesReceived().bytes(), Unit::kBytes,
+      ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "packets_received", GetTestCaseName(network_label),
+      stats->PacketsReceived(), Unit::kUnitless,
+      ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "average_receive_rate", GetTestCaseName(network_label),
+      stats->PacketsReceived() >= 2 ? stats->AverageReceiveRate().kbps() : 0,
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "sent_packets_loss", GetTestCaseName(network_label), packet_loss,
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
 }
 
 void NetworkQualityMetricsReporter::ReportPCStats(const std::string& pc_label,
                                                   const PCStats& stats) {
-  if (metrics_logger_ == nullptr) {
-    ReportResult("payload_bytes_received", pc_label,
-                 stats.payload_received.bytes(), "sizeInBytes");
-    ReportResult("payload_bytes_sent", pc_label, stats.payload_sent.bytes(),
-                 "sizeInBytes");
-  } else {
-    metrics_logger_->LogSingleValueMetric(
-        "payload_bytes_received", pc_label, stats.payload_received.bytes(),
-        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
-    metrics_logger_->LogSingleValueMetric(
-        "payload_bytes_sent", pc_label, stats.payload_sent.bytes(),
-        Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
-  }
-}
-
-void NetworkQualityMetricsReporter::ReportResult(
-    const std::string& metric_name,
-    const std::string& network_label,
-    const double value,
-    const std::string& unit) const {
-  test::PrintResult(metric_name, /*modifier=*/"",
-                    GetTestCaseName(network_label), value, unit,
-                    /*important=*/false);
+  metrics_logger_->LogSingleValueMetric(
+      "payload_bytes_received", pc_label, stats.payload_received.bytes(),
+      Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+  metrics_logger_->LogSingleValueMetric(
+      "payload_bytes_sent", pc_label, stats.payload_sent.bytes(), Unit::kBytes,
+      ImprovementDirection::kNeitherIsBetter);
 }
 
 std::string NetworkQualityMetricsReporter::GetTestCaseName(

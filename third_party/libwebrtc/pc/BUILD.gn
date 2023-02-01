@@ -2708,6 +2708,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:peer_connection_quality_test_fixture_api",
       "../api:simulated_network_api",
       "../api:time_controller",
+      "../api/test/metrics:global_metrics_logger_and_exporter",
       "../api/video_codecs:video_codecs_api",
       "../call:simulated_network",
       "../modules/video_coding:webrtc_vp9",

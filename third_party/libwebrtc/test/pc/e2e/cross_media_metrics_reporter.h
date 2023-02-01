@@ -22,7 +22,6 @@
 #include "api/test/track_id_stream_info_map.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -30,10 +29,7 @@ namespace webrtc_pc_e2e {
 class CrossMediaMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
-  CrossMediaMetricsReporter()
-      : CrossMediaMetricsReporter(/*metrics_logger=*/nullptr) {}
-  explicit CrossMediaMetricsReporter(test::MetricsLogger* metrics_logger)
-      : metrics_logger_(metrics_logger) {}
+  explicit CrossMediaMetricsReporter(test::MetricsLogger* metrics_logger);
   ~CrossMediaMetricsReporter() override = default;
 
   void Start(absl::string_view test_case_name,
@@ -52,12 +48,6 @@ class CrossMediaMetricsReporter
     std::string video_stream_label;
   };
 
-  static void ReportResult(const std::string& metric_name,
-                           const std::string& test_case_name,
-                           const SamplesStatsCounter& counter,
-                           const std::string& unit,
-                           webrtc::test::ImproveDirection improve_direction =
-                               webrtc::test::ImproveDirection::kNone);
   std::string GetTestCaseName(const std::string& stream_label,
                               const std::string& sync_group) const;
 

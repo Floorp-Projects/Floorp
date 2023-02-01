@@ -18,6 +18,7 @@
 #include "api/rtp_packet_info.h"
 #include "api/rtp_packet_infos.h"
 #include "api/test/create_frame_generator.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
@@ -148,6 +149,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -199,6 +201,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -280,6 +283,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -330,6 +334,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -388,6 +393,7 @@ TEST(DefaultVideoQualityAnalyzerTest, OneFrameReceivedTwice) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -444,6 +450,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
   constexpr char kCharlie[] = "charlie";
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case", std::vector<std::string>{kAlice, kBob, kCharlie},
                  kAnalyzerMaxThreadsCount);
@@ -574,6 +581,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   constexpr char kCharlie[] = "charlie";
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case", std::vector<std::string>{kAlice, kBob, kCharlie},
                  kAnalyzerMaxThreadsCount);
@@ -633,6 +641,7 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
   analyzer_options.max_frames_in_flight_per_stream_count =
       kMaxFramesInFlightPerStream;
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        analyzer_options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -692,6 +701,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   analyzer_options.max_frames_in_flight_per_stream_count =
       kMaxFramesInFlightPerStream;
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        analyzer_options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -750,6 +760,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -813,6 +824,7 @@ TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
   constexpr int kTwoThirdFrames = 2 * kOneThirdFrames;
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case", {}, kAnalyzerMaxThreadsCount);
 
@@ -958,6 +970,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   constexpr char kAlice[] = "alice";
   constexpr char kBob[] = "bob";
@@ -1020,7 +1033,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
@@ -1115,7 +1129,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
@@ -1208,6 +1223,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CodecTrackedCorrectly) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
                                        AnalyzerOptionsForTest());
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
@@ -1278,7 +1294,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
@@ -1370,7 +1387,8 @@ TEST(
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
@@ -1474,7 +1492,8 @@ TEST(DefaultVideoQualityAnalyzerTest, GetStreamFrames) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1518,7 +1537,8 @@ TEST(DefaultVideoQualityAnalyzerTest, ReceiverReceivedFramesWhenSenderRemoved) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1561,7 +1581,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1604,7 +1625,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1647,7 +1669,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
   options.enable_receive_own_stream = true;
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1702,7 +1725,8 @@ TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforeCapturing2ndFrame) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1742,7 +1766,8 @@ TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforePreEncoded) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1784,7 +1809,8 @@ TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforeEncoded) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1827,7 +1853,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -1873,7 +1900,8 @@ TEST(DefaultVideoQualityAnalyzerTest, UnregisterOneAndRegisterAnother) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{"alice", "bob", "charlie"},
                  kAnalyzerMaxThreadsCount);
@@ -1934,7 +1962,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case",
                  std::vector<std::string>{"alice", "bob", "charlie"},
                  kAnalyzerMaxThreadsCount);
@@ -1989,7 +2018,8 @@ TEST(DefaultVideoQualityAnalyzerTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
@@ -2026,7 +2056,8 @@ TEST_P(DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 

@@ -41,15 +41,11 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_stream_state.h"
 #include "test/pc/e2e/analyzer/video/names_collection.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 
 class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
  public:
-  explicit DefaultVideoQualityAnalyzer(
-      webrtc::Clock* clock,
-      DefaultVideoQualityAnalyzerOptions options = {});
   DefaultVideoQualityAnalyzer(webrtc::Clock* clock,
                               test::MetricsLogger* metrics_logger,
                               DefaultVideoQualityAnalyzerOptions options = {});
@@ -131,13 +127,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
                      const StreamStats& stats,
                      const FrameCounters& frame_counters)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  // Report result for single metric for specified stream.
-  static void ReportResult(const std::string& metric_name,
-                           const std::string& test_case_name,
-                           const SamplesStatsCounter& counter,
-                           const std::string& unit,
-                           webrtc::test::ImproveDirection improve_direction =
-                               webrtc::test::ImproveDirection::kNone);
   // Returns name of current test case for reporting.
   std::string GetTestCaseName(const std::string& stream_label) const;
   Timestamp Now();

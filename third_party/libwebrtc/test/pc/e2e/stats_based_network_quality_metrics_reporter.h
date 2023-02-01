@@ -41,17 +41,8 @@ class StatsBasedNetworkQualityMetricsReporter
   // and to log network layer metrics.
   StatsBasedNetworkQualityMetricsReporter(
       std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints,
-      NetworkEmulationManager* network_emulation)
-      : StatsBasedNetworkQualityMetricsReporter(std::move(peer_endpoints),
-                                                network_emulation,
-                                                /*metrics_logger=*/nullptr) {}
-  StatsBasedNetworkQualityMetricsReporter(
-      std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints,
       NetworkEmulationManager* network_emulation,
-      test::MetricsLogger* metrics_logger)
-      : collector_(std::move(peer_endpoints), network_emulation),
-        clock_(network_emulation->time_controller()->GetClock()),
-        metrics_logger_(metrics_logger) {}
+      test::MetricsLogger* metrics_logger);
   ~StatsBasedNetworkQualityMetricsReporter() override = default;
 
   void AddPeer(absl::string_view peer_name,
@@ -111,14 +102,6 @@ class StatsBasedNetworkQualityMetricsReporter
                    const NetworkLayerStats& network_layer_stats,
                    int64_t packet_loss,
                    const Timestamp& end_time);
-  void ReportResult(const std::string& metric_name,
-                    const std::string& network_label,
-                    double value,
-                    const std::string& unit) const;
-  void ReportResult(const std::string& metric_name,
-                    const std::string& network_label,
-                    const SamplesStatsCounter& value,
-                    const std::string& unit) const;
   std::string GetTestCaseName(absl::string_view network_label) const;
   void LogNetworkLayerStats(const std::string& peer_name,
                             const NetworkLayerStats& stats) const;

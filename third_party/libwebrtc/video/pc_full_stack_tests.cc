@@ -17,6 +17,7 @@
 #include "api/test/create_peer_connection_quality_test_frame_generator.h"
 #include "api/test/create_peerconnection_quality_test_fixture.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
@@ -93,7 +94,8 @@ CreateTestFixture(const std::string& test_case_name,
                    bob_configurer);
   fixture->AddQualityMetricsReporter(
       std::make_unique<webrtc_pc_e2e::NetworkQualityMetricsReporter>(
-          network_links.first, network_links.second));
+          network_links.first, network_links.second,
+          test::GetGlobalMetricsLogger()));
   return fixture;
 }
 

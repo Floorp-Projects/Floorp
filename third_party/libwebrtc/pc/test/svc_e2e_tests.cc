@@ -17,6 +17,7 @@
 #include "api/test/create_peer_connection_quality_test_frame_generator.h"
 #include "api/test/create_peerconnection_quality_test_fixture.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
@@ -185,6 +186,7 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
 
   explicit SvcVideoQualityAnalyzer(webrtc::Clock* clock)
       : DefaultVideoQualityAnalyzer(clock,
+                                    test::GetGlobalMetricsLogger(),
                                     DefaultVideoQualityAnalyzerOptions{
                                         .compute_psnr = false,
                                         .compute_ssim = false,

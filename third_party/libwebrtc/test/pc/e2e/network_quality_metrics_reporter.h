@@ -29,16 +29,8 @@ class NetworkQualityMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
   NetworkQualityMetricsReporter(EmulatedNetworkManagerInterface* alice_network,
-                                EmulatedNetworkManagerInterface* bob_network)
-      : NetworkQualityMetricsReporter(alice_network,
-                                      bob_network,
-                                      /*metrics_logger=*/nullptr) {}
-  NetworkQualityMetricsReporter(EmulatedNetworkManagerInterface* alice_network,
                                 EmulatedNetworkManagerInterface* bob_network,
-                                test::MetricsLogger* metrics_logger)
-      : alice_network_(alice_network),
-        bob_network_(bob_network),
-        metrics_logger_(metrics_logger) {}
+                                test::MetricsLogger* metrics_logger);
   ~NetworkQualityMetricsReporter() override = default;
 
   // Network stats must be empty when this method will be invoked.
@@ -63,10 +55,6 @@ class NetworkQualityMetricsReporter
                    std::unique_ptr<EmulatedNetworkStats> stats,
                    int64_t packet_loss);
   void ReportPCStats(const std::string& pc_label, const PCStats& stats);
-  void ReportResult(const std::string& metric_name,
-                    const std::string& network_label,
-                    double value,
-                    const std::string& unit) const;
   std::string GetTestCaseName(const std::string& network_label) const;
 
   std::string test_case_name_;
