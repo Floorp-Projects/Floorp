@@ -10,6 +10,20 @@
 #editBMPanel_folderTree,
 #editBMPanel_tagsSelector {
   height: 12.5em;
+  border: 1px solid ThreeDShadow;
+  border-radius: 4px;
+}
+
+#editBMPanel_folderTree {
+  appearance: none;
+  overflow: hidden;
+  margin-block: 2px;
+}
+
+@media (-moz-platform: macos) {
+  #editBMPanel_folderTree {
+    margin: 6px 4px 0;
+  }
 }
 
 #editBMPanel_folderMenuList::part(icon) {
@@ -33,16 +47,6 @@
   list-style-image: url("chrome://global/skin/icons/folder.svg") !important;
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-#editBMPanel_folderTree {
-  margin-block: 2px;
-}
-
-@media (-moz-platform: macos) {
-  #editBMPanel_folderTree {
-    margin: 6px 4px 0;
-  }
 }
 
 #editBMPanel_tagsSelector > richlistitem > image {

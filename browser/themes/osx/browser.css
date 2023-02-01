@@ -227,45 +227,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
    should be shared by all editBookmarkPanel.inc.xhtml consumers should be in
    editBookmark.css. */
 
-#editBMPanel_newFolderBox {
-  background-color: var(--arrowpanel-field-background);
-  color: inherit;
-  border: 1px solid var(--panel-separator-color);
-  border-radius: 0 0 2px 2px;
-  margin: 0;
-  padding: 0;
-  height: 24px;
-}
-
-#editBMPanel_newFolderButton {
-  appearance: none;
-  -moz-box-flex: 1;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.8;
-  border: none;
-  border-radius: 0;
-  padding: 0 9px;
-  margin: 0;
-  min-height: 24px;
-  height: 24px;
-  color: inherit;
-  list-style-image: url("chrome://global/skin/icons/plus.svg");
-}
-
-#editBMPanel_newFolderButton:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#editBMPanel_newFolderButton:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-#editBMPanel_newFolderButton .button-text {
-  -moz-box-flex: 1; /* push the button icon to the start side */
-  text-align: start;
-}
-
 /**** folder tree and tag selector ****/
 
 #editBMPanel_folderTree,
