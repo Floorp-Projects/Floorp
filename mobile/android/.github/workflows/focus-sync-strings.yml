@@ -2,45 +2,49 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-name: "Focus - Sync Strings"
+name: Focus - Uplift Strings
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 jobs:
   main:
-    name: "Sync Strings"
-    runs-on: ubuntu-20.04
+    name: Uplift strings
+    runs-on: ubuntu-latest
     steps:
-      - name: "Discover Focus Beta Version"
-        id: focus-android-beta-version
+      - name: Discover Focus beta version
+        id: discover-beta-version
         uses: mozilla-mobile/fenix-beta-version@4.2.2
-      - name: "Skip non-beta versions"
+      - name: Skip non-beta versions
         uses: andymckay/cancel-action@0.2
-        if: ${{ steps.focus-android-beta-version.outputs.beta_version == '' }}
-      - name: "Checkout Main Branch"
-        uses: actions/checkout@v2
+        if: ${{ steps.discover-beta-version.outputs.beta_version == '' }}
+      - name: Store ENV variables
+        id: env-variables
+        run: |
+          echo "beta_branch=releases_v${{ steps.discover-beta-version.outputs.beta_version }}" >> $GITHUB_OUTPUT
+      - name: Checkout main branch
+        uses: actions/checkout@v3
         with:
           path: main
           ref: main
-      - name: "Checkout Beta Branch"
-        uses: actions/checkout@v2
+      - name: Checkout beta branch
+        uses: actions/checkout@v3
         with:
           path: beta
-          ref: "releases_v${{ steps.focus-android-beta-version.outputs.beta_version }}"
-      - name: "Sync Strings"
+          ref: ${{ steps.env-variables.outputs.beta_branch }}
+      - name: Sync strings
         uses: mozilla-mobile/sync-strings-action@2.0.0
         with:
           project: focus-android
           src: main
           dst: beta
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
-          branch: automation/sync-focus-strings-${{ steps.focus-android-beta-version.outputs.beta_version }}
-          title: "Uplift Focus Strings from main to releases_v${{ steps.focus-android-beta-version.outputs.beta_version }}"
-          body: "This (automated) PR syncs strings from `main` to `releases_v${{ steps.focus-android-beta-version.outputs.beta_version }}`"
+          branch: automation/uplift-focus-strings-${{ steps.discover-beta-version.outputs.beta_version }}
+          title: "Uplift Focus strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
+          body: "This (automated) PR uplifts strings from `${{ github.ref_name }}` to `${{ steps.env-variables.outputs.beta_branch }}`"
