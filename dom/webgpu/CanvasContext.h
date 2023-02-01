@@ -97,7 +97,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   RefPtr<WebGPUChild> mBridge;
   RefPtr<Texture> mTexture;
   gfx::SurfaceFormat mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
-  gfx::IntSize mGfxSize;
 
   Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
