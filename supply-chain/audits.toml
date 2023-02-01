@@ -1310,6 +1310,11 @@ criteria = "safe-to-run"
 version = "0.5.0"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[audits.mozversion]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-run"
+delta = "0.5.0 -> 0.5.1"
+
 [[audits.naga]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
