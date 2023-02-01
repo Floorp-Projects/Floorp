@@ -1254,6 +1254,14 @@ rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
 
 }  // namespace
 
+RTCStatsCollector::CertificateStatsPair
+RTCStatsCollector::CertificateStatsPair::Copy() const {
+  CertificateStatsPair copy;
+  copy.local = local ? local->Copy() : nullptr;
+  copy.remote = remote ? remote->Copy() : nullptr;
+  return copy;
+}
+
 RTCStatsCollector::RequestInfo::RequestInfo(
     rtc::scoped_refptr<RTCStatsCollectorCallback> callback)
     : RequestInfo(FilterMode::kAll, std::move(callback), nullptr, nullptr) {}
@@ -1386,6 +1394,7 @@ void RTCStatsCollector::GetStatsReportInternal(
 void RTCStatsCollector::ClearCachedStatsReport() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   cached_report_ = nullptr;
+  cached_certificates_by_transport_.clear();
 }
 
 void RTCStatsCollector::WaitForPendingRequest() {
@@ -2309,29 +2318,44 @@ void RTCStatsCollector::ProduceTransportStats_n(
 std::map<std::string, RTCStatsCollector::CertificateStatsPair>
 RTCStatsCollector::PrepareTransportCertificateStats_n(
     const std::map<std::string, cricket::TransportStats>&
-        transport_stats_by_name) const {
+        transport_stats_by_name) {
   RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::map<std::string, CertificateStatsPair> transport_cert_stats;
-  for (const auto& entry : transport_stats_by_name) {
-    const std::string& transport_name = entry.first;
-
-    CertificateStatsPair certificate_stats_pair;
-    rtc::scoped_refptr<rtc::RTCCertificate> local_certificate;
-    if (pc_->GetLocalCertificate(transport_name, &local_certificate)) {
-      certificate_stats_pair.local =
-          local_certificate->GetSSLCertificateChain().GetStats();
+  if (!cached_certificates_by_transport_.empty()) {
+    // Copy the certificate info from the cache, avoiding expensive
+    // rtc::SSLCertChain::GetStats() calls.
+    for (const auto& pair : cached_certificates_by_transport_) {
+      transport_cert_stats.insert(
+          std::make_pair(pair.first, pair.second.Copy()));
     }
+  } else {
+    // Collect certificate info.
+    for (const auto& entry : transport_stats_by_name) {
+      const std::string& transport_name = entry.first;
 
-    std::unique_ptr<rtc::SSLCertChain> remote_cert_chain =
-        pc_->GetRemoteSSLCertChain(transport_name);
-    if (remote_cert_chain) {
-      certificate_stats_pair.remote = remote_cert_chain->GetStats();
+      CertificateStatsPair certificate_stats_pair;
+      rtc::scoped_refptr<rtc::RTCCertificate> local_certificate;
+      if (pc_->GetLocalCertificate(transport_name, &local_certificate)) {
+        certificate_stats_pair.local =
+            local_certificate->GetSSLCertificateChain().GetStats();
+      }
+
+      std::unique_ptr<rtc::SSLCertChain> remote_cert_chain =
+          pc_->GetRemoteSSLCertChain(transport_name);
+      if (remote_cert_chain) {
+        certificate_stats_pair.remote = remote_cert_chain->GetStats();
+      }
+
+      transport_cert_stats.insert(
+          std::make_pair(transport_name, std::move(certificate_stats_pair)));
     }
-
-    transport_cert_stats.insert(
-        std::make_pair(transport_name, std::move(certificate_stats_pair)));
+    // Copy the result into the certificate cache for future reference.
+    for (const auto& pair : transport_cert_stats) {
+      cached_certificates_by_transport_.insert(
+          std::make_pair(pair.first, pair.second.Copy()));
+    }
   }
   return transport_cert_stats;
 }
