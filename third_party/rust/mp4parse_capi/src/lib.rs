@@ -72,8 +72,9 @@ struct HashMap;
 struct String;
 
 #[repr(C)]
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Default)]
 pub enum Mp4parseTrackType {
+    #[default]
     Video = 0,
     Picture = 1,
     AuxiliaryVideo = 2,
@@ -81,16 +82,11 @@ pub enum Mp4parseTrackType {
     Metadata = 4,
 }
 
-impl Default for Mp4parseTrackType {
-    fn default() -> Self {
-        Mp4parseTrackType::Video
-    }
-}
-
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Default)]
 pub enum Mp4parseCodec {
+    #[default]
     Unknown,
     Aac,
     Flac,
@@ -111,15 +107,10 @@ pub enum Mp4parseCodec {
     AMRWB,
 }
 
-impl Default for Mp4parseCodec {
-    fn default() -> Self {
-        Mp4parseCodec::Unknown
-    }
-}
-
 #[repr(C)]
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Default)]
 pub enum Mp4ParseEncryptionSchemeType {
+    #[default]
     None,
     Cenc,
     Cbc1,
@@ -128,12 +119,6 @@ pub enum Mp4ParseEncryptionSchemeType {
     // Schemes also have a version component. At the time of writing, this does
     // not impact handling, so we do not expose it. Note that this may need to
     // be exposed in future, should the spec change.
-}
-
-impl Default for Mp4ParseEncryptionSchemeType {
-    fn default() -> Self {
-        Mp4ParseEncryptionSchemeType::None
-    }
 }
 
 #[repr(C)]
@@ -313,6 +298,15 @@ pub struct Mp4parseParser {
 }
 
 #[repr(C)]
+#[derive(Debug, Default)]
+pub enum Mp4parseAvifLoopMode {
+    #[default]
+    NoEdits,
+    LoopByCount,
+    LoopInfinitely,
+}
+
+#[repr(C)]
 #[derive(Debug)]
 pub struct Mp4parseAvifInfo {
     pub premultiplied_alpha: bool,
@@ -338,6 +332,14 @@ pub struct Mp4parseAvifInfo {
 
     /// Whether there is a sequence. Can be true with no primary image.
     pub has_sequence: bool,
+    /// Indicates whether the EditListBox requests that the image be looped.
+    pub loop_mode: Mp4parseAvifLoopMode,
+    /// Number of times to loop the animation during playback.
+    ///
+    /// The duration of the animation specified in `elst` must be looped to fill the
+    /// duration of the color track. If the resulting loop count is not an integer,
+    /// then it will be ceiled to play past and fill the entire track's duration.
+    pub loop_count: u64,
     /// The color track's ID, which must be valid if has_sequence is true.
     pub color_track_id: u32,
     pub color_track_bit_depth: u8,
@@ -1096,6 +1098,8 @@ fn mp4parse_avif_get_info_safe(context: &AvifContext) -> mp4parse::Result<Mp4par
         alpha_item_bit_depth: 0,
 
         has_sequence: false,
+        loop_mode: Mp4parseAvifLoopMode::NoEdits,
+        loop_count: 0,
         color_track_id: 0,
         color_track_bit_depth: 0,
         alpha_track_id: 0,
@@ -1112,7 +1116,7 @@ fn mp4parse_avif_get_info_safe(context: &AvifContext) -> mp4parse::Result<Mp4par
     let primary_item_bit_depth =
         get_bit_depth(context.primary_item_bits_per_channel().unwrap_or(Ok(&[]))?);
     let alpha_item_bit_depth =
-        get_bit_depth(context.primary_item_bits_per_channel().unwrap_or(Ok(&[]))?);
+        get_bit_depth(context.alpha_item_bits_per_channel().unwrap_or(Ok(&[]))?);
 
     if let Some(sequence) = &context.sequence {
         // Tracks must have track_id and samples
@@ -1182,10 +1186,38 @@ fn mp4parse_avif_get_info_safe(context: &AvifContext) -> mp4parse::Result<Mp4par
             _ => (0, 0),
         };
 
+        let (loop_mode, loop_count) = match color_track.tkhd.as_ref().map(|tkhd| tkhd.duration) {
+            Some(movie_duration) if movie_duration == std::u64::MAX => {
+                (Mp4parseAvifLoopMode::LoopInfinitely, 0)
+            }
+            Some(movie_duration) => match color_track.looped {
+                Some(true) => match color_track.edited_duration.map(|v| v.0) {
+                    Some(segment_duration) => {
+                        match movie_duration.checked_div(segment_duration).and_then(|n| {
+                            match movie_duration.checked_rem(segment_duration) {
+                                Some(0) => Some(n.saturating_sub(1)),
+                                Some(_) => Some(n),
+                                None => None,
+                            }
+                        }) {
+                            Some(n) => (Mp4parseAvifLoopMode::LoopByCount, n),
+                            None => (Mp4parseAvifLoopMode::LoopInfinitely, 0),
+                        }
+                    }
+                    None => (Mp4parseAvifLoopMode::NoEdits, 0),
+                },
+                Some(false) => (Mp4parseAvifLoopMode::LoopByCount, 0),
+                None => (Mp4parseAvifLoopMode::NoEdits, 0),
+            },
+            None => (Mp4parseAvifLoopMode::LoopInfinitely, 0),
+        };
+
         return Ok(Mp4parseAvifInfo {
             primary_item_bit_depth,
             alpha_item_bit_depth,
             has_sequence: true,
+            loop_mode,
+            loop_count,
             color_track_id,
             color_track_bit_depth,
             alpha_track_id,
@@ -1390,7 +1422,7 @@ pub unsafe extern "C" fn mp4parse_get_fragment_info(
 
     if let (Some(time), Some(scale)) = (duration, context.timescale) {
         info.fragment_duration = match media_time_to_us(time, scale) {
-            Some(time_us) => time_us.0 as u64,
+            Some(time_us) => time_us.0,
             None => return Mp4parseStatus::Invalid,
         }
     }
@@ -1430,7 +1462,7 @@ pub unsafe extern "C" fn mp4parse_is_fragmented(
     iter.find(|track| track.track_id == Some(track_id))
         .map_or(Mp4parseStatus::BadArg, |track| {
             match (&track.stsc, &track.stco, &track.stts) {
-                (&Some(ref stsc), &Some(ref stco), &Some(ref stts))
+                (Some(stsc), Some(stco), Some(stts))
                     if stsc.samples.is_empty()
                         && stco.offsets.is_empty()
                         && stts.samples.is_empty() =>

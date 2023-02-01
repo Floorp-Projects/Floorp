@@ -36,7 +36,7 @@ static_assertions = "1.1.0"
 [dev-dependencies]
 test-assembler = "0.1.2"
 walkdir = "2.3.1"
-criterion = "0.3"
+criterion = "0.4"
 
 [features]
 missing-pixi-permitted = []

@@ -491,7 +491,7 @@ fn read_hdlr_multiple_nul_in_name() {
     assert_eq!(stream.head.size, 45);
     assert_eq!(
         super::Status::from(super::read_hdlr(&mut stream, ParseStrictness::Strict)),
-        super::Status::HdlrNameMultipleNul,
+        super::Status::Ok,
     );
 }
 
@@ -643,7 +643,7 @@ fn make_dfla(
 ) -> Cursor<Vec<u8>> {
     assert!(data.len() < 1 << 24);
     make_fullbox(BoxSize::Auto, b"dfLa", 0, |s| {
-        let flag = if last { 1 } else { 0 };
+        let flag = u32::from(last);
         let size = match data_length {
             FlacBlockLength::Correct => (data.len() as u32) & 0x00ff_ffff,
             FlacBlockLength::Incorrect(size) => {
@@ -1104,7 +1104,7 @@ fn read_stsd_mp4v() {
     let esds_specific_data = &mp4v[90..];
     #[cfg(feature = "mp4v")]
     let esds_specific_data = &mp4v[112..151];
-    println!("esds_specific_data {:?}", esds_specific_data);
+    println!("esds_specific_data {esds_specific_data:?}");
 
     let mut stream = make_box(BoxSize::Auto, b"mp4v", |s| s.append_bytes(mp4v.as_slice()));
     let mut iter = super::BoxIter::new(&mut stream);
@@ -1325,6 +1325,6 @@ fn read_to_end_() {
 
 #[test]
 fn read_to_end_oom() {
-    let mut src = b"1234567890".take(std::usize::MAX.try_into().expect("usize < u64"));
+    let mut src = b"1234567890".take(std::isize::MAX.try_into().expect("isize < u64"));
     assert!(src.read_into_try_vec().is_err());
 }
