@@ -6463,7 +6463,7 @@ blocklist:
       Keep track of the timestamp of the oldest stash of the addons blocklist.
       Only meaningful when mlbf_enabled is true.
       The value is a datetime string in UTC format, or "Missing Date" when unavailable.
-    expires: "112"
+    expires: "122"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
