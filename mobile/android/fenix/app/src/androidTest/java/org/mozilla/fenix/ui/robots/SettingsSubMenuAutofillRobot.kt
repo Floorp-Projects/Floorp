@@ -116,6 +116,27 @@ class SettingsSubMenuAutofillRobot {
         )
     }
 
+    fun verifyCountryOption(country: String) {
+        scrollToElementByText(getStringResource(R.string.addresses_country))
+        mDevice.pressBack()
+        assertItemContainingTextExists(itemContainingText(country))
+    }
+
+    fun verifyStateOption(state: String) =
+        assertItemContainingTextExists(itemContainingText(state))
+
+    fun verifyCountryOptions(vararg countries: String) {
+        countryDropDown.click()
+        for (country in countries) {
+            assertItemContainingTextExists(itemContainingText(country))
+        }
+    }
+
+    fun selectCountry(country: String) {
+        countryDropDown.click()
+        countryOption(country).click()
+    }
+
     fun verifyEditAddressView() {
         assertItemContainingTextExists(editAddressToolbarTitle)
         assertItemWithDescriptionExists(navigateBackButton)

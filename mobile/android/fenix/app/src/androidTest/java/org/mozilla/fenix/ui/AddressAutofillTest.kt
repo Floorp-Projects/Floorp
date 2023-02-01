@@ -313,4 +313,20 @@ class AddressAutofillTest {
             verifyManageAddressesToolbarTitle()
         }
     }
+
+    @Test
+    fun verifyStateFieldUpdatesInAccordanceWithCountryFieldTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            verifyCountryOption("United States")
+            verifyStateOption("Alabama")
+            verifyCountryOptions("Canada", "United States")
+            clickCountryOption("Canada")
+            verifyStateOption("Alberta")
+        }
+    }
 }
