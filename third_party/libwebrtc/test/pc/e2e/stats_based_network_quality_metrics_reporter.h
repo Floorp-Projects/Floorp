@@ -21,6 +21,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/numerics/samples_stats_counter.h"
+#include "api/test/metrics/metrics_logger_and_exporter.h"
 #include "api/test/network_emulation/network_emulation_interfaces.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
@@ -41,8 +42,16 @@ class StatsBasedNetworkQualityMetricsReporter
   StatsBasedNetworkQualityMetricsReporter(
       std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints,
       NetworkEmulationManager* network_emulation)
+      : StatsBasedNetworkQualityMetricsReporter(std::move(peer_endpoints),
+                                                network_emulation,
+                                                /*metrics_logger=*/nullptr) {}
+  StatsBasedNetworkQualityMetricsReporter(
+      std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints,
+      NetworkEmulationManager* network_emulation,
+      test::MetricsLoggerAndExporter* metrics_logger)
       : collector_(std::move(peer_endpoints), network_emulation),
-        clock_(network_emulation->time_controller()->GetClock()) {}
+        clock_(network_emulation->time_controller()->GetClock()),
+        metrics_logger_(metrics_logger) {}
   ~StatsBasedNetworkQualityMetricsReporter() override = default;
 
   void AddPeer(absl::string_view peer_name,
@@ -116,6 +125,7 @@ class StatsBasedNetworkQualityMetricsReporter
 
   NetworkLayerStatsCollector collector_;
   Clock* const clock_;
+  test::MetricsLoggerAndExporter* const metrics_logger_;
 
   std::string test_case_name_;
   Timestamp start_time_ = Timestamp::MinusInfinity();
