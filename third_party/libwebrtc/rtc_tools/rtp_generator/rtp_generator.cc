@@ -19,13 +19,13 @@
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "media/base/media_constants.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/thread.h"
 #include "test/testsupport/file_utils.h"
 #include "video/config/encoder_stream_factory.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 namespace {

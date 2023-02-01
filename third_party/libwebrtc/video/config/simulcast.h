@@ -17,7 +17,7 @@
 
 #include "api/field_trials_view.h"
 #include "api/units/data_rate.h"
-#include "api/video_codecs/video_encoder_config.h"
+#include "video/config/video_encoder_config.h"
 
 namespace cricket {
 

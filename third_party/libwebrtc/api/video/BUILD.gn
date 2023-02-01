@@ -320,11 +320,7 @@ rtc_library("video_adaptation") {
 
 rtc_source_set("video_stream_encoder") {
   visibility = [ "*" ]
-  sources = [
-    "video_stream_encoder_interface.h",
-    "video_stream_encoder_observer.h",
-    "video_stream_encoder_settings.h",
-  ]
+  sources = [ "video_stream_encoder_settings.h" ]
 
   deps = [
     ":video_adaptation",

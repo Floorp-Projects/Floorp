@@ -218,6 +218,7 @@ if (!is_component_build) {
       "../test:fileutils",
       "../test:rtp_test_utils",
       "../test:video_test_common",
+      "../video/config:encoder_config",
       "../video/config:streams_config",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",

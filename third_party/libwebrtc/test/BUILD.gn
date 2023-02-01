@@ -945,6 +945,7 @@ rtc_library("encoder_settings") {
     "../call:video_stream_api",
     "../rtc_base:checks",
     "../rtc_base:refcount",
+    "../video/config:encoder_config",
   ]
 }
 
@@ -1030,6 +1031,7 @@ rtc_library("test_common") {
     "../rtc_base:timeutils",
     "../system_wrappers",
     "../system_wrappers:field_trial",
+    "../video/config:encoder_config",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   if (!is_android && !build_with_chromium) {

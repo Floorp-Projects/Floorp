@@ -37,7 +37,6 @@
 #include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
 #include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
 #include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "api/video_codecs/video_encoder_factory_template.h"
 #include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
@@ -61,6 +60,7 @@
 #include "test/testsupport/frame_writer.h"
 #include "test/video_codec_settings.h"
 #include "video/config/simulcast.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 namespace test {
