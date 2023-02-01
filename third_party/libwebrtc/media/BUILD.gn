@@ -98,6 +98,7 @@ rtc_library("rtc_media_base") {
     "../rtc_base/system:rtc_export",
     "../rtc_base/third_party/sigslot",
     "../system_wrappers:field_trial",
+    "../video/config:encoder_config",
   ]
   if (build_with_mozilla) {
     deps -= [ "../api/transport:stun_types" ]

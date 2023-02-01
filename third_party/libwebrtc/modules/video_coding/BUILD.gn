@@ -301,6 +301,7 @@ rtc_library("video_coding") {
     "../../system_wrappers",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
+    "../../video/config:encoder_config",
     "../rtp_rtcp",
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
@@ -1031,6 +1032,7 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "../../test:video_test_common",
       "../../test:video_test_support",
+      "../../video/config:encoder_config",
       "../../video/config:streams_config",
     ]
     absl_deps = [

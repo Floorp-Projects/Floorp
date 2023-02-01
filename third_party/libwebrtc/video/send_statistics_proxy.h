@@ -19,8 +19,6 @@
 
 #include "api/field_trials_view.h"
 #include "api/video/video_codec_constants.h"
-#include "api/video/video_stream_encoder_observer.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/video_send_stream.h"
 #include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
@@ -31,9 +29,11 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
+#include "video/config/video_encoder_config.h"
 #include "video/quality_limitation_reason_tracker.h"
 #include "video/report_block_stats.h"
 #include "video/stats_counter.h"
+#include "video/video_stream_encoder_observer.h"
 
 namespace webrtc {
 

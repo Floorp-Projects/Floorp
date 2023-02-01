@@ -27,7 +27,6 @@
 #include "api/rtp_headers.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/test/simulated_network.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/audio_receive_stream.h"
 #include "call/audio_send_stream.h"
 #include "call/call.h"
@@ -42,6 +41,7 @@
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/task_queue.h"
 #include "system_wrappers/include/clock.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 class DegradedCall : public Call, private PacketReceiver {

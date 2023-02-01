@@ -17,6 +17,7 @@ rtc_library("streams_config") {
   ]
 
   deps = [
+    ":encoder_config",
     "../../api:field_trials_view",
     "../../api/transport:field_trial_based_config",
     "../../api/units:data_rate",
@@ -31,6 +32,29 @@ rtc_library("streams_config") {
     "../../rtc_base/experiments:min_video_bitrate_experiment",
     "../../rtc_base/experiments:normalize_simulcast_size_experiment",
     "../../rtc_base/experiments:rate_control_settings",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("encoder_config") {
+  sources = [
+    "video_encoder_config.cc",
+    "video_encoder_config.h",
+  ]
+
+  deps = [
+    "../../api:scoped_refptr",
+    "../../api/video:resolution",
+    "../../api/video_codecs:scalability_mode",
+    "../../api/video_codecs:video_codecs_api",
+    "../../rtc_base:checks",
+    "../../rtc_base:refcount",
+    "../../rtc_base:stringutils",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -65,9 +89,4 @@ if (rtc_include_tests) {
       deps += [ "../../media:rtc_media_base" ]
     }
   }
-}
-
-rtc_library("encoder_config") {
-  sources = [ "video_encoder_config.h" ]
-  deps = [ "../../api/video_codecs:video_codecs_api" ]
 }

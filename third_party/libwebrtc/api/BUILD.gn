@@ -401,6 +401,7 @@ rtc_source_set("video_quality_test_fixture_api") {
     "../call:rtp_interfaces",
     "../test:test_common",
     "../test:video_test_common",
+    "../video/config:encoder_config",
     "transport:bitrate_settings",
     "transport:network_control",
     "video_codecs:video_codecs_api",

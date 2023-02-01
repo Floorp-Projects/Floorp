@@ -341,6 +341,7 @@ rtc_library("call") {
     "../system_wrappers:metrics",
     "../video",
     "../video:decode_synchronizer",
+    "../video/config:encoder_config",
     "adaptation:resource_adaptation",
   ]
   absl_deps = [
@@ -391,6 +392,7 @@ rtc_library("video_stream_api") {
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:checks",
     "../rtc_base:stringutils",
+    "../video/config:encoder_config",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -599,6 +601,7 @@ if (rtc_include_tests) {
         "../test:test_support",
         "../test:video_test_common",
         "../video",
+        "../video/config:encoder_config",
         "//testing/gtest",
       ]
       absl_deps = [

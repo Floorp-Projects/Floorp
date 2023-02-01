@@ -25,9 +25,7 @@
 #include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_bitrate_allocator.h"
-#include "api/video/video_stream_encoder_interface.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/bitrate_allocator.h"
 #include "call/rtp_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
@@ -39,7 +37,9 @@
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
+#include "video/config/video_encoder_config.h"
 #include "video/send_statistics_proxy.h"
+#include "video/video_stream_encoder_interface.h"
 
 namespace webrtc {
 namespace internal {
