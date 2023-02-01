@@ -145,6 +145,30 @@ TEST(MetricsLoggerAndExporterTest,
   ASSERT_THAT(metric.stats.max, absl::optional<double>(20.0));
 }
 
+TEST(MetricsLoggerAndExporterTest,
+     LogMetricWithEmptySamplesStatsCounterRecordsEmptyMetric) {
+  TestMetricsExporterFactory exporter_factory;
+  {
+    std::vector<std::unique_ptr<MetricsExporter>> exporters;
+    exporters.push_back(exporter_factory.CreateExporter());
+    MetricsLoggerAndExporter logger(Clock::GetRealTimeClock(),
+                                    std::move(exporters));
+    SamplesStatsCounter values;
+    logger.LogMetric("metric_name", "test_case_name", values, Unit::kUnitless,
+                     ImprovementDirection::kBiggerIsBetter, DefaultMetadata());
+  }
+
+  std::vector<Metric> metrics = exporter_factory.exported_metrics;
+  ASSERT_THAT(metrics.size(), Eq(1lu));
+  EXPECT_THAT(metrics[0].name, Eq("metric_name"));
+  EXPECT_THAT(metrics[0].test_case, Eq("test_case_name"));
+  EXPECT_THAT(metrics[0].time_series.samples, IsEmpty());
+  ASSERT_THAT(metrics[0].stats.mean, Eq(absl::nullopt));
+  ASSERT_THAT(metrics[0].stats.stddev, Eq(absl::nullopt));
+  ASSERT_THAT(metrics[0].stats.min, Eq(absl::nullopt));
+  ASSERT_THAT(metrics[0].stats.max, Eq(absl::nullopt));
+}
+
 TEST(MetricsLoggerAndExporterTest, LogMetricWithStatsRecordsMetric) {
   TestMetricsExporterFactory exporter_factory;
   {
