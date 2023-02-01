@@ -92,6 +92,7 @@ class MOZ_STACK_CLASS CaretPoint {
     MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
     MOZ_ASSERT(
         !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    mHandledCaretPoint = true;
     if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
         !mCaretPoint.IsSet()) {
       return false;
