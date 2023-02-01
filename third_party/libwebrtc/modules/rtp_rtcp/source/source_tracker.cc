@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "rtc_base/trace_event.h"
+
 namespace webrtc {
 
 constexpr int64_t SourceTracker::kTimeoutMs;
@@ -23,6 +25,8 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
   if (packet_infos.empty()) {
     return;
   }
+
+  TRACE_EVENT0("webrtc", "SourceTracker::OnFrameDelivered");
 
   int64_t now_ms = clock_->TimeInMilliseconds();
   MutexLock lock_scope(&lock_);

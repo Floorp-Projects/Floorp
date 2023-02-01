@@ -1828,6 +1828,7 @@ rtc_library("remote_audio_source") {
     "../media:rtc_media_base",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
     "../rtc_base:logging",
     "../rtc_base:safe_conversions",
     "../rtc_base:stringutils",

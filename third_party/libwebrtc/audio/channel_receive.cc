@@ -48,6 +48,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
 #include "system_wrappers/include/ntp_time.h"
 
@@ -376,6 +377,8 @@ void ChannelReceive::InitFrameTransformerDelegate(
 AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     int sample_rate_hz,
     AudioFrame* audio_frame) {
+  TRACE_EVENT1("webrtc", "ChannelReceive::GetAudioFrameWithInfo",
+               "sample_rate_hz", sample_rate_hz);
   RTC_DCHECK_RUNS_SERIALIZED(&audio_thread_race_checker_);
   audio_frame->sample_rate_hz_ = sample_rate_hz;
 
@@ -441,7 +444,6 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
 
   if (capture_start_rtp_time_stamp_ >= 0) {
     // audio_frame.timestamp_ should be valid from now on.
-
     // Compute elapsed time.
     int64_t unwrap_timestamp =
         rtp_ts_wraparound_handler_->Unwrap(audio_frame->timestamp_);

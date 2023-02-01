@@ -923,6 +923,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
               size_t number_of_channels,
               size_t number_of_frames,
               absl::optional<int64_t> absolute_capture_timestamp_ms) override {
+    TRACE_EVENT_BEGIN2("webrtc", "WebRtcAudioSendStream::OnData", "sample_rate",
+                       sample_rate, "number_of_frames", number_of_frames);
     RTC_DCHECK_EQ(16, bits_per_sample);
     RTC_CHECK_RUNS_SERIALIZED(&audio_capture_race_checker_);
     RTC_DCHECK(stream_);
@@ -938,6 +940,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
           *absolute_capture_timestamp_ms);
     }
     stream_->SendAudioData(std::move(audio_frame));
+    TRACE_EVENT_END1("webrtc", "WebRtcAudioSendStream::OnData",
+                     "number_of_channels", number_of_channels);
   }
 
   // Callback from the `source_` when it is going away. In case Start() has
