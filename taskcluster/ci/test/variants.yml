@@ -142,7 +142,7 @@ conditioned_profile:
 socketprocess:
     description: "{description} with socket process enabled"
     component: "Core::Networking"
-    expiration: "2023-03-01"
+    expiration: "2023-08-01"
     suffix: "spi"
     merge:
         mozharness:
