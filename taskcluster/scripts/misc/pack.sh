@@ -18,7 +18,7 @@ Darwin)
     ;;
 esac
 
-(cd "$dir"; find "$name"/* -not -type d -print0 | tar $TAR_FLAGS -cf - --null -T -) | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > "$name.tar.zst"
+(cd "$dir"; find "$name"/* -not -type d -print0 | tar $TAR_FLAGS -cvf - --null -T -) | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > "$name.tar.zst"
 
 mkdir -p "$UPLOAD_DIR"
 mv "$name.tar.zst" "$UPLOAD_DIR"
