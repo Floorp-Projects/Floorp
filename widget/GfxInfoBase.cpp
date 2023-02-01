@@ -978,14 +978,8 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
   // Some properties are not available on all platforms.
-  nsAutoString desktopEnvironment;
-  nsresult rv = GetDesktopEnvironment(desktopEnvironment);
-  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
-    return 0;
-  }
-
   nsAutoString windowProtocol;
-  rv = GetWindowProtocol(windowProtocol);
+  nsresult rv = GetWindowProtocol(windowProtocol);
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
     return 0;
   }

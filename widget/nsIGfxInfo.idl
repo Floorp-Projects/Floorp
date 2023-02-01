@@ -27,7 +27,6 @@ interface nsIGfxInfo : nsISupports
    * These are non-Android linux-specific
    */
   readonly attribute AString windowProtocol;
-  readonly attribute AString desktopEnvironment;
   readonly attribute AString testType;
 
   /*

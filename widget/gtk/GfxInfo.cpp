@@ -975,12 +975,6 @@ GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetDesktopEnvironment(nsAString& aDesktopEnvironment) {
-  CopyUTF8toUTF16(GetDesktopEnvironmentIdentifier(), aDesktopEnvironment);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GfxInfo::GetTestType(nsAString& aTestType) {
   GetData();
   AppendASCIItoUTF16(mTestType, aTestType);
