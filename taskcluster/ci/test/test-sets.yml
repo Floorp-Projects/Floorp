@@ -277,9 +277,6 @@ mingwclang-tests-opt:
     - mochitest-chrome-gpu
     - mochitest-plain-gpu
 
-windows-aarch64-tests:
-    - mochitest-media
-
 windows-talos:
     - talos-bcv
     - talos-chrome
