@@ -363,6 +363,7 @@ rtc_library("rtc_audio_video") {
     "../rtc_base/third_party/base64",
     "../system_wrappers",
     "../system_wrappers:metrics",
+    "../video/config:streams_config",
   ]
   if (build_with_mozilla) {
     deps -= [ "../api:libjingle_peerconnection_api" ]
@@ -379,8 +380,6 @@ rtc_library("rtc_audio_video") {
     "engine/null_webrtc_video_engine.h",
     "engine/payload_type_mapper.cc",
     "engine/payload_type_mapper.h",
-    "engine/simulcast.cc",
-    "engine/simulcast.h",
     "engine/unhandled_packets_buffer.cc",
     "engine/unhandled_packets_buffer.h",
     "engine/webrtc_media_engine.cc",
@@ -691,6 +690,7 @@ if (rtc_include_tests) {
         "../test:test_support",
         "../test:video_test_common",
         "../test/time_controller",
+        "../video/config:streams_config",
       ]
 
       if (enable_libaom) {
@@ -720,7 +720,6 @@ if (rtc_include_tests) {
         "engine/null_webrtc_video_engine_unittest.cc",
         "engine/payload_type_mapper_unittest.cc",
         "engine/simulcast_encoder_adapter_unittest.cc",
-        "engine/simulcast_unittest.cc",
         "engine/unhandled_packets_buffer_unittest.cc",
         "engine/webrtc_media_engine_unittest.cc",
         "engine/webrtc_video_engine_unittest.cc",

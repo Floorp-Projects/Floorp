@@ -69,6 +69,7 @@
 #include "test/null_transport.h"
 #include "test/rtcp_packet_parser.h"
 #include "test/video_encoder_proxy_factory.h"
+#include "video/config/encoder_stream_factory.h"
 #include "video/send_statistics_proxy.h"
 #include "video/transport_adapter.h"
 #include "video/video_send_stream.h"

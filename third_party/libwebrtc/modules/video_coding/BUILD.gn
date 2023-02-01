@@ -1031,6 +1031,7 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "../../test:video_test_common",
       "../../test:video_test_support",
+      "../../video/config:streams_config",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/strings:strings",

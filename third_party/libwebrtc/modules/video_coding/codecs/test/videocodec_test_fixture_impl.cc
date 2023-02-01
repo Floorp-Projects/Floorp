@@ -46,7 +46,6 @@
 #include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "common_video/h264/h264_common.h"
 #include "media/base/media_constants.h"
-#include "media/engine/simulcast.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/utility/ivf_file_writer.h"
@@ -61,6 +60,7 @@
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/frame_writer.h"
 #include "test/video_codec_settings.h"
+#include "video/config/simulcast.h"
 
 namespace webrtc {
 namespace test {

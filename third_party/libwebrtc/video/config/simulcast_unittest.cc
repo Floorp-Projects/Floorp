@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/engine/simulcast.h"
+#include "video/config/simulcast.h"
 
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/media_constants.h"

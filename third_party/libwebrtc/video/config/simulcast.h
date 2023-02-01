@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_ENGINE_SIMULCAST_H_
-#define MEDIA_ENGINE_SIMULCAST_H_
+#ifndef VIDEO_CONFIG_SIMULCAST_H_
+#define VIDEO_CONFIG_SIMULCAST_H_
 
 #include <stddef.h>
 
@@ -69,4 +69,4 @@ std::vector<webrtc::VideoStream> GetScreenshareLayers(
 
 }  // namespace cricket
 
-#endif  // MEDIA_ENGINE_SIMULCAST_H_
+#endif  // VIDEO_CONFIG_SIMULCAST_H_

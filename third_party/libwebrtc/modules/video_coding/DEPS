@@ -19,5 +19,6 @@ specific_include_rules = {
   ".*test.*\.cc": [
      "+media/base",
      "+media/engine",
+     "+video/config",
   ],
 }
