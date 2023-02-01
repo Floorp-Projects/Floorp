@@ -74,10 +74,10 @@ You can test that Mercurial is installed by running:
     .. code-block:: shell
 
         # If you're using zsh
-        echo "export PATH=\"$(python3 -m site --user-base)/bin:$PATH\"" >> ~/.zshenv
+        echo 'export PATH="'"$(python3 -m site --user-base)"'/bin:$PATH"' >> ~/.zshenv
 
         # If you're using bash
-        echo "export PATH=\"$(python3 -m site --user-base)/bin:$PATH\"" >> ~/.bashrc
+        echo 'export PATH="'"$(python3 -m site --user-base)"'/bin:$PATH"' >> ~/.bashrc
 
         # If you're using a different shell, follow its documentation to see
         # how to configure your PATH. Ensure that `$(python3 -m site --user-base)/bin`
