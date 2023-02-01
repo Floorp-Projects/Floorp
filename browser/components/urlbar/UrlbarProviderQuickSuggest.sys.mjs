@@ -127,10 +127,14 @@ const WEATHER_VIEW_TEMPLATE = {
                   name: "summaryTextSeparator",
                   tag: "span",
                 },
+                {
+                  name: "highLow",
+                  tag: "span",
+                },
               ],
             },
             {
-              name: "highLow",
+              name: "highLowWrap",
               tag: "span",
             },
           ],
@@ -308,6 +312,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
           },
           cacheable: true,
           excludeArgsFromCacheKey: true,
+        },
+      },
+      highLowWrap: {
+        l10n: {
+          id: "firefox-suggest-weather-high-low",
+          args: {
+            high: result.payload.high,
+            low: result.payload.low,
+            unit: uppercaseUnit,
+          },
         },
       },
       bottom: {
