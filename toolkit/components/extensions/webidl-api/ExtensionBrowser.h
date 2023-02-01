@@ -11,8 +11,11 @@
 #include "nsISupports.h"
 #include "nsTHashMap.h"
 #include "nsWrapperCache.h"
+#include "mozilla/WeakPtr.h"
+#include "xpcpublic.h"
 
 class nsIGlobalObject;
+class nsIURI;
 
 namespace mozilla {
 

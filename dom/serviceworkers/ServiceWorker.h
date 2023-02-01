@@ -31,10 +31,6 @@ struct StructuredSerializeOptions;
     }                                                \
   }
 
-bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal);
-
-bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal);
-
 class ServiceWorker final : public DOMEventTargetHelper {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKER_IID)

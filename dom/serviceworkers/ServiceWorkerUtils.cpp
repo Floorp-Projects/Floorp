@@ -9,7 +9,12 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
@@ -17,6 +22,72 @@
 #include "nsPrintfCString.h"
 
 namespace mozilla::dom {
+
+static bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
+  if (const nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+          Navigator::GetWindowFromGlobal(aGlobal)) {
+    if (auto* bc = innerWindow->GetBrowsingContext()) {
+      return bc->Top()->ServiceWorkersTestingEnabled();
+    }
+  }
+  return false;
+}
+
+static bool IsInPrivateBrowsing(JSContext* const aCx) {
+  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
+    if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
+      return principal->GetPrivateBrowsingId() > 0;
+    }
+  }
+  return false;
+}
+
+bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!StaticPrefs::dom_serviceWorkers_enabled()) {
+    return false;
+  }
+
+  // xpc::CurrentNativeGlobal below requires rooting
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+
+  if (IsInPrivateBrowsing(aCx)) {
+    return false;
+  }
+
+  // Allow a webextension principal to register a service worker script with
+  // a moz-extension url only if 'extensions.service_worker_register.allowed'
+  // is true.
+  if (!StaticPrefs::extensions_serviceWorkerRegister_allowed()) {
+    nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+    if (principal && BasePrincipal::Cast(principal)->AddonPolicy()) {
+      return false;
+    }
+  }
+
+  if (IsSecureContextOrObjectIsFromSecureContext(aCx, global)) {
+    return true;
+  }
+
+  return StaticPrefs::dom_serviceWorkers_testing_enabled() ||
+         IsServiceWorkersTestingEnabledInWindow(global);
+}
+
+bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal) {
+  if (NS_IsMainThread()) {
+    // We want to expose ServiceWorker interface only when
+    // navigator.serviceWorker is available. Currently it may not be available
+    // with some reasons:
+    // 1. navigator.serviceWorker is not supported in workers. (bug 1131324)
+    return ServiceWorkersEnabled(aCx, aGlobal);
+  }
+
+  // We are already in ServiceWorker and interfaces need to be exposed for e.g.
+  // globalThis.registration.serviceWorker. Note that navigator.serviceWorker
+  // is still not supported. (bug 1131324)
+  return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aGlobal);
+}
 
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData) {
