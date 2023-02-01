@@ -18,18 +18,6 @@ const {
   MODE_UNSET,
 } = Ci.nsICookieBannerService;
 
-const exampleRules = JSON.stringify([
-  {
-    id: "4b18afb0-76db-4f9e-a818-ed9a783fae6a",
-    cookies: {},
-    click: {
-      optIn: "#foo",
-      presence: "#bar",
-    },
-    domains: ["example.com"],
-  },
-]);
-
 /**
  * Determines whether the cookie banner section in the protections panel should
  * be visible with the given configuration.
@@ -158,7 +146,6 @@ async function testSectionVisibility({
 add_task(async function test_section_visibility() {
   // Test all combinations of cookie banner service modes and normal and
   // private browsing.
-
   for (let testPBM of [false, true]) {
     let win = window;
     // Open a new private window to test the panel in for testing PBM, otherwise
@@ -226,88 +213,60 @@ add_task(async function test_section_visibility_pref() {
  * tab).
  * @param {boolean} options.isPBM - Whether the given window is in private
  * browsing mode.
- * @param {string} options.expectedSwitchState - Whether the switch is expected to be
- * "on" (CBH enabled), "off" (user added exception), or "unsupported" (no rules for site).
+ * @param {boolean} options.expectEnabled - Whether the switch is expected to be
+ * enabled, this also indicates no exception set.
  */
-function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
+function assertSwitchAndPrefState({ win, isPBM, expectEnabled }) {
   let el = {
-    section: win.document.getElementById(
-      "protections-popup-cookie-banner-section"
-    ),
     switch: win.document.getElementById(
       "protections-popup-cookie-banner-switch"
     ),
     labelON: win.document.querySelector(
-      "#protections-popup-cookie-banner-enabled"
+      ".protections-popup-cookie-banner-switch-on-header"
     ),
     labelOFF: win.document.querySelector(
-      "#protections-popup-cookie-banner-disabled"
-    ),
-    labelUNDETECTED: win.document.querySelector(
-      "#protections-popup-cookie-banner-undetected"
+      ".protections-popup-cookie-banner-switch-off-header"
     ),
   };
 
-  let currentURI = win.gBrowser.currentURI;
-  let pref = Services.cookieBanners.getDomainPref(currentURI, isPBM);
-  if (expectedSwitchState == "on") {
-    ok(
-      !el.section.hasAttribute("hasException") &&
-        el.section.hasAttribute("enabled"),
-      "CBH switch is set to ON"
-    );
+  info("Test switch state.");
+  ok(BrowserTestUtils.is_visible(el.switch), "Switch should be visible");
+  is(
+    el.switch.hasAttribute("enabled"),
+    expectEnabled,
+    `Switch is ${expectEnabled ? "enabled" : "disabled"}.`
+  );
 
+  info("Test switch labels.");
+  if (expectEnabled) {
     ok(BrowserTestUtils.is_visible(el.labelON), "ON label should be visible");
     ok(
       !BrowserTestUtils.is_visible(el.labelOFF),
       "OFF label should not be visible"
     );
-    ok(
-      !BrowserTestUtils.is_visible(el.labelUNDETECTED),
-      "UNDETECTED label should not be visible"
-    );
-
-    is(
-      pref,
-      MODE_UNSET,
-      `There should be no per-site exception for ${currentURI.spec}.`
-    );
-  } else if (expectedSwitchState === "off") {
-    ok(
-      el.section.hasAttribute("hasException") &&
-        el.section.hasAttribute("enabled"),
-      "CBH switch is set to OFF"
-    );
-
+  } else {
     ok(
       !BrowserTestUtils.is_visible(el.labelON),
       "ON label should not be visible"
     );
     ok(BrowserTestUtils.is_visible(el.labelOFF), "OFF label should be visible");
-    ok(
-      !BrowserTestUtils.is_visible(el.labelUNDETECTED),
-      "UNDETECTED label should not be visible"
-    );
+  }
 
+  info("Test per-site exception state.");
+  let currentURI = win.gBrowser.currentURI;
+  let pref = Services.cookieBanners.getDomainPref(currentURI, isPBM);
+
+  if (expectEnabled) {
+    is(
+      pref,
+      MODE_UNSET,
+      `There should be no per-site exception for ${currentURI.spec}.`
+    );
+  } else {
     is(
       pref,
       MODE_DISABLED,
       `There should be a per-site exception for ${currentURI.spec}.`
-    );
-  } else {
-    ok(el.section.hasAttribute("disabled"), "CBH not supported for site");
-
-    ok(
-      !BrowserTestUtils.is_visible(el.labelON),
-      "ON label should not be visible"
-    );
-    ok(
-      !BrowserTestUtils.is_visible(el.labelOFF),
-      "OFF label should not be visible"
-    );
-    ok(
-      BrowserTestUtils.is_visible(el.labelUNDETECTED),
-      "UNDETECTED label should be visible"
     );
   }
 }
@@ -343,69 +302,17 @@ function assertTelemetryState({ expectEnabled = null } = {}) {
 }
 
 /**
- * Test the cookie banner enable / disable by clicking the switch, then
- * clicking the on/off button in the cookie banner subview. Assumes the
- * protections panel is already open.
- *
- * @param {boolean} enable - Whether we want to enable or disable.
- * @param {Window} win - Current chrome window under test.
- */
-async function toggleCookieBannerHandling(enable, win) {
-  let switchEl = win.document.getElementById(
-    "protections-popup-cookie-banner-switch"
-  );
-  let enableButton = win.document.getElementById(
-    "protections-popup-cookieBannerView-enable-button"
-  );
-  let disableButton = win.document.getElementById(
-    "protections-popup-cookieBannerView-disable-button"
-  );
-  let subView = win.document.getElementById(
-    "protections-popup-cookieBannerView"
-  );
-
-  let subViewShownPromise = BrowserTestUtils.waitForEvent(subView, "ViewShown");
-  switchEl.click();
-  await subViewShownPromise;
-
-  if (enable) {
-    ok(BrowserTestUtils.is_visible(enableButton), "Enable button is visible");
-    enableButton.click();
-  } else {
-    ok(BrowserTestUtils.is_visible(disableButton), "Disable button is visible");
-    disableButton.click();
-  }
-}
-
-function waitForProtectionsPopupHide(win = window) {
-  return BrowserTestUtils.waitForEvent(
-    win.document.getElementById("protections-popup"),
-    "popuphidden"
-  );
-}
-
-/**
  * Tests the cookie banner section per-site preference toggle.
  */
 add_task(async function test_section_toggle() {
-  // Temporarily disable in chaos mode until we fix bug 1813057.
-  if (Services.env.get("MOZ_CHAOSMODE")) {
-    Assert.ok(true, "Temporarily skipping test in chaos mode");
-    return;
-  }
-
   // initialize the pref environment
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", MODE_REJECT_OR_ACCEPT],
-      ["cookiebanners.service.mode.privateBrowsing", MODE_REJECT_OR_ACCEPT],
+      ["cookiebanners.service.mode.privateBrowsing", MODE_REJECT],
       ["cookiebanners.ui.desktop.enabled", true],
-      ["cookiebanners.listService.testRules", exampleRules],
-      ["cookiebanners.listService.testSkipRemoteSettings", true],
     ],
   });
-
-  Services.cookieBanners.resetRules(false);
 
   // Test both normal and private browsing windows. For normal windows we reuse
   // the existing one, for private windows we need to open a new window.
@@ -416,50 +323,65 @@ add_task(async function test_section_toggle() {
         private: true,
       });
     }
-
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "https://example.com" },
       async () => {
         await openProtectionsPanel(null, win);
+
         let switchEl = win.document.getElementById(
           "protections-popup-cookie-banner-switch"
         );
+
         info("Testing initial switch ON state.");
         assertSwitchAndPrefState({
           win,
           isPBM: testPBM,
           switchEl,
-          expectedSwitchState: "on",
+          expectEnabled: true,
         });
         assertTelemetryState();
 
         info("Testing switch state after toggle OFF");
-        let closePromise = waitForProtectionsPopupHide(win);
-        await toggleCookieBannerHandling(false, win);
-        await closePromise;
-
-        await openProtectionsPanel(null, win);
+        switchEl.click();
         assertSwitchAndPrefState({
           win,
           isPBM: testPBM,
           switchEl,
-          expectedSwitchState: "off",
+          expectEnabled: false,
         });
         assertTelemetryState({ expectEnabled: false });
 
-        info("Testing switch state after toggle ON.");
-        closePromise = waitForProtectionsPopupHide(win);
-        await toggleCookieBannerHandling(true, win);
-        await closePromise;
-
+        info("Reopen the panel to test the initial switch OFF state.");
+        await closeProtectionsPanel(win);
         await openProtectionsPanel(null, win);
         assertSwitchAndPrefState({
           win,
           isPBM: testPBM,
           switchEl,
-          expectedSwitchState: "on",
+          expectEnabled: false,
+        });
+        assertTelemetryState();
+
+        info("Testing switch state after toggle ON.");
+        switchEl.click();
+        assertSwitchAndPrefState({
+          win,
+          isPBM: testPBM,
+          switchEl,
+          expectEnabled: true,
         });
         assertTelemetryState({ expectEnabled: true });
+
+        info("Reopen the panel to test the initial switch ON state.");
+        await closeProtectionsPanel(win);
+        await openProtectionsPanel(null, win);
+        assertSwitchAndPrefState({
+          win,
+          isPBM: testPBM,
+          switchEl,
+          expectEnabled: true,
+        });
+        assertTelemetryState();
       }
     );
 
@@ -467,6 +389,4 @@ add_task(async function test_section_toggle() {
       await BrowserTestUtils.closeWindow(win);
     }
   }
-
-  await SpecialPowers.popPrefEnv();
 });
