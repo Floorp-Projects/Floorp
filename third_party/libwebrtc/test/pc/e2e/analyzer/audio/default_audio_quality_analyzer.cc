@@ -12,10 +12,14 @@
 
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/metrics/metric.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
 
 void DefaultAudioQualityAnalyzer::Start(std::string test_case_name,
                                         TrackIdStreamInfoMap* analyzer_helper) {
@@ -115,21 +119,44 @@ void DefaultAudioQualityAnalyzer::Stop() {
   using ::webrtc::test::ImproveDirection;
   MutexLock lock(&lock_);
   for (auto& item : streams_stats_) {
-    ReportResult("expand_rate", item.first, item.second.expand_rate, "unitless",
-                 ImproveDirection::kSmallerIsBetter);
-    ReportResult("accelerate_rate", item.first, item.second.accelerate_rate,
-                 "unitless", ImproveDirection::kSmallerIsBetter);
-    ReportResult("preemptive_rate", item.first, item.second.preemptive_rate,
-                 "unitless", ImproveDirection::kSmallerIsBetter);
-    ReportResult("speech_expand_rate", item.first,
-                 item.second.speech_expand_rate, "unitless",
-                 ImproveDirection::kSmallerIsBetter);
-    ReportResult("average_jitter_buffer_delay_ms", item.first,
-                 item.second.average_jitter_buffer_delay_ms, "ms",
-                 ImproveDirection::kNone);
-    ReportResult("preferred_buffer_size_ms", item.first,
-                 item.second.preferred_buffer_size_ms, "ms",
-                 ImproveDirection::kNone);
+    if (metrics_logger_ == nullptr) {
+      ReportResult("expand_rate", item.first, item.second.expand_rate,
+                   "unitless", ImproveDirection::kSmallerIsBetter);
+      ReportResult("accelerate_rate", item.first, item.second.accelerate_rate,
+                   "unitless", ImproveDirection::kSmallerIsBetter);
+      ReportResult("preemptive_rate", item.first, item.second.preemptive_rate,
+                   "unitless", ImproveDirection::kSmallerIsBetter);
+      ReportResult("speech_expand_rate", item.first,
+                   item.second.speech_expand_rate, "unitless",
+                   ImproveDirection::kSmallerIsBetter);
+      ReportResult("average_jitter_buffer_delay_ms", item.first,
+                   item.second.average_jitter_buffer_delay_ms, "ms",
+                   ImproveDirection::kNone);
+      ReportResult("preferred_buffer_size_ms", item.first,
+                   item.second.preferred_buffer_size_ms, "ms",
+                   ImproveDirection::kNone);
+    } else {
+      metrics_logger_->LogMetric("expand_rate", item.first,
+                                 item.second.expand_rate, Unit::kUnitless,
+                                 ImprovementDirection::kSmallerIsBetter);
+      metrics_logger_->LogMetric("accelerate_rate", item.first,
+                                 item.second.accelerate_rate, Unit::kUnitless,
+                                 ImprovementDirection::kSmallerIsBetter);
+      metrics_logger_->LogMetric("preemptive_rate", item.first,
+                                 item.second.preemptive_rate, Unit::kUnitless,
+                                 ImprovementDirection::kSmallerIsBetter);
+      metrics_logger_->LogMetric(
+          "speech_expand_rate", item.first, item.second.speech_expand_rate,
+          Unit::kUnitless, ImprovementDirection::kSmallerIsBetter);
+      metrics_logger_->LogMetric("average_jitter_buffer_delay_ms", item.first,
+                                 item.second.average_jitter_buffer_delay_ms,
+                                 Unit::kMilliseconds,
+                                 ImprovementDirection::kNeitherIsBetter);
+      metrics_logger_->LogMetric("preferred_buffer_size_ms", item.first,
+                                 item.second.preferred_buffer_size_ms,
+                                 Unit::kMilliseconds,
+                                 ImprovementDirection::kNeitherIsBetter);
+    }
   }
 }
 
