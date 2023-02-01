@@ -28,29 +28,7 @@
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
-
 namespace {
-
-class VideoWriter final : public rtc::VideoSinkInterface<VideoFrame> {
- public:
-  VideoWriter(test::VideoFrameWriter* video_writer, int sampling_modulo)
-      : video_writer_(video_writer), sampling_modulo_(sampling_modulo) {}
-  ~VideoWriter() override = default;
-
-  void OnFrame(const VideoFrame& frame) override {
-    if (frames_counter_++ % sampling_modulo_ != 0) {
-      return;
-    }
-    bool result = video_writer_->WriteFrame(frame);
-    RTC_CHECK(result) << "Failed to write frame";
-  }
-
- private:
-  test::VideoFrameWriter* const video_writer_;
-  const int sampling_modulo_;
-
-  int64_t frames_counter_ = 0;
-};
 
 class AnalyzingFramePreprocessor
     : public test::TestVideoCapturer::FramePreprocessor {
@@ -109,7 +87,7 @@ void VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::WriteFrameId(
       << "Failed to write frame id to the output file: " << file_name_;
 }
 
-VideoQualityAnalyzerInjectionHelper::VideoWriter2::VideoWriter2(
+VideoQualityAnalyzerInjectionHelper::VideoWriter::VideoWriter(
     test::VideoFrameWriter* video_writer,
     VideoFrameIdsWriter* frame_ids_writer,
     int sampling_modulo)
@@ -117,7 +95,7 @@ VideoQualityAnalyzerInjectionHelper::VideoWriter2::VideoWriter2(
       frame_ids_writer_(frame_ids_writer),
       sampling_modulo_(sampling_modulo) {}
 
-void VideoQualityAnalyzerInjectionHelper::VideoWriter2::OnFrame(
+void VideoQualityAnalyzerInjectionHelper::VideoWriter::OnFrame(
     const VideoFrame& frame) {
   if (frames_counter_++ % sampling_modulo_ != 0) {
     return;
@@ -172,28 +150,15 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   test::VideoFrameWriter* writer = nullptr;
   if (config.input_dump_options.has_value()) {
-    // Using new API for video dumping.
-    writer = MaybeCreateVideoWriter(
+    writer = CreateVideoWriter(
         config.input_dump_options->GetInputDumpFileName(*config.stream_label),
         config);
-    RTC_CHECK(writer);
-    VideoFrameIdsWriter* frame_ids_writer = nullptr;
-    if (config.input_dump_options->export_frame_ids()) {
-      frame_ids_writers_.push_back(std::make_unique<VideoFrameIdsWriter>(
-          *config.input_dump_options->GetInputFrameIdsDumpFileName(
-              *config.stream_label)));
-      frame_ids_writer = frame_ids_writers_.back().get();
-    }
-    sinks.push_back(std::make_unique<VideoWriter2>(
+    VideoFrameIdsWriter* frame_ids_writer = MaybeCreateVideoFrameIdsWriter(
+        config.input_dump_options->GetInputFrameIdsDumpFileName(
+            *config.stream_label));
+    sinks.push_back(std::make_unique<VideoWriter>(
         writer, frame_ids_writer,
         config.input_dump_options->sampling_modulo()));
-  } else {
-    // Using old API. To be removed.
-    writer = MaybeCreateVideoWriter(config.input_dump_file_name, config);
-    if (writer) {
-      sinks.push_back(std::make_unique<VideoWriter>(
-          writer, config.input_dump_sampling_modulo));
-    }
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
@@ -256,19 +221,15 @@ void VideoQualityAnalyzerInjectionHelper::Stop() {
   frame_ids_writers_.clear();
 }
 
-test::VideoFrameWriter*
-VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoWriter(
-    absl::optional<std::string> file_name,
+test::VideoFrameWriter* VideoQualityAnalyzerInjectionHelper::CreateVideoWriter(
+    absl::string_view file_name,
     const PeerConnectionE2EQualityTestFixture::VideoConfig& config) {
-  if (!file_name.has_value()) {
-    return nullptr;
-  }
   // TODO(titovartem) create only one file writer for simulcast video track.
   // For now this code will be invoked for each simulcast stream separately, but
   // only one file will be used.
   std::unique_ptr<test::VideoFrameWriter> video_writer =
       std::make_unique<test::Y4mVideoFrameWriterImpl>(
-          *file_name, config.width, config.height, config.fps);
+          std::string(file_name), config.width, config.height, config.fps);
   if (config.output_dump_use_fixed_framerate) {
     video_writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
         config.fps, clock_, std::move(video_writer));
@@ -276,6 +237,17 @@ VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoWriter(
   test::VideoFrameWriter* out = video_writer.get();
   video_writers_.push_back(std::move(video_writer));
   return out;
+}
+
+VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter*
+VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoFrameIdsWriter(
+    absl::optional<std::string> frame_ids_dump_file_name) {
+  if (!frame_ids_dump_file_name.has_value()) {
+    return nullptr;
+  }
+  frame_ids_writers_.push_back(
+      std::make_unique<VideoFrameIdsWriter>(*frame_ids_dump_file_name));
+  return frame_ids_writers_.back().get();
 }
 
 void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
@@ -321,37 +293,16 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   test::VideoFrameWriter* writer = nullptr;
   if (config.output_dump_options.has_value()) {
-    // Using new API with output directory.
-    writer = MaybeCreateVideoWriter(
+    writer = CreateVideoWriter(
         config.output_dump_options->GetOutputDumpFileName(
             receiver_stream.stream_label, receiver_stream.peer_name),
         config);
-    RTC_CHECK(writer);
-    VideoFrameIdsWriter* frame_ids_writer = nullptr;
-    if (config.output_dump_options->export_frame_ids()) {
-      frame_ids_writers_.push_back(std::make_unique<VideoFrameIdsWriter>(
-          *config.output_dump_options->GetOutputFrameIdsDumpFileName(
-              receiver_stream.stream_label, receiver_stream.peer_name)));
-      frame_ids_writer = frame_ids_writers_.back().get();
-    }
-    sinks.push_back(std::make_unique<VideoWriter2>(
+    VideoFrameIdsWriter* frame_ids_writer = MaybeCreateVideoFrameIdsWriter(
+        config.output_dump_options->GetOutputFrameIdsDumpFileName(
+            receiver_stream.stream_label, receiver_stream.peer_name));
+    sinks.push_back(std::make_unique<VideoWriter>(
         writer, frame_ids_writer,
         config.output_dump_options->sampling_modulo()));
-  } else {
-    // Using old API. To be removed.
-    absl::optional<std::string> output_dump_file_name =
-        config.output_dump_file_name;
-    if (output_dump_file_name.has_value() && peers_count_ > 2) {
-      // TODO(titovartem): make this default behavior for any amount of peers.
-      rtc::StringBuilder builder(*output_dump_file_name);
-      builder << "." << receiver_stream.peer_name;
-      output_dump_file_name = builder.str();
-    }
-    writer = MaybeCreateVideoWriter(output_dump_file_name, config);
-    if (writer) {
-      sinks.push_back(std::make_unique<VideoWriter>(
-          writer, config.output_dump_sampling_modulo));
-    }
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
