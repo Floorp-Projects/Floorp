@@ -24,7 +24,7 @@ fn dump_avif(filename: &str, strictness: ParseStrictness) {
     unsafe {
         let mut parser = std::ptr::null_mut();
         let rv = mp4parse_avif_new(&io, strictness, &mut parser);
-        println!("mp4parse_avif_new -> {:?}", rv);
+        println!("mp4parse_avif_new -> {rv:?}");
         if rv == Mp4parseStatus::Ok {
             println!(
                 "mp4parse_avif_get_image_safe -> {:?}",
@@ -52,7 +52,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                 dump_avif(filename, strictness);
             }
             _ => {
-                println!("-- fail to parse: {:?}, '-v' for more info", rv);
+                println!("-- fail to parse: {rv:?}, '-v' for more info");
                 return;
             }
         }
@@ -60,10 +60,10 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
         let mut frag_info = Mp4parseFragmentInfo::default();
         match mp4parse_get_fragment_info(parser, &mut frag_info) {
             Mp4parseStatus::Ok => {
-                println!("-- mp4parse_fragment_info {:?}", frag_info);
+                println!("-- mp4parse_fragment_info {frag_info:?}");
             }
             rv => {
-                println!("-- mp4parse_fragment_info failed with {:?}", rv);
+                println!("-- mp4parse_fragment_info failed with {rv:?}");
                 return;
             }
         }
@@ -84,10 +84,10 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
             };
             match mp4parse_get_track_info(parser, i, &mut track_info) {
                 Mp4parseStatus::Ok => {
-                    println!("-- mp4parse_get_track_info {:?}", track_info);
+                    println!("-- mp4parse_get_track_info {track_info:?}");
                 }
                 _ => {
-                    println!("-- mp4parse_get_track_info failed, track id: {}", i);
+                    println!("-- mp4parse_get_track_info failed, track id: {i}");
                     return;
                 }
             }
@@ -97,7 +97,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                     let mut audio_info = Mp4parseTrackAudioInfo::default();
                     match mp4parse_get_track_audio_info(parser, i, &mut audio_info) {
                         Mp4parseStatus::Ok => {
-                            println!("-- mp4parse_get_track_audio_info {:?}", audio_info);
+                            println!("-- mp4parse_get_track_audio_info {audio_info:?}");
                             for i in 0..audio_info.sample_info_count as isize {
                                 let sample_info = audio_info.sample_info.offset(i);
                                 println!(
@@ -107,7 +107,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                             }
                         }
                         _ => {
-                            println!("-- mp4parse_get_track_audio_info failed, track id: {}", i);
+                            println!("-- mp4parse_get_track_audio_info failed, track id: {i}");
                             return;
                         }
                     }
@@ -118,7 +118,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                     let mut video_info = Mp4parseTrackVideoInfo::default();
                     match mp4parse_get_track_video_info(parser, i, &mut video_info) {
                         Mp4parseStatus::Ok => {
-                            println!("-- mp4parse_get_track_video_info {:?}", video_info);
+                            println!("-- mp4parse_get_track_video_info {video_info:?}");
                             for i in 0..video_info.sample_info_count as isize {
                                 let sample_info = video_info.sample_info.offset(i);
                                 println!(
@@ -128,7 +128,7 @@ fn dump_file(filename: &str, strictness: ParseStrictness) {
                             }
                         }
                         _ => {
-                            println!("-- mp4parse_get_track_video_info failed, track id: {}", i);
+                            println!("-- mp4parse_get_track_video_info failed, track id: {i}");
                             return;
                         }
                     }
@@ -172,7 +172,7 @@ fn main() {
             "-v" | "--verbose" => verbose = true,
             _ => {
                 if let Some("-") = arg.get(0..1) {
-                    eprintln!("Ignoring unknown switch {:?}", arg);
+                    eprintln!("Ignoring unknown switch {arg:?}");
                 } else {
                     filenames.push(arg)
                 }

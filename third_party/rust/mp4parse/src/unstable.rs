@@ -146,7 +146,7 @@ pub fn create_sample_table(
     };
 
     let (stsc, stco, stsz, stts) = match (&track.stsc, &track.stco, &track.stsz, &track.stts) {
-        (&Some(ref a), &Some(ref b), &Some(ref c), &Some(ref d)) => (a, b, c, d),
+        (Some(a), Some(b), Some(c), Some(d)) => (a, b, c, d),
         _ => return None,
     };
 
@@ -328,7 +328,7 @@ impl<'a> Iterator for TimeOffsetIterator<'a> {
 impl<'a> TimeOffsetIterator<'a> {
     fn next_offset_time(&mut self) -> TrackScaledTime<i64> {
         match self.next() {
-            Some(v) => TrackScaledTime::<i64>(v as i64, self.track_id),
+            Some(v) => TrackScaledTime::<i64>(v, self.track_id),
             _ => TrackScaledTime::<i64>(0, self.track_id),
         }
     }

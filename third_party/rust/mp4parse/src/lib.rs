@@ -72,7 +72,7 @@ trait ToU64 {
 
 /// Statically verify that the platform `usize` can fit within a `u64`.
 /// If the size won't fit on the given platform, this will fail at compile time, but if a type
-/// which can fail TryInto<usize> is used, it may panic.
+/// which can fail `TryInto<usize>` is used, it may panic.
 impl ToU64 for usize {
     fn to_u64(self) -> u64 {
         static_assertions::const_assert!(
@@ -90,7 +90,7 @@ pub trait ToUsize {
 
 /// Statically verify that the given type can fit within a `usize`.
 /// If the size won't fit on the given platform, this will fail at compile time, but if a type
-/// which can fail TryInto<usize> is used, it may panic.
+/// which can fail `TryInto<usize>` is used, it may panic.
 macro_rules! impl_to_usize_from {
     ( $from_type:ty ) => {
         impl ToUsize for $from_type {
@@ -203,7 +203,6 @@ pub enum Status {
     EsdsDecSpecificIntoTagQuantity,
     FtypBadSize,
     FtypNotFirst,
-    HdlrNameMultipleNul,
     HdlrNameNoNul,
     HdlrNameNotUtf8,
     HdlrNotFirst,
@@ -223,7 +222,6 @@ pub enum Status {
     IlocBadQuantity,
     IlocBadSize,
     IlocDuplicateItemId,
-    IlocMissing,
     IlocNotFound,
     IlocOffsetOverflow,
     ImageItemType,
@@ -261,6 +259,7 @@ pub enum Status {
     NoImage,
     PitmBadQuantity,
     PitmMissing,
+    PitmNotFound,
     PixiBadChannelCount,
     PixiMissing,
     PsshSizeOverflow,
@@ -525,11 +524,6 @@ impl From<Status> for &str {
                 "The FileTypeBox shall be placed as early as possible in the file \
                  per ISOBMFF (ISO 14496-12:2020) § 4.3.1"
             }
-            Status::HdlrNameMultipleNul => {
-                "The HandlerBox 'name' field shall have a NUL byte \
-                 only in the final position \
-                 per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2"
-            }
             Status::HdlrNameNoNul => {
                 "The HandlerBox 'name' field shall be null-terminated \
                  per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2"
@@ -602,9 +596,6 @@ impl From<Status> for &str {
             }
             Status::IlocDuplicateItemId => {
                 "duplicate item_ID in iloc"
-            }
-            Status::IlocMissing => {
-                "iloc missing"
             }
             Status::IlocNotFound => {
                 "ItemLocationBox (iloc) contains an extent not present in any mdat or idat box"
@@ -738,6 +729,9 @@ impl From<Status> for &str {
                 "Missing required PrimaryItemBox (pitm), required \
                  per HEIF (ISO/IEC 23008-12:2017) § 10.2.1"
             }
+            Status::PitmNotFound => {
+                "PrimaryItemBox (pitm) referenced an item ID that was not present"
+            }
             Status::PixiBadChannelCount => {
                 "invalid num_channels"
             }
@@ -858,7 +852,7 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -994,6 +988,7 @@ pub struct TrackHeaderBox {
 /// Edit list box 'elst'
 #[derive(Debug)]
 struct EditListBox {
+    looped: bool,
     edits: TryVec<Edit>,
 }
 
@@ -1538,7 +1533,7 @@ impl fmt::Debug for IsobmffItem {
         match &self {
             IsobmffItem::MdatLocation(extent) | IsobmffItem::IdatLocation(extent) => f
                 .debug_struct("IsobmffItem::Location")
-                .field("0", &format_args!("{:?}", extent))
+                .field("0", &format_args!("{extent:?}"))
                 .finish(),
             IsobmffItem::Data(data) => f
                 .debug_struct("IsobmffItem::Data")
@@ -2144,36 +2139,26 @@ enum Extent {
     ToEnd { offset: u64 },
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub enum TrackType {
     Audio,
     Video,
     Picture,
     AuxiliaryVideo,
     Metadata,
+    #[default]
     Unknown,
-}
-
-impl Default for TrackType {
-    fn default() -> Self {
-        TrackType::Unknown
-    }
 }
 
 // This type is used by mp4parse_capi since it needs to be passed from FFI consumers
 // The C-visible struct is renamed via mp4parse_capi/cbindgen.toml to match naming conventions
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum ParseStrictness {
     Permissive, // Error only on ambiguous inputs
-    Normal,     // Error on "shall" directives, log warnings for "should"
+    #[default]
+    Normal, // Error on "shall" directives, log warnings for "should"
     Strict,     // Error on "should" directives
-}
-
-impl Default for ParseStrictness {
-    fn default() -> Self {
-        ParseStrictness::Normal
-    }
 }
 
 fn fail_with_status_if(violation: bool, status: Status) -> Result<()> {
@@ -2186,8 +2171,9 @@ fn fail_with_status_if(violation: bool, status: Status) -> Result<()> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CodecType {
+    #[default]
     Unknown,
     MP3,
     AAC,
@@ -2207,12 +2193,6 @@ pub enum CodecType {
     AMRNB,
     #[cfg(feature = "3gpp")]
     AMRWB,
-}
-
-impl Default for CodecType {
-    fn default() -> Self {
-        CodecType::Unknown
-    }
 }
 
 /// The media's global (mvhd) timescale in units per second.
@@ -2248,7 +2228,9 @@ where
 pub struct Track {
     pub id: usize,
     pub track_type: TrackType,
+    pub looped: Option<bool>,
     pub empty_duration: Option<MediaScaledTime>,
+    pub edited_duration: Option<MediaScaledTime>,
     pub media_time: Option<TrackScaledTime<u64>>,
     pub timescale: Option<TrackTimeScale<u64>>,
     pub duration: Option<TrackScaledTime<u64>>,
@@ -2293,7 +2275,7 @@ impl<'a, T: Read> BoxIter<'a, T> {
         match r {
             Ok(h) => Ok(Some(BMFFBox {
                 head: h,
-                content: self.src.take(h.size - h.offset),
+                content: self.src.take(h.size.saturating_sub(h.offset)),
             })),
             Err(Error::UnexpectedEOF) => Ok(None),
             Err(e) => Err(e),
@@ -2355,7 +2337,13 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
     let name = BoxType::from(be_u32(src)?);
     let size = match size32 {
         // valid only for top-level box and indicates it's the last box in the file.  usually mdat.
-        0 => return Err(Error::Unsupported("unknown sized box")),
+        0 => {
+            if name == BoxType::MediaDataBox {
+                0
+            } else {
+                return Err(Error::Unsupported("unknown sized box"));
+            }
+        }
         1 => {
             let size64 = be_u64(src)?;
             if size64 < BoxHeader::MIN_LARGE_SIZE {
@@ -2393,7 +2381,7 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
     } else {
         None
     };
-    assert!(offset <= size);
+    assert!(offset <= size || size == 0);
     Ok(BoxHeader {
         name,
         size,
@@ -2554,7 +2542,26 @@ pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<Avif
             }
             BoxType::MediaDataBox => {
                 let file_offset = b.offset();
-                let data = b.read_into_try_vec()?;
+                let data = if b.head.size == 0 {
+                    // Unknown sized `mdat`, read in chunks until EOF.
+                    const BUF_SIZE: usize = 64 * 1024;
+                    let mut data = TryVec::with_capacity(BUF_SIZE)?;
+                    loop {
+                        let got = fallible_collections::try_read_up_to(
+                            b.content.get_mut(),
+                            BUF_SIZE as u64,
+                            &mut data,
+                        )?;
+                        if got == 0 {
+                            // Mark `content` as consumed.
+                            b.content.set_limit(0);
+                            break;
+                        }
+                    }
+                    data
+                } else {
+                    b.read_into_try_vec()?
+                };
                 media_storage.push(DataBox::from_mdat(file_offset, data))?;
             }
             _ => skip_box_content(&mut b)?,
@@ -2699,6 +2706,12 @@ pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<Avif
         }
 
         assert!(item.is_some());
+    }
+
+    if (primary_item_id.is_some() && primary_item.is_none())
+        || (alpha_item_id.is_some() && alpha_item.is_none())
+    {
+        fail_with_status_if(strictness == ParseStrictness::Strict, Status::PitmNotFound)?;
     }
 
     assert!(primary_item.is_none() || primary_item_id.is_some());
@@ -2911,7 +2924,7 @@ fn read_avif_meta<T: Read + Offset>(
         item_references: item_references.unwrap_or_default(),
         primary_item_id,
         item_infos: item_infos.unwrap_or_default(),
-        iloc_items: iloc_items.ok_or_else(|| Error::from(Status::IlocMissing))?,
+        iloc_items: iloc_items.unwrap_or_default(),
         item_data_box,
     })
 }
@@ -4389,6 +4402,7 @@ fn read_edts<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
         match b.head.name {
             BoxType::EditListBox => {
                 let elst = read_elst(&mut b)?;
+                track.looped = Some(elst.looped);
                 if elst.edits.is_empty() {
                     debug!("empty edit list");
                     continue;
@@ -4408,6 +4422,7 @@ fn read_edts<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
                 if media_time < 0 {
                     debug!("unexpected negative media time in edit");
                 }
+                track.edited_duration = Some(MediaScaledTime(elst.edits[idx].segment_duration));
                 track.media_time = Some(TrackScaledTime::<u64>(
                     std::cmp::max(0, media_time) as u64,
                     track.id,
@@ -4674,7 +4689,7 @@ fn read_tkhd<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackHeaderBox> {
 /// Parse a elst box.
 /// See ISOBMFF (ISO 14496-12:2020) § 8.6.6
 fn read_elst<T: Read>(src: &mut BMFFBox<T>) -> Result<EditListBox> {
-    let (version, _) = read_fullbox_extra(src)?;
+    let (version, flags) = read_fullbox_extra(src)?;
     let edit_count = be_u32(src)?;
     let mut edits = TryVec::with_capacity(edit_count.to_usize())?;
     for _ in 0..edit_count {
@@ -4702,7 +4717,10 @@ fn read_elst<T: Read>(src: &mut BMFFBox<T>) -> Result<EditListBox> {
     // Padding could be added in some contents.
     skip_box_remain(src)?;
 
-    Ok(EditListBox { edits })
+    Ok(EditListBox {
+        looped: flags == 1,
+        edits,
+    })
 }
 
 /// Parse a mdhd box.
@@ -5522,21 +5540,14 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>, strictness: ParseStrictness) -> Resu
 
     match std::str::from_utf8(src.read_into_try_vec()?.as_slice()) {
         Ok(name) => {
-            match name.bytes().filter(|&b| b == b'\0').count() {
-                0 => fail_with_status_if(
+            match name.bytes().position(|b| b == b'\0') {
+                None => fail_with_status_if(
                     strictness != ParseStrictness::Permissive,
                     Status::HdlrNameNoNul,
                 )?,
-                1 => (),
-                n =>
+                // `name` must be nul-terminated and any trailing bytes after the first nul ignored.
                 // See https://github.com/MPEGGroup/FileFormat/issues/35
-                {
-                    error!("Found {} nul bytes in {:x?}", n, name);
-                    fail_with_status_if(
-                        strictness == ParseStrictness::Strict,
-                        Status::HdlrNameMultipleNul,
-                    )?
-                }
+                Some(_) => (),
             }
         }
         Err(_) => fail_with_status_if(

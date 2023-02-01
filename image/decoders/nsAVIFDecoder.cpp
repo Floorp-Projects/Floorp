@@ -1831,7 +1831,7 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
       case MP4PARSE_STATUS_CONSTRUCTION_METHOD:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::construction_method);
         return;
-      case MP4PARSE_STATUS_ILOC_MISSING:
+      case MP4PARSE_STATUS_PITM_NOT_FOUND:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::item_loc_not_found);
         return;
       case MP4PARSE_STATUS_IDAT_MISSING:

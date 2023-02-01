@@ -7,7 +7,7 @@ use mp4parse as mp4;
 use crate::mp4::{ParseStrictness, Status};
 use std::convert::TryInto;
 use std::fs::File;
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Cursor, Read, Seek};
 
 static MINI_MP4: &str = "tests/minimal.mp4";
 static MINI_MP4_WITH_METADATA: &str = "tests/metadata.mp4";
@@ -65,6 +65,7 @@ static IMAGE_AVIF_IMIR_MISSING_ESSENTIAL: &str = "tests/imir-missing-essential.a
 static IMAGE_AVIF_IROT_MISSING_ESSENTIAL: &str = "tests/irot-missing-essential.avif";
 static IMAGE_AVIF_LSEL_MISSING_ESSENTIAL: &str = "tests/corrupt/lsel-missing-essential.avif";
 static IMAGE_AVIF_CLAP_MISSING_ESSENTIAL: &str = "tests/clap-missing-essential.avif";
+static IMAGE_AVIF_UNKNOWN_MDAT_SIZE: &str = "tests/unknown_mdat.avif";
 static AVIF_TEST_DIRS: &[&str] = &["tests", "av1-avif/testFiles", "link-u-avif-sample-images"];
 
 // These files are
@@ -85,7 +86,11 @@ static AVIF_AVIS_MAJOR_NO_PITM: &str =
 /// This is av1-avif/testFiles/Netflix/avis/alpha_video.avif
 /// but with https://github.com/AOMediaCodec/av1-avif/issues/177 fixed
 static AVIF_AVIS_MAJOR_WITH_PITM_AND_ALPHA: &str = "tests/alpha_video_fixed.avif";
+static AVIF_AVIS_WITH_NO_PITM_NO_ILOC: &str = "tests/avis_with_no_ptim_no_iloc.avif";
+static AVIF_AVIS_WITH_PITM_NO_ILOC: &str = "tests/avis_with_pitm_no_iloc.avif";
 static AVIF_AVIS_MAJOR_NO_MOOV: &str = "tests/corrupt/alpha_video_moov_is_moop.avif";
+static AVIF_AVIS_NO_LOOP: &str = "tests/loop_none.avif";
+static AVIF_AVIS_LOOP_FOREVER: &str = "tests/loop_forever.avif";
 static AVIF_NO_PIXI_IMAGES: &[&str] = &[IMAGE_AVIF_NO_PIXI, IMAGE_AVIF_NO_ALPHA_PIXI];
 static AVIF_UNSUPPORTED_IMAGES: &[&str] = &[
     AVIF_A1LX,
@@ -909,6 +914,19 @@ fn public_avif_alpha_premultiplied() {
 }
 
 #[test]
+fn public_avif_unknown_mdat() {
+    let input = &mut File::open(IMAGE_AVIF_UNKNOWN_MDAT_SIZE).expect("Unknown file");
+    let context = mp4::read_avif(input, ParseStrictness::Normal).expect("read_avif failed");
+    assert_eq!(
+        context.primary_item_coded_data().unwrap(),
+        [
+            0x12, 0x00, 0x0A, 0x07, 0x38, 0x00, 0x06, 0x90, 0x20, 0x20, 0x69, 0x32, 0x0C, 0x16,
+            0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x79, 0x4C, 0xD2, 0x02
+        ]
+    );
+}
+
+#[test]
 fn public_avif_bug_1655846() {
     let input = &mut File::open(IMAGE_AVIF_CORRUPT).expect("Unknown file");
     assert!(mp4::read_avif(input, ParseStrictness::Normal).is_err());
@@ -931,7 +949,7 @@ fn for_strictness_result(
         ParseStrictness::Normal,
         ParseStrictness::Strict,
     ] {
-        input.seek(SeekFrom::Start(0)).expect("rewind failed");
+        input.rewind().expect("rewind failed");
         check(strictness, mp4::read_avif(input, strictness));
     }
 }
@@ -1051,7 +1069,7 @@ fn public_avif_hdlr_multiple_nul() {
     // This is a "should" despite the spec indicating a (somewhat ambiguous)
     // requirement about extra data in boxes
     // See comments in read_hdlr
-    assert_avif_should(IMAGE_AVIF_HDLR_MULTIPLE_NUL, Status::HdlrNameMultipleNul);
+    assert_avif_should(IMAGE_AVIF_HDLR_MULTIPLE_NUL, Status::Ok);
 }
 
 #[test]
@@ -1098,6 +1116,7 @@ fn public_avif_transform_order() {
     assert_avif_shall(IMAGE_AVIF_TRANSFORM_ORDER, Status::TxformOrder);
 }
 
+#[allow(clippy::uninlined_format_args)]
 fn assert_unsupported_nonfatal(result: &mp4::Result<mp4::AvifContext>, feature: mp4::Feature) {
     match result {
         Ok(context) => {
@@ -1207,7 +1226,13 @@ fn public_avis_major_with_pitm_and_alpha() {
             assert_eq!(context.major_brand, mp4::AVIS_BRAND);
             assert!(context.primary_item_coded_data().is_some());
             assert!(context.alpha_item_coded_data().is_some());
-            assert!(context.sequence.is_some());
+            match context.sequence {
+                Some(sequence) => {
+                    assert!(!sequence.tracks.is_empty());
+                    assert_eq!(sequence.tracks[0].looped, None);
+                }
+                None => panic!("Expected sequence"),
+            }
         }
         Err(e) => panic!("Expected Ok(_), found {:?}", e),
     }
@@ -1216,6 +1241,59 @@ fn public_avis_major_with_pitm_and_alpha() {
 #[test]
 fn public_avif_avis_major_no_moov() {
     assert_avif_shall(AVIF_AVIS_MAJOR_NO_MOOV, Status::MoovMissing);
+}
+
+#[test]
+fn public_avif_avis_with_no_pitm_no_iloc() {
+    let input = &mut File::open(AVIF_AVIS_WITH_NO_PITM_NO_ILOC).expect("Unknown file");
+    match mp4::read_avif(input, ParseStrictness::Normal) {
+        Ok(context) => {
+            assert_eq!(context.major_brand, mp4::AVIS_BRAND);
+            match context.sequence {
+                Some(sequence) => {
+                    assert!(!sequence.tracks.is_empty());
+                    assert_eq!(sequence.tracks[0].looped, Some(false));
+                }
+                None => panic!("Expected sequence"),
+            }
+        }
+        Err(e) => panic!("Expected Ok(_), found {:?}", e),
+    }
+}
+
+#[test]
+fn public_avif_avis_with_pitm_no_iloc() {
+    assert_avif_should(AVIF_AVIS_WITH_PITM_NO_ILOC, Status::PitmNotFound);
+}
+
+fn public_avis_loop_impl(path: &str, looped: bool) {
+    let input = &mut File::open(path).expect("Unknown file");
+    match mp4::read_avif(input, ParseStrictness::Normal) {
+        Ok(context) => match context.sequence {
+            Some(sequence) => {
+                assert!(!sequence.tracks.is_empty());
+                assert_eq!(sequence.tracks[0].looped, Some(looped));
+                if looped {
+                    assert!(sequence.tracks[0].edited_duration.is_some());
+                }
+            }
+            None => panic!(
+                "Expected sequence in {}",
+                AVIF_AVIS_MAJOR_WITH_PITM_AND_ALPHA
+            ),
+        },
+        Err(e) => panic!("Expected Ok(_), found {:?}", e),
+    }
+}
+
+#[test]
+fn public_avif_avis_no_loop() {
+    public_avis_loop_impl(AVIF_AVIS_NO_LOOP, false);
+}
+
+#[test]
+fn public_avif_avis_loop_forever() {
+    public_avis_loop_impl(AVIF_AVIS_LOOP_FOREVER, true);
 }
 
 #[test]
@@ -1250,7 +1328,7 @@ fn public_avif_read_samples_impl(strictness: ParseStrictness) {
             let path = entry.path();
             let extension = path.extension().unwrap_or_default();
             if !path.is_file() || (extension != "avif" && extension != "avifs") {
-                eprintln!("Skipping {:?}", path);
+                eprintln!("Skipping {path:?}");
                 continue; // Skip directories, ReadMe.txt, etc.
             }
             let corrupt = (path.canonicalize().unwrap().parent().unwrap()
@@ -1280,10 +1358,10 @@ fn public_avif_read_samples_impl(strictness: ParseStrictness) {
                         "{:?}",
                         c.unsupported_features
                     );
-                    eprintln!("Successfully parsed {:?}", path)
+                    eprintln!("Successfully parsed {path:?}")
                 }
                 Err(e) if corrupt => {
-                    eprintln!("Expected error parsing corrupt input {:?}: {:?}", path, e)
+                    eprintln!("Expected error parsing corrupt input {path:?}: {e:?}")
                 }
                 Err(e) => panic!("Unexpected error parsing {:?}: {:?}", path, e),
             }
