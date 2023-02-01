@@ -532,7 +532,7 @@ const FEEDS_DATA = [
         AT: ["de"],
         IT: ["it"],
         FR: ["fr"],
-        ES: ["es"],
+        ES: ["es-ES"],
         PL: ["pl"],
         JP: ["ja", "ja-JP-mac"],
       }[geo];
