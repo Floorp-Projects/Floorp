@@ -136,26 +136,27 @@ void DefaultAudioQualityAnalyzer::Stop() {
                    item.second.preferred_buffer_size_ms, "ms",
                    ImproveDirection::kNone);
     } else {
-      metrics_logger_->LogMetric("expand_rate", item.first,
+      metrics_logger_->LogMetric("expand_rate", GetTestCaseName(item.first),
                                  item.second.expand_rate, Unit::kUnitless,
                                  ImprovementDirection::kSmallerIsBetter);
-      metrics_logger_->LogMetric("accelerate_rate", item.first,
+      metrics_logger_->LogMetric("accelerate_rate", GetTestCaseName(item.first),
                                  item.second.accelerate_rate, Unit::kUnitless,
                                  ImprovementDirection::kSmallerIsBetter);
-      metrics_logger_->LogMetric("preemptive_rate", item.first,
+      metrics_logger_->LogMetric("preemptive_rate", GetTestCaseName(item.first),
                                  item.second.preemptive_rate, Unit::kUnitless,
                                  ImprovementDirection::kSmallerIsBetter);
       metrics_logger_->LogMetric(
-          "speech_expand_rate", item.first, item.second.speech_expand_rate,
-          Unit::kUnitless, ImprovementDirection::kSmallerIsBetter);
-      metrics_logger_->LogMetric("average_jitter_buffer_delay_ms", item.first,
-                                 item.second.average_jitter_buffer_delay_ms,
-                                 Unit::kMilliseconds,
-                                 ImprovementDirection::kNeitherIsBetter);
-      metrics_logger_->LogMetric("preferred_buffer_size_ms", item.first,
-                                 item.second.preferred_buffer_size_ms,
-                                 Unit::kMilliseconds,
-                                 ImprovementDirection::kNeitherIsBetter);
+          "speech_expand_rate", GetTestCaseName(item.first),
+          item.second.speech_expand_rate, Unit::kUnitless,
+          ImprovementDirection::kSmallerIsBetter);
+      metrics_logger_->LogMetric(
+          "average_jitter_buffer_delay_ms", GetTestCaseName(item.first),
+          item.second.average_jitter_buffer_delay_ms, Unit::kMilliseconds,
+          ImprovementDirection::kNeitherIsBetter);
+      metrics_logger_->LogMetric(
+          "preferred_buffer_size_ms", GetTestCaseName(item.first),
+          item.second.preferred_buffer_size_ms, Unit::kMilliseconds,
+          ImprovementDirection::kNeitherIsBetter);
     }
   }
 }
