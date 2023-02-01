@@ -6,6 +6,8 @@
     <string name="mozac_feature_sitepermissions_camera_title">%1$s ushın kamerańızdan qollanıwdı ruqsat etiw kerek pe?</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">%1$s ushın mikrofonıńızdan paydalanıwdı ruqsat etiw kerek pe?</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">%1$s ushın jaylasqan ornıńızdı paydalanıwǵa ruqsat etiw kerek pe?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
     <string name="mozac_feature_sitepermissions_camera_and_microphone">%1$s ushın kamera hám mikrofonıńızdı paydalanıwǵa ruqsat etiw kerek pe?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to

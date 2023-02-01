@@ -13,12 +13,6 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Qáwipsiz qosılıw ámelge aspadı</string>
 
-    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-        <li>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi alınǵan maǵlıwmatlar haqıyqıylıǵın tekseriw ilajsız.</li>
-        <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
-      </ul>]]></string>
-
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Qáwipsiz jalǵanıw ámelge aspadı</string>
 
@@ -32,7 +26,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Qáwipti qabıllaw hám dawam etiw</string>
 
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
-    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Bul veb-sayt qáwipsiz jalǵanıwdı talap etedi.</string>
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Bul sayt qáwipsiz jalǵanıwdı talap etedi.</string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Qosımsha…</string>
@@ -113,11 +107,16 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Internet jalǵanbaǵan</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Tarmaq jalǵanǵanın tekseriń yamasa bir neshe minutlardan keyin qayta júklewge urınıp kóriń.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Qayta júklew</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Jaramsız mánzil</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Kórsetilgen mánzildıń formatın anıqlaw múmkin bolmay atır. Mánzildıń qátesiz kiritilgenin tekserıń hám qayta urınıp kórıń.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Mánzil jaramsız</string>
 
@@ -150,6 +149,8 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Qáwipsiz sayt joq</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Siz qáwipsizlikti kúsheytiw ushın tek HTTPS rejimin qostıńız, biraq ta <em>%1$s</em> saytında HTTPS versiyası qollap-quwatlanbaydı.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">HTTP saytında dawam etiw</string>
 </resources>
