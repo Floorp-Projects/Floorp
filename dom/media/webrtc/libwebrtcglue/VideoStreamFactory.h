@@ -13,9 +13,9 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
 #include "api/video/video_source_interface.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "common_video/framerate_controller.h"
 #include "rtc_base/time_utils.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 class VideoFrame;
