@@ -137,6 +137,8 @@ skip-if(!cocoaWidget) != apple-symbols-1.html apple-symbols-1-notref.html
 skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-2.html emoji-fallback-2-ref.html
 == emoji-fallback-3.html emoji-fallback-3-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap.html emoji-keycap-notref.html
+# Dependent on Windows emoji font names, so not expected to be meaningful on other platforms:
+skip-if(!winWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap-2.html emoji-keycap-2-notref.html
 == emoji-skintone.html emoji-skintone-ref.html
 # Random on Android because font availability varies depending on the version/device.
 random-if(Android) != emoji-subregion-flag.html emoji-subregion-flag-notref.html
