@@ -258,7 +258,9 @@ class RTCStatsMemberInterface {
   virtual std::vector<NonStandardGroupId> group_ids() const { return {}; }
   // Type and value comparator. The names are not compared. These operators are
   // exposed for testing.
-  virtual bool operator==(const RTCStatsMemberInterface& other) const = 0;
+  bool operator==(const RTCStatsMemberInterface& other) const {
+    return IsEqual(other);
+  }
   bool operator!=(const RTCStatsMemberInterface& other) const {
     return !(*this == other);
   }
@@ -279,6 +281,8 @@ class RTCStatsMemberInterface {
  protected:
   RTCStatsMemberInterface(const char* name, bool is_defined)
       : name_(name), is_defined_(is_defined) {}
+
+  virtual bool IsEqual(const RTCStatsMemberInterface& other) const = 0;
 
   const char* const name_;
   bool is_defined_;
@@ -309,17 +313,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   bool is_sequence() const override;
   bool is_string() const override;
   bool is_standardized() const override { return true; }
-  bool operator==(const RTCStatsMemberInterface& other) const override {
-    if (type() != other.type() || is_standardized() != other.is_standardized())
-      return false;
-    const RTCStatsMember<T>& other_t =
-        static_cast<const RTCStatsMember<T>&>(other);
-    if (!is_defined_)
-      return !other_t.is_defined();
-    if (!other.is_defined())
-      return false;
-    return value_ == other_t.value_;
-  }
   std::string ValueToString() const override;
   std::string ValueToJson() const override;
 
@@ -361,6 +354,19 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   const T* operator->() const {
     RTC_DCHECK(is_defined_);
     return &value_;
+  }
+
+ protected:
+  bool IsEqual(const RTCStatsMemberInterface& other) const override {
+    if (type() != other.type() || is_standardized() != other.is_standardized())
+      return false;
+    const RTCStatsMember<T>& other_t =
+        static_cast<const RTCStatsMember<T>&>(other);
+    if (!is_defined_)
+      return !other_t.is_defined();
+    if (!other.is_defined())
+      return false;
+    return value_ == other_t.value_;
   }
 
  private:
