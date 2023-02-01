@@ -25,9 +25,8 @@ case "$CONFIGS" in
   echo echo 10.12 >> $ORIGPWD/bin/sw_vers
   chmod +x $ORIGPWD/bin/sw_vers
   # these variables are used in build-clang.py
-  export CROSS_CCTOOLS_PATH=$MOZ_FETCHES_DIR/cctools
   export CROSS_SYSROOT=$(ls -d $MOZ_FETCHES_DIR/MacOSX1*.sdk)
-  export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin:$ORIGPWD/bin
+  export PATH=$PATH:$ORIGPWD/bin
   ;;
 *win64*)
   case "$(uname -s)" in
