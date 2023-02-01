@@ -720,7 +720,7 @@ class RTCStatsCollectorTest : public ::testing::Test {
     video_media_info.receive_codecs.insert(
         std::make_pair(recv_codec.payload_type, recv_codec));
     // outbound-rtp
-    graph.outbound_rtp_id = "OV3";
+    graph.outbound_rtp_id = "OTTransportName1V3";
     video_media_info.senders.push_back(cricket::VideoSenderInfo());
     video_media_info.senders[0].local_stats.push_back(
         cricket::SsrcSenderInfo());
@@ -728,7 +728,7 @@ class RTCStatsCollectorTest : public ::testing::Test {
     video_media_info.senders[0].codec_payload_type = send_codec.payload_type;
     video_media_info.aggregated_senders.push_back(video_media_info.senders[0]);
     // inbound-rtp
-    graph.inbound_rtp_id = "IV4";
+    graph.inbound_rtp_id = "ITTransportName1V4";
     video_media_info.receivers.push_back(cricket::VideoReceiverInfo());
     video_media_info.receivers[0].local_stats.push_back(
         cricket::SsrcReceiverInfo());
@@ -820,13 +820,13 @@ class RTCStatsCollectorTest : public ::testing::Test {
     media_info.receive_codecs.insert(
         std::make_pair(recv_codec.payload_type, recv_codec));
     // outbound-rtp
-    graph.outbound_rtp_id = "OA3";
+    graph.outbound_rtp_id = "OTTransportName1A3";
     media_info.senders.push_back(cricket::VoiceSenderInfo());
     media_info.senders[0].local_stats.push_back(cricket::SsrcSenderInfo());
     media_info.senders[0].local_stats[0].ssrc = kLocalSsrc;
     media_info.senders[0].codec_payload_type = send_codec.payload_type;
     // inbound-rtp
-    graph.inbound_rtp_id = "IA4";
+    graph.inbound_rtp_id = "ITTransportName1A4";
     media_info.receivers.push_back(cricket::VoiceReceiverInfo());
     media_info.receivers[0].local_stats.push_back(cricket::SsrcReceiverInfo());
     media_info.receivers[0].local_stats[0].ssrc = kRemoteSsrc;
@@ -1043,10 +1043,8 @@ TEST_F(RTCStatsCollectorTest, ValidSsrcCollisionDoesNotCrash) {
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   auto inbound_rtps = report->GetStatsOfType<RTCInboundRTPStreamStats>();
   auto outbound_rtps = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
-  // TODO(https://crbug.com/webrtc/14443): When valid SSRC collisions are
-  // handled correctly, we should expect to see 4 of each type of object here.
-  EXPECT_EQ(inbound_rtps.size(), 2u);
-  EXPECT_EQ(outbound_rtps.size(), 2u);
+  EXPECT_EQ(inbound_rtps.size(), 4u);
+  EXPECT_EQ(outbound_rtps.size(), 4u);
 }
 
 // These SSRC collisions are illegal, so it is not clear if this setup can
@@ -2259,7 +2257,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   auto stats_of_track_type = report->GetStatsOfType<RTCMediaStreamTrackStats>();
   ASSERT_EQ(1U, stats_of_track_type.size());
 
-  RTCInboundRTPStreamStats expected_audio("IA1", report->timestamp_us());
+  RTCInboundRTPStreamStats expected_audio("ITTransportName1A1",
+                                          report->timestamp_us());
   expected_audio.ssrc = 1;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
@@ -2378,7 +2377,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
-  RTCInboundRTPStreamStats expected_video("IV1", report->timestamp_us());
+  RTCInboundRTPStreamStats expected_video("ITTransportName1V1",
+                                          report->timestamp_us());
   expected_video.ssrc = 1;
   expected_video.media_type = "video";
   expected_video.kind = "video";
@@ -2476,7 +2476,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
-  RTCOutboundRTPStreamStats expected_audio("OA1", report->timestamp_us());
+  RTCOutboundRTPStreamStats expected_audio("OTTransportName1A1",
+                                           report->timestamp_us());
   expected_audio.media_source_id = "SA50";
   // `expected_audio.remote_id` should be undefined.
   expected_audio.mid = "AudioMid";
@@ -2906,7 +2907,8 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
-  RTCOutboundRTPStreamStats expected_audio("OA1", report->timestamp_us());
+  RTCOutboundRTPStreamStats expected_audio("OTTransportName1A1",
+                                           report->timestamp_us());
   expected_audio.media_source_id = "SA50";
   expected_audio.mid = "AudioMid";
   expected_audio.ssrc = 1;
@@ -3234,7 +3236,8 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
         "TTransportName1";  // 1 for RTP (we have no RTCP
                             // transport)
     expected_remote_inbound_rtp.packets_lost = 7;
-    expected_remote_inbound_rtp.local_id = "O" + MediaTypeCharStr() + stream_id;
+    expected_remote_inbound_rtp.local_id =
+        "OTTransportName1" + MediaTypeCharStr() + stream_id;
     expected_remote_inbound_rtp.round_trip_time = kRoundTripTimeSample2Seconds;
     expected_remote_inbound_rtp.total_round_trip_time =
         kRoundTripTimeSample1Seconds + kRoundTripTimeSample2Seconds;
