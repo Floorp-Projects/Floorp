@@ -485,7 +485,7 @@ static gint moz_gtk_button_paint(cairo_t* cr, const GdkRectangle* rect,
   gtk_widget_set_direction(widget, direction);
 
   gtk_style_context_save(style);
-  StyleContextSetScale(style, state->scale);
+  StyleContextSetScale(style, state->image_scale);
   gtk_style_context_set_state(style, state_flags);
 
   if (state->isDefault && relief == GTK_RELIEF_NORMAL && !state->focused &&
@@ -551,14 +551,15 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
 
   GtkWidget* iconWidget =
       gtk_bin_get_child(GTK_BIN(GetWidget(aIconWidgetType)));
-  cairo_surface_t* surface = GetWidgetIconSurface(iconWidget, state->scale);
+  cairo_surface_t* surface =
+      GetWidgetIconSurface(iconWidget, state->image_scale);
 
   if (surface) {
     GtkStyleContext* style = gtk_widget_get_style_context(buttonWidget);
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
 
     gtk_style_context_save(style);
-    StyleContextSetScale(style, state->scale);
+    StyleContextSetScale(style, state->image_scale);
     gtk_style_context_set_state(style, state_flags);
 
     const ToolbarButtonGTKMetrics* metrics =
@@ -610,7 +611,7 @@ static gint moz_gtk_toggle_paint(cairo_t* cr, GdkRectangle* rect,
         static_cast<GtkStateFlags>(state_flags | GTK_STATE_FLAG_INCONSISTENT);
 
   style = GetStyleContext(isradio ? MOZ_GTK_RADIOBUTTON : MOZ_GTK_CHECKBUTTON,
-                          state->scale, direction, state_flags);
+                          state->image_scale, direction, state_flags);
 
   if (gtk_check_version(3, 20, 0) == nullptr) {
     gtk_render_background(style, cr, x, y, width, height);
@@ -765,7 +766,7 @@ static gint moz_gtk_inner_spin_paint(cairo_t* cr, GdkRectangle* rect,
                                      GtkWidgetState* state,
                                      GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_SPINBUTTON, state->scale, direction,
+      GetStyleContext(MOZ_GTK_SPINBUTTON, state->image_scale, direction,
                       GetStateFlagsFromGtkWidgetState(state));
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -796,7 +797,7 @@ static gint moz_gtk_spin_paint(cairo_t* cr, GdkRectangle* rect,
                                GtkWidgetState* state,
                                GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_SPINBUTTON, state->scale, direction);
+      GetStyleContext(MOZ_GTK_SPINBUTTON, state->image_scale, direction);
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
@@ -806,7 +807,7 @@ static gint moz_gtk_spin_updown_paint(cairo_t* cr, GdkRectangle* rect,
                                       gboolean isDown, GtkWidgetState* state,
                                       GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_SPINBUTTON, state->scale, direction,
+      GetStyleContext(MOZ_GTK_SPINBUTTON, state->image_scale, direction,
                       GetStateFlagsFromGtkWidgetState(state));
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -841,7 +842,7 @@ static gint moz_gtk_scale_paint(cairo_t* cr, GdkRectangle* rect,
   WidgetNodeType widget = (flags == GTK_ORIENTATION_HORIZONTAL)
                               ? MOZ_GTK_SCALE_TROUGH_HORIZONTAL
                               : MOZ_GTK_SCALE_TROUGH_VERTICAL;
-  style = GetStyleContext(widget, state->scale, direction, state_flags);
+  style = GetStyleContext(widget, state->image_scale, direction, state_flags);
   gtk_style_context_get_margin(style, state_flags, &margin);
 
   // Clamp the dimension perpendicular to the direction that the slider crosses
@@ -893,7 +894,7 @@ static gint moz_gtk_scale_thumb_paint(cairo_t* cr, GdkRectangle* rect,
   WidgetNodeType widget = (flags == GTK_ORIENTATION_HORIZONTAL)
                               ? MOZ_GTK_SCALE_THUMB_HORIZONTAL
                               : MOZ_GTK_SCALE_THUMB_VERTICAL;
-  style = GetStyleContext(widget, state->scale, direction, state_flags);
+  style = GetStyleContext(widget, state->image_scale, direction, state_flags);
   gtk_render_slider(style, cr, x, y, thumb_width, thumb_height, flags);
 
   return MOZ_GTK_SUCCESS;
@@ -903,7 +904,7 @@ static gint moz_gtk_gripper_paint(cairo_t* cr, GdkRectangle* rect,
                                   GtkWidgetState* state,
                                   GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_GRIPPER, state->scale, direction,
+      GetStyleContext(MOZ_GTK_GRIPPER, state->image_scale, direction,
                       GetStateFlagsFromGtkWidgetState(state));
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -913,7 +914,7 @@ static gint moz_gtk_gripper_paint(cairo_t* cr, GdkRectangle* rect,
 static gint moz_gtk_hpaned_paint(cairo_t* cr, GdkRectangle* rect,
                                  GtkWidgetState* state) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL, state->scale,
+      GetStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_HORIZONTAL, state->image_scale,
                       GTK_TEXT_DIR_LTR, GetStateFlagsFromGtkWidgetState(state));
   gtk_render_handle(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
@@ -922,7 +923,7 @@ static gint moz_gtk_hpaned_paint(cairo_t* cr, GdkRectangle* rect,
 static gint moz_gtk_vpaned_paint(cairo_t* cr, GdkRectangle* rect,
                                  GtkWidgetState* state) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL, state->scale,
+      GetStyleContext(MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL, state->image_scale,
                       GTK_TEXT_DIR_LTR, GetStateFlagsFromGtkWidgetState(state));
   gtk_render_handle(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
@@ -970,21 +971,21 @@ static gint moz_gtk_text_view_paint(cairo_t* cr, GdkRectangle* aRect,
                                                : GTK_STATE_FLAG_NORMAL;
 
   GtkStyleContext* style_frame = GetStyleContext(
-      MOZ_GTK_SCROLLED_WINDOW, state->scale, direction, state_flags);
+      MOZ_GTK_SCROLLED_WINDOW, state->image_scale, direction, state_flags);
   gtk_render_frame(style_frame, cr, aRect->x, aRect->y, aRect->width,
                    aRect->height);
 
   GdkRectangle rect = *aRect;
   InsetByBorderPadding(&rect, style_frame);
 
-  GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_TEXT_VIEW, state->scale, direction, state_flags);
+  GtkStyleContext* style = GetStyleContext(
+      MOZ_GTK_TEXT_VIEW, state->image_scale, direction, state_flags);
   gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
   // There is a separate "text" window, which usually provides the
   // background behind the text.  However, this is transparent in Ambiance
   // for GTK 3.20, in which case the MOZ_GTK_TEXT_VIEW background is
   // visible.
-  style = GetStyleContext(MOZ_GTK_TEXT_VIEW_TEXT, state->scale, direction,
+  style = GetStyleContext(MOZ_GTK_TEXT_VIEW_TEXT, state->image_scale, direction,
                           state_flags);
   gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
 
@@ -1005,17 +1006,20 @@ static gint moz_gtk_treeview_paint(cairo_t* cr, GdkRectangle* rect,
   state_flags =
       state->disabled ? GTK_STATE_FLAG_INSENSITIVE : GTK_STATE_FLAG_NORMAL;
 
-  style = GetStyleContext(MOZ_GTK_SCROLLED_WINDOW, state->scale, direction);
+  style =
+      GetStyleContext(MOZ_GTK_SCROLLED_WINDOW, state->image_scale, direction);
   gtk_style_context_get_border(style, state_flags, &border);
   xthickness = border.left;
   ythickness = border.top;
 
-  style_tree = GetStyleContext(MOZ_GTK_TREEVIEW_VIEW, state->scale, direction);
+  style_tree =
+      GetStyleContext(MOZ_GTK_TREEVIEW_VIEW, state->image_scale, direction);
   gtk_render_background(style_tree, cr, rect->x + xthickness,
                         rect->y + ythickness, rect->width - 2 * xthickness,
                         rect->height - 2 * ythickness);
 
-  style = GetStyleContext(MOZ_GTK_SCROLLED_WINDOW, state->scale, direction);
+  style =
+      GetStyleContext(MOZ_GTK_SCROLLED_WINDOW, state->image_scale, direction);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
 }
@@ -1044,7 +1048,7 @@ static gint moz_gtk_tree_header_sort_arrow_paint(cairo_t* cr,
   arrow_rect.height = 11;
   arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
   arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
-  style = GetStyleContext(MOZ_GTK_TREE_HEADER_SORTARROW, state->scale,
+  style = GetStyleContext(MOZ_GTK_TREE_HEADER_SORTARROW, state->image_scale,
                           direction, GetStateFlagsFromGtkWidgetState(state));
   switch (arrow_type) {
     case GTK_ARROW_LEFT:
@@ -1096,7 +1100,7 @@ static gint moz_gtk_treeview_expander_paint(cairo_t* cr, GdkRectangle* rect,
         static_cast<GtkStateFlags>(state_flags & ~(checkbox_check_state));
 
   GtkStyleContext* style = GetStyleContext(
-      MOZ_GTK_TREEVIEW_EXPANDER, state->scale, direction, state_flags);
+      MOZ_GTK_TREEVIEW_EXPANDER, state->image_scale, direction, state_flags);
   gtk_render_expander(style, cr, rect->x, rect->y, rect->width, rect->height);
 
   return MOZ_GTK_SUCCESS;
@@ -1133,7 +1137,7 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
 
   calculate_arrow_rect(comboBoxArrow, &arrow_rect, &real_arrow_rect, direction);
 
-  style = GetStyleContext(MOZ_GTK_COMBOBOX_ARROW, state->scale);
+  style = GetStyleContext(MOZ_GTK_COMBOBOX_ARROW, state->image_scale);
   gtk_render_arrow(style, cr, ARROW_DOWN, real_arrow_rect.x, real_arrow_rect.y,
                    real_arrow_rect.width);
 
@@ -1141,7 +1145,7 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
   GtkWidget* widget = GetWidget(MOZ_GTK_COMBOBOX_SEPARATOR);
   if (!widget) return MOZ_GTK_SUCCESS;
   style = gtk_widget_get_style_context(widget);
-  StyleContextSetScale(style, state->scale);
+  StyleContextSetScale(style, state->image_scale);
   gtk_style_context_get_style(style, "wide-separators", &wide_separators,
                               "separator-width", &separator_width, NULL);
 
@@ -1200,8 +1204,8 @@ static gint moz_gtk_arrow_paint(cairo_t* cr, GdkRectangle* rect,
   calculate_arrow_rect(GetWidget(MOZ_GTK_BUTTON_ARROW), rect, &arrow_rect,
                        direction);
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_BUTTON_ARROW, state->scale,
-                                           direction, state_flags);
+  GtkStyleContext* style = GetStyleContext(
+      MOZ_GTK_BUTTON_ARROW, state->image_scale, direction, state_flags);
   gtk_render_arrow(style, cr, arrow_angle, arrow_rect.x, arrow_rect.y,
                    arrow_rect.width);
   return MOZ_GTK_SUCCESS;
@@ -1224,7 +1228,7 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
 
   if (state_flags & GTK_STATE_FLAG_ACTIVE) {
     style = gtk_widget_get_style_context(comboBoxEntry);
-    StyleContextSetScale(style, state->scale);
+    StyleContextSetScale(style, state->image_scale);
     gtk_style_context_get_style(style, "child-displacement-x", &x_displacement,
                                 "child-displacement-y", &y_displacement, NULL);
     arrow_rect.x += x_displacement;
@@ -1234,7 +1238,7 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
   calculate_arrow_rect(GetWidget(MOZ_GTK_COMBOBOX_ENTRY_ARROW), &arrow_rect,
                        &real_arrow_rect, direction);
 
-  style = GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_ARROW, state->scale);
+  style = GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_ARROW, state->image_scale);
   gtk_render_arrow(style, cr, ARROW_DOWN, real_arrow_rect.x, real_arrow_rect.y,
                    real_arrow_rect.width);
   return MOZ_GTK_SUCCESS;
@@ -1246,7 +1250,7 @@ static gint moz_gtk_container_paint(cairo_t* cr, GdkRectangle* rect,
                                     GtkTextDirection direction) {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   GtkStyleContext* style =
-      GetStyleContext(widget_type, state->scale, direction, state_flags);
+      GetStyleContext(widget_type, state->image_scale, direction, state_flags);
   /* this is for drawing a prelight box */
   if (state_flags & GTK_STATE_FLAG_PRELIGHT) {
     gtk_render_background(style, cr, rect->x, rect->y, rect->width,
@@ -1263,7 +1267,7 @@ static gint moz_gtk_toggle_label_paint(cairo_t* cr, GdkRectangle* rect,
 
   GtkStyleContext* style = GetStyleContext(
       isradio ? MOZ_GTK_RADIOBUTTON_CONTAINER : MOZ_GTK_CHECKBUTTON_CONTAINER,
-      state->scale, direction, GetStateFlagsFromGtkWidgetState(state));
+      state->image_scale, direction, GetStateFlagsFromGtkWidgetState(state));
   gtk_render_focus(style, cr, rect->x, rect->y, rect->width, rect->height);
 
   return MOZ_GTK_SUCCESS;
@@ -1273,7 +1277,7 @@ static gint moz_gtk_toolbar_paint(cairo_t* cr, GdkRectangle* rect,
                                   GtkWidgetState* state,
                                   GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_TOOLBAR, state->scale, direction);
+      GetStyleContext(MOZ_GTK_TOOLBAR, state->image_scale, direction);
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
@@ -1292,11 +1296,12 @@ static gint moz_gtk_toolbar_separator_paint(cairo_t* cr, GdkRectangle* rect,
   const double start_fraction = 0.2;
   const double end_fraction = 0.8;
 
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_TOOLBAR, state->scale);
+  GtkStyleContext* style = GetStyleContext(MOZ_GTK_TOOLBAR, state->image_scale);
   gtk_style_context_get_style(style, "wide-separators", &wide_separators,
                               "separator-width", &separator_width, NULL);
 
-  style = GetStyleContext(MOZ_GTK_TOOLBAR_SEPARATOR, state->scale, direction);
+  style =
+      GetStyleContext(MOZ_GTK_TOOLBAR_SEPARATOR, state->image_scale, direction);
   if (wide_separators) {
     if (separator_width > rect->width) separator_width = rect->width;
 
@@ -1332,7 +1337,7 @@ static gint moz_gtk_tooltip_paint(cairo_t* cr, const GdkRectangle* aRect,
 
   // Tooltip drawing
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_TOOLTIP, state->scale, direction);
+      GetStyleContext(MOZ_GTK_TOOLTIP, state->image_scale, direction);
   GdkRectangle rect = *aRect;
   gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
   gtk_render_frame(style, cr, rect.x, rect.y, rect.width, rect.height);
@@ -1346,7 +1351,7 @@ static gint moz_gtk_tooltip_paint(cairo_t* cr, const GdkRectangle* aRect,
   // For drawing Horizontal Box we have to inset drawing area by that 6px
   // plus its CSS margin.
   GtkStyleContext* boxStyle =
-      GetStyleContext(MOZ_GTK_TOOLTIP_BOX, state->scale, direction);
+      GetStyleContext(MOZ_GTK_TOOLTIP_BOX, state->image_scale, direction);
 
   rect.x += 6;
   rect.y += 6;
@@ -1361,7 +1366,7 @@ static gint moz_gtk_tooltip_paint(cairo_t* cr, const GdkRectangle* aRect,
   InsetByBorderPadding(&rect, boxStyle);
 
   GtkStyleContext* labelStyle =
-      GetStyleContext(MOZ_GTK_TOOLTIP_BOX_LABEL, state->scale, direction);
+      GetStyleContext(MOZ_GTK_TOOLTIP_BOX_LABEL, state->image_scale, direction);
   moz_gtk_draw_styled_frame(labelStyle, cr, &rect, false);
 
   return MOZ_GTK_SUCCESS;
@@ -1371,7 +1376,7 @@ static gint moz_gtk_resizer_paint(cairo_t* cr, GdkRectangle* rect,
                                   GtkWidgetState* state,
                                   GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_RESIZER, state->scale, GTK_TEXT_DIR_LTR,
+      GetStyleContext(MOZ_GTK_RESIZER, state->image_scale, GTK_TEXT_DIR_LTR,
                       GetStateFlagsFromGtkWidgetState(state));
 
   // Workaround unico not respecting the text direction for resizers.
@@ -1394,7 +1399,7 @@ static gint moz_gtk_frame_paint(cairo_t* cr, GdkRectangle* rect,
                                 GtkWidgetState* state,
                                 GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_FRAME, state->scale, direction);
+      GetStyleContext(MOZ_GTK_FRAME, state->image_scale, direction);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
   return MOZ_GTK_SUCCESS;
 }
@@ -1403,7 +1408,7 @@ static gint moz_gtk_progressbar_paint(cairo_t* cr, GdkRectangle* rect,
                                       GtkWidgetState* state,
                                       GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_PROGRESS_TROUGH, state->scale, direction);
+      GetStyleContext(MOZ_GTK_PROGRESS_TROUGH, state->image_scale, direction);
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 
@@ -1415,7 +1420,7 @@ static gint moz_gtk_progress_chunk_paint(cairo_t* cr, GdkRectangle* rect,
                                          GtkTextDirection direction,
                                          WidgetNodeType widget) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_PROGRESS_CHUNK, state->scale, direction);
+      GetStyleContext(MOZ_GTK_PROGRESS_CHUNK, state->image_scale, direction);
 
   if (widget == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE ||
       widget == MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE) {
@@ -1493,7 +1498,7 @@ static gint moz_gtk_tab_paint(cairo_t* cr, GdkRectangle* rect,
   int initial_gap = 0;
   bool isBottomTab = (widget == MOZ_GTK_TAB_BOTTOM);
 
-  style = GetStyleContext(widget, state->scale, direction,
+  style = GetStyleContext(widget, state->image_scale, direction,
                           GetStateFlagsFromGtkTabFlags(flags));
   tabRect = *rect;
 
@@ -1570,7 +1575,7 @@ static gint moz_gtk_tab_paint(cairo_t* cr, GdkRectangle* rect,
       }
 
       GtkStyleContext* panelStyle =
-          GetStyleContext(MOZ_GTK_TABPANELS, state->scale, direction);
+          GetStyleContext(MOZ_GTK_TABPANELS, state->image_scale, direction);
 
       if (isBottomTab) {
         /* Draw the tab on bottom */
@@ -1656,7 +1661,7 @@ static gint moz_gtk_tabpanels_paint(cairo_t* cr, GdkRectangle* rect,
                                     GtkWidgetState* state,
                                     GtkTextDirection direction) {
   GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_TABPANELS, state->scale, direction);
+      GetStyleContext(MOZ_GTK_TABPANELS, state->image_scale, direction);
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   /*
    * The gap size is not needed in moz_gtk_tabpanels_paint because
@@ -1718,8 +1723,8 @@ static gint moz_gtk_tab_scroll_arrow_paint(cairo_t* cr, GdkRectangle* rect,
       break;
   }
   if (arrow_type != GTK_ARROW_NONE) {
-    style = GetStyleContext(MOZ_GTK_TAB_SCROLLARROW, state->scale, direction,
-                            GetStateFlagsFromGtkWidgetState(state));
+    style = GetStyleContext(MOZ_GTK_TAB_SCROLLARROW, state->image_scale,
+                            direction, GetStateFlagsFromGtkWidgetState(state));
     gtk_render_arrow(style, cr, arrow_angle, x, y, arrow_size);
   }
   return MOZ_GTK_SUCCESS;
@@ -1736,7 +1741,7 @@ static gint moz_gtk_menu_bar_paint(cairo_t* cr, GdkRectangle* rect,
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
-  StyleContextSetScale(style, state->scale);
+  StyleContextSetScale(style, state->image_scale);
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -1761,7 +1766,7 @@ static gint moz_gtk_menu_popup_paint(cairo_t* cr, GdkRectangle* rect,
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENU);
-  StyleContextSetScale(style, state->scale);
+  StyleContextSetScale(style, state->image_scale);
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -1786,7 +1791,7 @@ static gint moz_gtk_menu_separator_paint(cairo_t* cr, GdkRectangle* rect,
   gint x, y, w;
   GtkBorder padding;
 
-  style = GetStyleContext(MOZ_GTK_MENUSEPARATOR, state->scale, direction);
+  style = GetStyleContext(MOZ_GTK_MENUSEPARATOR, state->image_scale, direction);
   gtk_style_context_get_padding(style, gtk_style_context_get_state(style),
                                 &padding);
 
@@ -1828,7 +1833,7 @@ static gint moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t* cr,
     return MOZ_GTK_SUCCESS;
 
   GtkStyleContext* style =
-      GetStyleContext(widget, state->scale, direction, state_flags);
+      GetStyleContext(widget, state->image_scale, direction, state_flags);
 
   if (minorVersion < 6) {
     // GTK+ 3.4 saves the style context and adds the menubar class to
@@ -1859,8 +1864,8 @@ static gint moz_gtk_menu_arrow_paint(cairo_t* cr, GdkRectangle* rect,
                                      GtkWidgetState* state,
                                      GtkTextDirection direction) {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_MENUITEM, state->scale, direction, state_flags);
+  GtkStyleContext* style = GetStyleContext(MOZ_GTK_MENUITEM, state->image_scale,
+                                           direction, state_flags);
   gtk_render_arrow(style, cr,
                    (direction == GTK_TEXT_DIR_LTR) ? ARROW_RIGHT : ARROW_LEFT,
                    rect->x, rect->y, rect->width);
@@ -1888,7 +1893,7 @@ static gint moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
 
   bool pre_3_20 = gtk_get_minor_version() < 20;
   gint offset;
-  style = GetStyleContext(widgetType, state->scale, direction);
+  style = GetStyleContext(widgetType, state->image_scale, direction);
   gtk_style_context_get_style(style, "indicator-size", &indicator_size,
                               "horizontal-padding", &horizontal_padding, NULL);
   if (pre_3_20) {
@@ -1906,7 +1911,8 @@ static gint moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
   WidgetNodeType indicatorType = isRadio ? MOZ_GTK_RADIOMENUITEM_INDICATOR
                                          : MOZ_GTK_CHECKMENUITEM_INDICATOR;
   const ToggleGTKMetrics* metrics = GetToggleMetrics(indicatorType);
-  style = GetStyleContext(indicatorType, state->scale, direction, state_flags);
+  style = GetStyleContext(indicatorType, state->image_scale, direction,
+                          state_flags);
 
   if (direction == GTK_TEXT_DIR_RTL) {
     x = rect->width - indicator_size - offset;
@@ -1943,8 +1949,8 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
                                      GdkRectangle* rect,
                                      GtkWidgetState* state) {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  GtkStyleContext* style =
-      GetStyleContext(widgetType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
+  GtkStyleContext* style = GetStyleContext(widgetType, state->image_scale,
+                                           GTK_TEXT_DIR_NONE, state_flags);
 
   // Some themes like Elementary's style the container of the headerbar rather
   // than the header bar itself.
@@ -1952,8 +1958,8 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
     auto containerType = widgetType == MOZ_GTK_HEADER_BAR
                              ? MOZ_GTK_HEADERBAR_FIXED
                              : MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED;
-    style = GetStyleContext(containerType, state->scale, GTK_TEXT_DIR_NONE,
-                            state_flags);
+    style = GetStyleContext(containerType, state->image_scale,
+                            GTK_TEXT_DIR_NONE, state_flags);
   }
 
 // Some themes (Adwaita for instance) draws bold dark line at
@@ -1969,13 +1975,13 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
   if (widgetType == MOZ_GTK_HEADER_BAR &&
       !mozilla::widget::GdkIsWaylandDisplay()) {
     GtkStyleContext* windowStyle =
-        GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->scale);
+        GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->image_scale);
     const bool solidDecorations =
         gtk_style_context_has_class(windowStyle, "solid-csd");
     GtkStyleContext* decorationStyle =
         GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID
                                          : MOZ_GTK_WINDOW_DECORATION,
-                        state->scale, GTK_TEXT_DIR_LTR, state_flags);
+                        state->image_scale, GTK_TEXT_DIR_LTR, state_flags);
 
     gtk_render_background(decorationStyle, cr, rect->x, rect->y, rect->width,
                           rect->height + TITLEBAR_EXTENT);
@@ -2634,8 +2640,8 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
           cr, rect, (widget == MOZ_GTK_SPINBUTTON_DOWN), state, direction);
     case MOZ_GTK_SPINBUTTON_ENTRY: {
       GtkStyleContext* style =
-          GetStyleContext(MOZ_GTK_SPINBUTTON_ENTRY, state->scale, direction,
-                          GetStateFlagsFromGtkWidgetState(state));
+          GetStyleContext(MOZ_GTK_SPINBUTTON_ENTRY, state->image_scale,
+                          direction, GetStateFlagsFromGtkWidgetState(state));
       return moz_gtk_entry_paint(cr, rect, state, style, widget);
     }
     case MOZ_GTK_GRIPPER:
@@ -2653,7 +2659,7 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     case MOZ_GTK_ENTRY:
     case MOZ_GTK_DROPDOWN_ENTRY: {
       GtkStyleContext* style =
-          GetStyleContext(widget, state->scale, direction,
+          GetStyleContext(widget, state->image_scale, direction,
                           GetStateFlagsFromGtkWidgetState(state));
       gint ret = moz_gtk_entry_paint(cr, rect, state, style, widget);
       return ret;

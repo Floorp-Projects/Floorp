@@ -626,7 +626,7 @@ class SystemCairoClipper : public ClipExporter {
 static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
                                GtkWidgetState aState,
                                WidgetNodeType aGTKWidgetType, gint aFlags,
-                               GtkTextDirection aDirection, gint aScaleFactor,
+                               GtkTextDirection aDirection, double aScaleFactor,
                                bool aSnapped, const Point& aDrawOrigin,
                                const nsIntSize& aDrawSize,
                                GdkRectangle& aGDKRect,
@@ -635,7 +635,7 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
   const bool useHiDPIWidgets =
-      aScaleFactor != 1 && sCairoSurfaceSetDeviceScalePtr;
+      aScaleFactor != 1.0 && sCairoSurfaceSetDeviceScalePtr;
 
   Point drawOffsetScaled;
   Point drawOffsetOriginal;
@@ -661,8 +661,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   cairo_matrix_t mat;
   GfxMatrixToCairoMatrix(transform, mat);
 
-  nsIntSize clipSize((aDrawSize.width + aScaleFactor - 1) / aScaleFactor,
-                     (aDrawSize.height + aScaleFactor - 1) / aScaleFactor);
+  Size clipSize((aDrawSize.width + aScaleFactor - 1) / aScaleFactor,
+                (aDrawSize.height + aScaleFactor - 1) / aScaleFactor);
 
   // A direct Cairo draw target is not available, so we need to create a
   // temporary one.
@@ -670,11 +670,11 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   if (GdkIsX11Display()) {
     // If using a Cairo xlib surface, then try to reuse it.
     BorrowedXlibDrawable borrow(aDrawTarget);
-    if (borrow.GetDrawable()) {
+    if (Drawable drawable = borrow.GetDrawable()) {
       nsIntSize size = borrow.GetSize();
       cairo_surface_t* surf = cairo_xlib_surface_create(
-          borrow.GetDisplay(), borrow.GetDrawable(), borrow.GetVisual(),
-          size.width, size.height);
+          borrow.GetDisplay(), drawable, borrow.GetVisual(), size.width,
+          size.height);
       if (!NS_WARN_IF(!surf)) {
         Point offset = borrow.GetOffset();
         if (offset != Point()) {
@@ -861,7 +861,6 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   gfxRect rect = presContext->AppUnitsToGfxUnits(aRect);
   gfxRect dirtyRect = presContext->AppUnitsToGfxUnits(aDirtyRect);
-  gint scaleFactor = std::ceil(GetWidgetScaleFactor(aFrame).scale);
 
   // Align to device pixels where sensible
   // to provide crisper and faster drawing.
@@ -884,12 +883,13 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   // GTK themes can only draw an integer number of pixels
   // (even when not snapped).
-  nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
+  LayoutDeviceIntRect widgetRect(0, 0, NS_lround(rect.Width()),
+                                 NS_lround(rect.Height()));
 
   // This is the rectangle that will actually be drawn, in gdk pixels
-  nsIntRect drawingRect(int32_t(dirtyRect.X()), int32_t(dirtyRect.Y()),
-                        int32_t(dirtyRect.Width()),
-                        int32_t(dirtyRect.Height()));
+  LayoutDeviceIntRect drawingRect(
+      int32_t(dirtyRect.X()), int32_t(dirtyRect.Y()),
+      int32_t(dirtyRect.Width()), int32_t(dirtyRect.Height()));
   if (widgetRect.IsEmpty() ||
       !drawingRect.IntersectRect(widgetRect, drawingRect)) {
     return NS_OK;
@@ -907,20 +907,24 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   Transparency transparency = GetWidgetTransparency(aFrame, aAppearance);
 
   // gdk rectangles are wrt the drawing rect.
-  GdkRectangle gdk_rect = {
-      -drawingRect.x / scaleFactor, -drawingRect.y / scaleFactor,
-      widgetRect.width / scaleFactor, widgetRect.height / scaleFactor};
+  auto scaleFactor = GetWidgetScaleFactor(aFrame);
+  LayoutDeviceIntRect gdkDevRect(-drawingRect.TopLeft(), widgetRect.Size());
+
+  auto gdkCssRect = CSSIntRect::RoundIn(gdkDevRect / scaleFactor);
+  GdkRectangle gdk_rect = {gdkCssRect.x, gdkCssRect.y, gdkCssRect.width,
+                           gdkCssRect.height};
 
   // Save actual widget scale to GtkWidgetState as we don't provide
-  // nsFrame to gtk3drawing routines.
-  state.scale = scaleFactor;
+  // the frame to gtk3drawing routines.
+  state.image_scale = std::ceil(scaleFactor.scale);
 
   // translate everything so (0,0) is the top left of the drawingRect
-  gfxPoint origin = rect.TopLeft() + drawingRect.TopLeft();
+  gfxPoint origin = rect.TopLeft() + drawingRect.TopLeft().ToUnknownPoint();
 
   DrawThemeWithCairo(ctx, aContext->GetDrawTarget(), state, gtkWidgetType,
-                     flags, direction, scaleFactor, snapped, ToPoint(origin),
-                     drawingRect.Size(), gdk_rect, transparency);
+                     flags, direction, scaleFactor.scale, snapped,
+                     ToPoint(origin), drawingRect.Size().ToUnknownSize(),
+                     gdk_rect, transparency);
 
   if (!safeState) {
     // gdk_flush() call from expose event crashes Gtk+ on Wayland
