@@ -81,6 +81,8 @@ rtc_library("rtc_p2p") {
     "base/turn_port.cc",
     "base/turn_port.h",
     "base/udp_port.h",
+    "base/wrapping_active_ice_controller.cc",
+    "base/wrapping_active_ice_controller.h",
     "client/basic_port_allocator.cc",
     "client/basic_port_allocator.h",
     "client/relay_port_factory_interface.h",
@@ -201,6 +203,7 @@ if (rtc_include_tests) {
       "base/fake_packet_transport.h",
       "base/mock_active_ice_controller.h",
       "base/mock_async_resolver.h",
+      "base/mock_ice_agent.h",
       "base/mock_ice_controller.h",
       "base/mock_ice_transport.h",
       "base/test_stun_server.cc",
@@ -260,6 +263,7 @@ if (rtc_include_tests) {
       "base/transport_description_unittest.cc",
       "base/turn_port_unittest.cc",
       "base/turn_server_unittest.cc",
+      "base/wrapping_active_ice_controller_unittest.cc",
       "client/basic_port_allocator_unittest.cc",
     ]
     deps = [
