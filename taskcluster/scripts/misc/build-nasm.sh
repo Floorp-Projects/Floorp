@@ -27,31 +27,32 @@ EOF
 	;;
 esac
 
+export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
+
 case "$1" in
     win64)
-        export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
-        ./configure CC=x86_64-w64-mingw32-clang AR=llvm-ar RANLIB=llvm-ranlib --host=x86_64-w64-mingw32
+        TARGET=x86_64-w64-mingw32
+        CC=x86_64-w64-mingw32-clang
         EXE=.exe
         ;;
     macosx64)
-        export PATH="$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
-        export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/clang/lib"
         export MACOSX_DEPLOYMENT_TARGET=10.12
-        ./configure CC="clang --target=x86_64-apple-darwin -isysroot $MOZ_FETCHES_DIR/MacOSX13.0.sdk" --host=x86_64-apple-darwin
+        TARGET=x86_64-apple-darwin
+        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX13.0.sdk"
         EXE=
 	;;
     macosx64-aarch64)
-        export PATH="$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
-        export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/clang/lib"
         export MACOSX_DEPLOYMENT_TARGET=11.0
-        ./configure CC="clang --target=aarch64-apple-darwin -isysroot $MOZ_FETCHES_DIR/MacOSX13.0.sdk" --host=aarch64-apple-darwin
+        TARGET=aarch64-apple-darwin
+        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX13.0.sdk"
         EXE=
 	;;
     *)
-        ./configure CC="$MOZ_FETCHES_DIR/clang/bin/clang --sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
+        CC="clang --sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
         EXE=
         ;;
 esac
+./configure CC="$CC" AR=llvm-ar RANLIB=llvm-ranlib LDFLAGS=-fuse-ld=lld ${TARGET:+--host=$TARGET}
 make -j$(nproc)
 
 mv nasm$EXE nasm-tmp
