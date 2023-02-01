@@ -456,15 +456,13 @@ class nsWindow final : public nsBaseWidget {
 
     void ConsumePreXULSkeletonState(bool aWasMaximized);
 
-    // Whether we should call ShowWindow with the relevant size mode and focus
-    // the window if needed. We want to avoid that when Windows is already
-    // performing the change for us (via the SWP_FRAMECHANGED messages).
-    enum class ShowWindowAndFocus : bool { No, Yes };
+    // Whether we should call ShowWindow with the relevant size mode if needed.
+    // We want to avoid that when Windows is already performing the change for
+    // us (via the SWP_FRAMECHANGED messages).
+    enum class DoShowWindow : bool { No, Yes };
 
-    void EnsureSizeMode(nsSizeMode,
-                        ShowWindowAndFocus = ShowWindowAndFocus::Yes);
-    void EnsureFullscreenMode(bool,
-                              ShowWindowAndFocus = ShowWindowAndFocus::Yes);
+    void EnsureSizeMode(nsSizeMode, DoShowWindow = DoShowWindow::Yes);
+    void EnsureFullscreenMode(bool, DoShowWindow = DoShowWindow::Yes);
     void OnFrameChanging();
     void OnFrameChanged();
 
@@ -473,7 +471,7 @@ class nsWindow final : public nsBaseWidget {
     void CheckInvariant() const;
 
    private:
-    void SetSizeModeInternal(nsSizeMode, ShowWindowAndFocus);
+    void SetSizeModeInternal(nsSizeMode, DoShowWindow);
 
     nsSizeMode mSizeMode = nsSizeMode_Normal;
     // XXX mLastSizeMode is rather bizarre and needs some documentation.
