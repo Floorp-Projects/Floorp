@@ -44,7 +44,9 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(
   source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
 }
 
-BaseCapturerPipeWire::~BaseCapturerPipeWire() {}
+BaseCapturerPipeWire::~BaseCapturerPipeWire() {
+  options_.screencast_stream()->StopScreenCastStream();
+}
 
 void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
                                                      uint32_t stream_node_id,
