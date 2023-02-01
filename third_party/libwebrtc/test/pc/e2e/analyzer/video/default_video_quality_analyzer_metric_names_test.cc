@@ -315,8 +315,8 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest, MetricNamesForP2PAreCorrect) {
               .unit = Unit::kCount,
               .improvement_direction = ImprovementDirection::kBiggerIsBetter},
           MetricValidationInfo{.test_case = "test_case",
-                               .name = "cpu_usage",
-                               .unit = Unit::kPercent,
+                               .name = "cpu_usage_%",
+                               .unit = Unit::kUnitless,
                                .improvement_direction =
                                    ImprovementDirection::kSmallerIsBetter}));
 }
@@ -614,8 +614,8 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
               .unit = Unit::kCount,
               .improvement_direction = ImprovementDirection::kBiggerIsBetter},
           MetricValidationInfo{.test_case = "test_case",
-                               .name = "cpu_usage",
-                               .unit = Unit::kPercent,
+                               .name = "cpu_usage_%",
+                               .unit = Unit::kUnitless,
                                .improvement_direction =
                                    ImprovementDirection::kSmallerIsBetter}));
 }
