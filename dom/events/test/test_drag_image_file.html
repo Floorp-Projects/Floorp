@@ -13,6 +13,10 @@
 
 <script>
 async function runTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.events.dataTransfer.imageAsFile.enabled", true]],
+  });
+
   let dt = await synthesizePlainDragAndCancel({
       srcElement: document.getElementById('green-png'),
       finalY: 20,

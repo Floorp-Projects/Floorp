@@ -11,6 +11,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/DataTransferItemBinding.h"
 #include "mozilla/dom/Directory.h"
@@ -119,10 +120,12 @@ void DataTransferItem::SetData(nsIVariant* aData) {
       return KIND_FILE;
     }
 
-    // Firefox internally uses imgIContainer to represent images being
-    // copied/dragged. These need to be encoded to PNG files.
-    if (nsCOMPtr<imgIContainer>(do_QueryInterface(supports))) {
-      return KIND_FILE;
+    if (StaticPrefs::dom_events_dataTransfer_imageAsFile_enabled()) {
+      // Firefox internally uses imgIContainer to represent images being
+      // copied/dragged. These need to be encoded to PNG files.
+      if (nsCOMPtr<imgIContainer>(do_QueryInterface(supports))) {
+        return KIND_FILE;
+      }
     }
   }
 
