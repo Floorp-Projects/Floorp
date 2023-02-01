@@ -21,6 +21,10 @@ vars = {
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
   'fuchsia_version': 'version:9.20220919.2.1',
+  # By default, download the fuchsia images from the fuchsia GCS bucket.
+  'fuchsia_images_bucket': 'fuchsia',
+  'checkout_fuchsia_boot_images': "qemu.x64",
+  'checkout_fuchsia': False,
 
   # By default, do not check out the re-client binaries.
   'checkout_reclient': False,
@@ -2318,6 +2322,17 @@ hooks = [
     'pattern': '.',
     'condition': 'checkout_mac',
     'action': ['python3', 'src/build/mac_toolchain.py'],
+  },
+  {
+    'name': 'Download Fuchsia system images',
+    'pattern': '.',
+    'condition': 'checkout_fuchsia',
+    'action': [
+      'python3',
+      'src/build/fuchsia/update_images.py',
+      '--boot-images={checkout_fuchsia_boot_images}',
+      '--default-bucket={fuchsia_images_bucket}',
+    ],
   },
   {
     # Note: On Win, this should run after win_toolchain, as it may use it.

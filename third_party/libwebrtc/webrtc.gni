@@ -40,6 +40,10 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
+if (is_fuchsia) {
+  import("//build/config/fuchsia/config.gni")
+}
+
 # This declare_args is separated from the next one because args declared
 # in this one, can be read from the next one (args defined in the same
 # declare_args cannot be referenced in that scope).
