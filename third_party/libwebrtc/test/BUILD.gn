@@ -1009,6 +1009,7 @@ rtc_library("test_common") {
     "../api/video:video_bitrate_allocator_factory",
     "../api/video:video_frame",
     "../api/video_codecs:video_codecs_api",
+    "../call",
     "../call:call_interfaces",
     "../call:fake_network",
     "../call:simulated_network",
