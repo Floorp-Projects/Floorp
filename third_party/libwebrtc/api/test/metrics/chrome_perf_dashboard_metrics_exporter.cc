@@ -105,31 +105,39 @@ bool ChromePerfDashboardMetricsExporter::Export(
   std::unique_ptr<PerfTestResultWriter> writer =
       absl::WrapUnique<PerfTestResultWriter>(CreateHistogramWriter());
   for (const Metric& metric : metrics) {
+    if (metric.time_series.samples.empty() && IsEmpty(metric.stats)) {
+      // If there were no data collected for the metric it is expected that 0
+      // will be exported, so add 0 to the samples.
+      writer->LogResult(
+          metric.name, metric.test_case,
+          ToChromePerfDashboardValue(0, metric.unit),
+          ToChromePerfDashboardUnit(metric.unit),
+          /*important=*/false,
+          ToChromePerfDashboardImproveDirection(metric.improvement_direction));
+      continue;
+    }
+
+    if (metric.time_series.samples.empty()) {
+      writer->LogResultMeanAndError(
+          metric.name, metric.test_case,
+          ToChromePerfDashboardValue(*metric.stats.mean, metric.unit),
+          ToChromePerfDashboardValue(*metric.stats.stddev, metric.unit),
+          ToChromePerfDashboardUnit(metric.unit),
+          /*important=*/false,
+          ToChromePerfDashboardImproveDirection(metric.improvement_direction));
+      continue;
+    }
+
     std::vector<double> samples(metric.time_series.samples.size());
     for (size_t i = 0; i < metric.time_series.samples.size(); ++i) {
       samples[i] = ToChromePerfDashboardValue(
           metric.time_series.samples[i].value, metric.unit);
     }
-
-    if (samples.empty() && IsEmpty(metric.stats)) {
-      // If there were no data collected for the metric it is expected that 0
-      // will be exported, so add 0 to the samples.
-      samples.push_back(ToChromePerfDashboardValue(0, metric.unit));
-    }
-
-    if (!samples.empty()) {
-      writer->LogResultList(
-          metric.name, metric.test_case, samples,
-          ToChromePerfDashboardUnit(metric.unit),
-          /*important=*/false,
-          ToChromePerfDashboardImproveDirection(metric.improvement_direction));
-    } else {
-      writer->LogResultMeanAndError(
-          metric.name, metric.test_case, *metric.stats.mean,
-          *metric.stats.stddev, ToChromePerfDashboardUnit(metric.unit),
-          /*important=*/false,
-          ToChromePerfDashboardImproveDirection(metric.improvement_direction));
-    }
+    writer->LogResultList(
+        metric.name, metric.test_case, samples,
+        ToChromePerfDashboardUnit(metric.unit),
+        /*important=*/false,
+        ToChromePerfDashboardImproveDirection(metric.improvement_direction));
   }
   return WriteMetricsToFile(export_file_path_, writer->Serialize());
 }
