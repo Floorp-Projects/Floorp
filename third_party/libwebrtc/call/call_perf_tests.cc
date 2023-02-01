@@ -738,7 +738,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
           std::string("bitrate_stats_") +
               (pad_to_min_bitrate_ ? "min_transmit_bitrate"
                                    : "without_min_transmit_bitrate"),
-          "bitrate_kbps", bitrate_kbps_list_, Unit::kKilobitsPerSecond,
+          "bitrate_kbps", bitrate_kbps_list_, Unit::kUnitless,
           ImprovementDirection::kNeitherIsBetter);
     }
 
@@ -1017,7 +1017,7 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
           << "Minimum supported bitrate out of the test scope";
       GetGlobalMetricsLogger()->LogSingleValueMetric(
           "min_test_bitrate_", "min_bitrate", last_passed_test_bitrate,
-          Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+          Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
     }
 
     void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
