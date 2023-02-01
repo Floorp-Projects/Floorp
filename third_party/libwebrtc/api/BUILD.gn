@@ -458,6 +458,7 @@ rtc_library("rtp_parameters") {
     "../rtc_base:checks",
     "../rtc_base:stringutils",
     "../rtc_base/system:rtc_export",
+    "video:resolution",
     "video_codecs:scalability_mode",
   ]
   absl_deps = [

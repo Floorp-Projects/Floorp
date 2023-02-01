@@ -10,6 +10,7 @@
 
 #include "media/base/video_broadcaster.h"
 
+#include <algorithm>
 #include <vector>
 
 #include "absl/types/optional.h"
@@ -123,6 +124,7 @@ void VideoBroadcaster::UpdateWants() {
   VideoSinkWants wants;
   wants.rotation_applied = false;
   wants.resolution_alignment = 1;
+  wants.aggregates.emplace(VideoSinkWants::Aggregates());
   for (auto& sink : sink_pairs()) {
     // wants.rotation_applied == ANY(sink.wants.rotation_applied)
     if (sink.wants.rotation_applied) {
@@ -147,6 +149,25 @@ void VideoBroadcaster::UpdateWants() {
     }
     wants.resolution_alignment = cricket::LeastCommonMultiple(
         wants.resolution_alignment, sink.wants.resolution_alignment);
+
+    // Pick MAX(requested_resolution) since the actual can be downscaled
+    // in encoder instead.
+    if (sink.wants.requested_resolution) {
+      if (!wants.requested_resolution) {
+        wants.requested_resolution = sink.wants.requested_resolution;
+      } else {
+        wants.requested_resolution->width =
+            std::max(wants.requested_resolution->width,
+                     sink.wants.requested_resolution->width);
+        wants.requested_resolution->height =
+            std::max(wants.requested_resolution->height,
+                     sink.wants.requested_resolution->height);
+      }
+    } else if (sink.wants.is_active) {
+      wants.aggregates->any_active_without_requested_resolution = true;
+    }
+
+    wants.is_active |= sink.wants.is_active;
   }
 
   if (wants.target_pixel_count &&
