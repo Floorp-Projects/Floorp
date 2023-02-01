@@ -1856,6 +1856,7 @@ public class GeckoViewActivity extends AppCompatActivity
       final View toolbar = findViewById(R.id.toolbar);
       if (toolbar != null) {
         toolbar.setTranslationY(0f);
+        mGeckoView.setVerticalClipping(0);
       }
     }
 
