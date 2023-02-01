@@ -1046,7 +1046,7 @@ class EncodeKeysFunction final : public mozIStorageFunction {
               aArguments->GetInt64(0, &intKey);
 
               Key key;
-              key.SetFromInteger(intKey);
+              QM_TRY(key.SetFromInteger(intKey));
 
               return key;
             }
