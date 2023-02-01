@@ -26,20 +26,6 @@ MetricsLogger* GetGlobalMetricsLogger();
 bool ExportPerfMetric(MetricsLogger& logger,
                       std::vector<std::unique_ptr<MetricsExporter>> exporters);
 
-// Returns current global `MetricsLoggerAndExporter`. Returns `nullptr` if there
-// is global instance wasn't initialized.
-MetricsLoggerAndExporter* GetGlobalMetricsLoggerAndExporter();
-
-// Initialize global `MetricsLoggerAndExporter` with provided vector of
-// exporters. Crashes if there is already initialized global instance.
-void SetupGlobalMetricsLoggerAndExporter(
-    std::vector<std::unique_ptr<MetricsExporter>> exporters);
-
-// Destroys global `MetricsLoggerAndExporter` forcing it to export all collected
-// metrics to the configured exporters. Crashes if there is no initialized
-// global instance.
-void ExportAndDestroyGlobalMetricsLoggerAndExporter();
-
 }  // namespace test
 }  // namespace webrtc
 
