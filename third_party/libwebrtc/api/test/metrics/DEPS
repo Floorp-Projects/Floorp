@@ -3,4 +3,8 @@ specific_include_rules = {
     "+rtc_base/synchronization/mutex.h",
     "+system_wrappers/include/clock.h",
   ],
+  "metrics_logger\.h": [
+    "+rtc_base/synchronization/mutex.h",
+    "+system_wrappers/include/clock.h",
+  ],
 }
