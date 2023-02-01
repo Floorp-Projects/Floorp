@@ -142,7 +142,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../rtc_base/task_utils:repeating_task",
       "../../system_wrappers",
       "../../system_wrappers:field_trial",
-      "../../video",
+      "../../video/config:streams_config",
       "../logging:log_writer",
       "../network:emulated_network",
       "../time_controller",

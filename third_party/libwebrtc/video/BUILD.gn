@@ -71,6 +71,8 @@ rtc_library("video") {
     "../api/crypto:options",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
+    "../api/transport:field_trial_based_config",
+    "../api/units:data_rate",
     "../api/units:frequency",
     "../api/units:time_delta",
     "../api/units:timestamp",
@@ -102,6 +104,7 @@ rtc_library("video") {
     "../modules/video_coding:packet_buffer",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_vp9_helpers",
     "../modules/video_coding/timing:timing_module",
     "../rtc_base:checks",
     "../rtc_base:event_tracer",
@@ -125,6 +128,7 @@ rtc_library("video") {
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/experiments:keyframe_interval_settings_experiment",
     "../rtc_base/experiments:min_video_bitrate_experiment",
+    "../rtc_base/experiments:normalize_simulcast_size_experiment",
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:no_unique_address",
@@ -530,6 +534,7 @@ if (rtc_include_tests) {
         "../test:test_support_test_artifacts",
         "../test:video_test_common",
         "../test:video_test_support",
+        "config:streams_config",
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
@@ -799,6 +804,7 @@ if (rtc_include_tests) {
       "../api/test/metrics:global_metrics_logger_and_exporter",
       "../api/test/metrics:metric",
       "../api/test/video:function_video_factory",
+      "../api/transport:field_trial_based_config",
       "../api/units:data_rate",
       "../api/units:frequency",
       "../api/units:time_delta",
@@ -899,6 +905,7 @@ if (rtc_include_tests) {
       "../test:video_test_common",
       "../test/time_controller",
       "adaptation:video_adaptation",
+      "config:streams_config",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",

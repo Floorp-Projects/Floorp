@@ -18,6 +18,7 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/video_encoder_proxy_factory.h"
+#include "video/config/encoder_stream_factory.h"
 
 namespace webrtc {
 namespace test {

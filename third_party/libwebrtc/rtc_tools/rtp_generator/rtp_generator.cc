@@ -25,6 +25,7 @@
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/thread.h"
 #include "test/testsupport/file_utils.h"
+#include "video/config/encoder_stream_factory.h"
 
 namespace webrtc {
 namespace {
