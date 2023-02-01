@@ -761,10 +761,6 @@ criteria = "safe-to-deploy"
 version = "0.0.6"
 criteria = "safe-to-deploy"
 
-[[exemptions.marionette]]
-version = "0.2.0"
-criteria = "safe-to-run"
-
 [[exemptions.memalloc]]
 version = "0.1.0"
 criteria = "safe-to-deploy"
