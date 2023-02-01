@@ -63,11 +63,22 @@ class SequenceCheckerDoNothing {
   void Detach() {}
 };
 
-std::string ExpectationToString(const SequenceCheckerImpl* checker);
+template <typename ThreadLikeObject>
+std::enable_if_t<std::is_base_of_v<SequenceCheckerImpl, ThreadLikeObject>,
+                 std::string>
+ExpectationToString(const ThreadLikeObject* checker) {
+#if RTC_DCHECK_IS_ON
+  return checker->ExpectationToString();
+#else
+  return std::string();
+#endif
+}
 
 // Catch-all implementation for types other than explicitly supported above.
 template <typename ThreadLikeObject>
-std::string ExpectationToString(const ThreadLikeObject*) {
+std::enable_if_t<!std::is_base_of_v<SequenceCheckerImpl, ThreadLikeObject>,
+                 std::string>
+ExpectationToString(const ThreadLikeObject*) {
   return std::string();
 }
 
