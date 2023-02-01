@@ -2302,7 +2302,8 @@ export class UrlbarView {
 
   #setElementOverflowing(element, overflowing) {
     element.toggleAttribute("overflow", overflowing);
-    if (overflowing) {
+
+    if (overflowing && element._tooltip) {
       element.setAttribute("title", element._tooltip);
     } else {
       element.removeAttribute("title");
@@ -2848,7 +2849,11 @@ export class UrlbarView {
       event.detail == 1 &&
       (event.target.classList.contains("urlbarView-url") ||
         event.target.classList.contains("urlbarView-title") ||
-        event.target.classList.contains("urlbarView-tags"))
+        event.target.classList.contains("urlbarView-tags") ||
+        event.target.classList.contains(
+          "urlbarView-dynamic-weather-middleNoWrap"
+        ) ||
+        event.target.classList.contains("urlbarView-dynamic-weather-summary"))
     ) {
       this.#setElementOverflowing(event.target, true);
     }
@@ -2859,7 +2864,11 @@ export class UrlbarView {
       event.detail == 1 &&
       (event.target.classList.contains("urlbarView-url") ||
         event.target.classList.contains("urlbarView-title") ||
-        event.target.classList.contains("urlbarView-tags"))
+        event.target.classList.contains("urlbarView-tags") ||
+        event.target.classList.contains(
+          "urlbarView-dynamic-weather-middleNoWrap"
+        ) ||
+        event.target.classList.contains("urlbarView-dynamic-weather-summary"))
     ) {
       this.#setElementOverflowing(event.target, false);
     }
