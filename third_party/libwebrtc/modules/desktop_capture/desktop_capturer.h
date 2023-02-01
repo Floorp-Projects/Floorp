@@ -82,6 +82,11 @@ class RTC_EXPORT DesktopCapturer {
     // Title of the window or screen in UTF-8 encoding, maybe empty. This field
     // should not be used to identify a source.
     std::string title;
+
+#if defined(CHROMEOS)
+    // TODO(https://crbug.com/1369162): Remove or refactor this value.
+    WindowId in_process_id = kNullWindowId;
+#endif
   };
 
   typedef std::vector<Source> SourceList;
