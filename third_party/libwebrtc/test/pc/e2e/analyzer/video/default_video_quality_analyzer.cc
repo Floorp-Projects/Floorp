@@ -133,7 +133,7 @@ DefaultVideoQualityAnalyzer::DefaultVideoQualityAnalyzer(
 
 DefaultVideoQualityAnalyzer::DefaultVideoQualityAnalyzer(
     webrtc::Clock* clock,
-    test::MetricsLoggerAndExporter* metrics_logger,
+    test::MetricsLogger* metrics_logger,
     DefaultVideoQualityAnalyzerOptions options)
     : options_(options),
       clock_(clock),

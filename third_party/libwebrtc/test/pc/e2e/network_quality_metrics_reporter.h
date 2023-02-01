@@ -15,7 +15,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/track_id_stream_info_map.h"
@@ -35,7 +35,7 @@ class NetworkQualityMetricsReporter
                                       /*metrics_logger=*/nullptr) {}
   NetworkQualityMetricsReporter(EmulatedNetworkManagerInterface* alice_network,
                                 EmulatedNetworkManagerInterface* bob_network,
-                                test::MetricsLoggerAndExporter* metrics_logger)
+                                test::MetricsLogger* metrics_logger)
       : alice_network_(alice_network),
         bob_network_(bob_network),
         metrics_logger_(metrics_logger) {}
@@ -73,7 +73,7 @@ class NetworkQualityMetricsReporter
 
   EmulatedNetworkManagerInterface* const alice_network_;
   EmulatedNetworkManagerInterface* const bob_network_;
-  test::MetricsLoggerAndExporter* const metrics_logger_;
+  test::MetricsLogger* const metrics_logger_;
   Mutex lock_;
   std::map<std::string, PCStats> pc_stats_ RTC_GUARDED_BY(lock_);
 };

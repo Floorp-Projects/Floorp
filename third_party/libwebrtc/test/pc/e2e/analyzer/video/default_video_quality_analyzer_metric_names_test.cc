@@ -16,7 +16,7 @@
 #include "api/rtp_packet_infos.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/metrics/metric.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/metrics/stdout_metrics_exporter.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
@@ -35,10 +35,10 @@ using ::testing::Contains;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
+using ::webrtc::test::DefaultMetricsLogger;
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Metric;
 using ::webrtc::test::MetricsExporter;
-using ::webrtc::test::MetricsLoggerAndExporter;
 using ::webrtc::test::StdoutMetricsExporter;
 using ::webrtc::test::Unit;
 
@@ -165,10 +165,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest, MetricNamesForP2PAreCorrect) {
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  std::vector<std::unique_ptr<MetricsExporter>> exporters;
-  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
-  MetricsLoggerAndExporter metrics_logger(Clock::GetRealTimeClock(),
-                                          std::move(exporters));
+  DefaultMetricsLogger metrics_logger(Clock::GetRealTimeClock());
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
                                        &metrics_logger, options);
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
@@ -329,10 +326,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  std::vector<std::unique_ptr<MetricsExporter>> exporters;
-  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
-  MetricsLoggerAndExporter metrics_logger(Clock::GetRealTimeClock(),
-                                          std::move(exporters));
+  DefaultMetricsLogger metrics_logger(Clock::GetRealTimeClock());
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
                                        &metrics_logger, options);
   analyzer.Start("test_case",
@@ -628,10 +622,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
                                        /*num_squares=*/absl::nullopt);
 
   DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
-  std::vector<std::unique_ptr<MetricsExporter>> exporters;
-  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
-  MetricsLoggerAndExporter metrics_logger(Clock::GetRealTimeClock(),
-                                          std::move(exporters));
+  DefaultMetricsLogger metrics_logger(Clock::GetRealTimeClock());
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
                                        &metrics_logger, options);
   analyzer.Start("test_case",

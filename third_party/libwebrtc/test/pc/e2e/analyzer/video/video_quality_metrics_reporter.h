@@ -16,7 +16,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/numerics/samples_stats_counter.h"
-#include "api/test/metrics/metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/track_id_stream_info_map.h"
 #include "api/units/data_size.h"
@@ -40,7 +40,7 @@ class VideoQualityMetricsReporter
       : VideoQualityMetricsReporter(clock, /*metrics_logger=*/nullptr) {}
   explicit VideoQualityMetricsReporter(
       Clock* const clock,
-      test::MetricsLoggerAndExporter* const metrics_logger)
+      test::MetricsLogger* const metrics_logger)
       : clock_(clock), metrics_logger_(metrics_logger) {}
   ~VideoQualityMetricsReporter() override = default;
 
@@ -73,7 +73,7 @@ class VideoQualityMetricsReporter
   Timestamp Now() const { return clock_->CurrentTime(); }
 
   Clock* const clock_;
-  test::MetricsLoggerAndExporter* const metrics_logger_;
+  test::MetricsLogger* const metrics_logger_;
 
   std::string test_case_name_;
   absl::optional<Timestamp> start_time_;
