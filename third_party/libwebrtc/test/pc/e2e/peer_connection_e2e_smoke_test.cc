@@ -38,6 +38,8 @@ namespace {
 
 class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
  public:
+  using EmulatedSFUConfig =
+      PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig;
   using PeerConfigurer = PeerConnectionE2EQualityTestFixture::PeerConfigurer;
   using RunParams = PeerConnectionE2EQualityTestFixture::RunParams;
   using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
@@ -384,7 +386,8 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Simulcast) {
   AddPeer(network_links.first, [](PeerConfigurer* alice) {
     VideoConfig simulcast(1280, 720, 15);
     simulcast.stream_label = "alice-simulcast";
-    simulcast.simulcast_config = VideoSimulcastConfig(2, 0);
+    simulcast.simulcast_config = VideoSimulcastConfig(2);
+    simulcast.emulated_sfu_config = EmulatedSFUConfig(0);
     alice->AddVideoConfig(std::move(simulcast));
 
     AudioConfig audio;
@@ -412,7 +415,8 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Svc) {
     VideoConfig simulcast("alice-svc", 1280, 720, 15);
     // Because we have network with packets loss we can analyze only the
     // highest spatial layer in SVC mode.
-    simulcast.simulcast_config = VideoSimulcastConfig(2, 1);
+    simulcast.simulcast_config = VideoSimulcastConfig(2);
+    simulcast.emulated_sfu_config = EmulatedSFUConfig(1);
     alice->AddVideoConfig(std::move(simulcast));
 
     AudioConfig audio("alice-audio");

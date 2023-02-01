@@ -161,6 +161,7 @@ if (!build_with_chromium) {
     ]
     deps = [
       ":encoded_image_data_injector_api",
+      "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:video_quality_analyzer_api",
       "../../../api/video:encoded_image",
       "../../../api/video:video_frame",
@@ -338,6 +339,8 @@ if (!build_with_chromium) {
         "../../../api/transport:network_control",
         "../../../api/video_codecs:video_codecs_api",
         "../../../modules/audio_processing:api",
+        "../../../modules/video_coding/svc:scalability_mode_util",
+        "../../../modules/video_coding/svc:scalability_structures",
         "../../../rtc_base",
         "../../../rtc_base:macromagic",
         "../../../rtc_base:threading",

@@ -32,6 +32,8 @@
 
 namespace webrtc {
 
+using EmulatedSFUConfig =
+    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig;
 using PeerConfigurer =
     webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::PeerConfigurer;
 using RunParams = webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::RunParams;
@@ -1064,7 +1066,8 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_Simulcast_No_Conference_Mode) {
                             BuiltInNetworkBehaviorConfig()),
       [](PeerConfigurer* alice) {
         VideoConfig video(1850, 1110, 30);
-        video.simulcast_config = VideoSimulcastConfig(2, 1);
+        video.simulcast_config = VideoSimulcastConfig(2);
+        video.emulated_sfu_config = EmulatedSFUConfig(1);
         video.temporal_layers_count = 2;
         video.stream_label = "alice-video";
         video.content_hint = VideoTrackInterface::ContentHint::kText;
@@ -1086,7 +1089,8 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_Simulcast) {
                             BuiltInNetworkBehaviorConfig()),
       [](PeerConfigurer* alice) {
         VideoConfig video(1850, 1110, 30);
-        video.simulcast_config = VideoSimulcastConfig(2, 1);
+        video.simulcast_config = VideoSimulcastConfig(2);
+        video.emulated_sfu_config = EmulatedSFUConfig(1);
         video.temporal_layers_count = 2;
         video.stream_label = "alice-video";
         video.content_hint = VideoTrackInterface::ContentHint::kText;
@@ -1292,7 +1296,8 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_Vp9_3sl_High_Fps) {
       [](PeerConfigurer* alice) {
         VideoConfig video(1850, 1110, 30);
         video.stream_label = "alice-video";
-        video.simulcast_config = VideoSimulcastConfig(3, 2);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(2);
         video.content_hint = VideoTrackInterface::ContentHint::kText;
         auto frame_generator = CreateScreenShareFrameGenerator(
             video, ScreenShareConfig(TimeDelta::Seconds(10)));
@@ -1324,7 +1329,8 @@ TEST(PCFullStackTest, Pc_Vp9svc_3sl_High) {
       [](PeerConfigurer* alice) {
         VideoConfig video(1280, 720, 30);
         video.stream_label = "alice-video";
-        video.simulcast_config = VideoSimulcastConfig(3, 2);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(2);
         video.temporal_layers_count = 3;
         auto frame_generator = CreateFromYuvFileFrameGenerator(
             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
@@ -1356,7 +1362,8 @@ TEST(PCFullStackTest, Pc_Vp9svc_3sl_Low) {
       [](PeerConfigurer* alice) {
         VideoConfig video(1280, 720, 30);
         video.stream_label = "alice-video";
-        video.simulcast_config = VideoSimulcastConfig(3, 0);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(0);
         video.temporal_layers_count = 3;
         auto frame_generator = CreateFromYuvFileFrameGenerator(
             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
@@ -1487,7 +1494,8 @@ TEST(PCFullStackTest, MAYBE_Pc_Simulcast_HD_High) {
       CreateTwoNetworkLinks(network_emulation_manager.get(), config),
       [](PeerConfigurer* alice) {
         VideoConfig video(1920, 1080, 30);
-        video.simulcast_config = VideoSimulcastConfig(3, 2);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(2);
         video.temporal_layers_count = 3;
         video.stream_label = "alice-video";
         alice->AddVideoConfig(std::move(video));
@@ -1508,7 +1516,8 @@ TEST(PCFullStackTest, Pc_Simulcast_Vp8_3sl_High) {
       CreateTwoNetworkLinks(network_emulation_manager.get(), config),
       [](PeerConfigurer* alice) {
         VideoConfig video(1280, 720, 30);
-        video.simulcast_config = VideoSimulcastConfig(3, 2);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(2);
         video.stream_label = "alice-video";
         auto frame_generator = CreateFromYuvFileFrameGenerator(
             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
@@ -1529,7 +1538,8 @@ TEST(PCFullStackTest, Pc_Simulcast_Vp8_3sl_Low) {
       CreateTwoNetworkLinks(network_emulation_manager.get(), config),
       [](PeerConfigurer* alice) {
         VideoConfig video(1280, 720, 30);
-        video.simulcast_config = VideoSimulcastConfig(3, 0);
+        video.simulcast_config = VideoSimulcastConfig(3);
+        video.emulated_sfu_config = EmulatedSFUConfig(0);
         video.stream_label = "alice-video";
         auto frame_generator = CreateFromYuvFileFrameGenerator(
             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
