@@ -17,6 +17,9 @@
 #include "absl/algorithm/container.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/strings/string_view.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/rtp_rtcp/source/create_video_rtp_depacketizer.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
@@ -30,7 +33,6 @@
 #include "test/call_test.h"
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/frame_writer.h"
-#include "test/testsupport/perf_test.h"
 #include "test/testsupport/test_artifacts.h"
 
 ABSL_FLAG(bool,
@@ -41,6 +43,12 @@ ABSL_FLAG(bool,
 
 namespace webrtc {
 namespace {
+
+using ::webrtc::test::GetGlobalMetricsLogger;
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Metric;
+using ::webrtc::test::Unit;
+
 constexpr TimeDelta kSendStatsPollingInterval = TimeDelta::Seconds(1);
 constexpr size_t kMaxComparisons = 10;
 // How often is keep alive message printed.
@@ -53,6 +61,7 @@ constexpr int kKeepAliveIntervalIterations =
 bool IsFlexfec(int payload_type) {
   return payload_type == test::CallTest::kFlexfecPayloadType;
 }
+
 }  // namespace
 
 VideoAnalyzer::VideoAnalyzer(test::LayerFilteringTransport* transport,
@@ -609,8 +618,6 @@ bool VideoAnalyzer::FrameProcessed() {
 }
 
 void VideoAnalyzer::PrintResults() {
-  using ::webrtc::test::ImproveDirection;
-
   StopMeasuringCpuProcessTime();
   int dropped_frames_diff;
   {
@@ -619,36 +626,39 @@ void VideoAnalyzer::PrintResults() {
                           dropped_frames_before_rendering_ + frames_.size();
   }
   MutexLock lock(&comparison_lock_);
-  PrintResult("psnr", psnr_, "dB", ImproveDirection::kBiggerIsBetter);
-  PrintResult("ssim", ssim_, "unitless", ImproveDirection::kBiggerIsBetter);
-  PrintResult("sender_time", sender_time_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("receiver_time", receiver_time_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("network_time", network_time_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("total_delay_incl_network", end_to_end_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("time_between_rendered_frames", rendered_delta_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("encode_frame_rate", encode_frame_rate_, "fps",
-              ImproveDirection::kBiggerIsBetter);
-  PrintResult("encode_time", encode_time_ms_, "ms",
-              ImproveDirection::kSmallerIsBetter);
-  PrintResult("media_bitrate", media_bitrate_bps_, "bps",
-              ImproveDirection::kNone);
-  PrintResult("fec_bitrate", fec_bitrate_bps_, "bps", ImproveDirection::kNone);
-  PrintResult("send_bandwidth", send_bandwidth_bps_, "bps",
-              ImproveDirection::kNone);
-  PrintResult("pixels_per_frame", pixels_, "count",
-              ImproveDirection::kBiggerIsBetter);
+  PrintResult("psnr_dB", psnr_, Unit::kUnitless,
+              ImprovementDirection::kBiggerIsBetter);
+  PrintResult("ssim", ssim_, Unit::kUnitless,
+              ImprovementDirection::kBiggerIsBetter);
+  PrintResult("sender_time", sender_time_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
+  PrintResult("receiver_time", receiver_time_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
+  PrintResult("network_time", network_time_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
+  PrintResult("total_delay_incl_network", end_to_end_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
+  PrintResult("time_between_rendered_frames", rendered_delta_,
+              Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter);
+  PrintResult("encode_frame_rate_fps", encode_frame_rate_, Unit::kHertz,
+              ImprovementDirection::kBiggerIsBetter);
+  PrintResult("encode_time", encode_time_ms_, Unit::kMilliseconds,
+              ImprovementDirection::kSmallerIsBetter);
+  PrintResult("media_bitrate", media_bitrate_bps_ / 1000.0,
+              Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  PrintResult("fec_bitrate", fec_bitrate_bps_ / 1000.0,
+              Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  PrintResult("send_bandwidth", send_bandwidth_bps_ / 1000.0,
+              Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+  PrintResult("pixels_per_frame", pixels_, Unit::kCount,
+              ImprovementDirection::kBiggerIsBetter);
 
-  test::PrintResult("decode_frame_rate", "", test_label_.c_str(),
-                    decode_frame_rate_, "fps", false,
-                    ImproveDirection::kBiggerIsBetter);
-  test::PrintResult("render_frame_rate", "", test_label_.c_str(),
-                    render_frame_rate_, "fps", false,
-                    ImproveDirection::kBiggerIsBetter);
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      "decode_frame_rate_fps", test_label_, decode_frame_rate_, Unit::kHertz,
+      ImprovementDirection::kBiggerIsBetter);
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      "render_frame_rate_fps", test_label_, render_frame_rate_, Unit::kHertz,
+      ImprovementDirection::kBiggerIsBetter);
 
   // Record the time from the last freeze until the last rendered frame to
   // ensure we cover the full timespan of the session. Otherwise the metric
@@ -656,8 +666,8 @@ void VideoAnalyzer::PrintResults() {
   time_between_freezes_.AddSample(last_render_time_ - last_unfreeze_time_ms_);
 
   // Freeze metrics.
-  PrintResult("time_between_freezes", time_between_freezes_, "ms",
-              ImproveDirection::kBiggerIsBetter);
+  PrintResult("time_between_freezes", time_between_freezes_,
+              Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter);
 
   const double freeze_count_double = static_cast<double>(freeze_count_);
   const double total_freezes_duration_ms_double =
@@ -666,10 +676,10 @@ void VideoAnalyzer::PrintResults() {
       static_cast<double>(total_frames_duration_ms_);
 
   if (total_frames_duration_ms_double > 0) {
-    test::PrintResult(
-        "freeze_duration_ratio", "", test_label_.c_str(),
+    GetGlobalMetricsLogger()->LogSingleValueMetric(
+        "freeze_duration_ratio", test_label_,
         total_freezes_duration_ms_double / total_frames_duration_ms_double,
-        "unitless", false, ImproveDirection::kSmallerIsBetter);
+        Unit::kUnitless, ImprovementDirection::kSmallerIsBetter);
     RTC_DCHECK_LE(total_freezes_duration_ms_double,
                   total_frames_duration_ms_double);
 
@@ -677,47 +687,52 @@ void VideoAnalyzer::PrintResults() {
     const double total_frames_duration_min =
         total_frames_duration_ms_double / ms_per_minute;
     if (total_frames_duration_min > 0) {
-      test::PrintResult("freeze_count_per_minute", "", test_label_.c_str(),
-                        freeze_count_double / total_frames_duration_min,
-                        "unitless", false, ImproveDirection::kSmallerIsBetter);
+      GetGlobalMetricsLogger()->LogSingleValueMetric(
+          "freeze_count_per_minute", test_label_,
+          freeze_count_double / total_frames_duration_min, Unit::kUnitless,
+          ImprovementDirection::kSmallerIsBetter);
     }
   }
 
-  test::PrintResult("freeze_duration_average", "", test_label_.c_str(),
-                    freeze_count_double > 0
-                        ? total_freezes_duration_ms_double / freeze_count_double
-                        : 0,
-                    "ms", false, ImproveDirection::kSmallerIsBetter);
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      "freeze_duration_average", test_label_,
+      freeze_count_double > 0
+          ? total_freezes_duration_ms_double / freeze_count_double
+          : 0,
+      Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter);
 
   if (1000 * sum_squared_frame_durations_ > 0) {
-    test::PrintResult(
-        "harmonic_frame_rate", "", test_label_.c_str(),
+    GetGlobalMetricsLogger()->LogSingleValueMetric(
+        "harmonic_frame_rate_fps", test_label_,
         total_frames_duration_ms_double / (1000 * sum_squared_frame_durations_),
-        "fps", false, ImproveDirection::kBiggerIsBetter);
+        Unit::kHertz, ImprovementDirection::kBiggerIsBetter);
   }
 
   if (worst_frame_) {
-    test::PrintResult("min_psnr", "", test_label_.c_str(), worst_frame_->psnr,
-                      "dB", false, ImproveDirection::kBiggerIsBetter);
+    GetGlobalMetricsLogger()->LogSingleValueMetric(
+        "min_psnr_dB", test_label_, worst_frame_->psnr, Unit::kUnitless,
+        ImprovementDirection::kBiggerIsBetter);
   }
 
   if (receive_stream_ != nullptr) {
     PrintResultWithExternalMean("decode_time", mean_decode_time_ms_,
-                                decode_time_ms_, "ms",
-                                ImproveDirection::kSmallerIsBetter);
+                                decode_time_ms_, Unit::kMilliseconds,
+                                ImprovementDirection::kSmallerIsBetter);
   }
   dropped_frames_ += dropped_frames_diff;
-  test::PrintResult("dropped_frames", "", test_label_.c_str(), dropped_frames_,
-                    "count", false, ImproveDirection::kSmallerIsBetter);
-  test::PrintResult("cpu_usage", "", test_label_.c_str(), GetCpuUsagePercent(),
-                    "%", false, ImproveDirection::kSmallerIsBetter);
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      "dropped_frames", test_label_, dropped_frames_, Unit::kCount,
+      ImprovementDirection::kSmallerIsBetter);
+  GetGlobalMetricsLogger()->LogSingleValueMetric(
+      "cpu_usage_%", test_label_, GetCpuUsagePercent(), Unit::kUnitless,
+      ImprovementDirection::kSmallerIsBetter);
 
 #if defined(WEBRTC_WIN)
   // On Linux and Mac in Resident Set some unused pages may be counted.
   // Therefore this metric will depend on order in which tests are run and
   // will be flaky.
-  PrintResult("memory_usage", memory_usage_, "sizeInBytes",
-              ImproveDirection::kSmallerIsBetter);
+  PrintResult("memory_usage", memory_usage_, Unit::kBytes,
+              ImprovementDirection::kSmallerIsBetter);
 #endif
 
   // Saving only the worst frame for manual analysis. Intention here is to
@@ -735,19 +750,19 @@ void VideoAnalyzer::PrintResults() {
   }
 
   if (audio_receive_stream_ != nullptr) {
-    PrintResult("audio_expand_rate", audio_expand_rate_, "unitless",
-                ImproveDirection::kSmallerIsBetter);
-    PrintResult("audio_accelerate_rate", audio_accelerate_rate_, "unitless",
-                ImproveDirection::kSmallerIsBetter);
-    PrintResult("audio_jitter_buffer", audio_jitter_buffer_ms_, "ms",
-                ImproveDirection::kNone);
+    PrintResult("audio_expand_rate", audio_expand_rate_, Unit::kUnitless,
+                ImprovementDirection::kSmallerIsBetter);
+    PrintResult("audio_accelerate_rate", audio_accelerate_rate_,
+                Unit::kUnitless, ImprovementDirection::kSmallerIsBetter);
+    PrintResult("audio_jitter_buffer", audio_jitter_buffer_ms_,
+                Unit::kMilliseconds, ImprovementDirection::kNeitherIsBetter);
   }
 
   //  Disable quality check for quick test, as quality checks may fail
   //  because too few samples were collected.
   if (!is_quick_test_enabled_) {
-    EXPECT_GT(*psnr_.GetMean(), avg_psnr_threshold_);
-    EXPECT_GT(*ssim_.GetMean(), avg_ssim_threshold_);
+    EXPECT_GT(psnr_.GetAverage(), avg_psnr_threshold_);
+    EXPECT_GT(ssim_.GetAverage(), avg_ssim_threshold_);
   }
 }
 
@@ -820,32 +835,31 @@ void VideoAnalyzer::PerformFrameComparison(
   encoded_frame_size_.AddSample(comparison.encoded_frame_size);
 }
 
-void VideoAnalyzer::PrintResult(
-    const char* result_type,
-    Statistics stats,
-    const char* unit,
-    webrtc::test::ImproveDirection improve_direction) {
-  test::PrintResultMeanAndError(
-      result_type, "", test_label_.c_str(), stats.GetMean().value_or(0),
-      stats.GetStandardDeviation().value_or(0), unit, false, improve_direction);
+void VideoAnalyzer::PrintResult(absl::string_view result_type,
+                                const SamplesStatsCounter& stats,
+                                Unit unit,
+                                ImprovementDirection improvement_direction) {
+  GetGlobalMetricsLogger()->LogMetric(result_type, test_label_, stats, unit,
+                                      improvement_direction);
 }
 
 void VideoAnalyzer::PrintResultWithExternalMean(
-    const char* result_type,
+    absl::string_view result_type,
     double mean,
-    Statistics stats,
-    const char* unit,
-    webrtc::test::ImproveDirection improve_direction) {
+    const SamplesStatsCounter& stats,
+    Unit unit,
+    ImprovementDirection improvement_direction) {
   // If the true mean is different than the sample mean, the sample variance is
   // too low. The sample variance given a known mean is obtained by adding the
   // squared error between the true mean and the sample mean.
   double compensated_variance =
-      stats.Size() > 0
-          ? *stats.GetVariance() + pow(mean - *stats.GetMean(), 2.0)
-          : 0.0;
-  test::PrintResultMeanAndError(result_type, "", test_label_.c_str(), mean,
-                                std::sqrt(compensated_variance), unit, false,
-                                improve_direction);
+      stats.IsEmpty()
+          ? 0.0
+          : stats.GetVariance() + pow(mean - stats.GetAverage(), 2.0);
+  GetGlobalMetricsLogger()->LogMetric(
+      result_type, test_label_,
+      Metric::Stats{.mean = mean, .stddev = std::sqrt(compensated_variance)},
+      unit, improvement_direction);
 }
 
 void VideoAnalyzer::PrintSamplesToFile() {
