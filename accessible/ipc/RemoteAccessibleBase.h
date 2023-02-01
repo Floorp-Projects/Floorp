@@ -433,6 +433,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   void ApplyScrollOffset(nsRect& aBounds) const;
   void ApplyCrossDocOffset(nsRect& aBounds) const;
   LayoutDeviceIntRect BoundsWithOffset(Maybe<nsRect> aOffset) const;
+  bool IsFixedPos() const;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;

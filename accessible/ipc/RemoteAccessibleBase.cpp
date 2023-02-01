@@ -556,6 +556,16 @@ nsRect RemoteAccessibleBase<Derived>::BoundsInAppUnits() const {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
+  if (auto maybePosition =
+          mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::position)) {
+    return *maybePosition == nsGkAtoms::fixed;
+  }
+
+  return false;
+}
+
+template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     Maybe<nsRect> aOffset) const {
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
@@ -576,6 +586,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
 
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
+    bool encounteredFixedContainer = IsFixedPos();
     while (acc && acc->IsRemote()) {
       RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
@@ -600,25 +611,41 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           topDoc = remoteAcc->AsDoc();
         }
 
-        // We don't account for the document offset of iframes when computing
-        // parent-relative bounds. Instead, we store this value separately on
-        // all iframes and apply it here. See the comments in
+        // We don't account for the document offset of iframes when
+        // computing parent-relative bounds. Instead, we store this value
+        // separately on all iframes and apply it here. See the comments in
         // LocalAccessible::BundleFieldsForCache where we set the
         // nsGkAtoms::crossorigin attribute.
         remoteAcc->ApplyCrossDocOffset(remoteBounds);
-
-        // Apply scroll offset, if applicable. Only the contents of an
-        // element are affected by its scroll offset, which is why this call
-        // happens in this loop instead of both inside and outside of
-        // the loop (like ApplyTransform).
-        remoteAcc->ApplyScrollOffset(remoteBounds);
-
-        // Regardless of whether this is a doc, we should offset `bounds`
-        // by the bounds retrieved here. This is how we build screen
-        // coordinates from relative coordinates.
-        bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
-        Unused << remoteAcc->ApplyTransform(bounds, remoteBounds);
+        if (!encounteredFixedContainer) {
+          // Apply scroll offset, if applicable. Only the contents of an
+          // element are affected by its scroll offset, which is why this call
+          // happens in this loop instead of both inside and outside of
+          // the loop (like ApplyTransform).
+          // Never apply scroll offsets past a fixed container.
+          remoteAcc->ApplyScrollOffset(remoteBounds);
+        }
+        if (remoteAcc->IsDoc()) {
+          // Fixed elements are document relative, so if we've hit a
+          // document we're now subject to that document's styling
+          // (including scroll offsets that operate on it).
+          // This ordering is important, we don't want to apply scroll
+          // offsets on this doc's content.
+          encounteredFixedContainer = false;
+        }
+        if (!encounteredFixedContainer) {
+          // Regardless of whether this is a doc, we should offset `bounds`
+          // by the bounds retrieved here. This is how we build screen
+          // coordinates from relative coordinates.
+          bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
+          Unused << remoteAcc->ApplyTransform(bounds, remoteBounds);
+        }
       }
+      if (remoteAcc->IsFixedPos()) {
+        encounteredFixedContainer = true;
+      }
+      // we can't just break here if we're scroll suppressed because we still
+      // need to find the top doc
       acc = acc->Parent();
     }
 
