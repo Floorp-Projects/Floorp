@@ -157,6 +157,8 @@ class TestMainImpl : public TestMain {
     rtc::test::RunTestsFromIOSApp();
     int exit_code = 0;
 #else
+    int exit_code = RUN_ALL_TESTS();
+
     std::vector<std::unique_ptr<test::MetricsExporter>> exporters;
     if (absl::GetFlag(FLAGS_export_perf_results_new_api)) {
       exporters.push_back(std::make_unique<test::StdoutMetricsExporter>());
@@ -169,11 +171,8 @@ class TestMainImpl : public TestMain {
       exporters.push_back(
           std::make_unique<test::PrintResultProxyMetricsExporter>());
     }
-    test::SetupGlobalMetricsLoggerAndExporter(std::move(exporters));
-
-    int exit_code = RUN_ALL_TESTS();
-
-    test::ExportAndDestroyGlobalMetricsLoggerAndExporter();
+    test::ExportPerfMetric(*test::GetGlobalMetricsLogger(),
+                           std::move(exporters));
     if (!absl::GetFlag(FLAGS_export_perf_results_new_api)) {
       std::string perf_output_file =
           absl::GetFlag(FLAGS_isolated_script_test_perf_output);
