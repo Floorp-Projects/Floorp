@@ -31,7 +31,6 @@ macosx64-gn:
         toolchain-alias: macosx64-aarch64-gn
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-toolchain
             - macosx64-sdk-toolchain
 
