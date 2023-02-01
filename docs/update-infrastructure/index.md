@@ -13,6 +13,7 @@ At the time of writing (December, 2022), we currently have the following watersh
 * 47.0.2, Windows only. We [added CPU instruction set information to the update URL](https://bugzilla.mozilla.org/show_bug.cgi?id=1271761) to later allow SSE1 to be deprecated.
 * 56.0, Windows only. We added support for [sending information about the JAWS accessibility application to the update URL](https://bugzilla.mozilla.org/show_bug.cgi?id=1402376) to avoid updating people on crashy versions of it.
 * 72.0.2, all platforms. This is a required version due to a [necessary two-step password database migration](https://bugzilla.mozilla.org/show_bug.cgi?id=1615382).
+* 109.0.1, macOS only.  This updates the channel-prefs.js file (normally excluded from updates) due to [signature issues](https://bugzilla.mozilla.org/show_bug.cgi?id=1804303).
 
 
 [^1]: Here is a sample URL: https://aus5.mozilla.org/update/3/Firefox/85.0/20200518093924/WINNT_x86_64-msvc-x64/en-US/release/Windows_NT%2010.0.0.0.18363.1016%20(x64)/default/default/update.xml
