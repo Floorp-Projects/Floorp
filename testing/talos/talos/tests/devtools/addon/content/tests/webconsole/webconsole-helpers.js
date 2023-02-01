@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { reloadPageAndLog } = require("damp-test/tests/head");
+const {
+  reloadPageAndLog,
+  waitForDOMPredicate,
+} = require("damp-test/tests/head");
 
 /**
  * @param {String} label: The name of the test.
@@ -91,17 +94,13 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
  *                              when it returns `true`.
  */
 async function waitForConsoleOutputChildListChange(hud, predicate) {
-  const { window, document } = hud.ui;
+  const { document } = hud.ui;
   const webConsoleOutputEl = document.querySelector(".webconsole-output");
 
-  await new Promise(resolve => {
-    const observer = new window.MutationObserver((mutationsList, observer) => {
-      if (predicate(webConsoleOutputEl)) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    observer.observe(webConsoleOutputEl, { childList: true, subtree: true });
-  });
+  await waitForDOMPredicate(
+    webConsoleOutputEl,
+    () => predicate(webConsoleOutputEl),
+    { childList: true, subtree: true }
+  );
 }
 exports.waitForConsoleOutputChildListChange = waitForConsoleOutputChildListChange;

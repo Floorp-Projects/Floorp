@@ -6,7 +6,11 @@
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { getToolbox, runTest } = require("damp-test/tests/head");
+const {
+  getToolbox,
+  runTest,
+  waitForDOMElement,
+} = require("damp-test/tests/head");
 
 /**
  * Start monitoring all incoming update events about network requests and wait until
@@ -77,26 +81,6 @@ async function waitForAllRequestsFinished(
   });
 }
 
-function waitForDOMElement(target, selector, win) {
-  return new Promise(resolve => {
-    const observer = new win.MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        const element = mutation.target.querySelector(selector);
-        if (element !== null) {
-          observer.disconnect();
-          resolve(element);
-        }
-      });
-    });
-
-    observer.observe(target, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
-  });
-}
-
 function waitForLoad(iframe) {
   return new Promise(resolve => iframe.addEventListener("load", resolve));
 }
@@ -149,17 +133,13 @@ exports.openResponseDetailsPanel = async function(label, toolbox) {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const waitForDetailsBar = waitForDOMElement(
-    monitor,
-    ".network-details-bar",
-    win
-  );
+  const waitForDetailsBar = waitForDOMElement(monitor, ".network-details-bar");
   store.dispatch(Actions.toggleNetworkDetails());
   await waitForDetailsBar;
 
   const sideBar = document.querySelector(".network-details-bar");
   const iframeSelector = "#response-panel .html-preview iframe";
-  const waitForIframe = waitForDOMElement(sideBar, iframeSelector, win);
+  const waitForIframe = waitForDOMElement(sideBar, iframeSelector);
 
   clickElement(document.querySelector("#response-tab"), win);
 
@@ -178,8 +158,7 @@ exports.openResponseDetailsPanel = async function(label, toolbox) {
   );
   const waitForDesc = waitForDOMElement(
     sizeColumnHeader.parentNode,
-    "#requests-list-contentSize-button[data-sorted='descending']",
-    win
+    "#requests-list-contentSize-button[data-sorted='descending']"
   );
   // Click the size header twice to make sure the requests
   // are sorted in descending order.
@@ -192,8 +171,7 @@ exports.openResponseDetailsPanel = async function(label, toolbox) {
   const request = document.querySelectorAll(".request-list-item")[0];
   const waitForEditor = waitForDOMElement(
     monitor,
-    "#response-panel .CodeMirror.cm-s-mozilla",
-    win
+    "#response-panel .CodeMirror.cm-s-mozilla"
   );
   mouseDownElement(request, win);
   await waitForEditor;
