@@ -149,31 +149,58 @@ class PeerConnectionE2EQualityTestFixture {
         : simulcast_streams_count(simulcast_streams_count) {
       RTC_CHECK_GT(simulcast_streams_count, 1);
     }
-    VideoSimulcastConfig(int simulcast_streams_count, int target_spatial_index)
-        : simulcast_streams_count(simulcast_streams_count),
-          target_spatial_index(target_spatial_index) {
-      RTC_CHECK_GT(simulcast_streams_count, 1);
-      RTC_CHECK_GE(target_spatial_index, 0);
-      RTC_CHECK_LT(target_spatial_index, simulcast_streams_count);
-    }
 
     // Specified amount of simulcast streams/SVC layers, depending on which
     // encoder is used.
     int simulcast_streams_count;
-    // Specifies spatial index of the video stream to analyze.
+  };
+
+  // Configuration for the emulated Selective Forward Unit (SFU)
+  //
+  // The framework can optionally filter out frames that are decoded
+  // using an emulated SFU.
+  // When using simulcast or SVC, it's not always desirable to receive
+  // all frames. In a real world call, a SFU will only forward a subset
+  // of the frames.
+  // The emulated SFU is not able to change its configuration dynamically,
+  // if adaptation happens during the call, layers may be dropped and the
+  // analyzer won't receive the required data which will cause wrong results or
+  // test failures.
+  struct EmulatedSFUConfig {
+    EmulatedSFUConfig() {}
+    explicit EmulatedSFUConfig(int target_layer_index)
+        : target_layer_index(target_layer_index) {
+      RTC_CHECK_GE(target_layer_index, 0);
+    }
+
+    EmulatedSFUConfig(absl::optional<int> target_layer_index,
+                      absl::optional<int> target_temporal_index)
+        : target_layer_index(target_layer_index),
+          target_temporal_index(target_temporal_index) {
+      RTC_CHECK_GE(target_temporal_index.value_or(0), 0);
+      if (target_temporal_index)
+        RTC_CHECK_GE(*target_temporal_index, 0);
+    }
+
+    // Specifies simulcast or spatial index of the video stream to analyze.
     // There are 2 cases:
-    // 1. simulcast encoder is used:
-    //    in such case `target_spatial_index` will specify the index of
+    // 1. simulcast encoding is used:
+    //    in such case `target_layer_index` will specify the index of
     //    simulcast stream, that should be analyzed. Other streams will be
     //    dropped.
-    // 2. SVC encoder is used:
-    //    in such case `target_spatial_index` will specify the top interesting
+    // 2. SVC encoding is used:
+    //    in such case `target_layer_index` will specify the top interesting
     //    spatial layer and all layers below, including target one will be
     //    processed. All layers above target one will be dropped.
-    // If not specified than whatever stream will be received will be analyzed.
-    // It requires Selective Forwarding Unit (SFU) to be configured in the
-    // network.
-    absl::optional<int> target_spatial_index;
+    // If not specified then all streams will be received and analyzed.
+    // When set, it instructs the framework to create an emulated Selective
+    // Forwarding Unit (SFU) that will propagate only the requested layers.
+    absl::optional<int> target_layer_index;
+    // Specifies the index of the maximum temporal unit to keep.
+    // If not specified then all temporal layers will be received and analyzed.
+    // When set, it instructs the framework to create an emulated Selective
+    // Forwarding Unit (SFU) that will propagate only up to the requested layer.
+    absl::optional<int> target_temporal_index;
   };
 
   class VideoResolution {
@@ -308,6 +335,8 @@ class PeerConnectionE2EQualityTestFixture {
     // but only on non-lossy networks. See more in documentation to
     // VideoSimulcastConfig.
     absl::optional<VideoSimulcastConfig> simulcast_config;
+    // Configuration for the emulated Selective Forward Unit (SFU).
+    absl::optional<EmulatedSFUConfig> emulated_sfu_config;
     // Encoding parameters for both singlecast and per simulcast layer.
     // If singlecast is used, if not empty, a single value can be provided.
     // If simulcast is used, if not empty, `encoding_params` size have to be

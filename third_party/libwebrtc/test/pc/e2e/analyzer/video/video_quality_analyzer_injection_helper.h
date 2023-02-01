@@ -30,6 +30,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
+#include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/video_frame_writer.h"
 
@@ -55,7 +56,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
       absl::string_view peer_name,
       std::unique_ptr<VideoEncoderFactory> delegate,
       double bitrate_multiplier,
-      std::map<std::string, absl::optional<int>> stream_required_spatial_index)
+      QualityAnalyzingVideoEncoder::EmulatedSFUConfigMap stream_to_sfu_config)
       const;
   // Wraps video decoder factory to give video quality analyzer access to
   // received encoded images and frames, that were decoded from them.
