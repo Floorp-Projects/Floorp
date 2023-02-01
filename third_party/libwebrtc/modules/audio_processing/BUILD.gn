@@ -498,13 +498,15 @@ if (rtc_include_tests) {
       ":audio_processing",
       ":audioproc_test_utils",
       "../../api:array_view",
+      "../../api/numerics",
+      "../../api/test/metrics:global_metrics_logger_and_exporter",
+      "../../api/test/metrics:metric",
       "../../rtc_base:platform_thread",
       "../../rtc_base:protobuf_utils",
       "../../rtc_base:random",
       "../../rtc_base:rtc_event",
       "../../rtc_base:safe_conversions",
       "../../system_wrappers",
-      "../../test:perf_test",
       "../../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]

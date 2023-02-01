@@ -34,6 +34,7 @@ class SamplesStatsCounter {
   };
 
   SamplesStatsCounter();
+  explicit SamplesStatsCounter(size_t expected_samples_count);
   ~SamplesStatsCounter();
   SamplesStatsCounter(const SamplesStatsCounter&);
   SamplesStatsCounter& operator=(const SamplesStatsCounter&);
