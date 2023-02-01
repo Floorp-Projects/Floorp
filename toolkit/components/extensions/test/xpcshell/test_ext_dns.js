@@ -96,11 +96,11 @@ const tests = [
   },
 ];
 
-add_task(async function startup() {
+add_setup(async function startup() {
   await AddonTestUtils.promiseStartupManager();
 });
 
-async function test_dns_resolve() {
+add_task(async function test_dns_resolve() {
   let extension = getExtension();
   await extension.startup();
   await extension.awaitMessage("ready");
@@ -137,9 +137,9 @@ async function test_dns_resolve() {
   }
 
   await extension.unload();
-}
+});
 
-async function test_dns_resolve_socks() {
+add_task(async function test_dns_resolve_socks() {
   let extension = getExtension();
   await extension.startup();
   await extension.awaitMessage("ready");
@@ -173,13 +173,4 @@ async function test_dns_resolve_socks() {
     `expected error ${result.message}`
   );
   await extension.unload();
-}
-
-add_task(test_dns_resolve);
-add_task(
-  {
-    // TODO(Bug 1748313): remove the skip_if once we have introduced the proxy API namespace.
-    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
-  },
-  test_dns_resolve_socks
-);
+});
