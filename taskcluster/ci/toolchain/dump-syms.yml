@@ -37,7 +37,6 @@ macosx64-dump_syms:
         toolchain:
             - linux64-rust-macos-1.67
             - linux64-clang-toolchain
-            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 macosx64-aarch64-dump_syms:
@@ -49,7 +48,6 @@ macosx64-aarch64-dump_syms:
         toolchain:
             - linux64-rust-macos-1.67
             - linux64-clang-toolchain
-            - linux64-cctools-port
             - macosx64-sdk-toolchain
 
 win64-dump_syms:
