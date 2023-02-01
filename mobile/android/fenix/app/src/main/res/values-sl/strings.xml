@@ -291,6 +291,9 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Zapri</string>
 
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Sinhronizirajte zavihke med napravami, upravljajte prenose, pridobite nasvete za kar najboljši izkoristek %sovih zmožnosti in še več.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Nadaljuj</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -351,8 +354,14 @@
     <string name="preferences_cookie_banner_reduction">Zmanjšanje števila pasic s piškotki</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Zmanjšaj število pasic s piškotki</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Izključeno</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Vključeno</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox samodejno poskuša zavrniti zahteve pasic s piškotki po nastavljanju piškotkov. Če zavrnitev ni možna, lahko Firefox sprejme vse piškotke in zapre pasico.</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s poskuša samodejno zavrniti zahteve pasic po shranjevanju piškotkov.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Izključeno na tem spletnem mestu</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -382,6 +391,10 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Dovolite %1$su, da samodejno zavrne zahteve za shranjevanje piškotkov, kadar je mogoče?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ne zdaj</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Skrij pasice</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Prikazovalo se vam bo manj zahtev za shranjevanje piškotkov</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Zmanjšanje števila pasic s piškotki</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->

@@ -358,6 +358,10 @@
     <string name="preferences_cookie_banner_reduction">Redução de Faixas de Cookies</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reduzir faixas de cookies</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Desligado</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Ligado</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">O Firefox tenta rejeitar automaticamente pedidos de cookies em faixas de cookies. Se uma opção de rejeição não estiver disponível, o Firefox poderá aceitar todos os cookies para esconder a faixa.</string>
 
@@ -365,6 +369,8 @@
     <string name="reduce_cookie_banner_off_for_site">Desativado para este site</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ativado para este site</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Site atualmente não suportado</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Ativar Redução de Faixa de Cookie para %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -375,7 +381,7 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s pode tentar rejeitar pedidos de cookies automaticamente. Se uma opção de rejeição não estiver disponível, %2$s poderá aceitar todos os cookies para descartar a faixa.</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" tools:ignore="UnusedResources">Desapareçam faixas de cookies!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Desapareçam faixas de cookies!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rejeita automaticamente os pedidos de cookies, quando possível. Caso contrário, aceita todos os cookies para descartar as faixas de cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
@@ -773,6 +779,9 @@
     <string name="opening_screen_homepage_summary">Abrir na página principal</string>
     <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab_summary">Abrir no último separador</string>
+
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Abrir na página inicial após quatro horas</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
