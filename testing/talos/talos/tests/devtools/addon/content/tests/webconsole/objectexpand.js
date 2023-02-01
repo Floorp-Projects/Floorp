@@ -7,11 +7,11 @@
 const {
   openToolbox,
   closeToolboxAndLog,
-  getBrowserWindow,
   runTest,
   testSetup,
   testTeardown,
   SIMPLE_URL,
+  waitForDOMPredicate,
 } = require("damp-test/tests/head");
 
 module.exports = async function() {
@@ -118,19 +118,10 @@ async function logAndWaitForExpandedObjectDirMessage(
   // The tree can be collapsed since the properties are fetched asynchronously.
   if (tree.querySelectorAll(".node").length === 1) {
     // If this is the case, we wait for the properties to be fetched and displayed.
-    await new Promise(resolve => {
-      const observer = new (getBrowserWindow().MutationObserver)(mutations => {
-        for (const mutation of mutations) {
-          if (mutation.target.childElementCount === expectedTreeItemCount) {
-            resolve(mutations);
-            observer.disconnect();
-            break;
-          }
-        }
-      });
-      observer.observe(tree, {
-        childList: true,
-      });
-    });
+    await waitForDOMPredicate(
+      tree,
+      target => target.childElementCount === expectedTreeItemCount,
+      { childList: true }
+    );
   }
 }

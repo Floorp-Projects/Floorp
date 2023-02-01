@@ -63,7 +63,7 @@ module.exports = async function() {
     const infoMessages = consoleOutput.querySelectorAll(
       ".message.info .message-body"
     );
-    return infoMessages[infoMessages.length - 1].textContent.includes(
+    return infoMessages[infoMessages.length - 1]?.textContent.includes(
       "expression log " + (TOTAL_MESSAGES - 1)
     );
   });
