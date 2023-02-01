@@ -353,10 +353,37 @@ add_task(async function excludeArgsFromCacheKey() {
 
   let cache = new L10nCache(l10n);
 
+  // Test cases. For each test case, we cache a string using one or more
+  // methods, `cache.add({ excludeArgsFromCacheKey: true })` and/or
+  // `cache.ensure({ excludeArgsFromCacheKey: true })`. After calling each
+  // method, we call `cache.get()` to get the cached string.
+  //
+  // Test cases are cumulative, so when `cache.add()` is called for a string and
+  // then `cache.ensure()` is called for the same string but with different l10n
+  // argument values, the string should be re-cached with the new values.
+  //
+  // Each item in the tests array is: `{ methods, obj, gets }`
+  //
+  // {array} methods
+  //   Array of cache method names, one or more of: "add", "ensure"
+  //   Methods are called in the order they are listed.
+  // {object} obj
+  //   An l10n object that will be passed to the cache methods:
+  //   `{ id, args, excludeArgsFromCacheKey }`
+  // {array} gets
+  //   An array of objects that describes a series of calls to `cache.get()` and
+  //   the expected return values: `{ obj, expected }`
+  //
+  //   {object} obj
+  //     An l10n object that will be passed to `cache.get():`
+  //     `{ id, args, excludeArgsFromCacheKey }`
+  //   {object} expected
+  //     The expected return value from `get()`.
   let tests = [
-    // string with no args and no attributes
+    // args0: string with no args and no attributes
     {
-      add: {
+      methods: ["add", "ensure"],
+      obj: {
         id: "args0",
         excludeArgsFromCacheKey: true,
       },
@@ -378,25 +405,26 @@ add_task(async function excludeArgsFromCacheKey() {
       ],
     },
 
-    // string with one arg and no attributes
+    // args1: string with one arg and no attributes
     {
-      add: {
+      methods: ["add"],
+      obj: {
         id: "args1",
-        args: { arg1: "foo" },
+        args: { arg1: "ADD" },
         excludeArgsFromCacheKey: true,
       },
       gets: [
         {
           obj: { id: "args1" },
           expected: {
-            value: "One arg value is foo",
+            value: "One arg value is ADD",
             attributes: null,
           },
         },
         {
           obj: { id: "args1", excludeArgsFromCacheKey: true },
           expected: {
-            value: "One arg value is foo",
+            value: "One arg value is ADD",
             attributes: null,
           },
         },
@@ -407,7 +435,49 @@ add_task(async function excludeArgsFromCacheKey() {
             excludeArgsFromCacheKey: true,
           },
           expected: {
-            value: "One arg value is foo",
+            value: "One arg value is ADD",
+            attributes: null,
+          },
+        },
+        {
+          obj: {
+            id: "args1",
+            args: { arg1: "some other value" },
+          },
+          expected: undefined,
+        },
+      ],
+    },
+    {
+      methods: ["ensure"],
+      obj: {
+        id: "args1",
+        args: { arg1: "ENSURE" },
+        excludeArgsFromCacheKey: true,
+      },
+      gets: [
+        {
+          obj: { id: "args1" },
+          expected: {
+            value: "One arg value is ENSURE",
+            attributes: null,
+          },
+        },
+        {
+          obj: { id: "args1", excludeArgsFromCacheKey: true },
+          expected: {
+            value: "One arg value is ENSURE",
+            attributes: null,
+          },
+        },
+        {
+          obj: {
+            id: "args1",
+            args: { arg1: "some other value" },
+            excludeArgsFromCacheKey: true,
+          },
+          expected: {
+            value: "One arg value is ENSURE",
             attributes: null,
           },
         },
@@ -421,9 +491,10 @@ add_task(async function excludeArgsFromCacheKey() {
       ],
     },
 
-    // string with no args and one attribute
+    // attrs0: string with no args and one attribute
     {
-      add: {
+      methods: ["add", "ensure"],
+      obj: {
         id: "attrs0",
         excludeArgsFromCacheKey: true,
       },
@@ -449,11 +520,12 @@ add_task(async function excludeArgsFromCacheKey() {
       ],
     },
 
-    // string with one arg and two attributes
+    // attrs1: string with one arg and two attributes
     {
-      add: {
+      methods: ["add"],
+      obj: {
         id: "attrs1",
-        args: { arg1: "foo" },
+        args: { arg1: "ADD" },
         excludeArgsFromCacheKey: true,
       },
       gets: [
@@ -463,7 +535,7 @@ add_task(async function excludeArgsFromCacheKey() {
             value: null,
             attributes: {
               label: "attrs1 label has zero args",
-              tooltiptext: "attrs1 tooltiptext arg value is foo",
+              tooltiptext: "attrs1 tooltiptext arg value is ADD",
             },
           },
         },
@@ -473,7 +545,7 @@ add_task(async function excludeArgsFromCacheKey() {
             value: null,
             attributes: {
               label: "attrs1 label has zero args",
-              tooltiptext: "attrs1 tooltiptext arg value is foo",
+              tooltiptext: "attrs1 tooltiptext arg value is ADD",
             },
           },
         },
@@ -487,7 +559,58 @@ add_task(async function excludeArgsFromCacheKey() {
             value: null,
             attributes: {
               label: "attrs1 label has zero args",
-              tooltiptext: "attrs1 tooltiptext arg value is foo",
+              tooltiptext: "attrs1 tooltiptext arg value is ADD",
+            },
+          },
+        },
+        {
+          obj: {
+            id: "attrs1",
+            args: { arg1: "some other value" },
+          },
+          expected: undefined,
+        },
+      ],
+    },
+    {
+      methods: ["ensure"],
+      obj: {
+        id: "attrs1",
+        args: { arg1: "ENSURE" },
+        excludeArgsFromCacheKey: true,
+      },
+      gets: [
+        {
+          obj: { id: "attrs1" },
+          expected: {
+            value: null,
+            attributes: {
+              label: "attrs1 label has zero args",
+              tooltiptext: "attrs1 tooltiptext arg value is ENSURE",
+            },
+          },
+        },
+        {
+          obj: { id: "attrs1", excludeArgsFromCacheKey: true },
+          expected: {
+            value: null,
+            attributes: {
+              label: "attrs1 label has zero args",
+              tooltiptext: "attrs1 tooltiptext arg value is ENSURE",
+            },
+          },
+        },
+        {
+          obj: {
+            id: "attrs1",
+            args: { arg1: "some other value" },
+            excludeArgsFromCacheKey: true,
+          },
+          expected: {
+            value: null,
+            attributes: {
+              label: "attrs1 label has zero args",
+              tooltiptext: "attrs1 tooltiptext arg value is ENSURE",
             },
           },
         },
@@ -502,17 +625,33 @@ add_task(async function excludeArgsFromCacheKey() {
     },
   ];
 
-  for (let { add, gets } of tests) {
-    info("Adding to cache: " + JSON.stringify(add));
-    await cache.add(add);
-    for (let { obj, expected } of gets) {
-      Assert.deepEqual(
-        cache.get(obj),
-        expected,
-        "Expected message for get: " + JSON.stringify(obj)
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(cache, "add");
+
+  for (let { methods, obj, gets } of tests) {
+    for (let method of methods) {
+      info(`Calling method '${method}' with l10n obj: ` + JSON.stringify(obj));
+      await cache[method](obj);
+
+      // `add()` should always be called: We either just called it directly, or
+      // `ensure({ excludeArgsFromCacheKey: true })` called it.
+      Assert.ok(
+        spy.calledOnce,
+        "add() should have been called once: " + JSON.stringify(obj)
       );
+      spy.resetHistory();
+
+      for (let { obj: getObj, expected } of gets) {
+        Assert.deepEqual(
+          cache.get(getObj),
+          expected,
+          "Expected message for get: " + JSON.stringify(getObj)
+        );
+      }
     }
   }
+
+  sandbox.restore();
 });
 
 /**

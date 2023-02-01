@@ -2550,7 +2550,9 @@ export class L10nCache {
    *   The string will be cached only by its ID. See `add()` for more.
    */
   async ensure({ id, args = undefined, excludeArgsFromCacheKey = false }) {
-    if (!this.get({ id, args, excludeArgsFromCacheKey })) {
+    // Always re-cache if `excludeArgsFromCacheKey` is true. The values in
+    // `args` may be different from the values in the cached string.
+    if (excludeArgsFromCacheKey || !this.get({ id, args })) {
       await this.add({ id, args, excludeArgsFromCacheKey });
     }
   }
