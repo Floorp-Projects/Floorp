@@ -3411,6 +3411,33 @@ Aspects of Python use such as tooling, formatting and naming style
     * - Bugzilla Components
       - Developer Infrastructure :: Lint and Formatting
 
+Remote Protocol
+~~~~~~~~~~~~~~~
+Low-level remote protocol exposing interfaces for inspecting state and controlling execution of web documents, instrumenting various subsystems in the browser, simulating user interaction for automation purposes, and for subscribing to updates from the aforementioned.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+    * - Owner(s) Emeritus
+      - Andreas Tolfsen
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz, Alexandre Poirot, Yulia Startsev
+    * - Includes
+      -
+        | `remote/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/\*\*/\*>`__
+    * - URL
+      - https://firefox-source-docs.mozilla.org/remote/
+    * - Bugzilla Components
+      - Remote Protocol
+
 Sync
 ~~~~
 Firefox Sync client

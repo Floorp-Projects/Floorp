@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-01T13:40:18.437741'
+updated_at: '2023-02-01T13:42:10.620050'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3595,6 +3595,29 @@ modules:
     meta:
       components:
         - 'Developer Infrastructure :: Lint and Formatting'
+  - machine_name: remote_protocol
+    name: Remote Protocol
+    description: Low-level remote protocol exposing interfaces for inspecting state
+      and controlling execution of web documents, instrumenting various subsystems
+      in the browser, simulating user interaction for automation purposes, and for
+      subscribing to updates from the aforementioned.
+    includes:
+      - remote/**/*
+    excludes: []
+    owners:
+      - *whimboo
+    peers:
+      - *jdescottes
+    meta:
+      owners_emeritus:
+        - Andreas Tolfsen
+      peers_emeritus:
+        - Maja Frydrychowicz
+        - Alexandre Poirot
+        - Yulia Startsev
+      components:
+        - Remote Protocol
+      url: https://firefox-source-docs.mozilla.org/remote/
   - machine_name: sync
     name: Sync
     description: Firefox Sync client
@@ -3864,5 +3887,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 10fcdbc7ed75b36d0843e5b31b1b33dbf1a60062
-  export: 7d184a6074a60914f8f2c07cb9b1b056726c3347
+  config: 911a9e7df0837dfe1ccec941c6e9a5514d4247b5
+  export: 44fa3ad0e5a7146c0d058600278f4cf56f3475d1
