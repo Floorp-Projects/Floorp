@@ -72,7 +72,8 @@ TEST(MetricsLoggerAndExporterTest, LogSingleValueMetricRecordsMetric) {
                                     std::move(exporters));
     logger.LogSingleValueMetric(
         "metric_name", "test_case_name",
-        /*value=*/10, Unit::kTimeMs, ImprovementDirection::kBiggerIsBetter,
+        /*value=*/10, Unit::kMilliseconds,
+        ImprovementDirection::kBiggerIsBetter,
         std::map<std::string, std::string>{{"key", "value"}});
   }
 
@@ -81,7 +82,7 @@ TEST(MetricsLoggerAndExporterTest, LogSingleValueMetricRecordsMetric) {
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
-  EXPECT_THAT(metric.unit, Eq(Unit::kTimeMs));
+  EXPECT_THAT(metric.unit, Eq(Unit::kMilliseconds));
   EXPECT_THAT(metric.improvement_direction,
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
@@ -116,8 +117,8 @@ TEST(MetricsLoggerAndExporterTest,
         .time = Clock::GetRealTimeClock()->CurrentTime(),
         .metadata =
             std::map<std::string, std::string>{{"point_key2", "value2"}}});
-    logger.LogMetric("metric_name", "test_case_name", values, Unit::kTimeMs,
-                     ImprovementDirection::kBiggerIsBetter,
+    logger.LogMetric("metric_name", "test_case_name", values,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
                      std::map<std::string, std::string>{{"key", "value"}});
   }
 
@@ -126,7 +127,7 @@ TEST(MetricsLoggerAndExporterTest,
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
-  EXPECT_THAT(metric.unit, Eq(Unit::kTimeMs));
+  EXPECT_THAT(metric.unit, Eq(Unit::kMilliseconds));
   EXPECT_THAT(metric.improvement_direction,
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
@@ -153,7 +154,7 @@ TEST(MetricsLoggerAndExporterTest, LogMetricWithStatsRecordsMetric) {
                                     std::move(exporters));
     Metric::Stats metric_stats{.mean = 15, .stddev = 5, .min = 10, .max = 20};
     logger.LogMetric("metric_name", "test_case_name", metric_stats,
-                     Unit::kTimeMs, ImprovementDirection::kBiggerIsBetter,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
                      std::map<std::string, std::string>{{"key", "value"}});
   }
 
@@ -162,7 +163,7 @@ TEST(MetricsLoggerAndExporterTest, LogMetricWithStatsRecordsMetric) {
   const Metric& metric = metrics[0];
   EXPECT_THAT(metric.name, Eq("metric_name"));
   EXPECT_THAT(metric.test_case, Eq("test_case_name"));
-  EXPECT_THAT(metric.unit, Eq(Unit::kTimeMs));
+  EXPECT_THAT(metric.unit, Eq(Unit::kMilliseconds));
   EXPECT_THAT(metric.improvement_direction,
               Eq(ImprovementDirection::kBiggerIsBetter));
   EXPECT_THAT(metric.metric_metadata,
@@ -183,11 +184,11 @@ TEST(MetricsLoggerAndExporterTest, LogSingleValueMetricRecordsMultipleMetrics) {
                                     std::move(exporters));
 
     logger.LogSingleValueMetric("metric_name1", "test_case_name1",
-                                /*value=*/10, Unit::kTimeMs,
+                                /*value=*/10, Unit::kMilliseconds,
                                 ImprovementDirection::kBiggerIsBetter,
                                 DefaultMetadata());
     logger.LogSingleValueMetric("metric_name2", "test_case_name2",
-                                /*value=*/10, Unit::kTimeMs,
+                                /*value=*/10, Unit::kMilliseconds,
                                 ImprovementDirection::kBiggerIsBetter,
                                 DefaultMetadata());
   }
@@ -218,10 +219,12 @@ TEST(MetricsLoggerAndExporterTest,
         .time = Clock::GetRealTimeClock()->CurrentTime(),
         .metadata = DefaultMetadata()});
 
-    logger.LogMetric("metric_name1", "test_case_name1", values, Unit::kTimeMs,
-                     ImprovementDirection::kBiggerIsBetter, DefaultMetadata());
-    logger.LogMetric("metric_name2", "test_case_name2", values, Unit::kTimeMs,
-                     ImprovementDirection::kBiggerIsBetter, DefaultMetadata());
+    logger.LogMetric("metric_name1", "test_case_name1", values,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
+                     DefaultMetadata());
+    logger.LogMetric("metric_name2", "test_case_name2", values,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
+                     DefaultMetadata());
   }
 
   std::vector<Metric> metrics = exporter_factory.exported_metrics;
@@ -242,10 +245,10 @@ TEST(MetricsLoggerAndExporterTest, LogMetricWithStatsRecordsMultipleMetrics) {
     Metric::Stats metric_stats{.mean = 15, .stddev = 5, .min = 10, .max = 20};
 
     logger.LogMetric("metric_name1", "test_case_name1", metric_stats,
-                     Unit::kTimeMs, ImprovementDirection::kBiggerIsBetter,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
                      DefaultMetadata());
     logger.LogMetric("metric_name2", "test_case_name2", metric_stats,
-                     Unit::kTimeMs, ImprovementDirection::kBiggerIsBetter,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
                      DefaultMetadata());
   }
 
@@ -277,13 +280,14 @@ TEST(MetricsLoggerAndExporterTest,
     Metric::Stats metric_stats{.mean = 15, .stddev = 5, .min = 10, .max = 20};
 
     logger.LogSingleValueMetric("metric_name1", "test_case_name1",
-                                /*value=*/10, Unit::kTimeMs,
+                                /*value=*/10, Unit::kMilliseconds,
                                 ImprovementDirection::kBiggerIsBetter,
                                 DefaultMetadata());
-    logger.LogMetric("metric_name2", "test_case_name2", values, Unit::kTimeMs,
-                     ImprovementDirection::kBiggerIsBetter, DefaultMetadata());
+    logger.LogMetric("metric_name2", "test_case_name2", values,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
+                     DefaultMetadata());
     logger.LogMetric("metric_name3", "test_case_name3", metric_stats,
-                     Unit::kTimeMs, ImprovementDirection::kBiggerIsBetter,
+                     Unit::kMilliseconds, ImprovementDirection::kBiggerIsBetter,
                      DefaultMetadata());
   }
 
@@ -312,7 +316,7 @@ TEST(MetricsLoggerAndExporterTest,
                                     /*crash_on_export_failure=*/false);
 
     logger.LogSingleValueMetric("metric_name", "test_case_name",
-                                /*value=*/10, Unit::kTimeMs,
+                                /*value=*/10, Unit::kMilliseconds,
                                 ImprovementDirection::kBiggerIsBetter,
                                 DefaultMetadata());
   }

@@ -67,7 +67,7 @@ class ChromePerfDashboardMetricsExporterTest : public Test {
 TEST_F(ChromePerfDashboardMetricsExporterTest, ExportMetricFormatCorrect) {
   Metric metric1{
       .name = "test_metric1",
-      .unit = Unit::kTimeMs,
+      .unit = Unit::kMilliseconds,
       .improvement_direction = ImprovementDirection::kBiggerIsBetter,
       .test_case = "test_case_name1",
       .metric_metadata = DefaultMetadata(),
@@ -154,7 +154,7 @@ TEST_F(ChromePerfDashboardMetricsExporterTest, ExportMetricFormatCorrect) {
 TEST_F(ChromePerfDashboardMetricsExporterTest,
        ExportEmptyMetricExportsZeroValue) {
   Metric metric{.name = "test_metric",
-                .unit = Unit::kTimeMs,
+                .unit = Unit::kMilliseconds,
                 .improvement_direction = ImprovementDirection::kBiggerIsBetter,
                 .test_case = "test_case_name",
                 .metric_metadata = DefaultMetadata(),
@@ -184,7 +184,7 @@ TEST_F(ChromePerfDashboardMetricsExporterTest,
 TEST_F(ChromePerfDashboardMetricsExporterTest,
        ExportMetricWithOnlyStatsExportsMeanValues) {
   Metric metric{.name = "test_metric",
-                .unit = Unit::kTimeMs,
+                .unit = Unit::kMilliseconds,
                 .improvement_direction = ImprovementDirection::kBiggerIsBetter,
                 .test_case = "test_case_name",
                 .metric_metadata = DefaultMetadata(),

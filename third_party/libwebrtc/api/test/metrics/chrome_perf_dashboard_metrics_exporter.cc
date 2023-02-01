@@ -29,11 +29,11 @@ namespace {
 
 std::string ToChromePerfDashboardUnit(Unit unit) {
   switch (unit) {
-    case Unit::kTimeMs:
+    case Unit::kMilliseconds:
       return "msBestFitFormat";
     case Unit::kPercent:
       return "n%";
-    case Unit::kSizeInBytes:
+    case Unit::kBytes:
       return "sizeInBytes";
     case Unit::kKilobitsPerSecond:
       // Chrome Perf Dashboard doesn't have kpbs units, so we change the unit

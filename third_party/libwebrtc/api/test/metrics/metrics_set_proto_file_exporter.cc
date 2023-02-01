@@ -28,11 +28,11 @@ namespace {
 #if WEBRTC_ENABLE_PROTOBUF
 webrtc::test_metrics::Unit ToProtoUnit(Unit unit) {
   switch (unit) {
-    case Unit::kTimeMs:
+    case Unit::kMilliseconds:
       return webrtc::test_metrics::Unit::MILLISECONDS;
     case Unit::kPercent:
       return webrtc::test_metrics::Unit::PERCENT;
-    case Unit::kSizeInBytes:
+    case Unit::kBytes:
       return webrtc::test_metrics::Unit::BYTES;
     case Unit::kKilobitsPerSecond:
       return webrtc::test_metrics::Unit::KILOBITS_PER_SECOND;

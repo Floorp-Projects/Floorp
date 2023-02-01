@@ -81,7 +81,7 @@ TEST_F(MetricsSetProtoFileExporterTest, MetricsAreExportedCorrectly) {
 
   Metric metric1{
       .name = "test_metric1",
-      .unit = Unit::kTimeMs,
+      .unit = Unit::kMilliseconds,
       .improvement_direction = ImprovementDirection::kBiggerIsBetter,
       .test_case = "test_case_name1",
       .metric_metadata = DefaultMetadata(),
