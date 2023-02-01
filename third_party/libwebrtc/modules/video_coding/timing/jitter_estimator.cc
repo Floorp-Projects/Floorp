@@ -243,7 +243,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // https://en.wikipedia.org/wiki/68-95-99.7_rule. Note that neither of the
   // estimated means are true sample means, which implies that they are possibly
   // not normally distributed. Hence, this rejection method is just a heuristic.
-  double num_stddev_delay_outlier = GetNumStddevDelayOutlier();
+  double num_stddev_delay_outlier =
+      config_.num_stddev_delay_outlier.value_or(kNumStdDevDelayOutlier);
   // Delay outlier rejection is two-sided.
   bool abs_delay_is_not_outlier =
       fabs(delay_deviation_ms) <
@@ -253,10 +254,12 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // median-filtered version, even if configured to use latter for the
   // calculation in `CalculateEstimate()`.
   // Size outlier rejection is one-sided.
+  double num_stddev_size_outlier =
+      config_.num_stddev_size_outlier.value_or(kNumStdDevSizeOutlier);
   bool size_is_positive_outlier =
       frame_size.bytes() >
       avg_frame_size_bytes_ +
-          GetNumStddevSizeOutlier() * sqrt(var_frame_size_bytes2_);
+          num_stddev_size_outlier * sqrt(var_frame_size_bytes2_);
 
   // Only update the Kalman filter if the sample is not considered an extreme
   // outlier. Even if it is an extreme outlier from a delay point of view, if
@@ -269,13 +272,16 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
+    double congestion_rejection_factor =
+        config_.congestion_rejection_factor.value_or(
+            kCongestionRejectionFactor);
     double filtered_max_frame_size_bytes =
         config_.MaxFrameSizePercentileEnabled()
             ? max_frame_size_bytes_percentile_.GetFilteredValue()
             : max_frame_size_bytes_;
     bool is_not_congested =
         delta_frame_bytes >
-        GetCongestionRejectionFactor() * filtered_max_frame_size_bytes;
+        congestion_rejection_factor * filtered_max_frame_size_bytes;
 
     if (is_not_congested || config_.estimate_noise_when_congested) {
       // Update the variance of the deviation from the line given by the Kalman
@@ -318,19 +324,6 @@ void JitterEstimator::UpdateRtt(TimeDelta rtt) {
 
 JitterEstimator::Config JitterEstimator::GetConfigForTest() const {
   return config_;
-}
-
-double JitterEstimator::GetNumStddevDelayOutlier() const {
-  return config_.num_stddev_delay_outlier.value_or(kNumStdDevDelayOutlier);
-}
-
-double JitterEstimator::GetNumStddevSizeOutlier() const {
-  return config_.num_stddev_size_outlier.value_or(kNumStdDevSizeOutlier);
-}
-
-double JitterEstimator::GetCongestionRejectionFactor() const {
-  return config_.congestion_rejection_factor.value_or(
-      kCongestionRejectionFactor);
 }
 
 // Estimates the random jitter by calculating the variance of the sample
