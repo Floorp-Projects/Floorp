@@ -227,10 +227,13 @@ panel .text-link:-moz-lwtheme:not(:hover) {
  * 2) buttons in the toolbar moving horizontally while the window opens,
  *    because the element is first shown at full width and then completely
  *    hidden.
+ * TODO(emilio): The comment above was never quite true (the message did take
+ * horizontal space, see bug 1812636). Figure out how much of this rule is
+ * really needed.
  */
 #PersonalToolbar[collapsed=false] > #personal-toolbar-empty[nowidth] > #personal-toolbar-empty-description {
   margin-inline: 0;
-  width: 0;
+  min-width: 0;
   white-space: nowrap;
   position: relative;
   z-index: 1;
