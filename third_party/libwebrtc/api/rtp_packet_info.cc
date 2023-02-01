@@ -27,20 +27,6 @@ RtpPacketInfo::RtpPacketInfo(uint32_t ssrc,
       rtp_timestamp_(rtp_timestamp),
       receive_time_(receive_time) {}
 
-RtpPacketInfo::RtpPacketInfo(
-    uint32_t ssrc,
-    std::vector<uint32_t> csrcs,
-    uint32_t rtp_timestamp,
-    absl::optional<uint8_t> audio_level,
-    absl::optional<AbsoluteCaptureTime> absolute_capture_time,
-    Timestamp receive_time)
-    : ssrc_(ssrc),
-      csrcs_(std::move(csrcs)),
-      rtp_timestamp_(rtp_timestamp),
-      receive_time_(receive_time),
-      audio_level_(audio_level),
-      absolute_capture_time_(absolute_capture_time) {}
-
 RtpPacketInfo::RtpPacketInfo(const RTPHeader& rtp_header,
                              Timestamp receive_time)
     : ssrc_(rtp_header.ssrc),
@@ -57,23 +43,6 @@ RtpPacketInfo::RtpPacketInfo(const RTPHeader& rtp_header,
 
   absolute_capture_time_ = extension.absolute_capture_time;
 }
-
-RtpPacketInfo::RtpPacketInfo(
-    uint32_t ssrc,
-    std::vector<uint32_t> csrcs,
-    uint32_t rtp_timestamp,
-    absl::optional<uint8_t> audio_level,
-    absl::optional<AbsoluteCaptureTime> absolute_capture_time,
-    int64_t receive_time_ms)
-    : RtpPacketInfo(ssrc,
-                    csrcs,
-                    rtp_timestamp,
-                    audio_level,
-                    absolute_capture_time,
-                    Timestamp::Millis(receive_time_ms)) {}
-RtpPacketInfo::RtpPacketInfo(const RTPHeader& rtp_header,
-                             int64_t receive_time_ms)
-    : RtpPacketInfo(rtp_header, Timestamp::Millis(receive_time_ms)) {}
 
 bool operator==(const RtpPacketInfo& lhs, const RtpPacketInfo& rhs) {
   return (lhs.ssrc() == rhs.ssrc()) && (lhs.csrcs() == rhs.csrcs()) &&
