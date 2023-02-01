@@ -909,6 +909,8 @@ if (!build_with_chromium) {
       "../../../api:rtc_stats_api",
       "../../../api:track_id_stream_info_map",
       "../../../api/numerics",
+      "../../../api/test/metrics:metric",
+      "../../../api/test/metrics:metrics_logger_and_exporter",
       "../../../api/units:timestamp",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:rtc_event",

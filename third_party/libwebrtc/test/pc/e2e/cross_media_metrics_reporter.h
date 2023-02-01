@@ -17,6 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
+#include "api/test/metrics/metrics_logger_and_exporter.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/track_id_stream_info_map.h"
 #include "api/units/timestamp.h"
@@ -29,7 +30,11 @@ namespace webrtc_pc_e2e {
 class CrossMediaMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
-  CrossMediaMetricsReporter() = default;
+  CrossMediaMetricsReporter()
+      : CrossMediaMetricsReporter(/*metrics_logger=*/nullptr) {}
+  explicit CrossMediaMetricsReporter(
+      test::MetricsLoggerAndExporter* metrics_logger)
+      : metrics_logger_(metrics_logger) {}
   ~CrossMediaMetricsReporter() override = default;
 
   void Start(absl::string_view test_case_name,
@@ -56,6 +61,8 @@ class CrossMediaMetricsReporter
                                webrtc::test::ImproveDirection::kNone);
   std::string GetTestCaseName(const std::string& stream_label,
                               const std::string& sync_group) const;
+
+  test::MetricsLoggerAndExporter* const metrics_logger_;
 
   std::string test_case_name_;
   const TrackIdStreamInfoMap* reporter_helper_;
