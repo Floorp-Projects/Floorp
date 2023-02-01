@@ -20,7 +20,7 @@ Please obtain an API Token (Settings >> Conduit API Tokens)
 Windows dependencies
 --------------------
 
-#. You need 64-bit version of Windows 7 or later.
+#. You need a :ref:`supported version of Windows<tier_1_hosts>`.
 #. Download and install `Visual Studio Community Edition. <https://visualstudio.microsoft.com/downloads/>`__
 #. Finally download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
 

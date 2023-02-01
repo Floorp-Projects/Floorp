@@ -29,6 +29,8 @@ While we want to help users resolve build-related issues on their systems, we
 are unable to help resolve build system issues on all possible operating
 systems and versions.
 
+.. _tier_1_hosts:
+
 Tier-1 Hosts and Toolchains
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
