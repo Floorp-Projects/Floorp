@@ -180,11 +180,6 @@ class RTCStatsCollector : public rtc::RefCountInterface,
       int64_t timestamp_us,
       const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
       RTCStatsReport* report) const;
-  // Produces `RTCCodecStats`.
-  void ProduceCodecStats_n(
-      int64_t timestamp_us,
-      const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
-      RTCStatsReport* report) const;
   // Produces `RTCDataChannelStats`.
   void ProduceDataChannelStats_s(int64_t timestamp_us,
                                  RTCStatsReport* report) const;
@@ -208,9 +203,11 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // Produces `RTCPeerConnectionStats`.
   void ProducePeerConnectionStats_s(int64_t timestamp_us,
                                     RTCStatsReport* report) const;
-  // Produces `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats`.
-  // This has to be invoked after codecs and transport stats have been created
-  // because some metrics are calculated through lookup of other metrics.
+  // Produces `RTCInboundRTPStreamStats`, `RTCOutboundRTPStreamStats`,
+  // `RTCRemoteInboundRtpStreamStats`, `RTCRemoteOutboundRtpStreamStats` and any
+  // referenced `RTCCodecStats`. This has to be invoked after transport stats
+  // have been created because some metrics are calculated through lookup of
+  // other metrics.
   void ProduceRTPStreamStats_n(
       int64_t timestamp_us,
       const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
