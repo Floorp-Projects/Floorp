@@ -39,7 +39,7 @@ def main(args):
     # possible to avoid a cryptic import/usage error.
     if sys.version_info < (3, 6):
         print("Python 3.6+ is required to run mach.")
-        print("You are running Python", platform.python_version())
+        print("You are running Python {0}".format(platform.python_version()))
         if sys.platform.startswith("linux"):
             print(dedent("""
             See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
