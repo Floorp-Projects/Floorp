@@ -41,6 +41,7 @@ if (!build_with_chromium) {
         ":multi_reader_queue_test",
         ":names_collection_test",
         ":peer_connection_e2e_smoke_test",
+        ":peer_connection_quality_test_metric_names_test",
         ":single_process_encoded_image_data_injector_unittest",
         ":stats_poller_test",
         ":video_frame_tracking_id_injector_unittest",
@@ -407,6 +408,8 @@ if (!build_with_chromium) {
         "../../../api:video_quality_analyzer_api",
         "../../../api/rtc_event_log",
         "../../../api/task_queue",
+        "../../../api/test/metrics:metric",
+        "../../../api/test/metrics:metrics_logger_and_exporter",
         "../../../api/units:time_delta",
         "../../../api/units:timestamp",
         "../../../pc:pc_test_utils",
@@ -484,6 +487,7 @@ if (!build_with_chromium) {
         "../../../api:simulated_network_api",
         "../../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../../api/audio_codecs:builtin_audio_encoder_factory",
+        "../../../api/test/metrics:global_metrics_logger_and_exporter",
         "../../../api/video_codecs:builtin_video_decoder_factory",
         "../../../api/video_codecs:builtin_video_encoder_factory",
         "../../../call:simulated_network",
@@ -508,6 +512,23 @@ if (!build_with_chromium) {
       if (is_ios) {
         deps += [ ":peer_connection_e2e_smoke_test_resources_bundle_data" ]
       }
+    }
+
+    rtc_library("peer_connection_quality_test_metric_names_test") {
+      testonly = true
+      sources = [ "peer_connection_quality_test_metric_names_test.cc" ]
+      deps = [
+        ":peerconnection_quality_test",
+        ":stats_based_network_quality_metrics_reporter",
+        "../..:test_support",
+        "../../../api:create_network_emulation_manager",
+        "../../../api:create_peer_connection_quality_test_frame_generator",
+        "../../../api:network_emulation_manager_api",
+        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/metrics:metrics_logger_and_exporter",
+        "../../../api/test/metrics:stdout_metrics_exporter",
+        "../../../api/units:time_delta",
+      ]
     }
 
     rtc_library("stats_provider") {

@@ -21,6 +21,7 @@
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log_output_file.h"
 #include "api/scoped_refptr.h"
+#include "api/test/metrics/metric.h"
 #include "api/test/time_controller.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "pc/sdp_utils.h"
@@ -46,6 +47,8 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
 using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
 using VideoCodecConfig = PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 
@@ -128,17 +131,30 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
     TimeController& time_controller,
     std::unique_ptr<AudioQualityAnalyzerInterface> audio_quality_analyzer,
     std::unique_ptr<VideoQualityAnalyzerInterface> video_quality_analyzer)
+    : PeerConnectionE2EQualityTest(std::move(test_case_name),
+                                   time_controller,
+                                   std::move(audio_quality_analyzer),
+                                   std::move(video_quality_analyzer),
+                                   /*metrics_logger_=*/nullptr) {}
+
+PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
+    std::string test_case_name,
+    TimeController& time_controller,
+    std::unique_ptr<AudioQualityAnalyzerInterface> audio_quality_analyzer,
+    std::unique_ptr<VideoQualityAnalyzerInterface> video_quality_analyzer,
+    test::MetricsLoggerAndExporter* metrics_logger)
     : time_controller_(time_controller),
       task_queue_factory_(time_controller_.CreateTaskQueueFactory()),
       test_case_name_(std::move(test_case_name)),
       executor_(std::make_unique<TestActivitiesExecutor>(
-          time_controller_.GetClock())) {
+          time_controller_.GetClock())),
+      metrics_logger_(metrics_logger) {
   // Create default video quality analyzer. We will always create an analyzer,
   // even if there are no video streams, because it will be installed into video
   // encoder/decoder factories.
   if (video_quality_analyzer == nullptr) {
     video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
-        time_controller_.GetClock());
+        time_controller_.GetClock(), metrics_logger_);
   }
   if (field_trial::IsEnabled("WebRTC-VideoFrameTrackingIdAdvertised")) {
     encoded_image_data_propagator_ =
@@ -154,7 +170,8 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
           encoded_image_data_propagator_.get());
 
   if (audio_quality_analyzer == nullptr) {
-    audio_quality_analyzer = std::make_unique<DefaultAudioQualityAnalyzer>();
+    audio_quality_analyzer =
+        std::make_unique<DefaultAudioQualityAnalyzer>(metrics_logger_);
   }
   audio_quality_analyzer_.swap(audio_quality_analyzer);
 }
@@ -289,10 +306,10 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
       std::min(video_analyzer_threads, kMaxVideoAnalyzerThreads);
   RTC_LOG(LS_INFO) << "video_analyzer_threads=" << video_analyzer_threads;
   quality_metrics_reporters_.push_back(
-      std::make_unique<VideoQualityMetricsReporter>(
-          time_controller_.GetClock()));
+      std::make_unique<VideoQualityMetricsReporter>(time_controller_.GetClock(),
+                                                    metrics_logger_));
   quality_metrics_reporters_.push_back(
-      std::make_unique<CrossMediaMetricsReporter>());
+      std::make_unique<CrossMediaMetricsReporter>(metrics_logger_));
 
   video_quality_analyzer_injection_helper_->Start(
       test_case_name_,
@@ -719,14 +736,24 @@ void PeerConnectionE2EQualityTest::TearDownCall() {
 }
 
 void PeerConnectionE2EQualityTest::ReportGeneralTestResults() {
-  test::PrintResult(*alice_->params().name + "_connected", "", test_case_name_,
-                    alice_connected_, "unitless",
-                    /*important=*/false,
-                    test::ImproveDirection::kBiggerIsBetter);
-  test::PrintResult(*bob_->params().name + "_connected", "", test_case_name_,
-                    bob_connected_, "unitless",
-                    /*important=*/false,
-                    test::ImproveDirection::kBiggerIsBetter);
+  if (metrics_logger_ == nullptr) {
+    test::PrintResult(*alice_->params().name + "_connected", "",
+                      test_case_name_, alice_connected_, "unitless",
+                      /*important=*/false,
+                      test::ImproveDirection::kBiggerIsBetter);
+    test::PrintResult(*bob_->params().name + "_connected", "", test_case_name_,
+                      bob_connected_, "unitless",
+                      /*important=*/false,
+                      test::ImproveDirection::kBiggerIsBetter);
+  } else {
+    metrics_logger_->LogSingleValueMetric(
+        *alice_->params().name + "_connected", test_case_name_,
+        alice_connected_, Unit::kUnitless,
+        ImprovementDirection::kBiggerIsBetter);
+    metrics_logger_->LogSingleValueMetric(
+        *bob_->params().name + "_connected", test_case_name_, bob_connected_,
+        Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
+  }
 }
 
 Timestamp PeerConnectionE2EQualityTest::Now() const {

@@ -630,6 +630,7 @@ if (rtc_include_tests) {
         ":time_controller",
         ":video_quality_analyzer_api",
         "../test/pc/e2e:peerconnection_quality_test",
+        "test/metrics:global_metrics_logger_and_exporter",
       ]
     }
   }

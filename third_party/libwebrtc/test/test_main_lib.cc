@@ -13,11 +13,15 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "absl/flags/flag.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/stdout_metrics_exporter.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event_tracer.h"
 #include "rtc_base/logging.h"
@@ -65,6 +69,11 @@ ABSL_FLAG(std::string,
           "",
           "Path to output an empty JSON file which Chromium infra requires.");
 
+ABSL_FLAG(bool,
+          export_perf_results_new_api,
+          false,
+          "Tells to initialize new API for exporting performance metrics");
+
 ABSL_FLAG(bool, logs, true, "print logs to stderr");
 ABSL_FLAG(bool, verbose, false, "verbose logs to stderr");
 
@@ -100,6 +109,12 @@ class TestMainImpl : public TestMain {
 
     rtc::LogMessage::SetLogToStderr(absl::GetFlag(FLAGS_logs) ||
                                     absl::GetFlag(FLAGS_verbose));
+
+    if (absl::GetFlag(FLAGS_export_perf_results_new_api)) {
+      std::vector<std::unique_ptr<test::MetricsExporter>> exporters;
+      exporters.push_back(std::make_unique<test::StdoutMetricsExporter>());
+      test::SetupGlobalMetricsLoggerAndExporter(std::move(exporters));
+    }
 
     // InitFieldTrialsFromString stores the char*, so the char array must
     // outlive the application.
@@ -156,6 +171,10 @@ class TestMainImpl : public TestMain {
     }
     if (metrics_to_plot) {
       webrtc::test::PrintPlottableResults(*metrics_to_plot);
+    }
+
+    if (absl::GetFlag(FLAGS_export_perf_results_new_api)) {
+      test::ExportAndDestroyGlobalMetricsLoggerAndExporter();
     }
 
     std::string result_filename =
