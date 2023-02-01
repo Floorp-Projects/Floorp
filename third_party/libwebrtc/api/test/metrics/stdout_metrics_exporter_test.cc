@@ -43,7 +43,7 @@ Metric PsnrForTestFoo(double mean, double stddev) {
                 .stats = Metric::Stats{.mean = mean, .stddev = stddev}};
 }
 
-TEST(StdoutMetricsExporterTest, MAYBE_ExportMetricFormatCorrect) {
+TEST(StdoutMetricsExporterTest, ExportMetricFormatCorrect) {
   Metric metric1{
       .name = "test_metric1",
       .unit = Unit::kTimeMs,
