@@ -28,4 +28,7 @@ specific_include_rules = {
   ".*webrtc_video_engine_unittest\.cc": [
     "+video/config",
   ],
+  ".*fake_webrtc_call\.cc": [
+    "+video/config",
+  ],
 }

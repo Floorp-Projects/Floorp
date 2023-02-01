@@ -37,7 +37,6 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
-#include "video/config/encoder_stream_factory.h"
 
 namespace webrtc {
 class VideoDecoderFactory;
