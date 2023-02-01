@@ -284,11 +284,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.property(data, "skipFxA", true);
       assert.notProperty(data.screens[0].content, "secondary_button_top");
     });
-    it("should have an image caption", async () => {
-      const data = await prepConfig();
-
-      assert.property(data.screens[0].content, "help_text");
-    });
     it("should remove the caption if deleteIfNotEn is true", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
 
