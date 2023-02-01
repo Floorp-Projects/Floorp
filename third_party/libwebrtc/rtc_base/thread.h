@@ -35,7 +35,6 @@
 #include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
-#include "rtc_base/location.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -322,13 +321,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
     ReturnT result;
     BlockingCall([&] { result = std::forward<Functor>(functor)(); });
     return result;
-  }
-
-  // Deprecated, use `BlockingCall` instead.
-  template <typename ReturnT>
-  [[deprecated]] ReturnT Invoke(const Location& /*posted_from*/,
-                                FunctionView<ReturnT()> functor) {
-    return BlockingCall(functor);
   }
 
   // Allows BlockingCall to specified `thread`. Thread never will be
