@@ -158,6 +158,9 @@ export var PictureInPicture = {
   // Maps a browser to the number of PiP windows it has
   browserWeakMap: new WeakMap(),
 
+  // Maps an AppWindow to the number of PiP windows it has
+  originatingWinWeakMap: new WeakMap(),
+
   /**
    * Returns the player window if one exists and if it hasn't yet been closed.
    *
@@ -195,6 +198,24 @@ export var PictureInPicture = {
   },
 
   /**
+   * Increase the count of PiP windows for a given AppWindow.
+   *
+   * @param {Browser} browser
+   *   The content browser that the originating video lives in and from which
+   *   we'll read its parent window to increase PiP window count in originatingWinWeakMap.
+   */
+  addOriginatingWinToWeakMap(browser) {
+    let parentWin = browser.ownerGlobal;
+    let count = this.originatingWinWeakMap.get(parentWin);
+    if (!count || count == 0) {
+      this.setOriginatingWindowActive(parentWin.browsingContext, true);
+      this.originatingWinWeakMap.set(parentWin, 1);
+    } else {
+      this.originatingWinWeakMap.set(parentWin, count + 1);
+    }
+  },
+
+  /**
    * Decrease the count of PiP windows for a given browser.
    * If the count becomes 0, we will remove the browser from the WeakMap
    * @param browser The browser to decrease PiP count in browserWeakMap
@@ -212,6 +233,30 @@ export var PictureInPicture = {
     }
   },
 
+  /**
+   * Decrease the count of PiP windows for a given AppWindow.
+   * If the count becomes 0, we will remove the AppWindow from the WeakMap.
+   *
+   * @param {Browser} browser
+   *   The content browser that the originating video lives in and from which
+   *   we'll read its parent window to decrease PiP window count in originatingWinWeakMap.
+   */
+  removeOriginatingWinFromWeakMap(browser) {
+    let parentWin = browser?.ownerGlobal;
+
+    if (!parentWin) {
+      return;
+    }
+
+    let count = this.originatingWinWeakMap.get(parentWin);
+    if (!count || count <= 1) {
+      this.originatingWinWeakMap.delete(parentWin, 0);
+      this.setOriginatingWindowActive(parentWin.browsingContext, false);
+    } else {
+      this.originatingWinWeakMap.set(parentWin, count - 1);
+    }
+  },
+
   onPipSwappedBrowsers(event) {
     let otherTab = event.detail;
     if (otherTab) {
@@ -219,7 +264,9 @@ export var PictureInPicture = {
         if (this.weakWinToBrowser.get(win) === event.target.linkedBrowser) {
           this.weakWinToBrowser.set(win, otherTab.linkedBrowser);
           this.removePiPBrowserFromWeakMap(event.target.linkedBrowser);
+          this.removeOriginatingWinFromWeakMap(event.target.linkedBrowser);
           this.addPiPBrowserToWeakMap(otherTab.linkedBrowser);
+          this.addOriginatingWinToWeakMap(otherTab.linkedBrowser);
         }
       }
       otherTab.addEventListener("TabSwapPictureInPicture", this);
@@ -387,6 +434,7 @@ export var PictureInPicture = {
 
     this.weakWinToBrowser.set(win, browser);
     this.addPiPBrowserToWeakMap(browser);
+    this.addOriginatingWinToWeakMap(browser);
 
     win.setScrubberPosition(videoData.scrubberPosition);
     win.setTimestamp(videoData.timestamp);
@@ -415,6 +463,23 @@ export var PictureInPicture = {
   },
 
   /**
+   * Calls the browsingContext's `forceAppWindowActive` flag to determine if the
+   * the top level chrome browsingContext should be forcefully set as active or not.
+   * When the originating window's browsing context is set to active, captions on the
+   * PiP window are properly updated. Forcing active while a PiP window is open ensures
+   * that captions are still updated when the originating window is occluded.
+   *
+   * @param {BrowsingContext} browsingContext
+   *   The browsing context of the originating window
+   * @param {boolean} isActive
+   *   True to force originating window as active, or false to not enforce it
+   * @see CanonicalBrowsingContext
+   */
+  setOriginatingWindowActive(browsingContext, isActive) {
+    browsingContext.forceAppWindowActive = isActive;
+  },
+
+  /**
    * unload event has been called in player.js, cleanup our preserved
    * browser object.
    *
@@ -425,6 +490,8 @@ export var PictureInPicture = {
       "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
       window
     );
+
+    this.removeOriginatingWinFromWeakMap(this.weakWinToBrowser.get(window));
 
     gCurrentPlayerCount -= 1;
     // Saves the location of the Picture in Picture window
