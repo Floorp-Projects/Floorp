@@ -63,7 +63,6 @@ class PwaTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1814283")
     @SmokeTest
     @Test
     fun telephoneLinkPWATest() {
@@ -76,6 +75,7 @@ class PwaTest {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
             clickLinkMatchingText("Telephone link")
+            clickOpenInAppPromptButton()
             assertNativeAppOpens(PHONE_APP, phoneLink)
         }
     }

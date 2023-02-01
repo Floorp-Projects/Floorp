@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -164,7 +163,6 @@ class WebControlsTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1814283")
     @Test
     fun emailLinkTest() {
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
@@ -172,11 +170,11 @@ class WebControlsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
             clickLinkMatchingText("Email link")
+            clickOpenInAppPromptButton()
             assertNativeAppOpens(Constants.PackageName.GMAIL_APP, emailLink)
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1814283")
     @Test
     fun telephoneLinkTest() {
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
@@ -184,6 +182,7 @@ class WebControlsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
             clickLinkMatchingText("Telephone link")
+            clickOpenInAppPromptButton()
             assertNativeAppOpens(Constants.PackageName.PHONE_APP, phoneLink)
         }
     }

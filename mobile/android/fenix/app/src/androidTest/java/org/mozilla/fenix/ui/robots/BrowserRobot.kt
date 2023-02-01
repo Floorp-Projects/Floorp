@@ -47,6 +47,7 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
@@ -946,6 +947,13 @@ class BrowserRobot {
             it.waitForExists(waitingTime)
             it.click()
         }
+
+    fun clickOpenInAppPromptButton() =
+        itemWithResIdAndText("android:id/button1", "OPEN")
+            .also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
 
     class Transition {
         private fun threeDotButton() = onView(
