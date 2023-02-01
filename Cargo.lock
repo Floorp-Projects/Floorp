@@ -3507,7 +3507,7 @@ dependencies = [
 
 [[package]]
 name = "mozdevice"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "log",
  "once_cell",

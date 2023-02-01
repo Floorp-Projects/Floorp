@@ -1276,6 +1276,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.5.3 -> 0.6.2"
 
+[[audits.mozdevice]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-run"
+version = "0.5.1"
+notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
+
 [[audits.mozprofile]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-deploy"
