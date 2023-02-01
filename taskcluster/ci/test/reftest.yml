@@ -83,7 +83,6 @@ crashtest:
     max-run-time: 3600
     tier:
         by-test-platform:
-            windows10-aarch64-qr.*: 2
             android-hw-.*-qr/.*: 2
             android-em-7.0-x86_64-qr/debug-isolated-process: 3
             default: default
@@ -204,7 +203,6 @@ reftest:
                 by-test-platform:
                     android.*/.*: []
                     linux.*asan/opt: []
-                    windows10-aarch64-qr/opt: []
                     default: built-projects
     max-run-time:
         by-test-platform:
@@ -222,7 +220,6 @@ reftest:
                 default: true
     tier:
         by-test-platform:
-            windows10-aarch64-qr.*: 2
             android-hw-.*-qr/.*: 2
             android-em-7.0-x86_64-qr/debug-isolated-process: 3
             default: default
