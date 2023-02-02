@@ -231,6 +231,7 @@ class Tab extends PureComponent {
       >
         <SourceIcon
           source={source}
+          forTab={true}
           modifier={icon =>
             ["file", "javascript"].includes(icon) ? null : icon
           }

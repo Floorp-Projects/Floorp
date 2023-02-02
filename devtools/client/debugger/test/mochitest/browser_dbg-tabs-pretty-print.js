@@ -12,6 +12,18 @@ add_task(async function() {
   await selectSource(dbg, "math.min.js");
   clickElement(dbg, "prettyPrintButton");
   await waitForSource(dbg, "math.min.js:formatted");
+
+  await waitFor(() => findElement(dbg, "sourceTabs").children.length == 2);
+  const [prettyTab, originalTab] = findElement(dbg, "sourceTabs").children;
+  ok(
+    prettyTab.querySelector(".source-icon.img.prettyPrint"),
+    "Pretty printed tab has the pretty-print icon"
+  );
+  ok(
+    !originalTab.querySelector(".source-icon.img.prettyPrint"),
+    "original tab does not have the pretty-print icon"
+  );
+
   // Test reloading the debugger
   await waitForSelectedSource(dbg, "math.min.js:formatted");
   await reload(dbg);
