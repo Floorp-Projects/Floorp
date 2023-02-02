@@ -30,10 +30,6 @@ class WebTransportIncomingStreamsAlgorithms
       JSContext* aCx, ReadableStreamController& aController,
       ErrorResult& aRv) override;
 
-  already_AddRefed<Promise> CancelCallbackImpl(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) override;
-
  protected:
   ~WebTransportIncomingStreamsAlgorithms() override;
 

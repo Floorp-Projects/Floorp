@@ -120,6 +120,8 @@ class UnderlyingSourceAlgorithms final : public UnderlyingSourceAlgorithmsBase {
   MOZ_KNOWN_LIVE RefPtr<UnderlyingSourceCancelCallback> mCancelCallback;
 };
 
+// https://streams.spec.whatwg.org/#readablestream-set-up
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
 // Wrappers defined by the "Set up" methods in the spec. This helps you just
 // return nullptr when an error occurred as this wrapper converts it to a
 // rejected promise.
@@ -140,12 +142,17 @@ class UnderlyingSourceAlgorithmsWrapper
       ErrorResult& aRv) final;
 
   virtual already_AddRefed<Promise> PullCallbackImpl(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) = 0;
+      JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
+    // pullAlgorithm is optional, return null by default
+    return nullptr;
+  }
 
   virtual already_AddRefed<Promise> CancelCallbackImpl(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) = 0;
+      ErrorResult& aRv) {
+    // cancelAlgorithm is optional, return null by default
+    return nullptr;
+  }
 };
 
 }  // namespace mozilla::dom
