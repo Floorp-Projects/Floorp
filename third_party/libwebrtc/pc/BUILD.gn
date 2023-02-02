@@ -1025,6 +1025,7 @@ rtc_source_set("rtc_stats_collector") {
     "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/synchronization:mutex",
     "../rtc_base/third_party/sigslot:sigslot",
   ]
   absl_deps = [

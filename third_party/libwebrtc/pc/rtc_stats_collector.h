@@ -42,6 +42,7 @@
 #include "rtc_base/ref_count.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
@@ -285,7 +286,9 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // This cache avoids having to call rtc::SSLCertChain::GetStats(), which can
   // relatively expensive. ClearCachedStatsReport() needs to be called on
   // negotiation to ensure the cache is not obsolete.
-  std::map<std::string, CertificateStatsPair> cached_certificates_by_transport_;
+  Mutex cached_certificates_mutex_;
+  std::map<std::string, CertificateStatsPair> cached_certificates_by_transport_
+      RTC_GUARDED_BY(cached_certificates_mutex_);
 
   Call::Stats call_stats_;
 
