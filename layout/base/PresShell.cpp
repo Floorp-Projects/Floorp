@@ -46,6 +46,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/gfx/Types.h"
+#include "nsBoxLayoutState.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -9668,16 +9669,17 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 
   target->SetSize(boundsRelativeToTarget.Size());
 
-  // Always use boundsRelativeToTarget here, not
-  // desiredSize.InkOverflowRect(), because for root frames (where they
-  // could be different, since root frames are allowed to have overflow) the
-  // root view bounds need to match the viewport bounds; the view manager
-  // "window dimensions" code depends on it.
-  nsContainerFrame::SyncFrameViewAfterReflow(
-      mPresContext, target, target->GetView(), boundsRelativeToTarget);
-  nsContainerFrame::SyncWindowProperties(mPresContext, target,
-                                         target->GetView(), rcx,
-                                         nsContainerFrame::SET_ASYNC);
+  // Always use boundsRelativeToTarget here, not desiredSize.InkOverflowRect(),
+  // because for root frames (where they could be different, since root frames
+  // are allowed to have overflow) the root view bounds need to match the
+  // viewport bounds; the view manager "window dimensions" code depends on it.
+  if (target->HasView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(
+        mPresContext, target, target->GetView(), boundsRelativeToTarget);
+    if (target->IsViewportFrame()) {
+      SyncWindowProperties(/* aSync = */ false);
+    }
+  }
 
   target->DidReflow(mPresContext, nullptr);
   if (target->IsInScrollAnchorChain()) {
@@ -11520,13 +11522,118 @@ bool PresShell::DetermineFontSizeInflationState() {
   return true;
 }
 
-void PresShell::SyncWindowProperties(nsView* aView) {
-  nsIFrame* frame = aView->GetFrame();
-  if (frame && mPresContext) {
-    // CreateReferenceRenderingContext can return nullptr
-    RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
-    nsContainerFrame::SyncWindowProperties(mPresContext, frame, aView, rcx, 0);
+static nsIWidget* GetPresContextContainerWidget(nsPresContext* aPresContext) {
+  nsCOMPtr<nsISupports> container = aPresContext->Document()->GetContainer();
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+  if (!baseWindow) {
+    return nullptr;
   }
+
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  return mainWidget;
+}
+
+static bool IsTopLevelWidget(nsIWidget* aWidget) {
+  using WindowType = mozilla::widget::WindowType;
+
+  auto windowType = aWidget->GetWindowType();
+  return windowType == WindowType::TopLevel ||
+         windowType == WindowType::Dialog || windowType == WindowType::Popup ||
+         windowType == WindowType::Sheet;
+}
+
+PresShell::WindowSizeConstraints PresShell::GetWindowSizeConstraints() {
+  nsSize minSize(0, 0);
+  nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (!rootFrame || !mPresContext) {
+    return {minSize, maxSize};
+  }
+  if (rootFrame->IsXULBoxFrame()) {
+    RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
+    if (!rcx) {
+      return {minSize, maxSize};
+    }
+    nsBoxLayoutState state(mPresContext, rcx);
+    minSize = rootFrame->GetXULMinSize(state);
+    maxSize = rootFrame->GetXULMaxSize(state);
+  } else {
+    const auto* pos = rootFrame->StylePosition();
+    if (pos->mMinWidth.ConvertsToLength()) {
+      minSize.width = pos->mMinWidth.ToLength();
+    }
+    if (pos->mMinHeight.ConvertsToLength()) {
+      minSize.height = pos->mMinHeight.ToLength();
+    }
+    if (pos->mMaxWidth.ConvertsToLength()) {
+      maxSize.width = pos->mMaxWidth.ToLength();
+    }
+    if (pos->mMaxHeight.ConvertsToLength()) {
+      maxSize.height = pos->mMaxHeight.ToLength();
+    }
+  }
+  return {minSize, maxSize};
+}
+
+void PresShell::SyncWindowProperties(bool aSync) {
+  nsView* view = mViewManager->GetRootView();
+  if (!view || !view->HasWidget()) {
+    return;
+  }
+  RefPtr pc = mPresContext;
+  if (!pc) {
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> windowWidget = GetPresContextContainerWidget(pc);
+  if (!windowWidget || !IsTopLevelWidget(windowWidget)) {
+    return;
+  }
+
+  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  if (!aSync) {
+    view->SetNeedsWindowPropertiesSync();
+    return;
+  }
+
+  AutoWeakFrame weak(rootFrame);
+  if (!GetRootScrollFrame()) {
+    // Scrollframes use native widgets which don't work well with
+    // translucent windows, at least in Windows XP. So if the document
+    // has a root scrollrame it's useless to try to make it transparent,
+    // we'll just get something broken.
+    // We can change this to allow translucent toplevel HTML documents
+    // (e.g. to do something like Dashboard widgets), once we
+    // have broad support for translucent scrolled documents, but be
+    // careful because apparently some Firefox extensions expect
+    // openDialog("something.html") to produce an opaque window
+    // even if the HTML doesn't have a background-color set.
+    auto* canvas = GetCanvasFrame();
+    widget::TransparencyMode mode = nsLayoutUtils::GetFrameTransparency(
+        canvas ? canvas : rootFrame, rootFrame);
+    StyleWindowShadow shadow = rootFrame->StyleUIReset()->mWindowShadow;
+    nsCOMPtr<nsIWidget> viewWidget = view->GetWidget();
+    viewWidget->SetTransparencyMode(mode);
+    windowWidget->SetWindowShadowStyle(shadow);
+
+    // For macOS, apply color scheme overrides to the top level window widget.
+    if (auto scheme = pc->GetOverriddenOrEmbedderColorScheme()) {
+      windowWidget->SetColorScheme(scheme);
+    }
+  }
+
+  if (!weak.IsAlive()) {
+    return;
+  }
+
+  const auto& constraints = GetWindowSizeConstraints();
+  nsContainerFrame::SetSizeConstraints(pc, windowWidget, constraints.mMinSize,
+                                       constraints.mMaxSize);
 }
 
 nsresult PresShell::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,

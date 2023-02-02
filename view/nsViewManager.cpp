@@ -344,7 +344,7 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
         view->mNeedsWindowPropertiesSync = false;
         if (nsViewManager* vm = view->GetViewManager()) {
           if (PresShell* presShell = vm->GetPresShell()) {
-            presShell->SyncWindowProperties(view);
+            presShell->SyncWindowProperties(/* aSync */ true);
           }
         }
       }

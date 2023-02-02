@@ -2636,13 +2636,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructRootFrame() {
   viewportFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Bind the viewport frame to the root view
-  nsView* rootView = mPresShell->GetViewManager()->GetRootView();
-  viewportFrame->SetView(rootView);
-
-  viewportFrame->SyncFrameViewProperties(rootView);
-  nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(),
-                                         viewportFrame, rootView, nullptr,
-                                         nsContainerFrame::SET_ASYNC);
+  if (nsView* rootView = mPresShell->GetViewManager()->GetRootView()) {
+    viewportFrame->SetView(rootView);
+    viewportFrame->SyncFrameViewProperties(rootView);
+    rootView->SetNeedsWindowPropertiesSync();
+  }
 
   // Make it an absolute container for fixed-pos elements
   viewportFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
