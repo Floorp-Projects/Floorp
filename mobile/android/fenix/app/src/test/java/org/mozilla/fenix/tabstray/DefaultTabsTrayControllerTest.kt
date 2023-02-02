@@ -95,14 +95,14 @@ class DefaultTabsTrayControllerTest {
     }
 
     @Test
-    fun `GIVEN private mode WHEN handleOpeningNewTab is called THEN a profile marker is added for the operations executed`() {
+    fun `GIVEN private mode WHEN the fab is clicked THEN a profile marker is added for the operations executed`() {
         profiler = spyk(profiler) {
             every { getProfilerTime() } returns Double.MAX_VALUE
         }
 
         assertNull(TabsTray.newPrivateTabTapped.testGetValue())
 
-        createController().handleOpeningNewTab(true)
+        createController().handlePrivateTabsFabClick()
 
         assertNotNull(TabsTray.newPrivateTabTapped.testGetValue())
 
@@ -120,12 +120,12 @@ class DefaultTabsTrayControllerTest {
     }
 
     @Test
-    fun `GIVEN normal mode WHEN handleOpeningNewTab is called THEN a profile marker is added for the operations executed`() {
+    fun `GIVEN normal mode WHEN the fab is clicked THEN a profile marker is added for the operations executed`() {
         profiler = spyk(profiler) {
             every { getProfilerTime() } returns Double.MAX_VALUE
         }
 
-        createController().handleOpeningNewTab(false)
+        createController().handleNormalTabsFabClick()
 
         verifyOrder {
             profiler.getProfilerTime()
@@ -141,21 +141,39 @@ class DefaultTabsTrayControllerTest {
     }
 
     @Test
-    fun `GIVEN private mode WHEN handleOpeningNewTab is called THEN Event#NewPrivateTabTapped is added to telemetry`() {
+    fun `GIVEN private mode WHEN the fab is clicked THEN Event#NewPrivateTabTapped is added to telemetry`() {
         assertNull(TabsTray.newPrivateTabTapped.testGetValue())
 
-        createController().handleOpeningNewTab(true)
+        createController().handlePrivateTabsFabClick()
 
         assertNotNull(TabsTray.newPrivateTabTapped.testGetValue())
     }
 
     @Test
-    fun `GIVEN private mode WHEN handleOpeningNewTab is called THEN Event#NewTabTapped is added to telemetry`() {
+    fun `GIVEN normal mode WHEN the fab is clicked THEN Event#NewTabTapped is added to telemetry`() {
         assertNull(TabsTray.newTabTapped.testGetValue())
 
-        createController().handleOpeningNewTab(false)
+        createController().handleNormalTabsFabClick()
 
         assertNotNull(TabsTray.newTabTapped.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN the user is on the synced tabs page WHEN the fab is clicked THEN fire off a sync action`() {
+        every { trayStore.state.syncing } returns false
+
+        createController().handleSyncedTabsFabClick()
+
+        verify { trayStore.dispatch(TabsTrayAction.SyncNow) }
+    }
+
+    @Test
+    fun `GIVEN the user is on the synced tabs page and there is already an active sync WHEN the fab is clicked THEN no action should be taken`() {
+        every { trayStore.state.syncing } returns true
+
+        createController().handleSyncedTabsFabClick()
+
+        verify(exactly = 0) { trayStore.dispatch(TabsTrayAction.SyncNow) }
     }
 
     @Test

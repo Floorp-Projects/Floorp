@@ -19,6 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.tabstray.browser.TabsTrayFabInteractor
 
 class FloatingActionButtonBindingTest {
 
@@ -27,7 +28,7 @@ class FloatingActionButtonBindingTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     private val actionButton: ExtendedFloatingActionButton = mockk(relaxed = true)
-    private val interactor: TabsTrayInteractor = mockk(relaxed = true)
+    private val interactor: TabsTrayFabInteractor = mockk(relaxed = true)
 
     @Before
     fun setup() {

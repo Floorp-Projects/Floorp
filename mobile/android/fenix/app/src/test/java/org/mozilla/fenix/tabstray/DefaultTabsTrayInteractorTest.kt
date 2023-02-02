@@ -113,4 +113,25 @@ class DefaultTabsTrayInteractorTest {
 
         verify { controller.handleDeleteAllInactiveTabsClicked() }
     }
+
+    @Test
+    fun `GIVEN the user is viewing normal tabs WHEN the user clicks on the FAB THEN the Interactor delegates to the controller`() {
+        interactor.onNormalTabsFabClicked()
+
+        verifySequence { controller.handleNormalTabsFabClick() }
+    }
+
+    @Test
+    fun `GIVEN the user is viewing private tabs WHEN the user clicks on the FAB THEN the Interactor delegates to the controller`() {
+        interactor.onPrivateTabsFabClicked()
+
+        verifySequence { controller.handlePrivateTabsFabClick() }
+    }
+
+    @Test
+    fun `GIVEN the user is viewing synced tabs WHEN the user clicks on the FAB THEN the Interactor delegates to the controller`() {
+        interactor.onSyncedTabsFabClicked()
+
+        verifySequence { controller.handleSyncedTabsFabClick() }
+    }
 }

@@ -9,11 +9,17 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
+import org.mozilla.fenix.tabstray.browser.TabsTrayFabInteractor
 
 /**
  * Interactor for responding to all user actions in the tabs tray.
  */
-interface TabsTrayInteractor : SyncedTabsInteractor, TabsTray.Delegate, InactiveTabsInteractor {
+interface TabsTrayInteractor :
+    SyncedTabsInteractor,
+    TabsTray.Delegate,
+    InactiveTabsInteractor,
+    TabsTrayFabInteractor {
+
     /**
      * Invoked when a page in the tabs tray is selected.
      *
@@ -55,13 +61,6 @@ interface TabsTrayInteractor : SyncedTabsInteractor, TabsTray.Delegate, Inactive
         targetId: String?,
         placeAfter: Boolean,
     )
-
-    /**
-     * Invoked when the TabTray's Floating Action Button is clicked.
-     *
-     * @param isPrivate [Boolean] indicating whether the FAB was clicked in the private page of the tabs tray.
-     */
-    fun onFabClicked(isPrivate: Boolean)
 
     /**
      * Invoked when the recently closed item is clicked.
@@ -161,8 +160,16 @@ class DefaultTabsTrayInteractor(
         controller.handleTabSelected(tab, source)
     }
 
-    override fun onFabClicked(isPrivate: Boolean) {
-        controller.handleOpeningNewTab(isPrivate)
+    override fun onNormalTabsFabClicked() {
+        controller.handleNormalTabsFabClick()
+    }
+
+    override fun onPrivateTabsFabClicked() {
+        controller.handlePrivateTabsFabClick()
+    }
+
+    override fun onSyncedTabsFabClicked() {
+        controller.handleSyncedTabsFabClick()
     }
 
     override fun onRecentlyClosedClicked() {
