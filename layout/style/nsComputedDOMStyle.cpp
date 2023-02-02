@@ -1843,20 +1843,17 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRight() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  {
-    nscoord lineHeight;
-    if (GetLineHeightCoord(lineHeight)) {
-      val->SetAppUnits(lineHeight);
-      return val.forget();
-    }
+  nscoord lineHeight;
+  if (GetLineHeightCoord(lineHeight)) {
+    val->SetAppUnits(lineHeight);
+    return val.forget();
   }
 
-  auto& lh = StyleText()->mLineHeight;
-  if (lh.IsLength()) {
-    val->SetPixels(lh.AsLength().ToCSSPixels());
-  } else if (lh.IsNumber()) {
-    val->SetNumber(lh.AsNumber());
-  } else if (lh.IsMozBlockHeight()) {
+  const auto& lh = StyleText()->mLineHeight;
+
+  // Types Length or Number will have been handled by GetLineHeightCoord,
+  // leaving only MozBlockHeight and Normal to consider here.
+  if (lh.IsMozBlockHeight()) {
     val->SetString("-moz-block-height");
   } else {
     MOZ_ASSERT(lh.IsNormal());
