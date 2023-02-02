@@ -578,6 +578,13 @@ struct hb_ot_apply_context_t :
       unsigned stop = num_items - 1;
       if (c->buffer->flags & HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT)
         stop = 1 - 1;
+
+      /* When looking back, limit how far we search; this function is mostly
+       * used for looking back for base glyphs when attaching marks. If we
+       * don't limit, we can get O(n^2) behavior where n is the number of
+       * consecutive marks. */
+      stop = (unsigned) hb_max ((int) stop, (int) idx - HB_MAX_CONTEXT_LENGTH);
+
       while (idx > stop)
       {
 	idx--;
