@@ -81,13 +81,15 @@ this.search = class extends ExtensionAPI {
             }
           }
 
-          const tab = searchProperties.tabId
-            ? tabTracker.getTab(searchProperties.tabId)
-            : null;
+          let { tab, where } = getTarget({
+            tabId: searchProperties.tabId,
+            disposition: searchProperties.disposition,
+            defaultDisposition: "NEW_TAB",
+          });
 
           await windowTracker.topWindow.BrowserSearch.loadSearchFromExtension({
             query: searchProperties.query,
-            where: tab ? "current" : "tab",
+            where,
             engine,
             tab,
             triggeringPrincipal: context.principal,
