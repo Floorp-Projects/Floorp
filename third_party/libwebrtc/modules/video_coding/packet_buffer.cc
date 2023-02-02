@@ -171,6 +171,10 @@ void PacketBuffer::ForceSpsPpsIdrIsH264Keyframe() {
   sps_pps_idr_is_h264_keyframe_ = true;
 }
 
+void PacketBuffer::ResetSpsPpsIdrIsH264Keyframe() {
+  sps_pps_idr_is_h264_keyframe_ = false;
+}
+
 void PacketBuffer::ClearInternal() {
   for (auto& entry : buffer_) {
     entry = nullptr;

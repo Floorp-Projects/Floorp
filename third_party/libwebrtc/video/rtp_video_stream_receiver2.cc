@@ -364,7 +364,7 @@ void RtpVideoStreamReceiver2::AddReceiveCodec(
     const std::map<std::string, std::string>& codec_params,
     bool raw_payload) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) ||
+  if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) > 0 ||
       field_trials_.IsEnabled("WebRTC-SpsPpsIdrIsH264Keyframe")) {
     packet_buffer_.ForceSpsPpsIdrIsH264Keyframe();
   }
@@ -372,6 +372,41 @@ void RtpVideoStreamReceiver2::AddReceiveCodec(
       payload_type, raw_payload ? std::make_unique<VideoRtpDepacketizerRaw>()
                                 : CreateVideoRtpDepacketizer(video_codec));
   pt_codec_params_.emplace(payload_type, codec_params);
+}
+
+void RtpVideoStreamReceiver2::RemoveReceiveCodec(uint8_t payload_type) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  auto codec_params_it = pt_codec_params_.find(payload_type);
+  if (codec_params_it == pt_codec_params_.end())
+    return;
+
+  const bool sps_pps_idr_in_key_frame =
+      codec_params_it->second.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) > 0;
+
+  pt_codec_params_.erase(codec_params_it);
+  payload_type_map_.erase(payload_type);
+
+  if (sps_pps_idr_in_key_frame) {
+    bool reset_setting = true;
+    for (auto& [unused, codec_params] : pt_codec_params_) {
+      if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) > 0) {
+        reset_setting = false;
+        break;
+      }
+    }
+
+    if (reset_setting) {
+      packet_buffer_.ResetSpsPpsIdrIsH264Keyframe();
+    }
+  }
+}
+
+void RtpVideoStreamReceiver2::RemoveReceiveCodecs() {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+
+  pt_codec_params_.clear();
+  payload_type_map_.clear();
+  packet_buffer_.ResetSpsPpsIdrIsH264Keyframe();
 }
 
 absl::optional<Syncable::Info> RtpVideoStreamReceiver2::GetSyncInfo() const {
@@ -766,7 +801,7 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
     RTC_DCHECK_EQ(frame_boundary, packet->is_first_packet_in_frame());
     int64_t unwrapped_rtp_seq_num =
         rtp_seq_num_unwrapper_.Unwrap(packet->seq_num);
-    RTC_DCHECK(packet_infos_.count(unwrapped_rtp_seq_num) > 0);
+    RTC_DCHECK_GT(packet_infos_.count(unwrapped_rtp_seq_num), 0);
     RtpPacketInfo& packet_info = packet_infos_[unwrapped_rtp_seq_num];
     if (packet->is_first_packet_in_frame()) {
       first_packet = packet.get();

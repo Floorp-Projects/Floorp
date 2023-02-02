@@ -420,19 +420,19 @@ void VideoReceiveStream2::Start() {
 
 void VideoReceiveStream2::Stop() {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-  {
-    // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
-    // Also call `GetUniqueFramesSeen()` at the same time (since it's a counter
-    // that's updated on the network thread).
-    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-    rtp_video_stream_receiver_.StopReceive();
-  }
+
+  // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
+  // Also call `GetUniqueFramesSeen()` at the same time (since it's a counter
+  // that's updated on the network thread).
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.StopReceive();
 
   stats_proxy_.OnUniqueFramesCounted(
       rtp_video_stream_receiver_.GetUniqueFramesSeen());
 
   buffer_->Stop();
   call_stats_->DeregisterStatsObserver(this);
+
   if (decoder_running_) {
     rtc::Event done;
     decode_queue_.PostTask([this, &done] {
@@ -453,6 +453,11 @@ void VideoReceiveStream2::Stop() {
 
     UpdateHistograms();
   }
+
+  // TODO(bugs.webrtc.org/11993): Make these calls on the network thread.
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.RemoveReceiveCodecs();
+  video_receiver_.DeregisterReceiveCodecs();
 
   video_stream_decoder_.reset();
   incoming_video_stream_.reset();
