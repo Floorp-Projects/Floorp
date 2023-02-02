@@ -116,6 +116,6 @@ wasmRunWithDebugger(
       // The number below reflects amount of wasm operators executed during
       // the run of the test function, which runs $func0(4). It can change
       // when the code above and/or meaning of wasm operators will change.
-      assertEq(onStepCalled.length, 166);
+      assertEq(onStepCalled.length, 85);
   }
 );

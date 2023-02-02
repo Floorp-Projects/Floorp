@@ -10,18 +10,16 @@ function runTest(wast, initFunc, doneFunc) {
     g.eval(`
 var b = wasmTextToBinary('${wast}');
 var m = new WebAssembly.Instance(new WebAssembly.Module(b));
-var breakpoints = wasmCodeOffsets(b);
 `);
 
-    var { breakpoints } = g;
-
     var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
+    var breakpoints = wasmScript.getPossibleBreakpointOffsets();
 
     initFunc({
         dbg,
         wasmScript,
         g,
-        breakpoints
+        breakpoints,
     });
 
     let result, error;
@@ -48,11 +46,10 @@ runTest(
     '(module (func (nop) (nop)) (export "test" (func 0)))',
     function ({wasmScript, breakpoints}) {
         print(`${JSON.stringify(breakpoints)}`);
-        assertEq(breakpoints.length, 3);
+        assertEq(breakpoints.length, 2);
         assertEq(breakpoints[0] > 0, true);
         // Checking if breakpoints offsets are in ascending order.
         assertEq(breakpoints[0] < breakpoints[1], true);
-        assertEq(breakpoints[1] < breakpoints[2], true);
         onBreakpointCalled = 0;
         breakpoints.forEach(function (offset) {
             wasmScript.setBreakpoint(offset, {
@@ -65,7 +62,7 @@ runTest(
     },
     function ({dbg, error}) {
         assertEq(error, undefined);
-        assertEq(onBreakpointCalled, 3);
+        assertEq(onBreakpointCalled, 2);
     }
 );
 
@@ -145,7 +142,7 @@ runTest(
     function ({error}) {
         assertEq(error, undefined);
         assertEq(onBreakpointCalled, 0);
-        assertEq(onStepCalled.length, 3);
+        assertEq(onStepCalled.length, 2);
     }
 );
 

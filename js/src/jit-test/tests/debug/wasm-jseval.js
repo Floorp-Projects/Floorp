@@ -7,7 +7,12 @@ wasmRunWithDebugger(
     '(module (memory 1 1)\
      (global (mut f64) (f64.const 0.5))\
      (global f32 (f32.const 3.5))\
-     (func (param i32) (local f64) (f64.const 1.0) (tee_local 1) (set_global 0) (nop))\
+     (func (param i32) (local f64) \
+       nop \
+       f64.const 1.0 \
+       local.tee 1 \
+       global.set 0 \
+       nop) \
      (export "test" (func 0))\
      (data (i32.const 0) "Abc\\x2A"))',
     undefined,
@@ -24,14 +29,17 @@ wasmRunWithDebugger(
             var stepNumber = 0;
             frame.onStep = function () {
                 switch (stepNumber) {
-                  case 1: // after i64.const 1.0
+                  case 0: // before nop
+                    assertEq(frame.offset, 65);
                     assertEq(frame.eval('global0').return, 0.5);
                     assertEq(frame.eval('var1').return, 0.0);
                     break;
-                  case 2: // after tee_local $var1
+                  case 2: // after local.tee $var1
+                    assertEq(frame.offset, 79);
                     assertEq(frame.eval('var1').return, 1.0);
                     break;
-                  case 3: // after set_global $global0
+                  case 3: // after global.set $global0
+                    assertEq(frame.offset, 80);
                     assertEq(frame.eval('global0').return, 1.0);
                     break;
                 }

@@ -99,7 +99,7 @@ add_task(async function() {
   // While the decimal one is the line where the line appear in CodeMirror.
   // So while we set the breakpoint on the decimal line in CodeMirror gutter,
   // internaly, the engine sets the breakpoint on the "virtual line".
-  const virtualBinaryLine = 0x118;
+  const virtualBinaryLine = 0x11a;
   is(
     "0x" + virtualBinaryLine.toString(16),
     "0x" + generatedLine.toString(16),

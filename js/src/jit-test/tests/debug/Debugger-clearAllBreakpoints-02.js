@@ -8,12 +8,12 @@ g.eval(`
     var wasm = wasmTextToBinary(
       '(module (func (nop) (nop)) (export "test" (func 0)))');
     var m = new WebAssembly.Instance(new WebAssembly.Module(wasm));
-    var offsets = wasmCodeOffsets(wasm);
 `);
 var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
+var offsets = wasmScript.getPossibleBreakpointOffsets();
 
 let count = 0;
-wasmScript.setBreakpoint(g.offsets[0], {
+wasmScript.setBreakpoint(offsets[0], {
   hit: () => {
     count++;
   },

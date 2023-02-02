@@ -30,4 +30,4 @@ g.eval(`
 `);
 
 i.exports.f2();
-assertEq(g.calledOnStep >= 5, true);
+assertEq(g.calledOnStep, 2);

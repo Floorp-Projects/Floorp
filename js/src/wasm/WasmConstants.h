@@ -989,6 +989,38 @@ struct OpBytes {
     b1 = 0;
   }
   OpBytes() = default;
+
+  // Whether this opcode should have a breakpoint site inserted directly before
+  // the opcode in baseline when debugging. We use this as a heuristic to
+  // reduce the number of breakpoint sites.
+  bool shouldHaveBreakpoint() const {
+    switch (Op(b0)) {
+      // Block-like instructions don't get their own breakpoint site, a
+      // breakpoint can be used on instructions in the block.
+      case Op::Block:
+      case Op::Loop:
+      case Op::If:
+      case Op::Else:
+      case Op::Try:
+      case Op::Delegate:
+      case Op::Catch:
+      case Op::CatchAll:
+      case Op::End:
+      // Effect-less instructions without inputs are leaf nodes in expressions,
+      // a breakpoint can be used on instructions that consume these values.
+      case Op::LocalGet:
+      case Op::GlobalGet:
+      case Op::I32Const:
+      case Op::I64Const:
+      case Op::F32Const:
+      case Op::F64Const:
+      case Op::RefNull:
+      case Op::Drop:
+        return false;
+      default:
+        return true;
+    }
+  }
 };
 
 static const char NameSectionName[] = "name";
