@@ -32,7 +32,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsNetCID.h"
-#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -163,6 +162,7 @@ FileSystemDataManager::FileSystemDataManager(
       mState(State::Initial) {}
 
 FileSystemDataManager::~FileSystemDataManager() {
+  NS_ASSERT_OWNINGTHREAD(FileSystemDataManager);
   MOZ_ASSERT(mState == State::Closed);
   MOZ_ASSERT(!mDatabaseManager);
 }
@@ -396,15 +396,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
              })
       ->Then(quotaManager->IOThread(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
-                 const BoolPromise::ResolveOrRejectValue& value) mutable {
-               auto autoProxyReleaseManager = MakeScopeExit([&self] {
-                 nsCOMPtr<nsISerialEventTarget> target =
-                     self->MutableBackgroundTargetPtr();
-
-                 NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                 self.forget());
-               });
-
+                 const BoolPromise::ResolveOrRejectValue& value) {
                if (value.IsReject()) {
                  return BoolPromise::CreateAndReject(value.RejectValue(),
                                                      __func__);
@@ -418,15 +410,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
              })
       ->Then(MutableIOTargetPtr(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
-                 const BoolPromise::ResolveOrRejectValue& value) mutable {
-               auto autoProxyReleaseManager = MakeScopeExit([&self] {
-                 nsCOMPtr<nsISerialEventTarget> target =
-                     self->MutableBackgroundTargetPtr();
-
-                 NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                 self.forget());
-               });
-
+                 const BoolPromise::ResolveOrRejectValue& value) {
                if (value.IsReject()) {
                  return BoolPromise::CreateAndReject(value.RejectValue(),
                                                      __func__);
@@ -490,15 +474,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
   mState = State::Closing;
 
   InvokeAsync(MutableIOTargetPtr(), __func__,
-              [self = RefPtr<FileSystemDataManager>(this)]() mutable {
-                auto autoProxyReleaseManager = MakeScopeExit([&self] {
-                  nsCOMPtr<nsISerialEventTarget> target =
-                      self->MutableBackgroundTargetPtr();
-
-                  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                  self.forget());
-                });
-
+              [self = RefPtr<FileSystemDataManager>(this)]() {
                 if (self->mDatabaseManager) {
                   self->mDatabaseManager->Close();
                   self->mDatabaseManager = nullptr;

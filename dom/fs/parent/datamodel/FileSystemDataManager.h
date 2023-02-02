@@ -70,7 +70,7 @@ class FileSystemDataManager
 
   static bool IsShutdownCompleted();
 
-  NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemDataManager)
 
   void AssertIsOnIOTarget() const;
 
@@ -143,6 +143,7 @@ class FileSystemDataManager
 
   const quota::OriginMetadata mOriginMetadata;
   nsTHashSet<EntryId> mExclusiveLocks;
+  NS_DECL_OWNINGEVENTTARGET
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<nsCOMPtr<nsIEventTarget>> mIOTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
