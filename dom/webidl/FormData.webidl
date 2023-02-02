@@ -12,7 +12,7 @@ typedef (Blob or Directory or USVString) FormDataEntryValue;
 [Exposed=(Window,Worker)]
 interface FormData {
   [Throws]
-  constructor(optional HTMLFormElement form);
+  constructor(optional HTMLFormElement form, optional HTMLElement? submitter = null);
 
   [Throws]
   undefined append(USVString name, Blob value, optional USVString filename);
