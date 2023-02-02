@@ -348,8 +348,7 @@ std::unique_ptr<StreamState> ConfigureFromFlags(
 
   if (absl::GetFlag(FLAGS_flexfec_payload_type) != -1) {
     receive_config.rtp.protected_by_flexfec = true;
-    webrtc::FlexfecReceiveStream::Config flexfec_config(
-        &(stream_state->transport));
+    FlexfecReceiveStream::Config flexfec_config(&(stream_state->transport));
     flexfec_config.payload_type = absl::GetFlag(FLAGS_flexfec_payload_type);
     flexfec_config.protected_media_ssrcs.push_back(absl::GetFlag(FLAGS_ssrc));
     flexfec_config.rtp.remote_ssrc = absl::GetFlag(FLAGS_ssrc_flexfec);
@@ -437,8 +436,7 @@ class RtpReplayer final {
       : replay_config_path_(replay_config_path),
         rtp_dump_path_(rtp_dump_path),
         field_trials_(std::move(field_trials)),
-        task_queue_factory_(
-            webrtc::CreateDefaultTaskQueueFactory(field_trials_.get())),
+        task_queue_factory_(CreateDefaultTaskQueueFactory(field_trials_.get())),
         worker_thread_(std::make_unique<rtc::TaskQueue>(
             task_queue_factory_->CreateTaskQueue(
                 "worker_thread",
@@ -571,7 +569,7 @@ class RtpReplayer final {
 
   const std::string replay_config_path_;
   const std::string rtp_dump_path_;
-  webrtc::RtcEventLogNull event_log_;
+  RtcEventLogNull event_log_;
   std::unique_ptr<FieldTrialsView> field_trials_;
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<rtc::TaskQueue> worker_thread_;
