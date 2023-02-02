@@ -4,6 +4,12 @@ To add a new metric or ping to Firefox Desktop you should follow the
 [Glean SDK documentation on the subject](https://mozilla.github.io/glean/book/user/adding-new-metrics.html),
 with some few twists we detail herein:
 
+## Testing
+
+Instrumentation, being code, should be tested.
+Firefox on Glean [supports a wide variety of Firefox Desktop test suites][instrumentation-tests]
+in addition to [Glean's own debugging mechanisms][glean-debug].
+
 ## IPC
 
 Firefox Desktop is made of multiple processes.
@@ -105,3 +111,6 @@ on this subject. Some quick facts:
   This reduces the size and improves the performance of Firefox
   (and speeds up the Firefox build process)
   by decreasing the amount of code that needs to be generated.
+
+[instrumentation-tests]: ./instrumentation_tests
+[glean-debug]: https://mozilla.github.io/glean/book/reference/debug/index.html
