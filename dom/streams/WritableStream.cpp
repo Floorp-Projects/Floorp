@@ -773,6 +773,16 @@ void WritableStream::SetUpNative(JSContext* aCx,
                                        highWaterMark, aSizeAlgorithm, aRv);
 }
 
+already_AddRefed<WritableStream> WritableStream::CreateNative(
+    JSContext* aCx, nsIGlobalObject& aGlobal,
+    UnderlyingSinkAlgorithmsWrapper& aAlgorithms, Maybe<double> aHighWaterMark,
+    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
+  auto stream = MakeRefPtr<WritableStream>(
+      &aGlobal, WritableStream::HoldDropJSObjectsCaller::Implicit);
+  stream->SetUpNative(aCx, aAlgorithms, aHighWaterMark, aSizeAlgorithm, aRv);
+  return stream.forget();
+}
+
 // https://streams.spec.whatwg.org/#writablestream-error
 // To error a WritableStream stream given a JavaScript value e, perform !
 // WritableStreamDefaultControllerErrorIfNeeded(stream.[[controller]], e).
