@@ -24,6 +24,7 @@ class ErrorResult;
 namespace extensions {
 
 class ExtensionAlarms;
+class ExtensionBrowserSettings;
 class ExtensionDns;
 class ExtensionMockAPI;
 class ExtensionPort;
@@ -108,6 +109,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const;
 
   ExtensionAlarms* GetExtensionAlarms();
+  ExtensionBrowserSettings* GetExtensionBrowserSettings();
   ExtensionDns* GetExtensionDns();
   ExtensionMockAPI* GetExtensionMockAPI();
   ExtensionProxy* GetExtensionProxy();
@@ -137,6 +139,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // `nsCycleCollector_shutdown()` has been called and we don't expect anything
   // to be keeping the service worker global scope alive).
   RefPtr<ExtensionAlarms> mExtensionAlarms;
+  RefPtr<ExtensionBrowserSettings> mExtensionBrowserSettings;
   RefPtr<ExtensionDns> mExtensionDns;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionProxy> mExtensionProxy;

@@ -28,6 +28,8 @@ EXPORTS.mozilla.extensions += [
 # WebExtensions API namespaces.
 UNIFIED_SOURCES += [
     "ExtensionAlarms.cpp",
+    "ExtensionBrowserSettings.cpp",
+    "ExtensionBrowserSettingsColorManagement.cpp",
     "ExtensionDns.cpp",
     "ExtensionProxy.cpp",
     "ExtensionRuntime.cpp",
@@ -38,6 +40,8 @@ UNIFIED_SOURCES += [
 
 EXPORTS.mozilla.extensions += [
     "ExtensionAlarms.h",
+    "ExtensionBrowserSettings.h",
+    "ExtensionBrowserSettingsColorManagement.h",
     "ExtensionDns.h",
     "ExtensionProxy.h",
     "ExtensionRuntime.h",
