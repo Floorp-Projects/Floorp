@@ -393,6 +393,16 @@ urlbar.zeroprefix.exposure
   the "top sites" view since normally it shows the user's top sites. This scalar
   was introduced in Firefox 110.0 in bug 1806765.
 
+urlbar.quickaction.impression
+  A uint recording the number of times the user was shown a quickaction, the
+  key is in the form $key-$n where $n is the number of characters the user typed
+  in order for the suggestion to show. See bug 1806024.
+
+urlbar.quickaction.picked
+  A uint recording the number of times the user selected a quickaction, the
+  key is in the form $key-$n where $n is the number of characters the user typed
+  in order for the suggestion to show. See bug 1783155.
+
 places.*
   This is places related telemetry.
 

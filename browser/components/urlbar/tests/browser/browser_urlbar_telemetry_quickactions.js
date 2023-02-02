@@ -73,7 +73,52 @@ add_task(async function test() {
     1
   );
 
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "quickaction.impression",
+    "testaction-10",
+    1
+  );
+
   // Clean up for subsequent tests.
+  gURLBar.handleRevert();
+});
+
+add_task(async function test_impressions() {
+  UrlbarProviderQuickActions.addAction("testaction2", {
+    commands: ["testaction2"],
+    label: "quickactions-downloads2",
+    onPick: () => {},
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "testaction",
+    waitForFocus,
+    fireInputEvent: true,
+  });
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "quickaction.impression",
+    `testaction-10`,
+    1
+  );
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "quickaction.impression",
+    `testaction2-10`,
+    1
+  );
+
+  UrlbarProviderQuickActions.removeAction("testaction2");
   gURLBar.handleRevert();
 });
 
