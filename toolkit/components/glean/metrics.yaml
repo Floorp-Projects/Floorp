@@ -135,3 +135,21 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+server_knobs:
+  validation:
+    type: event
+    description: |
+      This is a temporary event intented to be used to validate the Glean
+      Server Knobs capabilities. See Bug 1811561 for more information.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811561
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811561
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - tlong@mozilla.com
+      - glean-team@mozilla.com
+    expires: 112
+    disabled: true
