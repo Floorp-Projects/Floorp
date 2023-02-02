@@ -143,104 +143,27 @@ ABSL_FLAG(uint32_t, render_width, 640, "Width of render window");
 ABSL_FLAG(uint32_t, render_height, 480, "Height of render window");
 
 namespace {
-
-static bool ValidatePayloadType(int32_t payload_type) {
+bool ValidatePayloadType(int32_t payload_type) {
   return payload_type > 0 && payload_type <= 127;
 }
 
-static bool ValidateOptionalPayloadType(int32_t payload_type) {
+bool ValidateOptionalPayloadType(int32_t payload_type) {
   return payload_type == -1 || ValidatePayloadType(payload_type);
 }
 
-static bool ValidateRtpHeaderExtensionId(int32_t extension_id) {
+bool ValidateRtpHeaderExtensionId(int32_t extension_id) {
   return extension_id >= -1 && extension_id < 15;
 }
 
 bool ValidateInputFilenameNotEmpty(const std::string& string) {
   return !string.empty();
 }
-
-static int MediaPayloadType() {
-  return absl::GetFlag(FLAGS_media_payload_type);
-}
-
-static int RedPayloadType() {
-  return absl::GetFlag(FLAGS_red_payload_type);
-}
-
-static int UlpfecPayloadType() {
-  return absl::GetFlag(FLAGS_ulpfec_payload_type);
-}
-
-static int FlexfecPayloadType() {
-  return absl::GetFlag(FLAGS_flexfec_payload_type);
-}
-
-static int MediaPayloadTypeRtx() {
-  return absl::GetFlag(FLAGS_media_payload_type_rtx);
-}
-
-static int RedPayloadTypeRtx() {
-  return absl::GetFlag(FLAGS_red_payload_type_rtx);
-}
-
-static uint32_t Ssrc() {
-  return absl::GetFlag(FLAGS_ssrc);
-}
-
-static uint32_t SsrcRtx() {
-  return absl::GetFlag(FLAGS_ssrc_rtx);
-}
-
-static uint32_t SsrcFlexfec() {
-  return absl::GetFlag(FLAGS_ssrc_flexfec);
-}
-
-static int AbsSendTimeId() {
-  return absl::GetFlag(FLAGS_abs_send_time_id);
-}
-
-static int TransmissionOffsetId() {
-  return absl::GetFlag(FLAGS_transmission_offset_id);
-}
-
-static std::string InputFile() {
-  return absl::GetFlag(FLAGS_input_file);
-}
-
-static std::string ConfigFile() {
-  return absl::GetFlag(FLAGS_config_file);
-}
-
-static std::string OutBase() {
-  return absl::GetFlag(FLAGS_out_base);
-}
-
-static std::string DecoderBitstreamFilename() {
-  return absl::GetFlag(FLAGS_decoder_bitstream_filename);
-}
-
-static std::string IVFFilename() {
-  return absl::GetFlag(FLAGS_decoder_ivf_filename);
-}
-
-static std::string Codec() {
-  return absl::GetFlag(FLAGS_codec);
-}
-
-static uint32_t RenderWidth() {
-  return absl::GetFlag(FLAGS_render_width);
-}
-
-static uint32_t RenderHeight() {
-  return absl::GetFlag(FLAGS_render_height);
-}
-
 }  // namespace
 
 namespace webrtc {
+namespace {
 
-static const uint32_t kReceiverLocalSsrc = 0x123456;
+const uint32_t kReceiverLocalSsrc = 0x123456;
 
 class FileRenderPassthrough : public rtc::VideoSinkInterface<VideoFrame> {
  public:
@@ -453,7 +376,8 @@ class RtpReplayer final {
       std::stringstream window_title;
       window_title << "Playback Video (" << config_count++ << ")";
       stream_state->sinks.emplace_back(test::VideoRenderer::Create(
-          window_title.str().c_str(), RenderWidth(), RenderHeight()));
+          window_title.str().c_str(), absl::GetFlag(FLAGS_render_width),
+          absl::GetFlag(FLAGS_render_height)));
       // Create a receive stream for this config.
       receive_config.renderer = stream_state->sinks.back().get();
       receive_config.decoder_factory = stream_state->decoder_factory.get();
@@ -473,67 +397,74 @@ class RtpReplayer final {
     std::stringstream window_title;
     window_title << "Playback Video (" << rtp_dump_path << ")";
     std::unique_ptr<test::VideoRenderer> playback_video(
-        test::VideoRenderer::Create(window_title.str().c_str(), RenderWidth(),
-                                    RenderHeight()));
+        test::VideoRenderer::Create(window_title.str().c_str(),
+                                    absl::GetFlag(FLAGS_render_width),
+                                    absl::GetFlag(FLAGS_render_height)));
     auto file_passthrough = std::make_unique<FileRenderPassthrough>(
-        OutBase(), playback_video.get());
+        absl::GetFlag(FLAGS_out_base), playback_video.get());
     stream_state->sinks.push_back(std::move(playback_video));
     stream_state->sinks.push_back(std::move(file_passthrough));
     // Setup the configuration from the flags.
     VideoReceiveStreamInterface::Config receive_config(
         &(stream_state->transport));
-    receive_config.rtp.remote_ssrc = Ssrc();
+    receive_config.rtp.remote_ssrc = absl::GetFlag(FLAGS_ssrc);
     receive_config.rtp.local_ssrc = kReceiverLocalSsrc;
-    receive_config.rtp.rtx_ssrc = SsrcRtx();
-    receive_config.rtp.rtx_associated_payload_types[MediaPayloadTypeRtx()] =
-        MediaPayloadType();
-    receive_config.rtp.rtx_associated_payload_types[RedPayloadTypeRtx()] =
-        RedPayloadType();
-    receive_config.rtp.ulpfec_payload_type = UlpfecPayloadType();
-    receive_config.rtp.red_payload_type = RedPayloadType();
+    receive_config.rtp.rtx_ssrc = absl::GetFlag(FLAGS_ssrc_rtx);
+    receive_config.rtp.rtx_associated_payload_types[absl::GetFlag(
+        FLAGS_media_payload_type_rtx)] =
+        absl::GetFlag(FLAGS_media_payload_type);
+    receive_config.rtp.rtx_associated_payload_types[absl::GetFlag(
+        FLAGS_red_payload_type_rtx)] = absl::GetFlag(FLAGS_red_payload_type);
+    receive_config.rtp.ulpfec_payload_type =
+        absl::GetFlag(FLAGS_ulpfec_payload_type);
+    receive_config.rtp.red_payload_type = absl::GetFlag(FLAGS_red_payload_type);
     receive_config.rtp.nack.rtp_history_ms = 1000;
 
-    if (FlexfecPayloadType() != -1) {
+    if (absl::GetFlag(FLAGS_flexfec_payload_type) != -1) {
       receive_config.rtp.protected_by_flexfec = true;
       webrtc::FlexfecReceiveStream::Config flexfec_config(
           &(stream_state->transport));
-      flexfec_config.payload_type = FlexfecPayloadType();
-      flexfec_config.protected_media_ssrcs.push_back(Ssrc());
-      flexfec_config.rtp.remote_ssrc = SsrcFlexfec();
+      flexfec_config.payload_type = absl::GetFlag(FLAGS_flexfec_payload_type);
+      flexfec_config.protected_media_ssrcs.push_back(absl::GetFlag(FLAGS_ssrc));
+      flexfec_config.rtp.remote_ssrc = absl::GetFlag(FLAGS_ssrc_flexfec);
       FlexfecReceiveStream* flexfec_stream =
           call->CreateFlexfecReceiveStream(flexfec_config);
       receive_config.rtp.packet_sink_ = flexfec_stream;
       stream_state->flexfec_streams.push_back(flexfec_stream);
     }
 
-    if (TransmissionOffsetId() != -1) {
-      receive_config.rtp.extensions.push_back(RtpExtension(
-          RtpExtension::kTimestampOffsetUri, TransmissionOffsetId()));
-    }
-    if (AbsSendTimeId() != -1) {
+    if (absl::GetFlag(FLAGS_transmission_offset_id) != -1) {
       receive_config.rtp.extensions.push_back(
-          RtpExtension(RtpExtension::kAbsSendTimeUri, AbsSendTimeId()));
+          RtpExtension(RtpExtension::kTimestampOffsetUri,
+                       absl::GetFlag(FLAGS_transmission_offset_id)));
+    }
+    if (absl::GetFlag(FLAGS_abs_send_time_id) != -1) {
+      receive_config.rtp.extensions.push_back(
+          RtpExtension(RtpExtension::kAbsSendTimeUri,
+                       absl::GetFlag(FLAGS_abs_send_time_id)));
     }
     receive_config.renderer = stream_state->sinks.back().get();
 
     // Setup the receiving stream
     VideoReceiveStreamInterface::Decoder decoder;
-    decoder = test::CreateMatchingDecoder(MediaPayloadType(), Codec());
-    if (!DecoderBitstreamFilename().empty()) {
+    decoder = test::CreateMatchingDecoder(
+        absl::GetFlag(FLAGS_media_payload_type), absl::GetFlag(FLAGS_codec));
+    if (!absl::GetFlag(FLAGS_decoder_bitstream_filename).empty()) {
       // Replace decoder with file writer if we're writing the bitstream to a
       // file instead.
       stream_state->decoder_factory =
           std::make_unique<test::FunctionVideoDecoderFactory>([]() {
             return std::make_unique<DecoderBitstreamFileWriter>(
-                DecoderBitstreamFilename().c_str());
+                absl::GetFlag(FLAGS_decoder_bitstream_filename).c_str());
           });
-    } else if (!IVFFilename().empty()) {
+    } else if (!absl::GetFlag(FLAGS_decoder_ivf_filename).empty()) {
       // Replace decoder with file writer if we're writing the ivf to a
       // file instead.
       stream_state->decoder_factory =
           std::make_unique<test::FunctionVideoDecoderFactory>([]() {
-            return std::make_unique<DecoderIvfFileWriter>(IVFFilename().c_str(),
-                                                          Codec());
+            return std::make_unique<DecoderIvfFileWriter>(
+                absl::GetFlag(FLAGS_decoder_ivf_filename).c_str(),
+                absl::GetFlag(FLAGS_codec));
           });
     } else {
       stream_state->decoder_factory =
@@ -645,9 +576,11 @@ class RtpReplayer final {
 };  // class RtpReplayer
 
 void RtpReplay() {
-  RtpReplayer::Replay(ConfigFile(), InputFile());
+  RtpReplayer::Replay(absl::GetFlag(FLAGS_config_file),
+                      absl::GetFlag(FLAGS_input_file));
 }
 
+}  // namespace
 }  // namespace webrtc
 
 int main(int argc, char* argv[]) {
