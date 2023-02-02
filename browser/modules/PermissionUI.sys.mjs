@@ -781,16 +781,12 @@ class GeolocationPermissionPrompt extends PermissionPromptForRequest {
       name: this.getPrincipalName(),
     };
 
-    if (this.principal.schemeIs("file")) {
-      options.checkbox = { show: false };
-    } else {
-      // Don't offer "always remember" action in PB mode
-      options.checkbox = {
-        show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-          this.browser.ownerGlobal
-        ),
-      };
-    }
+    // Don't offer "always remember" action in PB mode
+    options.checkbox = {
+      show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
+        this.browser.ownerGlobal
+      ),
+    };
 
     if (this.request.isRequestDelegatedToUnsafeThirdParty) {
       // Second name should be the third party origin
@@ -919,16 +915,12 @@ class XRPermissionPrompt extends PermissionPromptForRequest {
       name: this.getPrincipalName(),
     };
 
-    if (this.principal.schemeIs("file")) {
-      options.checkbox = { show: false };
-    } else {
-      // Don't offer "always remember" action in PB mode
-      options.checkbox = {
-        show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-          this.browser.ownerGlobal
-        ),
-      };
-    }
+    // Don't offer "always remember" action in PB mode
+    options.checkbox = {
+      show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
+        this.browser.ownerGlobal
+      ),
+    };
 
     if (options.checkbox.show) {
       options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
@@ -1243,16 +1235,12 @@ class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
       name: this.getPrincipalName(),
     };
 
-    if (this.principal.schemeIs("file")) {
-      options.checkbox = { show: false };
-    } else {
-      // Don't offer "always remember" action in PB mode
-      options.checkbox = {
-        show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
-          this.browser.ownerGlobal
-        ),
-      };
-    }
+    // Don't offer "always remember" action in PB mode
+    options.checkbox = {
+      show: !lazy.PrivateBrowsingUtils.isWindowPrivate(
+        this.browser.ownerGlobal
+      ),
+    };
 
     if (options.checkbox.show) {
       options.checkbox.label = lazy.gBrowserBundle.GetStringFromName(
