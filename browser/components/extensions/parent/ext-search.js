@@ -9,8 +9,29 @@
 
 var { ExtensionError } = ExtensionUtils;
 
+const dispositionMap = {
+  CURRENT_TAB: "current",
+  NEW_TAB: "tab",
+  NEW_WINDOW: "window",
+};
+
 this.search = class extends ExtensionAPI {
   getAPI(context) {
+    function getTarget({ tabId, disposition, defaultDisposition }) {
+      let tab, where;
+      if (disposition) {
+        if (tabId) {
+          throw new ExtensionError(`Cannot set both 'disposition' and 'tabId'`);
+        }
+        where = dispositionMap[disposition];
+      } else if (tabId) {
+        tab = tabTracker.getTab(tabId);
+      } else {
+        where = dispositionMap[defaultDisposition];
+      }
+      return { tab, where };
+    }
+
     return {
       search: {
         async get() {
@@ -50,6 +71,7 @@ this.search = class extends ExtensionAPI {
         async search(searchProperties) {
           await searchInitialized;
           let engine;
+
           if (searchProperties.engine) {
             engine = Services.search.getEngineByName(searchProperties.engine);
             if (!engine) {
@@ -63,12 +85,30 @@ this.search = class extends ExtensionAPI {
             ? tabTracker.getTab(searchProperties.tabId)
             : null;
 
-          await windowTracker.topWindow.BrowserSearch.loadSearchFromExtension(
-            searchProperties.query,
+          await windowTracker.topWindow.BrowserSearch.loadSearchFromExtension({
+            query: searchProperties.query,
+            where: tab ? "current" : "tab",
             engine,
             tab,
-            context.principal
-          );
+            triggeringPrincipal: context.principal,
+          });
+        },
+
+        async query(queryProperties) {
+          await searchInitialized;
+
+          let { tab, where } = getTarget({
+            tabId: queryProperties.tabId,
+            disposition: queryProperties.disposition,
+            defaultDisposition: "CURRENT_TAB",
+          });
+
+          await windowTracker.topWindow.BrowserSearch.loadSearchFromExtension({
+            query: queryProperties.text,
+            where,
+            tab,
+            triggeringPrincipal: context.principal,
+          });
         },
       },
     };

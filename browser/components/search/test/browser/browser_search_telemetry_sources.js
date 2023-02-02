@@ -386,11 +386,46 @@ add_task(async function test_source_system() {
   );
 });
 
-add_task(async function test_source_webextension() {
+add_task(async function test_source_webextension_search() {
   /* global browser */
   async function background(SEARCH_TERM) {
     // Search with no tabId
     browser.search.search({ query: "searchSuggestion", engine: "Example" });
+  }
+
+  let searchExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["search", "tabs"],
+    },
+    background,
+    useAddonManager: "temporary",
+  });
+
+  let tab;
+  await track_ad_click(
+    "webextension",
+    "webextension",
+    async () => {
+      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+
+      await searchExtension.startup();
+
+      return (tab = await tabPromise);
+    },
+    async () => {
+      await searchExtension.unload();
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+});
+
+add_task(async function test_source_webextension_query() {
+  async function background(SEARCH_TERM) {
+    // Search with no tabId
+    browser.search.query({
+      text: "searchSuggestion",
+      disposition: "NEW_TAB",
+    });
   }
 
   let searchExtension = ExtensionTestUtils.loadExtension({
