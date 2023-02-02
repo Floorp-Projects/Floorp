@@ -10,7 +10,7 @@
 #define MacApplicationDelegate_h_
 
 void EnsureUseCocoaDockAPI(void);
-void SetupMacApplicationDelegate(void);
+void SetupMacApplicationDelegate(bool* gRestartedByOS);
 void ProcessPendingGetURLAppleEvents(void);
 void DisableAppNap(void);
 
