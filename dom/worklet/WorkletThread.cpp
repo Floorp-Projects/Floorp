@@ -320,27 +320,32 @@ static bool DispatchToEventLoop(void* aClosure,
   // JS-internal helper thread.
 
   // See comment at JS::InitDispatchToEventLoop() below for how we know the
-  // WorkletThread is alive.
-  WorkletThread* workletThread = reinterpret_cast<WorkletThread*>(aClosure);
+  // thread is alive.
+  nsIThread* thread = static_cast<nsIThread*>(aClosure);
 
-  nsresult rv = workletThread->DispatchRunnable(NS_NewRunnableFunction(
-      "WorkletThread::DispatchToEventLoop", [aDispatchable]() {
-        CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
-        if (!ccjscx) {
-          return;
-        }
+  nsresult rv = thread->Dispatch(
+      NS_NewRunnableFunction(
+          "WorkletThread::DispatchToEventLoop",
+          [aDispatchable]() {
+            CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+            if (!ccjscx) {
+              return;
+            }
 
-        WorkletJSContext* wjc = ccjscx->GetAsWorkletJSContext();
-        if (!wjc) {
-          return;
-        }
+            WorkletJSContext* wjc = ccjscx->GetAsWorkletJSContext();
+            if (!wjc) {
+              return;
+            }
 
-        aDispatchable->run(wjc->Context(), JS::Dispatchable::NotShuttingDown);
-      }));
+            aDispatchable->run(wjc->Context(),
+                               JS::Dispatchable::NotShuttingDown);
+          }),
+      NS_DISPATCH_NORMAL);
 
   return NS_SUCCEEDED(rv);
 }
 
+// static
 void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
   CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
   if (ccjscx) {
@@ -364,10 +369,10 @@ void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
   // FIXME: JS::SetCTypesActivityCallback
   // FIXME: JS_SetGCZeal
 
-  // A WorkletThread lives strictly longer than its JSRuntime so we can safely
+  // A thread lives strictly longer than its JSRuntime so we can safely
   // store a raw pointer as the callback's closure argument on the JSRuntime.
   JS::InitDispatchToEventLoop(context->Context(), DispatchToEventLoop,
-                              (void*)this);
+                              NS_GetCurrentThread());
 
   JS_SetNativeStackQuota(context->Context(),
                          WORKLET_CONTEXT_NATIVE_STACK_LIMIT);
