@@ -385,11 +385,9 @@ class RtpReplayer final {
     // Wait for streams creation.
     sync_event.Wait(/*give_up_after=*/TimeDelta::Seconds(10));
 
-    if (stream_state == nullptr || rtp_reader == nullptr) {
-      return;
+    if (stream_state != nullptr && rtp_reader != nullptr) {
+      ReplayPackets(call.get(), rtp_reader.get(), worker_thread.get());
     }
-
-    ReplayPackets(call.get(), rtp_reader.get(), worker_thread.get());
 
     // Destruction of streams and the call must happen on the same thread as
     // their creation.
