@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(
 import {
   formatURIForDisplay,
   convertTimestamp,
-  createFaviconElement,
+  getImageUrl,
   NOW_THRESHOLD_MS,
 } from "./helpers.mjs";
 
@@ -26,6 +26,7 @@ class TabPickupList extends HTMLElement {
   constructor() {
     super();
     this.maxTabsLength = 3;
+    this.currentSyncedTabs = [];
     this.boundObserve = (...args) => {
       this.getSyncedTabData(...args);
     };
@@ -213,29 +214,70 @@ class TabPickupList extends HTMLElement {
     this.updateTabsList(tabs);
   }
 
+  tabsEqual(a, b) {
+    return JSON.stringify(a) == JSON.stringify(b);
+  }
+
   updateTabsList(syncedTabs) {
-    // don't do anything while the loading state is active
-
-    while (this.tabsList.firstChild) {
-      this.tabsList.firstChild.remove();
-    }
-
     if (!syncedTabs.length) {
-      this.sendTabTelemetry(0);
+      while (this.tabsList.firstChild) {
+        this.tabsList.firstChild.remove();
+      }
       this.togglePlaceholderVisibility(true);
       this.tabsList.hidden = true;
+      this.currentSyncedTabs = syncedTabs;
+      this.sendTabTelemetry(0);
       return;
     }
 
-    for (let i = 0; i < this.maxTabsLength; i++) {
-      let li = null;
-      if (!syncedTabs[i]) {
-        li = this.generatePlaceholder();
-      } else {
-        li = this.generateListItem(syncedTabs[i], i);
-      }
-      this.tabsList.append(li);
+    // Slice syncedTabs to maxTabsLength assuming maxTabsLength
+    // doesn't change between renders
+    const tabsToRender = syncedTabs.slice(0, this.maxTabsLength);
+
+    // Pad the render list with placeholders
+    for (let i = tabsToRender.length; i < this.maxTabsLength; i++) {
+      tabsToRender.push({
+        type: "placeholder",
+      });
     }
+
+    // Return early if new tabs are the same as previous ones
+    if (
+      JSON.stringify(tabsToRender) == JSON.stringify(this.currentSyncedTabs)
+    ) {
+      return;
+    }
+
+    for (let i = 0; i < tabsToRender.length; i++) {
+      const tabData = tabsToRender[i];
+      let li = this.tabsList.children[i];
+      if (li) {
+        if (this.tabsEqual(tabData, this.currentSyncedTabs[i])) {
+          // Nothing to change
+          continue;
+        }
+        if (tabData.type == "placeholder") {
+          // Replace a tab item with a placeholder
+          this.tabsList.replaceChild(this.generatePlaceholder(), li);
+          continue;
+        } else if (this.currentSyncedTabs[i]?.type == "placeholder") {
+          // Replace the placeholder with a tab item
+          const tabItem = this.generateListItem(i);
+          this.tabsList.replaceChild(tabItem, li);
+          li = tabItem;
+        }
+      } else if (tabData.type == "placeholder") {
+        this.tabsList.appendChild(this.generatePlaceholder());
+        continue;
+      } else {
+        li = this.tabsList.appendChild(this.generateListItem(i));
+      }
+      this.updateListItem(li, tabData);
+    }
+
+    this.currentSyncedTabs = tabsToRender;
+    // Record the full tab count
+    this.sendTabTelemetry(syncedTabs.length);
 
     if (this.tabsList.hidden) {
       this.tabsList.hidden = false;
@@ -245,8 +287,6 @@ class TabPickupList extends HTMLElement {
         this.intervalID = setInterval(() => this.updateTime(), lazy.timeMsPref);
       }
     }
-
-    this.sendTabTelemetry(syncedTabs.length);
   }
 
   generatePlaceholder() {
@@ -267,74 +307,101 @@ class TabPickupList extends HTMLElement {
     return li;
   }
 
-  generateListItem(tab, index) {
-    const li = document.createElement("li");
-    li.classList.add("synced-tab-li");
+  /*
+     Populate a list item with content from a tab object
+  */
+  updateListItem(li, tab) {
+    const targetURI = tab.url;
+    const lastUsedMs = tab.lastUsed * 1000;
+    const deviceText = tab.device;
+
     li.dataset.deviceType = tab.deviceType;
 
-    const targetURI = tab.url;
+    li.querySelector("a").href = targetURI;
+    li.querySelector(".synced-tab-li-title").textContent = tab.title;
+
+    const favicon = li.querySelector(".favicon");
+    const imageUrl = getImageUrl(tab.icon, targetURI);
+    favicon.style.backgroundImage = `url('${imageUrl}')`;
+
+    const time = li.querySelector(".synced-tab-li-time");
+    time.textContent = convertTimestamp(lastUsedMs, this.fluentStrings);
+    time.setAttribute("data-timestamp", lastUsedMs);
+
+    const deviceIcon = document.createElement("div");
+    deviceIcon.classList.add("icon", tab.deviceType);
+    deviceIcon.setAttribute("role", "presentation");
+
+    const device = li.querySelector(".synced-tab-li-device");
+    device.textContent = deviceText;
+    device.prepend(deviceIcon);
+    device.title = deviceText;
+
+    const url = li.querySelector(".synced-tab-li-url");
+    url.textContent = formatURIForDisplay(tab.url);
+    url.title = tab.url;
+    document.l10n.setAttributes(url, "firefoxview-tabs-list-tab-button", {
+      targetURI,
+    });
+  }
+
+  /*
+     Generate an empty list item ready to represent tab data
+  */
+  generateListItem(index) {
+    // Create new list item
+    const li = document.createElement("li");
+    li.classList.add("synced-tab-li");
+
     const a = document.createElement("a");
     a.classList.add("synced-tab-a");
-    a.href = targetURI;
     a.target = "_blank";
     if (index != 0) {
       a.setAttribute("tabindex", "-1");
     }
     a.addEventListener("keydown", this);
+    li.appendChild(a);
+
+    const favicon = document.createElement("div");
+    favicon.classList.add("favicon");
+    a.appendChild(favicon);
+
+    // Hide badge with CSS if not the first child
+    const badge = this.createBadge();
+    a.appendChild(badge);
 
     const title = document.createElement("span");
-    title.textContent = tab.title;
     title.classList.add("synced-tab-li-title");
-
-    const favicon = createFaviconElement(tab.icon, targetURI);
-
-    const lastUsedMs = tab.lastUsed * 1000;
-    const time = document.createElement("span");
-    time.textContent = convertTimestamp(lastUsedMs, this.fluentStrings);
-    time.classList.add("synced-tab-li-time");
-    time.setAttribute("data-timestamp", lastUsedMs);
+    a.appendChild(title);
 
     const url = document.createElement("span");
-    const device = document.createElement("span");
-    const deviceIcon = document.createElement("div");
-    deviceIcon.classList.add("icon", tab.deviceType);
-    deviceIcon.setAttribute("role", "presentation");
-
-    const deviceText = tab.device;
-    device.textContent = deviceText;
-    device.prepend(deviceIcon);
-    device.title = deviceText;
-
-    url.textContent = formatURIForDisplay(tab.url);
-    url.title = tab.url;
     url.classList.add("synced-tab-li-url");
-    document.l10n.setAttributes(url, "firefoxview-tabs-list-tab-button", {
-      targetURI,
-    });
+    a.appendChild(url);
+
+    const device = document.createElement("span");
     device.classList.add("synced-tab-li-device");
+    a.appendChild(device);
 
-    // the first list item is different from the second and third
-    if (index == 0) {
-      const badge = this.createBadge();
-      a.append(favicon, badge, title, url, device, time);
-    } else {
-      a.append(favicon, title, url, device, time);
-    }
+    const time = document.createElement("span");
+    time.classList.add("synced-tab-li-time");
+    a.appendChild(time);
 
-    li.append(a);
     return li;
   }
 
   createBadge() {
     const badge = document.createElement("div");
     const dot = document.createElement("span");
-    const badgeText = document.createElement("span");
+    const badgeTextEl = document.createElement("span");
+    const badgeText = this.fluentStrings.formatValueSync(
+      "firefoxview-pickup-tabs-badge"
+    );
 
-    badgeText.setAttribute("data-l10n-id", "firefoxview-pickup-tabs-badge");
-    badgeText.classList.add("badge-text");
+    badgeTextEl.classList.add("badge-text");
+    badgeTextEl.textContent = badgeText;
     badge.classList.add("last-active-badge");
     dot.classList.add("dot");
-    badge.append(dot, badgeText);
+    badge.append(dot, badgeTextEl);
     return badge;
   }
 

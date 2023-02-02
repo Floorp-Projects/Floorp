@@ -1023,6 +1023,10 @@ details[open] > .page-section-header > .twisty {
   font-size: 0.75em;
 }
 
+.synced-tab-li:not(:first-child) .last-active-badge {
+  display: none;
+}
+
 .dot {
   height: 8px;
   width: 8px;
