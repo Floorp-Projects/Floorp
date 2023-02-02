@@ -10,7 +10,6 @@
 #include <shldisp.h>
 
 #include "mozilla/glue/WinUtils.h"
-#include "mozilla/LazyIdleThread.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
@@ -35,7 +34,7 @@ class nsITransferable;
  * associated with instances via SetDragDrop().
  */
 class nsDataObj : public IDataObject, public IDataObjectAsyncCapability {
-  RefPtr<mozilla::LazyIdleThread> mIOThread;
+  nsCOMPtr<nsIThread> mIOThread;
 
  public:  // construction, destruction
   explicit nsDataObj(nsIURI* uri = nullptr);

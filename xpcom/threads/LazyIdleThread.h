@@ -11,81 +11,208 @@
 #  error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
 #endif
 
-#include "mozilla/TaskQueue.h"
+#include "nsINamed.h"
 #include "nsIObserver.h"
-#include "nsThreadPool.h"
+#include "nsIThreadInternal.h"
+#include "nsITimer.h"
+
+#include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
+#include "nsTArrayForwardDeclare.h"
+#include "nsString.h"
+#include "mozilla/Attributes.h"
+
+#define IDLE_THREAD_TOPIC "thread-shutting-down"
 
 namespace mozilla {
 
 /**
  * This class provides a basic event target that creates its thread lazily and
- * destroys its thread after a period of inactivity. It may be created and used
- * on any thread but it may only be shut down from the thread on which it is
- * created.
+ * destroys its thread after a period of inactivity. It may be created on any
+ * thread but it may only be used from the thread on which it is created. If it
+ * is created on the main thread then it will automatically join its thread on
+ * XPCOM shutdown using the Observer Service.
  */
-class LazyIdleThread final : public nsISerialEventTarget, public nsIObserver {
+class LazyIdleThread final : public nsIThread,
+                             public nsITimerCallback,
+                             public nsIThreadObserver,
+                             public nsIObserver,
+                             public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
+  NS_DECL_NSITHREAD
+  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
-  /**
-   * If AutomaticShutdown is specified, and the LazyIdleThread is created on the
-   * main thread, Shutdown() will automatically be called during
-   * xpcom-shutdown-threads.
-   */
   enum ShutdownMethod { AutomaticShutdown = 0, ManualShutdown };
 
   /**
    * Create a new LazyIdleThread that will destroy its thread after the given
    * number of milliseconds.
    */
-  LazyIdleThread(uint32_t aIdleTimeoutMS, const char* aName,
-                 ShutdownMethod aShutdownMethod = AutomaticShutdown);
+  LazyIdleThread(uint32_t aIdleTimeoutMS, const nsACString& aName,
+                 ShutdownMethod aShutdownMethod = AutomaticShutdown,
+                 nsIObserver* aIdleObserver = nullptr);
 
   /**
-   * Shuts down the LazyIdleThread, waiting for any pending work to complete.
-   * Must be called from mOwningEventTarget.
+   * Add an observer that will be notified when the thread is idle and about to
+   * be shut down. The aSubject argument can be QueryInterface'd to an nsIThread
+   * that can be used to post cleanup events. The aTopic argument will be
+   * IDLE_THREAD_TOPIC, and aData will be null. The LazyIdleThread does not add
+   * a reference to the observer to avoid circular references as it is assumed
+   * to be the owner. It is the caller's responsibility to clear this observer
+   * if the pointer becomes invalid.
    */
-  void Shutdown();
+  void SetWeakIdleObserver(nsIObserver* aObserver);
 
   /**
-   * Register a nsIThreadPoolListener on the underlying threadpool to track the
-   * thread as it is created/destroyed.
+   * Disable the idle timeout for this thread. No effect if the timeout is
+   * already disabled.
    */
-  nsresult SetListener(nsIThreadPoolListener* aListener);
+  void DisableIdleTimeout();
+
+  /**
+   * Enable the idle timeout. No effect if the timeout is already enabled.
+   */
+  void EnableIdleTimeout();
 
  private:
   /**
-   * Asynchronously shuts down the LazyIdleThread on mOwningEventTarget.
+   * Calls Shutdown().
    */
   ~LazyIdleThread();
 
   /**
-   * The thread which created this LazyIdleThread and is responsible for
-   * shutting it down.
+   * Called just before dispatching to mThread.
    */
-  const nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
+  void PreDispatch();
 
   /**
-   * The single-thread backing threadpool which provides the actual threads used
-   * by LazyIdleThread, and implements the timeout.
+   * Makes sure a valid thread lives in mThread.
    */
-  const RefPtr<nsThreadPool> mThreadPool;
+  nsresult EnsureThread();
 
   /**
-   * The serial event target providing a `nsISerialEventTarget` implementation
-   * when on the LazyIdleThread.
+   * Called on mThread to set up the thread observer.
    */
-  const RefPtr<TaskQueue> mTaskQueue;
+  void InitThread();
 
   /**
-   * Only safe to access on the owning thread or in the destructor (as no other
-   * threads have access then). If `true`, means the LazyIdleThread has already
-   * been shut down, so it does not need to be shut down asynchronously from the
-   * destructor.
+   * Called on mThread to clean up the thread observer.
    */
-  bool mShutdown = false;
+  void CleanupThread();
+
+  /**
+   * Called on the main thread when mThread believes itself to be idle. Sets up
+   * the idle timer.
+   */
+  void ScheduleTimer();
+
+  /**
+   * Called when we are shutting down mThread.
+   */
+  nsresult ShutdownThread();
+
+  /**
+   * Deletes this object. Used to delay calling mThread->Shutdown() during the
+   * final release (during a GC, for instance).
+   */
+  void SelfDestruct();
+
+  /**
+   * Returns true if events should be queued rather than immediately dispatched
+   * to mThread. Currently only happens when the thread is shutting down.
+   */
+  bool UseRunnableQueue() { return !!mQueuedRunnables; }
+
+  /**
+   * Protects data that is accessed on both threads.
+   */
+  mozilla::Mutex mMutex;
+
+  /**
+   * Touched on both threads but set before mThread is created. Used to direct
+   * timer events to the owning thread.
+   */
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
+
+  /**
+   * Only accessed on the owning thread. Set by EnsureThread().
+   */
+  nsCOMPtr<nsIThread> mThread;
+
+  /**
+   * Created when mThread has no pending events and fired
+   * at mOwningThread. Any thread that dispatches to mThread will take ownership
+   * of the timer and fire a separate cancel event to the owning thread.
+   * Only accessed from the owning thread.
+   */
+  nsCOMPtr<nsITimer> mIdleTimer;
+
+  /**
+   * Idle observer. Called when the thread is about to be shut down. Released
+   * only when Shutdown() is called.
+   */
+  nsIObserver* MOZ_UNSAFE_REF(
+      "See the documentation for SetWeakIdleObserver for "
+      "how the owner of LazyIdleThread should manage the "
+      "lifetime information of this field") mIdleObserver;
+
+  /**
+   * Temporary storage for events that happen to be dispatched while we're in
+   * the process of shutting down our real thread.
+   */
+  nsTArray<nsCOMPtr<nsIRunnable>>* mQueuedRunnables;
+
+  /**
+   * The number of milliseconds a thread should be idle before dying.
+   */
+  const uint32_t mIdleTimeoutMS;
+
+  /**
+   * The number of events that are pending on mThread. A nonzero value means
+   * that the thread cannot be cleaned up.
+   */
+  uint32_t mPendingEventCount MOZ_GUARDED_BY(mMutex);
+
+  /**
+   * The number of times that mThread has dispatched an idle notification. Any
+   * timer that fires while this count is nonzero can safely be ignored as
+   * another timer will be on the way.
+   */
+  uint32_t mIdleNotificationCount MOZ_GUARDED_BY(mMutex);
+
+  /**
+   * Whether or not the thread should automatically shutdown. If the owner
+   * specified ManualShutdown at construction time then the owner should take
+   * care to call Shutdown() manually when appropriate.
+   */
+  ShutdownMethod mShutdownMethod;
+
+  /**
+   * Only accessed on the owning thread. Set to true when Shutdown() has been
+   * called and prevents EnsureThread() from recreating mThread.
+   */
+  bool mShutdown;
+
+  /**
+   * Set from CleanupThread and lasting until the thread has shut down. Prevents
+   * further idle notifications during the shutdown process.
+   */
+  bool mThreadIsShuttingDown MOZ_GUARDED_BY(mMutex);
+
+  /**
+   * Whether or not the idle timeout is enabled.
+   */
+  bool mIdleTimeoutEnabled;
+
+  /**
+   * Name of the thread, set on the actual thread after it gets created.
+   */
+  nsCString mName;
 };
 
 }  // namespace mozilla
