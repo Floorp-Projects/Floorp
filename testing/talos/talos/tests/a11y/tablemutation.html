@@ -122,13 +122,15 @@ function mutateTable() {
   ensureAccessibleTreeForId("start");
 
   TalosContentProfiler.resume("tablemutation start", true).then(() => {
+    let start = window.performance.now();
+
     // Cause all kinds of crazy events
     Range.deleteContents();
     Range.insertNode(Fragment);
 
     document.documentElement.offsetLeft; // flush layout
 
-    setTimeout(postProcessingRecord, 0);
+    setTimeout(postProcessingRecord, 0, start);
   });
 }
 
