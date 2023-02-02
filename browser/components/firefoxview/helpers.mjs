@@ -56,6 +56,10 @@ export function createFaviconElement(image, targetURI = "") {
   return favicon;
 }
 
+export function getImageUrl(icon, targetURI) {
+  return icon ? lazy.PlacesUIUtils.getImageURL(icon) : `page-icon:${targetURI}`;
+}
+
 export function onToggleContainer(detailsContainer) {
   // Ignore early `toggle` events, which may either be fired because the
   // UI sections update visibility on component connected (based on persisted
