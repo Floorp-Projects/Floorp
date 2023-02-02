@@ -4345,10 +4345,16 @@ const BrowserSearch = {
   /**
    * Perform a search initiated from an extension.
    */
-  async loadSearchFromExtension(terms, engine, tab, triggeringPrincipal) {
+  async loadSearchFromExtension({
+    query,
+    engine,
+    where,
+    tab,
+    triggeringPrincipal,
+  }) {
     const result = await BrowserSearch._loadSearch(
-      terms,
-      tab ? "current" : "tab",
+      query,
+      where,
       PrivateBrowsingUtils.isWindowPrivate(window),
       "webextension",
       triggeringPrincipal,

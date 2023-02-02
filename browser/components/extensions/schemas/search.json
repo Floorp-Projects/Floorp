@@ -80,6 +80,41 @@
             }
           }
         ]
+      },
+      {
+        "name": "query",
+        "type": "function",
+        "async": "callback",
+        "description": "Use the chrome.search API to search via the default provider.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "queryInfo",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "String to query with the default search provider."
+              },
+              "disposition": {
+                "type": "string",
+                "optional": true,
+                "enum": ["CURRENT_TAB", "NEW_TAB", "NEW_WINDOW"],
+                "description": "Location where search results should be displayed. CURRENT_TAB is the default."
+              },
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Location where search results should be displayed. tabId cannot be used with disposition."
+              }
+            }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
+        ]
       }
     ]
   }
