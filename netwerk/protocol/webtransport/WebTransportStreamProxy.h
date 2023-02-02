@@ -59,6 +59,7 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
   NS_IMETHOD AsyncWait(nsIOutputStreamCallback* aCallback, uint32_t aFlags,
                        uint32_t aRequestedCount,
                        nsIEventTarget* aEventTarget) override;
+  NS_IMETHOD GetHasReceivedFIN(bool* aHasReceivedFIN) override;
 
  private:
   virtual ~WebTransportStreamProxy();

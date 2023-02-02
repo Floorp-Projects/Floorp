@@ -187,11 +187,15 @@ NS_IMETHODIMP WebTransportStreamProxy::GetReceiveStreamStats(
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Close() {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return CloseWithStatus(NS_BASE_STREAM_CLOSED);
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Available(uint64_t* aAvailable) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mReader) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return mReader->Available(aAvailable);
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::Read(char* aBuf, uint32_t aCount,
@@ -215,7 +219,11 @@ NS_IMETHODIMP WebTransportStreamProxy::IsNonBlocking(bool* aResult) {
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::CloseWithStatus(nsresult aStatus) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mReader) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return mReader->CloseWithStatus(aStatus);
 }
 
 NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
@@ -272,6 +280,12 @@ NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
     nsIOutputStreamCallback* aCallback, uint32_t aFlags,
     uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::GetHasReceivedFIN(
+    bool* aHasReceivedFIN) {
+  *aHasReceivedFIN = mWebTransportStream->RecvDone();
+  return NS_OK;
 }
 
 }  // namespace mozilla::net
