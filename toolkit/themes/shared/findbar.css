@@ -23,6 +23,13 @@ findbar[hidden] {
   transition-delay: 0s, 0s, 150ms;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  findbar {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
 findbar[noanim] {
   transition-duration: 0s !important;
   transition-delay: 0s !important;
