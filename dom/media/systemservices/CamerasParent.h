@@ -13,9 +13,9 @@
 #include "mozilla/ShmemPool.h"
 #include "mozilla/Atomics.h"
 #include "api/video/video_sink_interface.h"
-#include "common_video/include/incoming_video_stream.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include "video/render/incoming_video_stream.h"
 
 #include "CamerasChild.h"
 
