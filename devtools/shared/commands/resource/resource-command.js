@@ -1281,6 +1281,9 @@ loader.lazyRequireGetter(
   ResourceCommand.TYPES.ROOT_NODE,
   "resource://devtools/shared/commands/resource/legacy-listeners/root-node.js"
 );
+
+// @backward-compat { version 111 } The WebSocket legacy listener can be removed
+// once 111 is released.
 loader.lazyRequireGetter(
   LegacyListeners,
   ResourceCommand.TYPES.WEBSOCKET,
