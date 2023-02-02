@@ -9627,7 +9627,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor() {
     AutoRealm ar(cx_, callee_);
     templateObj = NewDenseFullyAllocatedArray(cx_, length, TenuredObject);
     if (!templateObj) {
-      cx_->recoverFromOutOfMemory();
+      cx_->clearPendingException();
       return AttachDecision::NoAction;
     }
   }
