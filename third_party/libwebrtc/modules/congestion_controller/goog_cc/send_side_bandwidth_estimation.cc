@@ -244,6 +244,9 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
   }
   ParseFieldTrial({&disable_receiver_limit_caps_only_},
                   key_value_config->Lookup("WebRTC-Bwe-ReceiverLimitCapsOnly"));
+  if (LossBasedBandwidthEstimatorV2Enabled()) {
+    loss_based_bandwidth_estimator_v2_.SetMinBitrate(min_bitrate_configured_);
+  }
 }
 
 SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
