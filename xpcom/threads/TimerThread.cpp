@@ -669,24 +669,29 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
     return rv;
   }
 
-  // Add the timer to our list.
-  if (!AddTimerInternal(aTimer)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Need to remove leading canceled timers because we're about to assume that
-  // mTimers[0] is the next timer to fire.
-  RemoveLeadingCanceledTimersInternal();
-
   // Awaken the timer thread if:
-  // - This is the new front timer, which may require the TimerThread to wake up
-  //   earlier than previously planned. AND/OR
+  // - This timer wants to fire *before* the Timer Thread is scheduled to wake
+  //   up. We don't track this directly but we know that we will have attempted
+  //   to wake up at the timeout for the first time in our list (if it exists),
+  //   so we can use that. Note: This is true even if the timer has since been
+  //   canceled.
+  // AND/OR
   // - The delay is 0, which is usually meant to be run as soon as possible.
   //   Note: Even if the thread is scheduled to wake up now/soon, on some
   //   systems there could be a significant delay compared to notifying, which
   //   is almost immediate; and some users of 0-delay depend on it being this
   //   fast!
-  if (mWaiting && (mTimers[0].Value() == aTimer || aTimer->mDelay.IsZero())) {
+  const bool wakeUpTimerThread =
+      mWaiting &&
+      (mTimers.Length() == 0 || aTimer->mTimeout < mTimers[0].Timeout() ||
+       aTimer->mDelay.IsZero());
+
+  // Add the timer to our list.
+  if (!AddTimerInternal(aTimer)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (wakeUpTimerThread) {
     mNotified = true;
     mMonitor.Notify();
   }
