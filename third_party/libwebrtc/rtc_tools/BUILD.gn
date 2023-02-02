@@ -278,6 +278,7 @@ if (!is_component_build) {
       "../test:test_support",
       "../test:video_test_common",
       "../test:video_test_support",
+      "../test/time_controller:time_controller",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
     ]
