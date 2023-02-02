@@ -517,6 +517,15 @@ bool Http3WebTransportStream::Done() const {
 void Http3WebTransportStream::Close(nsresult aResult) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3WebTransportStream::Close [this=%p]", this));
+  mTransaction = nullptr;
+  if (mSendStreamPipeIn) {
+    mSendStreamPipeIn->AsyncWait(nullptr, 0, 0, nullptr);
+    mSendStreamPipeIn->CloseWithStatus(aResult);
+  }
+  if (mReceiveStreamPipeOut) {
+    mReceiveStreamPipeOut->AsyncWait(nullptr, 0, 0, nullptr);
+    mReceiveStreamPipeOut->CloseWithStatus(aResult);
+  }
 }
 
 void Http3WebTransportStream::SendFin() {
