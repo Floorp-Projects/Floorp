@@ -280,9 +280,19 @@ webExtensionTargetPrototype._onDocShellDestroy = function(docShell) {
     .getInterface(Ci.nsIWebProgress);
   this._notifyDocShellDestroy(webProgress);
 
-  // If the destroyed docShell was the current docShell and the actor is
-  // not destroyed, switch to the fallback window
-  if (!this.isDestroyed() && docShell == this.docShell) {
+  // If the destroyed docShell:
+  // * was the current docShell,
+  // * the actor is not destroyed,
+  // * isn't the background page, as it means the addon is being shutdown or reloaded
+  //   and the target would be replaced by a new one to come, or everything is closing.
+  // => switch to the fallback window
+  if (
+    !this.isDestroyed() &&
+    docShell == this.docShell &&
+    !docShell.domWindow.location.href.includes(
+      "_generated_background_page.html"
+    )
+  ) {
     this._changeTopLevelDocument(this._searchForExtensionWindow());
   }
 };
