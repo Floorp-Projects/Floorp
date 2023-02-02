@@ -43,6 +43,12 @@ var HISTOGRAMS = {
     "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE_QM",
   "xpcom-will-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN",
   "xpcom-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_SHUTDOWN",
+
+  // The following keys appear in the JSON, but do not have associated
+  // histograms.
+  "xpcom-shutdown-threads": null,
+  XPCOMShutdownFinal: null,
+  CCPostLastCycleCollection: null,
 };
 
 nsTerminatorTelemetry.prototype = {
@@ -85,12 +91,13 @@ nsTerminatorTelemetry.prototype = {
 
         for (let k of Object.keys(data)) {
           let id = HISTOGRAMS[k];
+          if (id === null) {
+            // No histogram associated with this entry.
+            continue;
+          }
+
           try {
             let histogram = Services.telemetry.getHistogramById(id);
-            if (!histogram) {
-              throw new Error("Unknown histogram " + id);
-            }
-
             histogram.add(Number.parseInt(data[k]));
           } catch (ex) {
             // Make sure that the error is reported and causes test failures,
