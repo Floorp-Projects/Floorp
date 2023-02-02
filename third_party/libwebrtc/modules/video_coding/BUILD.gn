@@ -1122,7 +1122,6 @@ if (rtc_include_tests) {
       "../../test:video_test_common",
       "../rtp_rtcp:rtp_rtcp_format",
       "codecs/av1:dav1d_decoder",
-      "codecs/av1:libaom_av1_decoder",
       "//third_party/libyuv",
     ]
     if (build_with_mozilla) {
