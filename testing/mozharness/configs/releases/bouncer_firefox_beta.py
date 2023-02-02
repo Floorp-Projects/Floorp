@@ -112,7 +112,6 @@ config = {
                 "osx",
                 "win",
                 "win64",
-                "win64-aarch64",
             ],
         },
         "langpack-latest": {
@@ -123,7 +122,6 @@ config = {
                 "osx",
                 "win",
                 "win64",
-                "win64-aarch64",
             ],
         },
         "complete-mar": {
