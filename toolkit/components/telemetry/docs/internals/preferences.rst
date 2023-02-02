@@ -163,16 +163,6 @@ Preferences
 
   If a user has opted into the Pioneer program, this will contain their Pioneer ID.
 
-``toolkit.telemetry.prioping.enabled``
-
-  Whether the :doc:`../data/prio-ping` is enabled.
-  Defaults to true. Change requires restart.
-
-``toolkit.telemetry.prioping.dataLimit``
-
-  The number of encoded prio payloads which triggers an immediate :doc:`../data/prio-ping` with reason "max".
-  Default is 10 payloads.
-
 Data-choices notification
 -------------------------
 

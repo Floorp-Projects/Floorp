@@ -9,9 +9,6 @@ import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-// Other pings
-import { TelemetryPrioPing } from "resource://gre/modules/PrioPing.sys.mjs";
-
 const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -360,7 +357,7 @@ export var TelemetryScheduler = {
       this._log.trace("_schedulerTickLogic - Periodic ping due.");
       this._lastPeriodicPingTime = now;
       // Send other pings.
-      TelemetryPrioPing.periodicPing();
+      // ...currently no other pings exist
     }
 
     if (shouldSendDaily) {
