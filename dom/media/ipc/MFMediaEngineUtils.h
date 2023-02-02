@@ -49,6 +49,17 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
     } while (false)
 #endif
 
+#ifndef RETURN_PARAM_IF_FAILED
+#  define RETURN_PARAM_IF_FAILED(x, defaultOut)         \
+    do {                                                \
+      HRESULT rv = x;                                   \
+      if (MOZ_UNLIKELY(FAILED(rv))) {                   \
+        LOG_AND_WARNING("(" #x ") failed, rv=%lx", rv); \
+        return defaultOut;                              \
+      }                                                 \
+    } while (false)
+#endif
+
 #define ENGINE_MARKER(markerName) \
   PROFILER_MARKER(markerName, MEDIA_PLAYBACK, {}, MediaEngineMarker, Id())
 
@@ -63,6 +74,62 @@ const char* GUIDToStr(GUID aGUID);
 const char* MFVideoRotationFormatToStr(MFVideoRotationFormat aFormat);
 const char* MFVideoTransferFunctionToStr(MFVideoTransferFunction aFunc);
 const char* MFVideoPrimariesToStr(MFVideoPrimaries aPrimaries);
+
+template <typename T>
+class ScopedCoMem {
+ public:
+  ScopedCoMem() : mPtr(nullptr) {}
+
+  ~ScopedCoMem() { Reset(nullptr); }
+
+  ScopedCoMem(const ScopedCoMem&) = delete;
+  ScopedCoMem& operator=(const ScopedCoMem&) = delete;
+
+  T** operator&() {               // NOLINT
+    MOZ_ASSERT(mPtr == nullptr);  // To catch memory leaks.
+    return &mPtr;
+  }
+
+  operator T*() { return mPtr; }
+
+  T* operator->() {
+    MOZ_ASSERT(mPtr != nullptr);
+    return mPtr;
+  }
+
+  const T* operator->() const {
+    MOZ_ASSERT(mPtr != nullptr);
+    return mPtr;
+  }
+
+  explicit operator bool() const { return mPtr; }
+
+  friend bool operator==(const ScopedCoMem& lhs, std::nullptr_t) {
+    return lhs.Get() == nullptr;
+  }
+
+  friend bool operator==(std::nullptr_t, const ScopedCoMem& rhs) {
+    return rhs.Get() == nullptr;
+  }
+
+  friend bool operator!=(const ScopedCoMem& lhs, std::nullptr_t) {
+    return lhs.Get() != nullptr;
+  }
+
+  friend bool operator!=(std::nullptr_t, const ScopedCoMem& rhs) {
+    return rhs.Get() != nullptr;
+  }
+
+  void Reset(T* ptr) {
+    if (mPtr) CoTaskMemFree(mPtr);
+    mPtr = ptr;
+  }
+
+  T* Get() const { return mPtr; }
+
+ private:
+  T* mPtr;
+};
 
 }  // namespace mozilla
 
