@@ -7,6 +7,7 @@
 const statsExpectedByType = {
   "inbound-rtp": {
     expected: [
+      "trackIdentifier",
       "id",
       "timestamp",
       "type",
@@ -492,6 +493,10 @@ function pedanticChecks(report) {
       //
       // Required fields
       //
+
+      // trackIdentifier
+      is(typeof stat.trackIdentifier, "string");
+      isnot(stat.trackIdentifier, "");
 
       // packetsReceived
       ok(
