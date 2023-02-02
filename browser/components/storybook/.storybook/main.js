@@ -11,8 +11,9 @@ const projectRoot = path.resolve(__dirname, "../../../../");
 
 module.exports = {
   stories: [
+    "../**/*.stories.md",
     "../stories/**/*.stories.mdx",
-    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
     `${projectRoot}/toolkit/**/*.stories.@(js|jsx|mjs|ts|tsx)`,
   ],
   // Additions to the staticDirs might also need to get added to
@@ -48,6 +49,12 @@ module.exports = {
     config.resolve.alias[
       "lit.all.mjs"
     ] = `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`;
+    // @mdx-js/react@1.x.x versions don't get hoisted to the root node_modules
+    // folder due to the versions of React it accepts as a peer dependency. That
+    // means we have to go one level deeper and look in the node_modules of
+    // @storybook/addon-docs, which depends on @mdx-js/react.
+    config.resolve.alias["@mdx-js/react"] =
+      "browser/components/storybook/node_modules/@storybook/addon-docs/node_modules/@mdx-js/react";
 
     // The @storybook/web-components project uses lit-html. Redirect it to our
     // bundled version.
@@ -63,6 +70,41 @@ module.exports = {
       test: /\.mjs/,
       loader: path.resolve(__dirname, "./chrome-uri-loader.js"),
     });
+
+    // We're adding a rule for files matching this pattern in order to support
+    // writing docs only stories in plain markdown.
+    const MD_STORY_REGEX = /(stories|story)\.md$/;
+
+    // Find the existing rule for MDX stories.
+    let mdxStoryTest = /(stories|story)\.mdx$/.toString();
+    let mdxRule = config.module.rules.find(
+      rule => rule.test.toString() === mdxStoryTest
+    );
+
+    // Use a custom Webpack loader to transform our markdown stories into MDX,
+    // then run our new MDX through the same loaders that Storybook usually uses
+    // for MDX files. This is how we get a docs page from plain markdown.
+    config.module.rules.push({
+      test: MD_STORY_REGEX,
+      use: [
+        ...mdxRule.use,
+        { loader: path.resolve(__dirname, "./markdown-story-loader.js") },
+      ],
+    });
+
+    // Find the existing rule for markdown files.
+    let markdownTest = /\.md$/.toString();
+    let markdownRuleIndex = config.module.rules.findIndex(
+      rule => rule.test.toString() === markdownTest
+    );
+    let markdownRule = config.module.rules[markdownRuleIndex];
+
+    // Modify the existing markdown rule so it doesn't process .stories.md
+    // files, but still treats any other markdown files as asset/source.
+    config.module.rules[markdownRuleIndex] = {
+      ...markdownRule,
+      exclude: MD_STORY_REGEX,
+    };
 
     config.optimization = {
       splitChunks: false,

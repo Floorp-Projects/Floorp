@@ -27,23 +27,17 @@ commands, or with your personal npm/node that happens to be compatible.
 This is the recommended approach for installing dependencies and running
 Storybook locally.
 
-To start Storybook the first time (or if it's been a while since you last
-installed), run:
+To install dependencies and start Storybook, just run:
 
 ```sh
 # This uses npm ci under the hood to install the package-lock.json exactly.
-./mach storybook install
-```
-
-Once you've got your dependencies installed you can start Storybook. You should
-run your local build to test in Storybook since chrome:// URLs are currently
-being pulled from the running browser, so any changes to common-shared.css for
-example will come from your build.
-
-```sh
-# Start the Storybook server.
 ./mach storybook
 ```
+
+This single command will first install any missing dependencies then start the
+local Storybook server. You should run your local build to test in Storybook
+since chrome:// URLs are currently being pulled from the running browser, so any
+changes to common-shared.css for example will come from your build.
 
 The Storybook server will continue running and will watch for component file
 changes. To access your local Storybook preview you can use the `launch`
@@ -181,7 +175,7 @@ throughout Firefox. You can import the component into `html`/`xhtml` files via a
 `script` tag with `type="module"`:
 
 ```html
-<script type="module" src="chrome://global/content/elements/your-component-name.mjs">
+<script type="module" src="chrome://global/content/elements/your-component-name.mjs"/>
 ```
 
 ### Common pitfalls
