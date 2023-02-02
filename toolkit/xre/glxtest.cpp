@@ -177,11 +177,16 @@ extern pid_t glxtest_pid;
 }  // namespace widget
 }  // namespace mozilla
 
+#ifdef MOZ_WAYLAND
 // bits to use decoding childvaapitest() return values.
 constexpr int CODEC_HW_H264 = 1 << 4;
 constexpr int CODEC_HW_VP8 = 1 << 5;
 constexpr int CODEC_HW_VP9 = 1 << 6;
 constexpr int CODEC_HW_AV1 = 1 << 7;
+
+#  define NVIDIA_VENDOR_STRING "NVIDIA Corporation"
+static bool run_vaapi_test = false;
+#endif
 
 // the write end of the pipe, which we're going to write to
 static int write_end_of_the_pipe = -1;
@@ -604,6 +609,13 @@ static bool get_egl_gl_status(EGLDisplay dpy,
     }
     return false;
   }
+
+#ifdef MOZ_WAYLAND
+  // Enable VA-API testing on EGL/non-NVIDIA setup (Bug 1799747).
+  if (!strstr((const char*)vendorString, NVIDIA_VENDOR_STRING)) {
+    run_vaapi_test = true;
+  }
+#endif
 
   EGLDeviceEXT device;
   if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
@@ -1228,7 +1240,9 @@ int childgltest() {
   }
 
 #ifdef MOZ_WAYLAND
-  vaapitest();
+  if (run_vaapi_test) {
+    vaapitest();
+  }
 #endif
 
   // Finally write buffered data to the pipe.
