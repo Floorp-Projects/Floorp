@@ -414,6 +414,10 @@ var PingPicker = {
       }
     }
 
+    // augment "current ping payload" with origin telemetry
+    const originSnapshot = Telemetry.getOriginSnapshot(false /* clear */);
+    ping.payload.origins = originSnapshot;
+
     displayPingData(ping, true);
   },
 
@@ -1955,6 +1959,34 @@ var Events = {
   },
 };
 
+var Origins = {
+  render(aOrigins) {
+    let originSection = document.getElementById("origins");
+    removeAllChildNodes(originSection);
+
+    const headings = [
+      "about-telemetry-origin-origin",
+      "about-telemetry-origin-count",
+    ];
+
+    let hasData = false;
+    for (let [metric, origins] of Object.entries(aOrigins || {})) {
+      if (!Object.entries(origins).length) {
+        continue;
+      }
+      hasData = true;
+      const metricHeader = document.createElement("caption");
+      metricHeader.appendChild(document.createTextNode(metric));
+
+      const table = GenericTable.render(Object.entries(origins), headings);
+      table.appendChild(metricHeader);
+      originSection.appendChild(table);
+    }
+
+    setHasData("origin-telemetry-section", hasData);
+  },
+};
+
 /**
  * Helper function for showing either the toggle element or "No data collected" message for a section
  *
@@ -2611,6 +2643,9 @@ function displayRichPingData(ping, updatePayloadList) {
   Events.render(payload);
 
   LateWritesSingleton.renderLateWrites(payload.lateWrites);
+
+  // Show origin telemetry.
+  Origins.render(payload.origins);
 
   // Show simple measurements
   SimpleMeasurements.render(payload);

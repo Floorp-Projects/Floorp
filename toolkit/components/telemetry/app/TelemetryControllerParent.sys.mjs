@@ -58,6 +58,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
   TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
   TelemetryEventPing: "resource://gre/modules/EventPing.sys.mjs",
+  TelemetryPrioPing: "resource://gre/modules/PrioPing.sys.mjs",
   UninstallPing: "resource://gre/modules/UninstallPing.sys.mjs",
 });
 
@@ -869,6 +870,7 @@ var Impl = {
           }
 
           lazy.TelemetryEventPing.startup();
+          lazy.TelemetryPrioPing.startup();
 
           if (uploadEnabled) {
             await this.saveUninstallPing().catch(e =>
@@ -918,6 +920,7 @@ var Impl = {
       lazy.UpdatePing.shutdown();
 
       lazy.TelemetryEventPing.shutdown();
+      await lazy.TelemetryPrioPing.shutdown();
 
       // Shutdown the sync ping if it is initialized - this is likely, but not
       // guaranteed, to submit a "shutdown" sync ping.
