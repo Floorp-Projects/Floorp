@@ -71,7 +71,7 @@ TASK_CONFIG_TESTS = {
         ),
         (
             ["--worker-suffix", "b-linux=-dev"],
-            {"worker-overrides": {"b-linux": "gecko-1/b-linux-dev"}},
+            {"worker-overrides": {"b-linux": "gecko-1/b-linux-gcp-dev"}},
         ),
         (
             [
