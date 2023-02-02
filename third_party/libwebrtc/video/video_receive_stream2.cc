@@ -36,7 +36,6 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "call/rtp_stream_receiver_controller_interface.h"
 #include "call/rtx_receive_stream.h"
-#include "common_video/include/incoming_video_stream.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -54,6 +53,7 @@
 #include "video/call_stats2.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
+#include "video/render/incoming_video_stream.h"
 #include "video/task_queue_frame_decode_scheduler.h"
 
 namespace webrtc {
