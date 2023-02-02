@@ -932,6 +932,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_reset_required = true;
   }
 
+  // TODO(webrtc:14451) : Move AlignmentAdjuster into EncoderStreamFactory
   // Possibly adjusts scale_resolution_down_by in `encoder_config_` to limit the
   // alignment value.
   AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
@@ -948,12 +949,13 @@ void VideoStreamEncoder::ReconfigureEncoder() {
             encoder_config_.video_format.name, encoder_config_.max_qp,
             encoder_config_.content_type ==
                 webrtc::VideoEncoderConfig::ContentType::kScreen,
-            encoder_config_.legacy_conference_mode);
+            encoder_config_.legacy_conference_mode, encoder_->GetEncoderInfo());
 
     streams = factory->CreateEncoderStreams(
         last_frame_info_->width, last_frame_info_->height, encoder_config_);
   }
 
+  // TODO(webrtc:14451) : Move AlignmentAdjuster into EncoderStreamFactory
   // Get alignment when actual number of layers are known.
   int alignment = AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
       encoder_->GetEncoderInfo(), &encoder_config_, streams.size());

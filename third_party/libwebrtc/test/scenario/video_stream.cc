@@ -224,6 +224,7 @@ CreateEncoderSpecificSettings(VideoStreamConfig config) {
 }
 
 VideoEncoderConfig CreateVideoEncoderConfig(VideoStreamConfig config) {
+  webrtc::VideoEncoder::EncoderInfo encoder_info;
   VideoEncoderConfig encoder_config;
   encoder_config.codec_type = config.encoder.codec;
   encoder_config.content_type = ConvertContentType(config.encoder.content_type);
@@ -241,7 +242,8 @@ VideoEncoderConfig CreateVideoEncoderConfig(VideoStreamConfig config) {
                        VideoStreamConfig::Encoder::ContentType::kScreen;
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
-            cricket_codec, kDefaultMaxQp, screenshare, screenshare);
+            cricket_codec, kDefaultMaxQp, screenshare, screenshare,
+            encoder_info);
   } else {
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<DefaultVideoStreamFactory>();

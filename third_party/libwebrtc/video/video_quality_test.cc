@@ -108,13 +108,13 @@ class VideoStreamFactory
 
  private:
   std::vector<VideoStream> CreateEncoderStreams(
-      int width,
-      int height,
+      int frame_width,
+      int frame_height,
       const VideoEncoderConfig& encoder_config) override {
     // The highest layer must match the incoming resolution.
     std::vector<VideoStream> streams = streams_;
-    streams[streams_.size() - 1].height = height;
-    streams[streams_.size() - 1].width = width;
+    streams[streams_.size() - 1].height = frame_height;
+    streams[streams_.size() - 1].width = frame_width;
 
     streams[0].bitrate_priority = encoder_config.bitrate_priority;
     return streams;
@@ -613,6 +613,7 @@ void VideoQualityTest::FillScalabilitySettings(
     const std::vector<std::string>& sl_descriptors) {
   if (params->ss[video_idx].streams.empty() &&
       params->ss[video_idx].infer_streams) {
+    webrtc::VideoEncoder::EncoderInfo encoder_info;
     webrtc::VideoEncoderConfig encoder_config;
     encoder_config.codec_type =
         PayloadStringToCodecType(params->video[video_idx].codec);
@@ -629,11 +630,11 @@ void VideoQualityTest::FillScalabilitySettings(
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
             params->video[video_idx].codec, kDefaultMaxQp,
-            params->screenshare[video_idx].enabled, true);
+            params->screenshare[video_idx].enabled, true, encoder_info);
     params->ss[video_idx].streams =
         encoder_config.video_stream_factory->CreateEncoderStreams(
-            static_cast<int>(params->video[video_idx].width),
-            static_cast<int>(params->video[video_idx].height), encoder_config);
+            params->video[video_idx].width, params->video[video_idx].height,
+            encoder_config);
   } else {
     // Read VideoStream and SpatialLayer elements from a list of comma separated
     // lists. To use a default value for an element, use -1 or leave empty.
@@ -707,6 +708,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
   RTC_CHECK(num_video_streams_ > 0);
   video_encoder_configs_.resize(num_video_streams_);
   std::string generic_codec_name;
+  webrtc::VideoEncoder::EncoderInfo encoder_info;
   for (size_t video_idx = 0; video_idx < num_video_streams_; ++video_idx) {
     video_send_configs_.push_back(VideoSendStream::Config(send_transport));
     video_encoder_configs_.push_back(VideoEncoderConfig());
@@ -804,7 +806,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
             params_.video[video_idx].codec,
             params_.ss[video_idx].streams[0].max_qp,
-            params_.screenshare[video_idx].enabled, true);
+            params_.screenshare[video_idx].enabled, true, encoder_info);
 
     video_encoder_configs_[video_idx].spatial_layers =
         params_.ss[video_idx].spatial_layers;

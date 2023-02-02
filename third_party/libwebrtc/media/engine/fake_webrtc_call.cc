@@ -248,13 +248,14 @@ void FakeVideoSendStream::OnFrame(const webrtc::VideoFrame& frame) {
           encoder_config_.video_stream_factory->CreateEncoderStreams(
               frame.width(), frame.height(), encoder_config_);
     } else {
+      webrtc::VideoEncoder::EncoderInfo encoder_info;
       rtc::scoped_refptr<
           webrtc::VideoEncoderConfig::VideoStreamFactoryInterface>
           factory = rtc::make_ref_counted<cricket::EncoderStreamFactory>(
               encoder_config_.video_format.name, encoder_config_.max_qp,
               encoder_config_.content_type ==
                   webrtc::VideoEncoderConfig::ContentType::kScreen,
-              encoder_config_.legacy_conference_mode);
+              encoder_config_.legacy_conference_mode, encoder_info);
 
       video_streams_ = factory->CreateEncoderStreams(
           frame.width(), frame.height(), encoder_config_);
@@ -286,12 +287,13 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
     video_streams_ = config.video_stream_factory->CreateEncoderStreams(
         width, height, config);
   } else {
+    webrtc::VideoEncoder::EncoderInfo encoder_info;
     rtc::scoped_refptr<webrtc::VideoEncoderConfig::VideoStreamFactoryInterface>
         factory = rtc::make_ref_counted<cricket::EncoderStreamFactory>(
             config.video_format.name, config.max_qp,
             config.content_type ==
                 webrtc::VideoEncoderConfig::ContentType::kScreen,
-            config.legacy_conference_mode);
+            config.legacy_conference_mode, encoder_info);
 
     video_streams_ = factory->CreateEncoderStreams(width, height, config);
   }
