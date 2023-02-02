@@ -45,8 +45,19 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   // constructor of WriteableStream so that it doesn't make those calls.
   // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1801214.
   enum class HoldDropJSObjectsCaller { Implicit, Explicit };
+
+  // XXX: Do not call this constructor outside of dom/streams/ unless you are
+  // subclassing, instead use WritableStream::CreateNative, because currently
+  // the constructor is fallible. (See bug 1762233)
+  // Subclasses need to call SetUpNative method separately as a part of the
+  // construction.
   explicit WritableStream(const GlobalObject& aGlobal,
                           HoldDropJSObjectsCaller aHoldDropCaller);
+  // XXX: Do not call this constructor outside of dom/streams/ unless you are
+  // subclassing, instead use WritableStream::CreateNative, because currently
+  // the constructor is fallible. (See bug 1762233)
+  // Subclasses need to call SetUpNative method separately as a part of the
+  // construction.
   explicit WritableStream(nsIGlobalObject* aGlobal,
                           HoldDropJSObjectsCaller aHoldDropCaller);
 
@@ -158,15 +169,26 @@ class WritableStream : public nsISupports, public nsWrapperCache {
 
   // https://streams.spec.whatwg.org/#writablestream-set-up
  protected:
+  // Sets up the WritableStream. Intended for subclasses.
+  // TODO: Do this in constructor if bug 1762233 makes this infallible.
   MOZ_CAN_RUN_SCRIPT void SetUpNative(
       JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
+      Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+      ErrorResult& aRv);
+
+ public:
+  // Creates and sets up a WritableStream. Use SetUpNative for this purpose in
+  // subclasses.
+  // TODO: Do this in constructor if bug 1762233 makes this infallible.
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream> CreateNative(
+      JSContext* aCx, nsIGlobalObject& aGlobal,
+      UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
       Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
       ErrorResult& aRv);
 
   // The following definitions must only be used on WritableStream instances
   // initialized via the above set up algorithm:
 
- public:
   // https://streams.spec.whatwg.org/#writablestream-error
   MOZ_CAN_RUN_SCRIPT void ErrorNative(JSContext* aCx,
                                       JS::Handle<JS::Value> aError,
