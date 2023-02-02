@@ -10,6 +10,9 @@
 
 #include "modules/video_coding/decoder_database.h"
 
+#include <memory>
+#include <utility>
+
 #include "api/test/mock_video_decoder.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -25,10 +28,16 @@ TEST(VCMDecoderDatabaseTest, RegisterExternalDecoder) {
   constexpr int kPayloadType = 1;
   ASSERT_FALSE(db.IsExternalDecoderRegistered(kPayloadType));
 
-  NiceMock<MockVideoDecoder> decoder;
-  db.RegisterExternalDecoder(kPayloadType, &decoder);
+  auto decoder = std::make_unique<NiceMock<MockVideoDecoder>>();
+  bool decoder_deleted = false;
+  EXPECT_CALL(*decoder, Destruct).WillOnce([&decoder_deleted] {
+    decoder_deleted = true;
+  });
+
+  db.RegisterExternalDecoder(kPayloadType, std::move(decoder));
   EXPECT_TRUE(db.IsExternalDecoderRegistered(kPayloadType));
-  EXPECT_EQ(db.DeregisterExternalDecoder(kPayloadType), &decoder);
+  db.DeregisterExternalDecoder(kPayloadType);
+  EXPECT_TRUE(decoder_deleted);
   EXPECT_FALSE(db.IsExternalDecoderRegistered(kPayloadType));
 }
 

@@ -10,6 +10,9 @@
 
 #include "modules/video_coding/decoder_database.h"
 
+#include <memory>
+#include <utility>
+
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -19,36 +22,34 @@ VCMDecoderDatabase::VCMDecoderDatabase() {
   decoder_sequence_checker_.Detach();
 }
 
-VideoDecoder* VCMDecoderDatabase::DeregisterExternalDecoder(
-    uint8_t payload_type) {
+void VCMDecoderDatabase::DeregisterExternalDecoder(uint8_t payload_type) {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   auto it = decoders_.find(payload_type);
   if (it == decoders_.end()) {
-    return nullptr;
+    return;
   }
 
   // We can't use payload_type to check if the decoder is currently in use,
   // because payload type may be out of date (e.g. before we decode the first
   // frame after RegisterReceiveCodec).
-  if (current_decoder_ && current_decoder_->IsSameDecoder(it->second)) {
+  if (current_decoder_ && current_decoder_->IsSameDecoder(it->second.get())) {
     // Release it if it was registered and in use.
     current_decoder_ = absl::nullopt;
   }
-  VideoDecoder* ret = it->second;
   decoders_.erase(it);
-  return ret;
 }
 
 // Add the external decoder object to the list of external decoders.
 // Won't be registered as a receive codec until RegisterReceiveCodec is called.
 void VCMDecoderDatabase::RegisterExternalDecoder(
     uint8_t payload_type,
-    VideoDecoder* external_decoder) {
+    std::unique_ptr<VideoDecoder> external_decoder) {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   // If payload value already exists, erase old and insert new.
   DeregisterExternalDecoder(payload_type);
   if (external_decoder) {
-    decoders_[payload_type] = external_decoder;
+    decoders_.emplace(
+        std::make_pair(payload_type, std::move(external_decoder)));
   }
 }
 
@@ -131,7 +132,7 @@ void VCMDecoderDatabase::CreateAndInitDecoder(const VCMEncodedFrame& frame) {
     RTC_LOG(LS_ERROR) << "No decoder of this type exists.";
     return;
   }
-  current_decoder_.emplace(external_dec_item->second);
+  current_decoder_.emplace(external_dec_item->second.get());
 
   // Copy over input resolutions to prevent codec reinitialization due to
   // the first frame being of a different resolution than the database values.
