@@ -1404,3 +1404,13 @@ def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
             continue
         if "eslint-build" in name:
             yield name
+
+
+@_target_task("holly_tasks")
+def target_tasks_holly(full_task_graph, parameters, graph_config):
+    """Bug 1814661: only run updatebot tasks on holly"""
+
+    def filter(task):
+        return task.kind == "updatebot"
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
