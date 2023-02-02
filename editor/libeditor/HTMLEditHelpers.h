@@ -373,7 +373,7 @@ class MOZ_STACK_CLASS SplitNodeResult final : public CaretPoint {
         mDirection(aDirection) {}
 
   SplitNodeResult ToHandledResult() const {
-    mHandledCaretPoint = true;
+    CaretPointHandled();
     SplitNodeResult result(mDirection);
     result.mPreviousNode = GetPreviousContent();
     result.mNextNode = GetNextContent();
@@ -381,7 +381,7 @@ class MOZ_STACK_CLASS SplitNodeResult final : public CaretPoint {
     // Don't recompute the caret position because in this case, split has not
     // occurred yet.  In the case,  the caller shouldn't need to update
     // selection.
-    result.mCaretPoint = mCaretPoint;
+    result.SetCaretPoint(CaretPointRef());
     return result;
   }
 
@@ -448,7 +448,7 @@ class MOZ_STACK_CLASS SplitNodeResult final : public CaretPoint {
     aSplitNodeResult.UnmarkAsHandledCaretPoint();
     aDeeperSplitNodeResult.IgnoreCaretPointSuggestion();
     if (aSplitNodeResult.DidSplit() ||
-        !aDeeperSplitNodeResult.mCaretPoint.IsSet()) {
+        !aDeeperSplitNodeResult.HasCaretPointSuggestion()) {
       return std::move(aSplitNodeResult);
     }
     SplitNodeResult result(std::move(aSplitNodeResult));
@@ -495,12 +495,7 @@ class MOZ_STACK_CLASS SplitNodeResult final : public CaretPoint {
   // for representing the point.
   EditorDOMPoint mGivenSplitPoint;
 
-  // The point which is a good point to put caret from point of view the
-  // splitter.
-  EditorDOMPoint mCaretPoint;
-
   SplitNodeDirection mDirection;
-  bool mutable mHandledCaretPoint = false;
 };
 
 /*****************************************************************************
