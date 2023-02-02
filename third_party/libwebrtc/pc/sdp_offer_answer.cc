@@ -133,11 +133,6 @@ void NoteAddIceCandidateResult(int result) {
                             kAddIceCandidateMax);
 }
 
-void NoteKeyProtocol(KeyExchangeProtocolType protocol_type) {
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.KeyProtocol", protocol_type,
-                            kEnumCounterKeyProtocolMax);
-}
-
 std::map<std::string, const cricket::ContentGroup*> GetBundleGroupsByMid(
     const SessionDescription* desc) {
   std::vector<const cricket::ContentGroup*> bundle_groups =
@@ -331,9 +326,9 @@ RTCError VerifyCrypto(const SessionDescription* desc,
     if (content_info.rejected) {
       continue;
     }
-    // Note what media is used with each crypto protocol, for all sections.
-    NoteKeyProtocol(dtls_enabled ? webrtc::kEnumCounterKeyProtocolDtls
-                                 : webrtc::kEnumCounterKeyProtocolSdes);
+#if !defined(WEBRTC_FUCHSIA)
+    RTC_CHECK(dtls_enabled) << "SDES protocol is only allowed in Fuchsia";
+#endif
     const std::string& mid = content_info.name;
     auto it = bundle_groups_by_mid.find(mid);
     const cricket::ContentGroup* bundle =
