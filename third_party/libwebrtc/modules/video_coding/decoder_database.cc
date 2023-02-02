@@ -47,14 +47,15 @@ void VCMDecoderDataBase::RegisterExternalDecoder(
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
   // If payload value already exists, erase old and insert new.
   DeregisterExternalDecoder(payload_type);
-  decoders_[payload_type] = external_decoder;
+  if (external_decoder) {
+    decoders_[payload_type] = external_decoder;
+  }
 }
 
 bool VCMDecoderDataBase::IsExternalDecoderRegistered(
     uint8_t payload_type) const {
   RTC_DCHECK_RUN_ON(&decoder_sequence_checker_);
-  return payload_type == current_payload_type_ ||
-         decoders_.find(payload_type) != decoders_.end();
+  return decoders_.find(payload_type) != decoders_.end();
 }
 
 void VCMDecoderDataBase::RegisterReceiveCodec(
@@ -76,6 +77,11 @@ bool VCMDecoderDataBase::DeregisterReceiveCodec(uint8_t payload_type) {
     current_payload_type_ = absl::nullopt;
   }
   return true;
+}
+
+void VCMDecoderDataBase::DeregisterReceiveCodecs() {
+  current_payload_type_ = absl::nullopt;
+  decoder_settings_.clear();
 }
 
 VCMGenericDecoder* VCMDecoderDataBase::GetDecoder(
@@ -112,8 +118,8 @@ VCMGenericDecoder* VCMDecoderDataBase::GetDecoder(
 
 void VCMDecoderDataBase::CreateAndInitDecoder(const VCMEncodedFrame& frame) {
   uint8_t payload_type = frame.PayloadType();
-  RTC_LOG(LS_INFO) << "Initializing decoder with payload type '"
-                   << int{payload_type} << "'.";
+  RTC_DLOG(LS_INFO) << "Initializing decoder with payload type '"
+                    << int{payload_type} << "'.";
   auto decoder_item = decoder_settings_.find(payload_type);
   if (decoder_item == decoder_settings_.end()) {
     RTC_LOG(LS_ERROR) << "Can't find a decoder associated with payload type: "

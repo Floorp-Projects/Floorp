@@ -40,6 +40,7 @@ class VCMDecoderDataBase {
   void RegisterReceiveCodec(uint8_t payload_type,
                             const VideoDecoder::Settings& settings);
   bool DeregisterReceiveCodec(uint8_t payload_type);
+  void DeregisterReceiveCodecs();
 
   // Returns a decoder specified by frame.PayloadType. The decoded frame
   // callback of the decoder is set to `decoded_frame_callback`. If no such
