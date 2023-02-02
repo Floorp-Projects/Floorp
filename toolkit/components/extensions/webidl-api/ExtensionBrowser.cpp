@@ -10,6 +10,7 @@
 #include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
 #include "mozilla/dom/WorkerScope.h"           // GetWorkerPrivateFromContext
 #include "mozilla/extensions/ExtensionAlarms.h"
+#include "mozilla/extensions/ExtensionBrowserSettings.h"
 #include "mozilla/extensions/ExtensionDns.h"
 #include "mozilla/extensions/ExtensionMockAPI.h"
 #include "mozilla/extensions/ExtensionPort.h"
@@ -34,6 +35,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionAlarms)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionBrowserSettings)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionDns)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionProxy)
@@ -48,6 +50,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionAlarms)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionBrowserSettings)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionDns)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
@@ -201,6 +204,14 @@ ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
   }
 
   return mExtensionAlarms;
+}
+
+ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
+  if (!mExtensionBrowserSettings) {
+    mExtensionBrowserSettings = new ExtensionBrowserSettings(mGlobal, this);
+  }
+
+  return mExtensionBrowserSettings;
 }
 
 ExtensionDns* ExtensionBrowser::GetExtensionDns() {
