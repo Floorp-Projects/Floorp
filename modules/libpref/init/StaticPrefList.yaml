@@ -3498,7 +3498,7 @@
 # Enable Screen Orientation lock
 - name: dom.screenorientation.allow-lock
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to enable the JavaScript start-up cache. This causes one of the first
