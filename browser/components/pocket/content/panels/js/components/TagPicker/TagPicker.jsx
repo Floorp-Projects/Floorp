@@ -181,9 +181,8 @@ function TagPicker(props) {
                     className="stp_tag_picker_tag_remove"
                     onClick={() => addTag(tag)}
                   >
-                    +
+                    + {tag}
                   </button>
-                  {tag}
                 </div>
               ))}
           </div>
