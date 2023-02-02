@@ -267,6 +267,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
 
             auto constructCommonInboundRtpStats =
                 [&](RTCInboundRtpStreamStats& aLocal) {
+                  aLocal.mTrackIdentifier = recvTrackId;
                   aLocal.mTimestamp.Construct(
                       pipeline->GetTimestampMaker().GetNow());
                   aLocal.mId.Construct(localId);

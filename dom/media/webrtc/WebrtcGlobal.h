@@ -296,6 +296,7 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
   typedef mozilla::dom::RTCInboundRtpStreamStats paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mTrackIdentifier);
     WriteParam(aWriter, aParam.mRemoteId);
     WriteParam(aWriter, aParam.mFramesDecoded);
     WriteParam(aWriter, aParam.mFrameWidth);
@@ -332,7 +333,8 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &(aResult->mRemoteId)) &&
+    return ReadParam(aReader, &(aResult->mTrackIdentifier)) &&
+           ReadParam(aReader, &(aResult->mRemoteId)) &&
            ReadParam(aReader, &(aResult->mFramesDecoded)) &&
            ReadParam(aReader, &(aResult->mFrameWidth)) &&
            ReadParam(aReader, &(aResult->mFrameHeight)) &&
