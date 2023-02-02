@@ -43,13 +43,13 @@ add_task(async function() {
     } = require("resource://devtools/server/actors/resources/index.js");
 
     // Retrieve the target actor instance and its watcher for console messages
-    const targetActor = TargetActorRegistry.getTopLevelTargetActorForContext(
+    const targetActor = TargetActorRegistry.getTargetActors(
       {
         type: "browser-element",
         browserId: content.browsingContext.browserId,
       },
       _connectionPrefix
-    );
+    ).find(actor => actor.isTopLevelTarget);
     ok(targetActor, "Got the top level target actor from the content process");
     const watcher = getResourceWatcher(targetActor, TYPES.CONSOLE_MESSAGE);
 
