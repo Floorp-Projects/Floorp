@@ -197,10 +197,12 @@ class AwesomeBarView(
 
         if (!searchEngine.isNullOrEmpty()) {
             searchEngine = when (searchEngine) {
-                GOOGLE_SEARCH_ENGINE_NAME -> activity.getString(
+                GOOGLE_SEARCH_ENGINE_NAME -> getString(
+                    activity,
                     R.string.google_search_engine_suggestion_header,
                 )
-                else -> activity.getString(
+                else -> getString(
+                    activity,
                     R.string.other_default_search_engine_suggestion_header,
                     searchEngine,
                 )
@@ -208,6 +210,20 @@ class AwesomeBarView(
         }
 
         return searchEngine
+    }
+
+    /**
+     * Get a suggestions header if [currentEngineName] is the one of the default search engine.
+     *
+     * @param currentEngine The currently selected search engine.
+     */
+    private fun getSearchEngineSuggestionsHeader(currentEngine: SearchEngine?): String? {
+        val defaultSearchEngine = activity.components.core.store.state.search.selectedOrDefaultSearchEngine
+
+        return when (defaultSearchEngine == currentEngine) {
+            true -> getSearchEngineSuggestionsHeader()
+            false -> null
+        }
     }
 
     fun update(state: SearchFragmentState) {
@@ -375,7 +391,7 @@ class AwesomeBarView(
             searchEngine = validSearchEngine,
             icon = getDrawable(activity, R.drawable.ic_history)?.toBitmap(),
             engine = engineForSpeculativeConnects,
-            suggestionsHeader = getSearchEngineSuggestionsHeader(),
+            suggestionsHeader = getSearchEngineSuggestionsHeader(searchEngineSource.searchEngine),
         )
     }
 
@@ -544,6 +560,11 @@ class AwesomeBarView(
         @VisibleForTesting
         internal fun getDrawable(context: Context, resId: Int): Drawable? {
             return AppCompatResources.getDrawable(context, resId)
+        }
+
+        @VisibleForTesting
+        internal fun getString(context: Context, resId: Int, vararg formatArgs: String?): String {
+            return context.getString(resId, *formatArgs)
         }
     }
 }

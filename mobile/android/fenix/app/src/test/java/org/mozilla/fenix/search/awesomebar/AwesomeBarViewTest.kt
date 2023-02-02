@@ -12,6 +12,9 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.CombinedHistorySuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
@@ -42,7 +45,7 @@ import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AwesomeBarViewTest {
-    private val activity: HomeActivity = mockk(relaxed = true)
+    private var activity: HomeActivity = mockk(relaxed = true)
     private lateinit var awesomeBarView: AwesomeBarView
 
     @Before
@@ -603,11 +606,75 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN a search engine is available WHEN asking for a search term provider THEN return a valid provider`() {
-        val searchEngineSource = SearchEngineSource.Default(mockk())
+        val searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true))
 
         val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
 
         assertTrue(result is SearchTermSuggestionsProvider)
+    }
+
+    @Test
+    fun `GIVEN the default search engine WHEN asking for a search term provider THEN the provider should have a suggestions header`() {
+        val engine: SearchEngine = mockk {
+            every { name } returns "Test"
+        }
+        val searchEngineSource = SearchEngineSource.Default(engine)
+        every { AwesomeBarView.Companion.getString(any(), any(), any()) } answers {
+            "Search Test"
+        }
+
+        mockkStatic("mozilla.components.browser.state.state.SearchStateKt") {
+            every { any<SearchState>().selectedOrDefaultSearchEngine } returns engine
+
+            val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
+
+            assertTrue(result is SearchTermSuggestionsProvider)
+            assertEquals("Search Test", result?.groupTitle())
+        }
+    }
+
+    @Test
+    fun `GIVEN a shortcut search engine selected WHEN asking for a search term provider THEN the provider should not have a suggestions header`() {
+        val defaultEngine: SearchEngine = mockk {
+            every { name } returns "Test"
+        }
+        val otherEngine: SearchEngine = mockk {
+            every { name } returns "Other"
+        }
+        val searchEngineSource = SearchEngineSource.Shortcut(otherEngine)
+        every { AwesomeBarView.Companion.getString(any(), any(), any()) } answers {
+            "Search Test"
+        }
+
+        mockkStatic("mozilla.components.browser.state.state.SearchStateKt") {
+            every { any<SearchState>().selectedOrDefaultSearchEngine } returns defaultEngine
+
+            val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
+
+            assertTrue(result is SearchTermSuggestionsProvider)
+            assertNull(result?.groupTitle())
+        }
+    }
+
+    @Test
+    fun `GIVEN the default search engine is unknown WHEN asking for a search term provider THEN the provider should not have a suggestions header`() {
+        val defaultEngine: SearchEngine? = null
+        val otherEngine: SearchEngine = mockk {
+            every { name } returns "Other"
+        }
+        val searchEngineSource = SearchEngineSource.Shortcut(otherEngine)
+        every { AwesomeBarView.Companion.getString(any(), any(), any()) } answers {
+            "Search Test"
+        }
+
+        mockkStatic("mozilla.components.browser.state.state.SearchStateKt") {
+            every { any<SearchState>().selectedOrDefaultSearchEngine } returns defaultEngine
+
+            val result = awesomeBarView.getSearchTermSuggestionsProvider(searchEngineSource)
+
+            assertTrue(result is SearchTermSuggestionsProvider)
+            assertNull(result?.groupTitle())
+        }
     }
 
     @Test
