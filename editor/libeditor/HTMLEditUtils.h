@@ -2175,6 +2175,25 @@ class HTMLEditUtils final {
                                           nsAString& aNormalizedValue);
 
   /**
+   * Return true if aColorValue may be a CSS specific color value or general
+   * keywords of CSS.
+   */
+  [[nodiscard]] static bool MaybeCSSSpecificColorValue(
+      const nsAString& aColorValue);
+
+  /**
+   * Return true if aColorValue can be specified to `color` value of <font>.
+   */
+  [[nodiscard]] static bool CanConvertToHTMLColorValue(
+      const nsAString& aColorValue);
+
+  /**
+   * Convert aColorValue to `#[0-9a-f]{6}` style HTML color value.
+   */
+  static bool ConvertToNormalizedHTMLColorValue(const nsAString& aColorValue,
+                                                nsAString& aNormalizedValue);
+
+  /**
    * Get serialized color value (`rgb(...)` or `rgba(...)`) or "currentcolor"
    * if aColorValue is valid. The result is useful to set CSS color property.
    *

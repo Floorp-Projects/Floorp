@@ -2349,6 +2349,31 @@ bool HTMLEditUtils::IsSameHTMLColorValue(
   return colorA == colorB;
 }
 
+bool HTMLEditUtils::MaybeCSSSpecificColorValue(const nsAString& aColorValue) {
+  if (aColorValue.IsEmpty() || aColorValue.First() == '#') {
+    return false;  // Quick return for the most cases.
+  }
+
+  nsAutoString colorValue(aColorValue);
+  colorValue.CompressWhitespace(true, true);
+  if (colorValue.LowerCaseEqualsASCII("transparent")) {
+    return true;
+  }
+  nscolor color = NS_RGB(0, 0, 0);
+  if (colorValue.IsEmpty() || colorValue.First() == '#' ||
+      NS_ColorNameToRGB(colorValue, &color)) {
+    return false;
+  }
+  if (colorValue.LowerCaseEqualsASCII("initial") ||
+      colorValue.LowerCaseEqualsASCII("inherit") ||
+      colorValue.LowerCaseEqualsASCII("unset") ||
+      colorValue.LowerCaseEqualsASCII("revert") ||
+      colorValue.LowerCaseEqualsASCII("currentcolor")) {
+    return true;
+  }
+  return ServoCSSParser::IsValidCSSColor(NS_ConvertUTF16toUTF8(colorValue));
+}
+
 static bool ComputeColor(const nsAString& aColorValue, nscolor* aColor,
                          bool* aIsCurrentColor) {
   return ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0),
@@ -2360,6 +2385,28 @@ static bool ComputeColor(const nsACString& aColorValue, nscolor* aColor,
                          bool* aIsCurrentColor) {
   return ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorValue,
                                       aColor, aIsCurrentColor);
+}
+
+bool HTMLEditUtils::CanConvertToHTMLColorValue(const nsAString& aColorValue) {
+  bool isCurrentColor = false;
+  nscolor color = NS_RGB(0, 0, 0);
+  return ComputeColor(aColorValue, &color, &isCurrentColor) &&
+         !isCurrentColor && NS_GET_A(color) == 0xFF;
+}
+
+bool HTMLEditUtils::ConvertToNormalizedHTMLColorValue(
+    const nsAString& aColorValue, nsAString& aNormalizedValue) {
+  bool isCurrentColor = false;
+  nscolor color = NS_RGB(0, 0, 0);
+  if (!ComputeColor(aColorValue, &color, &isCurrentColor) || isCurrentColor ||
+      NS_GET_A(color) != 0xFF) {
+    aNormalizedValue = aColorValue;
+    return false;
+  }
+  aNormalizedValue.Truncate();
+  aNormalizedValue.AppendPrintf("#%02x%02x%02x", NS_GET_R(color),
+                                NS_GET_G(color), NS_GET_B(color));
+  return true;
 }
 
 bool HTMLEditUtils::GetNormalizedCSSColorValue(const nsAString& aColorValue,
