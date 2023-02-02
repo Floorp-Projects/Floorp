@@ -42,12 +42,11 @@ Defaults to 120 (activity), 1200 (inactivity).
 
 `MOZ_GLEAN_ANDROID`
 
-If set, recording Glean metrics are a no-op. Glean will not be initialized.
-Only set on Android.
-This define will be removed after we sort out how Android and Geckoview will work
-(see [bug 1670261](https://bugzilla.mozilla.org/show_bug.cgi?id=1670261)).
-It can be queried in C++ via `#ifndef MOZ_GLEAN_ANDROID`,
-and in JS via `AppConstants.MOZ_GLEAN_ANDROID`.
+If set, the Glean SDK is assumed to be managed by something other than FOG, meaning:
+* [GIFFT][gifft] is disabled.
+* Custom Pings cannot be submitted via C++ or JS
+* FOG doesn't initialize Glean
+* FOG doesn't relay (in)activity or experiment annotations to Glean
 
 `MOZILLA_OFFICIAL`
 
@@ -88,3 +87,4 @@ opts us into a preinit queue that doesn't discard tasks until there are 10^6 of 
 See [bug 1797494](https://bugzilla.mozilla.org/show_bug.cgi?id=1797494) for details.
 
 [gkrust-features]: https://searchfox.org/mozilla-central/source/toolkit/library/rust/gkrust-features.mozbuild
+[gifft]: ../user/gifft
