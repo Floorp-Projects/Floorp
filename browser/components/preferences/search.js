@@ -690,7 +690,7 @@ EngineStore.prototype = {
 
   updateEngine(newEngine) {
     let engineToUpdate = this._engines.findIndex(
-      e => e.originalEngine == newEngine
+      e => e.originalEngine.id == newEngine.id
     );
     if (engineToUpdate != -1) {
       this.engines[engineToUpdate] = this._cloneEngine(newEngine);
