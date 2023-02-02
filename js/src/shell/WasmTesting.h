@@ -31,15 +31,6 @@ namespace wasm {
 [[nodiscard]] extern bool TextToBinary(const char16_t* text, size_t textLen,
                                        Bytes* bytes, UniqueChars* error);
 
-// Decode the binary wasm module given and return the offsets of all
-// instructions inside of the the code section.
-//
-// This function is used exclusively for testing and handles errors by
-// returning an empty offset array.
-
-extern void CodeOffsets(const uint8_t* bytes, size_t bytesLen,
-                        Uint32Vector* offsets);
-
 }  // namespace wasm
 }  // namespace js
 

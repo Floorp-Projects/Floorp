@@ -25,10 +25,10 @@ var offsets1 = getAllOffsets('(module \
   (func (drop (f32.sqrt (f32.add (f32.const 1.0) (f32.const 2.0))))) \
 )');
 
-// There shall be total 8 lines with single and unique offset per line.
+// There shall be total 5 lines with single and unique offset per line.
 var usedOffsets = Object.create(null),
     usedLines = Object.create(null);
-assertEq(offsets1.length, 8);
+assertEq(offsets1.length, 5);
 
 offsets1.forEach(({offset, lineNumber, columnNumber}) => {
   assertEq(offset > 0, true);
@@ -37,5 +37,5 @@ offsets1.forEach(({offset, lineNumber, columnNumber}) => {
   usedOffsets[offset] = true;
   usedLines[lineNumber] = true;
 });
-assertEq(Object.keys(usedOffsets).length, 8);
-assertEq(Object.keys(usedLines).length, 8);
+assertEq(Object.keys(usedOffsets).length, 5);
+assertEq(Object.keys(usedLines).length, 5);
