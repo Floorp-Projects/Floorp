@@ -75,6 +75,10 @@ export var TelemetryUtils = {
     EventPingMinimumFrequency: "toolkit.telemetry.eventping.minimumFrequency",
     EventPingMaximumFrequency: "toolkit.telemetry.eventping.maximumFrequency",
 
+    // Prio Ping Preferences
+    PrioPingEnabled: "toolkit.telemetry.prioping.enabled",
+    PrioPingDataLimit: "toolkit.telemetry.prioping.dataLimit",
+
     // Data reporting Preferences
     AcceptedPolicyDate: "datareporting.policy.dataSubmissionPolicyNotifiedTime",
     AcceptedPolicyVersion:

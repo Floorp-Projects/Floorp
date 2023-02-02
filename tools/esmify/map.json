@@ -1359,6 +1359,8 @@
   "resource://gre/modules/Preferences.jsm": "toolkit/modules/Preferences.jsm",
   "resource://gre/modules/PrincipalsCollector.jsm":
     "toolkit/components/cleardata/PrincipalsCollector.jsm",
+  "resource://gre/modules/PrioPing.jsm":
+    "toolkit/components/telemetry/pings/PrioPing.jsm",
   "resource://gre/modules/PrivateBrowsingUtils.jsm":
     "toolkit/modules/PrivateBrowsingUtils.jsm",
   "resource://gre/modules/ProcessSelector.jsm": "dom/base/ProcessSelector.jsm",

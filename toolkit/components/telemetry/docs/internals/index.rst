@@ -13,7 +13,7 @@ Here is a quick overview of the most important code parts. They can be found in 
 * TelemetryStorage: Handles writing pings to disk for TelemetrySend
 * TelemetrySession: Collects data for a browsing session, includes many of the most important probes (aka metrics)
 * Policy: A layer of indirection added to provide testability. A common pattern in many files
-* pings/: Contains definitions and handling for most ping types, like EventPing
+* pings/: Contains definitions and handling for most ping types, like EventPing or PrioPing
 
 More details on different topics can be found in these chapters:
 

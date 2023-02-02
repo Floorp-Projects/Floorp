@@ -61,6 +61,7 @@ EXPORTS.mozilla += [
     "dap/DAPTelemetryBindings.h",
     "other/CombinedStacks.h",
     "other/ProcessedStack.h",
+    "TelemetryOriginEnums.h",
 ]
 
 EXPORTS.mozilla.telemetry += [
@@ -75,6 +76,7 @@ SOURCES += [
     "core/TelemetryCommon.cpp",
     "core/TelemetryEvent.cpp",
     "core/TelemetryHistogram.cpp",
+    "core/TelemetryOrigin.cpp",
     "core/TelemetryScalar.cpp",
     "core/TelemetryUserInteraction.cpp",
     "dap/DAPTelemetry.cpp",
@@ -118,6 +120,7 @@ EXTRA_JS_MODULES += [
     "pings/EventPing.sys.mjs",
     "pings/HealthPing.sys.mjs",
     "pings/ModulesPing.sys.mjs",
+    "pings/PrioPing.sys.mjs",
     "pings/TelemetrySession.sys.mjs",
     "pings/UntrustedModulesPing.sys.mjs",
     "pings/UpdatePing.sys.mjs",
