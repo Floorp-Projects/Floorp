@@ -105,12 +105,6 @@ class BodyStreamUnderlyingSourceAlgorithms final
     return bodyStream->PullCallback(aCx, aController, aRv);
   }
 
-  already_AddRefed<Promise> CancelCallbackImpl(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) override {
-    return Promise::CreateResolvedWithUndefined(mGlobal, aRv);
-  }
-
   void ReleaseObjects() override {
     RefPtr<BodyStreamHolder> holder = mUnderlyingSource.forget();
     // BodyStream may not be available if this cleanup happened first from

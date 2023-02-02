@@ -67,13 +67,4 @@ WebTransportIncomingStreamsAlgorithms::PullCallbackImpl(
   return returnResult.unwrap().forget();
 }
 
-// This will go away...
-already_AddRefed<Promise>
-WebTransportIncomingStreamsAlgorithms::CancelCallbackImpl(
-    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-    ErrorResult& aRv) {
-  // XXXX wrong?
-  return nullptr;  // Promise::CreateResolvedWithUndefined(mGlobal, aRv);
-}
-
 }  // namespace mozilla::dom

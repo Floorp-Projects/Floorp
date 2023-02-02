@@ -92,7 +92,9 @@ class TransformerAlgorithmsWrapper : public TransformerAlgorithmsBase {
       TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
 
   MOZ_CAN_RUN_SCRIPT virtual void FlushCallbackImpl(
-      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+      TransformStreamDefaultController& aController, ErrorResult& aRv) {
+    // flushAlgorithm is optional, do nothing by default
+  }
 };
 
 }  // namespace mozilla::dom
