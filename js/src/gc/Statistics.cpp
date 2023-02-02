@@ -1557,7 +1557,7 @@ void Statistics::maybePrintProfileHeaders() {
   _("PID", 7, "%7zu", pid)                     \
   _("Runtime", 14, "0x%12p", runtime)
 
-#define FOR_EACH_GC_PROFILE_METADATA(_)               \
+#define FOR_EACH_GC_PROFILE_SLICE_METADATA(_)         \
   FOR_EACH_GC_PROFILE_COMMON_METADATA(_)              \
   _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
   _("Reason", 20, "%-20.20s", reason)                 \
@@ -1566,9 +1566,9 @@ void Statistics::maybePrintProfileHeaders() {
   _("SizeKB", 8, "%8zu", sizeKB)                      \
   _("Budget", 6, "%6s", formatBudget(slice))
 
-#define FOR_EACH_GC_PROFILE_TOTALS_METADATA(_) \
-  FOR_EACH_GC_PROFILE_COMMON_METADATA(_)       \
-  _("SliceCount", 59, "%-59s", formatTotalSlices())
+#define FOR_EACH_GC_PROFILE_METADATA(_)  \
+  FOR_EACH_GC_PROFILE_COMMON_METADATA(_) \
+  FOR_EACH_GC_PROFILE_SLICE_METADATA(_)
 
 void Statistics::printProfileHeader() {
   if (!enableProfiling_) {
@@ -1715,6 +1715,22 @@ bool Statistics::printProfileTimes(const ProfileDurations& times,
   return sprinter.put("\n");
 }
 
+constexpr size_t SliceMetadataFormatWidth() {
+  size_t fieldCount = 0;
+  size_t totalWidth = 0;
+
+#define UPDATE_COUNT_AND_WIDTH(_1, width, _2, _3) \
+  fieldCount++;                                   \
+  totalWidth += width;
+  FOR_EACH_GC_PROFILE_SLICE_METADATA(UPDATE_COUNT_AND_WIDTH)
+#undef UPDATE_COUNT_AND_WIDTH
+
+  // Add padding between fields.
+  totalWidth += fieldCount - 1;
+
+  return totalWidth;
+}
+
 void Statistics::printTotalProfileTimes() {
   if (!enableProfiling_) {
     return;
@@ -1732,8 +1748,15 @@ void Statistics::printTotalProfileTimes() {
   if (!sprinter.jsprintf(" " format, value)) {   \
     return;                                      \
   }
-  FOR_EACH_GC_PROFILE_TOTALS_METADATA(PRINT_FIELD_VALUE)
+  FOR_EACH_GC_PROFILE_COMMON_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
+
+  // Use whole width of per-slice metadata to print total slices so the profile
+  // totals that follow line up.
+  size_t width = SliceMetadataFormatWidth();
+  if (!sprinter.jsprintf(" %-*s", int(width), formatTotalSlices())) {
+    return;
+  }
 
   if (!printProfileTimes(totalTimes_, sprinter)) {
     return;
