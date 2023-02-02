@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/include/incoming_video_stream.h"
+#include "video/render/incoming_video_stream.h"
 
 #include <memory>
 #include <utility>
 
 #include "absl/types/optional.h"
 #include "api/units/time_delta.h"
-#include "common_video/video_render_frames.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/trace_event.h"
+#include "video/render/video_render_frames.h"
 
 namespace webrtc {
 
