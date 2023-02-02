@@ -36,7 +36,7 @@ jobs:
           path: beta
           ref: ${{ steps.env-variables.outputs.beta_branch }}
       - name: Sync strings
-        uses: mozilla-mobile/sync-strings-action@3.0.0
+        uses: mozilla-mobile/sync-strings-action@3.0.1
         with:
           toml_path: android-components/l10n.toml
           src: main
@@ -47,5 +47,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
           branch: automation/uplift-ac-strings-${{ steps.discover-version.outputs.major-ac-version }}
+          commit-message: "Uplift AC strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           title: "Uplift AC strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           body: "This (automated) PR uplifts strings from `${{ github.ref_name }}` to `${{ steps.env-variables.outputs.beta_branch }}`"
