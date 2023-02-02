@@ -224,23 +224,8 @@ void NativeMenuMac::OnMenuClosed(dom::Element* aPopupElement) {
   }
 }
 
-static NSView* NativeViewForContent(nsIContent* aContent) {
-  dom::Document* doc = aContent->GetUncomposedDoc();
-  if (!doc) {
-    return nil;
-  }
-
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
-    return nil;
-  }
-
-  nsIFrame* frame = presShell->GetRootFrame();
-  if (!frame) {
-    return nil;
-  }
-
-  nsIWidget* widget = frame->GetNearestWidget();
+static NSView* NativeViewForFrame(nsIFrame* aFrame) {
+  nsIWidget* widget = aFrame->GetNearestWidget();
   return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
 }
 
@@ -252,15 +237,16 @@ static NSAppearance* NativeAppearanceForContent(nsIContent* aContent) {
   return NSAppearanceForColorScheme(LookAndFeel::ColorSchemeForFrame(f));
 }
 
-void NativeMenuMac::ShowAsContextMenu(nsPresContext* aPc, const CSSIntPoint& aPosition) {
+void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition) {
+  nsPresContext* pc = aClickedFrame->PresContext();
   auto cssToDesktopScale =
-      aPc->CSSToDevPixelScale() / aPc->DeviceContext()->GetDesktopToDeviceScale();
+      pc->CSSToDevPixelScale() / pc->DeviceContext()->GetDesktopToDeviceScale();
   const DesktopPoint desktopPoint = aPosition * cssToDesktopScale;
 
   mMenu->PopupShowingEventWasSentAndApprovedExternally();
 
   NSMenu* menu = mMenu->NativeNSMenu();
-  NSView* view = NativeViewForContent(mMenu->Content());
+  NSView* view = NativeViewForFrame(aClickedFrame);
   NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
   NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(desktopPoint);
 
