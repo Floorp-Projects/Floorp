@@ -918,7 +918,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   _("PID", 7, "%7zu", pid)                          \
   _("Runtime", 14, "0x%12p", runtime)
 
-#define FOR_EACH_NURSERY_PROFILE_METADATA(_)          \
+#define FOR_EACH_NURSERY_PROFILE_SLICE_METADATA(_)    \
   FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_)         \
   _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
   _("Reason", 20, "%-20.20s", reasonStr)              \
@@ -927,9 +927,9 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   _("NewKB", 6, "%6zu", newSizeKB)                    \
   _("Dedup", 6, "%6zu", dedupCount)
 
-#define FOR_EACH_NURSERY_PROFILE_TOTALS_METADATA(_) \
-  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_)       \
-  _("CollectionCount", 59, "%-59s", collections)
+#define FOR_EACH_NURSERY_PROFILE_METADATA(_)  \
+  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_) \
+  FOR_EACH_NURSERY_PROFILE_SLICE_METADATA(_)
 
 void js::Nursery::printCollectionProfile(JS::GCReason reason,
                                          double promotionRate) {
@@ -1001,6 +1001,22 @@ bool js::Nursery::printProfileDurations(const ProfileDurations& times,
   return sprinter.put("\n");
 }
 
+static constexpr size_t NurserySliceMetadataFormatWidth() {
+  size_t fieldCount = 0;
+  size_t totalWidth = 0;
+
+#define UPDATE_COUNT_AND_WIDTH(_1, width, _2, _3) \
+  fieldCount++;                                   \
+  totalWidth += width;
+  FOR_EACH_NURSERY_PROFILE_SLICE_METADATA(UPDATE_COUNT_AND_WIDTH)
+#undef UPDATE_COUNT_AND_WIDTH
+
+  // Add padding between fields.
+  totalWidth += fieldCount - 1;
+
+  return totalWidth;
+}
+
 void js::Nursery::printTotalProfileTimes() {
   if (!enableProfiling_) {
     return;
@@ -1023,8 +1039,15 @@ void js::Nursery::printTotalProfileTimes() {
   if (!sprinter.jsprintf(" " format, value)) {   \
     return;                                      \
   }
-  FOR_EACH_NURSERY_PROFILE_TOTALS_METADATA(PRINT_FIELD_VALUE)
+  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
+
+  // Use whole width of per-slice metadata to print total slices so the profile
+  // totals that follow line up.
+  size_t width = NurserySliceMetadataFormatWidth();
+  if (!sprinter.jsprintf(" %-*s", int(width), collections)) {
+    return;
+  }
 
   if (!printProfileDurations(totalDurations_, sprinter)) {
     return;
