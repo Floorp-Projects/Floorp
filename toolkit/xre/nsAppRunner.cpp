@@ -4192,7 +4192,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   // Set up ability to respond to system (Apple) events. This must occur before
   // ProcessUpdates to ensure that links clicked in external applications aren't
   // lost when updates are pending.
-  SetupMacApplicationDelegate(&gRestartedByOS);
+  SetupMacApplicationDelegate();
 
   if (EnvHasValue("MOZ_LAUNCHED_CHILD")) {
     // This is needed, on relaunch, to force the OS to use the "Cocoa Dock
