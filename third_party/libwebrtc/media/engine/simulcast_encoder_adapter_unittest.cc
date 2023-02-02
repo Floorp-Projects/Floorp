@@ -1777,5 +1777,24 @@ TEST_F(TestSimulcastEncoderAdapterFake,
             adapter_->InitEncode(&codec_, kSettings));
 }
 
+TEST_F(TestSimulcastEncoderAdapterFake, PopulatesScalabilityModeOfSubcodecs) {
+  SimulcastTestFixtureImpl::DefaultSettings(
+      &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
+      kVideoCodecVP8);
+  codec_.numberOfSimulcastStreams = 3;
+  codec_.simulcastStream[0].numberOfTemporalLayers = 1;
+  codec_.simulcastStream[1].numberOfTemporalLayers = 2;
+  codec_.simulcastStream[2].numberOfTemporalLayers = 3;
+
+  EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
+  ASSERT_EQ(3u, helper_->factory()->encoders().size());
+  EXPECT_EQ(helper_->factory()->encoders()[0]->codec().GetScalabilityMode(),
+            ScalabilityMode::kL1T1);
+  EXPECT_EQ(helper_->factory()->encoders()[1]->codec().GetScalabilityMode(),
+            ScalabilityMode::kL1T2);
+  EXPECT_EQ(helper_->factory()->encoders()[2]->codec().GetScalabilityMode(),
+            ScalabilityMode::kL1T3);
+}
+
 }  // namespace test
 }  // namespace webrtc
