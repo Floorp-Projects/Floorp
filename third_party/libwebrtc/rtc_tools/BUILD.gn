@@ -247,6 +247,7 @@ if (!is_component_build) {
     testonly = true
     sources = [ "video_replay.cc" ]
     deps = [
+      "../api:field_trials",
       "../api/rtc_event_log",
       "../api/task_queue:default_task_queue_factory",
       "../api/test/video:function_video_factory",
