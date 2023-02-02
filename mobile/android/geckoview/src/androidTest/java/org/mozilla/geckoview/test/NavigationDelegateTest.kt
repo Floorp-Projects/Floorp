@@ -2768,7 +2768,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
-        sessionRule.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.waitUntilCalled(object : HistoryDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
@@ -2779,6 +2779,11 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
+                assertThat("History should have one entry", state.size, equalTo(1))
             }
         })
         mainSession.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
