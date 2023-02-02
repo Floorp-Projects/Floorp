@@ -26,6 +26,7 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/engine/internal_decoder_factory.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/string_to_number.h"
@@ -606,7 +607,9 @@ class RtpReplayer final {
       ++num_packets;
       PacketReceiver::DeliveryStatus result = PacketReceiver::DELIVERY_OK;
       worker_thread->PostTask([&]() {
-        result = call->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
+        MediaType media_type =
+            IsRtcpPacket(packet_buffer) ? MediaType::ANY : MediaType::VIDEO;
+        result = call->Receiver()->DeliverPacket(media_type,
                                                  std::move(packet_buffer),
                                                  /* packet_time_us */ -1);
         event.Set();
