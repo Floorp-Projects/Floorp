@@ -711,6 +711,56 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
+    fun `WHEN a tab is selected THEN report the metric, update the state, and open the browser`() {
+        val controller = spyk(createController())
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
+        val source = TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME
+
+        every { controller.handleNavigateToBrowser() } just runs
+
+        assertNull(TabsTray.openedExistingTab.testGetValue())
+
+        controller.handleTabSelected(tab, source)
+
+        assertNotNull(TabsTray.openedExistingTab.testGetValue())
+        val snapshot = TabsTray.openedExistingTab.testGetValue()!!
+        assertEquals(1, snapshot.size)
+        assertEquals(source, snapshot.single().extra?.getValue("opened_existing_tab"))
+
+        verify { tabsUseCases.selectTab(tab.id) }
+        verify { controller.handleNavigateToBrowser() }
+    }
+
+    fun `WHEN a tab is selected without a source THEN report the metric with an unknown source, update the state, and open the browser`() {
+        val controller = spyk(createController())
+        val tab = TabSessionState(
+            id = "tabId",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
+        val sourceText = "unknown"
+
+        every { controller.handleNavigateToBrowser() } just runs
+
+        assertNull(TabsTray.openedExistingTab.testGetValue())
+
+        controller.handleTabSelected(tab, null)
+
+        assertNotNull(TabsTray.openedExistingTab.testGetValue())
+        val snapshot = TabsTray.openedExistingTab.testGetValue()!!
+        assertEquals(1, snapshot.size)
+        assertEquals(sourceText, snapshot.single().extra?.getValue("opened_existing_tab"))
+
+        verify { tabsUseCases.selectTab(tab.id) }
+        verify { controller.handleNavigateToBrowser() }
+    }
+
     private fun createController(
         navigateToHomeAndDeleteSession: (String) -> Unit = { },
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },

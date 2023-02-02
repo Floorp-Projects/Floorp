@@ -36,7 +36,6 @@ import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabsController
-import org.mozilla.fenix.tabstray.browser.SelectTabUseCaseWrapper
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import org.mozilla.fenix.tabstray.ext.isSelect
 import org.mozilla.fenix.utils.Settings
@@ -207,12 +206,6 @@ class DefaultTabsTrayController(
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
     internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
 ) : TabsTrayController {
-
-    private val selectTabWrapper by lazy {
-        SelectTabUseCaseWrapper(tabsUseCases.selectTab) {
-            handleNavigateToBrowser()
-        }
-    }
 
     override fun handleOpeningNewTab(isPrivate: Boolean) {
         val startTime = profiler?.getProfilerTime()
@@ -419,7 +412,9 @@ class DefaultTabsTrayController(
     }
 
     override fun handleTabSelected(tab: TabSessionState, source: String?) {
-        selectTabWrapper.invoke(tab.id, source)
+        TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
+        tabsUseCases.selectTab(tab.id)
+        handleNavigateToBrowser()
     }
 
     override fun handleTabUnselected(tab: TabSessionState) {
