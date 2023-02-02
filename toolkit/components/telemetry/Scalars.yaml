@@ -7630,6 +7630,23 @@ urlbar.zeroprefix:
       - main
 
 quickaction:
+  impression:
+    bug_numbers:
+      - 1806024
+    description: >
+      Counts how many times quickaction results were shown. The key
+      is the in the form "actionkey-N" where N is the number of characters
+      the user typed to be shown the action.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   picked:
     bug_numbers:
       - 1783155

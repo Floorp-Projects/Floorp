@@ -148,6 +148,7 @@ class ProviderQuickActions extends UrlbarProvider {
     );
     result.suggestedIndex = SUGGESTED_INDEX;
     addCallback(this, result);
+    this.#resultFromLastQuery = result;
   }
 
   getViewTemplate(result) {
@@ -229,6 +230,57 @@ class ProviderQuickActions extends UrlbarProvider {
   }
 
   /**
+   * Called when the user starts and ends an engagement with the urlbar.  For
+   * details on parameters, see UrlbarProvider.onEngagement().
+   *
+   * @param {boolean} isPrivate
+   *   True if the engagement is in a private context.
+   * @param {string} state
+   *   The state of the engagement, one of: start, engagement, abandonment,
+   *   discard
+   * @param {UrlbarQueryContext} queryContext
+   *   The engagement's query context.  This is *not* guaranteed to be defined
+   *   when `state` is "start".  It will always be defined for "engagement" and
+   *   "abandonment".
+   * @param {object} details
+   *   This is defined only when `state` is "engagement" or "abandonment", and
+   *   it describes the search string and picked result.
+   */
+  onEngagement(isPrivate, state, queryContext, details) {
+    let result = this.#resultFromLastQuery;
+    this.#resultFromLastQuery = null;
+    if (state == "engagement") {
+      // Find the quickaction result that's currently visible in the view.
+      // It's probably the result from the last query so check it first, but due
+      // to the async nature of how results are added to the view and made
+      // visible, it may not be.
+      if (
+        result &&
+        (result.rowIndex < 0 ||
+          queryContext.view?.visibleResults?.[result.rowIndex] != result)
+      ) {
+        // The result from the last query isn't visible.
+        result = null;
+      }
+
+      // If the result isn't visible, find a visible one.
+      if (!result) {
+        result = queryContext.view?.visibleResults?.find(
+          r => r.providerName == this.name
+        );
+      }
+
+      result.payload.results.forEach(({ key }) => {
+        Services.telemetry.keyedScalarAdd(
+          `quickaction.impression`,
+          `${key}-${queryContext.trimmedSearchString.length}`,
+          1
+        );
+      });
+    }
+  }
+
+  /**
    * Adds a new QuickAction.
    *
    * @param {string} key A key to identify this action.
@@ -276,6 +328,9 @@ class ProviderQuickActions extends UrlbarProvider {
 
   // The actions that have been added.
   #actions = new Map();
+
+  // The result we added during the most recent query.
+  #resultFromLastQuery = null;
 
   #loopOverPrefixes(commands, fun) {
     for (const command of commands) {
