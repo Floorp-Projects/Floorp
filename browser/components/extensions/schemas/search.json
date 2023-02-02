@@ -43,6 +43,12 @@
             "format": "url"
           }
         }
+      },
+      {
+        "id": "Disposition",
+        "type": "string",
+        "description": "Location where search results should be displayed.",
+        "enum": ["CURRENT_TAB", "NEW_TAB", "NEW_WINDOW"]
       }
     ],
     "functions": [
@@ -72,10 +78,15 @@
                 "optional": true,
                 "description": "Search engine to use. Uses the default if not specified."
               },
+              "disposition": {
+                "$ref": "Disposition",
+                "optional": true,
+                "description": "Location where search results should be displayed. NEW_TAB is the default."
+              },
               "tabId": {
                 "type": "integer",
                 "optional": true,
-                "description": "The ID of the tab for the search results. If not specified, a new tab is created."
+                "description": "The ID of the tab for the search results. If not specified, a new tab is created, unless disposition is set. tabId cannot be used with disposition."
               }
             }
           }
@@ -96,9 +107,8 @@
                 "description": "String to query with the default search provider."
               },
               "disposition": {
-                "type": "string",
+                "$ref": "Disposition",
                 "optional": true,
-                "enum": ["CURRENT_TAB", "NEW_TAB", "NEW_WINDOW"],
                 "description": "Location where search results should be displayed. CURRENT_TAB is the default."
               },
               "tabId": {
