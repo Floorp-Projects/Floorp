@@ -1180,18 +1180,19 @@ html {
   }
 
   .dismiss-button {
+    box-sizing: border-box;
     padding: 0;
     margin-block: 30px -45px;
     margin-inline: 0 30px;
     display: block;
     float: inline-end;
-    background: url('chrome://global/skin/icons/close.svg') no-repeat center / cover;
-    height: 15px;
-    width: 15px;
+    background: url('chrome://global/skin/icons/close.svg') no-repeat center / 16px;
+    height: 32px;
+    width: 32px;
     align-self: end;
     // override default min-height and min-width for buttons
-    min-height: 15px;
-    min-width: 15px;
+    min-height: 32px;
+    min-width: 32px;
     -moz-context-properties: fill;
     fill: currentColor;
   }
