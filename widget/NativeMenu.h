@@ -9,6 +9,7 @@
 #include "nsISupportsImpl.h"
 #include "Units.h"
 
+class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {
@@ -29,7 +30,7 @@ class NativeMenu {
   // Show this menu as a context menu at the specified position.
   // This call assumes that the popupshowing event for the root popup has
   // already been sent and "approved", i.e. preventDefault() was not called.
-  virtual void ShowAsContextMenu(nsPresContext* aPc,
+  virtual void ShowAsContextMenu(nsIFrame* aClickedFrame,
                                  const CSSIntPoint& aPosition) = 0;
 
   // Close the menu and synchronously fire popuphiding / popuphidden events.

@@ -355,12 +355,12 @@ NativeMenuGtk::~NativeMenuGtk() {
 
 RefPtr<dom::Element> NativeMenuGtk::Element() { return mMenuModel->Element(); }
 
-void NativeMenuGtk::ShowAsContextMenu(nsPresContext* aPc,
+void NativeMenuGtk::ShowAsContextMenu(nsIFrame* aClickedFrame,
                                       const CSSIntPoint& aPosition) {
   if (mMenuModel->IsShowing()) {
     return;
   }
-  RefPtr<nsIWidget> widget = aPc->GetRootWidget();
+  RefPtr<nsIWidget> widget = aClickedFrame->PresContext()->GetRootWidget();
   if (NS_WARN_IF(!widget)) {
     // XXX Do we need to close menus here?
     return;
@@ -372,7 +372,7 @@ void NativeMenuGtk::ShowAsContextMenu(nsPresContext* aPc,
 
   auto* geckoWin = static_cast<nsWindow*>(widget.get());
   // The position needs to be relative to our window.
-  auto pos = (aPosition * aPc->CSSToDevPixelScale()) -
+  auto pos = (aPosition * aClickedFrame->PresContext()->CSSToDevPixelScale()) -
              geckoWin->WidgetToScreenOffset();
   auto gdkPos = geckoWin->DevicePixelsToGdkPointRoundDown(
       LayoutDeviceIntPoint::Round(pos));

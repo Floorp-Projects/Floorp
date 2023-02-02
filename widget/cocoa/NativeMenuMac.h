@@ -29,7 +29,7 @@ class NativeMenuMac : public NativeMenu,
   explicit NativeMenuMac(dom::Element* aElement);
 
   // NativeMenu
-  void ShowAsContextMenu(nsPresContext*, const CSSIntPoint& aPosition) override;
+  void ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition) override;
   bool Close() override;
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers, int16_t aButton,
                     ErrorResult& aRv) override;

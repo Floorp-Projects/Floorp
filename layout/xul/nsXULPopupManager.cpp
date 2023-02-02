@@ -864,7 +864,11 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
 
   mNativeMenu = menu;
   mNativeMenu->AddObserver(this);
-  mNativeMenu->ShowAsContextMenu(presContext, CSSIntPoint(aXPos, aYPos));
+  nsIFrame* frame = presContext->PresShell()->GetCurrentEventFrame();
+  if (!frame) {
+    frame = presContext->PresShell()->GetRootFrame();
+  }
+  mNativeMenu->ShowAsContextMenu(frame, CSSIntPoint(aXPos, aYPos));
 
   // While the native menu is open, it consumes mouseup events.
   // Clear any :active state, mouse capture state and drag tracking now.
