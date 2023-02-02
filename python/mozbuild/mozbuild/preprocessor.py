@@ -530,8 +530,10 @@ class Preprocessor:
 
         if args:
             for f in args:
-                with io.open(f, "r", encoding="utf-8") as input:
-                    self.processFile(input=input, output=out)
+                if not isinstance(f, io.TextIOBase):
+                    f = io.open(f, "r", encoding="utf-8")
+                with f as input_:
+                    self.processFile(input=input_, output=out)
             if depfile:
                 mk = Makefile()
                 mk.create_rule([six.ensure_text(options.output)]).add_dependencies(
