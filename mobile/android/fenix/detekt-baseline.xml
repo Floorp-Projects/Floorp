@@ -502,8 +502,6 @@
     <ID>UndocumentedPublicClass:TrackingProtectionStore.kt$TrackingProtectionState.Mode$Normal : Mode</ID>
     <ID>UndocumentedPublicClass:TrayPagerAdapter.kt$TrayPagerAdapter : Adapter</ID>
     <ID>UndocumentedPublicClass:TurnOnSyncFragment.kt$TurnOnSyncFragment : FragmentAccountObserver</ID>
-    <ID>UndocumentedPublicClass:UseCases.kt$RemoveTabUseCaseWrapper : RemoveTabUseCase</ID>
-    <ID>UndocumentedPublicClass:UseCases.kt$SelectTabUseCaseWrapper : SelectTabUseCase</ID>
     <ID>UndocumentedPublicClass:Utils.kt$BookmarkNodeWithDepth</ID>
     <ID>UndocumentedPublicClass:WallpaperSettingsFragment.kt$WallpaperSettingsFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:WebAppSiteControlsBuilder.kt$WebAppSiteControlsBuilder : SiteControlsBuilder</ID>
@@ -950,8 +948,6 @@
     <ID>UndocumentedPublicFunction:TrackingProtectionPanelView.kt$TrackingProtectionPanelView$fun update(state: TrackingProtectionState)</ID>
     <ID>UndocumentedPublicFunction:TrackingProtectionView.kt$TrackingProtectionView$fun update(state: TrackingProtectionState)</ID>
     <ID>UndocumentedPublicFunction:TrackingProtectionView.kt$TrackingProtectionView$fun updateDetailsSection(show: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:UseCases.kt$RemoveTabUseCaseWrapper$operator fun invoke(tabId: String, source: String? = null)</ID>
-    <ID>UndocumentedPublicFunction:UseCases.kt$SelectTabUseCaseWrapper$operator fun invoke(tabId: String, source: String? = null)</ID>
     <ID>UndocumentedPublicFunction:Utils.kt$fun BookmarkNode.flatNodeList(excludeSubtreeRoot: String?, depth: Int = 0): List&lt;BookmarkNodeWithDepth&gt;</ID>
     <ID>UndocumentedPublicFunction:Utils.kt$fun friendlyRootTitle( context: Context, node: BookmarkNode, withMobileRoot: Boolean = true, rootTitles: Map&lt;String, String&gt; = rootTitles(context, withMobileRoot), )</ID>
     <ID>UndocumentedPublicFunction:Utils.kt$fun rootTitles(context: Context, withMobileRoot: Boolean): Map&lt;String, String&gt;</ID>
