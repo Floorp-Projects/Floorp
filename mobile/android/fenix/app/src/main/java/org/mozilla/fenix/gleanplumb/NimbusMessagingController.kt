@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.gleanplumb
 
+import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
 import org.mozilla.fenix.BuildConfig
@@ -48,14 +49,45 @@ class NimbusMessagingController(
      * Records a messageDismissed event, and records that the message
      * has been dismissed.
      */
-    suspend fun onMessageDismissed(message: Message) {
-        sendDismissedMessageTelemetry(message.id)
-        val updatedMetadata = message.metadata.copy(dismissed = true)
+    suspend fun onMessageDismissed(messageMetadata: Message.Metadata) {
+        sendDismissedMessageTelemetry(messageMetadata.id)
+        val updatedMetadata = messageMetadata.copy(dismissed = true)
         messagingStorage.updateMetadata(updatedMetadata)
     }
 
     /**
-     * Once a message is clicked, the action needs to be examined for string substitutions
+     * Called once the user has clicked on a message.
+     *
+     * This records that the message has been clicked on, but does not record a
+     * glean event. That should be done via [processMessageActionToUri].
+     */
+    suspend fun onMessageClicked(messageMetadata: Message.Metadata) {
+        val updatedMetadata = messageMetadata.copy(pressed = true)
+        messagingStorage.updateMetadata(updatedMetadata)
+    }
+
+    /**
+     * Create and return the relevant [Intent] for the given [action].
+     *
+     * @param action the [Message.action] to create the [Intent] for.
+     * @return an [Intent] using the processed [Message.action].
+     */
+    fun getIntentForMessageAction(action: String): Intent {
+        return Intent(Intent.ACTION_VIEW, action.toDeepLinkSchemeUri())
+    }
+
+    /**
+     * Will attempt to get the [Message] for the given [id].
+     *
+     * @param id the [Message.id] of the [Message] to try to match.
+     * @return the [Message] with a matching [id], or null if no [Message] has a matching [id].
+     */
+    suspend fun getMessage(id: String): Message? {
+        return messagingStorage.getMessages().find { it.id == id }
+    }
+
+    /**
+     * The [message] action needs to be examined for string substitutions
      * and any `uuid` needs to be recorded in the Glean event.
      *
      * We call this `process` as it has a side effect of logging a Glean event while it
@@ -66,17 +98,6 @@ class NimbusMessagingController(
         sendClickedMessageTelemetry(message.id, uuid)
 
         return action.toDeepLinkSchemeUri()
-    }
-
-    /**
-     * Called once the user has clicked on a message.
-     *
-     * This records that the message has been clicked on, but does not record a
-     * glean event. That should be done via [processMessageActionToUri].
-     */
-    suspend fun onMessageClicked(message: Message) {
-        val updatedMetadata = message.metadata.copy(pressed = true)
-        messagingStorage.updateMetadata(updatedMetadata)
     }
 
     private fun sendDismissedMessageTelemetry(messageId: String) {

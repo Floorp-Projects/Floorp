@@ -19,7 +19,8 @@ fun createBaseNotification(
     channelId: String,
     title: String?,
     text: String,
-    pendingIntent: PendingIntent,
+    onClick: PendingIntent? = null,
+    onDismiss: PendingIntent? = null,
 ): Notification {
     return NotificationCompat.Builder(context, channelId)
         .setSmallIcon(R.drawable.ic_status_logo)
@@ -29,7 +30,8 @@ fun createBaseNotification(
         .setColor(ContextCompat.getColor(context, R.color.primary_text_light_theme))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setShowWhen(false)
-        .setContentIntent(pendingIntent)
+        .setContentIntent(onClick)
+        .setDeleteIntent(onDismiss)
         .setAutoCancel(true)
         .build()
 }

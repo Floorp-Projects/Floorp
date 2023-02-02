@@ -118,7 +118,7 @@ class MessagingMiddlewareTest {
 
         middleware.invoke(middlewareContext, {}, MessageClicked(message))
 
-        coVerify { messagingController.onMessageClicked(message) }
+        coVerify { messagingController.onMessageClicked(message.metadata) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(pressed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
     }
@@ -146,7 +146,7 @@ class MessagingMiddlewareTest {
             MessageDismissed(message),
         )
 
-        coVerify { messagingController.onMessageDismissed(message) }
+        coVerify { messagingController.onMessageDismissed(message.metadata) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
     }
@@ -195,7 +195,7 @@ class MessagingMiddlewareTest {
 
         spiedMiddleware.onMessageDismissed(middlewareContext, message)
 
-        coVerify { messagingController.onMessageDismissed(message) }
+        coVerify { messagingController.onMessageDismissed(message.metadata) }
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
         verify { spiedMiddleware.removeMessage(middlewareContext, message) }
