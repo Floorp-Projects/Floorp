@@ -62,16 +62,9 @@ void VideoReceiver2::RegisterExternalDecoder(
 
   if (decoder) {
     RTC_DCHECK(!codec_database_.IsExternalDecoderRegistered(payload_type));
-    codec_database_.RegisterExternalDecoder(payload_type, decoder.get());
-    video_decoders_.push_back(std::move(decoder));
+    codec_database_.RegisterExternalDecoder(payload_type, std::move(decoder));
   } else {
-    VideoDecoder* registered =
-        codec_database_.DeregisterExternalDecoder(payload_type);
-    if (registered) {
-      video_decoders_.erase(absl::c_find_if(
-          video_decoders_,
-          [registered](const auto& d) { return d.get() == registered; }));
-    }
+    codec_database_.DeregisterExternalDecoder(payload_type);
   }
 }
 
