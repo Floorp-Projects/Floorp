@@ -43,7 +43,7 @@ if (is_android) {
       ":filevideo_java",
       ":hwcodecs_java",
       ":java_audio_device_module_java",
-      ":libaom_av1_java",
+      ":libaom_av1_encoder_java",
       ":libjingle_peerconnection_java",
       ":libjingle_peerconnection_metrics_default_java",
       ":libvpx_vp8_java",
@@ -511,20 +511,6 @@ if (is_android) {
     ]
   }
 
-  rtc_android_library("libaom_av1_java") {
-    visibility = [ "*" ]
-    sources = [
-      "api/org/webrtc/LibaomAv1Decoder.java",
-      "api/org/webrtc/LibaomAv1Encoder.java",
-    ]
-    deps = [
-      ":base_java",
-      ":video_api_java",
-      ":video_java",
-      "//rtc_base:base_java",
-    ]
-  }
-
   rtc_android_library("dav1d_java") {
     visibility = [ "*" ]
     sources = [ "api/org/webrtc/Dav1dDecoder.java" ]
@@ -540,7 +526,8 @@ if (is_android) {
 
     deps = [
       ":base_java",
-      ":libaom_av1_java",
+      ":dav1d_java",
+      ":libaom_av1_encoder_java",
       ":libvpx_vp8_java",
       ":libvpx_vp9_java",
       ":video_api_java",
@@ -884,18 +871,6 @@ if (current_os == "linux" || is_android) {
     ]
   }
 
-  rtc_library("libaom_av1_decoder_if_supported_jni") {
-    visibility = [ "*" ]
-    allow_poison = [ "software_video_codecs" ]
-    sources = [ "src/jni/libaom_av1_codec.cc" ]
-    deps = [
-      ":base_jni",
-      ":generated_libaom_av1_decoder_if_supported_jni",
-      ":video_jni",
-      "../../modules/video_coding/codecs/av1:libaom_av1_decoder",
-    ]
-  }
-
   rtc_library("dav1d_av1_jni") {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
@@ -912,7 +887,6 @@ if (current_os == "linux" || is_android) {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
     deps = [
-      ":libaom_av1_decoder_if_supported_jni",
       ":libvpx_vp8_jni",
       ":libvpx_vp9_jni",
     ]
@@ -1368,13 +1342,6 @@ if (current_os == "linux" || is_android) {
 
   generate_jni("generated_libaom_av1_encoder_jni") {
     sources = [ "api/org/webrtc/LibaomAv1Encoder.java" ]
-
-    namespace = "webrtc::jni"
-    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-  }
-
-  generate_jni("generated_libaom_av1_decoder_if_supported_jni") {
-    sources = [ "api/org/webrtc/LibaomAv1Decoder.java" ]
 
     namespace = "webrtc::jni"
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
