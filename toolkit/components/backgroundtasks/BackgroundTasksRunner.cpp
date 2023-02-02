@@ -66,7 +66,8 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
 
 NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
     const nsACString& aParentDirPath, const nsACString& aChildDirName,
-    const nsACString& aSecondsToWait, const nsACString& aOtherFoldersSuffix) {
+    const nsACString& aSecondsToWait, const nsACString& aOtherFoldersSuffix,
+    const nsACString& aMetricsId) {
   nsTArray<nsCString> argv = {aParentDirPath + ""_ns, aChildDirName + ""_ns,
                               aSecondsToWait + ""_ns,
                               aOtherFoldersSuffix + ""_ns};
@@ -78,6 +79,10 @@ NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
     nsAutoCString sleep;
     sleep.AppendInt(testingSleepMs);
     argv.AppendElement(sleep);
+  }
+  if (!aMetricsId.IsEmpty()) {
+    argv.AppendElement("--metrics-id");
+    argv.AppendElement(aMetricsId);
   }
 
   return RunInDetachedProcess("removeDirectory"_ns, argv);

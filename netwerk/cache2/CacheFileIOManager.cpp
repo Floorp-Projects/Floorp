@@ -4143,7 +4143,7 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
       do_GetService("@mozilla.org/backgroundtasksrunner;1");
 
   return runner->RemoveDirectoryInDetachedProcess(
-      path, aCacheDirName, aSecondsToWait, aPurgeExtension);
+      path, aCacheDirName, aSecondsToWait, aPurgeExtension, "HttpCache"_ns);
 #endif
 }
 

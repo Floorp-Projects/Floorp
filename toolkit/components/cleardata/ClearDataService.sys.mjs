@@ -760,7 +760,8 @@ const QuotaCleaner = {
       storageDir,
       "to-be-removed",
       "0",
-      ""
+      "",
+      "Quota"
     );
   },
 };
