@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
+#include "nsGenericHTMLElement.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
@@ -69,7 +70,7 @@ class FormData final : public nsISupports,
   static already_AddRefed<FormData> Constructor(
       const GlobalObject& aGlobal,
       const Optional<NonNull<HTMLFormElement> >& aFormElement,
-      ErrorResult& aRv);
+      nsGenericHTMLElement* aSubmitter, ErrorResult& aRv);
 
   void Append(const nsAString& aName, const nsAString& aValue,
               ErrorResult& aRv);

@@ -296,7 +296,7 @@ void HTMLFormElement::RequestSubmit(nsGenericHTMLElement* aSubmitter,
     // 1.2. If submitter's form owner is not this form element, then throw a
     //      "NotFoundError" DOMException.
     if (fc->GetForm() != this) {
-      aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+      aRv.ThrowNotFoundError("The submitter is not owned by this form.");
       return;
     }
   }
