@@ -15664,10 +15664,14 @@ void Document::ReportDocumentUseCounters() {
   // Copy StyleUseCounters into our document use counters.
   SetCssUseCounterBits();
 
+  Maybe<nsCString> urlForLogging;
+  const bool dumpCounters = StaticPrefs::dom_use_counters_dump_document();
+  if (dumpCounters) {
+    urlForLogging.emplace(
+        nsContentUtils::TruncatedURLForDisplay(GetDocumentURI()));
+  }
+
   // Report our per-document use counters.
-  MOZ_LOG(gUseCountersLog, LogLevel::Debug,
-          ("Reporting document use counters [%s]",
-           nsContentUtils::TruncatedURLForDisplay(GetDocumentURI()).get()));
   for (int32_t c = 0; c < eUseCounter_Count; ++c) {
     auto uc = static_cast<UseCounter>(c);
     if (!mUseCounters[uc]) {
@@ -15676,8 +15680,10 @@ void Document::ReportDocumentUseCounters() {
 
     auto id = static_cast<Telemetry::HistogramID>(
         Telemetry::HistogramFirstUseCounter + uc * 2);
-    MOZ_LOG(gUseCountersLog, LogLevel::Debug,
-            (" > %s\n", Telemetry::GetHistogramName(id)));
+    if (dumpCounters) {
+      printf_stderr("USE_COUNTER_DOCUMENT: %s - %s\n",
+                    Telemetry::GetHistogramName(id), urlForLogging->get());
+    }
     Telemetry::Accumulate(id, 1);
   }
 }

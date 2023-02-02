@@ -4173,6 +4173,24 @@
   value: false
   mirror: always
 
+# Whether to dump worker use counters
+- name: dom.use_counters.dump.worker
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Whether to dump document use counters
+- name: dom.use_counters.dump.document
+  type: bool
+  value: false
+  mirror: always
+
+# Whether to dump page use counters
+- name: dom.use_counters.dump.page
+  type: bool
+  value: false
+  mirror: always
+
 # Time limit, in milliseconds, for user gesture transient activation.
 - name: dom.user_activation.transient.timeout
   type: uint32_t
