@@ -20,8 +20,8 @@ namespace {
 using ::testing::NiceMock;
 
 // Test registering and unregistering an external decoder instance.
-TEST(VCMDecoderDataBaseTest, RegisterExternalDecoder) {
-  VCMDecoderDataBase db;
+TEST(VCMDecoderDatabaseTest, RegisterExternalDecoder) {
+  VCMDecoderDatabase db;
   constexpr int kPayloadType = 1;
   ASSERT_FALSE(db.IsExternalDecoderRegistered(kPayloadType));
 
@@ -32,8 +32,8 @@ TEST(VCMDecoderDataBaseTest, RegisterExternalDecoder) {
   EXPECT_FALSE(db.IsExternalDecoderRegistered(kPayloadType));
 }
 
-TEST(VCMDecoderDataBaseTest, RegisterReceiveCodec) {
-  VCMDecoderDataBase db;
+TEST(VCMDecoderDatabaseTest, RegisterReceiveCodec) {
+  VCMDecoderDatabase db;
   constexpr int kPayloadType = 1;
   ASSERT_FALSE(db.DeregisterReceiveCodec(kPayloadType));
 
@@ -46,8 +46,8 @@ TEST(VCMDecoderDataBaseTest, RegisterReceiveCodec) {
   EXPECT_TRUE(db.DeregisterReceiveCodec(kPayloadType));
 }
 
-TEST(VCMDecoderDataBaseTest, DeregisterReceiveCodecs) {
-  VCMDecoderDataBase db;
+TEST(VCMDecoderDatabaseTest, DeregisterReceiveCodecs) {
+  VCMDecoderDatabase db;
   constexpr int kPayloadType1 = 1;
   constexpr int kPayloadType2 = 2;
   ASSERT_FALSE(db.DeregisterReceiveCodec(kPayloadType1));
