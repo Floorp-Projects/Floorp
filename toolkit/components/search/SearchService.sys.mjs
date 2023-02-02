@@ -1774,6 +1774,11 @@ export class SearchService {
 
     for (let engine of oldEngineList) {
       if (!engine.isAppProvided) {
+        if (engine instanceof lazy.AddonSearchEngine) {
+          // If this is an add-on search engine, check to see if it needs
+          // an update.
+          await engine.update();
+        }
         continue;
       }
 

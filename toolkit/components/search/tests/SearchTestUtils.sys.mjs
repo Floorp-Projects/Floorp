@@ -237,6 +237,9 @@ export var SearchTestUtils = {
    *   engine will be restored when the test exits.
    * @param {boolean} [options.skipUnload]
    *   If true, this will skip the automatic unloading of the extension.
+   * @param {object} [files]
+   *   A key value object where the keys are the filenames and their contents are
+   *   the values. Used for simulating locales and other files in the WebExtension.
    * @returns {object}
    *   The loaded extension.
    */
@@ -246,12 +249,14 @@ export var SearchTestUtils = {
       setAsDefault = false,
       setAsDefaultPrivate = false,
       skipUnload = false,
-    } = {}
+    } = {},
+    files = {}
   ) {
     await Services.search.init();
 
     let extensionInfo = {
       useAddonManager: "permanent",
+      files,
       manifest: this.createEngineManifest(manifest),
     };
 
@@ -395,6 +400,10 @@ export var SearchTestUtils = {
         },
       },
     };
+
+    if (options.default_locale) {
+      manifest.default_locale = options.default_locale;
+    }
 
     if (options.search_url_post_params) {
       manifest.chrome_settings_overrides.search_provider.search_url_post_params =

@@ -54,7 +54,6 @@ export class AddonSearchEngine extends SearchEngine {
 
     super({
       loadPath: "[addon]" + extensionId,
-      isAppProvided,
       id,
     });
 
@@ -106,7 +105,7 @@ export class AddonSearchEngine extends SearchEngine {
    *   The locale to use from the extension for getting details of the search
    *   engine.
    */
-  async update({ configuration, extension, manifest, locale }) {
+  async update({ configuration, extension, manifest, locale } = {}) {
     let baseURI = extension?.baseURI;
     if (!manifest) {
       ({ baseURI, manifest } = await this.#getExtensionDetailsForLocale(
@@ -383,13 +382,31 @@ export class AddonSearchEngine extends SearchEngine {
 
     let manifest = extension.manifest;
 
-    // If the locale we want from the WebExtension is the extension's default
-    // then we get that from the manifest here. We do this because if we
-    // are reloading due to the locale change, the add-on manager might not
-    // have updated the WebExtension's manifest to the new version by the
-    // time we hit this code.
-    let localeToLoad =
-      locale == lazy.SearchUtils.DEFAULT_TAG ? manifest.default_locale : locale;
+    let localeToLoad;
+    if (this.#isAppProvided) {
+      // If the locale we want from the WebExtension is the extension's default
+      // then we get that from the manifest here. We do this because if we
+      // are reloading due to the locale change, the add-on manager might not
+      // have updated the WebExtension's manifest to the new version by the
+      // time we hit this code.
+      localeToLoad =
+        locale == lazy.SearchUtils.DEFAULT_TAG
+          ? manifest.default_locale
+          : locale;
+    } else {
+      // For user installed add-ons, we have to simulate the add-on manager
+      // code for loading the correct locale.
+      // We do this, as in the case of a live language switch, the add-on manager
+      // may not have yet reloaded the extension, and there's no way for us to
+      // listen for that reload to complete.
+      // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1781768#c3 for
+      // more background.
+      localeToLoad = Services.locale.negotiateLanguages(
+        Services.locale.appLocalesAsBCP47,
+        [...extension.localeData.locales.keys()],
+        manifest.default_locale
+      )[0];
+    }
 
     if (localeToLoad) {
       manifest = await extension.getLocalizedManifest(localeToLoad);
