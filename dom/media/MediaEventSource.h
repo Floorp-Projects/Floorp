@@ -564,6 +564,19 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
         }));
   }
 
+  template <typename Function>
+  void ForwardIf(MediaEventSource<Es...>& aSource, Function&& aFunction) {
+    // Forwarding a rawptr `this` here is fine, since DisconnectAll disconnect
+    // all mListeners synchronously and prevents this handler from running.
+    mListeners.AppendElement(aSource.Connect(
+        mEventTarget, [this, func = aFunction](ArgType<Es>&&... aEvents) {
+          if (!func()) {
+            return;
+          }
+          this->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
+        }));
+  }
+
   void DisconnectAll() {
     for (auto& l : mListeners) {
       l.Disconnect();
