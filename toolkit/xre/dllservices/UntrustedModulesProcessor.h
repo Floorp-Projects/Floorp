@@ -51,13 +51,15 @@ struct UnprocessedModuleLoadInfoContainer final
 using UnprocessedModuleLoads =
     AutoCleanLinkedList<UnprocessedModuleLoadInfoContainer>;
 
-class UntrustedModulesProcessor final : public nsIObserver {
+class UntrustedModulesProcessor final : public nsIObserver,
+                                        public nsIThreadPoolListener {
  public:
   static RefPtr<UntrustedModulesProcessor> Create(
       bool aIsReadyForBackgroundProcessing);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITHREADPOOLLISTENER
 
   // Called to check if the parent process is ready when a child process
   // is spanwed
@@ -93,8 +95,10 @@ class UntrustedModulesProcessor final : public nsIObserver {
   void AddObservers();
   void RemoveObservers();
 
-  void ScheduleNonEmptyQueueProcessing(const MutexAutoLock& aProofOfLock);
-  void CancelScheduledProcessing(const MutexAutoLock& aProofOfLock);
+  void ScheduleNonEmptyQueueProcessing(const MutexAutoLock& aProofOfLock)
+      MOZ_REQUIRES(mUnprocessedMutex);
+  void CancelScheduledProcessing(const MutexAutoLock& aProofOfLock)
+      MOZ_REQUIRES(mUnprocessedMutex);
   void DispatchBackgroundProcessing();
 
   void BackgroundProcessModuleLoadQueue();
@@ -150,12 +154,17 @@ class UntrustedModulesProcessor final : public nsIObserver {
  private:
   RefPtr<LazyIdleThread> mThread;
 
-  Mutex mUnprocessedMutex MOZ_UNANNOTATED;
-  Mutex mModuleCacheMutex MOZ_UNANNOTATED;
+  Mutex mThreadHandleMutex;
+  Mutex mUnprocessedMutex;
+  Mutex mModuleCacheMutex;
+
+  // Windows HANDLE for the currently active mThread, if active.
+  nsAutoHandle mThreadHandle MOZ_GUARDED_BY(mThreadHandleMutex);
 
   // The members in this group are protected by mUnprocessedMutex
-  UnprocessedModuleLoads mUnprocessedModuleLoads;
-  nsCOMPtr<nsIRunnable> mIdleRunnable;
+  UnprocessedModuleLoads mUnprocessedModuleLoads
+      MOZ_GUARDED_BY(mUnprocessedMutex);
+  nsCOMPtr<nsIRunnable> mIdleRunnable MOZ_GUARDED_BY(mUnprocessedMutex);
 
   // This member must only be touched on mThread
   UntrustedModulesData mProcessedModuleLoads;
@@ -168,7 +177,7 @@ class UntrustedModulesProcessor final : public nsIObserver {
   // Cache all module records, including ones trusted and ones loaded in
   // child processes, in the browser process to avoid evaluating the same
   // module multiple times
-  ModulesMap mGlobalModuleCache;
+  ModulesMap mGlobalModuleCache MOZ_GUARDED_BY(mModuleCacheMutex);
 };
 
 }  // namespace mozilla
