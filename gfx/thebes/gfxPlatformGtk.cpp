@@ -232,23 +232,22 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
 
   if (aForceEnabledByUser) {
     feature.UserForceEnable("Force enabled by pref");
+  } else {
+    nsCString failureId;
+    int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+    if (NS_FAILED(gfxInfo->GetFeatureStatus(
+            nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, failureId, &status))) {
+      feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                      "FEATURE_FAILURE_NO_GFX_INFO"_ns);
+    } else if (status == nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST) {
+      feature.ForceDisable(FeatureStatus::Unavailable,
+                           "Force disabled by gfxInfo", failureId);
+    } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+      feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
+                      failureId);
+    }
   }
-
-  nsCString failureId;
-  int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-  if (NS_FAILED(gfxInfo->GetFeatureStatus(
-          nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, failureId, &status))) {
-    feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
-                    "FEATURE_FAILURE_NO_GFX_INFO"_ns);
-  } else if (status == nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST) {
-    feature.ForceDisable(FeatureStatus::Unavailable,
-                         "Force disabled by gfxInfo", failureId);
-  } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-    feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
-                    failureId);
-  }
-
   if (!gfxVars::UseEGL()) {
     feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
