@@ -1238,7 +1238,7 @@ ParentAPIManager = {
 
     // Store pending listener additions so we can be sure they're all
     // fully initialize before we consider extension startup complete.
-    if (context.viewType === "background" && context.listenerPromises) {
+    if (context.isBackgroundContext && context.listenerPromises) {
       const { listenerPromises } = context;
       listenerPromises.add(promise);
       let remove = () => {
