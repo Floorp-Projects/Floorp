@@ -840,7 +840,7 @@ void WinUtils::InvalidatePluginAsWorkaround(nsIWidget* aWidget,
  ************************************************************************/
 
 AsyncFaviconDataReady::AsyncFaviconDataReady(
-    nsIURI* aNewURI, nsCOMPtr<nsIThread>& aIOThread, const bool aURLShortcut,
+    nsIURI* aNewURI, RefPtr<LazyIdleThread>& aIOThread, const bool aURLShortcut,
     already_AddRefed<nsIRunnable> aRunnable)
     : mNewURI(aNewURI),
       mIOThread(aIOThread),
@@ -1129,7 +1129,7 @@ AsyncDeleteAllFaviconsFromDisk::~AsyncDeleteAllFaviconsFromDisk() {}
  */
 nsresult FaviconHelper::ObtainCachedIconFile(
     nsCOMPtr<nsIURI> aFaviconPageURI, nsString& aICOFilePath,
-    nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+    RefPtr<LazyIdleThread>& aIOThread, bool aURLShortcut,
     already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
   // Obtain the ICO file path
@@ -1234,7 +1234,7 @@ nsresult FaviconHelper::GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
 // page aFaviconPageURI and stores it to disk at the path of aICOFile.
 nsresult FaviconHelper::CacheIconFileFromFaviconURIAsync(
     nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
-    nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+    RefPtr<LazyIdleThread>& aIOThread, bool aURLShortcut,
     already_AddRefed<nsIRunnable> aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
 #ifdef MOZ_PLACES
