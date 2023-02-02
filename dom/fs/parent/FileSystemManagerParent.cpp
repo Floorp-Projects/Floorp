@@ -10,6 +10,7 @@
 #include "FileSystemStreamCallbacks.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
+#include "mozilla/dom/FileSystemAccessHandle.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemLog.h"
@@ -119,17 +120,15 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  if (!mDataManager->LockExclusive(aRequest.entryId())) {
-    aResolver(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+  auto resolveAndReturn = [aResolver](nsresult rv) {
+    aResolver(rv);
     return IPC_OK();
-  }
+  };
 
-  auto autoUnlock =
-      MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {
-        self->mDataManager->UnlockExclusive(aRequest.entryId());
-      });
-
-  auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
+  QM_TRY_UNWRAP(
+      RefPtr<FileSystemAccessHandle> accessHandle,
+      FileSystemAccessHandle::Create(mDataManager, aRequest.entryId()),
+      resolveAndReturn);
 
   nsString type;
   fs::TimeStamp lastModifiedMilliSeconds;
@@ -137,7 +136,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
              aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
-         IPC_OK(), reportError);
+         resolveAndReturn);
 
   if (LOG_ENABLED()) {
     nsAutoString path;
@@ -152,7 +151,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
                                    mDataManager->OriginMetadataRef(),
                                    quota::Client::FILESYSTEM, file, -1, -1,
                                    nsIFileRandomAccessStream::DEFER_OPEN),
-      IPC_OK(), reportError);
+      resolveAndReturn);
 
   EnsureStreamCallbacks();
 
@@ -161,13 +160,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
           WrapMovingNotNullUnchecked(std::move(stream)), mStreamCallbacks);
 
   auto accessHandleParent =
-      MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
-
-  // Release the auto unlock helper just before calling
-  // SendPFileSystemAccessHandleConstructor which is responsible for destroying
-  // the actor if the sending fails (we call `UnlockExclusive` when the actor is
-  // destroyed).
-  autoUnlock.release();
+      MakeRefPtr<FileSystemAccessHandleParent>(accessHandle);
 
   if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
     aResolver(NS_ERROR_FAILURE);
@@ -176,6 +169,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
   aResolver(FileSystemAccessHandleProperties(std::move(streamParams),
                                              accessHandleParent, nullptr));
+
   return IPC_OK();
 }
 
