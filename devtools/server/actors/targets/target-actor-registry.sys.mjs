@@ -28,42 +28,8 @@ export var TargetActorRegistry = {
     xpcShellTargetActor = null;
   },
 
-  /**
-   * Return the first target actor matching the passed watcher's session context. Returns null if
-   * no matching target actors could be found.
-   *
-   * @param {Object} sessionContext: The Session Context to help know what is debugged.
-   *                                 See devtools/server/actors/watcher/session-context.js
-   * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
-   *                                   related to the same connection. i.e. the same client.
-   * @returns {TargetActor|null}
-   */
-  getTopLevelTargetActorForContext(sessionContext, connectionPrefix) {
-    if (sessionContext.type == "all") {
-      if (
-        Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT
-      ) {
-        // The xpcshell target actor also lives in the "parent process", even if it
-        // is an instance of ContentProcessTargetActor.
-        if (xpcShellTargetActor) {
-          return xpcShellTargetActor;
-        }
-
-        const actors = this.getTargetActors(sessionContext, connectionPrefix);
-        // In theory, there should be only one actor here.
-        return actors[0];
-      }
-      return null;
-    } else if (
-      sessionContext.type == "browser-element" ||
-      sessionContext.type == "webextension"
-    ) {
-      const actors = this.getTargetActors(sessionContext, connectionPrefix);
-      return actors.find(actor => {
-        return actor.isTopLevelTarget;
-      });
-    }
-    throw new Error("Unsupported session context type: " + sessionContext.type);
+  get xpcShellTargetActor() {
+    return xpcShellTargetActor;
   },
 
   /**
