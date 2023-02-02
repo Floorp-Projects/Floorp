@@ -2448,7 +2448,7 @@ void gfxPlatform::InitAcceleration() {
         gfxPlatformGtk::GetPlatform()->InitVAAPIConfig(
             StaticPrefs::
                 media_hardware_video_decoding_force_enabled_AtStartup() ||
-            StaticPrefs::media_ffmpeg_vaapi_enabled());
+            StaticPrefs::media_ffmpeg_vaapi_enabled_AtStartup());
 #else
     if (
 #  ifdef XP_WIN

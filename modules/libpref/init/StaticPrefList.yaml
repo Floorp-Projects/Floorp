@@ -9970,15 +9970,15 @@
     type: bool
     value: false
     mirror: always
+#endif  # MOZ_FFMPEG
 
 #ifdef MOZ_WIDGET_GTK
 # Use VA-API for ffmpeg video playback on Linux
 - name: media.ffmpeg.vaapi.enabled
-  type: RelaxedAtomicBool
+  type: bool
   value: false
-  mirror: always
+  mirror: once
 #endif # MOZ_WIDGET_GTK
-#endif  # MOZ_FFMPEG
 
 -   name: media.ffvpx.enabled
     type: RelaxedAtomicBool
