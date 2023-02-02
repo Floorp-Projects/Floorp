@@ -48,7 +48,7 @@ class LossBasedBweV2 {
 
   void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
   void SetBandwidthEstimate(DataRate bandwidth_estimate);
-
+  void SetMinBitrate(DataRate min_bitrate);
   void UpdateBandwidthEstimate(
       rtc::ArrayView<const PacketResult> packet_results,
       DataRate delay_based_estimate,
@@ -92,6 +92,9 @@ class LossBasedBweV2 {
     TimeDelta delayed_increase_window = TimeDelta::Zero();
     bool use_acked_bitrate_only_when_overusing = false;
     bool not_increase_if_inherent_loss_less_than_average_loss = false;
+    double high_loss_rate_threshold = 1.0;
+    DataRate bandwidth_cap_at_high_loss_rate = DataRate::MinusInfinity();
+    double slope_of_bwe_high_loss_func = 1000.0;
   };
 
   struct Derivatives {
@@ -168,6 +171,7 @@ class LossBasedBweV2 {
   Timestamp recovering_after_loss_timestamp_ = Timestamp::MinusInfinity();
   DataRate bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
   bool limited_due_to_loss_candidate_ = false;
+  DataRate min_bitrate_ = DataRate::KilobitsPerSec(1);
 };
 
 }  // namespace webrtc

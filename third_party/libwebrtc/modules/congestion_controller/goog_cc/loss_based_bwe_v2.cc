@@ -181,6 +181,15 @@ void LossBasedBweV2::SetBandwidthEstimate(DataRate bandwidth_estimate) {
   }
 }
 
+void LossBasedBweV2::SetMinBitrate(DataRate min_bitrate) {
+  if (IsValid(min_bitrate)) {
+    min_bitrate_ = min_bitrate;
+  } else {
+    RTC_LOG(LS_WARNING) << "The min bitrate must be finite: "
+                        << ToString(min_bitrate);
+  }
+}
+
 void LossBasedBweV2::UpdateBandwidthEstimate(
     rtc::ArrayView<const PacketResult> packet_results,
     DataRate delay_based_estimate,
@@ -324,7 +333,12 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool>
       not_increase_if_inherent_loss_less_than_average_loss(
           "NotIncreaseIfInherentLossLessThanAverageLoss", false);
-
+  FieldTrialParameter<double> high_loss_rate_threshold("HighLossRateThreshold",
+                                                       1.0);
+  FieldTrialParameter<DataRate> bandwidth_cap_at_high_loss_rate(
+      "BandwidthCapAtHighLossRate", DataRate::KilobitsPerSec(500.0));
+  FieldTrialParameter<double> slope_of_bwe_high_loss_func(
+      "SlopeOfBweHighLossFunc", 1000);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -356,7 +370,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &max_increase_factor,
                      &delayed_increase_window,
                      &use_acked_bitrate_only_when_overusing,
-                     &not_increase_if_inherent_loss_less_than_average_loss},
+                     &not_increase_if_inherent_loss_less_than_average_loss,
+                     &high_loss_rate_threshold,
+                     &bandwidth_cap_at_high_loss_rate,
+                     &slope_of_bwe_high_loss_func},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -412,6 +429,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       use_acked_bitrate_only_when_overusing.Get();
   config->not_increase_if_inherent_loss_less_than_average_loss =
       not_increase_if_inherent_loss_less_than_average_loss.Get();
+  config->high_loss_rate_threshold = high_loss_rate_threshold.Get();
+  config->bandwidth_cap_at_high_loss_rate =
+      bandwidth_cap_at_high_loss_rate.Get();
+  config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   return config;
 }
 
@@ -575,8 +596,8 @@ bool LossBasedBweV2::IsConfigValid() const {
         << config_->bandwidth_backoff_lower_bound_factor;
     valid = false;
   }
-  if (config_->trendline_observations_window_size < 2) {
-    RTC_LOG(LS_WARNING) << "The trendline window size must be at least 2: "
+  if (config_->trendline_observations_window_size < 1) {
+    RTC_LOG(LS_WARNING) << "The trendline window size must be at least 1: "
                         << config_->trendline_observations_window_size;
     valid = false;
   }
@@ -590,6 +611,12 @@ bool LossBasedBweV2::IsConfigValid() const {
                         << config_->delayed_increase_window.ms();
     valid = false;
   }
+  if (config_->high_loss_rate_threshold <= 0.0 ||
+      config_->high_loss_rate_threshold > 1.0) {
+    RTC_LOG(LS_WARNING) << "The high loss rate threshold must be in (0, 1]: "
+                        << config_->high_loss_rate_threshold;
+    valid = false;
+  }
   return valid;
 }
 
@@ -598,8 +625,8 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
     return 0.0;
   }
 
-  int num_packets = 0;
-  int num_lost_packets = 0;
+  double num_packets = 0;
+  double num_lost_packets = 0;
   for (const Observation& observation : observations_) {
     if (!observation.IsInitialized()) {
       continue;
@@ -612,7 +639,7 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
     num_lost_packets += instant_temporal_weight * observation.num_lost_packets;
   }
 
-  return static_cast<double>(num_lost_packets) / num_packets;
+  return num_lost_packets / num_packets;
 }
 
 DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound(
@@ -843,7 +870,16 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
     instant_limit = config_->instant_upper_bound_bandwidth_balance /
                     (average_reported_loss_ratio -
                      config_->instant_upper_bound_loss_offset);
+    if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
+      instant_limit = std::min(
+          instant_limit, DataRate::KilobitsPerSec(std::max(
+                             static_cast<double>(min_bitrate_.kbps()),
+                             config_->bandwidth_cap_at_high_loss_rate.kbps() -
+                                 config_->slope_of_bwe_high_loss_func *
+                                     average_reported_loss_ratio)));
+    }
   }
+
   cached_instant_upper_bound_ = instant_limit;
 }
 
