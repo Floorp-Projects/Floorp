@@ -2641,14 +2641,20 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocumentViewer::GetContentSize(
 
   nscoord prefISize;
   {
+    const auto& constraints = presShell->GetWindowSizeConstraints();
+    aMaxHeight = std::min(aMaxHeight, constraints.mMaxSize.height);
+    aMaxWidth = std::min(aMaxWidth, constraints.mMaxSize.width);
+
     RefPtr<gfxContext> rcx(presShell->CreateReferenceRenderingContext());
-    nscoord maxISize = wm.IsVertical() ? aMaxHeight : aMaxWidth;
+    const nscoord minISize = wm.IsVertical() ? constraints.mMinSize.height
+                                             : constraints.mMinSize.width;
+    const nscoord maxISize = wm.IsVertical() ? aMaxHeight : aMaxWidth;
     if (aPrefWidth) {
       prefISize = std::max(root->GetMinISize(rcx), aPrefWidth);
     } else {
       prefISize = root->GetPrefISize(rcx);
     }
-    prefISize = std::min(prefISize, maxISize);
+    prefISize = std::max(minISize, std::min(prefISize, maxISize));
   }
 
   // We should never intentionally get here with this sentinel value, but it's
