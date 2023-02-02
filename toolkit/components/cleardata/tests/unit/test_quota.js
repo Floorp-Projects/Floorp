@@ -18,11 +18,6 @@ const skipLocalStorageTests = Services.prefs.getBoolPref(
   "dom.storage.enable_unsupported_legacy_implementation"
 );
 
-// XXX(krosylight): xpcshell does not support background tasks
-const skipCleanupAfterDeletionAtShutdownTests = Services.prefs.getBoolPref(
-  "dom.quotaManager.backgroundTask.enabled"
-);
-
 /**
  * Create an origin with partitionKey.
  * @param {String} host - Host portion of origin to create.
@@ -539,11 +534,6 @@ add_task(async function test_deleteAllAtShutdown() {
     TEST_ORIGINS.length,
     `storage/to-be-removed has ${TEST_ORIGINS.length} subdirectories`
   );
-
-  if (skipCleanupAfterDeletionAtShutdownTests) {
-    // XXX(krosylight): xpcshell does not support background tasks
-    return;
-  }
 
   info("Verifying cleanupAfterDeletionAtShutdown");
   await new Promise(aResolve => {

@@ -51,12 +51,6 @@ background_update_metrics = [
     "toolkit/mozapps/update/metrics.yaml",
 ]
 
-# Metrics that are sent by the Firefox Desktop Background Tasks
-# Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
-background_tasks_metrics = [
-    "toolkit/components/backgroundtasks/metrics.yaml",
-]
-
 # Test metrics
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 test_metrics = [
@@ -66,11 +60,7 @@ test_metrics = [
 # The list of all Glean metrics.yaml files, relative to the top src dir.
 # ONLY TO BE MODIFIED BY FOG PEERS!
 metrics_yamls = (
-    gecko_metrics
-    + firefox_desktop_metrics
-    + background_update_metrics
-    + background_tasks_metrics
-    + test_metrics
+    gecko_metrics + firefox_desktop_metrics + background_update_metrics + test_metrics
 )
 
 # Pings that are sent by Gecko and everyone using Gecko
@@ -95,12 +85,6 @@ background_update_pings = [
     "toolkit/mozapps/update/pings.yaml",
 ]
 
-# Pings that are sent by the Firefox Desktop Background Tasks
-# Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
-background_tasks_pings = [
-    "toolkit/components/backgroundtasks/pings.yaml",
-]
-
 # Test pings
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 test_pings = [
@@ -119,13 +103,7 @@ pings_by_app_id = {
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
 # ONLY TO BE MODIFIED BY FOG PEERS!
-pings_yamls = (
-    gecko_pings
-    + firefox_desktop_pings
-    + background_update_pings
-    + background_tasks_pings
-    + test_pings
-)
+pings_yamls = gecko_pings + firefox_desktop_pings + background_update_pings + test_pings
 
 # The list of tags that are allowed in the above to files, and their
 # descriptions. Currently we restrict to a set scraped from bugzilla

@@ -194,7 +194,7 @@ def paramlistAsNative(m, empty="void", return_param=True):
         while (
             paramIter >= 0
             and m.params[paramIter].optional
-            and "out" in m.params[paramIter].paramtype
+            and m.params[paramIter].paramtype == "out"
         ):
             t = m.params[paramIter].type
             # Strings can't be optional, so this shouldn't happen, but let's make sure:

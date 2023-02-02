@@ -739,30 +739,11 @@ const QuotaCleaner = {
   async cleanupAfterDeletionAtShutdown() {
     const storageDir = PathUtils.join(
       PathUtils.profileDir,
-      Services.prefs.getStringPref("dom.quotaManager.storageName")
+      Services.prefs.getStringPref("dom.quotaManager.storageName"),
+      "to-be-removed"
     );
 
-    if (
-      !AppConstants.MOZ_BACKGROUNDTASKS ||
-      !Services.prefs.getBoolPref("dom.quotaManager.backgroundTask.enabled")
-    ) {
-      await IOUtils.remove(PathUtils.join(storageDir, "to-be-removed"), {
-        recursive: true,
-      });
-      return;
-    }
-
-    const runner = Cc["@mozilla.org/backgroundtasksrunner;1"].getService(
-      Ci.nsIBackgroundTasksRunner
-    );
-
-    runner.removeDirectoryInDetachedProcess(
-      storageDir,
-      "to-be-removed",
-      "0",
-      "",
-      "Quota"
-    );
+    await IOUtils.remove(storageDir, { recursive: true });
   },
 };
 
