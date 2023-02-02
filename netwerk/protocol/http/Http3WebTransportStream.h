@@ -69,6 +69,9 @@ class Http3WebTransportStream final : public Http3StreamBase,
   void GetWriterAndReader(nsIAsyncOutputStream** aOutOutputStream,
                           nsIAsyncInputStream** aOutInputStream);
 
+  // When mRecvState is RECV_DONE, this means we already received the FIN.
+  bool RecvDone() const { return mRecvState == RECV_DONE; }
+
  private:
   friend class Http3WebTransportSession;
   virtual ~Http3WebTransportStream();
@@ -96,12 +99,8 @@ class Http3WebTransportStream final : public Http3StreamBase,
     SEND_DONE,
   } mSendState{WAITING_TO_ACTIVATE};
 
-  enum RecvStreamState {
-    BEFORE_READING,
-    READING,
-    RECEIVED_FIN,
-    RECV_DONE
-  } mRecvState{BEFORE_READING};
+  enum RecvStreamState { BEFORE_READING, READING, RECEIVED_FIN, RECV_DONE };
+  Atomic<RecvStreamState> mRecvState{BEFORE_READING};
 
   nsresult mSocketOutCondition = NS_ERROR_NOT_INITIALIZED;
   nsresult mSocketInCondition = NS_ERROR_NOT_INITIALIZED;

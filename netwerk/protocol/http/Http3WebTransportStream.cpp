@@ -412,7 +412,7 @@ nsresult Http3WebTransportStream::OnWriteSegment(char* buf, uint32_t count,
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   LOG(("Http3WebTransportStream::OnWriteSegment [this=%p, state=%d", this,
-       mRecvState));
+       static_cast<uint32_t>(mRecvState)));
   nsresult rv = NS_OK;
   switch (mRecvState) {
     case READING: {
