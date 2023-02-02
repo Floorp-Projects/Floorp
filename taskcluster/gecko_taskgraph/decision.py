@@ -64,6 +64,10 @@ PER_PROJECT_PARAMETERS = {
     "cedar": {
         "target_tasks_method": "default",
     },
+    "holly": {
+        "enable_always_target": True,
+        "target_tasks_method": "holly_tasks",
+    },
     "oak": {
         "target_tasks_method": "nightly_desktop",
         "release_type": "nightly-oak",
