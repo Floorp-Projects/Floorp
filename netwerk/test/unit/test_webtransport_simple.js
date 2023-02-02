@@ -235,10 +235,10 @@ add_task(async function test_wt_stream_send_and_stats() {
   });
 
   let stream = await streamCreatePromise(webTransport, false);
-  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+  let outputStream = stream.outputStream;
 
   let data = "123456";
-  stream.write(data, data.length);
+  outputStream.write(data, data.length);
 
   // We need some time to send the packet out.
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -280,8 +280,8 @@ add_task(async function test_wt_receive_stream_and_stats() {
       Ci.nsIInputStreamCallback
     );
     handler.finish = resolve;
-    stream.QueryInterface(Ci.nsIAsyncInputStream);
-    stream.asyncWait(handler, 0, 0, Services.tm.currentThread);
+    let inputStream = stream.inputStream;
+    inputStream.asyncWait(handler, 0, 0, Services.tm.currentThread);
   });
 
   info("data: " + data);
@@ -315,18 +315,18 @@ add_task(async function test_wt_outgoing_bidi_stream() {
   });
 
   let stream = await streamCreatePromise(webTransport, true);
-  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+  let outputStream = stream.outputStream;
 
   let data = "1234567";
-  stream.write(data, data.length);
+  outputStream.write(data, data.length);
 
   let received = await new Promise(resolve => {
     let handler = new inputStreamReader().QueryInterface(
       Ci.nsIInputStreamCallback
     );
     handler.finish = resolve;
-    stream.QueryInterface(Ci.nsIAsyncInputStream);
-    stream.asyncWaitForRead(handler, 0, 0, Services.tm.currentThread);
+    let inputStream = stream.inputStream;
+    inputStream.asyncWait(handler, 0, 0, Services.tm.currentThread);
   });
 
   info("received: " + received);
@@ -366,18 +366,18 @@ add_task(async function test_wt_incoming_bidi_stream() {
   await pReady;
   let stream = await pStreamReady;
 
-  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+  let outputStream = stream.outputStream;
 
   let data = "12345678";
-  stream.write(data, data.length);
+  outputStream.write(data, data.length);
 
   let received = await new Promise(resolve => {
     let handler = new inputStreamReader().QueryInterface(
       Ci.nsIInputStreamCallback
     );
     handler.finish = resolve;
-    stream.QueryInterface(Ci.nsIAsyncInputStream);
-    stream.asyncWaitForRead(handler, 0, 0, Services.tm.currentThread);
+    let inputStream = stream.inputStream;
+    inputStream.asyncWait(handler, 0, 0, Services.tm.currentThread);
   });
 
   info("received: " + received);

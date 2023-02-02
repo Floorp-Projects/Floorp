@@ -20,17 +20,21 @@ NS_INTERFACE_MAP_BEGIN(WebTransportStreamProxy)
   NS_INTERFACE_MAP_ENTRY(nsIWebTransportReceiveStream)
   NS_INTERFACE_MAP_ENTRY(nsIWebTransportSendStream)
   NS_INTERFACE_MAP_ENTRY(nsIWebTransportBidirectionalStream)
-  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncOutputStream)
 NS_INTERFACE_MAP_END
 
 WebTransportStreamProxy::WebTransportStreamProxy(
     Http3WebTransportStream* aStream)
     : mWebTransportStream(aStream) {
-  mWebTransportStream->GetWriterAndReader(getter_AddRefs(mWriter),
-                                          getter_AddRefs(mReader));
+  nsCOMPtr<nsIAsyncInputStream> inputStream;
+  nsCOMPtr<nsIAsyncOutputStream> outputStream;
+  mWebTransportStream->GetWriterAndReader(getter_AddRefs(outputStream),
+                                          getter_AddRefs(inputStream));
+  if (outputStream) {
+    mWriter = new AsyncOutputStreamWrapper(outputStream);
+  }
+  if (inputStream) {
+    mReader = new AsyncInputStreamWrapper(inputStream, mWebTransportStream);
+  }
 }
 
 WebTransportStreamProxy::~WebTransportStreamProxy() {
@@ -186,106 +190,165 @@ NS_IMETHODIMP WebTransportStreamProxy::GetReceiveStreamStats(
   return NS_OK;
 }
 
-NS_IMETHODIMP WebTransportStreamProxy::Close() {
-  return CloseWithStatus(NS_BASE_STREAM_CLOSED);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::Available(uint64_t* aAvailable) {
-  if (!mReader) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mReader->Available(aAvailable);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::Read(char* aBuf, uint32_t aCount,
-                                            uint32_t* aResult) {
-  if (!mReader) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mReader->Read(aBuf, aCount, aResult);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::ReadSegments(nsWriteSegmentFun aWriter,
-                                                    void* aClosure,
-                                                    uint32_t aCount,
-                                                    uint32_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::IsNonBlocking(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::CloseWithStatus(nsresult aStatus) {
-  if (!mReader) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mReader->CloseWithStatus(aStatus);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
-    nsIInputStreamCallback* aCallback, uint32_t aFlags,
-    uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
-  if (!mReader) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mReader->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::AsyncWaitForRead(
-    nsIInputStreamCallback* aCallback, uint32_t aFlags,
-    uint32_t aRequestedCount, nsIEventTarget* aTarget) {
-  return AsyncWait(aCallback, aFlags, aRequestedCount, aTarget);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::Flush() {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::Write(const char* aBuf, uint32_t aCount,
-                                             uint32_t* aResult) {
-  if (!mWriter) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mWriter->Write(aBuf, aCount, aResult);
-}
-
-// static
-nsresult WebTransportStreamProxy::WriteFromSegments(
-    nsIInputStream* input, void* closure, const char* fromSegment,
-    uint32_t offset, uint32_t count, uint32_t* countRead) {
-  WebTransportStreamProxy* self = (WebTransportStreamProxy*)closure;
-  return self->Write(fromSegment, count, countRead);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::WriteFrom(nsIInputStream* aFromStream,
-                                                 uint32_t aCount,
-                                                 uint32_t* aResult) {
-  return aFromStream->ReadSegments(WriteFromSegments, this, aCount, aResult);
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::WriteSegments(nsReadSegmentFun aReader,
-                                                     void* aClosure,
-                                                     uint32_t aCount,
-                                                     uint32_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
-    nsIOutputStreamCallback* aCallback, uint32_t aFlags,
-    uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP WebTransportStreamProxy::GetHasReceivedFIN(
     bool* aHasReceivedFIN) {
   *aHasReceivedFIN = mWebTransportStream->RecvDone();
   return NS_OK;
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::GetInputStream(
+    nsIAsyncInputStream** aOut) {
+  if (!mReader) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<AsyncInputStreamWrapper> stream = mReader;
+  stream.forget(aOut);
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::GetOutputStream(
+    nsIAsyncOutputStream** aOut) {
+  if (!mWriter) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<AsyncOutputStreamWrapper> stream = mWriter;
+  stream.forget(aOut);
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------------
+// WebTransportStreamProxy::AsyncInputStreamWrapper
+//------------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(WebTransportStreamProxy::AsyncInputStreamWrapper,
+                  nsIInputStream, nsIAsyncInputStream)
+
+WebTransportStreamProxy::AsyncInputStreamWrapper::AsyncInputStreamWrapper(
+    nsIAsyncInputStream* aStream, Http3WebTransportStream* aWebTransportStream)
+    : mStream(aStream), mWebTransportStream(aWebTransportStream) {}
+
+WebTransportStreamProxy::AsyncInputStreamWrapper::~AsyncInputStreamWrapper() =
+    default;
+
+void WebTransportStreamProxy::AsyncInputStreamWrapper::MaybeCloseStream() {
+  if (!mWebTransportStream->RecvDone()) {
+    return;
+  }
+
+  uint64_t available = 0;
+  Unused << Available(&available);
+  if (available) {
+    // Don't close the InputStream if there's unread data available, since it
+    // would be lost. We exit above unless we know no more data will be received
+    // for the stream.
+    return;
+  }
+
+  LOG(
+      ("AsyncInputStreamWrapper::MaybeCloseStream close stream due to FIN "
+       "stream=%p",
+       mWebTransportStream.get()));
+  Close();
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::Close() {
+  return mStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::Available(
+    uint64_t* aAvailable) {
+  return mStream->Available(aAvailable);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::Read(
+    char* aBuf, uint32_t aCount, uint32_t* aResult) {
+  LOG(("WebTransportStreamProxy::AsyncInputStreamWrapper::Read %p", this));
+  nsresult rv = mStream->Read(aBuf, aCount, aResult);
+  MaybeCloseStream();
+  return rv;
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::ReadSegments(
+    nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
+    uint32_t* aResult) {
+  LOG(("WebTransportStreamProxy::AsyncInputStreamWrapper::ReadSegments %p",
+       this));
+  nsresult rv = mStream->ReadSegments(aWriter, aClosure, aCount, aResult);
+  MaybeCloseStream();
+  return rv;
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::IsNonBlocking(
+    bool* aResult) {
+  return mStream->IsNonBlocking(aResult);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::CloseWithStatus(
+    nsresult aStatus) {
+  return mStream->CloseWithStatus(aStatus);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::AsyncWait(
+    nsIInputStreamCallback* aCallback, uint32_t aFlags,
+    uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
+  return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
+}
+
+//------------------------------------------------------------------------------
+// WebTransportStreamProxy::AsyncOutputStreamWrapper
+//------------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(WebTransportStreamProxy::AsyncOutputStreamWrapper,
+                  nsIOutputStream, nsIAsyncOutputStream)
+
+WebTransportStreamProxy::AsyncOutputStreamWrapper::AsyncOutputStreamWrapper(
+    nsIAsyncOutputStream* aStream)
+    : mStream(aStream) {}
+
+WebTransportStreamProxy::AsyncOutputStreamWrapper::~AsyncOutputStreamWrapper() =
+    default;
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::Flush() {
+  return mStream->Flush();
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::Write(
+    const char* aBuf, uint32_t aCount, uint32_t* aResult) {
+  return mStream->Write(aBuf, aCount, aResult);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::WriteFrom(
+    nsIInputStream* aFromStream, uint32_t aCount, uint32_t* aResult) {
+  return mStream->WriteFrom(aFromStream, aCount, aResult);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::WriteSegments(
+    nsReadSegmentFun aReader, void* aClosure, uint32_t aCount,
+    uint32_t* aResult) {
+  return mStream->WriteSegments(aReader, aClosure, aCount, aResult);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::AsyncWait(
+    nsIOutputStreamCallback* aCallback, uint32_t aFlags,
+    uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
+  return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
+}
+
+NS_IMETHODIMP
+WebTransportStreamProxy::AsyncOutputStreamWrapper::CloseWithStatus(
+    nsresult aStatus) {
+  return mStream->CloseWithStatus(aStatus);
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::Close() {
+  return mStream->Close();
+}
+
+NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::IsNonBlocking(
+    bool* aResult) {
+  return mStream->IsNonBlocking(aResult);
 }
 
 }  // namespace mozilla::net

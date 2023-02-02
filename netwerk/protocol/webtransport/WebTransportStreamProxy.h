@@ -15,11 +15,10 @@ namespace mozilla::net {
 
 class Http3WebTransportStream;
 
-class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
-                                      public nsIWebTransportSendStream,
-                                      public nsIWebTransportBidirectionalStream,
-                                      public nsIAsyncInputStream,
-                                      public nsIAsyncOutputStream {
+class WebTransportStreamProxy final
+    : public nsIWebTransportReceiveStream,
+      public nsIWebTransportSendStream,
+      public nsIWebTransportBidirectionalStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -33,44 +32,48 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
   NS_IMETHOD GetReceiveStreamStats(
       nsIWebTransportStreamStatsCallback* aCallback) override;
 
-  NS_IMETHOD Close() override;
-  NS_IMETHOD Available(uint64_t* aAvailable) override;
-  NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* aResult) override;
-  NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                          uint32_t aCount, uint32_t* aResult) override;
-  NS_IMETHOD IsNonBlocking(bool* aResult) override;
-  NS_IMETHOD CloseWithStatus(nsresult aStatus) override;
-  NS_IMETHOD AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
-                       uint32_t aRequestedCount,
-                       nsIEventTarget* aEventTarget) override;
-  // XPCConnect seems to be confused about the other AsyncWait (with
-  // nsIOutputStreamCallback), so we need this function for reading.
-  NS_IMETHOD AsyncWaitForRead(nsIInputStreamCallback* aCallback,
-                              uint32_t aFlags, uint32_t aRequestedCount,
-                              nsIEventTarget* aTarget) override;
-
-  NS_IMETHOD Flush() override;
-  NS_IMETHOD Write(const char* aBuf, uint32_t aCount,
-                   uint32_t* aResult) override;
-  NS_IMETHOD WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
-                       uint32_t* aResult) override;
-  NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void* aClosure,
-                           uint32_t aCount, uint32_t* aResult) override;
-  NS_IMETHOD AsyncWait(nsIOutputStreamCallback* aCallback, uint32_t aFlags,
-                       uint32_t aRequestedCount,
-                       nsIEventTarget* aEventTarget) override;
   NS_IMETHOD GetHasReceivedFIN(bool* aHasReceivedFIN) override;
+
+  NS_IMETHOD GetInputStream(nsIAsyncInputStream** aOut) override;
+  NS_IMETHOD GetOutputStream(nsIAsyncOutputStream** aOut) override;
 
  private:
   virtual ~WebTransportStreamProxy();
 
-  static nsresult WriteFromSegments(nsIInputStream*, void*, const char*,
-                                    uint32_t offset, uint32_t count,
-                                    uint32_t* countRead);
+  class AsyncInputStreamWrapper : public nsIAsyncInputStream {
+   public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIINPUTSTREAM
+    NS_DECL_NSIASYNCINPUTSTREAM
+
+    AsyncInputStreamWrapper(nsIAsyncInputStream* aStream,
+                            Http3WebTransportStream* aWebTransportStream);
+
+   private:
+    virtual ~AsyncInputStreamWrapper();
+    void MaybeCloseStream();
+
+    nsCOMPtr<nsIAsyncInputStream> mStream;
+    RefPtr<Http3WebTransportStream> mWebTransportStream;
+  };
+
+  class AsyncOutputStreamWrapper : public nsIAsyncOutputStream {
+   public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIOUTPUTSTREAM
+    NS_DECL_NSIASYNCOUTPUTSTREAM
+
+    explicit AsyncOutputStreamWrapper(nsIAsyncOutputStream* aStream);
+
+   private:
+    virtual ~AsyncOutputStreamWrapper();
+
+    nsCOMPtr<nsIAsyncOutputStream> mStream;
+  };
 
   RefPtr<Http3WebTransportStream> mWebTransportStream;
-  nsCOMPtr<nsIAsyncOutputStream> mWriter;
-  nsCOMPtr<nsIAsyncInputStream> mReader;
+  RefPtr<AsyncOutputStreamWrapper> mWriter;
+  RefPtr<AsyncInputStreamWrapper> mReader;
 };
 
 }  // namespace mozilla::net

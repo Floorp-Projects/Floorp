@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIAsyncInputStream;
+interface nsIAsyncOutputStream;
 interface nsIInputStreamCallback;
 interface nsIEventTarget;
 
@@ -43,13 +45,9 @@ interface nsIWebTransportReceiveStream : nsISupports {
   void getReceiveStreamStats(
     in nsIWebTransportStreamStatsCallback aCallback);
 
-  void asyncWaitForRead(in nsIInputStreamCallback aCallback,
-                        in unsigned long aFlags,
-                        in unsigned long aRequestedCount,
-                        in nsIEventTarget aEventTarget);
-
   // When true, this indicates that FIN had been received.
   readonly attribute boolean hasReceivedFIN;
+  readonly attribute nsIAsyncInputStream inputStream;
 };
 
 [builtinclass, scriptable, uuid(804f245c-52ea-403c-8a78-f751533bdd70)]
@@ -61,6 +59,7 @@ interface nsIWebTransportSendStream : nsISupports {
   void reset(in uint8_t aErrorCode);
 
   void getSendStreamStats(in nsIWebTransportStreamStatsCallback aCallback);
+  readonly attribute nsIAsyncOutputStream outputStream;
 };
 
 [builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]
@@ -74,8 +73,9 @@ interface nsIWebTransportBidirectionalStream : nsISupports {
   // Reset the stream with the specified error code.
   void reset(in uint8_t aErrorCode);
 
-  void asyncWaitForRead(in nsIInputStreamCallback aCallback,
-                        in unsigned long aFlags,
-                        in unsigned long aRequestedCount,
-                        in nsIEventTarget aEventTarget);
+  // When true, this indicates that FIN had been received.
+  readonly attribute boolean hasReceivedFIN;
+
+  readonly attribute nsIAsyncInputStream inputStream;
+  readonly attribute nsIAsyncOutputStream outputStream;
 };
