@@ -36,7 +36,6 @@
 #include "nsCommandLineServiceMac.h"
 #include "nsCommandLine.h"
 #include "nsStandaloneNativeMenu.h"
-#include "nsCocoaUtils.h"
 
 class AutoAutoreleasePool {
  public:
@@ -79,7 +78,7 @@ void DisableAppNap() {
   }];
 }
 
-void SetupMacApplicationDelegate(bool* gRestartedByOS) {
+void SetupMacApplicationDelegate() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // this is called during startup, outside an event loop, and therefore
@@ -97,8 +96,6 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
   // Create the delegate. This should be around for the lifetime of the app.
   id<NSApplicationDelegate> delegate = [[MacApplicationDelegate alloc] init];
   [[GeckoNSApplication sharedApplication] setDelegate:delegate];
-
-  *gRestartedByOS = !!nsCocoaUtils::ShouldRestoreStateDueToLaunchAtLogin();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }

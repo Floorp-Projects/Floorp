@@ -343,8 +343,8 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   DesktopIntRect widgetRect = aRect + parentOrigin;
 
-  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(widgetRect), mBorderStyle,
-                                   false, aInitData->mIsPrivate);
+  nsresult rv =
+      CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(widgetRect), mBorderStyle, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == WindowType::Popup) {
@@ -407,7 +407,7 @@ static unsigned int WindowMaskForBorderStyle(BorderStyle aBorderStyle) {
 // the bottom of the menubar and aRect.width/height specify the size of the
 // content rect.
 nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, BorderStyle aBorderStyle,
-                                           bool aRectIsFrameRect, bool aIsPrivateBrowsing) {
+                                           bool aRectIsFrameRect) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // We default to NSWindowStyleMaskBorderless, add features if needed.
@@ -504,10 +504,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, BorderStyle aBor
 
   // Make sure that window titles don't leak to disk in private browsing mode
   // due to macOS' resume feature.
-  [mWindow setRestorable:!aIsPrivateBrowsing];
-  if (aIsPrivateBrowsing) {
-    [mWindow disableSnapshotRestoration];
-  }
+  [mWindow setRestorable:NO];
+  [mWindow disableSnapshotRestoration];
 
   // setup our notification delegate. Note that setDelegate: does NOT retain.
   mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
@@ -1499,8 +1497,7 @@ void nsCocoaWindow::HideWindowChrome(bool aShouldHide) {
   // Recreate the window with the right border style.
   NSRect frameRect = [mWindow frame];
   DestroyNativeWindow();
-  nsresult rv = CreateNativeWindow(frameRect, aShouldHide ? BorderStyle::None : mBorderStyle, true,
-                                   mWindow.restorable);
+  nsresult rv = CreateNativeWindow(frameRect, aShouldHide ? BorderStyle::None : mBorderStyle, true);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // Re-import state.
