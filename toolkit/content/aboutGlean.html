@@ -9,7 +9,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'"/>
     <meta charset="utf-8">
     <meta name="color-scheme" content="light dark">
-    <title data-l10n-id="about-glean-page-title"></title>
+    <title data-l10n-id="about-glean-page-title2"></title>
     <link rel="stylesheet" href="chrome://global/content/aboutGlean.css"/>
 
     <script src="chrome://global/content/aboutGlean.js"></script>
@@ -20,28 +20,60 @@
   <body>
     <section class="main-content">
       <div id="description">
-        <p data-l10n-id="about-glean-description">
+        <h2 data-l10n-id="about-glean-header"></h2>
+        <p data-l10n-id="about-glean-interface-description">
           <a data-l10n-name="glean-sdk-doc-link" href="https://mozilla.github.io/glean/book/index.html"></a>
-          <a data-l10n-name="fog-debug-doc-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/testing.html"></a>
+          <a data-l10n-name="fog-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/instrumentation_tests.html"></a>
         </p>
-        <p data-l10n-id="about-glean-warning"></p>
-      </div>
-      <div id="controls">
-        <div id="tag-pings-section">
-          <label for="tag-pings" data-l10n-id="tag-pings-label"></label>
-          <input type="text" name="tag-pings" id="tag-pings">
-        </div>
-        <div id="log-pings-section">
-          <label for="log-pings" data-l10n-id="log-pings-label"></label>
-          <input type="checkbox" name="log-pings" id="log-pings">
-        </div>
-        <div id="send-pings-section">
-          <label for="send-pings" data-l10n-id="send-pings-label"></label>
-          <input type="text" name="send-pings" id="send-pings">
-        </div>
-        <div id="submit">
-          <button id="controls-submit" data-l10n-id="controls-button-label-verbose"></button>
-        </div>
+        <p id="upload-status" data-l10n-id="about-glean-upload-enabled"></p>
+        <p>
+          <span id="about-glean-prefs-and-defines" data-l10n-id="about-glean-prefs-and-defines">
+            <a data-l10n-name="fog-prefs-and-defines-doc-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html"></a>
+          </span>
+          <ul>
+            <li data-l10n-id="about-glean-data-upload" data-l10n-args='{"data-upload-pref-value": "unknown"}'></li>
+            <li data-l10n-id="about-glean-local-port" data-l10n-args='{"local-port-pref-value": "unknown"}'></li>
+            <li data-l10n-id="about-glean-glean-android" data-l10n-args='{"glean-android-define-value": "unknown"}'></li>
+            <li data-l10n-id="about-glean-moz-official" data-l10n-args='{"moz-official-define-value": "unknown"}'></li>
+          </ul>
+        </p>
+        <h2 data-l10n-id="about-glean-about-testing-header"></h2>
+        <p data-l10n-id="about-glean-manual-testing">
+          <a data-l10n-name="fog-instrumentation-test-doc-link" href="https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/instrumentation_tests.html"></a>
+          <a data-l10n-name="glean-sdk-doc-link" href="https://mozilla.github.io/glean/book/index.html"></a>
+        </p>
+        <ol>
+          <li>
+            <input type="text" name="tag-pings" id="tag-pings">
+            <label for="tag-pings" data-l10n-id="about-glean-label-for-tag-pings"></label>
+          </li>
+          <li>
+            <select name="ping-names" id="ping-names"></select>
+            <label for="ping-names" data-l10n-id="about-glean-label-for-ping-names">
+              <a data-l10n-name="custom-ping-link" href="https://mozilla.github.io/glean/book/user/pings/custom.html"></a>
+            </label>
+          </li>
+          <li>
+            <input type="checkbox" name="log-pings" id="log-pings">
+            <label for="log-pings" data-l10n-id="about-glean-label-for-log-pings">
+              <a data-l10n-name="enable-logging-link" href="http://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/testing.html#logging"></a>
+            </label>
+          </li>
+          <li>
+            <button id="controls-submit" data-l10n-id="controls-button-label-verbose"></button>
+            <label for="controls-submit" data-l10n-id="about-glean-label-for-controls-submit" data-l10n-args='{"debug-tag": "unknown"}'>
+              <span id="submit-tag-span"></span>
+            </label>
+          </li>
+          <li data-l10n-id="about-glean-li-for-visit-gdpv">
+            <a data-l10n-name="gdpv-tagged-pings-link" href="https://debug-ping-preview.firebaseapp.com/pings/"></a>
+          </li>
+        </ol>
+        <p data-l10n-id="about-glean-adhoc-explanation"></p>
+        <h2 data-l10n-id="about-glean-about-data-header"></h2>
+        <p data-l10n-id="about-glean-about-data-explanation">
+          <a data-l10n-name="glean-dictionary-link" href="https://dictionary.telemetry.mozilla.org/"></a>
+        </p>
       </div>
     </section>
   </body>
