@@ -87,7 +87,7 @@ SimpleTest.waitForFocus(function() {
   sendString("b");
 
   // Here we get a somewhat ugly result since the red sticks.
-  is(div.innerHTML, "<p><font color=\"red\">12345a</font></p><font color=\"red\">b</font>67",
+  is(div.innerHTML, "<p><font color=\"red\">12345a</font></p><font color=\"#ff0000\">b</font>67",
                     "unexpected HTML");
 
   // ***** Delete test *****
