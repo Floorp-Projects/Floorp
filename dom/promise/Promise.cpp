@@ -104,6 +104,7 @@ already_AddRefed<Promise> Promise::Create(
 already_AddRefed<Promise> Promise::CreateInfallible(
     nsIGlobalObject* aGlobal,
     PropagateUserInteraction aPropagateUserInteraction) {
+  MOZ_ASSERT(aGlobal);
   RefPtr<Promise> p = new Promise(aGlobal);
   IgnoredErrorResult rv;
   p->CreateWrapper(rv, aPropagateUserInteraction);
@@ -111,11 +112,11 @@ already_AddRefed<Promise> Promise::CreateInfallible(
     MOZ_CRASH("Out of memory");
   }
 
-  // We may have failed to init the wrapper here, either because nsIGlobalObject
-  // was null (e.g. when caller passed GetIncumbentGlobal()) or had null
-  // GlobalJSObject. We consider JSContext is dead here, which means:
+  // We may have failed to init the wrapper here, because nsIGlobalObject had
+  // null GlobalJSObject. In that case we consider the JS realm is dead, which
+  // means:
   // 1. This promise can't be settled.
-  // 2. Nothing can subscribe this promise anymore from that context.
+  // 2. Nothing can subscribe this promise anymore from that realm.
   // Such condition makes this promise a no-op object.
   (void)NS_WARN_IF(!p->PromiseObj());
 
