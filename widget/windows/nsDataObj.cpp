@@ -481,7 +481,7 @@ nsDataObj::nsDataObj(nsIURI* uri)
       mTransferable(nullptr),
       mIsAsyncMode(FALSE),
       mIsInOperation(FALSE) {
-  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS, "nsDataObj",
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS, "nsDataObj"_ns,
                                  LazyIdleThread::ManualShutdown);
   m_enumFE = new CEnumFormatEtc();
   m_enumFE->AddRef();

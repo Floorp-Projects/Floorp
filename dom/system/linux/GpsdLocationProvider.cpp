@@ -391,7 +391,7 @@ GpsdLocationProvider::Startup() {
   // ... or create a new one.
   if (!pollThread) {
     pollThread = MakeAndAddRef<LazyIdleThread>(GPSD_POLL_THREAD_TIMEOUT_MS,
-                                               "Gpsd poll thread",
+                                               "Gpsd poll thread"_ns,
                                                LazyIdleThread::ManualShutdown);
   }
 

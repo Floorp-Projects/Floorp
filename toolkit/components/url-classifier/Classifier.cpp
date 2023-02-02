@@ -128,7 +128,7 @@ Classifier::Classifier()
       mIsClosed(false) {
   // Make a lazy thread for any IO
   mUpdateThread =
-      new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS, "Classifier Update",
+      new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS, "Classifier Update"_ns,
                          LazyIdleThread::ShutdownMethod::ManualShutdown);
 }
 
@@ -1779,7 +1779,7 @@ nsresult Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult,
 
 bool Classifier::ShouldAbort() const {
   return mIsClosed || nsUrlClassifierDBService::ShutdownHasStarted() ||
-         (mUpdateInterrupted && mUpdateThread->IsOnCurrentThread());
+         (mUpdateInterrupted && (NS_GetCurrentThread() == mUpdateThread));
 }
 
 }  // namespace safebrowsing
