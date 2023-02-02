@@ -232,13 +232,9 @@ interface nsIFile : nsISupports
      *  This will try to delete this file.  The 'recursive' flag
      *  must be PR_TRUE to delete directories which are not empty.
      *
-     *  If passed, 'removeCount' will be incremented by the total number of files
-     *  and/or directories removed. Will be 1 unless the 'recursive' flag is
-     *  set. The parameter must be initialized beforehand.
-     *
      *  This will not resolve any symlinks.
      */
-    void remove(in boolean recursive, [optional] inout uint32_t removeCount);
+    void remove(in boolean recursive);
 
     /**
      *  Attributes of nsIFile.

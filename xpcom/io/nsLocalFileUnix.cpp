@@ -1101,7 +1101,7 @@ nsLocalFile::MoveToFollowingLinksNative(nsIFile* aNewParent,
 }
 
 NS_IMETHODIMP
-nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
+nsLocalFile::Remove(bool aRecursive) {
   CHECK_mPath();
   ENSURE_STAT_CACHE();
 
@@ -1113,11 +1113,7 @@ nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
   }
 
   if (isSymLink || !S_ISDIR(mCachedStat.st_mode)) {
-    rv = NSRESULT_FOR_RETURN(unlink(mPath.get()));
-    if (NS_SUCCEEDED(rv) && aRemoveCount) {
-      *aRemoveCount += 1;
-    }
-    return rv;
+    return NSRESULT_FOR_RETURN(unlink(mPath.get()));
   }
 
   if (aRecursive) {
@@ -1142,9 +1138,7 @@ nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
       if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
       }
-      // XXX: We care the result of the removal here while
-      // nsLocalFileWin does not. We should align the behavior. (bug 1779696)
-      rv = file->Remove(aRecursive, aRemoveCount);
+      rv = file->Remove(aRecursive);
 
 #ifdef ANDROID
       // See bug 580434 - Bionic gives us just deleted files
@@ -1158,11 +1152,7 @@ nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
     }
   }
 
-  rv = NSRESULT_FOR_RETURN(rmdir(mPath.get()));
-  if (NS_SUCCEEDED(rv) && aRemoveCount) {
-    *aRemoveCount += 1;
-  }
-  return rv;
+  return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
 nsresult nsLocalFile::GetTimeImpl(PRTime* aTime,

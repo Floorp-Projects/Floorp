@@ -274,9 +274,7 @@ FileDescriptorFile::RenameToNative(nsIFile* aNewParentDir,
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+FileDescriptorFile::Remove(bool aRecursive) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 FileDescriptorFile::GetPermissions(uint32_t* aPermissions) {
