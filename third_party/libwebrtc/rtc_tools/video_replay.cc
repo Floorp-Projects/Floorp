@@ -16,6 +16,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "api/field_trials.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/video/function_video_decoder_factory.h"
@@ -141,6 +142,15 @@ ABSL_FLAG(uint32_t,
 // Flags for render window width and height
 ABSL_FLAG(uint32_t, render_width, 640, "Width of render window");
 ABSL_FLAG(uint32_t, render_height, 480, "Height of render window");
+
+ABSL_FLAG(
+    std::string,
+    force_fieldtrials,
+    "",
+    "Field trials control experimental feature code which can be forced. "
+    "E.g. running with --force_fieldtrials=WebRTC-FooFeature/Enabled/"
+    " will assign the group Enable to field trial WebRTC-FooFeature. Multiple "
+    "trials are separated by \"/\"");
 
 namespace {
 bool ValidatePayloadType(int32_t payload_type) {
@@ -579,9 +589,9 @@ class RtpReplayer final {
 };
 
 void RtpReplay() {
-  RtpReplayer replayer(absl::GetFlag(FLAGS_config_file),
-                       absl::GetFlag(FLAGS_input_file),
-                       std::make_unique<FieldTrialBasedConfig>());
+  RtpReplayer replayer(
+      absl::GetFlag(FLAGS_config_file), absl::GetFlag(FLAGS_input_file),
+      std::make_unique<FieldTrials>(absl::GetFlag(FLAGS_force_fieldtrials)));
   replayer.Run();
 }
 
