@@ -82,8 +82,7 @@ export var TargetActorRegistry = {
     for (const actor of windowGlobalTargetActors) {
       const isMatchingPrefix = actor.actorID.startsWith(connectionPrefix);
       const isMatchingContext =
-        (sessionContext.type == "all" &&
-          actor.typeName === "parentProcessTarget") ||
+        sessionContext.type == "all" ||
         (sessionContext.type == "browser-element" &&
           (actor.browserId == sessionContext.browserId ||
             actor.openerBrowserId == sessionContext.browserId)) ||
