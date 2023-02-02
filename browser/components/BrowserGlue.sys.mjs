@@ -2719,9 +2719,7 @@ BrowserGlue.prototype = {
           // Register Glean to listen for experiment updates releated to the
           // "glean" feature defined in the t/c/nimbus/FeatureManifest.yaml
           lazy.ExperimentAPI.on("update", { featureId: "glean" }, () => {
-            let cfg = lazy.NimbusFeatures.serverKnobs.getVariable(
-              "metricsDisabled"
-            );
+            let cfg = lazy.NimbusFeatures.glean.getVariable("metricsDisabled");
             Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
           });
         },
