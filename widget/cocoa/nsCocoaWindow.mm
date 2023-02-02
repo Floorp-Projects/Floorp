@@ -344,7 +344,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   DesktopIntRect widgetRect = aRect + parentOrigin;
 
   nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(widgetRect), mBorderStyle,
-                                   false, aInitData->mIsPrivateBrowsing);
+                                   false, aInitData->mIsPrivate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == WindowType::Popup) {
