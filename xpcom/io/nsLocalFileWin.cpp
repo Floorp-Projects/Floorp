@@ -2287,7 +2287,7 @@ nsLocalFile::Load(PRLibrary** aResult) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::Remove(bool aRecursive) {
+nsLocalFile::Remove(bool aRecursive, uint32_t* aRemoveCount) {
   // NOTE:
   //
   // if the working path points to a shortcut, then we will only
@@ -2340,9 +2340,11 @@ nsLocalFile::Remove(bool aRecursive) {
         return rv;
       }
 
+      // XXX: We are ignoring the result of the removal here while
+      // nsLocalFileUnix does not. We should align the behavior. (bug 1779696)
       nsCOMPtr<nsIFile> file;
       while (NS_SUCCEEDED(dirEnum->GetNextFile(getter_AddRefs(file))) && file) {
-        file->Remove(aRecursive);
+        file->Remove(aRecursive, aRemoveCount);
       }
     }
     if (RemoveDirectoryW(mWorkingPath.get()) == 0) {
@@ -2352,6 +2354,10 @@ nsLocalFile::Remove(bool aRecursive) {
     if (DeleteFileW(mWorkingPath.get()) == 0) {
       return ConvertWinError(GetLastError());
     }
+  }
+
+  if (aRemoveCount) {
+    *aRemoveCount += 1;
   }
 
   MakeDirty();

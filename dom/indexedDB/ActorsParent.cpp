@@ -5976,8 +5976,7 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
                        aOriginMetadata, Idempotency::Yes)));
       }));
 
-  QM_TRY_RETURN(
-      MOZ_TO_RESULT_INVOKE_MEMBER(aFileManagerDirectory, Remove, false));
+  QM_TRY_RETURN(MOZ_TO_RESULT(aFileManagerDirectory.Remove(false)));
 }
 
 // Idempotently delete all the parts of an IndexedDB database including its
