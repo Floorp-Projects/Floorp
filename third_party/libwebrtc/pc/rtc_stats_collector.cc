@@ -1414,6 +1414,7 @@ void RTCStatsCollector::GetStatsReportInternal(
 void RTCStatsCollector::ClearCachedStatsReport() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   cached_report_ = nullptr;
+  MutexLock lock(&cached_certificates_mutex_);
   cached_certificates_by_transport_.clear();
 }
 
@@ -2248,14 +2249,16 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::map<std::string, CertificateStatsPair> transport_cert_stats;
-  if (!cached_certificates_by_transport_.empty()) {
+  {
+    MutexLock lock(&cached_certificates_mutex_);
     // Copy the certificate info from the cache, avoiding expensive
     // rtc::SSLCertChain::GetStats() calls.
     for (const auto& pair : cached_certificates_by_transport_) {
       transport_cert_stats.insert(
           std::make_pair(pair.first, pair.second.Copy()));
     }
-  } else {
+  }
+  if (transport_cert_stats.empty()) {
     // Collect certificate info.
     for (const auto& entry : transport_stats_by_name) {
       const std::string& transport_name = entry.first;
@@ -2277,6 +2280,7 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
           std::make_pair(transport_name, std::move(certificate_stats_pair)));
     }
     // Copy the result into the certificate cache for future reference.
+    MutexLock lock(&cached_certificates_mutex_);
     for (const auto& pair : transport_cert_stats) {
       cached_certificates_by_transport_.insert(
           std::make_pair(pair.first, pair.second.Copy()));
