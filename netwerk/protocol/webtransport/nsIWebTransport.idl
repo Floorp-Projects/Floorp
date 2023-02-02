@@ -50,6 +50,11 @@ interface nsIWebTransport : nsISupports {
   void sendDatagram(in Array<uint8_t> aData, in uint64_t aTrackingId);
 
   void getMaxDatagramSize();
+
+  // This can be only called after onSessionReady().
+  // After this point, we can retarget the underlying WebTransportSessionProxy
+  // object off main thread.
+  [noscript] void retargetTo(in nsIEventTarget aTarget);
 };
 
 // Events related to a WebTransport session.

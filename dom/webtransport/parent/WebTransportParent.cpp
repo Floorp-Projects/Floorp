@@ -137,13 +137,7 @@ mozilla::ipc::IPCResult WebTransportParent::RecvClose(
        PromiseFlatCString(aReason).get()));
   MOZ_ASSERT(!mClosed);
   mClosed.Flip();
-  nsAutoCString reason(aReason);
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "WebTransport Close", [self = RefPtr{this}, aCode, reason] {
-        if (self->mWebTransport) {
-          self->mWebTransport->CloseSession(aCode, reason);
-        }
-      }));
+  mWebTransport->CloseSession(aCode, aReason);
   Close();
   return IPC_OK();
 }
@@ -168,6 +162,16 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
         }
       }));
 
+  nsresult rv;
+  nsCOMPtr<nsISerialEventTarget> sts =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Retarget to socket thread. After this, WebTransportParent and
+  // |mWebTransport| should be only accessed on the socket thread.
+  Unused << mWebTransport->RetargetTo(sts);
   return NS_OK;
 }
 

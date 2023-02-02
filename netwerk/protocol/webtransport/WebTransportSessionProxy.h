@@ -141,7 +141,9 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   ~WebTransportSessionProxy();
 
   void CloseSessionInternal();
+  void CloseSessionInternalLocked();
   void CallOnSessionClosed();
+  void CallOnSessionClosedLocked();
 
   enum WebTransportSessionProxyState {
     INIT,
@@ -176,6 +178,7 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   nsCString mReason MOZ_GUARDED_BY(mMutex);
   // This is used to store events happened before OnSessionReady.
   nsTArray<std::function<void()>> mPendingEvents MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mTarget;
 };
 
 }  // namespace mozilla::net
