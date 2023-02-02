@@ -789,11 +789,11 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
 
    private:
     std::vector<VideoStream> CreateEncoderStreams(
-        int width,
-        int height,
-        const VideoEncoderConfig& encoder_config) override {
+        int frame_width,
+        int frame_height,
+        const webrtc::VideoEncoderConfig& encoder_config) override {
       std::vector<VideoStream> streams =
-          test::CreateVideoStreams(width, height, encoder_config);
+          test::CreateVideoStreams(frame_width, frame_height, encoder_config);
       streams[0].min_bitrate_bps = 50000;
       streams[0].target_bitrate_bps = streams[0].max_bitrate_bps = 2000000;
       return streams;

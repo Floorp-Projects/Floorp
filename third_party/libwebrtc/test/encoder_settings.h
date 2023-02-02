@@ -35,9 +35,9 @@ class DefaultVideoStreamFactory
 
  private:
   std::vector<VideoStream> CreateEncoderStreams(
-      int width,
-      int height,
-      const VideoEncoderConfig& encoder_config) override;
+      int frame_width,
+      int frame_height,
+      const webrtc::VideoEncoderConfig& encoder_config) override;
 };
 
 // Creates `encoder_config.number_of_streams` VideoStreams where index

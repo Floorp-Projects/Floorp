@@ -2625,11 +2625,11 @@ TEST_F(VideoSendStreamTest, TranslatesTwoLayerScreencastToTargetBitrate) {
 
    private:
     std::vector<VideoStream> CreateEncoderStreams(
-        int width,
-        int height,
+        int frame_width,
+        int frame_height,
         const VideoEncoderConfig& encoder_config) override {
       std::vector<VideoStream> streams =
-          test::CreateVideoStreams(width, height, encoder_config);
+          test::CreateVideoStreams(frame_width, frame_height, encoder_config);
       RTC_CHECK_GT(streams[0].max_bitrate_bps,
                    kScreencastMaxTargetBitrateDeltaKbps);
       streams[0].target_bitrate_bps =
@@ -4080,6 +4080,7 @@ void VideoSendStreamTest::TestTemporalLayers(
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
+      webrtc::VideoEncoder::EncoderInfo encoder_info;
       send_config->encoder_settings.encoder_factory = encoder_factory_;
       send_config->rtp.payload_name = payload_name_;
       send_config->rtp.payload_type = test::CallTest::kVideoSendPayloadType;
@@ -4088,7 +4089,7 @@ void VideoSendStreamTest::TestTemporalLayers(
       encoder_config->video_stream_factory =
           rtc::make_ref_counted<cricket::EncoderStreamFactory>(
               payload_name_, /*max_qp=*/56, /*is_screenshare=*/false,
-              /*conference_mode=*/false);
+              /*conference_mode=*/false, encoder_info);
       encoder_config->max_bitrate_bps = kMaxBitrateBps;
       if (absl::EqualsIgnoreCase(payload_name_, "VP9")) {
         encoder_config->encoder_specific_settings = rtc::make_ref_counted<
