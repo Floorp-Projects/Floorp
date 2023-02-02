@@ -46,6 +46,7 @@
 #include "test/run_test.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/frame_writer.h"
+#include "test/time_controller/simulated_time_controller.h"
 #include "test/video_renderer.h"
 
 // Flag for payload type.
@@ -151,6 +152,8 @@ ABSL_FLAG(
     "E.g. running with --force_fieldtrials=WebRTC-FooFeature/Enabled/"
     " will assign the group Enable to field trial WebRTC-FooFeature. Multiple "
     "trials are separated by \"/\"");
+
+ABSL_FLAG(bool, simulated_time, false, "Run in simulated time");
 
 namespace {
 bool ValidatePayloadType(int32_t payload_type) {
@@ -442,21 +445,29 @@ class RtpReplayer final {
  public:
   RtpReplayer(absl::string_view replay_config_path,
               absl::string_view rtp_dump_path,
-              std::unique_ptr<FieldTrialsView> field_trials)
+              std::unique_ptr<FieldTrialsView> field_trials,
+              bool simulated_time)
       : replay_config_path_(replay_config_path),
         rtp_dump_path_(rtp_dump_path),
         field_trials_(std::move(field_trials)),
-        task_queue_factory_(CreateDefaultTaskQueueFactory(field_trials_.get())),
-        worker_thread_(std::make_unique<rtc::TaskQueue>(
-            task_queue_factory_->CreateTaskQueue(
-                "worker_thread",
-                TaskQueueFactory::Priority::NORMAL))),
         rtp_reader_(CreateRtpReader(rtp_dump_path_)) {
+    TaskQueueFactory* task_queue_factory;
+    if (simulated_time) {
+      time_sim_ = std::make_unique<GlobalSimulatedTimeController>(
+          Timestamp::Millis(1 << 30));
+      task_queue_factory = time_sim_->GetTaskQueueFactory();
+    } else {
+      task_queue_factory_ = CreateDefaultTaskQueueFactory(field_trials_.get()),
+      task_queue_factory = task_queue_factory_.get();
+    }
+    worker_thread_ =
+        std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
+            "worker_thread", TaskQueueFactory::Priority::NORMAL));
     rtc::Event event;
     worker_thread_->PostTask([&]() {
       Call::Config call_config(&event_log_);
       call_config.trials = field_trials_.get();
-      call_config.task_queue_factory = task_queue_factory_.get();
+      call_config.task_queue_factory = task_queue_factory;
       call_.reset(Call::Create(call_config));
 
       // Creation of the streams must happen inside a task queue because it is
@@ -516,7 +527,7 @@ class RtpReplayer final {
     uint32_t start_timestamp = absl::GetFlag(FLAGS_start_timestamp);
     uint32_t stop_timestamp = absl::GetFlag(FLAGS_stop_timestamp);
     while (true) {
-      int64_t now_ms = rtc::TimeMillis();
+      int64_t now_ms = CurrentTimeMs();
       if (replay_start_ms == -1) {
         replay_start_ms = now_ms;
       }
@@ -534,9 +545,7 @@ class RtpReplayer final {
       }
 
       int64_t deliver_in_ms = replay_start_ms + packet.time_ms - now_ms;
-      if (deliver_in_ms > 0) {
-        SleepMs(deliver_in_ms);
-      }
+      SleepOrAdvanceTime(deliver_in_ms);
 
       ++num_packets;
       PacketReceiver::DeliveryStatus result = PacketReceiver::DELIVERY_OK;
@@ -549,6 +558,7 @@ class RtpReplayer final {
         event.Set();
       });
       event.Wait(/*give_up_after=*/TimeDelta::Seconds(10));
+
       switch (result) {
         case PacketReceiver::DELIVERY_OK:
           break;
@@ -568,6 +578,10 @@ class RtpReplayer final {
         }
       }
     }
+    // One more call to SleepOrAdvanceTime is required to process the last
+    // delivered packet when running in simulated time.
+    SleepOrAdvanceTime(0);
+
     fprintf(stderr, "num_packets: %d\n", num_packets);
 
     for (std::map<uint32_t, int>::const_iterator it = unknown_packets.begin();
@@ -577,10 +591,24 @@ class RtpReplayer final {
     }
   }
 
+  int64_t CurrentTimeMs() {
+    return time_sim_ ? time_sim_->GetClock()->TimeInMilliseconds()
+                     : rtc::TimeMillis();
+  }
+
+  void SleepOrAdvanceTime(int64_t duration_ms) {
+    if (time_sim_) {
+      time_sim_->AdvanceTime(TimeDelta::Millis(duration_ms));
+    } else if (duration_ms > 0) {
+      SleepMs(duration_ms);
+    }
+  }
+
   const std::string replay_config_path_;
   const std::string rtp_dump_path_;
   RtcEventLogNull event_log_;
   std::unique_ptr<FieldTrialsView> field_trials_;
+  std::unique_ptr<GlobalSimulatedTimeController> time_sim_;
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<rtc::TaskQueue> worker_thread_;
   std::unique_ptr<Call> call_;
@@ -591,7 +619,8 @@ class RtpReplayer final {
 void RtpReplay() {
   RtpReplayer replayer(
       absl::GetFlag(FLAGS_config_file), absl::GetFlag(FLAGS_input_file),
-      std::make_unique<FieldTrials>(absl::GetFlag(FLAGS_force_fieldtrials)));
+      std::make_unique<FieldTrials>(absl::GetFlag(FLAGS_force_fieldtrials)),
+      absl::GetFlag(FLAGS_simulated_time));
   replayer.Run();
 }
 
