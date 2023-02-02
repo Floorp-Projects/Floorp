@@ -6,7 +6,6 @@
 
 DevToolsModules(
     "channel-event-sink.js",
-    "eventsource-actor.js",
     "network-content.js",
     "network-event-actor.js",
     "network-parent.js",
