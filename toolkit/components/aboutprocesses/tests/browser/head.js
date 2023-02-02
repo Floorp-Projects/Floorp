@@ -247,7 +247,7 @@ async function testMemory(element, total, delta, assumptions) {
   );
   if (extractedUnit != "GB") {
     Assert.ok(
-      extractedTotalNumber < 1024,
+      extractedTotalNumber <= 1024,
       `Unitless total memory use is less than 1024: ${extractedTotal}`
     );
   }
@@ -290,8 +290,10 @@ async function testMemory(element, total, delta, assumptions) {
     // Remove the thousands separator that breaks parseFloat.
     extractedDeltaTotal.replace(/,/g, "")
   );
+  // Note: displaying 1024KB can happen if the value is slightly less than
+  // 1024*1024B but rounded to 1024KB.
   Assert.ok(
-    deltaTotalNumber > 0 && deltaTotalNumber < 1024,
+    deltaTotalNumber > 0 && deltaTotalNumber <= 1024,
     `Unitless delta memory use is in (0, 1024): ${extractedDeltaTotal}`
   );
   Assert.ok(
