@@ -4447,8 +4447,6 @@ void WorkerPrivate::DispatchCancelingRunnable() {
 void WorkerPrivate::ReportUseCounters() {
   AssertIsOnWorkerThread();
 
-  static const bool kDebugUseCounters = false;
-
   if (mReportedUseCounters) {
     return;
   }
@@ -4474,13 +4472,15 @@ void WorkerPrivate::ReportUseCounters() {
       return;
   }
 
-  if (kDebugUseCounters) {
+  Maybe<nsCString> workerPathForLogging;
+  const bool dumpCounters = StaticPrefs::dom_use_counters_dump_worker();
+  if (dumpCounters) {
     nsAutoCString path(Domain());
     path.AppendLiteral("(");
     NS_ConvertUTF16toUTF8 script(ScriptURL());
     path.Append(script);
-    path.AppendPrintf(", 0x%p)", static_cast<void*>(this));
-    printf("-- Worker use counters for %s --\n", path.get());
+    path.AppendPrintf(", 0x%p)", this);
+    workerPathForLogging.emplace(std::move(path));
   }
 
   static_assert(
@@ -4496,18 +4496,19 @@ void WorkerPrivate::ReportUseCounters() {
   for (size_t c = 0; c < count; ++c) {
     // Histograms for worker use counters use the same order as the worker kinds
     // , so we can use the worker kind to index to corresponding histogram.
-    Telemetry::HistogramID id = static_cast<Telemetry::HistogramID>(
+    auto id = static_cast<Telemetry::HistogramID>(
         Telemetry::HistogramFirstUseCounterWorker + c * factor + kind);
     MOZ_ASSERT(id <= Telemetry::HistogramLastUseCounterWorker);
 
-    if (bool value = GetUseCounter(static_cast<UseCounterWorker>(c))) {
-      Telemetry::Accumulate(id, 1);
-
-      if (kDebugUseCounters) {
-        const char* name = Telemetry::GetHistogramName(id);
-        printf("  %s  #%d: %d\n", name, id, value);
-      }
+    if (!GetUseCounter(static_cast<UseCounterWorker>(c))) {
+      continue;
     }
+    if (dumpCounters) {
+      printf_stderr("USE_COUNTER_WORKER: %s - %s\n",
+                    Telemetry::GetHistogramName(id),
+                    workerPathForLogging->get());
+    }
+    Telemetry::Accumulate(id, 1);
   }
 }
 
