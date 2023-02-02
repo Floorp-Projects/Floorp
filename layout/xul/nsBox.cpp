@@ -391,21 +391,6 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
         aSize.height = pc->DevPixelsToAppUnits(size.height);
         aHeightSet = true;
       }
-    } else {
-      switch (appearance) {
-        case StyleAppearance::ScrollbarVertical:
-        case StyleAppearance::ScrollbarHorizontal: {
-          ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aBox);
-          auto size = theme->GetScrollbarSize(
-              pc, style->StyleUIReset()->ScrollbarWidth(),
-              nsITheme::Overlay::No);
-          aSize.width = pc->DevPixelsToAppUnits(size);
-          aWidthSet = true;
-          break;
-        }
-        default:
-          break;
-      }
     }
   }
 
