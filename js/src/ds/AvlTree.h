@@ -64,6 +64,10 @@ namespace js {
 //
 // `T` values stored in the tree will not be explicitly freed or destroyed.
 //
+// For best cache-friendlyness, try to put the fields of `T` that are read by
+// your compare function at the end of `T`.  See comment on `struct Node`
+// below.
+//
 // Some operations require (internally) building a stack of tree nodes from
 // the root to some leaf.  The maximum stack size, and hence the maximum tree
 // depth, is currently bounded at 48.  The max depth of an AVL tree is roughly
@@ -96,13 +100,20 @@ class AvlTreeImpl {
 
   // Tree nodes.  To save space we could omit ::tag and instead steal two bits
   // from ::left and/or ::right, but it hardly seems worth the hassle.
+  //
+  // For use cases that do a lot of lookups but few modifications, `left` and
+  // `right` are frequently accessed, but `tag` is not.  Lookups also require
+  // frequent access to (unspecified) areas of `item`.  It therefore makes
+  // sense to put those ares of `item` (as read by the compare method) at the
+  // end of `T`, so as to maximise the chance that they occupy the same cache
+  // line(s) as `left` and `right`.
   struct Node {
+    T item;
     Node* left;
     Node* right;
     Tag tag;
-    T item;
     explicit Node(const T& item)
-        : left(nullptr), right(nullptr), tag(Tag::None), item(item) {}
+        : item(item), left(nullptr), right(nullptr), tag(Tag::None) {}
   };
 
   // Once-per-tree components.

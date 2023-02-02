@@ -326,9 +326,9 @@ class LiveRange : public TempObject {
   UniqueChars toString() const;
 #endif
 
-  // Comparator for use in range splay trees.
+  // Comparator for use in AVL trees.
   static int compare(LiveRange* v0, LiveRange* v1) {
-    // LiveRange includes 'from' but excludes 'to'.
+    // The denoted range includes 'from' but excludes 'to'.
     if (v0->to() <= v1->from()) {
       return -1;
     }
@@ -338,6 +338,49 @@ class LiveRange : public TempObject {
     return 0;
   }
 };
+
+// LiveRangePlus is a simple wrapper around a LiveRange*.  It caches the
+// LiveRange*'s `.range_.from` and `.range_.to` CodePositions.  The only
+// purpose of this is to avoid some cache misses that would otherwise occur
+// when comparing those fields in an AvlTree<LiveRange*, ..>.  This measurably
+// speeds up the allocator in some cases.  See bug 1814204.
+
+class LiveRangePlus {
+  // The LiveRange we're wrapping.
+  LiveRange* liveRange_;
+  // Cached versions of liveRange_->range_.from and lr->range_.to
+  CodePosition from_;
+  CodePosition to_;
+
+ public:
+  explicit LiveRangePlus(LiveRange* lr)
+      : liveRange_(lr), from_(lr->from()), to_(lr->to()) {}
+  LiveRangePlus() : liveRange_(nullptr) {}
+  ~LiveRangePlus() {
+    MOZ_ASSERT(liveRange_ ? from_ == liveRange_->from()
+                          : from_ == CodePosition());
+    MOZ_ASSERT(liveRange_ ? to_ == liveRange_->to() : to_ == CodePosition());
+  }
+
+  LiveRange* liveRange() const { return liveRange_; }
+
+  // Comparator for use in AVL trees.
+  static int compare(const LiveRangePlus& lrp0, const LiveRangePlus& lrp1) {
+    // The denoted range includes 'from' but excludes 'to'.
+    if (lrp0.to_ <= lrp1.from_) {
+      return -1;
+    }
+    if (lrp0.from_ >= lrp1.to_) {
+      return 1;
+    }
+    return 0;
+  }
+};
+
+// Make sure there's no alignment holes or vtable present.  Per bug 1814204,
+// it's important that this structure is as small as possible.
+static_assert(sizeof(LiveRangePlus) ==
+              sizeof(LiveRange*) + 2 * sizeof(CodePosition));
 
 // Tracks information about bundles that should all be spilled to the same
 // physical location. At the beginning of allocation, each bundle has its own
@@ -558,16 +601,19 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
   PriorityQueue<QueueItem, QueueItem, 0, SystemAllocPolicy> allocationQueue;
 
-  // This is a set of LiveRanges.  They must be non-overlapping.  Attempts to
-  // add an overlapping range will cause AvlTree::insert to MOZ_CRASH().
+  // This is a set of LiveRange.  They must be non-overlapping.  Attempts
+  // to add an overlapping range will cause AvlTree::insert to MOZ_CRASH().
   using LiveRangeSet = AvlTree<LiveRange*, LiveRange>;
+
+  // The same, but for LiveRangePlus.  See comments on LiveRangePlus.
+  using LiveRangePlusSet = AvlTree<LiveRangePlus, LiveRangePlus>;
 
   // Each physical register is associated with the set of ranges over which
   // that register is currently allocated.
   struct PhysicalRegister {
     bool allocatable;
     AnyRegister reg;
-    LiveRangeSet allocations;
+    LiveRangePlusSet allocations;
 
     PhysicalRegister() : allocatable(false) {}
   };
@@ -582,7 +628,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
     CallRange(CodePosition from, CodePosition to) : range(from, to) {}
 
-    // Comparator for use in splay tree.
+    // Comparator for use in AVL trees.
     static int compare(CallRange* v0, CallRange* v1) {
       if (v0->range.to <= v1->range.from) {
         return -1;
@@ -603,7 +649,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
   struct SpillSlot : public TempObject,
                      public InlineForwardListNode<SpillSlot> {
     LStackSlot alloc;
-    LiveRangeSet allocated;
+    LiveRangePlusSet allocated;
 
     SpillSlot(uint32_t slot, LifoAlloc* alloc)
         : alloc(slot), allocated(alloc) {}
@@ -756,7 +802,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
   tryAllocatingRegistersForSpillBundles();
 
   // Rewriting of the LIR after bundle processing is done
-  [[nodiscard]] bool insertAllRanges(LiveRangeSet& set, LiveBundle* bundle);
+  [[nodiscard]] bool insertAllRanges(LiveRangePlusSet& set, LiveBundle* bundle);
   [[nodiscard]] bool pickStackSlot(SpillSet* spill);
   [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool pickStackSlots();
   [[nodiscard]] bool moveAtEdge(LBlock* predecessor, LBlock* successor,
