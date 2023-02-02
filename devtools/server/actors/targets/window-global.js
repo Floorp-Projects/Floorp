@@ -411,7 +411,9 @@ const windowGlobalTargetPrototype = {
    * Getter for the window global's current DOM window.
    */
   get window() {
-    return this.docShell && this.docShell.domWindow;
+    return this.docShell && !this.docShell.isBeingDestroyed()
+      ? this.docShell.domWindow
+      : null;
   },
 
   get outerWindowID() {
@@ -1360,20 +1362,25 @@ const windowGlobalTargetPrototype = {
   },
 
   _changeTopLevelDocument(window) {
-    // Fake a will-navigate on the previous document
-    // to let a chance to unregister it
-    this._willNavigate({
-      window: this.window,
-      newURI: window.location.href,
-      request: null,
-      isFrameSwitching: true,
-      navigationStart: Date.now(),
-    });
+    // In case of WebExtension, still using one WindowGlobalTarget instance for many document,
+    // when reloading the add-on we might not destroy the previous target and wait for the next
+    // one to come and destroy it.
+    if (this.window) {
+      // Fake a will-navigate on the previous document
+      // to let a chance to unregister it
+      this._willNavigate({
+        window: this.window,
+        newURI: window.location.href,
+        request: null,
+        isFrameSwitching: true,
+        navigationStart: Date.now(),
+      });
 
-    this._windowDestroyed(this.window, {
-      isFrozen: true,
-      isFrameSwitching: true,
-    });
+      this._windowDestroyed(this.window, {
+        isFrozen: true,
+        isFrameSwitching: true,
+      });
+    }
 
     // Immediately change the window as this window, if in process of unload
     // may already be non working on the next cycle and start throwing

@@ -59,6 +59,56 @@ add_task(async function() {
   await commands.destroy();
 });
 
+add_task(async function() {
+  info(" ### Test reloading an Add-on");
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    background() {
+      const { browser } = this;
+      browser.test.log("background script executed");
+    },
+  });
+
+  await extension.startup();
+
+  const commands = await CommandsFactory.forAddon(extension.id);
+  const targetCommand = commands.targetCommand;
+
+  // We have to start listening in order to ensure having a targetFront available
+  await targetCommand.startListening();
+
+  const {
+    onResource: onReloaded,
+  } = await commands.resourceCommand.waitForNextResource(
+    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate(resource) {
+        return resource.name == "dom-loading";
+      },
+    }
+  );
+
+  const backgroundPageURL = targetCommand.targetFront.url;
+  ok(backgroundPageURL, "Got the background page URL");
+  await targetCommand.reloadTopLevelTarget();
+
+  info("Wait for next dom-loading DOCUMENT_EVENT");
+  const event = await onReloaded;
+
+  // If we get about:blank here, it most likely means we receive notification
+  // for the previous background page being unload and navigating to about:blank
+  is(
+    event.url,
+    backgroundPageURL,
+    "We received the DOCUMENT_EVENT's for the expected document: the new background page."
+  );
+
+  await commands.destroy();
+
+  await extension.unload();
+});
 function getContentVariable() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     return content.wrappedJSObject.jsValue;
