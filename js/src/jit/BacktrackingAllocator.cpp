@@ -1454,7 +1454,11 @@ bool BacktrackingAllocator::addInitialFixedRange(AnyRegister reg,
                                                  CodePosition from,
                                                  CodePosition to) {
   LiveRange* range = LiveRange::FallibleNew(alloc(), nullptr, from, to);
-  return range && registers[reg.code()].allocations.insert(range);
+  if (!range) {
+    return false;
+  }
+  LiveRangePlus rangePlus(range);
+  return registers[reg.code()].allocations.insert(rangePlus);
 }
 
 // Helper for ::buildLivenessInfo
@@ -3183,16 +3187,18 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
   for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
        iter++) {
     LiveRange* range = LiveRange::get(*iter);
+    LiveRangePlus rangePlus(range);
 
     // All ranges in the bundle must be compatible with the physical register.
     MOZ_ASSERT(range->vreg().isCompatible(r.reg));
 
     for (size_t a = 0; a < r.reg.numAliased(); a++) {
       PhysicalRegister& rAlias = registers[r.reg.aliased(a).code()];
-      LiveRange* existing;
-      if (!rAlias.allocations.contains(range, &existing)) {
+      LiveRangePlus existingPlus;
+      if (!rAlias.allocations.contains(rangePlus, &existingPlus)) {
         continue;
       }
+      const LiveRange* existing = existingPlus.liveRange();
       if (existing->hasVreg()) {
         MOZ_ASSERT(existing->bundle()->allocation().toRegister() == rAlias.reg);
         bool duplicate = false;
@@ -3259,7 +3265,8 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
     if (!alloc().ensureBallast()) {
       return false;
     }
-    if (!r.allocations.insert(range)) {
+    LiveRangePlus rangePlus(range);
+    if (!r.allocations.insert(rangePlus)) {
       return false;
     }
   }
@@ -3317,7 +3324,8 @@ bool BacktrackingAllocator::evictBundle(LiveBundle* bundle) {
   for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
        iter++) {
     LiveRange* range = LiveRange::get(*iter);
-    physical.allocations.remove(range);
+    LiveRangePlus rangePlus(range);
+    physical.allocations.remove(rangePlus);
   }
 
   bundle->setAllocation(LAllocation());
@@ -3550,7 +3558,7 @@ bool BacktrackingAllocator::tryAllocatingRegistersForSpillBundles() {
 ///////////////////////////////////////////////////////////////////////////////
 
 // Helper for ::pickStackSlot
-bool BacktrackingAllocator::insertAllRanges(LiveRangeSet& set,
+bool BacktrackingAllocator::insertAllRanges(LiveRangePlusSet& set,
                                             LiveBundle* bundle) {
   for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
        iter++) {
@@ -3558,7 +3566,8 @@ bool BacktrackingAllocator::insertAllRanges(LiveRangeSet& set,
     if (!alloc().ensureBallast()) {
       return false;
     }
-    if (!set.insert(range)) {
+    LiveRangePlus rangePlus(range);
+    if (!set.insert(rangePlus)) {
       return false;
     }
   }
@@ -3628,8 +3637,9 @@ bool BacktrackingAllocator::pickStackSlot(SpillSet* spillSet) {
       for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
            iter++) {
         LiveRange* range = LiveRange::get(*iter);
-        LiveRange* existing;
-        if (spillSlot->allocated.contains(range, &existing)) {
+        LiveRangePlus rangePlus(range);
+        LiveRangePlus existingPlus;
+        if (spillSlot->allocated.contains(rangePlus, &existingPlus)) {
           success = false;
           break;
         }
@@ -4312,8 +4322,12 @@ bool BacktrackingAllocator::annotateMoveGroups() {
             } while (riter != block->begin());
           }
 
-          LiveRange* existing;
-          if (found || reg.allocations.contains(range, &existing)) {
+          if (found) {
+            continue;
+          }
+          LiveRangePlus existingPlus;
+          LiveRangePlus rangePlus(range);
+          if (reg.allocations.contains(rangePlus, &existingPlus)) {
             continue;
           }
 
@@ -4468,9 +4482,9 @@ void BacktrackingAllocator::dumpAllocations() {
       JitSpewHeader(JitSpew_RegAlloc);
       JitSpewCont(JitSpew_RegAlloc, "  %s:", AnyRegister::FromCode(i).name());
       bool first = true;
-      LiveRangeSet::Iter lrIter(&registers[i].allocations);
-      while (lrIter.hasMore()) {
-        LiveRange* range = lrIter.next();
+      LiveRangePlusSet::Iter lrpIter(&registers[i].allocations);
+      while (lrpIter.hasMore()) {
+        LiveRange* range = lrpIter.next().liveRange();
         if (first) {
           first = false;
         } else {
