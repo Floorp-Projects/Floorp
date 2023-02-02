@@ -200,7 +200,7 @@ function getWatcherSupportedResources(type) {
     [Resources.TYPES.SOURCE]: true,
     [Resources.TYPES.THREAD_STATE]: true,
     [Resources.TYPES.SERVER_SENT_EVENT]: isTabOrWebExtensionToolbox,
-    [Resources.TYPES.WEBSOCKET]: isTabOrWebExtensionToolbox,
+    [Resources.TYPES.WEBSOCKET]: true,
     [Resources.TYPES.LAST_PRIVATE_CONTEXT_EXIT]: true,
   };
 }

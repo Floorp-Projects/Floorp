@@ -10,5 +10,4 @@ DevToolsModules(
     "network-content.js",
     "network-event-actor.js",
     "network-parent.js",
-    "websocket-actor.js",
 )

@@ -6,6 +6,8 @@
 
 const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
+// @backward-compat { version 111 } The webSocket legacy listener can be deleted
+// when 111 is on the release channel.
 module.exports = async function({ targetFront, onAvailable }) {
   if (!targetFront.hasActor("webSocket")) {
     return;

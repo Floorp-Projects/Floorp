@@ -15,6 +15,9 @@ const {
 /**
  * A WebSocketFront is used as a front end for the WebSocketActor that is
  * created on the server, hiding implementation details.
+ *
+ * @backward-compat { version 111 } This front can be deleted when 111 is
+ * on the release channel.
  */
 class WebSocketFront extends FrontClassWithSpec(webSocketSpec) {
   constructor(client, targetFront, parentFront) {

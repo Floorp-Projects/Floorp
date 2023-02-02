@@ -8,6 +8,8 @@ const {
   generateActorSpec,
 } = require("resource://devtools/shared/protocol.js");
 
+// @backward-compat { version 111 } This spec file can be deleted when 111 is on
+// the release channel.
 const webSocketSpec = generateActorSpec({
   typeName: "webSocket",
 
