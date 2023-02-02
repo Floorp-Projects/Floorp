@@ -123,13 +123,13 @@ class OnboardingTest {
     @Test
     fun toolbarTapDoesntDismissOnboardingTest() {
         homeScreen {
-            verifyWelcomeHeader()
+            verifyStartBrowsingButton()
         }.openSearch {
             verifyScanButton()
             verifySearchEngineButton()
             verifyKeyboardVisibility()
         }.dismissSearchBar {
-            verifyWelcomeHeader()
+            verifyStartBrowsingButton()
         }
     }
 
