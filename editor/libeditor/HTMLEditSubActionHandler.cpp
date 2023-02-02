@@ -6108,6 +6108,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
         return pointToPutCaretOrError;
       }
       pointToPutCaret = pointToPutCaretOrError.unwrap();
+      MOZ_ASSERT(pointToPutCaret.IsSet());
       pendingStyle = mPendingStylesToApplyToNewContent->TakeClearingStyle();
     }
   }

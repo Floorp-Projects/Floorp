@@ -2373,11 +2373,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     }
   }
 
+  if (!unwrappedSplitResultAtStartOfNextNode.Handled()) {
+    return std::move(pointToPutCaret);
+  }
+
   // If there is no content, we should return here.
   // XXX Is this possible case without mutation event listener?
-  if (NS_WARN_IF(!unwrappedSplitResultAtStartOfNextNode.Handled()) ||
-      !unwrappedSplitResultAtStartOfNextNode.GetPreviousContent()) {
-    // XXX This is really odd, but we retrun this value...
+  if (!unwrappedSplitResultAtStartOfNextNode.GetPreviousContent()) {
+    // XXX This is really odd, but we return this value...
     const auto splitPoint =
         unwrappedSplitNodeResult.AtSplitPoint<EditorRawDOMPoint>();
     const auto splitPointAtStartOfNextNode =
