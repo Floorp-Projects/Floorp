@@ -45,7 +45,7 @@ export function setBreakableLines(cx, sourceId) {
 
       await Promise.all(
         actors.map(({ id }) =>
-          dispatch(loadSourceActorBreakableLines({ id, cx }))
+          dispatch(loadSourceActorBreakableLines({ sourceActorId: id, cx }))
         )
       );
     }
