@@ -15,7 +15,7 @@ about-glean-interface-description =
   The <a data-l10n-name="glean-sdk-doc-link">{ glean-sdk-brand-name }</a>
   is a data collection library used in { -vendor-short-name } projects.
   This interface is designed to be used by developers and testers to manually
-  <a data-l10n-name="fog-link">test instrumentation</a>
+  <a data-l10n-name="fog-link">test instrumentation</a>.
 
 about-glean-upload-enabled = Data upload is enabled.
 about-glean-upload-disabled = Data upload is disabled.
@@ -62,7 +62,7 @@ about-glean-label-for-tag-pings =
 # An in-line drop down list precedes this string.
 # Do not translate strings between <code> </code> tags.
 about-glean-label-for-ping-names =
-  Select the ping from the preceding list that your instrumentation is in.
+  Select from the preceding list the ping your instrumentation is in.
   If it’s in a <a data-l10n-name="custom-ping-link">custom ping</a>, choose that one.
   Otherwise, the default for <code>event</code> metrics is
   the <code>events</code> ping
@@ -76,7 +76,7 @@ about-glean-label-for-log-pings =
 #   $debug-tag (String): The user-set value of the debug tag input on this page. Like "about-glean-kV"
 # An in-line button labeled "Apply settings and submit ping" precedes this string.
 about-glean-label-for-controls-submit =
-  Press the preceding button to tag all { -glean-brand-name } pings with your tag and submit the named ping.
+  Press the preceding button to tag all { -glean-brand-name } pings with your tag and submit the selected ping.
   (All pings submitted from then until you restart the application will be tagged with
   <code>{ $debug-tag }</code>.)
 about-glean-li-for-visit-gdpv =
