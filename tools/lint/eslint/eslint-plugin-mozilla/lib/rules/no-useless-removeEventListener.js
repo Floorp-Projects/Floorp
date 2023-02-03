@@ -55,11 +55,12 @@ module.exports = {
             (call.arguments[0].type == "Identifier" &&
               call.arguments[0].name == node.arguments[0].name))
         ) {
-          context.report(
-            call,
-            "use {once: true} instead of removeEventListener as " +
-              "the first instruction of the listener"
-          );
+          context.report({
+            node: call,
+            message:
+              "use {once: true} instead of removeEventListener as " +
+              "the first instruction of the listener",
+          });
         }
       },
     };

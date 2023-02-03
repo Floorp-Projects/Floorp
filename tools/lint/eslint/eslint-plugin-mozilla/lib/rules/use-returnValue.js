@@ -32,10 +32,10 @@ module.exports = {
           return;
         }
 
-        context.report(
+        context.report({
           node,
-          `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`
-        );
+          message: `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`,
+        });
       },
     };
   },

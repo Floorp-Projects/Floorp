@@ -36,15 +36,15 @@ module.exports = {
     return {
       MemberExpression(node) {
         if (isOSProp(node, "File")) {
-          context.report(
+          context.report({
             node,
-            "OS.File is deprecated. You should use IOUtils instead."
-          );
+            message: "OS.File is deprecated. You should use IOUtils instead.",
+          });
         } else if (isOSProp(node, "Path")) {
-          context.report(
+          context.report({
             node,
-            "OS.Path is deprecated. You should use PathUtils instead."
-          );
+            message: "OS.Path is deprecated. You should use PathUtils instead.",
+          });
         }
       },
     };

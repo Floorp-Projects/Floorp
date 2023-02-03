@@ -31,10 +31,10 @@ module.exports = {
           return;
         }
 
-        context.report(
+        context.report({
           node,
-          "use .ownerGlobal instead of .ownerDocument.defaultView"
-        );
+          message: "use .ownerGlobal instead of .ownerDocument.defaultView",
+        });
       },
     };
   },

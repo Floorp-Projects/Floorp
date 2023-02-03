@@ -36,12 +36,13 @@ module.exports = {
             name: param.name,
             suggestion: deHungarianize(param.name),
           };
-          context.report(
-            param,
-            "Parameter '{{name}}' uses Hungarian Notation, " +
+          context.report({
+            node: param,
+            message:
+              "Parameter '{{name}}' uses Hungarian Notation, " +
               "consider using '{{suggestion}}' instead.",
-            errorObj
-          );
+            data: errorObj,
+          });
         }
       }
     }

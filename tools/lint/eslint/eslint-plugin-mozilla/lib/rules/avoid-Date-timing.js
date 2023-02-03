@@ -32,11 +32,12 @@ module.exports = {
           return;
         }
 
-        context.report(
+        context.report({
           node,
-          "use performance.now() instead of Date.now() for timing " +
-            "measurements"
-        );
+          message:
+            "use performance.now() instead of Date.now() for timing " +
+            "measurements",
+        });
       },
 
       NewExpression(node) {
@@ -49,11 +50,12 @@ module.exports = {
           return;
         }
 
-        context.report(
+        context.report({
           node,
-          "use performance.now() instead of new Date() for timing " +
-            "measurements"
-        );
+          message:
+            "use performance.now() instead of new Date() for timing " +
+            "measurements",
+        });
       },
     };
   },

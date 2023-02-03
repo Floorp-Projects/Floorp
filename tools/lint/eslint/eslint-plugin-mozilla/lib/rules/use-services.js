@@ -38,10 +38,10 @@ module.exports = {
         ) {
           let serviceName = servicesInterfaceMap[node.arguments[3].value];
 
-          context.report(
+          context.report({
             node,
-            `Use Services.${serviceName} rather than defineLazyServiceGetter.`
-          );
+            message: `Use Services.${serviceName} rather than defineLazyServiceGetter.`,
+          });
           return;
         }
 
@@ -60,10 +60,10 @@ module.exports = {
               let serviceName =
                 servicesInterfaceMap[property.value.elements[1].value];
 
-              context.report(
-                property.value,
-                `Use Services.${serviceName} rather than defineLazyServiceGetters.`
-              );
+              context.report({
+                node: property.value,
+                message: `Use Services.${serviceName} rather than defineLazyServiceGetters.`,
+              });
             }
           }
           return;

@@ -40,7 +40,10 @@ module.exports = {
             node.right.type == "Literal" &&
             node.right.value == 0)
         ) {
-          context.report(node, "use .includes instead of .indexOf");
+          context.report({
+            node,
+            message: "use .includes instead of .indexOf",
+          });
         }
       },
     };

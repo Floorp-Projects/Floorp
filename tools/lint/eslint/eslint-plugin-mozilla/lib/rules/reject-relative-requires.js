@@ -29,7 +29,10 @@ module.exports = {
       CallExpression(node) {
         const path = helpers.getDevToolsRequirePath(node);
         if (path && isRelativePath(path)) {
-          context.report(node, "relative paths are not allowed with require()");
+          context.report({
+            node,
+            message: "relative paths are not allowed with require()",
+          });
         }
       },
     };
