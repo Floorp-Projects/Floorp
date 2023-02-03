@@ -1939,33 +1939,6 @@ class HTMLEditor final : public EditorBase,
                                  ErrorResult& aError);
 
   /**
-   * MoveOneHardLineContentsWithTransaction() moves the content in a hard line
-   * which contains aPointInHardLine to aPointToInsert or end of
-   * aPointToInsert's container.
-   *
-   * @param aPointInHardLine            A point in a hard line.  All nodes in
-   *                                    same hard line will be moved.
-   * @param aPointToInsert              Point to insert contents of the hard
-   *                                    line.
-   * @param aEditingHost                The editing host.
-   * @param aMoveToEndOfContainer       If `Yes`, aPointToInsert.Offset() will
-   *                                    be ignored and instead, all contents
-   *                                    will be appended to the container of
-   *                                    aPointToInsert.  The result may be
-   *                                    different from setting this to `No`
-   *                                    and aPointToInsert points end of the
-   *                                    container because mutation event
-   *                                    listeners may modify children of the
-   *                                    container while we're moving nodes.
-   */
-  enum class MoveToEndOfContainer { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
-  MoveOneHardLineContentsWithTransaction(
-      const EditorDOMPoint& aPointInHardLine,
-      const EditorDOMPoint& aPointToInsert, const Element& aEditingHost,
-      MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
-
-  /**
    * CanMoveOrDeleteSomethingInHardLine() returns true if there are some content
    * nodes which can be moved to another place or deleted.  Note that if there
    * is only a padding `<br>` element in empty block element, this returns
@@ -2195,6 +2168,7 @@ class HTMLEditor final : public EditorBase,
                         nsIEditor::EStripWrappers aStripWrappers) final;
 
   class AutoDeleteRangesHandler;
+  class AutoMoveOneLineHandler;
 
   /**
    * DeleteMostAncestorMailCiteElementIfEmpty() deletes most ancestor
@@ -4527,15 +4501,14 @@ class HTMLEditor final : public EditorBase,
   friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
                                     // DidUndoTransaction
   friend class
-      WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
+      WhiteSpaceVisibilityKeeper;  // AutoMoveOneLineHandler
+                                   // CanMoveChildren,
                                    // CanMoveOrDeleteSomethingInHardLine,
                                    // ChangeListElementType,
                                    // DeleteNodeWithTransaction,
                                    // DeleteTextAndTextNodesWithTransaction,
                                    // JoinNearestEditableNodesWithTransaction,
                                    // MoveChildrenWithTransaction,
-                                   // MoveOneHardLineContentsWithTransaction,
-                                   // MoveToEndOfContainer,
                                    // SplitAncestorStyledInlineElementsAt,
                                    // TreatEmptyTextNodes
 };

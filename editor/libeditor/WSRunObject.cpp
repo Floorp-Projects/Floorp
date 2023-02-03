@@ -10,6 +10,7 @@
 #include "ErrorList.h"
 #include "HTMLEditHelpers.h"  // for MoveNodeResult, SplitNodeResult
 #include "HTMLEditor.h"
+#include "HTMLEditorNestedClasses.h"  // for AutoMoveOneLineHandler
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"
 
@@ -283,8 +284,7 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
     //     behavior, we should mark as handled.
     ret.MarkAsHandled();
   } else {
-    // XXX Why do we ignore the result of
-    //     MoveOneHardLineContentsWithTransaction()?
+    // XXX Why do we ignore the result of AutoMoveOneLineHandler::Run()?
     NS_ASSERTION(rightBlockElement == afterRightBlockChild.GetContainer(),
                  "The relation is not guaranteed but assumed");
 #ifdef DEBUG
@@ -293,15 +293,20 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
             EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
             aEditingHost);
 #endif  // #ifdef DEBUG
+    HTMLEditor::AutoMoveOneLineHandler lineMoverToEndOfLeftBlock(
+        aLeftBlockElement);
+    nsresult rv = lineMoverToEndOfLeftBlock.Prepare(
+        aHTMLEditor,
+        EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
+        aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoMoveOneLineHandler::Prepare() failed");
+      return Err(rv);
+    }
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
-            EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
-            EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
-            HTMLEditor::MoveToEndOfContainer::Yes);
+        lineMoverToEndOfLeftBlock.Run(aHTMLEditor, aEditingHost);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::MoveOneHardLineContentsWithTransaction("
-          "MoveToEndOfContainer::Yes) failed");
+      NS_WARNING("AutoMoveOneLineHandler::Run() failed");
       return moveNodeResult.propagateErr();
     }
 
@@ -589,12 +594,18 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
       MOZ_DIAGNOSTIC_ASSERT(pointToMoveFirstLineContent.IsSetAndValid());
     }
 
+    HTMLEditor::AutoMoveOneLineHandler lineMoverToPoint(
+        pointToMoveFirstLineContent);
+    nsresult rv = lineMoverToPoint.Prepare(
+        aHTMLEditor, EditorDOMPoint(&aRightBlockElement, 0u), aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoMoveOneLineHandler::Prepare() failed");
+      return Err(rv);
+    }
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
-            EditorDOMPoint(&aRightBlockElement, 0u),
-            pointToMoveFirstLineContent, aEditingHost);
+        lineMoverToPoint.Run(aHTMLEditor, aEditingHost);
     if (moveNodeResult.isErr()) {
-      NS_WARNING("HTMLEditor::MoveOneHardLineContentsWithTransaction() failed");
+      NS_WARNING("AutoMoveOneLineHandler::Run() failed");
       return moveNodeResult.propagateErr();
     }
 
@@ -714,15 +725,18 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
 #endif  // #ifdef DEBUG
 
     // Nodes are dissimilar types.
+    HTMLEditor::AutoMoveOneLineHandler lineMoverToEndOfLeftBlock(
+        aLeftBlockElement);
+    nsresult rv = lineMoverToEndOfLeftBlock.Prepare(
+        aHTMLEditor, EditorDOMPoint(&aRightBlockElement, 0u), aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoMoveOneLineHandler::Prepare() failed");
+      return Err(rv);
+    }
     Result<MoveNodeResult, nsresult> moveNodeResult =
-        aHTMLEditor.MoveOneHardLineContentsWithTransaction(
-            EditorDOMPoint(&aRightBlockElement, 0u),
-            EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
-            HTMLEditor::MoveToEndOfContainer::Yes);
+        lineMoverToEndOfLeftBlock.Run(aHTMLEditor, aEditingHost);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::MoveOneHardLineContentsWithTransaction("
-          "MoveToEndOfContainer::Yes) failed");
+      NS_WARNING("AutoMoveOneLineHandler::Run() failed");
       return moveNodeResult.propagateErr();
     }
 
