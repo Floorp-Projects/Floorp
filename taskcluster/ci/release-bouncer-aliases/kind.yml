@@ -73,6 +73,7 @@ jobs:
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
                     firefox-esr-langpack-latest-ssl: langpack
+                    firefox-esr-next-langpack-latest-ssl: langpack  # XXX - to remove after 102.8esr
                 mozilla-esrXXX:  # XXX - to update when we branch next ESR
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
