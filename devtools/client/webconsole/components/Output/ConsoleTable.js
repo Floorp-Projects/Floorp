@@ -55,10 +55,8 @@ class ConsoleTable extends Component {
     const headerItems = [];
     columns.forEach((value, key) =>
       headerItems.push(
-        dom.div(
+        dom.th(
           {
-            className: "consoletable-header",
-            role: "columnheader",
             key,
             title: value,
           },
@@ -66,13 +64,14 @@ class ConsoleTable extends Component {
         )
       )
     );
-    return headerItems;
+    return dom.thead({}, dom.tr({}, headerItems));
   }
 
   getRows(columns, items) {
     const { dispatch, serviceContainer, setExpanded } = this.props;
 
-    return items.map((item, index) => {
+    const rows = [];
+    items.forEach((item, index) => {
       const cells = [];
       const className = index % 2 ? "odd" : "even";
 
@@ -91,18 +90,17 @@ class ConsoleTable extends Component {
               });
 
         cells.push(
-          dom.div(
+          dom.td(
             {
-              role: "gridcell",
-              className,
               key,
             },
             cellContent
           )
         );
       });
-      return cells;
+      rows.push(dom.tr({ className }, cells));
     });
+    return dom.tbody({}, rows);
   }
 
   render() {
@@ -121,16 +119,17 @@ class ConsoleTable extends Component {
     const dataType = getParametersDataType(parameters);
     const { columns, items } = getTableItems(data, dataType, headers);
 
+    // We need to wrap the <table> in a div so we can have the max-height set properly
+    // without changing the table display.
     return dom.div(
-      {
-        className: "consoletable",
-        role: "grid",
-        style: {
-          gridTemplateColumns: `repeat(${columns.size}, calc(100% / ${columns.size}))`,
+      { className: "consoletable-wrapper" },
+      dom.table(
+        {
+          className: "consoletable",
         },
-      },
-      this.getHeaders(columns),
-      this.getRows(columns, items)
+        this.getHeaders(columns),
+        this.getRows(columns, items)
+      )
     );
   }
 }

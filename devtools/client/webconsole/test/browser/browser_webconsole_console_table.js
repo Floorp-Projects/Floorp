@@ -432,34 +432,28 @@ add_task(async function() {
   }
 });
 
-async function testItem(testCase, node) {
+async function testItem(testCase, tableNode) {
   info(testCase.info);
 
-  const columns = Array.from(node.querySelectorAll("[role=columnheader]"));
-  const columnsNumber = columns.length;
-  const cells = Array.from(node.querySelectorAll("[role=gridcell]"));
+  const ths = Array.from(tableNode.querySelectorAll("th"));
+  const trs = Array.from(tableNode.querySelectorAll("tbody tr"));
 
   is(
-    JSON.stringify(columns.map(column => column.textContent)),
+    JSON.stringify(ths.map(column => column.textContent)),
     JSON.stringify(testCase.expected.columns),
     `${testCase.info} | table has the expected columns`
   );
 
-  // We don't really have rows since we are using a CSS grid in order to have a sticky
-  // header on the table. So we check the "rows" by dividing the number of cells by the
-  // number of columns.
   is(
-    cells.length / columnsNumber,
+    trs.length,
     testCase.expected.rows.length,
     `${testCase.info} | table has the expected number of rows`
   );
 
   testCase.expected.rows.forEach((expectedRow, rowIndex) => {
-    const startIndex = rowIndex * columnsNumber;
-    // Slicing the cells array so we can get the current "row".
-    const rowCells = cells
-      .slice(startIndex, startIndex + columnsNumber)
-      .map(x => x.textContent);
+    const rowCells = Array.from(trs[rowIndex].querySelectorAll("td")).map(
+      x => x.textContent
+    );
 
     const isRegex = x => x && x.constructor.name === "RegExp";
     const hasRegExp = expectedRow.find(isRegex);
@@ -490,17 +484,21 @@ async function testItem(testCase, node) {
 
   if (testCase.expected.overflow) {
     ok(
-      node.isConnected,
+      tableNode.isConnected,
       "Node must be connected to test overflow. It is likely scrolled out of view."
     );
+    const tableWrapperNode = tableNode.closest(".consoletable-wrapper");
     ok(
-      node.scrollHeight > node.clientHeight,
+      tableWrapperNode.scrollHeight > tableWrapperNode.clientHeight,
       testCase.info + " table overflows"
     );
-    ok(getComputedStyle(node).overflowY !== "hidden", "table can be scrolled");
+    ok(
+      getComputedStyle(tableWrapperNode).overflowY !== "hidden",
+      "table can be scrolled"
+    );
   }
 
   if (typeof testCase.additionalTest === "function") {
-    await testCase.additionalTest(node);
+    await testCase.additionalTest(tableNode);
   }
 }
