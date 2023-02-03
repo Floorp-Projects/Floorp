@@ -1101,7 +1101,7 @@ var snapshotFormatters = {
     insertEnumerateDatabase();
 
     // Codec decode/encode support information (inc. HW accel)
-    if (["win", "macosx", "linux", "android"].includes(AppConstants.platform)) {
+    if (["win", "macosx", "linux"].includes(AppConstants.platform)) {
       insertBasicInfo("media-codec-support-info", data.codecSupportInfo);
     }
   },
