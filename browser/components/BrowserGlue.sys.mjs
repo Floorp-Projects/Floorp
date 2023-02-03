@@ -4383,6 +4383,7 @@ BrowserGlue.prototype = {
           id: data?.id || "ABOUT_WELCOME_MODAL",
           backdrop: data?.backdrop,
           screens: data?.screens,
+          UTMTerm: data?.UTMTerm,
         },
       },
     };
