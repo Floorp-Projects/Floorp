@@ -12,12 +12,15 @@
 
 #include <stdio.h>
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
@@ -68,6 +71,33 @@ class AnalyzingFramePreprocessor
       sinks_;
 };
 
+// Broadcast received frame to multiple underlying frame writers.
+class BroadcastingFrameWriter final : public test::VideoFrameWriter {
+ public:
+  explicit BroadcastingFrameWriter(
+      std::vector<std::unique_ptr<test::VideoFrameWriter>> delegates)
+      : delegates_(std::move(delegates)) {}
+  ~BroadcastingFrameWriter() override { Close(); }
+
+  bool WriteFrame(const webrtc::VideoFrame& frame) override {
+    for (auto& delegate : delegates_) {
+      if (!delegate->WriteFrame(frame)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void Close() override {
+    for (auto& delegate : delegates_) {
+      delegate->Close();
+    }
+  }
+
+ private:
+  std::vector<std::unique_ptr<test::VideoFrameWriter>> delegates_;
+};
+
 }  // namespace
 
 VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::VideoFrameIdsWriter(
@@ -78,25 +108,29 @@ VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::VideoFrameIdsWriter(
       << "Failed to open file to dump frame ids for writing: " << file_name_;
 }
 
-VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::
-    ~VideoFrameIdsWriter() {
-  fclose(output_file_);
+bool VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::WriteFrame(
+    const VideoFrame& frame) {
+  RTC_CHECK(output_file_ != nullptr) << "Writer is already closed";
+  int chars_written = fprintf(output_file_, "%d\n", frame.id());
+  if (chars_written < 2) {
+    RTC_LOG(LS_ERROR) << "Failed to write frame id to the output file: "
+                      << file_name_;
+    return false;
+  }
+  return true;
 }
 
-void VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::WriteFrameId(
-    uint16_t frame_id) {
-  int chars_written = fprintf(output_file_, "%d\n", frame_id);
-  RTC_CHECK_GE(chars_written, 2)
-      << "Failed to write frame id to the output file: " << file_name_;
+void VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter::Close() {
+  if (output_file_ != nullptr) {
+    fclose(output_file_);
+    output_file_ = nullptr;
+  }
 }
 
 VideoQualityAnalyzerInjectionHelper::VideoWriter::VideoWriter(
     test::VideoFrameWriter* video_writer,
-    VideoFrameIdsWriter* frame_ids_writer,
     int sampling_modulo)
-    : video_writer_(video_writer),
-      frame_ids_writer_(frame_ids_writer),
-      sampling_modulo_(sampling_modulo) {}
+    : video_writer_(video_writer), sampling_modulo_(sampling_modulo) {}
 
 void VideoQualityAnalyzerInjectionHelper::VideoWriter::OnFrame(
     const VideoFrame& frame) {
@@ -105,9 +139,6 @@ void VideoQualityAnalyzerInjectionHelper::VideoWriter::OnFrame(
   }
   bool result = video_writer_->WriteFrame(frame);
   RTC_CHECK(result) << "Failed to write frame";
-  if (frame_ids_writer_) {
-    frame_ids_writer_->WriteFrameId(frame.id());
-  }
 }
 
 VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
@@ -154,13 +185,11 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
   if (config.input_dump_options.has_value()) {
     writer = CreateVideoWriter(
         config.input_dump_options->GetInputDumpFileName(*config.stream_label),
-        config);
-    VideoFrameIdsWriter* frame_ids_writer = MaybeCreateVideoFrameIdsWriter(
         config.input_dump_options->GetInputFrameIdsDumpFileName(
-            *config.stream_label));
+            *config.stream_label),
+        config);
     sinks.push_back(std::make_unique<VideoWriter>(
-        writer, frame_ids_writer,
-        config.input_dump_options->sampling_modulo()));
+        writer, config.input_dump_options->sampling_modulo()));
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
@@ -220,18 +249,24 @@ void VideoQualityAnalyzerInjectionHelper::Stop() {
     video_writer->Close();
   }
   video_writers_.clear();
-  frame_ids_writers_.clear();
 }
 
 test::VideoFrameWriter* VideoQualityAnalyzerInjectionHelper::CreateVideoWriter(
     absl::string_view file_name,
+    absl::optional<std::string> frame_ids_dump_file_name,
     const PeerConnectionE2EQualityTestFixture::VideoConfig& config) {
   // TODO(titovartem) create only one file writer for simulcast video track.
   // For now this code will be invoked for each simulcast stream separately, but
   // only one file will be used.
+  std::vector<std::unique_ptr<test::VideoFrameWriter>> requested_writers;
+  requested_writers.push_back(std::make_unique<test::Y4mVideoFrameWriterImpl>(
+      std::string(file_name), config.width, config.height, config.fps));
+  if (frame_ids_dump_file_name.has_value()) {
+    requested_writers.push_back(
+        std::make_unique<VideoFrameIdsWriter>(*frame_ids_dump_file_name));
+  }
   std::unique_ptr<test::VideoFrameWriter> video_writer =
-      std::make_unique<test::Y4mVideoFrameWriterImpl>(
-          std::string(file_name), config.width, config.height, config.fps);
+      std::make_unique<BroadcastingFrameWriter>(std::move(requested_writers));
   if (config.output_dump_use_fixed_framerate) {
     video_writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
         config.fps, clock_, std::move(video_writer));
@@ -239,17 +274,6 @@ test::VideoFrameWriter* VideoQualityAnalyzerInjectionHelper::CreateVideoWriter(
   test::VideoFrameWriter* out = video_writer.get();
   video_writers_.push_back(std::move(video_writer));
   return out;
-}
-
-VideoQualityAnalyzerInjectionHelper::VideoFrameIdsWriter*
-VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoFrameIdsWriter(
-    absl::optional<std::string> frame_ids_dump_file_name) {
-  if (!frame_ids_dump_file_name.has_value()) {
-    return nullptr;
-  }
-  frame_ids_writers_.push_back(
-      std::make_unique<VideoFrameIdsWriter>(*frame_ids_dump_file_name));
-  return frame_ids_writers_.back().get();
 }
 
 void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
@@ -298,13 +322,11 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
     writer = CreateVideoWriter(
         config.output_dump_options->GetOutputDumpFileName(
             receiver_stream.stream_label, receiver_stream.peer_name),
-        config);
-    VideoFrameIdsWriter* frame_ids_writer = MaybeCreateVideoFrameIdsWriter(
         config.output_dump_options->GetOutputFrameIdsDumpFileName(
-            receiver_stream.stream_label, receiver_stream.peer_name));
+            receiver_stream.stream_label, receiver_stream.peer_name),
+        config);
     sinks.push_back(std::make_unique<VideoWriter>(
-        writer, frame_ids_writer,
-        config.output_dump_options->sampling_modulo()));
+        writer, config.output_dump_options->sampling_modulo()));
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
