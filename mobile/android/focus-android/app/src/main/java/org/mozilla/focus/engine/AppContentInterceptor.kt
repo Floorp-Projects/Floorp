@@ -15,6 +15,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.CrashListActivity
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.utils.SupportUtils
 
 class AppContentInterceptor(
     private val context: Context,
@@ -91,7 +92,7 @@ class AppContentInterceptor(
 
 private fun getErrorPageTitle(context: Context, type: ErrorType): String? {
     if (type == ErrorType.ERROR_HTTPS_ONLY) {
-        return context.getString(R.string.errorpage_httpsonly_title)
+        return context.getString(R.string.errorpage_httpsonly_title2)
     }
     // Returning `null` here will let the component use its default title for this error type
     return null
@@ -100,8 +101,9 @@ private fun getErrorPageTitle(context: Context, type: ErrorType): String? {
 private fun getErrorPageDescription(context: Context, type: ErrorType): String? {
     if (type == ErrorType.ERROR_HTTPS_ONLY) {
         return context.getString(
-            R.string.errorpage_httpsonly_message,
+            R.string.errorpage_httpsonly_message2,
             context.getString(R.string.app_name),
+            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.HTTPS_ONLY),
         )
     }
     // Returning `null` here will let the component use its default description for this error type
