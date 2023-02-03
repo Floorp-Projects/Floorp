@@ -24,6 +24,19 @@ class MFCDMChild final : public PMFCDMChild {
   using CapabilitiesPromise = MozPromise<MFCDMCapabilitiesIPDL, nsresult, true>;
   RefPtr<CapabilitiesPromise> GetCapabilities();
 
+  template <typename PromiseType>
+  already_AddRefed<PromiseType> InvokeAsync(
+      std::function<void()>&& aCall, const char* aCallerName,
+      MozPromiseHolder<PromiseType>& aPromise);
+
+  using InitPromise = MozPromise<MFCDMInitIPDL, nsresult, true>;
+  RefPtr<InitPromise> Init(const nsAString& aOrigin,
+                           const KeySystemConfig::Requirement aPersistentState,
+                           const KeySystemConfig::Requirement aDistinctiveID,
+                           const bool aHWSecure);
+
+  uint64_t Id() const { return mId; }
+
   void IPDLActorDestroyed() {
     AssertOnManagerThread();
     mIPDLSelfRef = nullptr;
@@ -45,6 +58,8 @@ class MFCDMChild final : public PMFCDMChild {
   using RemotePromise = GenericNonExclusivePromise;
   RefPtr<RemotePromise> EnsureRemote();
 
+  void AssertSendable();
+
   const nsString mKeySystem;
 
   const RefPtr<nsISerialEventTarget> mManagerThread;
@@ -60,6 +75,15 @@ class MFCDMChild final : public PMFCDMChild {
   MozPromiseHolder<CapabilitiesPromise> mCapabilitiesPromiseHolder;
 
   Atomic<bool> mShutdown;
+
+  // This represents an unique Id to indentify the CDM in the remote process.
+  // 0(zero) means the CDM is not yet initialized.
+  // Modified on the manager thread, and read on other threads.
+  Atomic<uint64_t> mId;
+  MozPromiseHolder<InitPromise> mInitPromiseHolder;
+  using InitIPDLPromise = MozPromise<mozilla::MFCDMInitResult,
+                                     mozilla::ipc::ResponseRejectReason, true>;
+  MozPromiseRequestHolder<InitIPDLPromise> mInitRequest;
 };
 
 }  // namespace mozilla

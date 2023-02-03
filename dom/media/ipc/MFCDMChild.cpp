@@ -4,12 +4,6 @@
 
 #include "MFCDMChild.h"
 
-#include <mfapi.h>
-#include <mfidl.h>
-#include <winerror.h>
-#include <winnt.h>
-#include <wrl.h>
-
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/RefPtr.h"
@@ -82,8 +76,10 @@ void MFCDMChild::Shutdown() {
   mShutdown = true;
 
   mRemoteRequest.DisconnectIfExists();
+  mInitRequest.DisconnectIfExists();
   mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+  mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 
   if (mState == NS_OK) {
     mManagerThread->Dispatch(NS_NewRunnableFunction(
@@ -120,19 +116,77 @@ RefPtr<MFCDMChild::CapabilitiesPromise> MFCDMChild::GetCapabilities() {
         });
   };
 
-  if (mRemotePromiseHolder.IsEmpty()) {
+  return InvokeAsync(doSend, __func__, mCapabilitiesPromiseHolder);
+}
+
+// Neither error nor shutdown.
+void MFCDMChild::AssertSendable() {
+  MOZ_ASSERT((mState == NS_ERROR_NOT_INITIALIZED || mState == NS_OK) &&
+             mShutdown == false);
+}
+
+template <typename PromiseType>
+already_AddRefed<PromiseType> MFCDMChild::InvokeAsync(
+    std::function<void()>&& aCall, const char* aCallerName,
+    MozPromiseHolder<PromiseType>& aPromise) {
+  AssertSendable();
+
+  if (mState == NS_OK) {
+    // mRemotePromise is resolved, send on manager thread.
     mManagerThread->Dispatch(
-        NS_NewRunnableFunction(__func__, std::move(doSend)));
-  } else {
-    mRemotePromise->Then(mManagerThread, __func__, std::move(doSend),
-                         [self = RefPtr{this}, this](nsresult rv) {
-                           LOG("error=%x", rv);
-                           mState = rv;
-                           mCapabilitiesPromiseHolder.RejectIfExists(rv,
-                                                                     __func__);
-                         });
+        NS_NewRunnableFunction(aCallerName, std::move(aCall)));
+  } else if (mState == NS_ERROR_NOT_INITIALIZED) {
+    // mRemotePromise is pending, chain to it.
+    mRemotePromise->Then(
+        mManagerThread, __func__, std::move(aCall),
+        [self = RefPtr{this}, this, &aPromise, aCallerName](nsresult rv) {
+          LOG("error=%x", rv);
+          mState = rv;
+          aPromise.RejectIfExists(rv, aCallerName);
+        });
   }
-  return mCapabilitiesPromiseHolder.Ensure(__func__);
+
+  return aPromise.Ensure(aCallerName);
+}
+
+RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
+    const nsAString& aOrigin,
+    const KeySystemConfig::Requirement aPersistentState,
+    const KeySystemConfig::Requirement aDistinctiveID, const bool aHWSecure) {
+  MOZ_ASSERT(mManagerThread);
+
+  if (mShutdown) {
+    return InitPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  if (mState != NS_OK && mState != NS_ERROR_NOT_INITIALIZED) {
+    LOG("error=%x", nsresult(mState));
+    return InitPromise::CreateAndReject(mState, __func__);
+  }
+
+  MFCDMInitParamsIPDL params{nsString(aOrigin), aPersistentState,
+                             aDistinctiveID, aHWSecure};
+  auto doSend = [self = RefPtr{this}, this, params]() {
+    SendInit(params)
+        ->Then(
+            mManagerThread, __func__,
+            [self, this](MFCDMInitResult&& aResult) {
+              if (aResult.type() == MFCDMInitResult::Tnsresult) {
+                nsresult rv = aResult.get_nsresult();
+                mInitPromiseHolder.RejectIfExists(rv, __func__);
+                return;
+              }
+              mId = aResult.get_MFCDMInitIPDL().id();
+              mInitPromiseHolder.ResolveIfExists(aResult.get_MFCDMInitIPDL(),
+                                                 __func__);
+            },
+            [self, this](const mozilla::ipc::ResponseRejectReason& aReason) {
+              mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+            })
+        ->Track(mInitRequest);
+  };
+
+  return InvokeAsync(std::move(doSend), __func__, mInitPromiseHolder);
 }
 
 #undef SLOG

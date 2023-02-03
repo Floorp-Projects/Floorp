@@ -34,12 +34,30 @@ union MFCDMCapabilitiesResult {
   MFCDMCapabilitiesIPDL;
 };
 
+// For Init()
+struct MFCDMInitParamsIPDL {
+  nsString origin;
+  Requirement distinctiveID;
+  Requirement persistentState;
+  bool hwSecure;
+};
+
+struct MFCDMInitIPDL {
+  uint64_t id;
+};
+
+union MFCDMInitResult {
+  nsresult;
+  MFCDMInitIPDL;
+};
+
 [ManualDealloc]
 async protocol PMFCDM
 {
   manager PRemoteDecoderManager;
 parent:
   async GetCapabilities() returns (MFCDMCapabilitiesResult result);
+  async Init(MFCDMInitParamsIPDL params) returns (MFCDMInitResult result);
   async __delete__();
 };
 

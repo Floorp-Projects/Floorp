@@ -5,10 +5,9 @@
 #ifndef DOM_MEDIA_IPC_MFCDMPARENT_H_
 #define DOM_MEDIA_IPC_MFCDMPARENT_H_
 
-#include <mfidl.h>
-#include <winnt.h>
 #include <wrl.h>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/PMFCDMParent.h"
 #include "MFCDMExtra.h"
 
@@ -29,16 +28,19 @@ class MFCDMParent final : public PMFCDMParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMParent);
 
   MFCDMParent(const nsAString& aKeySystem, RemoteDecoderManagerParent* aManager,
-              nsISerialEventTarget* aManagerThread)
-      : mKeySystem(aKeySystem),
-        mManager(aManager),
-        mManagerThread(aManagerThread) {
-    mIPDLSelfRef = this;
-    LoadFactory();
+              nsISerialEventTarget* aManagerThread);
+
+  static MFCDMParent* GetCDMById(uint64_t aId) {
+    MOZ_ASSERT(!sRegisteredCDMs.Contains(aId));
+    return sRegisteredCDMs.Get(aId);
   }
+  uint64_t Id() const { return mId; }
 
   mozilla::ipc::IPCResult RecvGetCapabilities(
       GetCapabilitiesResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvInit(const MFCDMInitParamsIPDL& aParams,
+                                   InitResolver&& aResolver);
 
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
@@ -51,17 +53,32 @@ class MFCDMParent final : public PMFCDMParent {
   }
 
  private:
-  ~MFCDMParent() = default;
+  ~MFCDMParent() { Unregister(); }
 
   HRESULT LoadFactory();
+
+  void Register() {
+    MOZ_ASSERT(!sRegisteredCDMs.Contains(this->mId));
+    sRegisteredCDMs.InsertOrUpdate(this->mId, this);
+  }
+  void Unregister() {
+    MOZ_ASSERT(sRegisteredCDMs.Contains(this->mId));
+    sRegisteredCDMs.Remove(this->mId);
+  }
 
   nsString mKeySystem;
 
   const RefPtr<RemoteDecoderManagerParent> mManager;
   const RefPtr<nsISerialEventTarget> mManagerThread;
 
+  static inline nsTHashMap<nsUint64HashKey, MFCDMParent*> sRegisteredCDMs;
+
+  static inline uint64_t sNextId = 1;
+  const uint64_t mId;
+
   RefPtr<MFCDMParent> mIPDLSelfRef;
   Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory> mFactory;
+  Microsoft::WRL::ComPtr<IMFContentDecryptionModule> mCDM;
 };
 
 }  // namespace mozilla
