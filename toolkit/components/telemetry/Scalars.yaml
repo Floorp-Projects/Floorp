@@ -6094,6 +6094,26 @@ startup:
     record_in_processes:
       - main
 
+  is_restored_by_macos:
+    bug_numbers:
+      - 639707
+    description: >
+      Recorded on every launch of a Firefox install on macOS, with a boolean
+      value indicating whether Firefox was restored by macOS or if it was
+      manually launched by a user.
+    expires: "116"
+    keyed: false
+    kind: boolean
+    notification_emails:
+      - spohl@mozilla.com
+    operating_systems:
+      - mac
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
 script.preloader:
   mainthread_recompile:
     bug_numbers:
