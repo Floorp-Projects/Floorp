@@ -542,6 +542,11 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<int32_t>(candidate.priority);
     verifier.TestMemberIsUndefined(candidate.url);
     verifier.TestMemberIsUndefined(candidate.relay_protocol);
+    verifier.TestMemberIsDefined(candidate.foundation);
+    verifier.TestMemberIsUndefined(candidate.related_address);
+    verifier.TestMemberIsUndefined(candidate.related_port);
+    verifier.TestMemberIsDefined(candidate.username_fragment);
+    verifier.TestMemberIsUndefined(candidate.tcp_type);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 

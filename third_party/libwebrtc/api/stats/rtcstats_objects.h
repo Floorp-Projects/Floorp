@@ -245,6 +245,12 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   RTCStatsMember<std::string> candidate_type;
   RTCStatsMember<int32_t> priority;
   RTCStatsMember<std::string> url;
+  RTCStatsMember<std::string> foundation;
+  RTCStatsMember<std::string> related_address;
+  RTCStatsMember<int32_t> related_port;
+  RTCStatsMember<std::string> username_fragment;
+  // Enum type RTCIceTcpCandidateType.
+  RTCStatsMember<std::string> tcp_type;
 
   RTCNonStandardStatsMember<bool> vpn;
   RTCNonStandardStatsMember<std::string> network_adapter_type;
