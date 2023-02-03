@@ -1334,12 +1334,11 @@ bool GCMarker::markOneColor(SliceBudget& budget) {
       }
     }
 
-    processMarkStackTop<opts>(budget);
-    MOZ_ASSERT_IF(color == MarkColor::Gray, !hasBlackEntries());
-
-    if (budget.isOverBudget()) {
+    if (!processMarkStackTop<opts>(budget)) {
       return false;
     }
+
+    MOZ_ASSERT_IF(color == MarkColor::Gray, !hasBlackEntries());
   } while (hasEntries(color));
 
   return true;
@@ -1372,7 +1371,7 @@ static inline size_t NumUsedDynamicSlots(NativeObject* obj) {
 }
 
 template <uint32_t opts>
-inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
+inline bool GCMarker::processMarkStackTop(SliceBudget& budget) {
   /*
    * This function uses explicit goto and scans objects directly. This allows us
    * to eliminate tail recursion and significantly improve the marking
@@ -1389,78 +1388,89 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
   size_t index;              // Index of the next slot to mark.
   size_t end;                // End of slot range to mark.
 
-  switch (stack.peekTag()) {
-    case MarkStack::SlotsOrElementsRangeTag: {
-      auto range = stack.popSlotsOrElementsRange();
-      obj = range.ptr().asRangeObject();
-      NativeObject* nobj = &obj->as<NativeObject>();
-      kind = range.kind();
-      index = range.start();
+  if (stack.peekTag() == MarkStack::SlotsOrElementsRangeTag) {
+    auto range = stack.popSlotsOrElementsRange();
+    obj = range.ptr().asRangeObject();
+    NativeObject* nobj = &obj->as<NativeObject>();
+    kind = range.kind();
+    index = range.start();
 
-      switch (kind) {
-        case SlotsOrElementsKind::FixedSlots: {
-          base = nobj->fixedSlots();
-          end = NumUsedFixedSlots(nobj);
-          break;
-        }
-
-        case SlotsOrElementsKind::DynamicSlots: {
-          base = nobj->slots_;
-          end = NumUsedDynamicSlots(nobj);
-          break;
-        }
-
-        case SlotsOrElementsKind::Elements: {
-          base = nobj->getDenseElements();
-
-          // Account for shifted elements.
-          size_t numShifted = nobj->getElementsHeader()->numShiftedElements();
-          size_t initlen = nobj->getDenseInitializedLength();
-          index = std::max(index, numShifted) - numShifted;
-          end = initlen;
-          break;
-        }
-
-        case SlotsOrElementsKind::Unused: {
-          MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unused SlotsOrElementsKind");
-        }
+    switch (kind) {
+      case SlotsOrElementsKind::FixedSlots: {
+        base = nobj->fixedSlots();
+        end = NumUsedFixedSlots(nobj);
+        break;
       }
 
-      goto scan_value_range;
-    }
-
-    case MarkStack::ObjectTag: {
-      obj = stack.popPtr().as<JSObject>();
-      AssertShouldMarkInZone(this, obj);
-      goto scan_obj;
-    }
-
-    case MarkStack::JitCodeTag: {
-      auto code = stack.popPtr().as<jit::JitCode>();
-      AutoSetTracingSource asts(tracer(), code);
-      return code->traceChildren(tracer());
-    }
-
-    case MarkStack::ScriptTag: {
-      auto script = stack.popPtr().as<BaseScript>();
-      if constexpr (bool(opts & MarkingOptions::MarkImplicitEdges)) {
-        markImplicitEdges(script);
+      case SlotsOrElementsKind::DynamicSlots: {
+        base = nobj->slots_;
+        end = NumUsedDynamicSlots(nobj);
+        break;
       }
-      AutoSetTracingSource asts(tracer(), script);
-      return script->traceChildren(tracer());
+
+      case SlotsOrElementsKind::Elements: {
+        base = nobj->getDenseElements();
+
+        // Account for shifted elements.
+        size_t numShifted = nobj->getElementsHeader()->numShiftedElements();
+        size_t initlen = nobj->getDenseInitializedLength();
+        index = std::max(index, numShifted) - numShifted;
+        end = initlen;
+        break;
+      }
+
+      case SlotsOrElementsKind::Unused: {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unused SlotsOrElementsKind");
+      }
     }
 
-    default:
-      MOZ_CRASH("Invalid tag in mark stack");
+    goto scan_value_range;
   }
-  return;
+
+  budget.step();
+  if (budget.isOverBudget()) {
+    return false;
+  }
+
+  {
+    MarkStack::TaggedPtr ptr = stack.popPtr();
+    switch (ptr.tag()) {
+      case MarkStack::ObjectTag: {
+        obj = ptr.as<JSObject>();
+        AssertShouldMarkInZone(this, obj);
+        goto scan_obj;
+      }
+
+      case MarkStack::JitCodeTag: {
+        auto* code = ptr.as<jit::JitCode>();
+        AutoSetTracingSource asts(tracer(), code);
+        code->traceChildren(tracer());
+        return true;
+      }
+
+      case MarkStack::ScriptTag: {
+        auto* script = ptr.as<BaseScript>();
+        if constexpr (bool(opts & MarkingOptions::MarkImplicitEdges)) {
+          markImplicitEdges(script);
+        }
+        AutoSetTracingSource asts(tracer(), script);
+        script->traceChildren(tracer());
+        return true;
+      }
+
+      default:
+        MOZ_CRASH("Invalid tag in mark stack");
+    }
+  }
+
+  return true;
 
 scan_value_range:
   while (index < end) {
     budget.step();
     if (budget.isOverBudget()) {
       pushValueRange(obj, kind, index, end);
-      return;
+      return false;
     }
 
     const Value& v = base[index];
@@ -1497,16 +1507,11 @@ scan_value_range:
       markAndTraverseEdge<opts>(obj, JS::GCCellPtr(cell, cell->getTraceKind()));
     }
   }
-  return;
+
+  return true;
 
 scan_obj : {
   AssertShouldMarkInZone(this, obj);
-
-  budget.step();
-  if (budget.isOverBudget()) {
-    repush(obj);
-    return;
-  }
 
   if constexpr (bool(opts & MarkingOptions::MarkImplicitEdges)) {
     markImplicitEdges(obj);
@@ -1516,7 +1521,7 @@ scan_obj : {
   CallTraceHook(tracer(), obj);
 
   if (!obj->is<NativeObject>()) {
-    return;
+    return true;
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
@@ -2243,7 +2248,8 @@ void GCRuntime::processDelayedMarkingList(MarkColor color) {
     }
     while (marker().hasEntries(color)) {
       SliceBudget budget = SliceBudget::unlimited();
-      marker().processMarkStackTop<NormalMarkingOptions>(budget);
+      MOZ_ALWAYS_TRUE(
+          marker().processMarkStackTop<NormalMarkingOptions>(budget));
     }
   } while (delayedMarkingWorkAdded);
 
