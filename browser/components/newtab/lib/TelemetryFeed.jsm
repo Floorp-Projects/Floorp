@@ -840,7 +840,8 @@ class TelemetryFeed {
     if (this.telemetryEnabled) {
       this.pingCentre.sendStructuredIngestionPing(
         eventObject,
-        this._generateStructuredIngestionEndpoint(namespace, pingType, version)
+        this._generateStructuredIngestionEndpoint(namespace, pingType, version),
+        namespace
       );
     }
   }

@@ -168,7 +168,11 @@ export var PartnerLinkAttribution = {
 
     const endpoint = makeEndpointUrl(pingType, "1");
     payload.context_id = lazy.contextId;
-    lazy.pingcentre.sendStructuredIngestionPing(payload, endpoint);
+    lazy.pingcentre.sendStructuredIngestionPing(
+      payload,
+      endpoint,
+      NAMESPACE_CONTEXUAL_SERVICES
+    );
   },
 
   /**
