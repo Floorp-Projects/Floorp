@@ -53,6 +53,17 @@ constexpr int kSurplusCompressionGain = 6;
 // frames).
 constexpr int kClippingPredictorEvaluatorHistorySize = 500;
 
+// Target speech level (dBFs) and speech probability threshold used to compute
+// the RMS error override in `GetSpeechLevelErrorDb()`. These are only used for
+// computing the error override and they are not passed to `agc_`.
+// TODO(webrtc:7494): Move these to a config and pass in the ctor.
+constexpr float kOverrideTargetSpeechLevelDbfs = -18.0f;
+constexpr float kOverrideSpeechProbabilitySilenceThreshold = 0.5f;
+// The minimum number of frames between `UpdateGain()` calls.
+// TODO(webrtc:7494): Move this to a config and pass in the ctor with
+// kOverrideWaitFrames = 100. Default value zero needed for the unit tests.
+constexpr int kOverrideWaitFrames = 0;
+
 using AnalogAgcConfig =
     AudioProcessing::Config::GainController1::AnalogGainController;
 
@@ -173,6 +184,27 @@ void LogClippingMetrics(int clipping_rate) {
                               /*bucket_count=*/50);
 }
 
+// Computes the speech level error in dB. `speech_level_dbfs` is required to be
+// in the range [-90.0f, 30.0f] and `speech_probability` in the range
+// [0.0f, 1.0f].
+int GetSpeechLevelErrorDb(float speech_level_dbfs, float speech_probability) {
+  constexpr float kMinSpeechLevelDbfs = -90.0f;
+  constexpr float kMaxSpeechLevelDbfs = 30.0f;
+  RTC_DCHECK_GE(speech_level_dbfs, kMinSpeechLevelDbfs);
+  RTC_DCHECK_LE(speech_level_dbfs, kMaxSpeechLevelDbfs);
+  RTC_DCHECK_GE(speech_probability, 0.0f);
+  RTC_DCHECK_LE(speech_probability, 1.0f);
+
+  if (speech_probability < kOverrideSpeechProbabilitySilenceThreshold) {
+    return 0;
+  }
+
+  const float speech_level = rtc::SafeClamp<float>(
+      speech_level_dbfs, kMinSpeechLevelDbfs, kMaxSpeechLevelDbfs);
+
+  return std::round(kOverrideTargetSpeechLevelDbfs - speech_level);
+}
+
 }  // namespace
 
 MonoAgc::MonoAgc(ApmDataDumper* data_dumper,
@@ -201,9 +233,12 @@ void MonoAgc::Initialize() {
   compression_accumulator_ = compression_;
   capture_output_used_ = true;
   check_volume_on_next_process_ = true;
+  frames_since_update_gain_ = 0;
+  is_first_frame_ = true;
 }
 
-void MonoAgc::Process(rtc::ArrayView<const int16_t> audio) {
+void MonoAgc::Process(rtc::ArrayView<const int16_t> audio,
+                      absl::optional<int> rms_error_override) {
   new_compression_to_set_ = absl::nullopt;
 
   if (check_volume_on_next_process_) {
@@ -215,14 +250,32 @@ void MonoAgc::Process(rtc::ArrayView<const int16_t> audio) {
 
   agc_->Process(audio);
 
-  // Update gain if `agc_` has an RMS error estimate ready.
+  // Always check if `agc_` has a new error available. If yes, `agc_` gets
+  // reset.
+  // TODO(webrtc:7494) Replace the `agc_` call `GetRmsErrorDb()` with `Reset()`
+  // if an error override is used.
   int rms_error = 0;
-  if (agc_->GetRmsErrorDb(&rms_error)) {
+  bool update_gain = agc_->GetRmsErrorDb(&rms_error);
+  if (rms_error_override.has_value()) {
+    if (is_first_frame_ || frames_since_update_gain_ < kOverrideWaitFrames) {
+      update_gain = false;
+    } else {
+      rms_error = *rms_error_override;
+      update_gain = true;
+    }
+  }
+
+  if (update_gain) {
     UpdateGain(rms_error);
   }
 
   if (!disable_digital_adaptive_) {
     UpdateCompressor();
+  }
+
+  is_first_frame_ = false;
+  if (frames_since_update_gain_ < kOverrideWaitFrames) {
+    ++frames_since_update_gain_;
   }
 }
 
@@ -242,6 +295,8 @@ void MonoAgc::HandleClipping(int clipped_level_step) {
     SetLevel(std::max(clipped_level_min_, level_ - clipped_level_step));
     // Reset the AGCs for all channels since the level has changed.
     agc_->Reset();
+    frames_since_update_gain_ = 0;
+    is_first_frame_ = false;
   }
 }
 
@@ -276,7 +331,8 @@ void MonoAgc::SetLevel(int new_level) {
     // was manually adjusted. The compressor will still provide some of the
     // desired gain change.
     agc_->Reset();
-
+    frames_since_update_gain_ = 0;
+    is_first_frame_ = false;
     return;
   }
 
@@ -344,6 +400,8 @@ int MonoAgc::CheckVolumeAndReset() {
   agc_->Reset();
   level_ = level;
   startup_ = false;
+  frames_since_update_gain_ = 0;
+  is_first_frame_ = true;
   return 0;
 }
 
@@ -355,6 +413,11 @@ int MonoAgc::CheckVolumeAndReset() {
 // it, in which case we take no action and cache the updated level.
 void MonoAgc::UpdateGain(int rms_error_db) {
   int rms_error = rms_error_db;
+
+  // Always reset the counter regardless of whether the gain is changed
+  // or not. This matches with the bahvior of `agc_` where the histogram is
+  // reset every time an RMS error is successfully read.
+  frames_since_update_gain_ = 0;
 
   // The compressor will always add at least kMinCompressionGain. In effect,
   // this adjusts our target gain upward by the same amount and rms_error
@@ -646,6 +709,13 @@ void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
 }
 
 void AgcManagerDirect::Process(const AudioBuffer& audio_buffer) {
+  Process(audio_buffer, /*speech_probability=*/absl::nullopt,
+          /*speech_level_dbfs=*/absl::nullopt);
+}
+
+void AgcManagerDirect::Process(const AudioBuffer& audio_buffer,
+                               absl::optional<float> speech_probability,
+                               absl::optional<float> speech_level_dbfs) {
   AggregateChannelLevels();
 
   if (!capture_output_used_) {
@@ -653,12 +723,18 @@ void AgcManagerDirect::Process(const AudioBuffer& audio_buffer) {
   }
 
   const size_t num_frames_per_band = audio_buffer.num_frames_per_band();
+  absl::optional<int> rms_error_override = absl::nullopt;
+  if (speech_probability.has_value() && speech_level_dbfs.has_value()) {
+    rms_error_override =
+        GetSpeechLevelErrorDb(*speech_level_dbfs, *speech_probability);
+  }
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     std::array<int16_t, AudioBuffer::kMaxSampleRate / 100> audio_data;
     int16_t* audio_use = audio_data.data();
     FloatS16ToS16(audio_buffer.split_bands_const_f(ch)[0], num_frames_per_band,
                   audio_use);
-    channel_agcs_[ch]->Process({audio_use, num_frames_per_band});
+    channel_agcs_[ch]->Process({audio_use, num_frames_per_band},
+                               rms_error_override);
     new_compressions_to_set_[ch] = channel_agcs_[ch]->new_compression();
   }
 

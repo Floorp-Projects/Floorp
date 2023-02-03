@@ -69,8 +69,18 @@ class AgcManagerDirect final {
   // prediction (if enabled). Must be called after `set_stream_analog_level()`.
   void AnalyzePreProcess(const AudioBuffer& audio_buffer);
 
-  // Processes `audio`. Chooses a digital compression gain and the new input
-  // volume to recommend. Must be called after `AnalyzePreProcess()`.
+  // Processes `audio_buffer`. Chooses a digital compression gain and the new
+  // input volume to recommend. Must be called after `AnalyzePreProcess()`. If
+  // `speech_probability` (range [0.0f, 1.0f]) and `speech_level_dbfs` (range
+  // [-90.f, 30.0f]) are given, uses them to override the estimated RMS error.
+  // TODO(webrtc:7494): This signature is needed for testing purposes, unify
+  // the signatures when the clean-up is done.
+  void Process(const AudioBuffer& audio_buffer,
+               absl::optional<float> speech_probability,
+               absl::optional<float> speech_level_dbfs);
+
+  // Processes `audio_buffer`. Chooses a digital compression gain and the new
+  // input volume to recommend. Must be called after `AnalyzePreProcess()`.
   void Process(const AudioBuffer& audio_buffer);
 
   // TODO(bugs.webrtc.org/7494): Return recommended input volume and remove
@@ -125,6 +135,10 @@ class AgcManagerDirect final {
                            UsedClippingPredictionsProduceLowerAnalogLevels);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
                            UnusedClippingPredictionsProduceEqualAnalogLevels);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
+                           EmptyRmsErrorOverrideHasNoEffect);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectParametrizedTest,
+                           NonEmptyRmsErrorOverrideHasEffect);
 
   // Ctor that creates a single channel AGC and by injecting `agc`.
   // `agc` will be owned by this class; hence, do not delete it.
@@ -198,10 +212,13 @@ class MonoAgc {
   // `set_stream_analog_level()`.
   void HandleClipping(int clipped_level_step);
 
-  // Analyzes `audio`, updates the recommended input volume based on the
-  // estimated speech level and, if enabled, updates the (digital) compression
-  // gain to be applied by `agc_`. Must be called after `HandleClipping()`.
-  void Process(rtc::ArrayView<const int16_t> audio);
+  // Analyzes `audio`, requests the RMS error from AGC, updates the recommended
+  // input volume based on the estimated speech level and, if enabled, updates
+  // the (digital) compression gain to be applied by `agc_`. Must be called
+  // after `HandleClipping()`. If `rms_error_override` has a value, RMS error
+  // from AGC is overridden by it.
+  void Process(rtc::ArrayView<const int16_t> audio,
+               absl::optional<int> rms_error_override);
 
   // Returns the recommended input volume. Must be called after `Process()`.
   int recommended_analog_level() const { return recommended_input_volume_; }
@@ -257,6 +274,11 @@ class MonoAgc {
   absl::optional<int> new_compression_to_set_;
   bool log_to_histograms_ = false;
   const int clipped_level_min_;
+
+  // Frames since the last `UpdateGain()` call.
+  int frames_since_update_gain_ = 0;
+  // Set to true for the first frame after startup and reset, otherwise false.
+  bool is_first_frame_ = true;
 };
 
 }  // namespace webrtc
