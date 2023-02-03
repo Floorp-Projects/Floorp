@@ -5,6 +5,7 @@
 #ifndef AndroidDecoderModule_h_
 #define AndroidDecoderModule_h_
 
+#include "MediaCodecsSupport.h"
 #include "PlatformDecoderModule.h"
 #include "mozilla/MediaDrmCDMProxy.h"
 #include "mozilla/StaticPtr.h"  // for StaticAutoPtr
@@ -35,11 +36,22 @@ class AndroidDecoderModule : public PlatformDecoderModule {
 
   static void SetSupportedMimeTypes(nsTArray<nsCString>&& aSupportedTypes);
 
+  // Return supported codecs (querying via JNI if not already cached)
+  static media::MediaCodecsSupported GetSupportedCodecs();
+
  private:
   explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
   virtual ~AndroidDecoderModule() = default;
   RefPtr<MediaDrmCDMProxy> mProxy;
-  static StaticAutoPtr<nsTArray<nsCString>> sSupportedMimeTypes;
+  // SW compatible MIME type strings
+  static StaticAutoPtr<nsTArray<nsCString>> sSupportedSwMimeTypes;
+  // HW compatible MIME type strings
+  static StaticAutoPtr<nsTArray<nsCString>> sSupportedHwMimeTypes;
+  // EnumSet containing SW/HW codec support information parsed from
+  // MIME type strings. If a specific codec could not be determined
+  // it will not be included in this EnumSet. All supported MIME type strings
+  // are still stored in sSupportedMimeTypes and sSupportedHwMimeTypes.
+  static StaticAutoPtr<media::MediaCodecsSupported> sSupportedCodecs;
 };
 
 extern LazyLogModule sAndroidDecoderModuleLog;

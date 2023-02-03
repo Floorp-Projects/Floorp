@@ -811,6 +811,9 @@ media::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
       supported += MCSInfo::GetDecodeMediaCodecsSupported(
           cd.codec, pdm->SupportsMimeType(nsCString(cd.mimeTypeString)));
     }
+#ifdef MOZ_WIDGET_ANDROID
+    supported += AndroidDecoderModule::GetSupportedCodecs();
+#endif
     return supported;
   };
 
