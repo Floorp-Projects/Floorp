@@ -60,19 +60,18 @@ let isUpdated = false;
 async function onFinalUIStartup() {
     Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
 
-        IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages")).then(
-            (data)=>{
-                if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
-            }
-        )
+    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        .then((data) => {
+            if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        })
 
     // Write CSS.
     
     IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "chrome")).then((data) => {
-    if (!data) {
-        let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
-        let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
-        IOUtils.writeUTF8(uccpth,`
+        if (!data) {
+            let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
+            let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
+            IOUtils.writeUTF8(uccpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
 
 userChrome.cssは、スタイルシートであり、Floorp のユーザーインターフェースに適用され、デフォルトの Floorp のスタイルルールをオーバーライドできます。 残念ながら、userChrome.cssを使用して Floorp の機能操作を変更することはできません。
@@ -105,8 +104,8 @@ NOTE:適用に、about:config の操作は不要です。
 }
 `);
 
-        let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
-        IOUtils.writeUTF8(ucconpth,`
+            let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
+            IOUtils.writeUTF8(ucconpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
  
 userContent.css は userChrome.css と同じく、chrome 特権を用いてブラウザーに対して CSS スタイルルールを指定できる特殊なCSSファイルです。
@@ -132,7 +131,8 @@ userChrome.css は、ツールバーなどのブラウザーを制御する場�
 
 `);
 
-    }});
+        }
+    });
 
     if (isFirstRun) {
         try {
@@ -214,3 +214,6 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 
 // Load Tab Sleep feature
 ChromeUtils.import("resource:///modules/TabSleep.jsm");
+
+// Load OpenLinkInExternal feature
+ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
