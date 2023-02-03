@@ -87,6 +87,7 @@ const WEATHER_VIEW_TEMPLATE = {
     {
       name: "summary",
       tag: "span",
+      overflowable: true,
       children: [
         {
           name: "top",
@@ -118,6 +119,7 @@ const WEATHER_VIEW_TEMPLATE = {
             {
               name: "middleNoWrap",
               tag: "span",
+              overflowable: true,
               children: [
                 {
                   name: "summaryText",
