@@ -1144,6 +1144,12 @@ void RTCRtpSender::SetTrack(const RefPtr<MediaStreamTrack>& aTrack) {
   // Used for RTCPeerConnection.removeTrack and RTCPeerConnection.addTrack
   mSenderTrack = aTrack;
   SeamlessTrackSwitch(aTrack);
+  if (aTrack) {
+    // RFC says:
+    // However, an RtpTransceiver MUST NOT be removed if a track was attached
+    // to the RtpTransceiver via the addTrack method.
+    GetJsepTransceiver().SetOnlyExistsBecauseOfSetRemote(false);
+  }
 }
 
 bool RTCRtpSender::SetSenderTrackWithClosedCheck(
