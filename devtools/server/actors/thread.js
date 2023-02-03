@@ -1237,10 +1237,10 @@ class ThreadActor extends Actor {
               stepFrame.onStep = onStep;
             }
           }
-        // eslint-disable no-fallthrough
+        // eslint-disable-next-line no-fallthrough
         case "finish":
           stepFrame.onStep = createStepForReactionTracking(stepFrame.onStep);
-        // eslint-disable no-fallthrough
+        // eslint-disable-next-line no-fallthrough
         case "restart":
           stepFrame.onPop = onPop;
           break;
