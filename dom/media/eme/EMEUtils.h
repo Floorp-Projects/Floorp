@@ -82,6 +82,10 @@ bool IsClearkeyKeySystem(const nsAString& aKeySystem);
 
 bool IsWidevineKeySystem(const nsAString& aKeySystem);
 
+#ifdef MOZ_MF_CDM
+bool IsPlayReadyKeySystem(const nsAString& aKeySystem);
+#endif
+
 // Note: Primetime is now unsupported, but we leave it in the enum so
 // that the telemetry enum values are not changed; doing so would break
 // existing telemetry probes.
