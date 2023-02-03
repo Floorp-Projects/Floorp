@@ -32,6 +32,7 @@ class RenderDcompSurfaceTextureHost;
 class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
 class RenderTextureHostSWGL;
+class RenderTextureHostWrapper;
 
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
                                   GLenum aBindTarget, GLuint aBindTexture);
@@ -108,6 +109,8 @@ class RenderTextureHost {
       gfx::IntSize aTextureSize) const;
 
   bool mIsFromDRMSource;
+
+  friend class RenderTextureHostWrapper;
 };
 
 }  // namespace wr
