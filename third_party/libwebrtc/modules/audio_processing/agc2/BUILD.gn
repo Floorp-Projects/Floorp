@@ -95,25 +95,6 @@ rtc_library("clipping_predictor") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-rtc_library("clipping_predictor_evaluator") {
-  visibility = [
-    "../agc:agc",
-    "./*",
-  ]
-
-  sources = [
-    "clipping_predictor_evaluator.cc",
-    "clipping_predictor_evaluator.h",
-  ]
-
-  deps = [
-    "../../../rtc_base:checks",
-    "../../../rtc_base:logging",
-  ]
-
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
-
 rtc_source_set("common") {
   sources = [ "agc2_common.h" ]
 }
@@ -332,7 +313,6 @@ rtc_library("fixed_digital_unittests") {
 rtc_library("input_volume_controller_unittests") {
   testonly = true
   sources = [
-    "clipping_predictor_evaluator_unittest.cc",
     "clipping_predictor_level_buffer_unittest.cc",
     "clipping_predictor_unittest.cc",
     "speech_probability_buffer_unittest.cc",
@@ -342,7 +322,6 @@ rtc_library("input_volume_controller_unittests") {
 
   deps = [
     ":clipping_predictor",
-    ":clipping_predictor_evaluator",
     ":gain_map",
     ":input_volume_controller",
     "../../../rtc_base:checks",
