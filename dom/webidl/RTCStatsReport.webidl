@@ -66,6 +66,7 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   required DOMString trackIdentifier;
   DOMString remoteId;
   unsigned long framesDecoded;
+  unsigned long framesDropped;
   unsigned long frameWidth;
   unsigned long frameHeight;
   double framesPerSecond;
