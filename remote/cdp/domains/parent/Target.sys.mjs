@@ -19,23 +19,31 @@ ChromeUtils.defineESModuleGetters(lazy, {
 let browserContextIds = 1;
 
 export class Target extends Domain {
+  #browserContextIds;
+
   constructor(session) {
     super(session);
+
+    this.#browserContextIds = new Set();
 
     this._onTargetCreated = this._onTargetCreated.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   }
 
   getBrowserContexts() {
-    return {
-      browserContextIds: [],
-    };
+    const browserContextIds = lazy.ContextualIdentityService.getPublicUserContextIds().filter(
+      id => this.#browserContextIds.has(id)
+    );
+
+    return { browserContextIds };
   }
 
   createBrowserContext() {
     const identity = lazy.ContextualIdentityService.create(
       "remote-agent-" + browserContextIds++
     );
+
+    this.#browserContextIds.add(identity.userContextId);
     return { browserContextId: identity.userContextId };
   }
 
@@ -44,6 +52,8 @@ export class Target extends Domain {
 
     lazy.ContextualIdentityService.remove(browserContextId);
     lazy.ContextualIdentityService.closeContainerTabs(browserContextId);
+
+    this.#browserContextIds.delete(browserContextId);
   }
 
   getTargets() {
