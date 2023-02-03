@@ -168,7 +168,7 @@ description[value]::before {
 }
 
 label[value=""]::before {
-  content: "\200B"; /* zwsp */
+  content: "\200b" !important; /* zwsp */
 }
 
 label[value][crop]::before,
@@ -184,10 +184,14 @@ description[value][crop]::before {
 label[value]:is([crop="left"], [crop="start"])::before,
 description[value]:is([crop="left"], [crop="start"])::before {
   direction: rtl;
+  /* Mark text as ltr to preserve punctuation/numeric order */
+  content: "\200e" -moz-label-content;
 }
 label[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before,
 description[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before {
   direction: ltr;
+  /* Mark text as rtl to preserve punctuation/numeric order */
+  content: "\200f" -moz-label-content;
 }
 
 .checkbox-label-box,
