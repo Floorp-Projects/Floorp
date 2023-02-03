@@ -22,7 +22,7 @@
     <!-- Placeholder text shown in search bar when using tabs search -->
     <string name="tab_search_hint">Betlerdi izlew</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
-    <string name="application_search_hint">Izlew sózlerin kiritiń</string>
+    <string name="application_search_hint">Izlew sózlerin kirgiziń</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ashıq betlerińiz usı jerde kórsetiledi.</string>
     <!-- No Private Tabs Message Description -->
@@ -80,6 +80,9 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Jabıw</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Cookieden tolıq qorǵanıw haqqında biliń</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameraǵa kiriw kerek. Bunıń ushın Android sazlawların ashıń, ruqsatnamalar bólimin tańlań, hám ruqsat etiw túymesin basıń.</string>
@@ -181,13 +184,17 @@
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s de ashıw</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Oqıw kórinisin jabıw</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Baǵdarlamada ashıw</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Qosıw</string>
     <!-- Browser menu label for editing a bookmark -->
-    <string name="browser_menu_edit">Ózgeris kiritiw</string>
+    <string name="browser_menu_edit">Ózgeris kirgiziw</string>
 
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Bas betti ózgertiw</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Tiykarǵı ekran</string>
@@ -223,6 +230,9 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Izlew sazlawları</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Bul ret izleymiz:</string>
+
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Jeke internetke xosh kelipsiz</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
@@ -234,7 +244,7 @@
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Ótkizip jiberiw</string>
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-    <string name="sync_cfr_message">Betler sáykeslestirilmekte! Jumıstı qalǵan jerinen basqa  qurılmada dawam etiń.</string>
+    <string name="sync_cfr_message">Betler sáykeslestirilmekte! Jumıstı qalǵan jerinen basqa qurılmada dawam etiń.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Jabıw</string>
 
@@ -389,6 +399,13 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Artqa qaytıw</string>
 
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Jaqındaǵı saylandılar</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Jaqında kirilgenler</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Qáwenderlik maqalalar</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Fon súwretleri</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -597,10 +614,15 @@
     <string name="studies_active">Aktiv</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Tolıǵıraq úyreniw</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Ózgerislerdi iske asırıw ushın baǵdarlama jabıladı</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">MAQUL</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Biykarlaw</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Ózgerislerdi iske asırıw ushın baǵdarlama jabılmaqta…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -670,7 +692,7 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search_1">Izlew sózlerin kiritiń</string>
+    <string name="history_search_1">Izlew sózlerin kirgiziń</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Tariyxtı óshiriw</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -710,12 +732,22 @@
     <string name="download_delete_item_1">Alıp taslaw</string>
 
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Keshiresiz. %1$s bul betti júkley almaydı.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Nasazlıq esabatın Mozillaǵa jiberiw</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Betti jabıw</string>
 
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Betti qayta tiklew</string>
 
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Bul papkanı óshiriwge isenimińiz kámil me?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s tańlanǵan elementlerdi óshiredi.</string>
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">Biykarlaw</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -723,9 +755,9 @@
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Saylandı saqlandı!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
-    <string name="edit_bookmark_snackbar_action">ÓZGERIS KIRITIW</string>
+    <string name="edit_bookmark_snackbar_action">ÓZGERIS KIRGIZIW</string>
     <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">Ózgeris kiritiw</string>
+    <string name="bookmark_menu_edit_button">Ózgeris kirgiziw</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kóshirip alıw</string>
     <!-- Bookmark overflow menu share button -->
@@ -745,8 +777,12 @@
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d  saylandı</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Saylandıǵa ózgeris kirgiziw</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Papkaǵa ózgeris kirgiziw</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Sáykeslestirilgen saylandılardı kóriw ushın kiriń</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -760,6 +796,8 @@
     <string name="bookmark_select_folder_fragment_label">Papkanı tańlaw</string>
     <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Baslama bolıwı shárt</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Qáte URL</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">Bul jerde saylandılar joq</string>
     <!-- Bookmark snackbar message on deletion
@@ -773,7 +811,7 @@
     <string name="bookmark_undo_deletion">BIYKARLAW</string>
 
     <!-- Text for the button to search all bookmarks -->
-    <string name="bookmark_search">Izlew sózlerin kiritiń</string>
+    <string name="bookmark_search">Izlew sózlerin kirgiziń</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
@@ -786,16 +824,24 @@
     <string name="clear_permissions_positive">MAQUL</string>
     <!-- Text for the cancel button on Clear permissions dialog -->
     <string name="clear_permissions_negative">Biykarlaw</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Ruqsattı tazalaw</string>
     <!-- Text for the OK button on Clear permission dialog -->
     <string name="clear_permission_positive">MAQUL</string>
     <!-- Text for the cancel button on Clear permission dialog -->
     <string name="clear_permission_negative">Biykarlaw</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Barlıq saytlardaǵı ruqsatlardı tazalaw</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Avtomatikalıq iske túsiriw</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Mikrofon</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Xabarnama</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Turaqlı saqlaw ornı</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Ruxsat beriwdi sorań</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -812,6 +858,8 @@
     <string name="tracking_protection_off">Óshirilgen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
     <string name="tracking_protection_standard">Standart</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Qatań</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Audio hám videoǵa ruqsat beriw</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -907,8 +955,12 @@
     <string name="sync_offline">Oflayn</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Basqa qurılmaǵa jalǵaw</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Betti jiberiw ushın keminde jáne bir qurılmadan Firefoxqa kiriń.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Túsindim</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Bul baǵdarlamaǵa jiberiw múmkin emes</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Qurılmaǵa jiberiw</string>
 
@@ -955,21 +1007,36 @@
     <string name="qr_scanner_dialog_positive">RUQSAT BERIW</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">BIYKARLAW</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Veb mánzil qáte.</string>
     <!-- QR code scanner prompt dialog positive option when there is an error -->
     <string name="qr_scanner_dialog_invalid_ok">MAQUL</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">%1$s dı óshiriwińizge isenimińiz kámil me?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Bul betti óshirseńiz, barlıq toplam óshiriledi. Siz qálegen waqıtta jańa toplamlar jaratıwıńız múmkin.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s óshirilsin be?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Óshiriw</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Tolıq ekran rejimi</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Silteme nusqalandı</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Bul úlgi tekst. Siz bul sazlaw járdeminde ólshemdi úlkeytkende yamasa kishireytkende, tekst qanday kórinetuǵının kóriwge boladı.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Veb-saytlardaǵı tekstlerdi úlkenirek yamasa kishirek qılıw</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Shrift ólshemi</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Avtomatikalıq shrift ólshemi</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Shrift ólshemi Android sazlawlarına maslasadı. Bul jerde shrift ólshemin basqarıw ushın bul sazlawdı óshiriń.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Brauzer maǵlıwmatların óshiriw</string>
@@ -980,6 +1047,8 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d mánzil</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookieler</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Siz kóp saytlardan shıǵıp ketesiz</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -1005,6 +1074,11 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Óshiriw</string>
 
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Brauzer maǵlıwmatları óshirildi</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Brauzer maǵlıwmatları óshirilmekte…</string>
+
     <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
     <string name="delete_all_history_group_prompt_message">“%s” daǵı barlıq saytlardı óshiriw</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
@@ -1015,14 +1089,33 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Topar óshirildi</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Eń jaqsı internetke xosh kelipsiz</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Payda ushın emes, adamlar ushın jaratılǵan brauzer.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Toqtaǵan jerińizden dawam etiń</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Kiriw</string>
 
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Qatań</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Bunı tómende qaldırıń yamasa joqarıǵa kóshiriń.</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Ozińiz maǵlıwmatlarıńızdı basqarız</string>
     <!-- Text for the conclusion onboarding message -->
     <string name="onboarding_conclusion_header">Qızıqlı internetti ashıwǵa tayarsız ba?</string>
 
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Kóriwdi baslaw</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Temańızdı tańlań</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Qarańǵı rejim járdeminde batareya quwatlıǵın hám kóriw qábiletińizdi saqlań.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Avtomatik</string>
 
@@ -1040,30 +1133,53 @@
     <string name="sync_sent_tab_snackbar">Bet jiberildi!</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">QAYT URÍNÍŃ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">QR kodtı oqıw</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Kompyuterińizde Firefoxtı ashıń hám <b>https://firefox.com/pair</b> ǵa kiriń]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Kodtı oqıw</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Kamera járdeminde kiriw</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Ornına elektron pochtadan paydalanıw</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Biykarlaw</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Qorǵaw sazlawları</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Baqlawdan keńeytilgen qorǵanıw</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq úyreniw</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Standart (bastan ornatılǵan)</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookieler</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Barlıq betlerde</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Tek ǵana jeke betlerde</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Barmaq izlerin jıynawshılar</string>
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">Detallar</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Bloklanǵan</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ruqsat etildi</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Barmaq izlerin jıynawshılar</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bul sayt ushın qorǵanıw qosıwlı</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Bul sayt ushın qorǵanıw óshirilgen</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Bul veb-saytlar ushın baqlawdan keńeytilgen qorǵanıwı óshirilgen</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%sda ne jańalıq</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Tolıǵıraq úyreniw</string>
 
@@ -1073,6 +1189,9 @@
     <string name="about_crashes">Nasazlıqlar</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Huqıqlarıńızdı biliń </string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Bizler paydalanatuǵın kitapxanalar</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1100,10 +1219,18 @@
     <string name="preferences_passwords_logins_and_passwords">Loginler hám paroller</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Login hám parollerdi saqlaw</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Saqlawdı soraw</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Heshqashan saqlamaw</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$sda avtomatikalıq toltırıw</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$sdı paydalanıp atırǵan waqıtta paydalanıwshı atları hám parollerdi veb-saytlarda toltırıw hám saqlaw.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Basqa baǵdarlamalarda avtomatikalıq toltırıw</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Qurılmańızdaǵı basqa baǵdarlamalarda paydalanıw atları hám parollerin toltırıw.</string>
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Login qosıw</string>
 
@@ -1111,10 +1238,14 @@
     <string name="preferences_passwords_sync_logins">Loginlardı sáykeslestiriw</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saqlanǵan loginler</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">%sda siz saqlaǵan yamasa sáykeslegen loginlerińiz usı jerde payda boladı.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sáykeslestiriw haqqında kóbirek úyreniń.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Esaptan tısqarılar</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Saqlanbaǵan login hám paroller usı jerde payda boladı.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Bul saytlar ushın login hám paroller saqlanbaydı.</string>
     <!-- Text on button to remove all saved login exceptions -->
@@ -1160,6 +1291,8 @@
     <string name="logins_biometric_prompt_message_pin">Qurılmańızdı bloktan shıǵarıń</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Barlıq veb-saytlarda kólemin úlkeytiw</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Atı boyınsha (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Sońǵı qollanılǵan</string>
 
@@ -1193,7 +1326,7 @@
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Karta qosıw</string>
     <!-- Title of the "Edit card" screen -->
-    <string name="credit_cards_edit_card">Kartaǵa ózgeris kiritiw</string>
+    <string name="credit_cards_edit_card">Kartaǵa ózgeris kirgiziw</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Karta nomeri</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1202,6 +1335,8 @@
     <string name="credit_cards_expiration_date_month">Kartanıń tamam bolıw ayı</string>
     <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Kartanıń tamam bolıw jılı</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Karta iyesiniń atı</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Kartanı óshiriw</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1219,7 +1354,9 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Saqlanǵan kartalar</string>
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Ótinish, jaramlı bank kartası nomerin kiritiń</string>
+    <string name="credit_cards_number_validation_error_message">Ótinish, jaramlı bank kartası nomerin kirgiziń</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Ótinish, bul maydandı toltırıń</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Saqlanǵan kartalardı kóriw ushın bloktan shıǵarıń</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1230,10 +1367,12 @@
     <string name="credit_cards_warning_dialog_later">Keyinirek</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Qurılmańızdı bloktan shıǵarıń</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Saqlanǵan bank kartası maǵlıwmatlarınan paydalanıw ushın blokdan shıǵarıń</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Mánzil qosıw</string>
     <!-- Title of the "Edit address" screen -->
-    <string name="addresses_edit_address">Mánzilge ózgeris kiritiw</string>
+    <string name="addresses_edit_address">Mánzilge ózgeris kirgiziw</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Mánzillerdi basqarıw</string>
     <!-- The header for the first name of an address -->
@@ -1275,13 +1414,13 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Izlew sistemasın qosıw</string>
     <!-- Title of the Edit search engine screen -->
-    <string name="search_engine_edit_custom_search_engine_title">Izlew sistemasına ózgeris kiritiw</string>
+    <string name="search_engine_edit_custom_search_engine_title">Izlew sistemasına ózgeris kirgiziw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Qosıw</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description">Saqlaw</string>
     <!-- Text for the menu button to edit a search engine -->
-    <string name="search_engine_edit">Ózgeris kiritiw</string>
+    <string name="search_engine_edit">Ózgeris kirgiziw</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Óshiriw</string>
 
@@ -1290,10 +1429,17 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Atı</string>
 
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Sorawdı “%s” menen almastırıń. Mısalı:\nhttps://www.google.com/search?q=%s</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Izlew sistemasınıń atın kirgiziń</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Izlew qatarın kirgiziń</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Izlew qatarınıń úlgi formatına mas keliwin tekseriń</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” ǵa jalǵanıwdaǵı qátelik</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s jaratıldı</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1313,6 +1459,14 @@
     <string name="quick_settings_sheet_secure_connection_2">Jalǵanıw qáwipsiz</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Jalǵanıw qáwipsiz emes</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Cookie hám sayt maǵlıwmatların tazalaw</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Siz bul sayt ushın bul ruqsatnamanı óshiriwge isenimińiz kámil me?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Bul sayt ushın esaptan tısqarılar joq</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Siz bul saylandını óshiriwge isenimińiz kámil me?</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Operativ buyrıqlarǵa qosıw</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1323,22 +1477,34 @@
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Óshiriw</string>
     <!-- Login overflow menu edit button -->
-    <string name="login_menu_edit_button">Ózgeris kiritiw</string>
+    <string name="login_menu_edit_button">Ózgeris kirgiziw</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Siz bul logindi óshiriwge isenimińiz kámil me?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Óshiriw</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Biykarlaw</string>
 
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Login sazlawları</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Loginniń veb mánzili ushın ózgeris kirgiziwge bolatuǵın tekst maydanı.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Loginniń paydalanıwshı atı ushın ózgeris kirgiziwge bolatuǵın tekst maydanı.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Loginnıń paroli ushın ózgeris kirgiziwge bolatuǵın tekst maydanı.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Ózgerislerdi loginge saqlaw</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Ózgeris kiritiw</string>
+    <string name="edit">Ózgeris kirgiziw</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Jańa login qosıw</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Parol talap etiledi</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Paydalanıwshı atı talap etiledi</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Server atı talap etiledi</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Dawıslı izlew</string>
 
@@ -1347,9 +1513,14 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Durıs server atı talap etiledi</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Basqa qurılmanı jalǵaw.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Ótinish, bet sáykeslestiriwin qosıń.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Basqa qurılmalarıńızdaǵı Firefoxta birde-bir bet ashıq emes.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
@@ -1394,9 +1565,16 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Barlıq aktiv emes betlerdi jabıw</string>
 
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Aktiv emes betkerdi keńeytiw</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Aktiv emes betleri qısqartıw</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Bir aydan soń avtomat jabılsın ba?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ótken ayda kórilmegen betlerdi jabıwı múmkin.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AVTOMAT JABÍWDÍ QOSÍW</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
@@ -1436,6 +1614,11 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Sazlawlarǵa ótiw</string>
 
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">qısqartıw</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">keńeytiw</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">bul toplam haqqında kóbirek biliw ushın siltemeni ashıń</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
