@@ -2245,13 +2245,17 @@ already_AddRefed<gfxFont> gfxFontGroup::GetDefaultFont() {
       if (pfl->SharedFontList()->GetGeneration() != oldGeneration) {
         return GetDefaultFont();
       }
-    } else {
-      gfxFontEntry* fe = pfl->GetDefaultFontEntry();
-      if (fe) {
-        RefPtr<gfxFont> f = fe->FindOrMakeFont(&mStyle);
-        if (f) {
-          return f.forget();
-        }
+    }
+  }
+
+  if (!mDefaultFont) {
+    // We must have failed to find anything usable in our font-family list,
+    // or it's badly broken. One more last-ditch effort to make a font:
+    gfxFontEntry* fe = pfl->GetDefaultFontEntry();
+    if (fe) {
+      RefPtr<gfxFont> f = fe->FindOrMakeFont(&mStyle);
+      if (f) {
+        return f.forget();
       }
     }
   }
