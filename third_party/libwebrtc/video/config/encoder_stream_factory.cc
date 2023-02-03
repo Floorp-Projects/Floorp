@@ -184,6 +184,8 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
   layer.width = width;
   layer.height = height;
   layer.max_framerate = max_framerate;
+  layer.requested_resolution =
+      encoder_config.simulcast_layers[0].requested_resolution;
   // Note: VP9 seems to have be sending if any layer is active,
   // (see `UpdateSendState`) and still use parameters only from
   // encoder_config.simulcast_layers[0].
@@ -321,6 +323,8 @@ EncoderStreamFactory::CreateSimulcastOrConferenceModeScreenshareStreams(
     layers[i].active = encoder_config.simulcast_layers[i].active;
     layers[i].scalability_mode =
         encoder_config.simulcast_layers[i].scalability_mode;
+    layers[i].requested_resolution =
+        encoder_config.simulcast_layers[i].requested_resolution;
     // Update with configured num temporal layers if supported by codec.
     if (encoder_config.simulcast_layers[i].num_temporal_layers &&
         IsTemporalLayersSupported(codec_name_)) {
@@ -444,6 +448,7 @@ EncoderStreamFactory::GetLayerResolutionFromRequestedResolution(
     wants.max_pixel_count =
         rtc::dchecked_cast<int>(restrictions_->max_pixels_per_frame().value_or(
             std::numeric_limits<int>::max()));
+    wants.aggregates.emplace(rtc::VideoSinkWants::Aggregates());
     wants.resolution_alignment = encoder_info_requested_resolution_alignment_;
     adapter.OnSinkWants(wants);
   }

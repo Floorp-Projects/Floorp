@@ -85,7 +85,7 @@ struct RTC_EXPORT VideoSinkWants {
   absl::optional<FrameSize> requested_resolution;
 
   // `active` : is (any) of the layers/sink(s) active.
-  bool is_active = false;
+  bool is_active = true;
 
   // This sub-struct contains information computed by VideoBroadcaster
   // that aggregates several VideoSinkWants (and sends them to
