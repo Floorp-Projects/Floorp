@@ -795,9 +795,7 @@ class RTCStatsReportVerifier {
   bool VerifyRTCInboundRTPStreamStats(
       const RTCInboundRTPStreamStats& inbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &inbound_stream);
-    VerifyRTCReceivedRtpStreamStats(
-        inbound_stream, verifier,
-        inbound_stream.kind.is_defined() && *inbound_stream.kind == "audio");
+    VerifyRTCReceivedRtpStreamStats(inbound_stream, verifier);
     verifier.TestMemberIsOptionalIDReference(
         inbound_stream.remote_id, RTCRemoteOutboundRtpStreamStats::kType);
     verifier.TestMemberIsDefined(inbound_stream.mid);
@@ -812,10 +810,13 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.packets_received);
     if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "audio") {
       verifier.TestMemberIsNonNegative<uint64_t>(
+          inbound_stream.packets_discarded);
+      verifier.TestMemberIsNonNegative<uint64_t>(
           inbound_stream.fec_packets_received);
       verifier.TestMemberIsNonNegative<uint64_t>(
           inbound_stream.fec_packets_discarded);
     } else {
+      verifier.TestMemberIsUndefined(inbound_stream.packets_discarded);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_received);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_discarded);
     }
@@ -1025,23 +1026,16 @@ class RTCStatsReportVerifier {
 
   void VerifyRTCReceivedRtpStreamStats(
       const RTCReceivedRtpStreamStats& received_rtp,
-      RTCStatsVerifier& verifier,
-      bool packets_discarded_defined) {
+      RTCStatsVerifier& verifier) {
     VerifyRTCRTPStreamStats(received_rtp, verifier);
     verifier.TestMemberIsNonNegative<double>(received_rtp.jitter);
     verifier.TestMemberIsDefined(received_rtp.packets_lost);
-    if (packets_discarded_defined) {
-      verifier.TestMemberIsNonNegative<uint64_t>(
-          received_rtp.packets_discarded);
-    } else {
-      verifier.TestMemberIsUndefined(received_rtp.packets_discarded);
-    }
   }
 
   bool VerifyRTCRemoteInboundRtpStreamStats(
       const RTCRemoteInboundRtpStreamStats& remote_inbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &remote_inbound_stream);
-    VerifyRTCReceivedRtpStreamStats(remote_inbound_stream, verifier, false);
+    VerifyRTCReceivedRtpStreamStats(remote_inbound_stream, verifier);
     verifier.TestMemberIsDefined(remote_inbound_stream.fraction_lost);
     verifier.TestMemberIsIDReference(remote_inbound_stream.local_id,
                                      RTCOutboundRTPStreamStats::kType);

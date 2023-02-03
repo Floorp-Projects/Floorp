@@ -412,7 +412,6 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
 
   RTCStatsMember<double> jitter;
   RTCStatsMember<int32_t> packets_lost;  // Signed per RFC 3550
-  RTCStatsMember<uint64_t> packets_discarded;
 
  protected:
   RTCReceivedRtpStreamStats(const std::string&& id, int64_t timestamp_us);
@@ -452,6 +451,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<std::string> mid;
   RTCStatsMember<std::string> remote_id;
   RTCStatsMember<uint32_t> packets_received;
+  RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<uint64_t> fec_packets_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
   RTCStatsMember<uint64_t> bytes_received;

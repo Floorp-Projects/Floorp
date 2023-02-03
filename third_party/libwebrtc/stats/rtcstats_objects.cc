@@ -601,8 +601,7 @@ RTCRTPStreamStats::~RTCRTPStreamStats() {}
 WEBRTC_RTCSTATS_IMPL(
     RTCReceivedRtpStreamStats, RTCRTPStreamStats, "received-rtp",
     &jitter,
-    &packets_lost,
-    &packets_discarded)
+    &packets_lost)
 // clang-format on
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(const std::string&& id,
@@ -613,15 +612,13 @@ RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(std::string&& id,
                                                      int64_t timestamp_us)
     : RTCRTPStreamStats(std::move(id), timestamp_us),
       jitter("jitter"),
-      packets_lost("packetsLost"),
-      packets_discarded("packetsDiscarded") {}
+      packets_lost("packetsLost") {}
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(
     const RTCReceivedRtpStreamStats& other)
     : RTCRTPStreamStats(other),
       jitter(other.jitter),
-      packets_lost(other.packets_lost),
-      packets_discarded(other.packets_discarded) {}
+      packets_lost(other.packets_lost) {}
 
 RTCReceivedRtpStreamStats::~RTCReceivedRtpStreamStats() {}
 
@@ -656,6 +653,7 @@ WEBRTC_RTCSTATS_IMPL(
     &mid,
     &remote_id,
     &packets_received,
+    &packets_discarded,
     &fec_packets_received,
     &fec_packets_discarded,
     &bytes_received,
@@ -708,6 +706,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       mid("mid"),
       remote_id("remoteId"),
       packets_received("packetsReceived"),
+      packets_discarded("packetsDiscarded"),
       fec_packets_received("fecPacketsReceived"),
       fec_packets_discarded("fecPacketsDiscarded"),
       bytes_received("bytesReceived"),
@@ -756,6 +755,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       mid(other.mid),
       remote_id(other.remote_id),
       packets_received(other.packets_received),
+      packets_discarded(other.packets_discarded),
       fec_packets_received(other.fec_packets_received),
       fec_packets_discarded(other.fec_packets_discarded),
       bytes_received(other.bytes_received),
