@@ -10,12 +10,12 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   // Dependencies
   const {
+    Component,
     createElement,
-    useState,
+    createFactory,
   } = require("devtools/client/shared/vendor/react");
   const {
     cleanupStyle,
-    wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
   const ALLOWED_TAGS = new Set([
@@ -29,58 +29,92 @@ define(function(require, exports, module) {
     "td",
   ]);
 
-  /**
-   * Renders null value
-   */
-  CustomFormatter.PropTypes = {
-    object: PropTypes.object.isRequired,
-    createElement: PropTypes.func,
-  };
+  class CustomFormatter extends Component {
+    static get propTypes() {
+      return {
+        createElement: PropTypes.func,
+        front: PropTypes.object,
+        object: PropTypes.object.isRequired,
+      };
+    }
 
-  function CustomFormatter(props) {
-    const [state, setState] = useState({ open: false });
-    const headerJsonMl = renderJsonMl(props.object.header, {
-      ...props,
-      open: state.open,
-    });
+    constructor(props) {
+      super(props);
+      this.state = { open: false };
+      this.toggleBody = this.toggleBody.bind(this);
+    }
 
-    async function toggleBody(evt) {
+    componentDidThrow(e) {
+      console.error("Error in CustomFormatter", e);
+      this.setState(state => ({ ...state, hasError: true }));
+    }
+
+    async toggleBody(evt) {
       evt.stopPropagation();
-      const open = !state.open;
-      if (open && !state.bodyJsonMl) {
+
+      const open = !this.state.open;
+      if (open && !this.state.bodyJsonMl) {
         const response = await getCustomFormatterBody(
-          props.front,
-          props.object.customFormatterIndex
+          this.props.front,
+          this.props.object.customFormatterIndex
         );
 
         const bodyJsonMl = renderJsonMl(response.customFormatterBody, {
-          ...props,
+          ...this.props,
           object: null,
         });
-        setState({ ...state, bodyJsonMl, open });
+
+        this.setState(state => ({
+          ...state,
+          bodyJsonMl,
+          open,
+        }));
       } else {
-        delete state.bodyJsonMl;
-        setState({ ...state, open });
+        this.setState(state => ({
+          ...state,
+          bodyJsonMl: null,
+          open,
+        }));
       }
     }
 
-    return createElement(
-      "span",
-      {
-        className: "objectBox-jsonml-wrapper",
-        "data-expandable": props.object.hasBody,
-        "aria-expanded": state.open,
-        onClick: props.object.hasBody ? toggleBody : null,
-      },
-      headerJsonMl,
-      state.bodyJsonMl
-        ? createElement(
-            "div",
-            { className: "objectBox-jsonml-body-wrapper" },
-            state.bodyJsonMl
-          )
-        : null
-    );
+    render() {
+      if (this.state && this.state.hasError) {
+        return createElement(
+          "span",
+          {
+            className: "objectBox objectBox-failure",
+            title:
+              "This object could not be rendered, " +
+              "please file a bug on bugzilla.mozilla.org",
+          },
+          "Invalid custom formatter object"
+        );
+      }
+
+      const headerJsonMl = renderJsonMl(this.props.object.header, {
+        ...this.props,
+        open: this.state?.open,
+      });
+
+      return createElement(
+        "span",
+        {
+          className: "objectBox-jsonml-wrapper",
+          "data-expandable": this.props.object.hasBody,
+          "aria-expanded": this.state.open,
+          onClick: this.props.object.hasBody ? this.toggleBody : null,
+        },
+        headerJsonMl,
+        this.state.bodyJsonMl
+          ? createElement(
+              "div",
+              { className: "objectBox-jsonml-body-wrapper" },
+              this.state.bodyJsonMl
+            )
+          : null
+      );
+    }
   }
 
   function renderJsonMl(jsonMl, props, index = 0) {
@@ -202,7 +236,7 @@ define(function(require, exports, module) {
 
   // Exports from this module
   module.exports = {
-    rep: wrapRender(CustomFormatter),
+    rep: createFactory(CustomFormatter),
     supportsObject,
   };
 });
