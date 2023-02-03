@@ -51,6 +51,8 @@ TEST(EncoderStreamFactory, SinglecastRequestedResolution) {
   encoder_config.simulcast_layers.push_back(
       LayerWithRequestedResolution({.width = 640, .height = 360}));
   auto streams = factory->CreateEncoderStreams(1280, 720, encoder_config);
+  EXPECT_EQ(streams[0].requested_resolution,
+            (Resolution{.width = 640, .height = 360}));
   EXPECT_EQ(GetStreamResolutions(streams), (std::vector<Resolution>{
                                                {.width = 640, .height = 360},
                                            }));
@@ -71,6 +73,8 @@ TEST(EncoderStreamFactory, SinglecastRequestedResolutionWithAdaptation) {
   encoder_config.simulcast_layers.push_back(
       LayerWithRequestedResolution({.width = 640, .height = 360}));
   auto streams = factory->CreateEncoderStreams(1280, 720, encoder_config);
+  EXPECT_EQ(streams[0].requested_resolution,
+            (Resolution{.width = 640, .height = 360}));
   EXPECT_EQ(GetStreamResolutions(streams), (std::vector<Resolution>{
                                                {.width = 320, .height = 180},
                                            }));
