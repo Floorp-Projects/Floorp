@@ -140,12 +140,13 @@ class HomeScreenTest {
             verifyJumpBackInShowAllButton()
         }.clickJumpBackInShowAllButton {
             verifyExistingOpenTabs(firstWebPage.title)
-        }.closeTabDrawer() {
+        }.closeTabDrawer {
         }
         homeScreen {
         }.clickJumpBackInItemWithTitle(firstWebPage.title) {
             verifyUrl(firstWebPage.url.toString())
             clickLinkMatchingText("Link 1")
+            verifyPageContent(secondWebPage.content)
         }.goToHomescreen {
             verifyJumpBackInSectionIsDisplayed()
             verifyJumpBackInItemTitle(secondWebPage.title)

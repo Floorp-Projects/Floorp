@@ -286,7 +286,10 @@ class HomeScreenRobot {
     }
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
 
-    fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
+    fun verifyJumpBackInSectionIsDisplayed() {
+        scrollToElementByText(getStringResource(R.string.recent_tabs_header))
+        assertTrue(jumpBackInSection().waitForExists(waitingTime))
+    }
     fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
     fun verifyJumpBackInItemTitle(itemTitle: String) = assertJumpBackInItemTitle(itemTitle)
     fun verifyJumpBackInItemWithUrl(itemUrl: String) = assertJumpBackInItemWithUrl(itemUrl)
@@ -985,8 +988,6 @@ private fun assertTopSiteContextMenuItems() {
         waitingTime,
     )
 }
-
-private fun assertJumpBackInSectionIsDisplayed() = assertTrue(jumpBackInSection().waitForExists(waitingTime))
 
 private fun assertJumpBackInSectionIsNotDisplayed() = assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
 
