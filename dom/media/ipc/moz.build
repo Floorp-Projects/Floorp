@@ -84,6 +84,8 @@ if CONFIG["MOZ_MF_CDM"]:
     ]
     UNIFIED_SOURCES += [
         "MFCDMChild.cpp",
+    ]
+    SOURCES += [
         "MFCDMParent.cpp",
     ]
 

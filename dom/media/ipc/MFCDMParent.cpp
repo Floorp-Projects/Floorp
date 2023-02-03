@@ -4,31 +4,40 @@
 
 #include "MFCDMParent.h"
 
-#include <combaseapi.h>
-#include <intsafe.h>
 #include <mfmediaengine.h>
-#include <propsys.h>
-#include <wtypes.h>
+#define INITGUID          // Enable DEFINE_PROPERTYKEY()
+#include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
+#include <propvarutil.h>  // For InitPropVariantFrom*()
 
+#include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
+#include "SpecialSystemDirectory.h"  // For temp dir
 #include "WMFUtils.h"
 
 namespace mozilla {
+
+// See
+// https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_util.cc;l=26-40;drc=503535015a7b373cc6185c69c991e01fda5da571
+#ifndef EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID
+DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
+                   0x4c98, 0x90, 0xe5, 0x5f, 0x58, 0x18, 0xd4, 0xb6, 0x7e,
+                   PID_FIRST_USABLE);
+#endif
 
 #define MFCDM_PARENT_LOG(msg, ...) \
   EME_LOG("MFCDMParent[%p]@%s: " msg, this, __func__, ##__VA_ARGS__)
 #define MFCDM_PARENT_SLOG(msg, ...) \
   EME_LOG("MFCDMParent@%s: " msg, __func__, ##__VA_ARGS__)
 
-#define MFCDM_RETURN_IF_FAILED(x)                      \
-  do {                                                 \
-    HRESULT rv = x;                                    \
-    if (MOZ_UNLIKELY(FAILED(rv))) {                    \
-      MFCDM_PARENT_LOG("(" #x ") failed, rv=%lx", rv); \
-      return rv;                                       \
-    }                                                  \
+#define MFCDM_RETURN_IF_FAILED(x)                       \
+  do {                                                  \
+    HRESULT rv = x;                                     \
+    if (MOZ_UNLIKELY(FAILED(rv))) {                     \
+      MFCDM_PARENT_SLOG("(" #x ") failed, rv=%lx", rv); \
+      return rv;                                        \
+    }                                                   \
   } while (false)
 
 #define MFCDM_REJECT_IF(pred, rv)                            \
@@ -39,6 +48,36 @@ namespace mozilla {
       return IPC_OK();                                       \
     }                                                        \
   } while (false)
+
+#define MFCDM_REJECT_IF_FAILED(op, rv)                             \
+  do {                                                             \
+    HRESULT hr = op;                                               \
+    if (MOZ_UNLIKELY(FAILED(hr))) {                                \
+      MFCDM_PARENT_LOG("(" #op ") failed(hr=%lx), rv=%x", hr, rv); \
+      aResolver(rv);                                               \
+      return IPC_OK();                                             \
+    }                                                              \
+  } while (false)
+
+MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
+                         RemoteDecoderManagerParent* aManager,
+                         nsISerialEventTarget* aManagerThread)
+    : mKeySystem(aKeySystem),
+      mManager(aManager),
+      mManagerThread(aManagerThread),
+      mId(sNextId++) {
+  // TODO: check Widevine too when it's ready.
+  MOZ_ASSERT(aKeySystem.EqualsLiteral(kPlayReadyKeySystemName));
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aManagerThread);
+  MOZ_ASSERT(XRE_IsUtilityProcess());
+  MOZ_ASSERT(GetCurrentSandboxingKind() ==
+             ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
+
+  mIPDLSelfRef = this;
+  LoadFactory();
+  Register();
+}
 
 HRESULT MFCDMParent::LoadFactory() {
   Microsoft::WRL::ComPtr<IMFMediaEngineClassFactory4> clsFactory;
@@ -175,6 +214,183 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   return IPC_OK();
 }
 
+// RAIIized PROPVARIANT. See
+// third_party/libwebrtc/modules/audio_device/win/core_audio_utility_win.h
+class AutoPropVar {
+ public:
+  AutoPropVar() { PropVariantInit(&mVar); }
+
+  ~AutoPropVar() { Reset(); }
+
+  AutoPropVar(const AutoPropVar&) = delete;
+  AutoPropVar& operator=(const AutoPropVar&) = delete;
+  bool operator==(const AutoPropVar&) const = delete;
+  bool operator!=(const AutoPropVar&) const = delete;
+
+  // Returns a pointer to the underlying PROPVARIANT for use as an out param
+  // in a function call.
+  PROPVARIANT* Receive() {
+    MOZ_ASSERT(mVar.vt == VT_EMPTY);
+    return &mVar;
+  }
+
+  // Clears the instance to prepare it for re-use (e.g., via Receive).
+  void Reset() {
+    if (mVar.vt != VT_EMPTY) {
+      HRESULT hr = PropVariantClear(&mVar);
+      MOZ_ASSERT(SUCCEEDED(hr));
+    }
+  }
+
+  const PROPVARIANT& get() const { return mVar; }
+  const PROPVARIANT* ptr() const { return &mVar; }
+
+ private:
+  PROPVARIANT mVar;
+};
+
+static MF_MEDIAKEYS_REQUIREMENT ToMFRequirement(
+    const KeySystemConfig::Requirement aRequirement) {
+  switch (aRequirement) {
+    case KeySystemConfig::Requirement::NotAllowed:
+      return MF_MEDIAKEYS_REQUIREMENT_NOT_ALLOWED;
+    case KeySystemConfig::Requirement::Optional:
+      return MF_MEDIAKEYS_REQUIREMENT_OPTIONAL;
+    case KeySystemConfig::Requirement::Required:
+      return MF_MEDIAKEYS_REQUIREMENT_REQUIRED;
+  }
+};
+
+static HRESULT BuildCDMAccessConfig(
+    const MFCDMInitParamsIPDL& aParams,
+    Microsoft::WRL::ComPtr<IPropertyStore>& aConfig) {
+  Microsoft::WRL::ComPtr<IPropertyStore>
+      mksc;  // EME MediaKeySystemConfiguration
+  MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksc)));
+
+  // Empty 'audioCapabilities'.
+  AutoPropVar audioCapabilities;
+  PROPVARIANT* var = audioCapabilities.Receive();
+  var->vt = VT_VARIANT | VT_VECTOR;
+  var->capropvar.cElems = 0;
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_AUDIOCAPABILITIES, audioCapabilities.get()));
+
+  // 'videoCapabilites'.
+  Microsoft::WRL::ComPtr<IPropertyStore>
+      mksmc;  // EME MediaKeySystemMediaCapability
+  MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksmc)));
+  AutoPropVar robustness;
+  if (aParams.hwSecure()) {
+    var = robustness.Receive();
+    var->vt = VT_BSTR;
+    var->bstrVal = SysAllocString(L"HW_SECURE_ALL");
+    MFCDM_RETURN_IF_FAILED(
+        mksmc->SetValue(MF_EME_ROBUSTNESS, robustness.get()));
+  }
+  // Store mksmc in a PROPVARIANT.
+  AutoPropVar videoCapability;
+  var = videoCapability.Receive();
+  var->vt = VT_UNKNOWN;
+  var->punkVal = mksmc.Detach();
+  // Insert element.
+  AutoPropVar videoCapabilities;
+  var = videoCapabilities.Receive();
+  var->vt = VT_VARIANT | VT_VECTOR;
+  var->capropvar.cElems = 1;
+  var->capropvar.pElems =
+      reinterpret_cast<PROPVARIANT*>(CoTaskMemAlloc(sizeof(PROPVARIANT)));
+  PropVariantCopy(var->capropvar.pElems, videoCapability.ptr());
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_VIDEOCAPABILITIES, videoCapabilities.get()));
+
+  AutoPropVar persistState;
+  InitPropVariantFromUInt32(ToMFRequirement(aParams.persistentState()),
+                            persistState.Receive());
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_PERSISTEDSTATE, persistState.get()));
+
+  AutoPropVar distinctiveID;
+  InitPropVariantFromUInt32(ToMFRequirement(aParams.distinctiveID()),
+                            distinctiveID.Receive());
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_DISTINCTIVEID, distinctiveID.get()));
+
+  aConfig.Swap(mksc);
+  return S_OK;
+}
+
+static HRESULT BuildCDMProperties(
+    const nsString& aOrigin, Microsoft::WRL::ComPtr<IPropertyStore>& aProps) {
+  MOZ_ASSERT(!aOrigin.IsEmpty);
+
+  Microsoft::WRL::ComPtr<IPropertyStore> props;
+  MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&props)));
+
+  AutoPropVar origin;
+  MFCDM_RETURN_IF_FAILED(
+      InitPropVariantFromString(aOrigin.get(), origin.Receive()));
+  MFCDM_RETURN_IF_FAILED(
+      props->SetValue(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, origin.get()));
+
+  // TODO: support client token?
+
+  // TODO: CDM store path per profile?
+  nsCOMPtr<nsIFile> dir;
+  if (NS_FAILED(GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(dir)))) {
+    return E_ACCESSDENIED;
+  }
+  if (NS_FAILED(dir->AppendNative(nsDependentCString("mfcdm")))) {
+    return E_ACCESSDENIED;
+  }
+  nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_FAILED(rv)) {
+    return E_ACCESSDENIED;
+  }
+  nsAutoString cdmStorePath;
+  if (NS_FAILED(dir->GetPath(cdmStorePath))) {
+    return E_ACCESSDENIED;
+  }
+
+  AutoPropVar path;
+  MFCDM_RETURN_IF_FAILED(
+      InitPropVariantFromString(cdmStorePath.get(), path.Receive()));
+  MFCDM_RETURN_IF_FAILED(
+      props->SetValue(MF_CONTENTDECRYPTIONMODULE_STOREPATH, path.get()));
+
+  aProps.Swap(props);
+  return S_OK;
+}
+
+mozilla::ipc::IPCResult MFCDMParent::RecvInit(
+    const MFCDMInitParamsIPDL& aParams, InitResolver&& aResolver) {
+  // Get access object to CDM.
+  Microsoft::WRL::ComPtr<IPropertyStore> accessConfig;
+  MFCDM_REJECT_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig),
+                         NS_ERROR_FAILURE);
+
+  AutoTArray<IPropertyStore*, 1> configs = {accessConfig.Get()};
+  Microsoft::WRL::ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
+  MFCDM_REJECT_IF_FAILED(
+      mFactory->CreateContentDecryptionModuleAccess(
+          mKeySystem.get(), configs.Elements(), configs.Length(), &cdmAccess),
+      NS_ERROR_FAILURE);
+  // Get CDM.
+  Microsoft::WRL::ComPtr<IPropertyStore> cdmProps;
+  MFCDM_REJECT_IF_FAILED(BuildCDMProperties(aParams.origin(), cdmProps),
+                         NS_ERROR_FAILURE);
+  Microsoft::WRL::ComPtr<IMFContentDecryptionModule> cdm;
+  MFCDM_REJECT_IF_FAILED(
+      cdmAccess->CreateContentDecryptionModule(cdmProps.Get(), &cdm),
+      NS_ERROR_FAILURE);
+
+  mCDM.Swap(cdm);
+  aResolver(MFCDMInitIPDL{mId});
+  return IPC_OK();
+}
+
+#undef MFCDM_REJECT_IF_FAILED
 #undef MFCDM_REJECT_IF
 #undef MFCDM_RETURN_IF_FAILED
 #undef MFCDM_PARENT_SLOG
