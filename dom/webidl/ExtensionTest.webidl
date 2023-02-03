@@ -10,6 +10,11 @@
  *  More info about generating webidl API bindings for WebExtensions API at:
  *
  *  https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/webidl_bindings.html
+ *
+ *  A short summary of the special setup used by these WebIDL files (meant to aid
+ *  webidl peers reviews and sign-offs) is available in the following section:
+ *
+ *  https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/webidl_bindings.html#review-process-on-changes-to-webidl-definitions
  */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
