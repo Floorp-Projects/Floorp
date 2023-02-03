@@ -522,3 +522,76 @@ add_task(async function test_multistage_aboutwelcome_backdrop() {
 
   await doExperimentCleanup();
 });
+
+add_task(async function test_multistage_aboutwelcome_utm_term() {
+  const sandbox = sinon.createSandbox();
+
+  const TEST_CONTENT = [
+    {
+      id: "TEST_SCREEN",
+      content: {
+        position: "split",
+        logo: {},
+        title: "test",
+        secondary_button_top: {
+          label: "test",
+          style: "link",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/",
+            },
+          },
+        },
+      },
+    },
+  ];
+  await setAboutWelcomePref(true);
+  await ExperimentAPI.ready();
+
+  const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      id: "my-mochitest-experiment",
+      screens: TEST_CONTENT,
+      UTMTerm: "test",
+    },
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+
+  const browser = tab.linkedBrowser;
+  const aboutWelcomeActor = await getAboutWelcomeParent(browser);
+
+  sandbox.stub(aboutWelcomeActor, "onContentMessage");
+
+  await onButtonClick(browser, "button[value='secondary_button_top']");
+
+  let actionCall;
+
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("SPECIAL")) {
+      actionCall = call;
+    }
+  }
+
+  Assert.equal(
+    actionCall.args[1].data.args,
+    "https://www.mozilla.org/?utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=aboutwelcome-test-screen",
+    "UTMTerm set in mobile"
+  );
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  await doExperimentCleanup();
+});
