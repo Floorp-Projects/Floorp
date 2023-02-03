@@ -48,7 +48,7 @@
       let frag = document.importNode(
         MozXULElement.parseXULToFragment(`
         <image class="toolbarbutton-icon"></image>
-        <label class="toolbarbutton-text" crop="right" flex="1"></label>
+        <label class="toolbarbutton-text" crop="end" flex="1"></label>
         `),
         true
       );
@@ -63,7 +63,7 @@
           <image class="toolbarbutton-icon"/>
           <html:label class="toolbarbutton-badge"/>
         </stack>
-        <label class="toolbarbutton-text" crop="right" flex="1"/>
+        <label class="toolbarbutton-text" crop="end" flex="1"/>
         `),
         true
       );

@@ -307,7 +307,7 @@ class TabsPanel extends TabsListBase {
       "all-tabs-button subviewbutton subviewbutton-iconic"
     );
     button.setAttribute("flex", "1");
-    button.setAttribute("crop", "right");
+    button.setAttribute("crop", "end");
     button.tab = tab;
 
     row.appendChild(button);
