@@ -104,13 +104,15 @@ class PingCentre {
    *
    * The payload would be compressed using gzip.
    *
-   * @param {Object} data     The payload to be sent.
-   * @param {String} endpoint The destination endpoint. Note that Structured Ingestion
-   *                          requires a different endpoint for each ping. It's up to the
-   *                          caller to provide that. See more details at
-   *                          https://github.com/mozilla/gcp-ingestion/blob/master/docs/edge.md#postput-request
+   * @param {Object} data      The payload to be sent.
+   * @param {String} endpoint  The destination endpoint. Note that Structured Ingestion
+   *                           requires a different endpoint for each ping. It's up to the
+   *                           caller to provide that. See more details at
+   *                           https://github.com/mozilla/gcp-ingestion/blob/master/docs/edge.md#postput-request
+   * @param {String} namespace Optional. The structured ingestion namespace.
+   *                           Used for data collection.
    */
-  sendStructuredIngestionPing(data, endpoint) {
+  sendStructuredIngestionPing(data, endpoint, namespace = undefined) {
     if (!this.enabled) {
       return Promise.resolve();
     }
@@ -124,12 +126,31 @@ class PingCentre {
       );
     }
 
-    return PingCentre._sendStandalonePing(endpoint, payload).catch(event => {
-      Glean.pingCentre.sendFailures.add(1);
-      console.error(
-        `Structured Ingestion ping failure with error: ${event.type}`
-      );
-    });
+    let gleanNamespace = "other";
+    switch (namespace) {
+      case "activity-stream":
+        gleanNamespace = "activity_stream";
+        break;
+      case "messaging-system":
+        gleanNamespace = "messaging_system";
+        break;
+      case "contextual-services":
+        gleanNamespace = "contextual_services";
+        break;
+    }
+
+    return PingCentre._sendStandalonePing(endpoint, payload).then(
+      () => {
+        Glean.pingCentre.sendSuccessesByNamespace[gleanNamespace].add(1);
+      },
+      event => {
+        Glean.pingCentre.sendFailures.add(1);
+        Glean.pingCentre.sendFailuresByNamespace[gleanNamespace].add(1);
+        console.error(
+          `Structured Ingestion ping failure with error: ${event.type}`
+        );
+      }
+    );
   }
 
   uninit() {

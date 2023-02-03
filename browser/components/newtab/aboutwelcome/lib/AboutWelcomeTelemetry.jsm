@@ -110,7 +110,8 @@ class AboutWelcomeTelemetry {
     const ping = await this._createPing(event);
     this.pingCentre.sendStructuredIngestionPing(
       ping,
-      this._generateStructuredIngestionEndpoint()
+      this._generateStructuredIngestionEndpoint(),
+      STRUCTURED_INGESTION_NAMESPACE_MS
     );
   }
 }

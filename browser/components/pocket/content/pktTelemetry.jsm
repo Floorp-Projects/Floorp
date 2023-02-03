@@ -119,7 +119,8 @@ var pktTelemetry = {
   sendStructuredIngestionEvent(eventObject) {
     lazy.pingCentre.sendStructuredIngestionPing(
       eventObject,
-      this._generateStructuredIngestionEndpoint()
+      this._generateStructuredIngestionEndpoint(),
+      STRUCTURED_INGESTION_NAMESPACE_AS
     );
   },
 };
