@@ -48,8 +48,16 @@ class PocketStoriesConfig(
  *
  * @property siteId Optional - ID of the site parameter, should be used with care as it changes the
  * set of sponsored stories fetched from the server.
+ * @property country Optional - Value of the country parameter, shall be used with care as it allows
+ * overriding the IP location and receiving a set of sponsored stories not suited for the real location.
+ * @property city Optional - Value of the city parameter, shall be used with care as it allows
+ * overriding the IP location and receiving a set of sponsored stories not suited for the real location.
  */
-class PocketStoriesRequestConfig(val siteId: String = DEFAULT_SPONSORED_STORIES_SITE_ID)
+class PocketStoriesRequestConfig(
+    val siteId: String = DEFAULT_SPONSORED_STORIES_SITE_ID,
+    val country: String = "",
+    val city: String = "",
+)
 
 /**
  * Sponsored stories configuration data.

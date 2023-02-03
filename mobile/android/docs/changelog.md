@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
 * **service-pocket**
+  * 🌟 Added `country` and `city` parameters to Pocket sponsored stories fetch request. These can be overwritten using `PocketStoriesConfig`, allowing clients to specify a location and receive sponsored stories when outside countries where Pocket is enabled based on IP location. [Bug 1811537](https://bugzilla.mozilla.org/show_bug.cgi?id=1811537).
+
+* **service-pocket**
   * 🌟 Added `site` parameter to Pocket sponsored stories requests. It can be overwritten using `PocketStoriesConfig`, allowing clients to customize spoc content. [Bug 1811531](https://bugzilla.mozilla.org/show_bug.cgi?id=1811531).
 
 * **browser-storage-sync**:

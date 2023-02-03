@@ -33,6 +33,8 @@ private const val SPOCS_PROXY_VERSION_VALUE = 2
 private const val SPOCS_PROXY_PROFILE_KEY = "pocket_id"
 private const val SPOCS_PROXY_APP_KEY = "consumer_key"
 private const val SPOCS_PROXY_SITE_KEY = "site"
+private const val SPOCS_PROXY_COUNTRY_KEY = "country"
+private const val SPOCS_PROXY_CITY_KEY = "city"
 
 /**
  * Makes requests to the Pocket endpoint and returns the raw JSON data.
@@ -58,6 +60,12 @@ internal class SpocsEndpointRaw internal constructor(
         if (sponsoredStoriesParams.siteId.isNotBlank()) {
             url.appendQueryParameter(SPOCS_PROXY_SITE_KEY, sponsoredStoriesParams.siteId)
         }
+        if (sponsoredStoriesParams.country.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_COUNTRY_KEY, sponsoredStoriesParams.country)
+        }
+        if (sponsoredStoriesParams.city.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_CITY_KEY, sponsoredStoriesParams.city)
+        }
         url.build()
 
         val request = Request(
@@ -80,6 +88,12 @@ internal class SpocsEndpointRaw internal constructor(
             .encodedPath(baseUrl + SPOCS_ENDPOINT_DELETE_PROFILE_PATH)
         if (sponsoredStoriesParams.siteId.isNotBlank()) {
             url.appendQueryParameter(SPOCS_PROXY_SITE_KEY, sponsoredStoriesParams.siteId)
+        }
+        if (sponsoredStoriesParams.country.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_COUNTRY_KEY, sponsoredStoriesParams.country)
+        }
+        if (sponsoredStoriesParams.city.isNotBlank()) {
+            url.appendQueryParameter(SPOCS_PROXY_CITY_KEY, sponsoredStoriesParams.city)
         }
         url.build()
 

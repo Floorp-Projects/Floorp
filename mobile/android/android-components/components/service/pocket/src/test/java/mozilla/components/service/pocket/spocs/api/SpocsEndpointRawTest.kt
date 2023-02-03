@@ -58,6 +58,8 @@ class SpocsEndpointRawTest {
         }
 
         whenever(sponsoredStoriesParams.siteId).thenReturn("")
+        whenever(sponsoredStoriesParams.country).thenReturn("")
+        whenever(sponsoredStoriesParams.city).thenReturn("")
 
         endpoint = SpocsEndpointRaw(client, profileId, appId, sponsoredStoriesParams)
     }
@@ -100,8 +102,10 @@ class SpocsEndpointRawTest {
     @Test
     fun `GIVEN a debug build AND a request configuration WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
         SpocsEndpointRaw.isDebugBuild = true
-        val expectedUrl = "https://spocs.getpocket.dev/spocs?site=123"
+        val expectedUrl = "https://spocs.getpocket.dev/spocs?site=123&country=US&city=NY"
         whenever(sponsoredStoriesParams.siteId).thenReturn("123")
+        whenever(sponsoredStoriesParams.country).thenReturn("US")
+        whenever(sponsoredStoriesParams.city).thenReturn("NY")
 
         assertRequestParams(
             client,
@@ -161,8 +165,10 @@ class SpocsEndpointRawTest {
     @Test
     fun `GIVEN a release build AND a request configuration WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
         SpocsEndpointRaw.isDebugBuild = false
-        val expectedUrl = "https://spocs.getpocket.com/spocs?site=123"
+        val expectedUrl = "https://spocs.getpocket.com/spocs?site=123&country=US&city=NY"
         whenever(sponsoredStoriesParams.siteId).thenReturn("123")
+        whenever(sponsoredStoriesParams.country).thenReturn("US")
+        whenever(sponsoredStoriesParams.city).thenReturn("NY")
 
         assertRequestParams(
             client,

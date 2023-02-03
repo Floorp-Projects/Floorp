@@ -59,5 +59,7 @@ class PocketStoriesConfigTest {
         val config = PocketStoriesConfig(mock())
 
         assertEquals(DEFAULT_SPONSORED_STORIES_SITE_ID, config.sponsoredStoriesParams.siteId)
+        assertEquals("", config.sponsoredStoriesParams.country)
+        assertEquals("", config.sponsoredStoriesParams.city)
     }
 }

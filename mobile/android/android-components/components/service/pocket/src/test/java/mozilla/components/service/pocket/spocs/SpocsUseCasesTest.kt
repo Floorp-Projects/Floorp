@@ -42,7 +42,7 @@ class SpocsUseCasesTest {
     private val fetchClient: Client = mock()
     private val profileId = UUID.randomUUID()
     private val appId = "test"
-    private val sponsoredStoriesParams = PocketStoriesRequestConfig("123")
+    private val sponsoredStoriesParams = PocketStoriesRequestConfig("123", "US", "NY")
     private val useCases = spy(SpocsUseCases(testContext, fetchClient, profileId, appId, sponsoredStoriesParams))
     private val spocsProvider: SpocsEndpoint = mock()
     private val spocsRepo: SpocsRepository = mock()
@@ -101,7 +101,7 @@ class SpocsUseCasesTest {
         val fetchClient2: Client = mock()
         val profileId2 = UUID.randomUUID()
         val appId2 = "test"
-        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1")
+        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1", "CA", "OW")
 
         val refreshUseCase = useCases.RefreshSponsoredStories(context2, fetchClient2, profileId2, appId2, sponsoredStoriesParams2)
 
@@ -250,7 +250,7 @@ class SpocsUseCasesTest {
         val fetchClient2: Client = mock()
         val profileId2 = UUID.randomUUID()
         val appId2 = "test"
-        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1")
+        val sponsoredStoriesParams2 = PocketStoriesRequestConfig("1", "CA", "OW")
 
         val deleteProfileUseCase = useCases.DeleteProfile(context2, fetchClient2, profileId2, appId2, sponsoredStoriesParams2)
 
