@@ -215,10 +215,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                         webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
                 aRemote.mId.Construct(remoteId);
                 aRemote.mType.Construct(RTCStatsType::Remote_inbound_rtp);
-                aRemote.mSsrc.Construct(ssrc);
-                aRemote.mMediaType.Construct(
-                    kind);  // mediaType is the old name for kind.
-                aRemote.mKind.Construct(kind);
+                aRemote.mSsrc = ssrc;
+                aRemote.mKind = kind;
                 aRemote.mLocalId.Construct(localId);
                 if (base_seq) {
                   if (aRtcpData.report_block()
@@ -235,14 +233,12 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
 
           auto constructCommonOutboundRtpStats =
               [&](RTCOutboundRtpStreamStats& aLocal) {
-                aLocal.mSsrc.Construct(ssrc);
+                aLocal.mSsrc = ssrc;
                 aLocal.mTimestamp.Construct(
                     pipeline->GetTimestampMaker().GetNow());
                 aLocal.mId.Construct(localId);
                 aLocal.mType.Construct(RTCStatsType::Outbound_rtp);
-                aLocal.mMediaType.Construct(
-                    kind);  // mediaType is the old name for kind.
-                aLocal.mKind.Construct(kind);
+                aLocal.mKind = kind;
                 if (remoteId.Length()) {
                   aLocal.mRemoteId.Construct(remoteId);
                 }
