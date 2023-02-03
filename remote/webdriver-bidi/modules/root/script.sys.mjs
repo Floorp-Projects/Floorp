@@ -34,7 +34,20 @@ const ScriptEvaluateResultType = {
 };
 
 class ScriptModule extends Module {
-  destroy() {}
+  #preloadScriptMap;
+
+  constructor(messageHandler) {
+    super(messageHandler);
+
+    // Map in which the keys are UUIDs, and the values are structs
+    // with an item named expression, which is a string,
+    // and an item named sandbox which is a string or null.
+    this.#preloadScriptMap = new Map();
+  }
+
+  destroy() {
+    this.#preloadScriptMap = null;
+  }
 
   /**
    * Used to represent a frame of a JavaScript stack trace.

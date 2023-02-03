@@ -33,6 +33,8 @@ const EvaluationStatus = {
 
 class ScriptModule extends Module {
   #defaultRealm;
+  #observerListening;
+  #preloadScripts;
   #realms;
 
   constructor(messageHandler) {
@@ -42,15 +44,36 @@ class ScriptModule extends Module {
 
     // Maps sandbox names to instances of window realms.
     this.#realms = new Map();
+
+    // Set of structs with an item named expression, which is a string,
+    // and an item named sandbox which is a string or null.
+    this.#preloadScripts = new Set();
   }
 
   destroy() {
+    this.#preloadScripts = null;
+
+    this.#stopObserving();
+
     this.#defaultRealm.destroy();
 
     for (const realm of this.#realms.values()) {
       realm.destroy();
     }
     this.#realms = null;
+  }
+
+  observe(subject, topic) {
+    if (topic !== "document-element-inserted") {
+      return;
+    }
+
+    const window = subject?.defaultView;
+
+    // Ignore events without a window and those from other tabs.
+    if (window === this.messageHandler.window) {
+      this.#evaluatePreloadScripts();
+    }
   }
 
   #buildExceptionDetails(exception, stack, realm, resultOwnership) {
@@ -152,6 +175,26 @@ class ScriptModule extends Module {
     }
   }
 
+  #evaluatePreloadScripts() {
+    new Promise(resolve => {
+      // Block script parsing.
+      this.messageHandler.window.document.blockParsing(resolve);
+
+      for (const script of this.#preloadScripts.values()) {
+        const realm = this.#getRealmFromSandboxName(script.sandbox);
+        const rv = realm.executeInGlobal(script.expression);
+
+        if ("throw" in rv) {
+          const exception = this.#toRawObject(rv.throw);
+          realm.reportError(lazy.stringify(exception), rv.stack);
+        }
+      }
+
+      // Continue script parsing.
+      resolve();
+    });
+  }
+
   #getRealm(realmId, sandboxName) {
     if (realmId === null) {
       return this.#getRealmFromSandboxName(sandboxName);
@@ -188,6 +231,20 @@ class ScriptModule extends Module {
     this.#realms.set(sandboxName, realm);
 
     return realm;
+  }
+
+  #startObserving() {
+    if (!this.#observerListening) {
+      Services.obs.addObserver(this, "document-element-inserted");
+      this.#observerListening = true;
+    }
+  }
+
+  #stopObserving() {
+    if (this.#observerListening) {
+      Services.obs.removeObserver(this, "document-element-inserted");
+      this.#observerListening = false;
+    }
   }
 
   #toRawObject(maybeDebuggerObject) {
@@ -338,6 +395,26 @@ class ScriptModule extends Module {
     return [this.#defaultRealm, ...this.#realms.values()].map(realm =>
       realm.getInfo()
     );
+  }
+
+  /**
+   * Internal commands
+   */
+
+  _applySessionData(params) {
+    // We only care about updates coming on context creation.
+    if (params.category === "preload-script" && params.initial) {
+      this.#preloadScripts = new Set();
+      for (const item of params.sessionData) {
+        if (this.messageHandler.matchesContext(item.contextDescriptor)) {
+          this.#preloadScripts.add(item.value);
+        }
+      }
+
+      if (this.#preloadScripts.size) {
+        this.#startObserving();
+      }
+    }
   }
 }
 

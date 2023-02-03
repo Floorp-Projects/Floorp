@@ -89,6 +89,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
         commandName: "_applySessionData",
         params: {
           category,
+          initial: true,
           sessionData: sessionDataItems,
         },
         destination,
