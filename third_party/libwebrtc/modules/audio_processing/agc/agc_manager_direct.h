@@ -228,7 +228,7 @@ class MonoAgc {
   void SetMaxLevel(int level);
 
   int CheckVolumeAndReset();
-  void UpdateGain();
+  void UpdateGain(int rms_error_db);
   void UpdateCompressor();
 
   const int min_mic_level_;

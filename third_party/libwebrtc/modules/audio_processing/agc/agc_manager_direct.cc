@@ -215,7 +215,12 @@ void MonoAgc::Process(rtc::ArrayView<const int16_t> audio) {
 
   agc_->Process(audio);
 
-  UpdateGain();
+  // Update gain if `agc_` has an RMS error estimate ready.
+  int rms_error = 0;
+  if (agc_->GetRmsErrorDb(&rms_error)) {
+    UpdateGain(rms_error);
+  }
+
   if (!disable_digital_adaptive_) {
     UpdateCompressor();
   }
@@ -342,19 +347,15 @@ int MonoAgc::CheckVolumeAndReset() {
   return 0;
 }
 
-// Requests the RMS error from AGC and distributes the required gain change
-// between the digital compression stage and volume slider. We use the
-// compressor first, providing a slack region around the current slider
-// position to reduce movement.
+// Distributes the required gain change between the digital compression stage
+// and volume slider. We use the compressor first, providing a slack region
+// around the current slider position to reduce movement.
 //
 // If the slider needs to be moved, we check first if the user has adjusted
 // it, in which case we take no action and cache the updated level.
-void MonoAgc::UpdateGain() {
-  int rms_error = 0;
-  if (!agc_->GetRmsErrorDb(&rms_error)) {
-    // No error update ready.
-    return;
-  }
+void MonoAgc::UpdateGain(int rms_error_db) {
+  int rms_error = rms_error_db;
+
   // The compressor will always add at least kMinCompressionGain. In effect,
   // this adjusts our target gain upward by the same amount and rms_error
   // needs to reflect that.
