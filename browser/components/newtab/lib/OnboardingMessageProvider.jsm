@@ -926,6 +926,7 @@ const BASE_MESSAGES = () => [
       layout: "icon_and_message",
       icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
       icon_class: "cfr-doorhanger-small-icon",
+      persistent_doorhanger: true,
       heading_text: {
         string_id: "cfr-cookiebanner-header",
       },
@@ -967,6 +968,9 @@ const BASE_MESSAGES = () => [
                       value: false,
                     },
                   },
+                },
+                {
+                  type: "RELOAD_BROWSER",
                 },
               ],
             },
