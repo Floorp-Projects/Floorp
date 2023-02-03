@@ -418,6 +418,7 @@ if (rtc_include_tests) {
         "agc2:adaptive_digital_unittests",
         "agc2:biquad_filter_unittests",
         "agc2:fixed_digital_unittests",
+        "agc2:input_volume_controller_unittests",
         "agc2:noise_estimator_unittests",
         "agc2:test_utils",
         "agc2:vad_wrapper_unittests",
@@ -525,7 +526,7 @@ if (rtc_include_tests) {
       "../../rtc_base:logging",
       "../../rtc_base:safe_conversions",
       "../../rtc_base:safe_minmax",
-      "agc:gain_map",
+      "agc2:gain_map",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }

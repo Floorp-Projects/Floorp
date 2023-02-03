@@ -69,6 +69,51 @@ rtc_library("biquad_filter") {
   ]
 }
 
+rtc_library("clipping_predictor") {
+  visibility = [
+    "../agc:agc",
+    "./*",
+  ]
+
+  sources = [
+    "clipping_predictor.cc",
+    "clipping_predictor.h",
+    "clipping_predictor_level_buffer.cc",
+    "clipping_predictor_level_buffer.h",
+  ]
+
+  deps = [
+    ":gain_map",
+    "..:api",
+    "..:audio_frame_view",
+    "../../../common_audio",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:safe_minmax",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("clipping_predictor_evaluator") {
+  visibility = [
+    "../agc:agc",
+    "./*",
+  ]
+
+  sources = [
+    "clipping_predictor_evaluator.cc",
+    "clipping_predictor_evaluator.h",
+  ]
+
+  deps = [
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_source_set("common") {
   sources = [ "agc2_common.h" ]
 }
@@ -124,6 +169,16 @@ rtc_library("gain_applier") {
     "../../../api:array_view",
     "../../../rtc_base:safe_minmax",
   ]
+}
+
+rtc_source_set("gain_map") {
+  visibility = [
+    "..:analog_mic_simulation",
+    "../agc:agc",
+    "./*",
+  ]
+
+  sources = [ "gain_map_internal.h" ]
 }
 
 rtc_library("noise_level_estimator") {
@@ -255,6 +310,29 @@ rtc_library("fixed_digital_unittests") {
     "../../../rtc_base:gunit_helpers",
     "../../../system_wrappers:metrics",
   ]
+}
+
+rtc_library("input_volume_controller_unittests") {
+  testonly = true
+  sources = [
+    "clipping_predictor_evaluator_unittest.cc",
+    "clipping_predictor_level_buffer_unittest.cc",
+    "clipping_predictor_unittest.cc",
+  ]
+
+  configs += [ "..:apm_debug_dump" ]
+
+  deps = [
+    ":clipping_predictor",
+    ":clipping_predictor_evaluator",
+    ":gain_map",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:random",
+    "../../../rtc_base:safe_conversions",
+    "../../../test:test_support",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("noise_estimator_unittests") {
