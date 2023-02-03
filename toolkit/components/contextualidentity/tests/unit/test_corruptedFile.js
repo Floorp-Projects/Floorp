@@ -104,6 +104,12 @@ add_task(async function corruptedFile() {
     "We should have the default public identities"
   );
 
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    cis.getPublicIdentities().map(identity => identity.userContextId),
+    "getPublicUserContextIds has matching user context IDs"
+  );
+
   // Verify that when the containers.json file is being rebuilt, the computed lastUserContextId
   // is the expected one.
   equal(
