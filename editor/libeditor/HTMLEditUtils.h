@@ -1486,16 +1486,20 @@ class HTMLEditUtils final {
    * GetMostDistantAncestorInlineElement() returns the most distant ancestor
    * inline element between aContent and the aEditingHost.  Even if aEditingHost
    * is an inline element, this method never returns aEditingHost as the result.
+   * Optionally, you can specify ancestor limiter content node.  This guarantees
+   * that the result is a descendant of aAncestorLimiter if aContent is a
+   * descendant of aAncestorLimiter.
    */
   static nsIContent* GetMostDistantAncestorInlineElement(
-      const nsIContent& aContent, const Element* aEditingHost = nullptr) {
+      const nsIContent& aContent, const Element* aEditingHost = nullptr,
+      const nsIContent* aAncestorLimiter = nullptr) {
     if (HTMLEditUtils::IsBlockElement(aContent)) {
       return nullptr;
     }
 
     // If aNode is the editing host itself, there is no modifiable inline
     // parent.
-    if (&aContent == aEditingHost) {
+    if (&aContent == aEditingHost || &aContent == aAncestorLimiter) {
       return nullptr;
     }
 
@@ -1513,12 +1517,12 @@ class HTMLEditUtils final {
 
     // Looks for the highest inline parent in the editing host.
     nsIContent* topMostInlineContent = const_cast<nsIContent*>(&aContent);
-    for (nsIContent* content : aContent.AncestorsOfType<nsIContent>()) {
-      if (content == aEditingHost ||
-          !HTMLEditUtils::IsInlineElement(*content)) {
+    for (Element* element : aContent.AncestorsOfType<Element>()) {
+      if (element == aEditingHost || element == aAncestorLimiter ||
+          !HTMLEditUtils::IsInlineElement(*element)) {
         break;
       }
-      topMostInlineContent = content;
+      topMostInlineContent = element;
     }
     return topMostInlineContent;
   }
@@ -1529,13 +1533,20 @@ class HTMLEditUtils final {
    * inline element.
    */
   static Element* GetMostDistantAncestorEditableEmptyInlineElement(
-      const nsIContent& aEmptyContent, const Element* aEditingHost = nullptr) {
+      const nsIContent& aEmptyContent, const Element* aEditingHost = nullptr,
+      const nsIContent* aAncestorLimiter = nullptr) {
+    if (&aEmptyContent == aEditingHost || &aEmptyContent == aAncestorLimiter) {
+      return nullptr;
+    }
     nsIContent* lastEmptyContent = const_cast<nsIContent*>(&aEmptyContent);
-    for (Element* element = aEmptyContent.GetParentElement();
-         element && element != aEditingHost &&
-         HTMLEditUtils::IsInlineElement(*element) &&
-         HTMLEditUtils::IsSimplyEditableNode(*element);
-         element = element->GetParentElement()) {
+    for (Element* element : aEmptyContent.AncestorsOfType<Element>()) {
+      if (element == aEditingHost || element == aAncestorLimiter) {
+        break;
+      }
+      if (!HTMLEditUtils::IsInlineElement(*element) ||
+          !HTMLEditUtils::IsSimplyEditableNode(*element)) {
+        break;
+      }
       if (element->GetChildCount() > 1) {
         for (const nsIContent* child = element->GetFirstChild(); child;
              child = child->GetNextSibling()) {

@@ -513,6 +513,8 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
       // simple case, we will simply move the content in aRightBlockElement
       // out of its block.
       pointToMoveFirstLineContent = atLeftBlockChild;
+      MOZ_ASSERT(pointToMoveFirstLineContent.GetContainer() ==
+                 &aLeftBlockElement);
     } else {
       if (NS_WARN_IF(!aLeftContentInBlock.IsInComposedDoc())) {
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -527,6 +529,9 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
       // unexpected position.  (see bug 200416) The new idea is to make the
       // moving content a sibling, next to the previous visible content.
       pointToMoveFirstLineContent.SetAfter(&aLeftContentInBlock);
+      if (NS_WARN_IF(!pointToMoveFirstLineContent.IsInContentNode())) {
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
     }
 
     MOZ_ASSERT(pointToMoveFirstLineContent.IsSetAndValid());
@@ -572,22 +577,23 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
             break;
           }
         }
+        if (NS_WARN_IF(!pointToMoveFirstLineContent.IsInContentNode())) {
+          return Err(NS_ERROR_FAILURE);
+        }
       } else if (unwrappedSplitNodeResult.Handled()) {
         // If se split something, we should move the first line contents before
         // the right elements.
         if (nsIContent* nextContentAtSplitPoint =
                 unwrappedSplitNodeResult.GetNextContent()) {
           pointToMoveFirstLineContent.Set(nextContentAtSplitPoint);
-          if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
-            NS_WARNING("Next node of split point was orphaned");
-            return Err(NS_ERROR_NULL_POINTER);
+          if (NS_WARN_IF(!pointToMoveFirstLineContent.IsInContentNode())) {
+            return Err(NS_ERROR_FAILURE);
           }
         } else {
           pointToMoveFirstLineContent =
               unwrappedSplitNodeResult.AtSplitPoint<EditorDOMPoint>();
-          if (MOZ_UNLIKELY(!pointToMoveFirstLineContent.IsSet())) {
-            NS_WARNING("Split node was orphaned");
-            return Err(NS_ERROR_NULL_POINTER);
+          if (NS_WARN_IF(!pointToMoveFirstLineContent.IsInContentNode())) {
+            return Err(NS_ERROR_FAILURE);
           }
         }
       }
