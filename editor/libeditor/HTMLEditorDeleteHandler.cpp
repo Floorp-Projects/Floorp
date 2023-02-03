@@ -5149,58 +5149,18 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::Prepare(
       mDestInclusiveAncestorBlock != mSrcInclusiveAncestorBlock &&
       mSrcInclusiveAncestorBlock->IsInclusiveDescendantOf(
           mDestInclusiveAncestorBlock);
-  mTopmostSrcAncestorBlockInDestBlock = [&]() -> Element* {
-    if (!mMovingToParentBlock) {
-      return nullptr;
-    }
-    Element* lastBlockAncestor = mSrcInclusiveAncestorBlock;
-    for (Element* element :
-         mSrcInclusiveAncestorBlock->InclusiveAncestorsOfType<Element>()) {
-      if (element == mDestInclusiveAncestorBlock) {
-        return lastBlockAncestor;
-      }
-      if (HTMLEditUtils::IsBlockElement(*lastBlockAncestor)) {
-        lastBlockAncestor = element;
-      }
-    }
-    return nullptr;
-  }();
+  mTopmostSrcAncestorBlockInDestBlock =
+      mMovingToParentBlock
+          ? AutoMoveOneLineHandler::
+                GetMostDistantInclusiveAncestorBlockInSpecificAncestorElement(
+                    *mSrcInclusiveAncestorBlock, *mDestInclusiveAncestorBlock)
+          : nullptr;
   MOZ_ASSERT_IF(mMovingToParentBlock, mTopmostSrcAncestorBlockInDestBlock);
 
-  // If we move content from or to <pre>, we don't need to preserve the
-  // white-space style for compatibility with both our traditional behavior
-  // and the other browsers.
-  mPreserveWhiteSpaceStyle = [&]() {
-    if (MOZ_UNLIKELY(!mDestInclusiveAncestorBlock)) {
-      return PreserveWhiteSpaceStyle::No;
-    }
-    // TODO: If `white-space` is specified by non-UA stylesheet, we should
-    // preserve it even if the right block is <pre> for compatibility with the
-    // other browsers.
-    const auto IsInclusiveDescendantOfPre = [](const nsIContent& aContent) {
-      // If the content has different `white-space` style from <pre>, we
-      // shouldn't treat it as a descendant of <pre> because web apps or
-      // the user intent to treat the white-spaces in aContent not as `pre`.
-      if (EditorUtils::GetComputedWhiteSpaceStyle(aContent).valueOr(
-              StyleWhiteSpace::Normal) != StyleWhiteSpace::Pre) {
-        return false;
-      }
-      for (const Element* element :
-           aContent.InclusiveAncestorsOfType<Element>()) {
-        if (element->IsHTMLElement(nsGkAtoms::pre)) {
-          return true;
-        }
-      }
-      return false;
-    };
-    if (IsInclusiveDescendantOfPre(*mDestInclusiveAncestorBlock) ||
-        MOZ_UNLIKELY(!aPointInHardLine.IsInContentNode()) ||
-        IsInclusiveDescendantOfPre(
-            *aPointInHardLine.ContainerAs<nsIContent>())) {
-      return PreserveWhiteSpaceStyle::No;
-    }
-    return PreserveWhiteSpaceStyle::Yes;
-  }();
+  mPreserveWhiteSpaceStyle =
+      AutoMoveOneLineHandler::ConsiderWhetherPreserveWhiteSpaceStyle(
+          aPointInHardLine.GetContainerAs<nsIContent>(),
+          mDestInclusiveAncestorBlock);
 
   AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
   rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
@@ -5240,6 +5200,69 @@ HTMLEditor::AutoMoveOneLineHandler::SplitToMakeTheLineIsolated(
     return Err(rv);
   }
   return CaretPoint(pointToPutCaret);
+}
+
+// static
+Element* HTMLEditor::AutoMoveOneLineHandler::
+    GetMostDistantInclusiveAncestorBlockInSpecificAncestorElement(
+        Element& aBlockElement, const Element& aAncestorElement) {
+  MOZ_ASSERT(aBlockElement.IsInclusiveDescendantOf(&aAncestorElement));
+  MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aBlockElement));
+
+  if (&aBlockElement == &aAncestorElement) {
+    return nullptr;
+  }
+
+  Element* lastBlockAncestor = &aBlockElement;
+  for (Element* element : aBlockElement.InclusiveAncestorsOfType<Element>()) {
+    if (element == &aAncestorElement) {
+      return lastBlockAncestor;
+    }
+    if (HTMLEditUtils::IsBlockElement(*lastBlockAncestor)) {
+      lastBlockAncestor = element;
+    }
+  }
+  return nullptr;
+}
+
+// static
+HTMLEditor::PreserveWhiteSpaceStyle
+HTMLEditor::AutoMoveOneLineHandler::ConsiderWhetherPreserveWhiteSpaceStyle(
+    const nsIContent* aContentInLine,
+    const Element* aInclusiveAncestorBlockOfInsertionPoint) {
+  if (MOZ_UNLIKELY(!aInclusiveAncestorBlockOfInsertionPoint)) {
+    return PreserveWhiteSpaceStyle::No;
+  }
+
+  // If we move content from or to <pre>, we don't need to preserve the
+  // white-space style for compatibility with both our traditional behavior
+  // and the other browsers.
+
+  // TODO: If `white-space` is specified by non-UA stylesheet, we should
+  // preserve it even if the right block is <pre> for compatibility with the
+  // other browsers.
+  const auto IsInclusiveDescendantOfPre = [](const nsIContent& aContent) {
+    // If the content has different `white-space` style from <pre>, we
+    // shouldn't treat it as a descendant of <pre> because web apps or
+    // the user intent to treat the white-spaces in aContent not as `pre`.
+    if (EditorUtils::GetComputedWhiteSpaceStyle(aContent).valueOr(
+            StyleWhiteSpace::Normal) != StyleWhiteSpace::Pre) {
+      return false;
+    }
+    for (const Element* element :
+         aContent.InclusiveAncestorsOfType<Element>()) {
+      if (element->IsHTMLElement(nsGkAtoms::pre)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  if (IsInclusiveDescendantOfPre(*aInclusiveAncestorBlockOfInsertionPoint) ||
+      MOZ_UNLIKELY(!aContentInLine) ||
+      IsInclusiveDescendantOfPre(*aContentInLine)) {
+    return PreserveWhiteSpaceStyle::No;
+  }
+  return PreserveWhiteSpaceStyle::Yes;
 }
 
 Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(

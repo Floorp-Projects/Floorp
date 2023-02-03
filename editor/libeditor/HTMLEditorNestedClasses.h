@@ -256,6 +256,37 @@ class MOZ_STACK_CLASS HTMLEditor::AutoMoveOneLineHandler final {
   }
 
   /**
+   * Consider whether Run() should preserve or does not preserve white-space
+   * style of moving content.
+   *
+   * @param aContentInLine      Specify a content node in the moving line.
+   *                            Typically, container of aPointInHardLine of
+   *                            Prepare().
+   * @param aInclusiveAncestorBlockOfInsertionPoint
+   *                            Inclusive ancestor block element of insertion
+   *                            point.  Typically, computed
+   *                            mDestInclusiveAncestorBlock.
+   */
+  [[nodiscard]] static PreserveWhiteSpaceStyle
+  ConsiderWhetherPreserveWhiteSpaceStyle(
+      const nsIContent* aContentInLine,
+      const Element* aInclusiveAncestorBlockOfInsertionPoint);
+
+  /**
+   * Look for inclusive ancestor block element of aBlockElement and a descendant
+   * of aAncestorElement.  If aBlockElement and aAncestorElement are same one,
+   * this returns nullptr.
+   *
+   * @param aBlockElement       A block element which is a descendant of
+   *                            aAncestorElement.
+   * @param aAncestorElement    An inclusive ancestor block element of
+   *                            aBlockElement.
+   */
+  [[nodiscard]] static Element*
+  GetMostDistantInclusiveAncestorBlockInSpecificAncestorElement(
+      Element& aBlockElement, const Element& aAncestorElement);
+
+  /**
    * Split ancestors at the line range boundaries and collect array of contents
    * in the line to aOutArrayOfContents.
    */
