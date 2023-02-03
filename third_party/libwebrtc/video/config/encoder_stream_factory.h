@@ -16,6 +16,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/units/data_rate.h"
 #include "api/video_codecs/video_encoder.h"
+#include "call/adaptation/video_source_restrictions.h"
 #include "video/config/video_encoder_config.h"
 
 namespace cricket {
@@ -34,14 +35,16 @@ class EncoderStreamFactory
                        bool is_screenshare,
                        bool conference_mode,
                        const webrtc::VideoEncoder::EncoderInfo& encoder_info,
+                       absl::optional<webrtc::VideoSourceRestrictions>
+                           restrictions = absl::nullopt,
                        const webrtc::FieldTrialsView* trials = nullptr);
 
- private:
   std::vector<webrtc::VideoStream> CreateEncoderStreams(
       int width,
       int height,
       const webrtc::VideoEncoderConfig& encoder_config) override;
 
+ private:
   std::vector<webrtc::VideoStream> CreateDefaultVideoStreams(
       int width,
       int height,
@@ -69,6 +72,7 @@ class EncoderStreamFactory
   const webrtc::FieldTrialBasedConfig fallback_trials_;
   const webrtc::FieldTrialsView& trials_;
   const int encoder_info_requested_resolution_alignment_;
+  const absl::optional<webrtc::VideoSourceRestrictions> restrictions_;
 };
 
 }  // namespace cricket

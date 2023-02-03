@@ -23,6 +23,7 @@ rtc_library("streams_config") {
     "../../api/units:data_rate",
     "../../api/video:video_codec_constants",
     "../../api/video_codecs:video_codecs_api",
+    "../../call/adaptation:resource_adaptation",
     "../../media:rtc_media_base",
     "../../modules/video_coding:video_coding_utility",
     "../../modules/video_coding:webrtc_vp9_helpers",
@@ -69,10 +70,14 @@ if (rtc_include_tests) {
     testonly = true
 
     defines = []
-    sources = [ "simulcast_unittest.cc" ]
+    sources = [
+      "encoder_stream_factory_unittest.cc",
+      "simulcast_unittest.cc",
+    ]
     deps = [
       ":streams_config",
       "../../api/transport:field_trial_based_config",
+      "../../call/adaptation:resource_adaptation",
       "../../test:field_trial",
       "../../test:test_support",
     ]
