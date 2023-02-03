@@ -1981,6 +1981,22 @@ function isServiceSpecificErrorCode(errorCode) {
 }
 
 /**
+ * This function determines whether the error represented by the passed error
+ * code is the result of the updater failing to allocate memory. This is
+ * relevant when staging because, since Firefox is also running, we may not be
+ * able to allocate much memory. Thus, if we fail to stage an update, we may
+ * succeed at updating without staging.
+ *
+ * @param   An integer error code from the update.status file. Should be one of
+ *          the codes enumerated in updatererrors.h.
+ * @returns true if the code represents a memory allocation error.
+ *          Otherwise, false.
+ */
+function isMemoryAllocationErrorCode(errorCode) {
+  return errorCode >= 10 && errorCode <= 14;
+}
+
+/**
  * Normally when staging, `nsUpdateProcessor::WaitForProcess` waits for the
  * staging process to complete by watching for its PID to terminate.
  * However, there are less ideal situations. Notably, we might start the browser
@@ -4757,16 +4773,26 @@ UpdateManager.prototype = {
       cleanUpReadyUpdateDir(false);
 
       if (update.state == STATE_FAILED) {
+        let isMemError = isMemoryAllocationErrorCode(update.errorCode);
         if (
           update.errorCode == DELETE_ERROR_STAGING_LOCK_FILE ||
-          update.errorCode == UNEXPECTED_STAGING_ERROR
+          update.errorCode == UNEXPECTED_STAGING_ERROR ||
+          isMemError
         ) {
           update.state = getBestPendingState();
           writeStatusFile(getReadyUpdateDir(), update.state);
-          LOG(
-            `UpdateManager:refreshUpdateStatus - Unexpected staging error. ` +
-              `Setting status to "${update.state}"`
-          );
+          if (isMemError) {
+            LOG(
+              `UpdateManager:refreshUpdateStatus - Updater failed to ` +
+                `allocate enough memory to successfully stage. Setting ` +
+                `status to "${update.state}"`
+            );
+          } else {
+            LOG(
+              `UpdateManager:refreshUpdateStatus - Unexpected staging error. ` +
+                `Setting status to "${update.state}"`
+            );
+          }
         } else if (isServiceSpecificErrorCode(update.errorCode)) {
           // Sometimes when staging, we might encounter an error that is
           // specific to the Maintenance Service. If this happens, we should try
