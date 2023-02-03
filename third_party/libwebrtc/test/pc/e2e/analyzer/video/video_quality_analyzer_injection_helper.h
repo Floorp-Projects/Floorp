@@ -134,12 +134,14 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
     }
   };
 
-  class VideoFrameIdsWriter {
+  class VideoFrameIdsWriter final : public test::VideoFrameWriter {
    public:
     explicit VideoFrameIdsWriter(absl::string_view file_name);
-    ~VideoFrameIdsWriter();
+    ~VideoFrameIdsWriter() { Close(); }
 
-    void WriteFrameId(uint16_t frame_id);
+    bool WriteFrame(const VideoFrame& frame) override;
+
+    void Close() override;
 
    private:
     const std::string file_name_;
@@ -148,16 +150,13 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
 
   class VideoWriter final : public rtc::VideoSinkInterface<VideoFrame> {
    public:
-    VideoWriter(test::VideoFrameWriter* video_writer,
-                VideoFrameIdsWriter* frame_ids_writer,
-                int sampling_modulo);
+    VideoWriter(test::VideoFrameWriter* video_writer, int sampling_modulo);
     ~VideoWriter() override = default;
 
     void OnFrame(const VideoFrame& frame) override;
 
    private:
     test::VideoFrameWriter* const video_writer_;
-    VideoFrameIdsWriter* const frame_ids_writer_;
     const int sampling_modulo_;
 
     int64_t frames_counter_ = 0;
@@ -165,9 +164,8 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
 
   test::VideoFrameWriter* CreateVideoWriter(
       absl::string_view file_name,
+      absl::optional<std::string> frame_ids_dump_file_name,
       const PeerConnectionE2EQualityTestFixture::VideoConfig& config);
-  VideoFrameIdsWriter* MaybeCreateVideoFrameIdsWriter(
-      absl::optional<std::string> frame_ids_dump_file_name);
   // Creates a deep copy of the frame and passes it to the video analyzer, while
   // passing real frame to the sinks
   void OnFrame(absl::string_view peer_name, const VideoFrame& frame);
@@ -180,7 +178,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   EncodedImageDataExtractor* extractor_;
 
   std::vector<std::unique_ptr<test::VideoFrameWriter>> video_writers_;
-  std::vector<std::unique_ptr<VideoFrameIdsWriter>> frame_ids_writers_;
 
   Mutex mutex_;
   int peers_count_ RTC_GUARDED_BY(mutex_);
