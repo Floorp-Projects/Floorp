@@ -635,4 +635,10 @@ LazyIdleThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LazyIdleThread::SetThreadQoS(nsIThread::QoSPriority aPriority) {
+  // Unimplemented on lazy idle threads.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace mozilla

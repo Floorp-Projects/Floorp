@@ -59,6 +59,7 @@ nsThreadPool::nsThreadPool()
       mIdleThreadLimit(DEFAULT_IDLE_THREAD_LIMIT),
       mIdleThreadTimeout(DEFAULT_IDLE_THREAD_TIMEOUT),
       mIdleCount(0),
+      mQoSPriority(nsIThread::QOS_PRIORITY_NORMAL),
       mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE),
       mShutdown(false),
       mRegressiveMaxIdleTime(false),
@@ -175,6 +176,18 @@ void nsThreadPool::ShutdownThread(nsIThread* aThread) {
                         &nsIThread::AsyncShutdown));
 }
 
+NS_IMETHODIMP
+nsThreadPool::SetQoSForThreads(nsIThread::QoSPriority aPriority) {
+  MutexAutoLock lock(mMutex);
+  mQoSPriority = aPriority;
+
+  // We don't notify threads here to observe the change, because we don't want
+  // to create spurious wakeups during idle. Rather, we want threads to simply
+  // observe the change on their own if they wake up to do some task.
+
+  return NS_OK;
+}
+
 // This event 'runs' for the lifetime of the worker thread.  The actual
 // eventqueue is mEvents, and is shared by all the worker threads.  This
 // means that the set of threads together define the delay seen by a new
@@ -213,6 +226,7 @@ nsThreadPool::Run() {
   bool exitThread = false;
   bool wasIdle = false;
   TimeStamp idleSince;
+  nsIThread::QoSPriority threadPriority = nsIThread::QOS_PRIORITY_NORMAL;
 
   // This thread is an nsThread created below with NS_NewNamedThread()
   static_cast<nsThread*>(current.get())
@@ -223,6 +237,13 @@ nsThreadPool::Run() {
     MutexAutoLock lock(mMutex);
     listener = mListener;
     LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
+
+    // Go ahead and check for thread priority. If priority is normal, do nothing
+    // because threads are created with default priority.
+    if (threadPriority != mQoSPriority) {
+      current->SetThreadQoS(threadPriority);
+      threadPriority = mQoSPriority;
+    }
   }
 
   if (listener) {
@@ -238,6 +259,12 @@ nsThreadPool::Run() {
     {
       MutexAutoLock lock(mMutex);
 
+      // Before getting the next event, we can adjust priority as needed.
+      if (threadPriority != mQoSPriority) {
+        current->SetThreadQoS(threadPriority);
+        threadPriority = mQoSPriority;
+      }
+
       event = mEvents.GetEvent(lock, &delay);
       if (!event) {
         TimeStamp now = TimeStamp::Now();
@@ -246,7 +273,7 @@ nsThreadPool::Run() {
         TimeDuration timeout = TimeDuration::FromMilliseconds(
             static_cast<double>(mIdleThreadTimeout) / idleTimeoutDivider);
 
-        // If we are shutting down, then don't keep any idle threads
+        // If we are shutting down, then don't keep any idle threads.
         if (mShutdown) {
           exitThread = true;
         } else {

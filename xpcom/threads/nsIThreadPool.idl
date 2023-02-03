@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIEventTarget.idl"
+#include "nsIThread.idl"
 
 [uuid(ef194cab-3f86-4b61-b132-e5e96a79e5d1)]
 interface nsIThreadPoolListener : nsISupports
@@ -30,6 +31,13 @@ interface nsIThreadPoolListener : nsISupports
 [uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
 interface nsIThreadPool : nsIEventTarget
 {
+  /**
+   * Set the entire pool's QoS priority. If the priority has not changed, do nothing.
+   * Existing threads will update their QoS priority the next time they become
+   * active, and newly created threads will set this QoS priority upon creation.
+   */
+   [noscript] void setQoSForThreads(in nsIThread_QoSPriority aPriority);
+
   /**
    * Shutdown the thread pool.  This method may not be executed from any thread
    * in the thread pool.  Instead, it is meant to be executed from another
