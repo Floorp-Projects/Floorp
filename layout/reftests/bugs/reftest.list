@@ -1792,7 +1792,7 @@ pref(layout.css.overflow-clip-box.enabled,true) fuzzy(0-2,0-845) == 992447.html 
 == 1021564-4.html 1021564-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 fuzzy(0-1,0-126000) == 1022612-1.html 1022612-1-ref.html
-== 1024473-1.html 1024473-1-ref.html
+skip-if(Android&&emulator) == 1024473-1.html 1024473-1-ref.html
 fuzzy(0-1,0-24000) == 1025914-1.html 1025914-1-ref.html
 pref(layout.css.moz-document.content.enabled,true) == 1035091.html 1035091-ref.html
 pref(layout.css.moz-document.content.enabled,false) == 1035091-2.html 1035091-ref.html
