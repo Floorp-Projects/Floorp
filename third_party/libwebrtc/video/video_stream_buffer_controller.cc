@@ -147,9 +147,12 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
   int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
   if (buffer_->InsertFrame(std::move(frame))) {
     RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
-    if (!metadata.delayed_by_retransmission && metadata.receive_time)
+    if (!metadata.delayed_by_retransmission && metadata.receive_time &&
+        (field_trials_.IsDisabled("WebRTC-IncomingTimestampOnMarkerBitOnly") ||
+         metadata.is_last_spatial_layer)) {
       timing_->IncomingTimestamp(metadata.rtp_timestamp,
                                  *metadata.receive_time);
+    }
     if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
       TRACE_EVENT2("webrtc",
                    "VideoStreamBufferController::InsertFrame Frame Complete",
