@@ -421,7 +421,7 @@ class alignas(TypicalCacheLineSize) GCMarker {
   void setMarkingStateAndTracer(MarkingState prev, MarkingState next);
 
   template <uint32_t markingOptions>
-  void processMarkStackTop(SliceBudget& budget);
+  bool processMarkStackTop(SliceBudget& budget);
   friend class gc::GCRuntime;
 
   // Helper methods that coerce their second argument to the base pointer
