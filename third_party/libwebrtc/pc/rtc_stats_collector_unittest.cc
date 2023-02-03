@@ -225,6 +225,9 @@ std::unique_ptr<cricket::Candidate> CreateFakeCandidate(
   candidate->set_underlying_type_for_vpn(underlying_type_for_vpn);
   candidate->set_type(candidate_type);
   candidate->set_priority(priority);
+  // Defaults for testing.
+  candidate->set_foundation("foundationIsAString");
+  candidate->set_username("iceusernamefragment");
   return candidate;
 }
 
@@ -1664,6 +1667,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_host.priority = 0;
   expected_a_local_host.vpn = true;
   expected_a_local_host.network_adapter_type = RTCNetworkAdapterType::kEthernet;
+  expected_a_local_host.foundation = "foundationIsAString";
+  expected_a_local_host.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> a_remote_srflx = CreateFakeCandidate(
       "6.7.8.9", 10, "remote_srflx's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
@@ -1677,6 +1682,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_remote_srflx.protocol = "remote_srflx's protocol";
   expected_a_remote_srflx.candidate_type = "srflx";
   expected_a_remote_srflx.priority = 1;
+  expected_a_remote_srflx.foundation = "foundationIsAString";
+  expected_a_remote_srflx.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> a_local_prflx = CreateFakeCandidate(
       "11.12.13.14", 15, "a_local_prflx's protocol",
@@ -1694,6 +1701,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_prflx.vpn = false;
   expected_a_local_prflx.network_adapter_type =
       RTCNetworkAdapterType::kCellular2g;
+  expected_a_local_prflx.foundation = "foundationIsAString";
+  expected_a_local_prflx.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> a_remote_relay = CreateFakeCandidate(
       "16.17.18.19", 20, "a_remote_relay's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
@@ -1707,6 +1716,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_remote_relay.protocol = "a_remote_relay's protocol";
   expected_a_remote_relay.candidate_type = "relay";
   expected_a_remote_relay.priority = 3;
+  expected_a_remote_relay.foundation = "foundationIsAString";
+  expected_a_remote_relay.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> a_local_relay = CreateFakeCandidate(
       "16.17.18.19", 21, "a_local_relay's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
@@ -1728,6 +1739,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay.url = "turn:url1";
   expected_a_local_relay.vpn = false;
   expected_a_local_relay.network_adapter_type = RTCNetworkAdapterType::kUnknown;
+  expected_a_local_relay.foundation = "foundationIsAString";
+  expected_a_local_relay.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> a_local_relay_prflx = CreateFakeCandidate(
       "11.12.13.20", 22, "a_local_relay_prflx's protocol",
@@ -1748,6 +1761,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay_prflx.vpn = false;
   expected_a_local_relay_prflx.network_adapter_type =
       RTCNetworkAdapterType::kUnknown;
+  expected_a_local_relay_prflx.foundation = "foundationIsAString";
+  expected_a_local_relay_prflx.username_fragment = "iceusernamefragment";
 
   // A non-paired local candidate.
   std::unique_ptr<cricket::Candidate> a_local_host_not_paired =
@@ -1768,6 +1783,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_host_not_paired.vpn = true;
   expected_a_local_host_not_paired.network_adapter_type =
       RTCNetworkAdapterType::kEthernet;
+  expected_a_local_host_not_paired.foundation = "foundationIsAString";
+  expected_a_local_host_not_paired.username_fragment = "iceusernamefragment";
 
   // Candidates in the second transport stats.
   std::unique_ptr<cricket::Candidate> b_local =
@@ -1784,6 +1801,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_local.priority = 42;
   expected_b_local.vpn = false;
   expected_b_local.network_adapter_type = RTCNetworkAdapterType::kWifi;
+  expected_b_local.foundation = "foundationIsAString";
+  expected_b_local.username_fragment = "iceusernamefragment";
 
   std::unique_ptr<cricket::Candidate> b_remote = CreateFakeCandidate(
       "42.42.42.42", 42, "b_remote's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
@@ -1796,6 +1815,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_remote.protocol = "b_remote's protocol";
   expected_b_remote.candidate_type = "host";
   expected_b_remote.priority = 42;
+  expected_b_remote.foundation = "foundationIsAString";
+  expected_b_remote.username_fragment = "iceusernamefragment";
 
   // Add candidate pairs to connection.
   cricket::TransportChannelStats a_transport_channel_stats;
@@ -1886,9 +1907,13 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   std::unique_ptr<cricket::Candidate> local_candidate =
       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
                           cricket::LOCAL_PORT_TYPE, 42);
+  local_candidate->set_username("local_iceusernamefragment");
+
   std::unique_ptr<cricket::Candidate> remote_candidate = CreateFakeCandidate(
       "42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_UNKNOWN,
-      cricket::LOCAL_PORT_TYPE, 42);
+      cricket::STUN_PORT_TYPE, 42);
+  remote_candidate->set_related_address(rtc::SocketAddress("192.168.2.1", 43));
+  remote_candidate->set_username("remote_iceusernamefragment");
 
   cricket::ConnectionInfo connection_info;
   connection_info.best_connection = false;
@@ -2022,6 +2047,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_local_candidate.protocol = "protocol";
   expected_local_candidate.candidate_type = "host";
   expected_local_candidate.priority = 42;
+  expected_local_candidate.foundation = "foundationIsAString";
+  expected_local_candidate.username_fragment = "local_iceusernamefragment";
   expected_local_candidate.vpn = false;
   expected_local_candidate.network_adapter_type = RTCNetworkAdapterType::kWifi;
   ASSERT_TRUE(report->Get(expected_local_candidate.id()));
@@ -2036,8 +2063,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_remote_candidate.address = "42.42.42.42";
   expected_remote_candidate.port = 42;
   expected_remote_candidate.protocol = "protocol";
-  expected_remote_candidate.candidate_type = "host";
+  expected_remote_candidate.candidate_type = "srflx";
   expected_remote_candidate.priority = 42;
+  expected_remote_candidate.foundation = "foundationIsAString";
+  expected_remote_candidate.username_fragment = "remote_iceusernamefragment";
+  expected_remote_candidate.related_address = "192.168.2.1";
+  expected_remote_candidate.related_port = 43;
   ASSERT_TRUE(report->Get(expected_remote_candidate.id()));
   EXPECT_EQ(expected_remote_candidate,
             report->Get(expected_remote_candidate.id())

@@ -279,6 +279,11 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidateStats, RTCStats, "abstract-ice-candidate",
     &candidate_type,
     &priority,
     &url,
+    &foundation,
+    &related_address,
+    &related_port,
+    &username_fragment,
+    &tcp_type,
     &vpn,
     &network_adapter_type)
 // clang-format on
@@ -303,6 +308,11 @@ RTCIceCandidateStats::RTCIceCandidateStats(std::string&& id,
       candidate_type("candidateType"),
       priority("priority"),
       url("url"),
+      foundation("foundation"),
+      related_address("relatedAddress"),
+      related_port("relatedPort"),
+      username_fragment("usernameFragment"),
+      tcp_type("tcpType"),
       vpn("vpn"),
       network_adapter_type("networkAdapterType") {}
 
@@ -319,6 +329,11 @@ RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other)
       candidate_type(other.candidate_type),
       priority(other.priority),
       url(other.url),
+      foundation(other.foundation),
+      related_address(other.related_address),
+      related_port(other.related_port),
+      username_fragment(other.username_fragment),
+      tcp_type(other.tcp_type),
       vpn(other.vpn),
       network_adapter_type(other.network_adapter_type) {}
 

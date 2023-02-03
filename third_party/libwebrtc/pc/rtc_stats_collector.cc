@@ -921,6 +921,17 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
     candidate_stats->candidate_type =
         CandidateTypeToRTCIceCandidateType(candidate.type());
     candidate_stats->priority = static_cast<int32_t>(candidate.priority());
+    candidate_stats->foundation = candidate.foundation();
+    auto related_address = candidate.related_address();
+    if (related_address.port() != 0) {
+      candidate_stats->related_address = related_address.ipaddr().ToString();
+      candidate_stats->related_port =
+          static_cast<int32_t>(related_address.port());
+    }
+    candidate_stats->username_fragment = candidate.username();
+    if (candidate.protocol() == "tcp") {
+      candidate_stats->tcp_type = candidate.tcptype();
+    }
 
     stats = candidate_stats.get();
     report->AddStats(std::move(candidate_stats));
