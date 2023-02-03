@@ -11,6 +11,9 @@
 #ifndef SDK_OBJC_NATIVE_SRC_AUDIO_HELPERS_H_
 #define SDK_OBJC_NATIVE_SRC_AUDIO_HELPERS_H_
 
+#import <Foundation/Foundation.h>
+#include <objc/objc.h>
+
 #include <string>
 
 namespace webrtc {
