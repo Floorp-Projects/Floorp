@@ -346,13 +346,10 @@ class RTC_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
   RTCStatsMember<uint64_t> concealment_events;
   RTCStatsMember<uint64_t> inserted_samples_for_deceleration;
   RTCStatsMember<uint64_t> removed_samples_for_acceleration;
-  // Non-standard audio-only member
-  // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcaudioreceiverstats-jitterbufferflushes
+  // TODO(crbug.com/webrtc/14524): These metrics have been moved, delete them.
   RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
   RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
   RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
-  // TODO(henrik.lundin): Add description of the interruption metrics at
-  // https://github.com/w3c/webrtc-provisional-stats/issues/17
   RTCNonStandardStatsMember<uint32_t> interruption_count;
   RTCNonStandardStatsMember<double> total_interruption_duration;
   // Non-standard video-only members.
@@ -503,6 +500,12 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
+  // Non-standard audio metrics.
+  RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
+  RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
+  RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
+  RTCNonStandardStatsMember<uint32_t> interruption_count;
+  RTCNonStandardStatsMember<double> total_interruption_duration;
 
   // The former googMinPlayoutDelayMs (in seconds).
   RTCNonStandardStatsMember<double> min_playout_delay;
