@@ -366,7 +366,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
  protected:
   virtual ~nsCocoaWindow();
 
-  nsresult CreateNativeWindow(const NSRect& aRect, BorderStyle aBorderStyle, bool aRectIsFrameRect);
+  nsresult CreateNativeWindow(const NSRect& aRect, BorderStyle aBorderStyle, bool aRectIsFrameRect,
+                              bool aIsPrivateBrowsing);
   nsresult CreatePopupContentView(const LayoutDeviceIntRect& aRect, InitData*);
   void DestroyNativeWindow();
   void UpdateBounds();
