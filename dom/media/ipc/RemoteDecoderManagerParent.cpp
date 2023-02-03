@@ -28,6 +28,10 @@
 #  include "MFMediaEngineParent.h"
 #endif
 
+#ifdef MOZ_MF_CDM
+#  include "MFCDMParent.h"
+#endif
+
 namespace mozilla {
 
 #define LOG(msg, ...) \
@@ -249,6 +253,22 @@ bool RemoteDecoderManagerParent::DeallocPMFMediaEngineParent(
 #ifdef MOZ_WMF_MEDIA_ENGINE
   MFMediaEngineParent* parent = static_cast<MFMediaEngineParent*>(actor);
   parent->Destroy();
+#endif
+  return true;
+}
+
+PMFCDMParent* RemoteDecoderManagerParent::AllocPMFCDMParent(
+    const nsAString& aKeySystem) {
+#ifdef MOZ_MF_CDM
+  return new MFCDMParent(aKeySystem, this, sRemoteDecoderManagerParentThread);
+#else
+  return nullptr;
+#endif
+}
+
+bool RemoteDecoderManagerParent::DeallocPMFCDMParent(PMFCDMParent* actor) {
+#ifdef MOZ_MF_CDM
+  static_cast<MFCDMParent*>(actor)->Destroy();
 #endif
   return true;
 }
