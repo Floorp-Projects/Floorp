@@ -71,6 +71,28 @@ using namespace mozilla::gl;
 static const GLuint kCoordinateAttributeIndex = 0;
 static const GLuint kTexCoordinateAttributeIndex = 1;
 
+class DummyTextureSourceOGL : public TextureSource, public TextureSourceOGL {
+ public:
+  const char* Name() const override { return "DummyTextureSourceOGL"; }
+
+  TextureSourceOGL* AsSourceOGL() override { return this; }
+
+  void BindTexture(GLenum activetex,
+                   gfx::SamplingFilter aSamplingFilter) override {}
+
+  bool IsValid() const override { return false; }
+
+  gfx::IntSize GetSize() const override { return gfx::IntSize(); }
+
+  gfx::SurfaceFormat GetFormat() const override {
+    return gfx::SurfaceFormat::B8G8R8A8;
+  }
+
+  GLenum GetWrapMode() const override { return LOCAL_GL_CLAMP_TO_EDGE; }
+
+ protected:
+};
+
 class AsyncReadbackBufferOGL final : public AsyncReadbackBuffer {
  public:
   AsyncReadbackBufferOGL(GLContext* aGL, const IntSize& aSize);
@@ -372,9 +394,9 @@ bool CompositorOGL::Initialize(nsCString* const out_failureReason) {
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // initialise a common shader to check that we can actually compile a shader
-  RefPtr<EffectNV12> effect =
-      new EffectNV12(nullptr, YUVColorSpace::BT601, ColorRange::LIMITED,
-                     ColorDepth::COLOR_8, SamplingFilter::GOOD);
+  RefPtr<DummyTextureSourceOGL> source = new DummyTextureSourceOGL;
+  RefPtr<EffectRGB> effect =
+      new EffectRGB(source, /* aPremultiplied */ true, SamplingFilter::GOOD);
   ShaderConfigOGL config = GetShaderConfigFor(effect);
   if (!GetShaderProgramFor(config)) {
     *out_failureReason = "FEATURE_FAILURE_OPENGL_COMPILE_SHADER";
