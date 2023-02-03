@@ -71,6 +71,8 @@ int Resample(const AudioFrame& frame,
              const int destination_sample_rate,
              PushResampler<int16_t>* resampler,
              int16_t* destination) {
+  TRACE_EVENT2("webrtc", "Resample", "frame sample rate", frame.sample_rate_hz_,
+               "destination_sample_rate", destination_sample_rate);
   const int number_of_channels = static_cast<int>(frame.num_channels_);
   const int target_number_of_samples_per_channel =
       destination_sample_rate / 100;
