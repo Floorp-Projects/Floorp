@@ -17,7 +17,6 @@
 #include "nsThreadUtils.h"
 
 namespace mozilla {
-class MFCDMChild;
 
 /**
  * WMFCDMImpl is a helper class for MFCDM protocol clients. It creates, manages,
