@@ -157,6 +157,8 @@ ABSL_FLAG(bool, simulated_time, false, "Run in simulated time");
 
 ABSL_FLAG(bool, disable_preview, false, "Disable decoded video preview.");
 
+ABSL_FLAG(bool, disable_decoding, false, "Disable video decoding.");
+
 namespace {
 bool ValidatePayloadType(int32_t payload_type) {
   return payload_type > 0 && payload_type <= 127;
@@ -307,7 +309,13 @@ std::unique_ptr<StreamState> ConfigureFromFile(const std::string& config_path,
     return nullptr;
   }
 
-  stream_state->decoder_factory = std::make_unique<InternalDecoderFactory>();
+  if (absl::GetFlag(FLAGS_disable_decoding)) {
+    stream_state->decoder_factory =
+        std::make_unique<test::FunctionVideoDecoderFactory>(
+            []() { return std::make_unique<test::FakeDecoder>(); });
+  } else {
+    stream_state->decoder_factory = std::make_unique<InternalDecoderFactory>();
+  }
   size_t config_count = 0;
   for (const auto& json : json_configs) {
     // Create the configuration and parse the JSON into the config.
@@ -418,6 +426,10 @@ std::unique_ptr<StreamState> ConfigureFromFlags(
               absl::GetFlag(FLAGS_decoder_ivf_filename).c_str(),
               absl::GetFlag(FLAGS_codec));
         });
+  } else if (absl::GetFlag(FLAGS_disable_decoding)) {
+    stream_state->decoder_factory =
+        std::make_unique<test::FunctionVideoDecoderFactory>(
+            []() { return std::make_unique<test::FakeDecoder>(); });
   } else {
     stream_state->decoder_factory = std::make_unique<InternalDecoderFactory>();
   }
