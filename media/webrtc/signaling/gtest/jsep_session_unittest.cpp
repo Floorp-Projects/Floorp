@@ -306,6 +306,7 @@ class JsepSessionTest : public JsepSessionTestBase,
       RefPtr<JsepTransceiver> suitableTransceiver;
       size_t i;
       if (magic == ADDTRACK_MAGIC) {
+        // We're simulating addTrack.
         for (i = 0; i < side.GetTransceivers().size(); ++i) {
           auto transceiver = side.GetTransceivers()[i];
           if (transceiver->mSendTrack.GetMediaType() != type) {
@@ -324,12 +325,13 @@ class JsepSessionTest : public JsepSessionTestBase,
         i = side.GetTransceivers().size();
         suitableTransceiver = new JsepTransceiver(type, mUuidGen);
         side.AddTransceiver(suitableTransceiver);
+        if (magic == ADDTRACK_MAGIC) {
+          suitableTransceiver->SetAddTrackMagic();
+        }
       }
 
       std::cerr << "Updating send track for transceiver " << i << std::endl;
-      if (magic == ADDTRACK_MAGIC) {
-        suitableTransceiver->SetAddTrackMagic();
-      }
+      suitableTransceiver->SetOnlyExistsBecauseOfSetRemote(false);
       suitableTransceiver->mJsDirection |=
           SdpDirectionAttribute::Direction::kSendonly;
       suitableTransceiver->mSendTrack.UpdateStreamIds(
@@ -6459,10 +6461,8 @@ TEST_F(JsepSessionTest, AnswerWithoutVP8) {
 
 // Ok. Hear me out.
 // The JSEP spec specifies very different behavior for the following two cases:
-// 1. AddTrack either caused a transceiver to be created, or set the send
-// track on a preexisting transceiver.
-// 2. The transceiver was not created as a side-effect of AddTrack, and the
-// send track was put in place by some other means than AddTrack.
+// 1. AddTrack caused a transceiver to be created.
+// 2. The transceiver was not created as a side-effect of AddTrack.
 //
 // All together now...
 //
@@ -6885,9 +6885,7 @@ TEST_F(JsepSessionTest, NoAddTrackMagicReplaceTrack) {
   ASSERT_TRUE(mSessionAns->GetTransceivers()[3]->IsAssociated());
 }
 
-// Check that transceivers that were created without a send track, but that
-// were subsequently given a send track with addTrack, are now "magical".
-TEST_F(JsepSessionTest, AddTrackMakesTransceiverMagical) {
+TEST_F(JsepSessionTest, AddTrackDoesNotMakeTransceiverMagical) {
   types = BuildTypes("audio,video");
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
@@ -6912,7 +6910,9 @@ TEST_F(JsepSessionTest, AddTrackMakesTransceiverMagical) {
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsAssociated());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
 
-  // :D MAGIC! D:
+  // This attaches a track to the third transceiver, but does _not_ set the
+  // addTrack magic bit, meaning it will not auto-pair with the track added
+  // to the offerer.
   AddTracks(*mSessionAns, "audio");
 
   ASSERT_EQ(3U, mSessionAns->GetTransceivers().size());
@@ -6925,21 +6925,26 @@ TEST_F(JsepSessionTest, AddTrackMakesTransceiverMagical) {
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsStopped());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsAssociated());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
 
   OfferAnswer(CHECK_SUCCESS);
 
-  ASSERT_EQ(3U, mSessionAns->GetTransceivers().size());
+  // The offer's new transceiver does not pair up with the transceiver we added
+  ASSERT_EQ(4U, mSessionAns->GetTransceivers().size());
   ASSERT_EQ(0U, mSessionAns->GetTransceivers()[0]->GetLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[0]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[0]->IsAssociated());
   ASSERT_EQ(1U, mSessionAns->GetTransceivers()[1]->GetLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[1]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[1]->IsAssociated());
-  ASSERT_EQ(2U, mSessionAns->GetTransceivers()[2]->GetLevel());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsStopped());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->IsAssociated());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsAssociated());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_EQ(2U, mSessionAns->GetTransceivers()[3]->GetLevel());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[3]->IsStopped());
+  ASSERT_TRUE(mSessionAns->GetTransceivers()[3]->IsAssociated());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[3]->HasAddTrackMagic());
 }
 
 TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
@@ -6958,41 +6963,47 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
   ASSERT_FALSE(mSessionAns->GetTransceivers()[0]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[0]->IsAssociated());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[0]->HasAddTrackMagic());
-  ASSERT_FALSE(mSessionAns->GetTransceivers()[0]->WasCreatedBySetRemote());
+  ASSERT_FALSE(
+      mSessionAns->GetTransceivers()[0]->OnlyExistsBecauseOfSetRemote());
 
   // Second video transceiver, not matched with offer
   ASSERT_FALSE(mSessionAns->GetTransceivers()[1]->HasLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[1]->IsStopped());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[1]->IsAssociated());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[1]->HasAddTrackMagic());
-  ASSERT_FALSE(mSessionAns->GetTransceivers()[1]->WasCreatedBySetRemote());
+  ASSERT_FALSE(
+      mSessionAns->GetTransceivers()[1]->OnlyExistsBecauseOfSetRemote());
 
   // Audio transceiver, created due to application of SetRemote
   ASSERT_EQ(0U, mSessionAns->GetTransceivers()[2]->GetLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->IsAssociated());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->WasCreatedBySetRemote());
+  ASSERT_TRUE(
+      mSessionAns->GetTransceivers()[2]->OnlyExistsBecauseOfSetRemote());
 
   // Audio transceiver, created due to application of SetRemote
   ASSERT_EQ(1U, mSessionAns->GetTransceivers()[3]->GetLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[3]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[3]->IsAssociated());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[3]->HasAddTrackMagic());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[3]->WasCreatedBySetRemote());
+  ASSERT_TRUE(
+      mSessionAns->GetTransceivers()[3]->OnlyExistsBecauseOfSetRemote());
 
   // Audio transceiver, created due to application of SetRemote
   ASSERT_EQ(2U, mSessionAns->GetTransceivers()[4]->GetLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[4]->IsStopped());
   ASSERT_TRUE(mSessionAns->GetTransceivers()[4]->IsAssociated());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[4]->HasAddTrackMagic());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[4]->WasCreatedBySetRemote());
+  ASSERT_TRUE(
+      mSessionAns->GetTransceivers()[4]->OnlyExistsBecauseOfSetRemote());
 
-  // This will cause the first audio transceiver to become "magical", and
-  // thereby it will stick around after rollback, even though we clear it out
-  // with replaceTrack.
+  // This will prevent rollback from eating this transceiver, even though we
+  // call replaceTrack(null) on it.
   AddTracks(*mSessionAns, "audio");
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(
+      mSessionAns->GetTransceivers()[2]->OnlyExistsBecauseOfSetRemote());
   mSessionAns->GetTransceivers()[2]->mSendTrack.ClearStreamIds();
   mSessionAns->GetTransceivers()[2]->mJsDirection =
       SdpDirectionAttribute::Direction::kRecvonly;
@@ -7037,7 +7048,9 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasLevel());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsStopped());
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsAssociated());
-  ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
+  ASSERT_FALSE(
+      mSessionAns->GetTransceivers()[2]->OnlyExistsBecauseOfSetRemote());
   ASSERT_TRUE(IsNull(mSessionAns->GetTransceivers()[2]->mSendTrack));
   ASSERT_FALSE(mSessionAns->GetTransceivers()[2]->IsRemoved());
 

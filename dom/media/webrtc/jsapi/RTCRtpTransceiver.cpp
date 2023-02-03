@@ -584,8 +584,6 @@ void RTCRtpTransceiver::SetDirectionInternal(
 }
 
 void RTCRtpTransceiver::SetAddTrackMagic() {
-  // TODO(bug 1767820): Refactor this to only forbid removal, not to set the
-  // magic bit
   // We do this immediately, without waiting for a SyncToJsep, because this is
   // set at transceiver creation time.
   GetJsepTransceiver()->SetAddTrackMagic();

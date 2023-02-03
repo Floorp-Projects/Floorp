@@ -1390,9 +1390,9 @@ class RTCPeerConnection {
         streams,
         direction: "sendrecv",
       });
+      transceiver.setAddTrackMagic();
     }
 
-    transceiver.setAddTrackMagic();
     this.updateNegotiationNeeded();
     return transceiver.sender;
   }
