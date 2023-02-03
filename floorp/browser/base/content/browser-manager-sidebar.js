@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 if (Services.prefs.getPrefType("floorp.browser.sidebar2.customurl2") != 0) {
-    if (Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}" || Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "") {
+    if (!Services.prefs.prefHasUserValue("floorp.browser.sidebar2.data") || Services.prefs.getStringPref("floorp.browser.sidebar2.data", "") == "") {
         let updateObject = { "data": {}, "index": [] }
         let staticURL = ["floorp//bmt", "floorp//bookmarks", "floorp//history", "floorp//downloads", "floorp//tst"]
         for (let i = 0; i <= 4; i++) {
