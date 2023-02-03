@@ -174,6 +174,54 @@ IMFContentDecryptionModule : public IUnknown {
 
 #  endif /* __IMFContentDecryptionModule_INTERFACE_DEFINED__ */
 
+#  ifndef __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__
+#    define __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__
+
+/* interface IMFContentDecryptionModuleAccess */
+/* [unique][uuid][object] */
+
+EXTERN_C const IID IID_IMFContentDecryptionModuleAccess;
+
+MIDL_INTERFACE("a853d1f4-e2a0-4303-9edc-f1a68ee43136")
+IMFContentDecryptionModuleAccess : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE CreateContentDecryptionModule(
+      /* [in] */ __RPC__in_opt IPropertyStore *
+          contentDecryptionModuleProperties,
+      /* [out] */ __RPC__deref_out_opt IMFContentDecryptionModule *
+          *contentDecryptionModule) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE GetConfiguration(
+      /* [out] */ __RPC__deref_out_opt IPropertyStore * *configuration) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE GetKeySystem(
+      /* [out] */ __RPC__deref_out_opt LPWSTR * keySystem) = 0;
+};
+#  endif /* __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__ */
+
+#  ifndef __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__
+#    define __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__
+
+/* interface IMFContentDecryptionModuleFactory */
+/* [local][uuid][object] */
+
+EXTERN_C const IID IID_IMFContentDecryptionModuleFactory;
+MIDL_INTERFACE("7d5abf16-4cbb-4e08-b977-9ba59049943e")
+IMFContentDecryptionModuleFactory : public IUnknown {
+ public:
+  virtual BOOL STDMETHODCALLTYPE IsTypeSupported(
+      /* [in] */ LPCWSTR keySystem,
+      /* [optional][in] */ LPCWSTR contentType) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE CreateContentDecryptionModuleAccess(
+      /* [in] */ LPCWSTR keySystem,
+      /* [size_is][size_is][in] */ IPropertyStore * *configurations,
+      /* [in] */ DWORD numConfigurations,
+      /* [out] */ IMFContentDecryptionModuleAccess *
+          *contentDecryptionModuleAccess) = 0;
+};
+#  endif /* __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__ */
+
 #endif  //  defined(WINVER) && WINVER >= 0x0A00
 
 #endif  // DOM_MEDIA_PLATFORM_WMF_MFCDMEXTRA_H
