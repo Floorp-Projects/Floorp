@@ -54,10 +54,7 @@ define(function(require, exports, module) {
 
       const open = !this.state.open;
       if (open && !this.state.bodyJsonMl) {
-        const response = await getCustomFormatterBody(
-          this.props.front,
-          this.props.object.customFormatterIndex
-        );
+        const response = await this.props.front.customFormatterBody();
 
         const bodyJsonMl = renderJsonMl(response.customFormatterBody, {
           ...this.props,
@@ -224,10 +221,6 @@ define(function(require, exports, module) {
       },
       childElements
     );
-  }
-
-  async function getCustomFormatterBody(objectFront, customFormatterIndex) {
-    return objectFront.customFormatterBody(customFormatterIndex);
   }
 
   function supportsObject(grip) {

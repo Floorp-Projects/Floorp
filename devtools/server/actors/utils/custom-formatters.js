@@ -47,9 +47,10 @@ class FormatterError extends Error {
  *
  * @returns {Object} Data related to the custom formatter header:
  *          - {boolean} useCustomFormatter, indicating if a custom formatter is used.
- *          - {number} customFormatterIndex Index of the custom formatter in the formatters array.
  *          - {Array} header JsonML of the output header.
  *          - {boolean} hasBody True in case the custom formatter has a body.
+ *          - {Object} formatter The devtoolsFormatters item that was being used to format
+ *                               the object.
  */
 function customFormatterHeader(objectActor) {
   const rawValue = objectActor.rawValue();
@@ -99,7 +100,6 @@ function customFormatterHeader(objectActor) {
       // TODO: Any issues regarding the implementation will be covered in https://bugzil.la/1776611.
       try {
         const rv = processFormatterForHeader({
-          customFormatterIndex,
           customFormatterObjectTagDepth,
           valueDbgObj,
           configDbgObj,
@@ -144,8 +144,6 @@ exports.customFormatterHeader = customFormatterHeader;
  * @param {Object} options
  * @param {Object} formatter
  *        The raw formatter object (coming from "customFormatter" array).
- * @param {Number} customFormatterIndex
- *        Position of the formatter in the "customFormatter" array.
  * @param {Number} customFormatterObjectTagDepth
  *        See buildJsonMlFromCustomFormatterHookResult JSDoc.
  * @param {Object} rawValue
@@ -162,7 +160,6 @@ exports.customFormatterHeader = customFormatterHeader;
  * @returns {Object} See customFormatterHeader jsdoc, it returns the same object.
  */
 function processFormatterForHeader({
-  customFormatterIndex,
   customFormatterObjectTagDepth,
   formatter,
   valueDbgObj,
@@ -251,25 +248,28 @@ function processFormatterForHeader({
 
   return {
     useCustomFormatter: true,
-    customFormatterIndex,
     header: sanitizedHeader,
     hasBody: !!hasBody?.return,
+    formatter,
   };
 }
 
 /**
  * Handle a protocol request to get the custom formatter body for an object
  *
- * @param ObjectActor objectActor
- * @param number customFormatterIndex
- *        Index of the custom formatter used for the object
+ * @param {ObjectActor} objectActor
+ * @param {Object} formatter: The global.devtoolsFormatters entry that was used in customFormatterHeader
+ *                            for this object.
+ *
  * @returns {Object} Data related to the custom formatter body:
  *          - {*} customFormatterBody Data of the custom formatter body.
  */
-async function customFormatterBody(objectActor, customFormatterIndex) {
+async function customFormatterBody(objectActor, formatter) {
   const rawValue = objectActor.rawValue();
   const globalWrapper = Cu.getGlobalForObject(rawValue);
   const global = globalWrapper?.wrappedJSObject;
+
+  const customFormatterIndex = global.devtoolsFormatters.indexOf(formatter);
 
   // Use makeSideeffectFreeDebugger (from eval-with-debugger.js) and the debugger
   // object for each formatter and use `call` (https://searchfox.org/mozilla-central/rev/5e15e00fa247cba5b765727496619bf9010ed162/js/src/doc/Debugger/Debugger.Object.md#484)
@@ -282,8 +282,6 @@ async function customFormatterBody(objectActor, customFormatterIndex) {
     } = objectActor.hooks;
 
     const dbgGlobal = dbg.makeGlobalObjectReference(global);
-    const formatter = global.devtoolsFormatters[customFormatterIndex];
-
     if (_invalidCustomFormatterHooks.has(formatter)) {
       return {
         customFormatterBody: null,
