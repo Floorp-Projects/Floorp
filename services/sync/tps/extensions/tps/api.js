@@ -57,22 +57,6 @@ async function tpsStartup() {
   }
 }
 
-function onStartupFinished() {
-  return new Promise(resolve => {
-    const onStartupFinished = () => {
-      Services.obs.removeObserver(
-        onStartupFinished,
-        "browser-delayed-startup-finished"
-      );
-      resolve();
-    };
-    Services.obs.addObserver(
-      onStartupFinished,
-      "browser-delayed-startup-finished"
-    );
-  });
-}
-
 this.tps = class extends ExtensionAPI {
   onStartup() {
     resProto.setSubstitution(

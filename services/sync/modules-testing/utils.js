@@ -23,9 +23,6 @@ var EXPORTED_SYMBOLS = [
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
 const { Assert } = ChromeUtils.importESModule(
   "resource://testing-common/Assert.sys.mjs"
 );

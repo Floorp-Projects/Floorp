@@ -26,7 +26,6 @@ const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const {
   DEVICE_TYPE_DESKTOP,
   DEVICE_TYPE_MOBILE,
-  SCORE_INCREMENT_XLARGE,
   SINGLE_USER_THRESHOLD,
   SYNC_API_VERSION,
 } = ChromeUtils.import("resource://services-sync/constants.js");
