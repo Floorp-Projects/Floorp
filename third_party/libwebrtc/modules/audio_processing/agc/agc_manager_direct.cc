@@ -49,10 +49,6 @@ constexpr int kMaxResidualGainChange = 15;
 // restrictions from clipping events.
 constexpr int kSurplusCompressionGain = 6;
 
-// History size for the clipping predictor evaluator (unit: number of 10 ms
-// frames).
-constexpr int kClippingPredictorEvaluatorHistorySize = 500;
-
 // Target speech level (dBFs) and speech probability threshold used to compute
 // the RMS error override in `GetSpeechLevelErrorDb()`. These are only used for
 // computing the error override and they are not passed to `agc_`.
@@ -506,7 +502,6 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
       use_clipping_predictor_step_(
           !!clipping_predictor_ &&
           analog_config.clipping_predictor.use_predicted_step),
-      clipping_predictor_evaluator_(kClippingPredictorEvaluatorHistorySize),
       clipping_rate_log_(0.0f),
       clipping_rate_log_counter_(0) {
   RTC_LOG(LS_INFO) << "[agc] analog controller enabled: "
@@ -546,7 +541,6 @@ void AgcManagerDirect::Initialize() {
   capture_output_used_ = true;
 
   AggregateChannelLevels();
-  clipping_predictor_evaluator_.Reset();
   clipping_rate_log_ = 0.0f;
   clipping_rate_log_counter_ = 0;
 }
@@ -625,14 +619,6 @@ void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
         clipping_predicted = true;
       }
     }
-    // Clipping prediction evaluation.
-    // `clipping_detected` is not used to evaluate the clipping predictor
-    // since for this purpose a single clipping sample counts as clipping.
-    const bool one_or_more_clipped_samples =
-        clipped_ratio >= (1.0f / samples_per_channel);
-    // TODO(webrtc:7494): Remove the evaluator, the result is not used.
-    clipping_predictor_evaluator_.Observe(
-        /*clipping_detected=*/one_or_more_clipped_samples, clipping_predicted);
   }
   if (clipping_detected) {
     RTC_DLOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
@@ -654,7 +640,6 @@ void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
     frames_since_clipped_ = 0;
     if (!!clipping_predictor_) {
       clipping_predictor_->Reset();
-      clipping_predictor_evaluator_.RemoveExpectations();
     }
   }
   AggregateChannelLevels();

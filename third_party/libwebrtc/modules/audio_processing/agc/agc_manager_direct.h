@@ -18,7 +18,6 @@
 #include "api/array_view.h"
 #include "modules/audio_processing/agc/agc.h"
 #include "modules/audio_processing/agc2/clipping_predictor.h"
-#include "modules/audio_processing/agc2/clipping_predictor_evaluator.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
@@ -182,7 +181,6 @@ class AgcManagerDirect final {
 
   const std::unique_ptr<ClippingPredictor> clipping_predictor_;
   const bool use_clipping_predictor_step_;
-  ClippingPredictorEvaluator clipping_predictor_evaluator_;
   float clipping_rate_log_;
   int clipping_rate_log_counter_;
 };
