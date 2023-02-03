@@ -10,6 +10,7 @@
 #include "api/test/metrics/print_result_proxy_metrics_exporter.h"
 
 #include <string>
+#include <unordered_set>
 
 #include "api/array_view.h"
 #include "api/test/metrics/metric.h"
@@ -67,10 +68,40 @@ bool IsEmpty(const Metric::Stats& stats) {
          !stats.min.has_value() && !stats.max.has_value();
 }
 
+bool NameEndsWithConnected(const std::string& name) {
+  static const std::string suffix = "_connected";
+  return name.size() >= suffix.size() &&
+         0 == name.compare(name.size() - suffix.size(), suffix.size(), suffix);
+}
+
 }  // namespace
 
 bool PrintResultProxyMetricsExporter::Export(
     rtc::ArrayView<const Metric> metrics) {
+  static const std::unordered_set<std::string> per_call_metrics{
+      "actual_encode_bitrate",
+      "encode_frame_rate",
+      "harmonic_framerate",
+      "max_skipped",
+      "min_psnr_dB",
+      "retransmission_bitrate",
+      "sent_packets_loss",
+      "transmission_bitrate",
+      "dropped_frames",
+      "frames_in_flight",
+      "rendered_frames",
+      "average_receive_rate",
+      "average_send_rate",
+      "bytes_discarded_no_receiver",
+      "bytes_received",
+      "bytes_sent",
+      "packets_discarded_no_receiver",
+      "packets_received",
+      "packets_sent",
+      "payload_bytes_received",
+      "payload_bytes_sent",
+      "cpu_usage"};
+
   for (const Metric& metric : metrics) {
     if (metric.time_series.samples.empty() && IsEmpty(metric.stats)) {
       // If there were no data collected for the metric it is expected that 0
@@ -93,7 +124,9 @@ bool PrintResultProxyMetricsExporter::Export(
       continue;
     }
 
-    if (metric.time_series.samples.size() == 1lu) {
+    if (metric.time_series.samples.size() == 1lu &&
+        (per_call_metrics.count(metric.name) > 0 ||
+         NameEndsWithConnected(metric.name))) {
       // Increase backwards compatibility for 1 value use case.
       PrintResult(
           metric.name, /*modifier=*/"", metric.test_case,
