@@ -15,7 +15,6 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   // label of selected option or value of textfield for editable menu lists
   readonly attribute AString label;
 
-  attribute AString crop;
   attribute AString image;
 
   // For editable menu lists only.

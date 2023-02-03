@@ -11,7 +11,6 @@ webidl Element;
 [scriptable, uuid(5c6be58f-17df-4750-88a5-4a59ac28adc9)]
 interface nsIDOMXULSelectControlItemElement : nsISupports {
   attribute boolean disabled;
-  attribute AString crop;
   attribute AString image;
   attribute AString label;
   attribute AString accessKey;

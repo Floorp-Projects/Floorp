@@ -262,12 +262,6 @@
       return true;
     }
 
-    set crop(val) {}
-
-    get crop() {
-      return false;
-    }
-
     set open(val) {
       if (val) {
         this.showHistoryPopup();
