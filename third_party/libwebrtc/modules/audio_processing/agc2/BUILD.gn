@@ -181,6 +181,23 @@ rtc_source_set("gain_map") {
   sources = [ "gain_map_internal.h" ]
 }
 
+rtc_library("input_volume_controller") {
+  sources = [
+    "speech_probability_buffer.cc",
+    "speech_probability_buffer.h",
+  ]
+
+  visibility = [
+    "..:gain_controller2",
+    "./*",
+  ]
+
+  deps = [
+    "../../../rtc_base:checks",
+    "../../../rtc_base:gtest_prod",
+  ]
+}
+
 rtc_library("noise_level_estimator") {
   sources = [
     "noise_level_estimator.cc",
@@ -318,6 +335,7 @@ rtc_library("input_volume_controller_unittests") {
     "clipping_predictor_evaluator_unittest.cc",
     "clipping_predictor_level_buffer_unittest.cc",
     "clipping_predictor_unittest.cc",
+    "speech_probability_buffer_unittest.cc",
   ]
 
   configs += [ "..:apm_debug_dump" ]
@@ -326,6 +344,7 @@ rtc_library("input_volume_controller_unittests") {
     ":clipping_predictor",
     ":clipping_predictor_evaluator",
     ":gain_map",
+    ":input_volume_controller",
     "../../../rtc_base:checks",
     "../../../rtc_base:random",
     "../../../rtc_base:safe_conversions",
