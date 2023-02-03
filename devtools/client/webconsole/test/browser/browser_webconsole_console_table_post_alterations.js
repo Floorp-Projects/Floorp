@@ -58,23 +58,11 @@ add_task(async function() {
 });
 
 function checkTable(node, expectedRows) {
-  const columns = Array.from(node.querySelectorAll("[role=columnheader]"));
-  const columnsNumber = columns.length;
-  const cells = Array.from(node.querySelectorAll("[role=gridcell]"));
-
-  // We don't really have rows since we are using a CSS grid in order to have a sticky
-  // header on the table. So we check the "rows" by dividing the number of cells by the
-  // number of columns.
-  is(
-    cells.length / columnsNumber,
-    expectedRows.length,
-    "table has the expected number of rows"
-  );
+  const rows = Array.from(node.querySelectorAll("tbody tr"));
+  is(rows.length, expectedRows.length, "table has the expected number of rows");
 
   expectedRows.forEach((expectedRow, rowIndex) => {
-    const startIndex = rowIndex * columnsNumber;
-    // Slicing the cells array so we can get the current "row".
-    const rowCells = cells.slice(startIndex, startIndex + columnsNumber);
+    const rowCells = Array.from(rows[rowIndex].querySelectorAll("td"));
     is(rowCells.map(x => x.textContent).join(" | "), expectedRow.join(" | "));
   });
 }

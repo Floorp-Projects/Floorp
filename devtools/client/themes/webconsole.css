@@ -761,45 +761,56 @@ a.learn-more-link.webconsole-learn-more-link {
   color: var(--theme-comment);
 }
 
+
 /* console.table() */
+.message .consoletable-wrapper {
+  --consoletable-border: var(--theme-splitter-color);
+
+  max-height: 250px;
+  overflow: auto;
+  position: relative;
+  border-width: 1px 0 0 1px;
+  padding: 0;
+  margin-block-end: var(--attachment-margin-block-end);
+  border: 1px solid var(--consoletable-border);
+}
+
 .message .consoletable {
   width: 100%;
-  --consoletable-border: var(--theme-splitter-color);
-  margin-block-end: var(--attachment-margin-block-end);
+  margin: 0;
   color: var(--theme-body-color);
-  display: grid;
-  max-height: 250px;
-  overflow-y: auto;
-  border: 1px solid var(--consoletable-border);
-  /* border at the left side will be added by the inner divs [role=gridcell] */
-  border-left: none;
+  border-spacing: 0;
 }
 
-.consoletable > div {
-  border-left: 1px solid var(--consoletable-border);
+.consoletable :is(th, td) {
+  border: 0 solid var(--consoletable-border);
+  text-overflow: ellipsis;
 }
 
-.consoletable-header {
+.consoletable :is(th, td) + :is(th, td) {
+  border-inline-start-width: 1px;
+}
+
+.consoletable th {
   position: sticky;
   top: 0;
-  border-bottom: 1px solid var(--consoletable-border);
   background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color);
+  border-block-end-width: 1px;
   margin: 0;
   padding: 5px 4px;
   font-weight: inherit;
-  z-index: 1;
-  text-overflow: ellipsis;
 }
 
-.consoletable > [role="gridcell"] {
+.consoletable td {
   background-color: var(--theme-body-background);
   color: var(--theme-body-color);
   padding: 3px 4px;
-  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
 }
 
-.consoletable > [role="gridcell"].even {
+
+.consoletable tr.even td {
   background-color: var(--table-zebra-background);
 }
 
