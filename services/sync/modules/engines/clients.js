@@ -246,7 +246,7 @@ ClientEngine.prototype = {
     }
     // Sometimes the sync clients don't always correctly update the device name
     // However FxA always does, so try to pull the name from there first
-    let fxaDevice = this.fxAccounts.device.recentDeviceList.find(
+    let fxaDevice = this.fxAccounts.device.recentDeviceList?.find(
       device => device.id === client.fxaDeviceId
     );
 
