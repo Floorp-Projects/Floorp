@@ -15,6 +15,11 @@
 
 import { GeckoViewActorParent } from "resource://gre/modules/GeckoViewActorParent.sys.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
+
 class FindHandler {
   #browser;
 
@@ -157,8 +162,68 @@ class FindHandler {
   }
 }
 
+class FileSaver {
+  #browser;
+
+  #callback = null;
+
+  constructor(aBrowser) {
+    this.#browser = aBrowser;
+  }
+
+  cleanup() {
+    this.#callback = null;
+  }
+
+  onEvent(aEvent, aData, aCallback) {
+    if (
+      this.#browser.contentPrincipal.spec !==
+      "resource://pdf.js/web/viewer.html"
+    ) {
+      return;
+    }
+
+    this.#callback = aCallback;
+    this.#browser.sendMessageToActor(
+      "PDFJS:Child:handleEvent",
+      {
+        type: "save",
+      },
+      "GeckoViewPdfjs"
+    );
+  }
+
+  async save({ blobUrl, filename }) {
+    if (!this.#callback) {
+      warn`Save a PDF: No callback !`;
+      return;
+    }
+
+    try {
+      const isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+        this.#browser
+      );
+      const response = await fetch(blobUrl);
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      this.#callback.onSuccess({
+        bytes,
+        filename,
+        isPrivate,
+      });
+      debug`Save a PDF: ${bytes.length} bytes sent.`;
+    } catch (e) {
+      this.#callback.onError(`Cannot save the pdf: ${e}.`);
+    } finally {
+      this.cleanup();
+    }
+  }
+}
+
 export class GeckoViewPdfjsParent extends GeckoViewActorParent {
   #findHandler;
+
+  #fileSaver;
 
   receiveMessage(aMsg) {
     debug`receiveMessage: name=${aMsg.name}, data=${aMsg.data}`;
@@ -170,6 +235,8 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
         return this.#updateMatchesCount(aMsg);
       case "PDFJS:Parent:addEventListener":
         return this.#addEventListener();
+      case "PDFJS:Parent:saveURL":
+        return this.#save(aMsg);
       default:
         break;
     }
@@ -191,6 +258,12 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
     ]);
     this.#findHandler.cleanup();
     this.#findHandler = null;
+
+    this.eventDispatcher.unregisterListener(this.#fileSaver, [
+      "GeckoView:PDFSave",
+    ]);
+    this.#fileSaver.cleanup();
+    this.#fileSaver = null;
   }
 
   #addEventListener() {
@@ -205,6 +278,11 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       "GeckoView:DisplayMatches",
       "GeckoView:FindInPage",
     ]);
+
+    this.#fileSaver = new FileSaver(this.browser);
+    this.eventDispatcher.registerListener(this.#fileSaver, [
+      "GeckoView:PDFSave",
+    ]);
   }
 
   #updateMatchesCount({ data }) {
@@ -213,6 +291,10 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
 
   #updateControlState({ data: { matchesCount, result } }) {
     this.#findHandler.updateMatchesCount(matchesCount, result);
+  }
+
+  #save({ data }) {
+    this.#fileSaver.save(data);
   }
 }
 

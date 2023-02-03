@@ -100,6 +100,7 @@ import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.ScreenLength;
 import org.mozilla.geckoview.SessionAccessibility;
 import org.mozilla.geckoview.SessionFinder;
+import org.mozilla.geckoview.SessionPdfFileSaver;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.StorageController;
@@ -903,6 +904,7 @@ package org.mozilla.geckoview {
     method @UiThread public void getPageToScreenMatrix(@NonNull Matrix);
     method @UiThread public void getPageToSurfaceMatrix(@NonNull Matrix);
     method @NonNull @UiThread public PanZoomController getPanZoomController();
+    method @AnyThread @NonNull public SessionPdfFileSaver getPdfFileSaver();
     method @Nullable @UiThread public GeckoSession.PermissionDelegate getPermissionDelegate();
     method @AnyThread @Nullable public GeckoSession.PrintDelegate getPrintDelegate();
     method @Nullable @UiThread public GeckoSession.ProgressDelegate getProgressDelegate();
@@ -920,6 +922,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void goForward(boolean);
     method @AnyThread public void gotoHistoryIndex(int);
     method @UiThread public boolean isOpen();
+    method @AnyThread @NonNull public GeckoResult<Boolean> isPdfJs();
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
     method @AnyThread public void loadUri(@NonNull String);
     method @UiThread public void open(@NonNull GeckoRuntime);
@@ -1132,6 +1135,13 @@ package org.mozilla.geckoview {
     field public final int target;
     field @Nullable public final String triggerUri;
     field @NonNull public final String uri;
+  }
+
+  @AnyThread public static class GeckoSession.PdfSaveResult {
+    ctor protected PdfSaveResult();
+    field @NonNull public final byte[] bytes;
+    field @NonNull public final String filename;
+    field public final boolean isPrivate;
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.Permission {
@@ -1923,6 +1933,10 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoResult<GeckoSession.FinderResult> find(@Nullable String, int);
     method public int getDisplayFlags();
     method public void setDisplayFlags(int);
+  }
+
+  @AnyThread public final class SessionPdfFileSaver {
+    method @NonNull public GeckoResult<GeckoSession.PdfSaveResult> save();
   }
 
   public final class SessionTextInput {

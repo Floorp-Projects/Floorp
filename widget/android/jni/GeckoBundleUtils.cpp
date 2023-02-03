@@ -11,6 +11,7 @@
 #include "nsJSUtils.h"
 
 #include "js/Array.h"
+#include "js/experimental/TypedData.h"
 
 namespace mozilla::jni {
 namespace detail {
@@ -84,6 +85,20 @@ nsresult BoxArrayPrimitive(JSContext* aCx, JS::Handle<JSObject*> aData,
     data[i] = (element.get().*ToType)();
   }
   aOut = (*NewArray)(data.get(), aLength);
+  return NS_OK;
+}
+
+nsresult BoxByteArray(JSContext* aCx, JS::Handle<JSObject*> aData,
+                      jni::Object::LocalRef& aOut) {
+  JS::AutoCheckCannotGC nogc;
+  bool isShared = false;
+  const void* data = JS_GetArrayBufferViewData(aData, &isShared, nogc);
+  size_t length = JS_GetArrayBufferViewByteLength(aData);
+
+  aOut = jni::ByteArray::New(reinterpret_cast<const int8_t*>(data), length);
+  if (!aOut) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -206,6 +221,10 @@ nsresult BoxObject(JSContext* aCx, JS::Handle<JS::Value> aData,
   bool isArray = false;
   if (CheckJS(aCx, JS::IsArrayObject(aCx, obj, &isArray)) && isArray) {
     return BoxArray(aCx, obj, aOut);
+  }
+
+  if (JS_IsTypedArrayObject(obj)) {
+    return BoxByteArray(aCx, obj, aOut);
   }
 
   NS_ENSURE_TRUE(CheckJS(aCx, JS_Enumerate(aCx, obj, &ids)), NS_ERROR_FAILURE);
