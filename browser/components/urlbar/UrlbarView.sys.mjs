@@ -1379,7 +1379,7 @@ export class UrlbarView {
       provider.getViewTemplate ||
       oldResult.isBestMatch != result.isBestMatch ||
       (!lazy.UrlbarPrefs.get("resultMenu") &&
-        (!!result.payload.helpUrl != item._buttons.has("block") ||
+        (!!result.payload.helpUrl != item._buttons.has("help") ||
           !!result.payload.isBlockable != item._buttons.has("block"))) ||
       !!this.#getResultMenuCommands(result) != item._buttons.has("menu") ||
       !lazy.ObjectUtils.deepEqual(
