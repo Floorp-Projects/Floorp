@@ -25,6 +25,7 @@ module.exports = {
       useStaticImport:
         "Please use static import instead of ChromeUtils.importESModule",
     },
+    schema: [],
     type: "suggestion",
   },
 

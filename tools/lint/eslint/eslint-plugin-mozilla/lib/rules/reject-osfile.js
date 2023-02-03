@@ -28,6 +28,7 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-osfile.html",
     },
+    schema: [],
     type: "problem",
   },
 

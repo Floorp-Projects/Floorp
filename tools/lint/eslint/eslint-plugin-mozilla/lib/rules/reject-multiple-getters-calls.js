@@ -30,6 +30,7 @@ module.exports = {
       rejectMultipleCalls:
         "ChromeUtils.defineESModuleGetters is already called for {{target}} in the same context. Please merge those calls",
     },
+    schema: [],
     type: "suggestion",
   },
 

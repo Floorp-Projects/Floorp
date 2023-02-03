@@ -17,6 +17,7 @@ module.exports = {
     messages: {
       rejectRequiresAwait: "Assert.rejects needs to be preceded by await.",
     },
+    schema: [],
     type: "problem",
   },
 

@@ -101,6 +101,7 @@ module.exports = {
       unknownProperty:
         "Use of unknown property Ci.{{ interface }}.{{ property }}",
     },
+    schema: [],
     type: "problem",
   },
 

@@ -50,6 +50,7 @@ module.exports = {
       unknownProperty:
         "Unknown property access Services.{{ alias }}.{{ propertyName }}, Interfaces: {{ checkedInterfaces }}",
     },
+    schema: [],
     type: "problem",
   },
 

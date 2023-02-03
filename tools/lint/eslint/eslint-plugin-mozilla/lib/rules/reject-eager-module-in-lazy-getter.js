@@ -43,6 +43,7 @@ module.exports = {
       eagerModule:
         'Module "{{uri}}" is known to be loaded early in the startup process, and should be loaded eagerly, instead of defining a lazy getter.',
     },
+    schema: [],
     type: "problem",
   },
 

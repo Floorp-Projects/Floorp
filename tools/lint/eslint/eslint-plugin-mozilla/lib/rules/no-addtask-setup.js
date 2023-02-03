@@ -15,8 +15,9 @@ function isNamedLikeSetup(name) {
 
 module.exports = {
   meta: {
-    type: "suggestion",
     fixable: "code",
+    schema: [],
+    type: "suggestion",
   },
   create(context) {
     return {

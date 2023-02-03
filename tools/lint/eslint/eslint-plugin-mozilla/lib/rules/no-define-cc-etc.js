@@ -16,6 +16,7 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-define-cc-etc.html",
     },
+    schema: [],
     type: "suggestion",
   },
 

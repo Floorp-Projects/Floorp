@@ -15,6 +15,7 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/valid-services.html",
     },
+    schema: [],
     type: "problem",
   },
 
