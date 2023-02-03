@@ -2631,6 +2631,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":stream_collection",
       ":video_track_source",
       "../api:audio_options_api",
+      "../api:call_api",
       "../api:create_frame_generator",
       "../api:create_peerconnection_factory",
       "../api:field_trials_view",

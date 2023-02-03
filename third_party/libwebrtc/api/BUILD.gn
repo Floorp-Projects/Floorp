@@ -158,6 +158,7 @@ rtc_library("candidate") {
 rtc_source_set("turn_customizer") {
   visibility = [ "*" ]
   sources = [ "turn_customizer.h" ]
+  deps = [ "transport:stun_types" ]
 }
 
 rtc_source_set("ice_transport_interface") {

@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "api/call/audio_sink.h"
 #include "media/base/media_channel.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"

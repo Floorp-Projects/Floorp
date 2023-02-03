@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/video_codecs/sdp_video_format.h"
 #include "modules/video_coding/codecs/av1/dav1d_decoder.h"
 
 namespace webrtc {
