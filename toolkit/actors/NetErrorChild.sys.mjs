@@ -32,6 +32,7 @@ export class NetErrorChild extends RemotePageChild {
       "RPMOpenPreferences",
       "RPMGetTRRSkipReason",
       "RPMGetTRRDomain",
+      "RPMIsSiteSpecificTRRError",
     ];
     this.exportFunctions(exportableFunctions);
   }
@@ -175,11 +176,15 @@ export class NetErrorChild extends RemotePageChild {
     return lazy.AppInfo.isFirefox;
   }
 
-  RPMIsNativeFallbackFailure() {
+  _getTRRSkipReason() {
     let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
       Ci.nsIHttpChannelInternal
     );
-    let value = channel?.trrSkipReason ?? Ci.nsITRRSkipReason.TRR_UNSET;
+    return channel?.trrSkipReason ?? Ci.nsITRRSkipReason.TRR_UNSET;
+  }
+
+  RPMIsNativeFallbackFailure() {
+    let skipReason = this._getTRRSkipReason();
 
     const warningReasons = new Set([
       Ci.nsITRRSkipReason.TRR_NOT_CONFIRMED,
@@ -198,19 +203,27 @@ export class NetErrorChild extends RemotePageChild {
 
     return (
       Services.dns.currentTrrMode == Ci.nsIRequest.TRR_FIRST_MODE &&
-      warningReasons.has(value)
+      warningReasons.has(skipReason)
     );
   }
 
   RPMGetTRRSkipReason() {
-    let channel = this.contentWindow?.docShell?.failedChannel?.QueryInterface(
-      Ci.nsIHttpChannelInternal
-    );
-    let value = channel?.trrSkipReason ?? Ci.nsITRRSkipReason.TRR_UNSET;
-    return Services.dns.getTRRSkipReasonName(value);
+    let skipReason = this._getTRRSkipReason();
+    return Services.dns.getTRRSkipReasonName(skipReason);
   }
 
   RPMGetTRRDomain() {
     return Services.dns.trrDomain;
+  }
+
+  RPMIsSiteSpecificTRRError() {
+    let skipReason = this._getTRRSkipReason();
+    switch (skipReason) {
+      case Ci.nsITRRSkipReason.TRR_NXDOMAIN:
+      case Ci.nsITRRSkipReason.TRR_RCODE_FAIL:
+      case Ci.nsITRRSkipReason.TRR_NO_ANSWERS:
+        return true;
+    }
+    return false;
   }
 }

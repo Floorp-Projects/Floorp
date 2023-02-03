@@ -37,5 +37,6 @@ module.exports = {
     RPMOpenPreferences: false,
     RPMGetTRRSkipReason: false,
     RPMGetTRRDomain: false,
+    RPMIsSiteSpecificTRRError: false,
   },
 };
