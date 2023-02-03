@@ -69,7 +69,8 @@ class VCMTiming {
 
   // Used to report that a frame is passed to decoding. Updates the timestamp
   // filter which is used to map between timestamps and receiver system time.
-  void IncomingTimestamp(uint32_t rtp_timestamp, Timestamp last_packet_time);
+  virtual void IncomingTimestamp(uint32_t rtp_timestamp,
+                                 Timestamp last_packet_time);
 
   // Returns the receiver system time when the frame with timestamp
   // `frame_timestamp` should be rendered, assuming that the system time
