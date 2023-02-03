@@ -50,6 +50,7 @@ module.exports = {
       rejectLazyImportsIntoGlobals:
         "Non-system modules should not import into globalThis nor window. Prefer a lazy object holder",
     },
+    schema: [],
     type: "suggestion",
   },
 

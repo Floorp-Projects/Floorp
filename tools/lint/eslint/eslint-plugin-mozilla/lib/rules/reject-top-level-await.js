@@ -20,6 +20,7 @@ module.exports = {
       rejectTopLevelAwait:
         "Top-level await is not currently supported in component files.",
     },
+    schema: [],
     type: "problem",
   },
 

@@ -61,6 +61,7 @@ module.exports = {
       topLevelAndUnconditional:
         "Lazy property {{name}} is used at top-level unconditionally. It should be non-lazy.",
     },
+    schema: [],
     type: "problem",
   },
 

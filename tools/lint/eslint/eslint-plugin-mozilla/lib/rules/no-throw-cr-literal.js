@@ -52,6 +52,7 @@ module.exports = {
       newErrorComponentsResults:
         "Do not pass Components.results.ERRORs to new Error(), use Components.Exception instead",
     },
+    schema: [],
     type: "problem",
   },
 

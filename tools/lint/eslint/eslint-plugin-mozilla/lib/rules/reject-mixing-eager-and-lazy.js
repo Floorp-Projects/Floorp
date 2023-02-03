@@ -44,6 +44,7 @@ module.exports = {
       mixedEagerAndLazy:
         'Module "{{uri}}" is loaded eagerly, and should not be used for lazy getter.',
     },
+    schema: [],
     type: "problem",
   },
 

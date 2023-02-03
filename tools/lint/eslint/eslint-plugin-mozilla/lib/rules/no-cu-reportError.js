@@ -78,6 +78,7 @@ module.exports = {
     messages: {
       useConsoleError: "Please use console.error instead of Cu.reportError",
     },
+    schema: [],
     type: "suggestion",
   },
 

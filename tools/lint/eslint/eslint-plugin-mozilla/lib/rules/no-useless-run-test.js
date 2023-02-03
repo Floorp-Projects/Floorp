@@ -15,6 +15,7 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-run-test.html",
     },
     fixable: "code",
+    schema: [],
     type: "suggestion",
   },
 

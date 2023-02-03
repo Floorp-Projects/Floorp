@@ -16,6 +16,7 @@ module.exports = {
       rejectStaticImportSystemModuleFromNonSystem:
         "System modules (*.sys.mjs) can be imported with static import declaration only from system modules.",
     },
+    schema: [],
     type: "problem",
   },
 

@@ -29,6 +29,7 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-chromeutils-import-params.html",
     },
     hasSuggestions: true,
+    schema: [],
     type: "problem",
   },
 

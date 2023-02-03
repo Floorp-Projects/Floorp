@@ -19,6 +19,7 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/lazy-getter-object-name.html",
     },
+    schema: [],
     type: "problem",
   },
 

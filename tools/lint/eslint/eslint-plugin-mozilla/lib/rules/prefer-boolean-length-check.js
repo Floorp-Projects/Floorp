@@ -63,6 +63,7 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-boolean-length-check.html",
     },
     fixable: "code",
+    schema: [],
     type: "suggestion",
   },
 

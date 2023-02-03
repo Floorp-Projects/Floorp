@@ -28,6 +28,7 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-import.html",
     },
     fixable: "code",
+    schema: [],
     type: "suggestion",
   },
 

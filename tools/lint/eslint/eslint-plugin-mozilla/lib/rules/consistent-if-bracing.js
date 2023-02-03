@@ -17,6 +17,7 @@ module.exports = {
     messages: {
       consistentIfBracing: "Bracing of if..else bodies should be consistent.",
     },
+    schema: [],
     type: "layout",
   },
 
