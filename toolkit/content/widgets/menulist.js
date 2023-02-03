@@ -159,16 +159,6 @@
     }
 
     // nsIDOMXULMenuListElement
-    set crop(val) {
-      this.setAttribute("crop", val);
-    }
-
-    // nsIDOMXULMenuListElement
-    get crop() {
-      return this.getAttribute("crop");
-    }
-
-    // nsIDOMXULMenuListElement
     set image(val) {
       this.setAttribute("image", val);
     }
