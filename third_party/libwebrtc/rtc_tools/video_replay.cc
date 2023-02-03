@@ -155,6 +155,8 @@ ABSL_FLAG(
 
 ABSL_FLAG(bool, simulated_time, false, "Run in simulated time");
 
+ABSL_FLAG(bool, disable_preview, false, "Disable decoded video preview.");
+
 namespace {
 bool ValidatePayloadType(int32_t payload_type) {
   return payload_type > 0 && payload_type <= 127;
@@ -177,6 +179,11 @@ namespace webrtc {
 namespace {
 
 const uint32_t kReceiverLocalSsrc = 0x123456;
+
+class NullRenderer : public rtc::VideoSinkInterface<VideoFrame> {
+ public:
+  void OnFrame(const VideoFrame& frame) override {}
+};
 
 class FileRenderPassthrough : public rtc::VideoSinkInterface<VideoFrame> {
  public:
@@ -314,9 +321,13 @@ std::unique_ptr<StreamState> ConfigureFromFile(const std::string& config_path,
     // Create a window for this config.
     std::stringstream window_title;
     window_title << "Playback Video (" << config_count++ << ")";
-    stream_state->sinks.emplace_back(test::VideoRenderer::Create(
-        window_title.str().c_str(), absl::GetFlag(FLAGS_render_width),
-        absl::GetFlag(FLAGS_render_height)));
+    if (absl::GetFlag(FLAGS_disable_preview)) {
+      stream_state->sinks.emplace_back(std::make_unique<NullRenderer>());
+    } else {
+      stream_state->sinks.emplace_back(test::VideoRenderer::Create(
+          window_title.str().c_str(), absl::GetFlag(FLAGS_render_width),
+          absl::GetFlag(FLAGS_render_height)));
+    }
     // Create a receive stream for this config.
     receive_config.renderer = stream_state->sinks.back().get();
     receive_config.decoder_factory = stream_state->decoder_factory.get();
@@ -335,10 +346,14 @@ std::unique_ptr<StreamState> ConfigureFromFlags(
   // them from deallocating.
   std::stringstream window_title;
   window_title << "Playback Video (" << rtp_dump_path << ")";
-  std::unique_ptr<test::VideoRenderer> playback_video(
-      test::VideoRenderer::Create(window_title.str().c_str(),
-                                  absl::GetFlag(FLAGS_render_width),
-                                  absl::GetFlag(FLAGS_render_height)));
+  std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> playback_video;
+  if (absl::GetFlag(FLAGS_disable_preview)) {
+    playback_video = std::make_unique<NullRenderer>();
+  } else {
+    playback_video.reset(test::VideoRenderer::Create(
+        window_title.str().c_str(), absl::GetFlag(FLAGS_render_width),
+        absl::GetFlag(FLAGS_render_height)));
+  }
   auto file_passthrough = std::make_unique<FileRenderPassthrough>(
       absl::GetFlag(FLAGS_out_base), playback_video.get());
   stream_state->sinks.push_back(std::move(playback_video));
