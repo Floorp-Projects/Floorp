@@ -979,7 +979,10 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 }
 
 bool Http3Session::CanReuse() {
-  return CanSandData() && !(mGoawayReceived || mShouldClose);
+  // TODO: we assume "pooling" is disabled here, so we don't allow this session
+  // to be reused.  Bug 1814761
+  return CanSandData() && !(mGoawayReceived || mShouldClose) &&
+         !mConnInfo->GetWebTransport();
 }
 
 void Http3Session::QueueStream(Http3StreamBase* stream) {
