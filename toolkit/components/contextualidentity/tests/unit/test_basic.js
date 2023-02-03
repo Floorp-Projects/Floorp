@@ -29,6 +29,12 @@ add_task(function() {
   ok(!!cis.getPublicIdentityFromId(2), "Identity 2 exists");
   ok(!!cis.getPublicIdentityFromId(3), "Identity 3 exists");
   ok(!!cis.getPublicIdentityFromId(4), "Identity 4 exists");
+
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    cis.getPublicIdentities().map(ident => ident.userContextId),
+    "getPublicUserContextIds has matching user context IDs"
+  );
 });
 
 // Make sure we are not allowed to only use whitespaces as a container name
@@ -94,6 +100,12 @@ add_task(function() {
     "Identity label is OK"
   );
 
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    cis.getPublicIdentities().map(ident => ident.userContextId),
+    "getPublicUserContextIds has matching user context IDs"
+  );
+
   // Remove an identity
   equal(
     cis.remove(-1),
@@ -103,6 +115,11 @@ add_task(function() {
   equal(cis.remove(1), true, "cis.remove() returns true if identity exists.");
 
   equal(cis.getPublicIdentities().length, 4, "Expected 4 containers.");
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    cis.getPublicIdentities().map(ident => ident.userContextId),
+    "getPublicUserContextIds has matching user context IDs"
+  );
 });
 
 // Update an identity

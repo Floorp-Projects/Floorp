@@ -423,6 +423,12 @@ _ContextualIdentityService.prototype = {
     }
   },
 
+  getPublicUserContextIds() {
+    return this._identities
+      .filter(identity => identity.public)
+      .map(identity => identity.userContextId);
+  },
+
   getPrivateUserContextIds() {
     return this._identities
       .filter(identity => !identity.public)

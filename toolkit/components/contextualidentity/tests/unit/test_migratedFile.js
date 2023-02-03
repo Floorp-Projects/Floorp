@@ -100,6 +100,12 @@ add_task(async function migratedFile() {
   );
   ok(!!customUserCreatedIdentity, "Got the custom user-created identity");
 
+  Assert.deepEqual(
+    cis.getPublicUserContextIds(),
+    cis.getPublicIdentities().map(identity => identity.userContextId),
+    "getPublicUserContextIds has matching user context IDs"
+  );
+
   // Check that the reserved userContextIdInternal.webextStorageLocal identity exists.
 
   const webextStorageLocalPrivateId = ContextualIdentityService._defaultIdentities
