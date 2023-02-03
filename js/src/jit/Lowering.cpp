@@ -4968,10 +4968,10 @@ void LIRGenerator::visitMegamorphicSetElement(MMegamorphicSetElement* ins) {
   // See comment in LIROps.yaml (x86 is short on registers)
 #ifdef JS_CODEGEN_X86
   auto* lir = new (alloc()) LMegamorphicSetElement(
-      useRegisterAtStart(ins->object()),
+      useFixedAtStart(ins->object(), CallTempReg0),
       useBoxFixedAtStart(ins->index(), CallTempReg1, CallTempReg2),
       useBoxFixedAtStart(ins->value(), CallTempReg3, CallTempReg4),
-      tempFixed(CallTempReg0));
+      tempFixed(CallTempReg5));
 #else
   auto* lir = new (alloc()) LMegamorphicSetElement(
       useRegisterAtStart(ins->object()), useBoxAtStart(ins->index()),
