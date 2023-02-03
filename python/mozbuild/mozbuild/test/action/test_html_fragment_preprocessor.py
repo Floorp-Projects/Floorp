@@ -147,9 +147,9 @@ class TestNode(unittest.TestCase):
             + 'gatekeeper/there.is.only.xul" flex="1" id="label-box" '
             + 'part="label-box" role="none"> '
             + '<image part="icon" role="none"></image> '
-            + '<label crop="right" flex="1" id="label" part="label" '
+            + '<label crop="end" flex="1" id="label" part="label" '
             + 'role="none"></label> '
-            + '<label crop="right" flex="1" id="highlightable-label" '
+            + '<label crop="end" flex="1" id="highlightable-label" '
             + 'part="label" role="none"></label> '
             + "</hbox> "
             + '<html:slot xmlns:html="http://www.w3.org/1999/xhtml">'

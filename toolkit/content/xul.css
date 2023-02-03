@@ -149,18 +149,11 @@ label:where([value]) {
   display: -moz-inline-box;
 }
 
-label[value],
-description[value] {
+:is(label, description)[value] {
   white-space: nowrap;
 }
 
-label[value][crop],
-description[value][crop] {
-  min-width: 0;
-}
-
-label[value]::before,
-description[value]::before {
+:is(label, description)[value]::before {
   /* This displays the value attribute, along with the underlined
    * accesskey if needed */
   content: -moz-label-content;
@@ -171,24 +164,26 @@ label[value=""]::before {
   content: "\200b" !important; /* zwsp */
 }
 
-label[value][crop]::before,
-description[value][crop]::before {
+:is(label, description)[value][crop] {
+  min-width: 0;
+}
+
+:is(label, description)[value][crop]::before {
   min-width: 0;
   max-width: 100%;
-  /* This implements crop=end/right */
+  /* This implements crop=end */
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Invert the direction to clip at the start rather than end */
-label[value]:is([crop="left"], [crop="start"])::before,
-description[value]:is([crop="left"], [crop="start"])::before {
+:is(label, description)[value][crop="start"]::before {
   direction: rtl;
   /* Mark text as ltr to preserve punctuation/numeric order */
   content: "\200e" -moz-label-content;
 }
-label[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before,
-description[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before {
+
+:is(label, description)[value][crop="start"]:-moz-locale-dir(rtl)::before {
   direction: ltr;
   /* Mark text as rtl to preserve punctuation/numeric order */
   content: "\200f" -moz-label-content;

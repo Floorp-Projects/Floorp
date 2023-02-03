@@ -7,8 +7,8 @@
   <html:link href="chrome://global/skin/example.css" rel="stylesheet"/>
   <hbox id="label-box" part="label-box" flex="1" role="none">
     <image part="icon" role="none"/>
-    <label id="label" part="label" crop="right" flex="1" role="none"/>
-    <label id="highlightable-label" part="label" crop="right" flex="1" role="none"/>
+    <label id="label" part="label" crop="end" flex="1" role="none"/>
+    <label id="highlightable-label" part="label" crop="end" flex="1" role="none"/>
   </hbox>
   <html:slot/>
 </template>

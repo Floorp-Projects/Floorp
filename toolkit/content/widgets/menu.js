@@ -147,8 +147,8 @@
       <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
         <image class="menu-iconic-icon" aria-hidden="true"></image>
       </hbox>
-      <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"></label>
-      <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"></label>
+      <label class="menu-iconic-text" flex="1" crop="end" aria-hidden="true"></label>
+      <label class="menu-iconic-highlightable-text" crop="end" aria-hidden="true"></label>
     `)
       );
       this.initializeAttributeInheritance();
@@ -214,8 +214,8 @@
       <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
         <image class="menu-iconic-icon"/>
       </hbox>
-      <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"/>
-      <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"/>
+      <label class="menu-iconic-text" flex="1" crop="end" aria-hidden="true"/>
+      <label class="menu-iconic-highlightable-text" crop="end" aria-hidden="true"/>
     `),
         true
       );
@@ -229,8 +229,8 @@
       <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
         <image class="menu-iconic-icon"/>
       </hbox>
-      <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"/>
-      <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"/>
+      <label class="menu-iconic-text" flex="1" crop="end" aria-hidden="true"/>
+      <label class="menu-iconic-highlightable-text" crop="end" aria-hidden="true"/>
       <hbox class="menu-accel-container" aria-hidden="true">
         <label class="menu-iconic-accel"/>
       </hbox>
@@ -244,7 +244,7 @@
     static get plainFragment() {
       let frag = document.importNode(
         MozXULElement.parseXULToFragment(`
-      <label class="menu-text" crop="right" aria-hidden="true"/>
+      <label class="menu-text" crop="end" aria-hidden="true"/>
       <hbox class="menu-accel-container" aria-hidden="true">
         <label class="menu-accel"/>
       </hbox>
@@ -395,7 +395,7 @@
         if (!MozMenu.menubarIconicFrag) {
           MozMenu.menubarIconicFrag = MozXULElement.parseXULToFragment(`
           <image class="menubar-left" aria-hidden="true"/>
-          <label class="menubar-text" crop="right" aria-hidden="true"/>
+          <label class="menubar-text" crop="end" aria-hidden="true"/>
         `);
         }
         fragment = document.importNode(MozMenu.menubarIconicFrag, true);
@@ -403,7 +403,7 @@
       if (isMenubarChild && !isIconic) {
         if (!MozMenu.menubarFrag) {
           MozMenu.menubarFrag = MozXULElement.parseXULToFragment(`
-          <label class="menubar-text" crop="right" aria-hidden="true"/>
+          <label class="menubar-text" crop="end" aria-hidden="true"/>
         `);
         }
         fragment = document.importNode(MozMenu.menubarFrag, true);
@@ -414,8 +414,8 @@
           <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
             <image class="menu-iconic-icon"/>
           </hbox>
-          <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"/>
-          <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"/>
+          <label class="menu-iconic-text" flex="1" crop="end" aria-hidden="true"/>
+          <label class="menu-iconic-highlightable-text" crop="end" aria-hidden="true"/>
           <hbox class="menu-accel-container" anonid="accel" aria-hidden="true">
             <label class="menu-iconic-accel"/>
           </hbox>
@@ -430,7 +430,7 @@
       if (!isMenubarChild && !isIconic) {
         if (!MozMenu.normalFrag) {
           MozMenu.normalFrag = MozXULElement.parseXULToFragment(`
-          <label class="menu-text" crop="right" aria-hidden="true"/>
+          <label class="menu-text" crop="end" aria-hidden="true"/>
           <hbox class="menu-accel-container" anonid="accel" aria-hidden="true">
             <label class="menu-accel"/>
           </hbox>

@@ -46,7 +46,7 @@ function createRichlistItem(item) {
 
   let row = document.createXULElement("label");
   row.setAttribute("flex", "1");
-  row.setAttribute("crop", "right");
+  row.setAttribute("crop", "end");
   row.setAttribute("style", "margin-inline-start: 15px;");
   if ("raw" in item) {
     row.setAttribute("value", item.raw);
