@@ -402,6 +402,9 @@ const SpecialMessageActions = {
           source: "firefoxview",
         });
         break;
+      case "RELOAD_BROWSER":
+        browser.reload();
+        break;
     }
   },
 };

@@ -322,3 +322,10 @@ Selects an element in the current Window's document and triggers a click action
 * args: (none)
 
 Action for opening about:firefoxview and the colorways modal
+
+
+### `RELOAD_BROWSER`
+
+* args: (none)
+
+Action for reloading the current browser

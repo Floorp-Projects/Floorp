@@ -551,6 +551,18 @@
           "required": ["type"],
           "additionalProperties": false,
           "description": "Message action that opens about:firefoxview and renders the colorways modal"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["RELOAD_BROWSER"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Message action that reloads the current browser"
         }
       ]
     }
