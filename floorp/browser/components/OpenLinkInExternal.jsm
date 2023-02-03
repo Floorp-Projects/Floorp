@@ -20,11 +20,8 @@ function OpenLinkInExternal(path, url) {
     process.init(path);
     process.runAsync([url], 1) 
 }
-//OpenLinkInExternal(FileUtils.File("C:\\Users\\user\\AppData\\Local\\Vivaldi\\Application\\vivaldi.exe"), "https://google.com")
 
 let seenDocuments = new WeakSet();
-
-// Listen for new windows to overlay.
 let documentObserver = {
     observe(doc) {
         if (
@@ -35,12 +32,24 @@ let documentObserver = {
             let window_ = doc.defaultView;
             let document_ = window_.document;
             if (window_.location.href == "chrome://browser/content/browser.xhtml") {
-                const openLinkInVivaldi = document_.createXULElement("toolbarbutton");
-                openLinkInVivaldi.id = "open-link-in-vivaldi";
-                openLinkInVivaldi.classList.add("subviewbutton");
-                openLinkInVivaldi.label = "Vivaldiで開く";
-                document_.querySelector("#tabContextMenu #context_sendTabToDevice").insertAdjacentElement("afterend", openLinkInVivaldi);
-                //window_.PanelMultiView.getViewNode(document_, "appMenu-quit-button2").insertAdjacentElement("afterend", openLinkInVivaldi);
+                let tabContextMenu = document_.querySelector("#tabContextMenu");
+                window_.OpenLinkInExternalMenu = function (url) {
+                    OpenLinkInExternal(FileUtils.File("C:\\Users\\user\\AppData\\Local\\Vivaldi\\Application\\vivaldi.exe"), url);
+                }
+                let openLinkInExternal = document_.createXULElement("menuitem");
+                openLinkInExternal.id = "open-link-in-external";
+                openLinkInExternal.label = "Vivaldiで開く";
+                openLinkInExternal.setAttribute(
+                    "oncommand",
+                    "OpenLinkInExternalMenu(TabContextMenu.contextTab.linkedBrowser.currentURI.spec);"
+                );
+                tabContextMenu.addEventListener("popupshowing", function(e) {
+                    let window_ = e.currentTarget.ownerGlobal;
+                    let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
+                    e.currentTarget.querySelector("#open-link-in-external").hidden = !/https?/.test(scheme);
+                });
+                tabContextMenu.querySelector("#context_sendTabToDevice")
+                    .insertAdjacentElement("afterend", openLinkInExternal);
             }
         }
     },
