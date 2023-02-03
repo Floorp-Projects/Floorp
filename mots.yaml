@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-01T13:45:46.744362'
+updated_at: '2023-02-02T16:09:32.463568'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3932,4 +3932,4 @@ modules:
       group: dev-platform
 hashes:
   config: 8209f49523a804df62b97420eae97d2ae800fe43
-  export: 103d4cf72381d53b62ea681e0288dba6e246a95a
+  export: 4975afe4d10423da5fef7a9e802869e8103e28c3
