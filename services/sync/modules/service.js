@@ -4,12 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["Service"];
 
-// How long before refreshing the cluster
-const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
-
-// How long a key to generate from an old passphrase.
-const PBKDF2_KEY_BYTES = 16;
-
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 

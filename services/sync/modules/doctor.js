@@ -21,7 +21,7 @@ const { Observers } = ChromeUtils.import(
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
 
 const log = Log.repository.getLogger("Sync.Doctor");
 

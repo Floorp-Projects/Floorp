@@ -13,7 +13,6 @@ const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 /**
  * Represents a pair of keys.
