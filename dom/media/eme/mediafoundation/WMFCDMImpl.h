@@ -8,6 +8,7 @@
 #define DOM_MEDIA_EME_MEDIAFOUNDATION_WMFCDMIMPL_H_
 
 #include "MediaData.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/media/MediaUtils.h"
@@ -30,51 +31,24 @@ class WMFCDMImpl final {
   explicit WMFCDMImpl(const nsAString& aKeySystem)
       : mCDM(MakeRefPtr<MFCDMChild>(aKeySystem)) {}
 
-  static bool Supports(const nsAString& aKeySystem) {
-    static std::map<nsString, bool> supports;
+  static bool Supports(const nsAString& aKeySystem);
+  // TODO: make this async?
+  bool GetCapabilities(KeySystemConfig& aConfig);
 
-    nsString key(aKeySystem);
-    if (const auto& s = supports.find(key); s != supports.end()) {
-      return s->second;
-    }
+  using InitPromise = GenericPromise;
+  struct InitParams {
+    nsString mOrigin;
+    bool mPersistentState;
+    bool mDistinctiveID;
+    bool mHWSecure;
+  };
 
-    RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
-    KeySystemConfig c;
-    bool s = cdm->GetCapabilities(c);
-    supports[key] = s;
+  RefPtr<InitPromise> Init(const InitParams& aParams);
 
-    return s;
-  }
-
-  bool GetCapabilities(KeySystemConfig& aConfig) {
-    nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
-    NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
-
-    bool ok = false;
-    media::Await(
-        backgroundTaskQueue.forget(), mCDM->GetCapabilities(),
-        [&ok, &aConfig](const MFCDMCapabilitiesIPDL& capabilities) {
-          EME_LOG("capabilities: keySystem=%s",
-                  NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
-          for (const auto& v : capabilities.videoCapabilities()) {
-            EME_LOG("capabilities: video=%s",
-                    NS_ConvertUTF16toUTF8(v.contentType()).get());
-          }
-          for (const auto& a : capabilities.audioCapabilities()) {
-            EME_LOG("capabilities: audio=%s",
-                    NS_ConvertUTF16toUTF8(a.contentType()).get());
-          }
-          for (const auto& v : capabilities.encryptionSchemes()) {
-            EME_LOG("capabilities: encryptionScheme=%s",
-                    EncryptionSchemeStr(v));
-          }
-          MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, aConfig);
-          ok = true;
-        },
-        [](nsresult rv) {
-          EME_LOG("Fail to get key system capabilities. rv=%x", rv);
-        });
-    return ok;
+  uint64_t Id() {
+    MOZ_ASSERT(mCDM->Id() != 0,
+               "Should be called only after Init() is resolved");
+    return mCDM->Id();
   }
 
  private:
@@ -84,51 +58,9 @@ class WMFCDMImpl final {
     }
   };
 
-  static void MFCDMCapabilitiesIPDLToKeySystemConfig(
-      const MFCDMCapabilitiesIPDL& aCDMConfig,
-      KeySystemConfig& aKeySystemConfig) {
-    aKeySystemConfig.mKeySystem = aCDMConfig.keySystem();
-
-    for (const auto& type : aCDMConfig.initDataTypes()) {
-      aKeySystemConfig.mInitDataTypes.AppendElement(type);
-    }
-
-    for (const auto& type : aCDMConfig.sessionTypes()) {
-      aKeySystemConfig.mSessionTypes.AppendElement(type);
-    }
-
-    for (const auto& c : aCDMConfig.videoCapabilities()) {
-      if (!c.robustness().IsEmpty() &&
-          !aKeySystemConfig.mVideoRobustness.Contains(c.robustness())) {
-        aKeySystemConfig.mVideoRobustness.AppendElement(c.robustness());
-      }
-      aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-          NS_ConvertUTF16toUTF8(c.contentType()));
-    }
-    for (const auto& c : aCDMConfig.audioCapabilities()) {
-      if (!c.robustness().IsEmpty() &&
-          !aKeySystemConfig.mAudioRobustness.Contains(c.robustness())) {
-        aKeySystemConfig.mAudioRobustness.AppendElement(c.robustness());
-      }
-      aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-          NS_ConvertUTF16toUTF8(c.contentType()));
-    }
-    aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
-    aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
-  }
-
-  static const char* EncryptionSchemeStr(const CryptoScheme aScheme) {
-    switch (aScheme) {
-      case CryptoScheme::None:
-        return "none";
-      case CryptoScheme::Cenc:
-        return "cenc";
-      case CryptoScheme::Cbcs:
-        return "cbcs";
-    }
-  }
-
   const RefPtr<MFCDMChild> mCDM;
+
+  MozPromiseHolder<InitPromise> mInitPromiseHolder;
 };
 
 }  // namespace mozilla
