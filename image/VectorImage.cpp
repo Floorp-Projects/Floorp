@@ -848,6 +848,19 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
       return ImgDrawResult::TEMPORARY_ERROR;
     }
 
+    if (!SurfaceCache::IsLegalSize(aSize) ||
+        !Factory::AllowedSurfaceSize(aSize)) {
+      // If either of these is true then the InitWithDrawable call below will
+      // fail, so fail early and use this opportunity to return NOT_SUPPORTED
+      // instead of TEMPORARY_ERROR as we do for any InitWithDrawable failure.
+      // This means that we will use fallback which has a path that will draw
+      // directly into the gfxContext without having to allocate a surface. It
+      // means we will have to use fallback and re-rasterize for everytime we
+      // have to draw this image, but it's better than not drawing anything at
+      // all.
+      return ImgDrawResult::NOT_SUPPORTED;
+    }
+
     // We aren't using blobs, so we need to rasterize.
     float animTime =
         mHaveAnimations ? mSVGDocumentWrapper->GetCurrentTimeAsFloat() : 0.0f;
