@@ -143,40 +143,6 @@ float ComputeClippedRatio(const float* const* audio,
   return static_cast<float>(num_clipped) / (samples_per_channel);
 }
 
-void LogClippingPredictorMetrics(const ClippingPredictorEvaluator& evaluator) {
-  absl::optional<ClippingPredictionMetrics> metrics =
-      ComputeClippingPredictionMetrics(evaluator.counters());
-  if (metrics.has_value()) {
-    RTC_LOG(LS_INFO) << "Clipping predictor metrics: P " << metrics->precision
-                     << " R " << metrics->recall << " F1 score "
-                     << metrics->f1_score;
-    RTC_DCHECK_GE(metrics->f1_score, 0.0f);
-    RTC_DCHECK_LE(metrics->f1_score, 1.0f);
-    RTC_DCHECK_GE(metrics->precision, 0.0f);
-    RTC_DCHECK_LE(metrics->precision, 1.0f);
-    RTC_DCHECK_GE(metrics->recall, 0.0f);
-    RTC_DCHECK_LE(metrics->recall, 1.0f);
-    RTC_HISTOGRAM_COUNTS_LINEAR(
-        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.F1Score",
-        /*sample=*/std::round(metrics->f1_score * 100.0f),
-        /*min=*/0,
-        /*max=*/100,
-        /*bucket_count=*/50);
-    RTC_HISTOGRAM_COUNTS_LINEAR(
-        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.Precision",
-        /*sample=*/std::round(metrics->precision * 100.0f),
-        /*min=*/0,
-        /*max=*/100,
-        /*bucket_count=*/50);
-    RTC_HISTOGRAM_COUNTS_LINEAR(
-        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.Recall",
-        /*sample=*/std::round(metrics->recall * 100.0f),
-        /*min=*/0,
-        /*max=*/100,
-        /*bucket_count=*/50);
-  }
-}
-
 void LogClippingMetrics(int clipping_rate) {
   RTC_LOG(LS_INFO) << "Input clipping rate: " << clipping_rate << "%";
   RTC_HISTOGRAM_COUNTS_LINEAR(/*name=*/"WebRTC.Audio.Agc.InputClippingRate",
@@ -541,7 +507,6 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
           !!clipping_predictor_ &&
           analog_config.clipping_predictor.use_predicted_step),
       clipping_predictor_evaluator_(kClippingPredictorEvaluatorHistorySize),
-      clipping_predictor_log_counter_(0),
       clipping_rate_log_(0.0f),
       clipping_rate_log_counter_(0) {
   RTC_LOG(LS_INFO) << "[agc] analog controller enabled: "
@@ -582,7 +547,6 @@ void AgcManagerDirect::Initialize() {
 
   AggregateChannelLevels();
   clipping_predictor_evaluator_.Reset();
-  clipping_predictor_log_counter_ = 0;
   clipping_rate_log_ = 0.0f;
   clipping_rate_log_counter_ = 0;
 }
@@ -666,21 +630,9 @@ void AgcManagerDirect::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
     // since for this purpose a single clipping sample counts as clipping.
     const bool one_or_more_clipped_samples =
         clipped_ratio >= (1.0f / samples_per_channel);
-    absl::optional<int> prediction_interval =
-        clipping_predictor_evaluator_.Observe(
-            /*clipping_detected=*/one_or_more_clipped_samples,
-            clipping_predicted);
-    if (prediction_interval.has_value()) {
-      RTC_HISTOGRAM_COUNTS_LINEAR(
-          "WebRTC.Audio.Agc.ClippingPredictor.PredictionInterval",
-          prediction_interval.value(), /*min=*/0,
-          /*max=*/49, /*bucket_count=*/50);
-    }
-    clipping_predictor_log_counter_++;
-    if (clipping_predictor_log_counter_ == kNumFramesIn30Seconds) {
-      LogClippingPredictorMetrics(clipping_predictor_evaluator_);
-      clipping_predictor_log_counter_ = 0;
-    }
+    // TODO(webrtc:7494): Remove the evaluator, the result is not used.
+    clipping_predictor_evaluator_.Observe(
+        /*clipping_detected=*/one_or_more_clipped_samples, clipping_predicted);
   }
   if (clipping_detected) {
     RTC_DLOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
