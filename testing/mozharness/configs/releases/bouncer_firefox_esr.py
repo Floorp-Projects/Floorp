@@ -130,14 +130,17 @@ config = {
         },
         "pkg": {
             "product-name": "Firefox-%(version)s-pkg-SSL",
+            "check_uptake": True,
             "platforms": ["osx"],
         },
         "pkg-latest": {
             "product-name": "Firefox-esr-pkg-latest-SSL",
+            "check_uptake": True,
             "platforms": ["osx"],
         },
         "pkg-next-latest": {
             "product-name": "Firefox-esr-next-pkg-latest-SSL",
+            "check_uptake": True,
             "platforms": ["osx"],
         },
         "complete-mar": {
