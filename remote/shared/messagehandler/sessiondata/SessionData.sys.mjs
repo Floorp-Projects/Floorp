@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  **/
 export const SessionDataCategory = {
   Event: "event",
+  PreloadScript: "preload-script",
 };
 
 /**

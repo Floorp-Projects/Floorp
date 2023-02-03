@@ -303,4 +303,31 @@ export class WindowRealm extends Realm {
       type: WindowRealm.type,
     };
   }
+
+  /**
+   * Log an error caused by a script evaluation.
+   *
+   * @param {string} message
+   *     The error message.
+   * @param {Stack} stack
+   *     The JavaScript stack trace.
+   */
+  reportError(message, stack) {
+    const { column, line, source: sourceLine } = stack;
+
+    const scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+    const scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+
+    scriptError.initWithWindowID(
+      message,
+      this.#window.document.baseURI,
+      sourceLine,
+      line,
+      column,
+      Ci.nsIScriptError.errorFlag,
+      "content javascript",
+      this.#window.windowGlobalChild.innerWindowId
+    );
+    Services.console.logMessage(scriptError);
+  }
 }
