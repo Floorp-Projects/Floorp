@@ -5,84 +5,97 @@
 import { asyncActionAsValue } from "../actions/utils/middleware/promise";
 
 /**
- * This reducer stores the list of all source actors.
+ * This reducer stores the list of all source actors as well their breakable lines.
+ *
  * There is a one-one relationship with Source Actors from the server codebase,
  * as well as SOURCE Resources distributed by the ResourceCommand API.
  *
- * See create.js: `createSourceActor` for the shape of the source actor objects.
- * This reducer will append the following attributes:
- * - breakableLines: { state: <"pending"|"fulfilled">, value: Array<Number> }
- *   List of all lines where breakpoints can be set
  */
-export const initial = new Map();
+function initialSourceActorsState() {
+  return {
+    // Map(Source Actor ID: string => SourceActor: object)
+    // See create.js: `createSourceActor` for the shape of the source actor objects.
+    mutableSourceActors: new Map(),
 
-export default function update(state = initial, action) {
+    // Map(Source Actor ID: string => Breakable lines: object)
+    // Breakable lines object is of the form: { state: <"pending"|"fulfilled">, value: Array<Number> }
+    // The array is the list of all lines where breakpoints can be set
+    mutableBreakableLines: new Map(),
+  };
+}
+
+export const initial = initialSourceActorsState();
+
+export default function update(state = initialSourceActorsState(), action) {
   switch (action.type) {
     case "INSERT_SOURCE_ACTORS": {
-      const { items } = action;
-      // The `item` objects are defined from create.js: `createSource` method.
-      state = new Map(state);
-      for (const sourceActor of items) {
-        state.set(sourceActor.id, {
-          ...sourceActor,
-          breakableLines: null,
-        });
+      for (const sourceActor of action.sourceActors) {
+        state.mutableSourceActors.set(sourceActor.id, sourceActor);
       }
-      break;
+      return {
+        ...state,
+      };
     }
 
     case "NAVIGATE": {
-      state = initial;
+      state = initialSourceActorsState();
       break;
     }
 
     case "REMOVE_THREAD": {
-      state = new Map(state);
-      for (const sourceActor of state.values()) {
+      for (const sourceActor of state.mutableSourceActors.values()) {
         if (sourceActor.thread == action.threadActorID) {
-          state.delete(sourceActor.id);
+          state.mutableSourceActors.delete(sourceActor.id);
         }
       }
-      break;
+      return {
+        ...state,
+      };
     }
 
     case "SET_SOURCE_ACTOR_BREAKABLE_LINES":
-      state = updateBreakableLines(state, action);
-      break;
+      return updateBreakableLines(state, action);
 
     case "CLEAR_SOURCE_ACTOR_MAP_URL":
-      state = clearSourceActorMapURL(state, action.id);
-      break;
+      return clearSourceActorMapURL(state, action.sourceActorId);
   }
 
   return state;
 }
 
-function clearSourceActorMapURL(state, id) {
-  if (!state.has(id)) {
+function clearSourceActorMapURL(state, sourceActorId) {
+  const existingSourceActor = state.mutableSourceActors.get(sourceActorId);
+  if (!existingSourceActor) {
     return state;
   }
 
-  const newMap = new Map(state);
-  newMap.set(id, {
-    ...state.get(id),
+  // /!\ We end up mutating sourceActor objects here /!\
+  // The `sourceMapURL` attribute isn't reliable and we must query the selectors
+  // each time we try to interpret its value via sourceActor.sourceMapURL!
+  //
+  // We should probably move this attribute into a dedicated map,
+  // and uncouple it from sourceActor object.
+  state.mutableSourceActors.set(sourceActorId, {
+    ...existingSourceActor,
     sourceMapURL: "",
   });
-  return newMap;
+
+  return {
+    ...state,
+  };
 }
 
 function updateBreakableLines(state, action) {
   const value = asyncActionAsValue(action);
-  const { sourceId } = action;
+  const { sourceActorId } = action;
 
-  if (!state.has(sourceId)) {
+  // Ignore breakable lines for source actors that aren't/no longer registered
+  if (!state.mutableSourceActors.has(sourceActorId)) {
     return state;
   }
 
-  const newMap = new Map(state);
-  newMap.set(sourceId, {
-    ...state.get(sourceId),
-    breakableLines: value,
-  });
-  return newMap;
+  state.mutableBreakableLines.set(sourceActorId, value);
+  return {
+    ...state,
+  };
 }

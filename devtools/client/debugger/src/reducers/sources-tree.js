@@ -100,7 +100,7 @@ export default function update(state = initialSourcesTreeState(), action) {
       // But we do want to process source actors in order to be able to display
       // distinct Source Tree Items for sources with the same URL loaded in distinct thread.
       // (And may be also later be able to highlight the many sources with the same URL loaded in a given thread)
-      const newSourceActors = action.items.filter(sourceActor =>
+      const newSourceActors = action.sourceActors.filter(sourceActor =>
         isSourceVisibleInSourceTree(
           sourceActor.sourceObject,
           state.chromeAndExtensionsEnabled,
