@@ -11,6 +11,8 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
 
 #include <algorithm>
+#include <map>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -32,15 +34,22 @@ namespace {
 
 constexpr TimeDelta kFreezeThreshold = TimeDelta::Millis(150);
 constexpr int kMaxActiveComparisons = 10;
+constexpr char kFrameIdMetadataKey[] = "frame_id";
 
-SamplesStatsCounter::StatsSample StatsSample(double value,
-                                             Timestamp sampling_time) {
-  return SamplesStatsCounter::StatsSample{value, sampling_time};
+SamplesStatsCounter::StatsSample StatsSample(
+    double value,
+    Timestamp sampling_time,
+    std::map<std::string, std::string> metadata) {
+  return SamplesStatsCounter::StatsSample{value, sampling_time,
+                                          std::move(metadata)};
 }
 
-SamplesStatsCounter::StatsSample StatsSample(TimeDelta duration,
-                                             Timestamp sampling_time) {
-  return SamplesStatsCounter::StatsSample{duration.ms<double>(), sampling_time};
+SamplesStatsCounter::StatsSample StatsSample(
+    TimeDelta duration,
+    Timestamp sampling_time,
+    std::map<std::string, std::string> metadata) {
+  return SamplesStatsCounter::StatsSample{duration.ms<double>(), sampling_time,
+                                          std::move(metadata)};
 }
 
 FrameComparison ValidateFrameComparison(FrameComparison comparison) {
@@ -224,7 +233,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::Stop(
       // to last freeze end as time between freezes.
       stream_stats_.at(stats_key).time_between_freezes_ms.AddSample(StatsSample(
           last_rendered_frame_time - stream_last_freeze_end_time_.at(stats_key),
-          Now()));
+          Now(), /*metadata=*/{}));
     }
   }
 }
@@ -298,8 +307,10 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
   MutexLock lock(&mutex_);
   RTC_CHECK_EQ(state_, State::kActive)
       << "Frames comparator has to be started before it will be used";
-  stream_stats_.at(stats_key).skipped_between_rendered.AddSample(
-      StatsSample(skipped_between_rendered, Now()));
+  stream_stats_.at(stats_key).skipped_between_rendered.AddSample(StatsSample(
+      skipped_between_rendered, Now(),
+      /*metadata=*/
+      {{kFrameIdMetadataKey, std::to_string(frame_stats.frame_id)}}));
   AddComparisonInternal(std::move(stats_key), std::move(captured),
                         std::move(rendered), type, std::move(frame_stats));
 }
@@ -312,7 +323,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparisonInternal(
     FrameStats frame_stats) {
   cpu_measurer_.StartExcludingCpuThreadTime();
   frames_comparator_stats_.comparisons_queue_size.AddSample(
-      StatsSample(comparisons_.size(), Now()));
+      StatsSample(comparisons_.size(), Now(), /*metadata=*/{}));
   // If there too many computations waiting in the queue, we won't provide
   // frames itself to make future computations lighter.
   if (comparisons_.size() >= kMaxActiveComparisons) {
@@ -408,11 +419,16 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     frames_comparator_stats_.memory_overloaded_comparisons_done++;
   }
 
+  std::map<std::string, std::string> metadata;
+  metadata.emplace(kFrameIdMetadataKey, std::to_string(frame_stats.frame_id));
+
   if (psnr > 0) {
-    stats->psnr.AddSample(StatsSample(psnr, frame_stats.rendered_time));
+    stats->psnr.AddSample(
+        StatsSample(psnr, frame_stats.rendered_time, metadata));
   }
   if (ssim > 0) {
-    stats->ssim.AddSample(StatsSample(ssim, frame_stats.received_time));
+    stats->ssim.AddSample(
+        StatsSample(ssim, frame_stats.received_time, metadata));
   }
 
   // Compute dropped phase for dropped frame
@@ -436,12 +452,12 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   if (frame_stats.encoded_time.IsFinite()) {
     stats->encode_time_ms.AddSample(
         StatsSample(frame_stats.encoded_time - frame_stats.pre_encode_time,
-                    frame_stats.encoded_time));
+                    frame_stats.encoded_time, metadata));
     stats->encode_frame_rate.AddEvent(frame_stats.encoded_time);
     stats->total_encoded_images_payload +=
         frame_stats.encoded_image_size.bytes();
     stats->target_encode_bitrate.AddSample(StatsSample(
-        frame_stats.target_encode_bitrate, frame_stats.encoded_time));
+        frame_stats.target_encode_bitrate, frame_stats.encoded_time, metadata));
 
     // Stats sliced on encoded frame type.
     if (frame_stats.encoded_frame_type == VideoFrameType::kVideoFrameKey) {
@@ -455,18 +471,18 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
       stats->resolution_of_rendered_frame.AddSample(
           StatsSample(*comparison.frame_stats.rendered_frame_width *
                           *comparison.frame_stats.rendered_frame_height,
-                      frame_stats.rendered_time));
+                      frame_stats.rendered_time, metadata));
       stats->total_delay_incl_transport_ms.AddSample(
           StatsSample(frame_stats.rendered_time - frame_stats.captured_time,
-                      frame_stats.received_time));
+                      frame_stats.received_time, metadata));
       stats->receive_to_render_time_ms.AddSample(
           StatsSample(frame_stats.rendered_time - frame_stats.received_time,
-                      frame_stats.rendered_time));
+                      frame_stats.rendered_time, metadata));
     }
     if (frame_stats.decode_start_time.IsFinite()) {
       stats->transport_time_ms.AddSample(
           StatsSample(frame_stats.decode_start_time - frame_stats.encoded_time,
-                      frame_stats.decode_start_time));
+                      frame_stats.decode_start_time, metadata));
 
       // Stats sliced on decoded frame type.
       if (frame_stats.pre_decoded_frame_type ==
@@ -474,39 +490,39 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
         ++stats->num_recv_key_frames;
         stats->recv_key_frame_size_bytes.AddSample(
             StatsSample(frame_stats.pre_decoded_image_size.bytes(),
-                        frame_stats.decode_start_time));
+                        frame_stats.decode_start_time, metadata));
       } else if (frame_stats.pre_decoded_frame_type ==
                  VideoFrameType::kVideoFrameDelta) {
         stats->recv_delta_frame_size_bytes.AddSample(
             StatsSample(frame_stats.pre_decoded_image_size.bytes(),
-                        frame_stats.decode_start_time));
+                        frame_stats.decode_start_time, metadata));
       }
     }
     if (frame_stats.decode_end_time.IsFinite()) {
       stats->decode_time_ms.AddSample(StatsSample(
           frame_stats.decode_end_time - frame_stats.decode_start_time,
-          frame_stats.decode_end_time));
+          frame_stats.decode_end_time, metadata));
     }
 
     if (frame_stats.prev_frame_rendered_time.IsFinite() &&
         frame_stats.rendered_time.IsFinite()) {
       TimeDelta time_between_rendered_frames =
           frame_stats.rendered_time - frame_stats.prev_frame_rendered_time;
-      stats->time_between_rendered_frames_ms.AddSample(
-          StatsSample(time_between_rendered_frames, frame_stats.rendered_time));
+      stats->time_between_rendered_frames_ms.AddSample(StatsSample(
+          time_between_rendered_frames, frame_stats.rendered_time, metadata));
       TimeDelta average_time_between_rendered_frames = TimeDelta::Millis(
           stats->time_between_rendered_frames_ms.GetAverage());
       if (time_between_rendered_frames >
           std::max(kFreezeThreshold + average_time_between_rendered_frames,
                    3 * average_time_between_rendered_frames)) {
         stats->freeze_time_ms.AddSample(StatsSample(
-            time_between_rendered_frames, frame_stats.rendered_time));
+            time_between_rendered_frames, frame_stats.rendered_time, metadata));
         auto freeze_end_it =
             stream_last_freeze_end_time_.find(comparison.stats_key);
         RTC_DCHECK(freeze_end_it != stream_last_freeze_end_time_.end());
         stats->time_between_freezes_ms.AddSample(StatsSample(
             frame_stats.prev_frame_rendered_time - freeze_end_it->second,
-            frame_stats.rendered_time));
+            frame_stats.rendered_time, metadata));
         freeze_end_it->second = frame_stats.rendered_time;
       }
     }
