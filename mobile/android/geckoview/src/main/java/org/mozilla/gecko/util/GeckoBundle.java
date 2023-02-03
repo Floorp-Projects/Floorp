@@ -35,6 +35,7 @@ public final class GeckoBundle implements Parcelable {
   @WrapForJNI(calledFrom = "gecko")
   private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
 
+  private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
   private static final int[] EMPTY_INT_ARRAY = new int[0];
   private static final long[] EMPTY_LONG_ARRAY = new long[0];
   private static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
@@ -276,6 +277,17 @@ public final class GeckoBundle implements Parcelable {
         : Array.getLength(value) == 0
             ? EMPTY_INT_ARRAY
             : value instanceof double[] ? getIntArray((double[]) value) : (int[]) value;
+  }
+
+  /**
+   * Returns the value associated with an byte array mapping, or null if the mapping does not exist.
+   *
+   * @param key Key to look for.
+   * @return Byte array value
+   */
+  public byte[] getByteArray(final String key) {
+    final Object value = mMap.get(key);
+    return value == null ? null : Array.getLength(value) == 0 ? EMPTY_BYTE_ARRAY : (byte[]) value;
   }
 
   /**

@@ -29,6 +29,7 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:SetPriorityHint",
       "GeckoView:UpdateInitData",
       "GeckoView:ZoomToInput",
+      "GeckoView:IsPdfJs",
     ]);
   }
 
@@ -191,6 +192,9 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       case "GeckoView:ContainsFormData":
         this._containsFormData(aCallback);
+        break;
+      case "GeckoView:IsPdfJs":
+        aCallback.onSuccess(this.isPdfJs);
         break;
     }
   }
