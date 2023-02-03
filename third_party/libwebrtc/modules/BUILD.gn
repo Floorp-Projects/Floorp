@@ -227,6 +227,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "pacing:pacing_unittests",
       "remote_bitrate_estimator:remote_bitrate_estimator_unittests",
       "rtp_rtcp:rtp_rtcp_unittests",
+      "utility:utility_unittests",
       "video_coding:video_coding_unittests",
       "video_coding/timing:timing_unittests",
     ]
