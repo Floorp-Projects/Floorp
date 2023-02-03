@@ -15,10 +15,16 @@ Overview
 --------
 To add, remove, or update module information, see the `mots documentation <https://mots.readthedocs.io/en/latest/#adding-a-module>`_.
 
-Mozilla operates under a `module ownership governance system <https://www.mozilla.org/hacking/module-ownership.html>`_. A module is a discrete unit of code or activity. An owner is the person in charge of a module or sub-module. A peer is a person whom the owner has appointed to help them. A module may have multiple peers and, very occasionally, multiple owners.
+Mozilla operates under a `module ownership governance system
+<https://www.mozilla.org/hacking/module-ownership.html>`_. A module is a
+discrete unit of code or activity. An owner is the person in charge of a module
+or sub-module. A peer is a person whom the owner has appointed to help them. A
+module may have multiple peers and, very occasionally, multiple owners.
 
-The system is overseen by the owner and peers of the Module Ownership module. For the modules that make up Firefox, oversight is provided by the Firefox Technical Leadership module. Owners may add and remove peers from their modules as they wish, without reference to anyone else.
-
+The system is overseen by the owner and peers of the Module Ownership module.
+For the modules that make up Firefox, oversight is provided by the Firefox
+Technical Leadership module. Owners may add and remove peers from their modules
+as they wish, without reference to anyone else.
 
 
 -------
@@ -44,7 +50,8 @@ The top level directory for the mozilla tree.
 
 Code Coverage
 ~~~~~~~~~~~~~
-Tools for code coverage instrumentation, and coverage data parsing and management.
+Tools for code coverage instrumentation, and coverage data parsing and
+management.
 
 
 .. list-table::
@@ -68,7 +75,10 @@ Tools for code coverage instrumentation, and coverage data parsing and managemen
 
 Core: Accessibility
 ~~~~~~~~~~~~~~~~~~~
-Support for platform accessibility APIs. Accessibility APIs are used by 3rd party software like screen readers, screen magnifiers, and voice dictation software, which need information about document content and UI controls, as well as important events like changes of focus.
+Support for platform accessibility APIs. Accessibility APIs are used by 3rd
+party software like screen readers, screen magnifiers, and voice dictation
+software, which need information about document content and UI controls, as
+well as important events like changes of focus.
 
 
 .. list-table::
@@ -99,7 +109,8 @@ Support for platform accessibility APIs. Accessibility APIs are used by 3rd part
 
 Core: Animation
 ~~~~~~~~~~~~~~~
-Declarative animations: CSS animations, CSS transitions, Web Animations API, and off-main thread animations.
+Declarative animations: CSS animations, CSS transitions, Web Animations API,
+and off-main thread animations.
 
 
 .. list-table::
@@ -209,7 +220,8 @@ Web API for rendering apps, browser windows and widgets.
 
 Core: Build and Release Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tools related to build and release automation and configuration of release builds.
+Tools related to build and release automation and configuration of release
+builds.
 
 
 .. list-table::
@@ -238,7 +250,8 @@ Tools related to build and release automation and configuration of release build
 
 Core: Build Config
 ~~~~~~~~~~~~~~~~~~
-The build system for Gecko and several mozilla.org hosted Gecko-based applications.
+The build system for Gecko and several mozilla.org hosted Gecko-based
+applications.
 
 
 .. list-table::
@@ -297,7 +310,9 @@ Submodule of the build config covering Fennec's build system in mobile/android.
 
 Core: Build Config - Taskgraph
 ==============================
-Support for task-graph generation in decision, action, and cron tasks, including configuration of all tasks including those for CI, nightlies, and releases; as well as Docker and VM images used to execute those tasks.
+Support for task-graph generation in decision, action, and cron tasks,
+including configuration of all tasks including those for CI, nightlies, and
+releases; as well as Docker and VM images used to execute those tasks.
 
 
 .. list-table::
@@ -326,7 +341,8 @@ Support for task-graph generation in decision, action, and cron tasks, including
 
 Core: Code Analysis and Debugging Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tools for debugging Mozilla code or for analyzing speed, memory use, and other characteristics of it.
+Tools for debugging Mozilla code or for analyzing speed, memory use, and other
+characteristics of it.
 
 
 .. list-table::
@@ -347,7 +363,11 @@ Tools for debugging Mozilla code or for analyzing speed, memory use, and other c
 
 Core: Content Security
 ~~~~~~~~~~~~~~~~~~~~~~
-Native content-based security features enforced in the ContentSecurityManager, including: Content Security Policy (CSP), Mixed Content Blocker (MCB), Referrer Policy, Subresource Integrity (SRI), Cross-Origin Resource Sharing (CORS), X-Frame-Options, X-Content-Type-Options: nosniff, HTTPS-Only-Mode, Sanitizer API, Sec-Fetch Metadata, and top-level data: URI blocking.
+Native content-based security features enforced in the ContentSecurityManager,
+including: Content Security Policy (CSP), Mixed Content Blocker (MCB), Referrer
+Policy, Subresource Integrity (SRI), Cross-Origin Resource Sharing (CORS),
+X-Frame-Options, X-Content-Type-Options: nosniff, HTTPS-Only-Mode, Sanitizer
+API, Sec-Fetch Metadata, and top-level data: URI blocking.
 
 
 .. list-table::
@@ -401,7 +421,10 @@ Core: Cookies
 
 Core: Crash reporting
 ~~~~~~~~~~~~~~~~~~~~~
-Infrastructure and tools used to generate, submit and process crash reports. This includes the in-tree google-breakpad fork, the crash report generation machinery as well as the host tools used to dump symbols, analyse minidumps and generate stack traces.
+Infrastructure and tools used to generate, submit and process crash reports.
+This includes the in-tree google-breakpad fork, the crash report generation
+machinery as well as the host tools used to dump symbols, analyse minidumps and
+generate stack traces.
 
 
 .. list-table::
@@ -461,7 +484,9 @@ API Surface for FedCM and WebAuthn
 
 Core: C++/Rust usage, tools, and style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Aspects of C++ use such as language feature usage, standard library versions/usage, compiler/toolchain versions, formatting and naming style, and aspects of Rust use as needs arise
+Aspects of C++ use such as language feature usage, standard library
+versions/usage, compiler/toolchain versions, formatting and naming style, and
+aspects of Rust use as needs arise
 
 
 .. list-table::
@@ -709,7 +734,8 @@ DOM Events and Event Handling
 
 Core: Firefox Source Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The infrastructure platform used to generate Firefox's source documentation, excluding editorial control over the content.
+The infrastructure platform used to generate Firefox's source documentation,
+excluding editorial control over the content.
 
 
 .. list-table::
@@ -795,7 +821,8 @@ Framework for embedding Gecko into Android applications
 
 Core: Global Key Bindings
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Global hot keys for Firefox. Does not include underlined menu accelerators and the like, as those are part of i18n.
+Global hot keys for Firefox. Does not include underlined menu accelerators and
+the like, as those are part of i18n.
 
 
 .. list-table::
@@ -852,7 +879,8 @@ Mozilla graphics API
     * - URL
       - https://wiki.mozilla.org/Platform/GFX https://wiki.mozilla.org/Gecko:Layers https://wiki.mozilla.org/Gecko:2DGraphicsSketch
     * - Bugzilla Components
-      - Core::Graphics, Core::Graphics: Layers, Core::Graphics: Text, Core::Graphics: WebRender, Core::GFX: Color Management, Core::Canvas: 2D, Core::Canvas: WebGL
+      - Core::Graphics, Core::Graphics: Layers, Core::Graphics: Text, Core::Graphics:
+        WebRender, Core::GFX: Color Management, Core::Canvas: 2D, Core::Canvas: WebGL
 
 Core: HAL
 ~~~~~~~~~
@@ -876,7 +904,8 @@ Hardware Abstraction Layer
 
 Core: HTML Parser
 ~~~~~~~~~~~~~~~~~
-The HTML Parser transforms HTML source code into a DOM. It conforms to the HTML specification, and is mostly translated automatically from Java to C++.
+The HTML Parser transforms HTML source code into a DOM. It conforms to the HTML
+specification, and is mostly translated automatically from Java to C++.
 
 
 .. list-table::
@@ -1058,7 +1087,9 @@ JavaScript engine (SpiderMonkey)
     * - URL
       - https://spidermonkey.dev/
     * - Bugzilla Components
-      - Core::JavaScript Engine, Core::JavaScript: GC, Core::JavaScript: Internationalization API, Core::JavaScript: Standard Library, Core::JavaScript: WebAssembly, Core::js-ctypes
+      - Core::JavaScript Engine, Core::JavaScript: GC, Core::JavaScript:
+        Internationalization API, Core::JavaScript: Standard Library, Core::JavaScript:
+        WebAssembly, Core::js-ctypes
 
 Core: JavaScript JIT
 ~~~~~~~~~~~~~~~~~~~~
@@ -1157,7 +1188,12 @@ rendering tree construction, layout (reflow), etc.
     * - URL
       - https://wiki.mozilla.org/Gecko:Overview#Layout
     * - Bugzilla Components
-      - Core::Layout, Core::Layout: Block and Inline, Core::Layout: Columns, Core::Layout: Flexbox, Core::Layout: Floats, Core::Layout: Form Controls, Core::Layout: Generated Content, Lists, and Counters, Core::Layout: Grid, Core::Layout: Images, Video, and HTML Frames, Core::Layout: Positioned, Core::Layout: Ruby, Core::Layout: Scrolling and Overflow, Core::Layout: Tables, Core::Layout: Text and Fonts, Core::Print Preview, Core::Printing: Output
+      - Core::Layout, Core::Layout: Block and Inline, Core::Layout: Columns,
+        Core::Layout: Flexbox, Core::Layout: Floats, Core::Layout: Form Controls,
+        Core::Layout: Generated Content, Lists, and Counters, Core::Layout: Grid,
+        Core::Layout: Images, Video, and HTML Frames, Core::Layout: Positioned,
+        Core::Layout: Ruby, Core::Layout: Scrolling and Overflow, Core::Layout: Tables,
+        Core::Layout: Text and Fonts, Core::Print Preview, Core::Printing: Output
 
 Core: Legacy HTML Parser
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1187,7 +1223,8 @@ Core: Legacy HTML Parser
 
 Core: libjar
 ~~~~~~~~~~~~
-The JAR handling code (protocol handler, stream implementation, and zipreader/zipwriter).
+The JAR handling code (protocol handler, stream implementation, and
+zipreader/zipwriter).
 
 
 .. list-table::
@@ -1215,7 +1252,8 @@ The JAR handling code (protocol handler, stream implementation, and zipreader/zi
 
 Core: MathML
 ~~~~~~~~~~~~
-MathML is a low-level specification for describing mathematics which provides a foundation for the inclusion of mathematical expressions in Web pages.
+MathML is a low-level specification for describing mathematics which provides a
+foundation for the inclusion of mathematical expressions in Web pages.
 
 
 .. list-table::
@@ -1240,7 +1278,9 @@ MathML is a low-level specification for describing mathematics which provides a 
 
 Core: Media Playback
 ~~~~~~~~~~~~~~~~~~~~
-HTML Media APIs, including Media Source Extensions and non-MSE video/audio element playback, and Encrypted Media Extensions. (WebRTC and WebAudio not included).
+HTML Media APIs, including Media Source Extensions and non-MSE video/audio
+element playback, and Encrypted Media Extensions. (WebRTC and WebAudio not
+included).
 
 .. warning::
     This module does not have any owners specified.
@@ -1304,7 +1344,8 @@ Pluggable transport for real-time media
 
 Core: Memory Allocator
 ~~~~~~~~~~~~~~~~~~~~~~
-Most things related to memory allocation in Gecko, including jemalloc, replace-malloc, DMD (dark matter detector), logalloc, etc.
+Most things related to memory allocation in Gecko, including jemalloc, replace-
+malloc, DMD (dark matter detector), logalloc, etc.
 
 
 .. list-table::
@@ -1326,7 +1367,9 @@ Most things related to memory allocation in Gecko, including jemalloc, replace-m
 
 Core: mfbt
 ~~~~~~~~~~
-mfbt is a collection of headers, macros, data structures, methods, and other functionality available for use and reuse throughout all Mozilla code (including SpiderMonkey and Gecko more broadly).
+mfbt is a collection of headers, macros, data structures, methods, and other
+functionality available for use and reuse throughout all Mozilla code
+(including SpiderMonkey and Gecko more broadly).
 
 
 .. list-table::
@@ -1376,7 +1419,8 @@ Platform independent 2D graphics API
 
 Core: Mozglue
 ~~~~~~~~~~~~~
-Glue library containing various low-level functionality, including a dynamic linker for Android, a DLL block list for Windows, etc.
+Glue library containing various low-level functionality, including a dynamic
+linker for Android, a DLL block list for Windows, etc.
 
 
 .. list-table::
@@ -1468,11 +1512,17 @@ The Mozilla Networking Library
     * - URL
       - :ref:`Networking`
     * - Bugzilla Components
-      - Core::Networking, Core::Networking: Cache, Core::Networking: Cookies, Core::Networking: FTP, Core::Networking: File, Core::Networking: HTTP, Core::Networking: JAR, Core::Networking: Websockets, Core::DOM: Networking
+      - Core::Networking, Core::Networking: Cache, Core::Networking: Cookies,
+        Core::Networking: FTP, Core::Networking: File, Core::Networking: HTTP,
+        Core::Networking: JAR, Core::Networking: Websockets, Core::DOM: Networking
 
 Core: NodeJS usage, tools, and style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Advises on the use of NodeJS and npm packages at build and runtime. Reviews additions/upgrades/removals of vendored npm packages. Works with appropriate teams to maintain automated license and security audits of npm packages. Works with the security team and relevant developers to respond to vulnerabilities in NodeJS and vendored npm packages.
+Advises on the use of NodeJS and npm packages at build and runtime. Reviews
+additions/upgrades/removals of vendored npm packages. Works with appropriate
+teams to maintain automated license and security audits of npm packages. Works
+with the security team and relevant developers to respond to vulnerabilities in
+NodeJS and vendored npm packages.
 
 
 .. list-table::
@@ -1637,7 +1687,8 @@ Preference library
 
 Core: Private Browsing
 ~~~~~~~~~~~~~~~~~~~~~~
-Implementation of the Private Browsing mode, and the integration of other modules with Private Browsing APIs.
+Implementation of the Private Browsing mode, and the integration of other
+modules with Private Browsing APIs.
 
 
 .. list-table::
@@ -1691,7 +1742,8 @@ Caps is the capabilities-based security system.
 
 Core: Push Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Push is a way for application developers to send messages to their web applications.
+Push is a way for application developers to send messages to their web
+applications.
 
 .. warning::
     This module does not have any owners specified.
@@ -1792,7 +1844,8 @@ Sandboxing for the Windows platform
 
 Core: security
 ~~~~~~~~~~~~~~
-Crypto/PKI code, including NSS (Network Security Services) and JSS (NSS for Java)
+Crypto/PKI code, including NSS (Network Security Services) and JSS (NSS for
+Java)
 
 
 .. list-table::
@@ -1881,7 +1934,8 @@ Sandboxing using WASM/RLBox libraries.
 
 Core: Static analysis & rewriting for C++
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tools for checking C++ code looking for problems at compile time, plus tools for automated rewriting of C++ code.
+Tools for checking C++ code looking for problems at compile time, plus tools
+for automated rewriting of C++ code.
 
 
 .. list-table::
@@ -2047,7 +2101,8 @@ User Agent String
 
 Core: View System
 ~~~~~~~~~~~~~~~~~
-The View Manager is responsible for handling "heavyweight" rendering (some clipping, compositing) and event handling tasks.
+The View Manager is responsible for handling "heavyweight" rendering (some
+clipping, compositing) and event handling tasks.
 
 
 .. list-table::
@@ -2187,7 +2242,8 @@ WebGPU implementation
 
 Core: WebRTC
 ~~~~~~~~~~~~
-WebRTC is responsible for realtime audio and video communication, as well as related issues like low-level camera and microphone access
+WebRTC is responsible for realtime audio and video communication, as well as
+related issues like low-level camera and microphone access
 
 
 .. list-table::
@@ -2216,7 +2272,8 @@ WebRTC is responsible for realtime audio and video communication, as well as rel
 
 Core: WebVR
 ~~~~~~~~~~~
-Gecko's implementation of WebVR (Virtual Reality) functionality, including API, devices, graphics and integration
+Gecko's implementation of WebVR (Virtual Reality) functionality, including API,
+devices, graphics and integration
 
 
 .. list-table::
@@ -2244,7 +2301,9 @@ Gecko's implementation of WebVR (Virtual Reality) functionality, including API, 
 
 Core: WebRTC Media
 ==================
-Submodule of WebRTC responsible for access to media input devices (microphones, cameras, screen capture), as well as realtime audiovisual codecs and packetization.
+Submodule of WebRTC responsible for access to media input devices (microphones,
+cameras, screen capture), as well as realtime audiovisual codecs and
+packetization.
 
 
 .. list-table::
@@ -2276,7 +2335,8 @@ Submodule of WebRTC responsible for access to media input devices (microphones, 
 
 Core: WebRTC Signaling
 ======================
-Submodule of WebRTC responsible for implementation of PeerConnection API, WebRTC identity, and SDP/JSEP handling
+Submodule of WebRTC responsible for implementation of PeerConnection API,
+WebRTC identity, and SDP/JSEP handling
 
 
 .. list-table::
@@ -2331,7 +2391,8 @@ Top level Widget
 
 Core: Widget - Android
 ~~~~~~~~~~~~~~~~~~~~~~
-This is part of the [https://wiki.mozilla.org/Modules/Core#GeckoView GeckoView] module.
+This is part of the [https://wiki.mozilla.org/Modules/Core#GeckoView GeckoView]
+module.
 
 
 .. list-table::
@@ -2448,7 +2509,9 @@ Windows widget support
 
 Core: XML
 ~~~~~~~~~
-XML in Mozilla, including XML, XHTML, Namespaces in XML, Associating Style Sheets with XML Documents, XML Linking and XML Extras. XML-related things that are not covered by more specific projects.
+XML in Mozilla, including XML, XHTML, Namespaces in XML, Associating Style
+Sheets with XML Documents, XML Linking and XML Extras. XML-related things that
+are not covered by more specific projects.
 
 
 .. list-table::
@@ -2570,7 +2633,8 @@ Deep Magic
 
 Core: XPIDL
 ~~~~~~~~~~~
-Cross-platform IDL compiler; produces .h C++ header files and .xpt runtime type description files from .idl interface description files.
+Cross-platform IDL compiler; produces .h C++ header files and .xpt runtime type
+description files from .idl interface description files.
 
 
 .. list-table::
@@ -3056,12 +3120,14 @@ Managing, saving and filling logins.
     * - URL
       - https://wiki.mozilla.org/Toolkit:Password_Manager
     * - Bugzilla Components
-      - Toolkit::Password Manager, Toolkit::Password Manager: Site, Compatibility, Firefox::about:logins
+      - Toolkit::Password Manager, Toolkit::Password Manager: Site, Compatibility,
+        Firefox::about:logins
 
 
 Picture-in-Picture
 ==================
-A component that allows video elements to be pulled out into an always-on-top window.
+A component that allows video elements to be pulled out into an always-on-top
+window.
 
 
 .. list-table::
@@ -3165,7 +3231,8 @@ The search service, address bar and address bar autocomplete.
 
 Security and Privacy UI
 =======================
-The front-end to our security and privacy features, including Protections UI, Site Identity, Site Permissions and Certificate Errors
+The front-end to our security and privacy features, including Protections UI,
+Site Identity, Site Permissions and Certificate Errors
 
 
 .. list-table::
@@ -3187,7 +3254,8 @@ The front-end to our security and privacy features, including Protections UI, Si
         | `browser/components/protections/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/protections/\*\*/\*>`__
         | `browser/components/controlcenter/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/controlcenter/\*\*/\*>`__
     * - Bugzilla Components
-      - Firefox::Security, Firefox::Protections UI, Firefox::Site Identity, Firefox::Site Permissions
+      - Firefox::Security, Firefox::Protections UI, Firefox::Site Identity,
+        Firefox::Site Permissions
 
 
 Session Restore
@@ -3328,7 +3396,8 @@ Mozilla Developer Tools
 
 JavaScript usage, tools, and style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Aspects of JavaScript use such as language feature usage, tooling such as lint configurations, formatting and naming style.
+Aspects of JavaScript use such as language feature usage, tooling such as lint
+configurations, formatting and naming style.
 
 
 .. list-table::
@@ -3352,7 +3421,9 @@ Aspects of JavaScript use such as language feature usage, tooling such as lint c
 
 Marionette
 ~~~~~~~~~~
-Marionette is a remote protocol that lets out-of-process programs communicate with, instrument, and control Gecko-based browsers. Combined with geckodriver, this forms our WebDriver implementation.
+Marionette is a remote protocol that lets out-of-process programs communicate
+with, instrument, and control Gecko-based browsers. Combined with geckodriver,
+this forms our WebDriver implementation.
 
 
 .. list-table::
@@ -3437,7 +3508,10 @@ Aspects of Python use such as tooling, formatting and naming style
 
 Remote Protocol
 ~~~~~~~~~~~~~~~
-Low-level remote protocol exposing interfaces for inspecting state and controlling execution of web documents, instrumenting various subsystems in the browser, simulating user interaction for automation purposes, and for subscribing to updates from the aforementioned.
+Low-level remote protocol exposing interfaces for inspecting state and
+controlling execution of web documents, instrumenting various subsystems in the
+browser, simulating user interaction for automation purposes, and for
+subscribing to updates from the aforementioned.
 
 
 .. list-table::
@@ -3514,7 +3588,8 @@ Firefox UI test framework.
 
 geckodriver
 ~~~~~~~~~~~
-Proxy for using W3C WebDriver-compatible clients to interact with Gecko-based browsers.
+Proxy for using W3C WebDriver-compatible clients to interact with Gecko-based
+browsers.
 
 
 .. list-table::
@@ -3600,7 +3675,9 @@ Base modules used for implementing test components.
 
 Performance Testing
 ~~~~~~~~~~~~~~~~~~~
-This module encompasses all of our performance testing projects, e.g.  Raptor,  Talos, MozPerfTest, AWSY, mach try perf, etc.. See our PerfDocs for more information  on the owners/peers of the various components (linked below).
+This module encompasses all of our performance testing projects, e.g.  Raptor,
+Talos, MozPerfTest, AWSY, mach try perf, etc.. See our PerfDocs for more
+information  on the owners/peers of the various components (linked below).
 
 
 .. list-table::
@@ -3631,7 +3708,8 @@ This module encompasses all of our performance testing projects, e.g.  Raptor,  
     * - URL
       - :ref:`Performance Testing`
     * - Bugzilla Components
-      - Testing :: Raptor, Testing :: Talos, Testing :: AWSY, Testing :: Performance, Testing :: mozperftest, Testing :: Condprofile
+      - Testing :: Raptor, Testing :: Talos, Testing :: AWSY, Testing :: Performance,
+        Testing :: mozperftest, Testing :: Condprofile
 
 Reftest (+ jsreftest + crashtest)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3771,7 +3849,12 @@ The profile system and startup process before the front-end launches.
 
 Telemetry
 =========
-The core infrastructure in the Firefox client to send back telemetry data. Includes the common mechanisms to record, view and submit data: Legacy Telemetry and Glean (via Firefox on Glean (FOG)). This module does ''not'' include responsibility for every piece of submitted Telemetry data. Each team/module is responsible for their own measurements (histograms, scalars, other ping submissions, etc.).
+The core infrastructure in the Firefox client to send back telemetry data.
+Includes the common mechanisms to record, view and submit data: Legacy
+Telemetry and Glean (via Firefox on Glean (FOG)). This module does ''not''
+include responsibility for every piece of submitted Telemetry data. Each
+team/module is responsible for their own measurements (histograms, scalars,
+other ping submissions, etc.).
 
 
 .. list-table::
@@ -3853,7 +3936,8 @@ Webextension APIs and integration.
 
 URL Classifier
 ~~~~~~~~~~~~~~
-Database and list-based classification of URL resources, such as Tracking Protection and SafeBrowsing.
+Database and list-based classification of URL resources, such as Tracking
+Protection and SafeBrowsing.
 
 
 .. list-table::
