@@ -60,6 +60,11 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   // size of the wrapped object (which reports itself).
   size_t Bytes() override { return 0; }
 
+ protected:
+  // RenderTextureHost
+  std::pair<gfx::Point, gfx::Point> GetUvCoords(
+      gfx::IntSize aTextureSize) const override;
+
  private:
   ~RenderTextureHostWrapper() override;
 
