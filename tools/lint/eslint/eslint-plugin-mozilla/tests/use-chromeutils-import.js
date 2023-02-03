@@ -55,11 +55,6 @@ ruleTester.run("use-chromeutils-import", rule, {
       errors: callError(MESSAGE_IMPORT),
     },
     {
-      code: `Components.utils.import("resource://gre/modules/AppConstants.jsm");`,
-      output: `ChromeUtils.import("resource://gre/modules/AppConstants.jsm");`,
-      errors: callError(MESSAGE_IMPORT),
-    },
-    {
       code: `XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                                "resource://gre/modules/AppConstants.jsm");`,
       output: `ChromeUtils.defineModuleGetter(this, "AppConstants",

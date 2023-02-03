@@ -30,10 +30,11 @@ module.exports = {
           isIdentifier(node.object, "Ci") &&
           isIdentifier(node.property, "nsIScriptableUnicodeConverter")
         ) {
-          context.report(
+          context.report({
             node,
-            "Ci.nsIScriptableUnicodeConverter is deprecated. You should use TextEncoder or TextDecoder instead."
-          );
+            message:
+              "Ci.nsIScriptableUnicodeConverter is deprecated. You should use TextEncoder or TextDecoder instead.",
+          });
         }
       },
     };

@@ -43,8 +43,10 @@ module.exports = {
           return;
         }
 
-        let msg = "provide a default value instead of using a try/catch block";
-        context.report(node, msg);
+        context.report({
+          node,
+          message: "provide a default value instead of using a try/catch block",
+        });
       },
     };
   },

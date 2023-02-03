@@ -32,7 +32,6 @@ ruleTester.run("consistent-if-bracing", rule, {
     invalidCode("if (true) 1; else {0}"),
     invalidCode("if (true) {1} else if (true) 2; else {0}"),
     invalidCode("if (true) 1; else if (true) {2} else {0}"),
-    invalidCode("if (true) {1} else if (true) 2; else {0}"),
     invalidCode("if (true) {1} else if (true) {2} else 0"),
     invalidCode("if (true) {1} else if (true) {2} else if (true) 3; else {0}"),
     invalidCode("if (true) {if (true) 1; else {0}} else {0}"),

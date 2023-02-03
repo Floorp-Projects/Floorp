@@ -51,11 +51,12 @@ module.exports = {
 
         let timeout = node.arguments[1];
         if (timeout.type !== "Literal" || timeout.value > 0) {
-          context.report(
+          context.report({
             node,
-            "listen for events instead of setTimeout() " +
-              "with arbitrary delay"
-          );
+            message:
+              "listen for events instead of setTimeout() " +
+              "with arbitrary delay",
+          });
         }
       },
     };

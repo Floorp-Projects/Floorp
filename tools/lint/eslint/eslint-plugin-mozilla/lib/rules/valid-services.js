@@ -52,7 +52,10 @@ module.exports = {
         }
 
         if (!serviceAliases.has(alias)) {
-          context.report(node, `Unknown Services member property ${alias}`);
+          context.report({
+            node,
+            message: `Unknown Services member property ${alias}`,
+          });
         }
       },
     };

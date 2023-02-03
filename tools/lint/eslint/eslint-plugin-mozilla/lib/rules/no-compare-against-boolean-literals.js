@@ -26,10 +26,11 @@ module.exports = {
           (["true", "false"].includes(node.left.raw) ||
             ["true", "false"].includes(node.right.raw))
         ) {
-          context.report(
+          context.report({
             node,
-            "Don't compare for inexact equality against boolean literals"
-          );
+            message:
+              "Don't compare for inexact equality against boolean literals",
+          });
         }
       },
     };

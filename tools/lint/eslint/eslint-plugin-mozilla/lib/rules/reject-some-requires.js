@@ -34,7 +34,7 @@ module.exports = {
       CallExpression(node) {
         const path = helpers.getDevToolsRequirePath(node);
         if (path && RX.test(path)) {
-          context.report(node, `require(${path}) is not allowed`);
+          context.report({ node, message: `require(${path}) is not allowed` });
         }
       },
     };

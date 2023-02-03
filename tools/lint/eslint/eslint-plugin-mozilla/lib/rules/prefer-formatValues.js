@@ -39,11 +39,12 @@ module.exports = {
       let calls = BlockStack.pop();
       if (calls.size > 1) {
         for (let callNode of calls) {
-          context.report(
-            callNode,
-            "prefer to use a single document.l10n.formatValues call instead " +
-              "of multiple calls to document.l10n.formatValue or document.l10n.formatValues"
-          );
+          context.report({
+            node: callNode,
+            message:
+              "prefer to use a single document.l10n.formatValues call instead " +
+              "of multiple calls to document.l10n.formatValue or document.l10n.formatValues",
+          });
         }
       }
     }
@@ -56,7 +57,10 @@ module.exports = {
 
       CallExpression(node) {
         if (!BlockStack.length) {
-          context.report(node, "call expression found outside of known block");
+          context.report({
+            node,
+            message: "call expression found outside of known block",
+          });
         }
 
         let callee = node.callee;
