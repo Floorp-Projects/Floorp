@@ -251,6 +251,49 @@ nsIWidget* nsCocoaUtils::GetHiddenWindowWidget() {
   return hiddenWindowWidget;
 }
 
+BOOL nsCocoaUtils::WasLaunchedAtLogin() {
+  ProcessSerialNumber processSerialNumber = {0, kCurrentProcess};
+  ProcessInfoRec processInfoRec = {};
+  processInfoRec.processInfoLength = sizeof(processInfoRec);
+
+  // There is currently no replacement for ::GetProcessInformation, which has
+  // been deprecated since macOS 10.9.
+  if (::GetProcessInformation(&processSerialNumber, &processInfoRec) == noErr) {
+    ProcessInfoRec parentProcessInfo = {};
+    parentProcessInfo.processInfoLength = sizeof(parentProcessInfo);
+    if (::GetProcessInformation(&processInfoRec.processLauncher, &parentProcessInfo) == noErr) {
+      return parentProcessInfo.processSignature == 'lgnw';
+    }
+  }
+  return NO;
+}
+
+BOOL nsCocoaUtils::ShouldRestoreStateDueToLaunchAtLogin() {
+  // Check if we were launched by macOS as a result of having
+  // "Reopen windows..." selected during a restart.
+  if (!WasLaunchedAtLogin()) {
+    return NO;
+  }
+
+  CFStringRef lgnwPlistName = CFSTR("com.apple.loginwindow");
+  CFStringRef saveStateKey = CFSTR("TALLogoutSavesState");
+  CFPropertyListRef lgnwPlist =
+      (CFPropertyListRef)(::CFPreferencesCopyAppValue(saveStateKey, lgnwPlistName));
+  // The .plist doesn't exist unless the user changed the "Reopen windows..."
+  // preference. If it doesn't exist, restore by default (as this is the macOS
+  // default).
+  // https://developer.apple.com/library/mac/documentation/macosx/conceptual/bpsystemstartup/chapters/CustomLogin.html
+  if (!lgnwPlist) {
+    return YES;
+  }
+
+  if (CFBooleanRef shouldRestoreState = static_cast<CFBooleanRef>(lgnwPlist)) {
+    return ::CFBooleanGetValue(shouldRestoreState);
+  }
+
+  return NO;
+}
+
 void nsCocoaUtils::PrepareForNativeAppModalDialog() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 

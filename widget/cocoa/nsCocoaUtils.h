@@ -238,6 +238,12 @@ class nsCocoaUtils {
 
   static nsIWidget* GetHiddenWindowWidget();
 
+  /**
+   * Should the application restore its state because it was launched by the OS
+   * at login?
+   */
+  static BOOL ShouldRestoreStateDueToLaunchAtLogin();
+
   static void PrepareForNativeAppModalDialog();
   static void CleanUpAfterNativeAppModalDialog();
 
@@ -537,6 +543,11 @@ class nsCocoaUtils {
    * Get the title for URL from NSPasteboardItem.
    */
   static NSString* GetTitleForURLFromPasteboardItem(NSPasteboardItem* item);
+
+  /**
+   * Did the OS launch the application at login?
+   */
+  static BOOL WasLaunchedAtLogin();
 
   /**
    * Array of promises waiting to be resolved due to a video capture request.

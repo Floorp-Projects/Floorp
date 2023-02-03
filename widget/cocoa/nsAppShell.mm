@@ -196,6 +196,8 @@ void OnUncaughtException(NSException* aException) {
 
 - (id)initWithAppShell:(nsAppShell*)aAppShell;
 - (void)applicationWillTerminate:(NSNotification*)aNotification;
+- (BOOL)shouldSaveApplicationState:(NSCoder*)coder;
+- (BOOL)shouldRestoreApplicationState:(NSCoder*)coder;
 @end
 
 // nsAppShell implementation
@@ -1043,6 +1045,14 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
   nsBaseAppShell::OnSystemTimezoneChange();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
+- (BOOL)shouldSaveApplicationState:(NSCoder*)coder {
+  return YES;
+}
+
+- (BOOL)shouldRestoreApplicationState:(NSCoder*)coder {
+  return YES;
 }
 
 @end
