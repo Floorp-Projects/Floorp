@@ -40,8 +40,12 @@
     <string name="mozac_feature_addons_permissions_downloads_open_description">Qurılmańızǵa júklengen fayllardı ashıw</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Barlıq ashıq bettegi tekstlerdi oqıw</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Jaylasqan ornıńızǵa kiriw</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Brauzer tariyxına kiriw</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Sizge xabarnamalardı kórsetiw</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Brauzer proksi sazlawların basqarıw</string>
     <!-- Description for sessions permission. -->
@@ -69,6 +73,8 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Óshirilgen</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Jeke bette ruqsat etiw</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Jeke betlerde iske túsiriw</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Iske túsirilgen</string>
@@ -92,6 +98,8 @@
     <string name="mozac_feature_addons_remove">Alıp taslaw</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s qosılsın ba?</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Bul tómendegi ruqsatlardı talap etedi:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Qosıw</string>
     <!-- This is a button to cancel the add-on installation . -->

@@ -38,7 +38,7 @@
     <string name="mozac_feature_prompt_login_add_username_headline">Saqlaǵan parolge paydalanıwshı atı qosılsın ba?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
-    <string name="mozac_feature_prompts_content_description_input_label">Tekst kiritiw maydanı ushın belgi</string>
+    <string name="mozac_feature_prompts_content_description_input_label">Tekst kirgiziw maydanı ushın belgi</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Reńdi tańlań</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
@@ -96,6 +96,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Bul saytqa maǵlıwmatlar qayta jiberilsin be?</string>
+    <string name="mozac_feature_prompt_repost_message">Bul betti jańalaw nátiyjesinde pikir jazıw yamasa tólemdi jiberiw sıyaqlı sóńǵı háreketler qaytalanıwı múmkin.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Maǵlıwmatlardı qayta jiberiw</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->

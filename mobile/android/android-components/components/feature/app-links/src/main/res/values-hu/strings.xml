@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">Megnyitás a következővel…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Megnyitja az alkalmazásban? Lehet, hogy tevékenysége már nem lesz privát.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Megnyitás egy másik alkalmazásban</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Elhagyja a %sot a tartalom megtekintéséhez?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Megnyitás</string>
     <!-- Cancels the prompt -->

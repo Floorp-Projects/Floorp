@@ -893,6 +893,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">سوئچ کرو</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">پوری سکرین موڈ وچ داخل تھیندا پئے</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">فوری طور تے نویں ٹیب وچ لنک تے سوئچ کرو</string>
 
