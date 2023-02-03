@@ -864,6 +864,9 @@ export class UrlbarView {
    *   {array} [classList]
    *     An optional list of classes.  Each class will be added to the element
    *     created for the object by calling element.classList.add().
+   *   {boolean} [overflowable]
+   *     If true, the element's overflow status will be tracked in order to
+   *     fade it out when needed.
    *   {string} [stylesheet]
    *     An optional stylesheet URL.  This property is valid only on the root
    *     object in the structure.  The stylesheet will be loaded in all browser
@@ -1182,12 +1185,12 @@ export class UrlbarView {
     item._elements.set("tailPrefixChar", tailPrefixChar);
 
     let title = this.#createElement("span");
-    title.className = "urlbarView-title";
+    title.classList.add("urlbarView-title", "urlbarView-overflowable");
     noWrap.appendChild(title);
     item._elements.set("title", title);
 
     let tagsContainer = this.#createElement("span");
-    tagsContainer.className = "urlbarView-tags";
+    tagsContainer.classList.add("urlbarView-tags", "urlbarView-overflowable");
     noWrap.appendChild(tagsContainer);
     item._elements.set("tagsContainer", tagsContainer);
 
@@ -1227,8 +1230,11 @@ export class UrlbarView {
 
   #buildViewForDynamicType(type, parentNode, elementsByName, template) {
     // Add classes to parentNode's classList.
-    for (let className of template.classList || []) {
-      parentNode.classList.add(className);
+    if (template.classList) {
+      parentNode.classList.add(...template.classList);
+    }
+    if (template.overflowable) {
+      parentNode.classList.add("urlbarView-overflowable");
     }
     // Set attributes on parentNode.
     for (let [name, value] of Object.entries(template.attributes || {})) {
@@ -1281,7 +1287,7 @@ export class UrlbarView {
     item._elements.set("noWrap", noWrap);
 
     let title = this.#createElement("span");
-    title.className = "urlbarView-title";
+    title.classList.add("urlbarView-title", "urlbarView-overflowable");
     noWrap.appendChild(title);
     item._elements.set("title", title);
 
@@ -1474,10 +1480,7 @@ export class UrlbarView {
       title.removeAttribute("aria-label");
     }
 
-    title._tooltip = result.title;
-    if (title.hasAttribute("overflow")) {
-      title.setAttribute("title", title._tooltip);
-    }
+    this.#updateOverflowTooltip(title, result.title);
 
     let tagsContainer = item._elements.get("tagsContainer");
     tagsContainer.textContent = "";
@@ -1617,14 +1620,11 @@ export class UrlbarView {
         result.payload.displayUrl,
         result.payloadHighlights.displayUrl || []
       );
-      url._tooltip = result.payload.displayUrl;
+      this.#updateOverflowTooltip(url, result.payload.displayUrl);
     } else {
       item.removeAttribute("has-url");
       url.textContent = "";
-      url._tooltip = "";
-    }
-    if (url.hasAttribute("overflow")) {
-      url.setAttribute("title", url._tooltip);
+      this.#updateOverflowTooltip(url, "");
     }
 
     if (isVisitAction) {
@@ -1755,12 +1755,7 @@ export class UrlbarView {
 
     let title = item._elements.get("title");
     this.#setResultTitle(result, title);
-    title._tooltip = result.title;
-    if (title.hasAttribute("overflow")) {
-      title.setAttribute("title", title._tooltip);
-    } else {
-      title.removeAttribute("title");
-    }
+    this.#updateOverflowTooltip(title, result.title);
 
     let url = item._elements.get("url");
     this.#addTextContentWithHighlights(
@@ -1768,12 +1763,7 @@ export class UrlbarView {
       result.payload.displayUrl,
       result.payloadHighlights.displayUrl || []
     );
-    url._tooltip = result.payload.displayUrl;
-    if (url.hasAttribute("overflow")) {
-      url.setAttribute("title", url._tooltip);
-    } else {
-      url.removeAttribute("title");
-    }
+    this.#updateOverflowTooltip(url, result.payload.displayUrl);
 
     let bottom = item._elements.get("bottom");
     if (result.payload.isSponsored) {
@@ -2217,7 +2207,7 @@ export class UrlbarView {
    *
    * @param {UrlbarResult} result
    *   The result for which the title is being set.
-   * @param {Node} titleNode
+   * @param {Element} titleNode
    *   The DOM node for the result's tile.
    */
   #setResultTitle(result, titleNode) {
@@ -2257,7 +2247,7 @@ export class UrlbarView {
    * Adds text content to a node, placing substrings that should be highlighted
    * inside <em> nodes.
    *
-   * @param {Node} parentNode
+   * @param {Element} parentNode
    *   The text content will be added to this node.
    * @param {string} textContent
    *   The text content to give the node.
@@ -2294,7 +2284,7 @@ export class UrlbarView {
   /**
    * Adds markup for a tail suggestion prefix to a row.
    *
-   * @param {Node} item
+   * @param {Element} item
    *   The node for the result row.
    * @param {UrlbarResult} result
    *   A UrlbarResult representing a tail suggestion.
@@ -2319,10 +2309,50 @@ export class UrlbarView {
     }
   }
 
+  /**
+   * @param {Element} element
+   *   The element
+   * @returns {boolean}
+   *   Whether we track this element's overflow status in order to fade it out
+   *   and add a tooltip when needed.
+   */
+  #canElementOverflow(element) {
+    let { classList } = element;
+    return (
+      classList.contains("urlbarView-overflowable") ||
+      classList.contains("urlbarView-url")
+    );
+  }
+
+  /**
+   * Marks an element as overflowing or not overflowing.
+   *
+   * @param {Element} element
+   *   The element
+   * @param {boolean} overflowing
+   *   Whether the element is overflowing
+   */
   #setElementOverflowing(element, overflowing) {
     element.toggleAttribute("overflow", overflowing);
+    this.#updateOverflowTooltip(element);
+  }
 
-    if (overflowing && element._tooltip) {
+  /**
+   * Sets an overflowing element's tooltip, or removes the tooltip if the
+   * element isn't overflowing. Also optionally updates the string that should
+   * be used as the tooltip in case of overflow.
+   *
+   * @param {Element} element
+   *   The element
+   * @param {string} [tooltip]
+   *   The string that should be used in the tooltip. This will be stored and
+   *   re-used next time the element overflows.
+   */
+  #updateOverflowTooltip(element, tooltip) {
+    if (typeof tooltip == "string") {
+      element._tooltip = tooltip;
+    }
+    if (element.hasAttribute("overflow") && element._tooltip) {
       element.setAttribute("title", element._tooltip);
     } else {
       element.removeAttribute("title");
@@ -2865,14 +2895,8 @@ export class UrlbarView {
 
   on_overflow(event) {
     if (
-      event.detail == 1 &&
-      (event.target.classList.contains("urlbarView-url") ||
-        event.target.classList.contains("urlbarView-title") ||
-        event.target.classList.contains("urlbarView-tags") ||
-        event.target.classList.contains(
-          "urlbarView-dynamic-weather-middleNoWrap"
-        ) ||
-        event.target.classList.contains("urlbarView-dynamic-weather-summary"))
+      event.detail == 1 /* horizontal overflow */ &&
+      this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, true);
     }
@@ -2880,14 +2904,8 @@ export class UrlbarView {
 
   on_underflow(event) {
     if (
-      event.detail == 1 &&
-      (event.target.classList.contains("urlbarView-url") ||
-        event.target.classList.contains("urlbarView-title") ||
-        event.target.classList.contains("urlbarView-tags") ||
-        event.target.classList.contains(
-          "urlbarView-dynamic-weather-middleNoWrap"
-        ) ||
-        event.target.classList.contains("urlbarView-dynamic-weather-summary"))
+      event.detail == 1 /* horizontal underflow */ &&
+      this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, false);
     }

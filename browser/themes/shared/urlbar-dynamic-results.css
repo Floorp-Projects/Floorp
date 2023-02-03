@@ -400,17 +400,6 @@
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0;
-  overflow: hidden;
-}
-
-.urlbarView-dynamic-weather-summary[overflow],
-.urlbarView-dynamic-weather-middleNoWrap[overflow] {
-  mask-image: linear-gradient(to left, transparent, black 2em);
-}
-
-.urlbarView-dynamic-weather-summary[overflow]:-moz-locale-dir(rtl),
-.urlbarView-dynamic-weather-middleNoWrap[overflow]:-moz-locale-dir(rtl) {
-  mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
 .urlbarView-dynamic-weather-top {
@@ -441,7 +430,6 @@
 .urlbarView-dynamic-weather-middleNoWrap {
   display: inline-flex;
   align-items: center;
-  overflow: hidden;
 }
 
 /* When middleNoWrap has overflowed, we want to hide the summaryTextSeparator.
@@ -452,14 +440,14 @@
    state while hiding the summaryTextSeparator.
  */
 .urlbarView-dynamic-weather-middleNoWrap[overflow] > .urlbarView-dynamic-weather-summaryTextSeparator,
-.urlbarView-dynamic-weather-middleNoWrap[overflow] > .urlbarView-dynamic-weather-highLow  {
+.urlbarView-dynamic-weather-middleNoWrap[overflow] > .urlbarView-dynamic-weather-highLow {
   visibility: hidden;
 }
 
 /* The highLowWrap remains hidden when middleNoWrap is not overflowed. Once it
    has overflowed, we display the highLowWrap element.
 */
-.urlbarView-dynamic-weather-middleNoWrap:not([overflow]) + .urlbarView-dynamic-weather-highLowWrap  {
+.urlbarView-dynamic-weather-middleNoWrap:not([overflow]) + .urlbarView-dynamic-weather-highLowWrap {
   display: none;
 }
 

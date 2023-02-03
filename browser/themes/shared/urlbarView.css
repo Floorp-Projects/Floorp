@@ -204,16 +204,17 @@
   }
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title[overflow],
-.urlbarView-tags[overflow],
+.urlbarView-overflowable,
+.urlbarView-url {
+  overflow: hidden;
+}
+
+.urlbarView-overflowable[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl),
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title[overflow]:-moz-locale-dir(rtl),
-.urlbarView-tags[overflow]:-moz-locale-dir(rtl) {
+.urlbarView-overflowable[overflow]:not(.urlbarView-title[isurl]):-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -462,7 +463,6 @@
 /* Title */
 
 .urlbarView-title {
-  overflow: hidden;
   white-space: nowrap;
   /* Explicitly set line-height to avoid excessively tall rows if the title triggers use of
      fallback fonts with extreme metrics. */
@@ -595,7 +595,6 @@
 }
 
 .urlbarView-url {
-  overflow: hidden;
   color: var(--urlbar-popup-url-color);
   /* Increase line-height to avoid cutting overhanging glyphs due to masking on
      the element */
@@ -662,7 +661,6 @@
 /* Tags */
 
 .urlbarView-tags {
-  overflow: hidden;
   display: flex;
   /* Increase line-height to avoid cutting overhanging glyphs due to masking on
      the element */
