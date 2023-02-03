@@ -48,9 +48,16 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, bitDepth));
   if (subType == MFAudioFormat_AAC) {
     if (mAACUserData.IsEmpty()) {
-      MOZ_ASSERT(info.mCodecSpecificConfig.is<AacCodecSpecificData>());
-      const auto& blob = info.mCodecSpecificConfig.as<AacCodecSpecificData>()
-                             .mDecoderConfigDescriptorBinaryBlob;
+      MOZ_ASSERT(info.mCodecSpecificConfig.is<AacCodecSpecificData>() ||
+                 info.mCodecSpecificConfig.is<AudioCodecSpecificBinaryBlob>());
+      RefPtr<MediaByteBuffer> blob;
+      if (info.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
+        blob = info.mCodecSpecificConfig.as<AacCodecSpecificData>()
+                   .mDecoderConfigDescriptorBinaryBlob;
+      } else {
+        blob = info.mCodecSpecificConfig.as<AudioCodecSpecificBinaryBlob>()
+                   .mBinaryBlob;
+      }
       AACAudioSpecificConfigToUserData(info.mExtendedProfile, blob->Elements(),
                                        blob->Length(), mAACUserData);
       LOGV("Generated AAC user data");
