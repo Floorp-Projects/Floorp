@@ -288,7 +288,11 @@ enum ShouldReportMarkTime : bool {
 
 } /* namespace gc */
 
-class GCMarker {
+// To prevent false sharing, some data structures are aligned to a typical cache
+// line size.
+static constexpr size_t TypicalCacheLineSize = 64;
+
+class alignas(TypicalCacheLineSize) GCMarker {
   enum MarkingState : uint8_t {
     // Have not yet started marking.
     NotActive,
