@@ -240,11 +240,13 @@ already_AddRefed<gfxFont> gfxFontCache::Lookup(
   }
 
   RefPtr<gfxFont> font = entry->mFont;
-  MarkUsedLocked(font, lock);
+  if (font->GetExpirationState()->IsTracked()) {
+    RemoveObjectLocked(font, lock);
+  }
   return font.forget();
 }
 
-already_AddRefed<gfxFont> gfxFontCache::MaybeInsert(RefPtr<gfxFont>&& aFont) {
+already_AddRefed<gfxFont> gfxFontCache::MaybeInsert(gfxFont* aFont) {
   MOZ_ASSERT(aFont);
   MutexAutoLock lock(mMutex);
 
@@ -252,35 +254,69 @@ already_AddRefed<gfxFont> gfxFontCache::MaybeInsert(RefPtr<gfxFont>&& aFont) {
           aFont->GetUnicodeRangeMap());
   HashEntry* entry = mFonts.PutEntry(key);
   if (!entry) {
-    return aFont.forget();
+    return do_AddRef(aFont);
   }
 
   // If it is null, then we are inserting a new entry. Otherwise we are
   // attempting to replace an existing font, probably due to a thread race, in
   // which case stick with the original font.
   if (!entry->mFont) {
-    entry->mFont = std::move(aFont);
-    AddObjectLocked(entry->mFont, lock);
+    entry->mFont = aFont;
     // Assert that we can find the entry we just put in (this fails if the key
     // has a NaN float value in it, e.g. 'sizeAdjust').
     MOZ_ASSERT(entry == mFonts.GetEntry(key));
   } else {
-    MarkUsedLocked(entry->mFont, lock);
+    MOZ_ASSERT(entry->mFont != aFont);
+    aFont->Destroy();
+    if (entry->mFont->GetExpirationState()->IsTracked()) {
+      RemoveObjectLocked(entry->mFont, lock);
+    }
   }
 
   return do_AddRef(entry->mFont);
 }
 
-void gfxFontCache::NotifyExpiredLocked(gfxFont* aFont, const AutoLock& aLock) {
-  // If there are outstanding references to the font outside the cache, we
-  // should just mark it as used.
-  if (aFont->GetRefCount() > 1) {
-    MarkUsedLocked(aFont, aLock);
-    return;
+bool gfxFontCache::MaybeDestroy(gfxFont* aFont) {
+  MOZ_ASSERT(aFont);
+  MutexAutoLock lock(mMutex);
+
+  // If the font has a non-zero refcount, then we must have lost the race with
+  // gfxFontCache::Lookup and the same font was reacquired.
+  if (aFont->GetRefCount() > 0) {
+    return false;
   }
 
-  // We should have the last reference to the font.
+  Key key(aFont->GetFontEntry(), aFont->GetStyle(),
+          aFont->GetUnicodeRangeMap());
+  HashEntry* entry = mFonts.GetEntry(key);
+  if (!entry || entry->mFont != aFont) {
+    MOZ_ASSERT(!aFont->GetExpirationState()->IsTracked());
+    return true;
+  }
+
+  // If the font is being tracked, we must have then also lost another race with
+  // gfxFontCache::MaybeDestroy which re-added it to the tracker.
+  if (aFont->GetExpirationState()->IsTracked()) {
+    return false;
+  }
+
+  // Typically this won't fail, but it may during startup/shutdown if the timer
+  // service is not available.
+  nsresult rv = AddObjectLocked(aFont, lock);
+  if (NS_SUCCEEDED(rv)) {
+    return false;
+  }
+
+  mFonts.RemoveEntry(entry);
+  return true;
+}
+
+void gfxFontCache::NotifyExpiredLocked(gfxFont* aFont, const AutoLock& aLock) {
+  MOZ_ASSERT(aFont->GetRefCount() == 0);
+
   RemoveObjectLocked(aFont, aLock);
+  mTrackerDiscard.AppendElement(aFont);
+
   Key key(aFont->GetFontEntry(), aFont->GetStyle(),
           aFont->GetUnicodeRangeMap());
   HashEntry* entry = mFonts.GetEntry(key);
@@ -289,12 +325,11 @@ void gfxFontCache::NotifyExpiredLocked(gfxFont* aFont, const AutoLock& aLock) {
     return;
   }
 
-  mTrackerDiscard.AppendElement(std::move(entry->mFont));
   mFonts.RemoveEntry(entry);
 }
 
 void gfxFontCache::NotifyHandlerEnd() {
-  nsTArray<RefPtr<gfxFont>> discard;
+  nsTArray<gfxFont*> discard;
   {
     MutexAutoLock lock(mMutex);
     discard = std::move(mTrackerDiscard);
@@ -302,27 +337,47 @@ void gfxFontCache::NotifyHandlerEnd() {
   DestroyDiscard(discard);
 }
 
-void gfxFontCache::DestroyDiscard(nsTArray<RefPtr<gfxFont>>& aDiscard) {
+void gfxFontCache::DestroyDiscard(nsTArray<gfxFont*>& aDiscard) {
   for (auto& font : aDiscard) {
-    NS_ASSERTION(font->GetRefCount() == 1,
+    NS_ASSERTION(font->GetRefCount() == 0,
                  "Destroying with refs outside cache!");
     font->ClearCachedWords();
+    font->Destroy();
   }
   aDiscard.Clear();
 }
 
 void gfxFontCache::Flush() {
-  nsTHashtable<HashEntry> discard;
+  nsTArray<gfxFont*> discard;
   {
     MutexAutoLock lock(mMutex);
+    discard.SetCapacity(mFonts.Count());
     for (auto iter = mFonts.Iter(); !iter.Done(); iter.Next()) {
       HashEntry* entry = static_cast<HashEntry*>(iter.Get());
-      RemoveObjectLocked(entry->mFont, lock);
+      if (!entry || !entry->mFont) {
+        MOZ_ASSERT_UNREACHABLE("Invalid font?");
+        continue;
+      }
+
+      if (entry->mFont->GetRefCount() == 0) {
+        // If we are not tracked, then we must have won the race with
+        // gfxFont::MaybeDestroy and it is waiting on the mutex. To avoid a
+        // double free, we let gfxFont::MaybeDestroy handle the freeing when it
+        // acquires the mutex and discovers there is no matching entry in the
+        // hashtable.
+        if (entry->mFont->GetExpirationState()->IsTracked()) {
+          RemoveObjectLocked(entry->mFont, lock);
+          discard.AppendElement(entry->mFont);
+        }
+      } else {
+        MOZ_ASSERT(!entry->mFont->GetExpirationState()->IsTracked());
+      }
     }
     MOZ_ASSERT(IsEmptyLocked(lock),
                "Cache tracker still has fonts after flush!");
-    discard = std::move(mFonts);
+    mFonts.Clear();
   }
+  DestroyDiscard(discard);
 }
 
 /*static*/
