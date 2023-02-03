@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC_GAIN_MAP_INTERNAL_H_
-#define MODULES_AUDIO_PROCESSING_AGC_GAIN_MAP_INTERNAL_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_GAIN_MAP_INTERNAL_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_GAIN_MAP_INTERNAL_H_
 
 namespace webrtc {
 
@@ -37,4 +37,4 @@ static const int kGainMap[kGainMapSize] = {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_GAIN_MAP_INTERNAL_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_GAIN_MAP_INTERNAL_H_

@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc/clipping_predictor.h"
+#include "modules/audio_processing/agc2/clipping_predictor.h"
 
 #include <algorithm>
 #include <memory>
 
 #include "common_audio/include/audio_util.h"
-#include "modules/audio_processing/agc/clipping_predictor_level_buffer.h"
-#include "modules/audio_processing/agc/gain_map_internal.h"
+#include "modules/audio_processing/agc2/clipping_predictor_level_buffer.h"
+#include "modules/audio_processing/agc2/gain_map_internal.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"

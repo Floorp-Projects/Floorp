@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC_CLIPPING_PREDICTOR_H_
-#define MODULES_AUDIO_PROCESSING_AGC_CLIPPING_PREDICTOR_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_CLIPPING_PREDICTOR_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_CLIPPING_PREDICTOR_H_
 
 #include <memory>
 #include <vector>
@@ -46,7 +46,6 @@ class ClippingPredictor {
       int default_step,
       int min_mic_level,
       int max_mic_level) const = 0;
-
 };
 
 // Creates a ClippingPredictor based on the provided `config`. When enabled,
@@ -60,4 +59,4 @@ std::unique_ptr<ClippingPredictor> CreateClippingPredictor(
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_CLIPPING_PREDICTOR_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_CLIPPING_PREDICTOR_H_

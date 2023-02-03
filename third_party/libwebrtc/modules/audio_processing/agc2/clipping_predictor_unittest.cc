@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc/clipping_predictor.h"
+#include "modules/audio_processing/agc2/clipping_predictor.h"
 
 #include <cstdint>
 #include <limits>

@@ -16,7 +16,7 @@
 #include "api/array_view.h"
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/agc/gain_control.h"
-#include "modules/audio_processing/agc/gain_map_internal.h"
+#include "modules/audio_processing/agc2/gain_map_internal.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
