@@ -55,8 +55,8 @@ class VideoQualityMetricsReporter
     Timestamp sample_time = Timestamp::Zero();
   };
 
-  std::string GetTestCaseName(const std::string& stream_label) const;
-  void ReportVideoBweResults(const std::string& test_case_name,
+  std::string GetTestCaseName(const std::string& peer_name) const;
+  void ReportVideoBweResults(const std::string& peer_name,
                              const VideoBweStats& video_bwe_stats);
   Timestamp Now() const { return clock_->CurrentTime(); }
 

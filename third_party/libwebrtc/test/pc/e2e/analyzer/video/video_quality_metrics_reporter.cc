@@ -10,6 +10,9 @@
 
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
 
+#include <map>
+#include <string>
+
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/test/metrics/metric.h"
@@ -17,6 +20,7 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
+#include "test/pc/e2e/metric_metadata_keys.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -24,6 +28,7 @@ namespace {
 
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Unit;
+using ::webrtc::webrtc_pc_e2e::MetricMetadataKey;
 
 SamplesStatsCounter BytesPerSecondToKbps(const SamplesStatsCounter& counter) {
   return counter * 0.008;
@@ -118,30 +123,37 @@ void VideoQualityMetricsReporter::OnStatsReports(
 void VideoQualityMetricsReporter::StopAndReportResults() {
   MutexLock video_bwemutex_(&video_bwe_stats_lock_);
   for (const auto& item : video_bwe_stats_) {
-    ReportVideoBweResults(GetTestCaseName(item.first), item.second);
+    ReportVideoBweResults(item.first, item.second);
   }
 }
 
 std::string VideoQualityMetricsReporter::GetTestCaseName(
-    const std::string& stream_label) const {
-  return test_case_name_ + "/" + stream_label;
+    const std::string& peer_name) const {
+  return test_case_name_ + "/" + peer_name;
 }
 
 void VideoQualityMetricsReporter::ReportVideoBweResults(
-    const std::string& test_case_name,
+    const std::string& peer_name,
     const VideoBweStats& video_bwe_stats) {
+  std::string test_case_name = GetTestCaseName(peer_name);
+  std::map<std::string, std::string> metric_metadata{
+      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
+
   metrics_logger_->LogMetric(
       "available_send_bandwidth", test_case_name,
       BytesPerSecondToKbps(video_bwe_stats.available_send_bandwidth),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogMetric(
       "transmission_bitrate", test_case_name,
       BytesPerSecondToKbps(video_bwe_stats.transmission_bitrate),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogMetric(
       "retransmission_bitrate", test_case_name,
       BytesPerSecondToKbps(video_bwe_stats.retransmission_bitrate),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
 }
 
 }  // namespace webrtc_pc_e2e
