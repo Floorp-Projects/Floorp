@@ -9,11 +9,11 @@ import {
 import { memoizeableAction } from "../utils/memoizableAction";
 import { PROMISE } from "./utils/middleware/promise";
 
-export function insertSourceActors(sourceActors) {
+export function insertSourceActors(items) {
   return function({ dispatch }) {
     dispatch({
       type: "INSERT_SOURCE_ACTORS",
-      sourceActors,
+      items,
     });
   };
 }
@@ -21,15 +21,15 @@ export function insertSourceActors(sourceActors) {
 export const loadSourceActorBreakableLines = memoizeableAction(
   "loadSourceActorBreakableLines",
   {
-    createKey: args => args.sourceActorId,
-    getValue: ({ sourceActorId }, { getState }) =>
-      getSourceActorBreakableLines(getState(), sourceActorId),
-    action: async ({ sourceActorId }, { dispatch, getState, client }) => {
+    createKey: args => args.id,
+    getValue: ({ id }, { getState }) =>
+      getSourceActorBreakableLines(getState(), id),
+    action: async ({ id }, { dispatch, getState, client }) => {
       await dispatch({
         type: "SET_SOURCE_ACTOR_BREAKABLE_LINES",
-        sourceActorId,
+        sourceId: id,
         [PROMISE]: client.getSourceActorBreakableLines(
-          getSourceActor(getState(), sourceActorId)
+          getSourceActor(getState(), id)
         ),
       });
     },

@@ -8,25 +8,25 @@ import { asSettled } from "../utils/async-value";
  * Tells if a given Source Actor is registered in the redux store
  *
  * @param {Object} state
- * @param {String} sourceActorId
+ * @param {String} id
  *        Source Actor ID
  * @return {Boolean}
  */
-export function hasSourceActor(state, sourceActorId) {
-  return state.sourceActors.mutableSourceActors.has(sourceActorId);
+export function hasSourceActor(state, id) {
+  return state.sourceActors.has(id);
 }
 
 /**
  * Get the Source Actor object. See create.js:createSourceActor()
  *
  * @param {Object} state
- * @param {String} sourceActorId
+ * @param {String} id
  *        Source Actor ID
  * @return {Object}
  *        The Source Actor object (if registered)
  */
-export function getSourceActor(state, sourceActorId) {
-  return state.sourceActors.mutableSourceActors.get(sourceActorId);
+export function getSourceActor(state, id) {
+  return state.sourceActors.get(id);
 }
 
 // Used by threads selectors
@@ -34,17 +34,17 @@ export function getSourceActor(state, sourceActorId) {
  * Get all Source Actor objects for a given thread. See create.js:createSourceActor()
  *
  * @param {Object} state
- * @param {Array<String>} threadActorIDs
+ * @param {Array<String>} ids
  *        List of Thread IDs
  * @return {Array<Object>}
  */
-export function getSourceActorsForThread(state, threadActorIDs) {
-  if (!Array.isArray(threadActorIDs)) {
-    threadActorIDs = [threadActorIDs];
+export function getSourceActorsForThread(state, ids) {
+  if (!Array.isArray(ids)) {
+    ids = [ids];
   }
   const actors = [];
-  for (const sourceActor of state.sourceActors.mutableSourceActors.values()) {
-    if (threadActorIDs.includes(sourceActor.thread)) {
+  for (const sourceActor of state.sourceActors.values()) {
+    if (ids.includes(sourceActor.thread)) {
       actors.push(sourceActor);
     }
   }
@@ -55,13 +55,15 @@ export function getSourceActorsForThread(state, threadActorIDs) {
  * Get the list of all breakable lines for a given source actor.
  *
  * @param {Object} state
- * @param {String} sourceActorId
+ * @param {String} id
  *        Source Actor ID
  * @return {AsyncValue<Array<Number>>}
  *        List of all the breakable lines.
  */
-export function getSourceActorBreakableLines(state, sourceActorId) {
-  return asSettled(state.sourceActors.mutableBreakableLines.get(sourceActorId));
+export function getSourceActorBreakableLines(state, id) {
+  const { breakableLines } = getSourceActor(state, id);
+
+  return asSettled(breakableLines);
 }
 
 // Used by sources selectors
@@ -72,7 +74,7 @@ export function getSourceActorBreakableLines(state, sourceActorId) {
  * which are made of multiple source actors (one per inline script).
  *
  * @param {Object} state
- * @param {Array<String>} sourceActorIDs
+ * @param {Array<String>} ids
  *        List of Source Actor IDs
  * @param {Boolean} isHTML
  *        True, if we are fetching the breakable lines for an HTML source.
@@ -82,16 +84,10 @@ export function getSourceActorBreakableLines(state, sourceActorId) {
  * @return {Array<Number>}
  *        List of all the breakable lines.
  */
-export function getBreakableLinesForSourceActors(
-  state,
-  sourceActorIDs,
-  isHTML
-) {
+export function getBreakableLinesForSourceActors(state, ids, isHTML) {
   const allBreakableLines = [];
-  for (const sourceActorId of sourceActorIDs) {
-    const breakableLines = state.sourceActors.mutableBreakableLines.get(
-      sourceActorId
-    );
+  for (const id of ids) {
+    const { breakableLines } = getSourceActor(state, id);
     if (breakableLines && breakableLines.state == "fulfilled") {
       if (isHTML) {
         allBreakableLines.push(...breakableLines.value);
