@@ -12,7 +12,6 @@ const statsExpectedByType = {
       "timestamp",
       "type",
       "ssrc",
-      "mediaType",
       "kind",
       "codecId",
       "packetsReceived",
@@ -78,7 +77,6 @@ const statsExpectedByType = {
       "timestamp",
       "type",
       "ssrc",
-      "mediaType",
       "kind",
       "codecId",
       "packetsSent",
@@ -110,7 +108,6 @@ const statsExpectedByType = {
       "timestamp",
       "type",
       "ssrc",
-      "mediaType",
       "kind",
       "codecId",
       "packetsLost",
@@ -142,7 +139,6 @@ const statsExpectedByType = {
       "timestamp",
       "type",
       "ssrc",
-      "mediaType",
       "kind",
       "codecId",
       "packetsSent",
@@ -388,14 +384,6 @@ function pedanticChecks(report) {
         ["audio", "video"].includes(stat.kind),
         stat.type + ".kind is 'audio' or 'video'"
       );
-
-      // mediaType, renamed to kind but remains for backward compability.
-      ok(
-        ["audio", "video"].includes(stat.mediaType),
-        stat.type + ".mediaType is 'audio' or 'video'"
-      );
-
-      ok(stat.kind == stat.mediaType, "kind equals legacy mediaType");
 
       // codecId
       ok(stat.codecId, `${stat.type}.codecId has a value`);
