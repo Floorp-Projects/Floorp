@@ -216,8 +216,8 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   /**
    * Get the body of a custom formatted object.
    */
-  async customFormatterBody(customFormatterIndex) {
-    const result = await super.customFormatterBody(customFormatterIndex);
+  async customFormatterBody() {
+    const result = await super.customFormatterBody();
 
     if (!result?.customFormatterBody) {
       return result;

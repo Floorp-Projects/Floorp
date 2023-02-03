@@ -168,8 +168,11 @@ const proto = {
 
     // Only process custom formatters if the feature is enabled.
     if (this.thread?._parent?.customFormatters) {
-      const header = customFormatterHeader(this);
-      if (header) {
+      const result = customFormatterHeader(this);
+      if (result) {
+        const { formatter, ...header } = result;
+        this._customFormatterItem = formatter;
+
         return {
           ...g,
           ...header,
@@ -217,8 +220,8 @@ const proto = {
     return g;
   },
 
-  customFormatterBody(customFormatterIndex) {
-    return customFormatterBody(this, customFormatterIndex);
+  customFormatterBody() {
+    return customFormatterBody(this, this._customFormatterItem);
   },
 
   _getOwnPropertyLength() {
@@ -794,6 +797,7 @@ const proto = {
     if (this.hooks) {
       this.hooks.customFormatterConfig = null;
     }
+    this._customFormatterItem = null;
   },
 };
 
