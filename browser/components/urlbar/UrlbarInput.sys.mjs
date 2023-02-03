@@ -576,7 +576,7 @@ export class UrlbarInput {
     // If the value was submitted during composition, the result may not have
     // been updated yet, because the input event happens after composition end.
     // We can't trust element nor _resultForCurrentValue targets in that case,
-    // so we'always generate a new heuristic to load.
+    // so we always generate a new heuristic to load.
     let isComposing = this.editor.composing;
 
     // Use the selected element if we have one; this is usually the case

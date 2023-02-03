@@ -32,6 +32,13 @@ add_task(async function test_remove_history() {
 
   let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
 
+  info("Checking that Space activates the menu button");
+  await UrlbarTestUtils.openResultMenu(window, {
+    resultIndex,
+    activationKey: " ",
+  });
+  gURLBar.view.resultMenu.hidePopup();
+
   await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R", {
     resultIndex,
   });

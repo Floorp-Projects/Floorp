@@ -328,6 +328,11 @@ export class UrlbarController {
         }
         event.preventDefault();
         break;
+      case KeyEvent.DOM_VK_SPACE:
+        if (!this.view.shouldSpaceActivateSelectedElement()) {
+          break;
+        }
+      // Fall through, we want the SPACE key to activate this element.
       case KeyEvent.DOM_VK_RETURN:
         if (executeAction) {
           this.input.handleCommand(event);
