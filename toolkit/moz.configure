@@ -670,20 +670,6 @@ set_define("MOZ_WMF", wmf)
 set_config("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
 set_define("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
 
-# PlayReady CDM support
-# ==============================================================
-option("--disable-mf-cdm", help="Disable support for Media Foundation CDM")
-
-
-@depends("--enable-mf-cdm", when=wmfmediaengine)
-def mfcdm(value):
-    if value:
-        return True
-
-
-set_config("MOZ_MF_CDM", True, when=mfcdm)
-set_define("MOZ_MF_CDM", True, when=mfcdm)
-
 # FFmpeg H264/AAC Decoding Support
 # ==============================================================
 option("--disable-ffmpeg", help="Disable FFmpeg for fragmented H264/AAC decoding")

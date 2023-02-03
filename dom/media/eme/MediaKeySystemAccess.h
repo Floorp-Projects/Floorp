@@ -52,6 +52,10 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
   static MediaKeySystemStatus GetKeySystemStatus(
       const nsAString& aKeySystem, nsACString& aOutExceptionMessage);
 
+  static bool IsSupported(const nsAString& aKeySystem,
+                          const Sequence<MediaKeySystemConfiguration>& aConfigs,
+                          DecoderDoctorDiagnostics* aDiagnostics);
+
   static void NotifyObservers(nsPIDOMWindowInner* aWindow,
                               const nsAString& aKeySystem,
                               MediaKeySystemStatus aStatus);

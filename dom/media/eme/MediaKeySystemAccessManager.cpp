@@ -376,9 +376,6 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   //   agent, reject promise with a NotSupportedError. String comparison is
   //   case-sensitive.
   if (!IsWidevineKeySystem(aRequest->mKeySystem) &&
-#ifdef MOZ_MF_CDM
-      !IsPlayReadyKeySystem(aRequest->mKeySystem) &&
-#endif
       !IsClearkeyKeySystem(aRequest->mKeySystem)) {
     // Not to inform user, because nothing to do if the keySystem is not
     // supported.
