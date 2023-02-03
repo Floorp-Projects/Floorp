@@ -35,7 +35,6 @@ rtc_library("agc") {
     "../../../system_wrappers:field_trial",
     "../../../system_wrappers:metrics",
     "../agc2:clipping_predictor",
-    "../agc2:clipping_predictor_evaluator",
     "../agc2:gain_map",
     "../vad",
   ]
