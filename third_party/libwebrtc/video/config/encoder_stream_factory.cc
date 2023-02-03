@@ -10,6 +10,7 @@
 #include "video/config/encoder_stream_factory.h"
 
 #include <algorithm>
+#include <limits>
 #include <set>
 #include <string>
 #include <utility>
@@ -115,6 +116,7 @@ EncoderStreamFactory::EncoderStreamFactory(
     bool is_screenshare,
     bool conference_mode,
     const webrtc::VideoEncoder::EncoderInfo& encoder_info,
+    absl::optional<webrtc::VideoSourceRestrictions> restrictions,
     const webrtc::FieldTrialsView* trials)
     : codec_name_(codec_name),
       max_qp_(max_qp),
@@ -122,7 +124,8 @@ EncoderStreamFactory::EncoderStreamFactory(
       conference_mode_(conference_mode),
       trials_(trials ? *trials : fallback_trials_),
       encoder_info_requested_resolution_alignment_(
-          encoder_info.requested_resolution_alignment) {}
+          encoder_info.requested_resolution_alignment),
+      restrictions_(restrictions) {}
 
 std::vector<webrtc::VideoStream> EncoderStreamFactory::CreateEncoderStreams(
     int frame_width,
@@ -434,6 +437,16 @@ EncoderStreamFactory::GetLayerResolutionFromRequestedResolution(
   adapter.OnOutputFormatRequest(requested_resolution.ToPair(),
                                 requested_resolution.PixelCount(),
                                 absl::nullopt);
+  if (restrictions_) {
+    rtc::VideoSinkWants wants;
+    wants.is_active = true;
+    wants.target_pixel_count = restrictions_->target_pixels_per_frame();
+    wants.max_pixel_count =
+        rtc::dchecked_cast<int>(restrictions_->max_pixels_per_frame().value_or(
+            std::numeric_limits<int>::max()));
+    wants.resolution_alignment = encoder_info_requested_resolution_alignment_;
+    adapter.OnSinkWants(wants);
+  }
   int cropped_width, cropped_height;
   int out_width = 0, out_height = 0;
   if (!adapter.AdaptFrameResolution(frame_width, frame_height, 0,

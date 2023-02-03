@@ -457,6 +457,20 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   const absl::optional<int> vp9_low_tier_core_threshold_;
 
+  // These are copies of restrictions (glorified max_pixel_count) set by
+  // a) OnVideoSourceRestrictionsUpdated
+  // b) CheckForAnimatedContent
+  // They are used to scale down encoding resolution if needed when using
+  // requested_resolution.
+  //
+  // TODO(webrtc:14451) Split video_source_sink_controller_
+  // so that ownership on restrictions/wants is kept on &encoder_queue_, that
+  // these extra copies would not be needed.
+  absl::optional<VideoSourceRestrictions> latest_restrictions_
+      RTC_GUARDED_BY(&encoder_queue_);
+  absl::optional<VideoSourceRestrictions> animate_restrictions_
+      RTC_GUARDED_BY(&encoder_queue_);
+
   // Used to cancel any potentially pending tasks to the worker thread.
   // Refrenced by tasks running on `encoder_queue_` so need to be destroyed
   // after stopping that queue. Must be created and destroyed on

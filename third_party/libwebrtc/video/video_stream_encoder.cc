@@ -33,6 +33,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/adaptation/resource_adaptation_processor.h"
+#include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
 #include "modules/video_coding/svc/svc_rate_allocator.h"
@@ -508,7 +509,7 @@ void ApplyEncoderBitrateLimitsIfSingleActiveStream(
 }
 
 absl::optional<int> ParseVp9LowTierCoreCountThreshold(
-    const webrtc::FieldTrialsView& trials) {
+    const FieldTrialsView& trials) {
   FieldTrialFlag disable_low_tier("Disabled");
   FieldTrialParameter<int> max_core_count("max_core_count", 2);
   ParseFieldTrial({&disable_low_tier, &max_core_count},
@@ -517,6 +518,22 @@ absl::optional<int> ParseVp9LowTierCoreCountThreshold(
     return absl::nullopt;
   }
   return max_core_count.Get();
+}
+
+absl::optional<VideoSourceRestrictions> MergeRestrictions(
+    const std::vector<absl::optional<VideoSourceRestrictions>>& list) {
+  absl::optional<VideoSourceRestrictions> return_value;
+  for (const auto& res : list) {
+    if (!res) {
+      continue;
+    }
+    if (!return_value) {
+      return_value = *res;
+      continue;
+    }
+    return_value->UpdateMin(*res);
+  }
+  return return_value;
 }
 
 }  //  namespace
@@ -949,7 +966,9 @@ void VideoStreamEncoder::ReconfigureEncoder() {
             encoder_config_.video_format.name, encoder_config_.max_qp,
             encoder_config_.content_type ==
                 webrtc::VideoEncoderConfig::ContentType::kScreen,
-            encoder_config_.legacy_conference_mode, encoder_->GetEncoderInfo());
+            encoder_config_.legacy_conference_mode, encoder_->GetEncoderInfo(),
+            MergeRestrictions({latest_restrictions_, animate_restrictions_}),
+            &field_trials_);
 
     streams = factory->CreateEncoderStreams(
         last_frame_info_->width, last_frame_info_->height, encoder_config_);
@@ -2313,6 +2332,11 @@ void VideoStreamEncoder::OnVideoSourceRestrictionsUpdated(
   RTC_LOG(LS_INFO) << "Updating sink restrictions from "
                    << (reason ? reason->Name() : std::string("<null>"))
                    << " to " << restrictions.ToString();
+
+  // TODO(webrtc:14451) Split video_source_sink_controller_
+  // so that ownership on restrictions/wants is kept on &encoder_queue_
+  latest_restrictions_ = restrictions;
+
   worker_queue_->PostTask(SafeTask(
       task_safety_.flag(), [this, restrictions = std::move(restrictions)]() {
         RTC_DCHECK_RUN_ON(worker_queue_);
@@ -2454,6 +2478,17 @@ void VideoStreamEncoder::CheckForAnimatedContent(
       RTC_LOG(LS_INFO) << "Removing resolution cap due to no consistent "
                           "animation detection.";
     }
+    // TODO(webrtc:14451) Split video_source_sink_controller_
+    // so that ownership on restrictions/wants is kept on &encoder_queue_
+    if (should_cap_resolution) {
+      animate_restrictions_ =
+          VideoSourceRestrictions(kMaxAnimationPixels,
+                                  /* target_pixels_per_frame= */ absl::nullopt,
+                                  /* max_frame_rate= */ absl::nullopt);
+    } else {
+      animate_restrictions_.reset();
+    }
+
     worker_queue_->PostTask(
         SafeTask(task_safety_.flag(), [this, should_cap_resolution]() {
           RTC_DCHECK_RUN_ON(worker_queue_);
