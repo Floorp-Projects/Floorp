@@ -124,7 +124,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   // Report results for all metrics for all streams.
   void ReportResults();
-  void ReportResults(const std::string& test_case_name,
+  void ReportResults(const InternalStatsKey& key,
                      const StreamStats& stats,
                      const FrameCounters& frame_counters)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);

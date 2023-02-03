@@ -28,13 +28,15 @@
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
+#include "test/pc/e2e/metric_metadata_keys.h"
 
 namespace webrtc {
 namespace {
 
+using ::webrtc::webrtc_pc_e2e::SampleMetadataKey;
+
 constexpr TimeDelta kFreezeThreshold = TimeDelta::Millis(150);
 constexpr int kMaxActiveComparisons = 10;
-constexpr char kFrameIdMetadataKey[] = "frame_id";
 
 SamplesStatsCounter::StatsSample StatsSample(
     double value,
@@ -307,10 +309,11 @@ void DefaultVideoQualityAnalyzerFramesComparator::AddComparison(
   MutexLock lock(&mutex_);
   RTC_CHECK_EQ(state_, State::kActive)
       << "Frames comparator has to be started before it will be used";
-  stream_stats_.at(stats_key).skipped_between_rendered.AddSample(StatsSample(
-      skipped_between_rendered, Now(),
-      /*metadata=*/
-      {{kFrameIdMetadataKey, std::to_string(frame_stats.frame_id)}}));
+  stream_stats_.at(stats_key).skipped_between_rendered.AddSample(
+      StatsSample(skipped_between_rendered, Now(),
+                  /*metadata=*/
+                  {{SampleMetadataKey::kFrameIdMetadataKey,
+                    std::to_string(frame_stats.frame_id)}}));
   AddComparisonInternal(std::move(stats_key), std::move(captured),
                         std::move(rendered), type, std::move(frame_stats));
 }
@@ -420,7 +423,8 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   }
 
   std::map<std::string, std::string> metadata;
-  metadata.emplace(kFrameIdMetadataKey, std::to_string(frame_stats.frame_id));
+  metadata.emplace(SampleMetadataKey::kFrameIdMetadataKey,
+                   std::to_string(frame_stats.frame_id));
 
   if (psnr > 0) {
     stats->psnr.AddSample(

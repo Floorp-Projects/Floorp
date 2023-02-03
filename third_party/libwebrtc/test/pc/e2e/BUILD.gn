@@ -524,6 +524,7 @@ if (!build_with_chromium) {
       testonly = true
       sources = [ "peer_connection_quality_test_metric_names_test.cc" ]
       deps = [
+        ":metric_metadata_keys",
         ":peerconnection_quality_test",
         ":stats_based_network_quality_metrics_reporter",
         "../..:test_support",
@@ -741,6 +742,7 @@ if (!build_with_chromium) {
       "analyzer/video/video_quality_metrics_reporter.h",
     ]
     deps = [
+      ":metric_metadata_keys",
       "../..:perf_test",
       "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:rtc_stats_api",
@@ -761,6 +763,12 @@ if (!build_with_chromium) {
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }
 
+  rtc_library("metric_metadata_keys") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "metric_metadata_keys.h" ]
+  }
+
   rtc_library("default_video_quality_analyzer") {
     visibility = [ "*" ]
 
@@ -773,6 +781,7 @@ if (!build_with_chromium) {
     deps = [
       ":default_video_quality_analyzer_internal",
       ":default_video_quality_analyzer_shared",
+      ":metric_metadata_keys",
       "../..:perf_test",
       "../../../api:array_view",
       "../../../api:video_quality_analyzer_api",
@@ -832,6 +841,7 @@ if (!build_with_chromium) {
 
     deps = [
       ":default_video_quality_analyzer_shared",
+      ":metric_metadata_keys",
       ":multi_reader_queue",
       "../../../api:array_view",
       "../../../api:scoped_refptr",
