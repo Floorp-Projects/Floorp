@@ -91,7 +91,8 @@ TabEngine.prototype = {
       recent_clients: {},
     };
 
-    let tabs = await TabProvider.getAllTabs(true);
+    // We shouldn't upload tabs past what the server will accept
+    let tabs = await this.getTabsWithinPayloadSize();
     await this._rustStore.setLocalTabs(
       tabs.map(tab => {
         // rust wants lastUsed in MS but the provider gives it in seconds
@@ -109,8 +110,8 @@ TabEngine.prototype = {
         fxa_device_id: remoteClient.fxaDeviceId,
         // device_name and device_type are soft-deprecated - every client
         // prefers what's in the FxA record. But fill them correctly anyway.
-        device_name: clientsEngine.getClientName(id) ?? "",
         device_type: clientsEngine.getClientType(id),
+        device_name: clientsEngine.getClientName(id),
       };
       clientData.recent_clients[id] = client;
     }
@@ -204,6 +205,20 @@ TabEngine.prototype = {
     if (this._modified.count() > 0) {
       this._tracker.modified = true;
     }
+  },
+
+  async getTabsWithinPayloadSize() {
+    let tabs = await TabProvider.getAllTabs(true);
+    const maxPayloadSize = this.service.getMaxRecordPayloadSize();
+    let records = Utils.tryFitItems(tabs, maxPayloadSize);
+
+    if (records.length != tabs.length) {
+      this._log.warn(
+        `Can't fit all tabs in sync payload: have ${tabs.length}, but can only fit ${records.length}.`
+      );
+    }
+
+    return records;
   },
 
   // Support for "quick writes"
@@ -316,7 +331,6 @@ TabEngine.prototype = {
 
       Async.checkAppReady();
       await this._uploadOutgoing();
-      telemetryRecord.onEngineApplied(name, 1);
       telemetryRecord.onEngineStop(name, null);
       return true;
     } catch (ex) {
