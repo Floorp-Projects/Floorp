@@ -418,17 +418,20 @@ class MOZ_STACK_CLASS AutoRangeArray final {
 
   /**
    * Splits text nodes if each range end is in middle of a text node, then,
-   * calls HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem&) for
-   * each range.  Finally, updates ranges to keep edit target ranges as
-   * expected.
+   * calls HTMLEditor::SplitParentInlineElementsAtRangeBoundaries() for each
+   * range.  Finally, updates ranges to keep edit target ranges as expected.
    *
-   * @param aHTMLEditor The HTMLEditor which will handle the splittings.
-   * @return            A suggest point to put caret if succeeded, but it may be
-   *                    unset.
+   * @param aHTMLEditor         The HTMLEditor which will handle the splittings.
+   * @param aElement            The editing host.
+   * @param aAncestorLimiter    A content node which you don't want this to
+   *                            split it.
+   * @return                    A suggest point to put caret if succeeded, but
+   *                            it may be unset.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-      HTMLEditor& aHTMLEditor);
+  SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+      HTMLEditor& aHTMLEditor, const dom::Element& aEditingHost,
+      const nsIContent* aAncestorLimiter = nullptr);
 
   /**
    * CollectEditTargetNodes() collects edit target nodes the ranges.

@@ -881,9 +881,10 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
   return NS_OK;
 }
 
-Result<EditorDOMPoint, nsresult> AutoRangeArray::
-    SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-        HTMLEditor& aHTMLEditor) {
+Result<EditorDOMPoint, nsresult>
+AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+    HTMLEditor& aHTMLEditor, const Element& aEditingHost,
+    const nsIContent* aAncestorLimiter /* = nullptr */) {
   // FYI: The following code is originated in
   // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#6971
 
@@ -893,7 +894,8 @@ Result<EditorDOMPoint, nsresult> AutoRangeArray::
   IgnoredErrorResult ignoredError;
   for (const OwningNonNull<nsRange>& range : mRanges) {
     EditorDOMPoint atEnd(range->EndRef());
-    if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode()) {
+    if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode() ||
+        atEnd.GetContainer() == aAncestorLimiter) {
       continue;
     }
 
@@ -939,9 +941,11 @@ Result<EditorDOMPoint, nsresult> AutoRangeArray::
   for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
     // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
     Result<EditorDOMPoint, nsresult> splitParentsResult =
-        aHTMLEditor.SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
+        aHTMLEditor.SplitParentInlineElementsAtRangeBoundaries(
+            MOZ_KnownLive(*item), aEditingHost, aAncestorLimiter);
     if (MOZ_UNLIKELY(splitParentsResult.isErr())) {
-      NS_WARNING("HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
+      NS_WARNING(
+          "HTMLEditor::SplitParentInlineElementsAtRangeBoundaries() failed");
       rv = splitParentsResult.unwrapErr();
       break;
     }

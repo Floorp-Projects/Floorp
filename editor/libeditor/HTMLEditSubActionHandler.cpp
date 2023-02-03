@@ -3305,12 +3305,12 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         EditSubAction::eCreateOrChangeList, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
+            .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                *this, aEditingHost);
     if (MOZ_UNLIKELY(splitResult.isErr())) {
       NS_WARNING(
           "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+          "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
           "failed");
       return splitResult.propagateErr();
     }
@@ -3938,13 +3938,13 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
               EditSubAction::eCreateOrChangeList, aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
           extendedSelectionRanges
-              .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                  *this);
+              .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                  *this, aEditingHost);
       if (MOZ_UNLIKELY(splitResult.isErr())) {
         NS_WARNING(
             "AutoRangeArray::"
-            "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries()"
-            " failed");
+            "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
+            "failed");
         return splitResult.unwrapErr();
       }
       nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
@@ -4049,13 +4049,12 @@ HTMLEditor::FormatBlockContainerWithTransaction(
       EditSubAction::eCreateOrRemoveBlock, aEditingHost);
   Result<EditorDOMPoint, nsresult> splitResult =
       aSelectionRanges
-          .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-              *this);
+          .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+              *this, aEditingHost);
   if (MOZ_UNLIKELY(splitResult.isErr())) {
     NS_WARNING(
         "AutoRangeArray::"
-        "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
-        "failed");
+        "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() failed");
     return splitResult.propagateErr();
   }
   nsresult rv = aSelectionRanges.CollectEditTargetNodes(
@@ -4575,13 +4574,13 @@ nsresult HTMLEditor::HandleCSSIndentAroundRanges(AutoRangeArray& aRanges,
           EditSubAction::eIndent, aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
           extendedRanges
-              .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                  *this);
+              .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                  *this, aEditingHost);
       if (MOZ_UNLIKELY(splitResult.isErr())) {
         NS_WARNING(
             "AutoRangeArray::"
-            "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries()"
-            " failed");
+            "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
+            "failed");
         return splitResult.unwrapErr();
       }
       if (splitResult.inspect().IsSet()) {
@@ -4879,12 +4878,12 @@ nsresult HTMLEditor::HandleHTMLIndentAroundRanges(AutoRangeArray& aRanges,
         EditSubAction::eIndent, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
+            .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                *this, aEditingHost);
     if (MOZ_UNLIKELY(splitResult.isErr())) {
       NS_WARNING(
           "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+          "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
           "failed");
       return splitResult.unwrapErr();
     }
@@ -6386,12 +6385,12 @@ nsresult HTMLEditor::AlignContentsAtRanges(AutoRangeArray& aRanges,
         EditSubAction::eSetOrClearAlignment, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
+            .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                *this, aEditingHost);
     if (MOZ_UNLIKELY(splitResult.isErr())) {
       NS_WARNING(
           "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+          "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
           "failed");
       return splitResult.unwrapErr();
     }
@@ -7207,20 +7206,18 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::MaybeSplitElementsAtEveryBRElement(
 }
 
 Result<EditorDOMPoint, nsresult>
-HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem) {
+HTMLEditor::SplitParentInlineElementsAtRangeBoundaries(
+    RangeItem& aRangeItem, const Element& aEditingHost,
+    const nsIContent* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return EditorDOMPoint();  // XXX Why not an error?
-  }
 
   EditorDOMPoint pointToPutCaret;
   if (!aRangeItem.Collapsed() && aRangeItem.mEndContainer &&
       aRangeItem.mEndContainer->IsContent()) {
     nsCOMPtr<nsIContent> mostAncestorInlineContentAtEnd =
         HTMLEditUtils::GetMostDistantAncestorInlineElement(
-            *aRangeItem.mEndContainer->AsContent(), editingHost);
+            *aRangeItem.mEndContainer->AsContent(), &aEditingHost,
+            aAncestorLimiter);
 
     if (mostAncestorInlineContentAtEnd) {
       Result<SplitNodeResult, nsresult> splitEndInlineResult =
@@ -7239,7 +7236,7 @@ HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem) {
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       if (pointToPutCaret.IsInContentNode() &&
           MOZ_UNLIKELY(
-              editingHost !=
+              &aEditingHost !=
               ComputeEditingHost(*pointToPutCaret.ContainerAs<nsIContent>()))) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
@@ -7265,7 +7262,8 @@ HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem) {
 
   nsCOMPtr<nsIContent> mostAncestorInlineContentAtStart =
       HTMLEditUtils::GetMostDistantAncestorInlineElement(
-          *aRangeItem.mStartContainer->AsContent(), editingHost);
+          *aRangeItem.mStartContainer->AsContent(), &aEditingHost,
+          aAncestorLimiter);
 
   if (mostAncestorInlineContentAtStart) {
     Result<SplitNodeResult, nsresult> splitStartInlineResult =
@@ -10788,12 +10786,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         EditSubAction::eSetPositionToAbsolute, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedSelectionRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
+            .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+                *this, aEditingHost);
     if (MOZ_UNLIKELY(splitResult.isErr())) {
       NS_WARNING(
           "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+          "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
           "failed");
       return splitResult.unwrapErr();
     }

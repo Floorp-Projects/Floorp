@@ -5174,18 +5174,18 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::Prepare(
 
 Result<CaretPoint, nsresult>
 HTMLEditor::AutoMoveOneLineHandler::SplitToMakeTheLineIsolated(
-    HTMLEditor& aHTMLEditor, const Element& aEditingHost,
+    HTMLEditor& aHTMLEditor, const nsIContent& aNewContainer,
+    const Element& aEditingHost,
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) const {
   AutoRangeArray rangesToWrapTheLine(mLineRange);
   Result<EditorDOMPoint, nsresult> splitResult =
       rangesToWrapTheLine
-          .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-              aHTMLEditor);
+          .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+              aHTMLEditor, aEditingHost, &aNewContainer);
   if (MOZ_UNLIKELY(splitResult.isErr())) {
     NS_WARNING(
         "AutoRangeArray::"
-        "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
-        "failed");
+        "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() failed");
     return Err(splitResult.unwrapErr());
   }
   EditorDOMPoint pointToPutCaret;
@@ -5270,6 +5270,8 @@ HTMLEditor::AutoMoveOneLineHandler::ConsiderWhetherPreserveWhiteSpaceStyle(
 Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
     HTMLEditor& aHTMLEditor, const Element& aEditingHost) {
   EditorDOMPoint pointToInsert(NextInsertionPointRef());
+  MOZ_ASSERT(pointToInsert.IsInContentNode());
+
   EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
@@ -5277,7 +5279,10 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
                                         &pointToInsert);
 
     Result<CaretPoint, nsresult> splitAtLineEdgesResult =
-        SplitToMakeTheLineIsolated(aHTMLEditor, aEditingHost, arrayOfContents);
+        SplitToMakeTheLineIsolated(
+            aHTMLEditor,
+            MOZ_KnownLive(*pointToInsert.ContainerAs<nsIContent>()),
+            aEditingHost, arrayOfContents);
     if (MOZ_UNLIKELY(splitAtLineEdgesResult.isErr())) {
       NS_WARNING("AutoMoveOneLineHandler::SplitToMakeTheLineIsolated() failed");
       return splitAtLineEdgesResult.propagateErr();
@@ -5359,7 +5364,8 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
                              EmptyCheckOption::TreatTableCellAsVisible})) {
         nsCOMPtr<nsIContent> emptyContent =
             HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
-                content, &aEditingHost);
+                content, &aEditingHost,
+                pointToInsert.ContainerAs<nsIContent>());
         if (!emptyContent) {
           emptyContent = content;
         }
@@ -5513,6 +5519,8 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
   }
   // If the found unnecessary line break is not what we moved above, we
   // shouldn't remove it.  E.g., the web app may have inserted it intentionally.
+  MOZ_ASSERT(aMovedContentRange.StartRef().IsSetAndValid());
+  MOZ_ASSERT(aMovedContentRange.EndRef().IsSetAndValid());
   if (!aMovedContentRange.Contains(atUnnecessaryLineBreak)) {
     return NS_OK;
   }
