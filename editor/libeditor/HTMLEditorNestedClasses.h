@@ -241,6 +241,15 @@ class MOZ_STACK_CLASS HTMLEditor::AutoMoveOneLineHandler final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult> Run(
       HTMLEditor& aHTMLEditor, const Element& aEditingHost);
 
+  /**
+   * Returns true if there are some content nodes which can be moved to another
+   * place or deleted in the line containing aPointInHardLine.  Note that if
+   * there is only a padding <br> element in an empty block element, this
+   * returns false even though it may be deleted.
+   */
+  static Result<bool, nsresult> CanMoveOrDeleteSomethingInLine(
+      const EditorDOMPoint& aPointInHardLine, const Element& aEditingHost);
+
   AutoMoveOneLineHandler(const AutoMoveOneLineHandler& aOther) = delete;
   AutoMoveOneLineHandler(AutoMoveOneLineHandler&& aOther) = delete;
 

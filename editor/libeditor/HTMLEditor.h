@@ -1939,18 +1939,6 @@ class HTMLEditor final : public EditorBase,
                                  ErrorResult& aError);
 
   /**
-   * CanMoveOrDeleteSomethingInHardLine() returns true if there are some content
-   * nodes which can be moved to another place or deleted.  Note that if there
-   * is only a padding `<br>` element in empty block element, this returns
-   * false even though it may be deleted.
-   *
-   * @param aPointInHardLine    A point in a hard line.
-   */
-  Result<bool, nsresult> CanMoveOrDeleteSomethingInHardLine(
-      const EditorDOMPoint& aPointInHardLine,
-      const Element& aEditingHost) const;
-
-  /**
    * SplitNodeWithTransaction() creates a transaction to create a new node
    * (left node) identical to an existing node (right node), and split the
    * contents between the same point in both nodes, then, execute the
@@ -4503,7 +4491,6 @@ class HTMLEditor final : public EditorBase,
   friend class
       WhiteSpaceVisibilityKeeper;  // AutoMoveOneLineHandler
                                    // CanMoveChildren,
-                                   // CanMoveOrDeleteSomethingInHardLine,
                                    // ChangeListElementType,
                                    // DeleteNodeWithTransaction,
                                    // DeleteTextAndTextNodesWithTransaction,

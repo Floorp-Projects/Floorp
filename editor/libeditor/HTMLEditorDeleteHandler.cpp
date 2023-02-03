@@ -4768,7 +4768,7 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       } else {
         // Marked as handled only when it actually moves a content node.
         Result<bool, nsresult> firstLineHasContent =
-            aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
+            AutoMoveOneLineHandler::CanMoveOrDeleteSomethingInLine(
                 mPointContainingTheOtherBlockElement
                     .NextPoint<EditorDOMPoint>(),
                 aEditingHost);
@@ -4806,7 +4806,7 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       } else {
         // Marked as handled only when it actually moves a content node.
         Result<bool, nsresult> firstLineHasContent =
-            aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
+            AutoMoveOneLineHandler::CanMoveOrDeleteSomethingInLine(
                 EditorDOMPoint(mRightBlockElement, 0u), aEditingHost);
         mFallbackToDeleteLeafContent =
             firstLineHasContent.isOk() && !firstLineHasContent.inspect();
@@ -5038,10 +5038,12 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   return result;
 }
 
-Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
-    const EditorDOMPoint& aPointInHardLine, const Element& aEditingHost) const {
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aPointInHardLine.IsSet()) ||
-                   NS_WARN_IF(aPointInHardLine.IsInNativeAnonymousSubtree()))) {
+// static
+Result<bool, nsresult>
+HTMLEditor::AutoMoveOneLineHandler::CanMoveOrDeleteSomethingInLine(
+    const EditorDOMPoint& aPointInHardLine, const Element& aEditingHost) {
+  if (NS_WARN_IF(!aPointInHardLine.IsSet()) ||
+      NS_WARN_IF(aPointInHardLine.IsInNativeAnonymousSubtree())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
 
