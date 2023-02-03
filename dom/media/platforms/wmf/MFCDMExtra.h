@@ -18,50 +18,6 @@
 // For `IMFCdmSuspendNotify`
 #  include "MFMediaEngineExtra.h"
 
-typedef enum MF_MEDIAKEYS_REQUIREMENT {
-  MF_MEDIAKEYS_REQUIREMENT_REQUIRED = 1,
-  MF_MEDIAKEYS_REQUIREMENT_OPTIONAL = 2,
-  MF_MEDIAKEYS_REQUIREMENT_NOT_ALLOWED = 3
-} MF_MEDIAKEYS_REQUIREMENT;
-
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY
-    MF_CONTENTDECRYPTIONMODULE_STOREPATH = {
-        {0x77d993b9,
-         0xba61,
-         0x4bb7,
-         {0x92, 0xc6, 0x18, 0xc8, 0x6a, 0x18, 0x9c, 0x06}},
-        0x02};
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY MF_EME_DISTINCTIVEID = {
-    {0x7dc9c4a5,
-     0x12be,
-     0x497e,
-     {0x8b, 0xff, 0x9b, 0x60, 0xb2, 0xdc, 0x58, 0x45}},
-    PID_FIRST_USABLE + 0x00000002};
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY MF_EME_PERSISTEDSTATE = {
-    {0x5d4df6ae,
-     0x9af1,
-     0x4e3d,
-     {0x95, 0x5b, 0x0e, 0x4b, 0xd2, 0x2f, 0xed, 0xf0}},
-    PID_FIRST_USABLE + 0x00000003};
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY MF_EME_AUDIOCAPABILITIES = {
-    {0x980fbb84,
-     0x297d,
-     0x4ea7,
-     {0x89, 0x5f, 0xbc, 0xf2, 0x8a, 0x46, 0x28, 0x81}},
-    PID_FIRST_USABLE + 0x00000004};
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY MF_EME_VIDEOCAPABILITIES = {
-    {0xb172f83d,
-     0x30dd,
-     0x4c10,
-     {0x80, 0x06, 0xed, 0x53, 0xda, 0x4d, 0x3b, 0xdb}},
-    PID_FIRST_USABLE + 0x00000005};
-EXTERN_C const DECLSPEC_SELECTANY PROPERTYKEY MF_EME_ROBUSTNESS = {
-    {0x9d3d2b9e,
-     0x7023,
-     0x4944,
-     {0xa8, 0xf5, 0xec, 0xca, 0x52, 0xa4, 0x69, 0x90}},
-    PID_FIRST_USABLE + 0x00000001};
-
 typedef enum MF_MEDIAKEYSESSION_TYPE {
   MF_MEDIAKEYSESSION_TYPE_TEMPORARY = 0,
   MF_MEDIAKEYSESSION_TYPE_PERSISTENT_LICENSE =
@@ -217,54 +173,6 @@ IMFContentDecryptionModule : public IUnknown {
 };
 
 #  endif /* __IMFContentDecryptionModule_INTERFACE_DEFINED__ */
-
-#  ifndef __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__
-#    define __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__
-
-/* interface IMFContentDecryptionModuleAccess */
-/* [unique][uuid][object] */
-
-EXTERN_C const IID IID_IMFContentDecryptionModuleAccess;
-
-MIDL_INTERFACE("a853d1f4-e2a0-4303-9edc-f1a68ee43136")
-IMFContentDecryptionModuleAccess : public IUnknown {
- public:
-  virtual HRESULT STDMETHODCALLTYPE CreateContentDecryptionModule(
-      /* [in] */ __RPC__in_opt IPropertyStore *
-          contentDecryptionModuleProperties,
-      /* [out] */ __RPC__deref_out_opt IMFContentDecryptionModule *
-          *contentDecryptionModule) = 0;
-
-  virtual HRESULT STDMETHODCALLTYPE GetConfiguration(
-      /* [out] */ __RPC__deref_out_opt IPropertyStore * *configuration) = 0;
-
-  virtual HRESULT STDMETHODCALLTYPE GetKeySystem(
-      /* [out] */ __RPC__deref_out_opt LPWSTR * keySystem) = 0;
-};
-#  endif /* __IMFContentDecryptionModuleAccess_INTERFACE_DEFINED__ */
-
-#  ifndef __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__
-#    define __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__
-
-/* interface IMFContentDecryptionModuleFactory */
-/* [local][uuid][object] */
-
-EXTERN_C const IID IID_IMFContentDecryptionModuleFactory;
-MIDL_INTERFACE("7d5abf16-4cbb-4e08-b977-9ba59049943e")
-IMFContentDecryptionModuleFactory : public IUnknown {
- public:
-  virtual BOOL STDMETHODCALLTYPE IsTypeSupported(
-      /* [in] */ LPCWSTR keySystem,
-      /* [optional][in] */ LPCWSTR contentType) = 0;
-
-  virtual HRESULT STDMETHODCALLTYPE CreateContentDecryptionModuleAccess(
-      /* [in] */ LPCWSTR keySystem,
-      /* [size_is][size_is][in] */ IPropertyStore * *configurations,
-      /* [in] */ DWORD numConfigurations,
-      /* [out] */ IMFContentDecryptionModuleAccess *
-          *contentDecryptionModuleAccess) = 0;
-};
-#  endif /* __IMFContentDecryptionModuleFactory_INTERFACE_DEFINED__ */
 
 #endif  //  defined(WINVER) && WINVER >= 0x0A00
 
