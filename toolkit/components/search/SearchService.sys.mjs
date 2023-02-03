@@ -1356,11 +1356,9 @@ export class SearchService {
    * called from init(). Any subsequent updates to the remote settings are
    * handled via a sync listener.
    *
-   * For desktop, the initial remote settings are obtained from dumps in
+   * Dumps of remote settings should be available locally to avoid waiting
+   * for the network on startup. For desktop, the dumps are located in
    * `services/settings/dumps/main/`.
-   *
-   * When enabling for Android, be aware the dumps are not shipped there, and
-   * hence the `get` may take a while to return.
    */
   async #setupRemoteSettings() {
     // Now we have the values, listen for future updates.
