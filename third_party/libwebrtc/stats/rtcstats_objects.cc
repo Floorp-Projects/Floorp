@@ -696,6 +696,11 @@ WEBRTC_RTCSTATS_IMPL(
     &pli_count,
     &nack_count,
     &qp_sum,
+    &jitter_buffer_flushes,
+    &delayed_packet_outage_samples,
+    &relative_packet_arrival_delay,
+    &interruption_count,
+    &total_interruption_duration,
     &min_playout_delay)
 // clang-format on
 
@@ -754,6 +759,18 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       pli_count("pliCount"),
       nack_count("nackCount"),
       qp_sum("qpSum"),
+      jitter_buffer_flushes(
+          "jitterBufferFlushes",
+          {NonStandardGroupId::kRtcAudioJitterBufferMaxPackets}),
+      delayed_packet_outage_samples(
+          "delayedPacketOutageSamples",
+          {NonStandardGroupId::kRtcAudioJitterBufferMaxPackets,
+           NonStandardGroupId::kRtcStatsRelativePacketArrivalDelay}),
+      relative_packet_arrival_delay(
+          "relativePacketArrivalDelay",
+          {NonStandardGroupId::kRtcStatsRelativePacketArrivalDelay}),
+      interruption_count("interruptionCount"),
+      total_interruption_duration("totalInterruptionDuration"),
       min_playout_delay("minPlayoutDelay") {}
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
@@ -808,6 +825,11 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       pli_count(other.pli_count),
       nack_count(other.nack_count),
       qp_sum(other.qp_sum),
+      jitter_buffer_flushes(other.jitter_buffer_flushes),
+      delayed_packet_outage_samples(other.delayed_packet_outage_samples),
+      relative_packet_arrival_delay(other.relative_packet_arrival_delay),
+      interruption_count(other.interruption_count),
+      total_interruption_duration(other.total_interruption_duration),
       min_playout_delay(other.min_playout_delay) {}
 
 RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {}

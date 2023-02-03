@@ -496,6 +496,19 @@ std::unique_ptr<RTCInboundRTPStreamStats> CreateInboundAudioStreamStats(
   inbound_audio->fec_packets_discarded =
       voice_receiver_info.fec_packets_discarded;
   inbound_audio->packets_discarded = voice_receiver_info.packets_discarded;
+  inbound_audio->jitter_buffer_flushes =
+      voice_receiver_info.jitter_buffer_flushes;
+  inbound_audio->delayed_packet_outage_samples =
+      voice_receiver_info.delayed_packet_outage_samples;
+  inbound_audio->relative_packet_arrival_delay =
+      voice_receiver_info.relative_packet_arrival_delay_seconds;
+  inbound_audio->interruption_count =
+      voice_receiver_info.interruption_count >= 0
+          ? voice_receiver_info.interruption_count
+          : 0;
+  inbound_audio->total_interruption_duration =
+      static_cast<double>(voice_receiver_info.total_interruption_duration_ms) /
+      rtc::kNumMillisecsPerSec;
   return inbound_audio;
 }
 
@@ -1034,6 +1047,9 @@ ProduceMediaStreamTrackStatsFromVoiceReceiverInfo(
       voice_receiver_info.silent_concealed_samples;
   audio_track_stats->concealment_events =
       voice_receiver_info.concealment_events;
+
+  // TODO(crbug.com/webrtc/14524): These metrics have been moved from "track"
+  // stats, delete them.
   audio_track_stats->jitter_buffer_flushes =
       voice_receiver_info.jitter_buffer_flushes;
   audio_track_stats->delayed_packet_outage_samples =
@@ -1047,6 +1063,7 @@ ProduceMediaStreamTrackStatsFromVoiceReceiverInfo(
   audio_track_stats->total_interruption_duration =
       static_cast<double>(voice_receiver_info.total_interruption_duration_ms) /
       rtc::kNumMillisecsPerSec;
+
   return audio_track_stats;
 }
 
