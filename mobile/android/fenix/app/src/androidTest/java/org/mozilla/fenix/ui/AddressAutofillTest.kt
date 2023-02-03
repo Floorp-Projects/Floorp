@@ -366,4 +366,41 @@ class AddressAutofillTest {
             verifyManuallyFilledAddress("Ap. 07")
         }
     }
+
+    @Test
+    fun verifyAutofillAddressSectionTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            verifyAddressAutofillSection(true, false)
+            clickAddAddressButton()
+            fillAndSaveAddress(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "United States",
+                "555-5555",
+                "foo@bar.com",
+            )
+            verifyAddressAutofillSection(true, true)
+            clickManageAddressesButton()
+            verifyManageAddressesSection(
+                "Mozilla",
+                "Fenix",
+                "Firefox",
+                "Harrison Street",
+                "San Francisco",
+                "Alaska",
+                "94105",
+                "US",
+                "555-5555",
+                "foo@bar.com",
+            )
+        }
+    }
 }

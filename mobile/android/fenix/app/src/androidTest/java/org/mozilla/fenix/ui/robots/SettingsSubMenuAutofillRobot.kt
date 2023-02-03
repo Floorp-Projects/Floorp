@@ -208,21 +208,20 @@ class SettingsSubMenuAutofillRobot {
         emailAddress: String,
     ) {
         firstNameTextInput.waitForExists(waitingTime)
+        mDevice.pressBack()
         firstNameTextInput.setText(firstName)
         middleNameTextInput.setText(middleName)
         lastNameTextInput.setText(lastName)
         streetAddressTextInput.setText(streetAddress)
-        scrollToElementByText(getStringResource(R.string.addresses_city))
         cityTextInput.setText(city)
         subRegionDropDown.click()
         clickSubRegionOption(state)
         zipCodeTextInput.setText(zipCode)
         countryDropDown.click()
         clickCountryOption(country)
-        scrollToElementByText(getStringResource(R.string.addresses_phone))
+        scrollToElementByText(getStringResource(R.string.addresses_save_button))
         phoneTextInput.setText(phoneNumber)
         emailTextInput.setText(emailAddress)
-        scrollToElementByText(getStringResource(R.string.addresses_save_button))
         saveButton.click()
         manageAddressesButton.waitForExists(waitingTime)
     }
