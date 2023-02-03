@@ -63,8 +63,6 @@ class MediaDrmCDMProxy : public CDMProxy {
 
   void Terminated() override;
 
-  const nsCString& GetNodeId() const override;
-
   void OnSetSessionId(uint32_t aCreateSessionToken,
                       const nsAString& aSessionId) override;
 
@@ -97,11 +95,6 @@ class MediaDrmCDMProxy : public CDMProxy {
   // Resolves promise with "undefined".
   // Can be called from any thread.
   void ResolvePromise(PromiseId aId) override;
-
-  // Threadsafe.
-  const nsString& KeySystem() const override;
-
-  DataMutex<CDMCaps>& Capabilites() override;
 
   void OnKeyStatusesChange(const nsAString& aSessionId) override;
 

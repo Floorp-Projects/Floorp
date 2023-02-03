@@ -470,8 +470,6 @@ void ChromiumCDMProxy::ResolvePromise(PromiseId aId) {
   }
 }
 
-const nsCString& ChromiumCDMProxy::GetNodeId() const { return mNodeId; }
-
 void ChromiumCDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
                                       const nsAString& aSessionId) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -589,10 +587,6 @@ void ChromiumCDMProxy::OnRejectPromise(uint32_t aPromiseId,
   MOZ_ASSERT(NS_IsMainThread());
   RejectPromise(aPromiseId, std::move(aException), aMsg);
 }
-
-const nsString& ChromiumCDMProxy::KeySystem() const { return mKeySystem; }
-
-DataMutex<CDMCaps>& ChromiumCDMProxy::Capabilites() { return mCapabilites; }
 
 RefPtr<DecryptPromise> ChromiumCDMProxy::Decrypt(MediaRawData* aSample) {
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
