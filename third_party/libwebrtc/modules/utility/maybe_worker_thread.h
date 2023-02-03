@@ -77,7 +77,7 @@ class RTC_LOCKABLE MaybeWorkerThread {
 
  private:
   SequenceChecker sequence_checker_;
-  const std::unique_ptr<TaskQueueBase, TaskQueueDeleter> owned_task_queue_;
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> owned_task_queue_;
   TaskQueueBase* const worker_thread_;
 };
 

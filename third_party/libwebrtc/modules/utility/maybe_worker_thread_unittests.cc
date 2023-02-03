@@ -137,5 +137,25 @@ TEST(MaybeWorkerThreadTest, IsCurrentBehavesCorrectInExperiment) {
   ASSERT_TRUE(event.Wait(TimeDelta::Seconds(10)));
 }
 
+TEST(MaybeWorkerThreadTest, IsCurrentCanBeCalledInDestructorPerDefault) {
+  test::ExplicitKeyValueConfig field_trial("");
+  RealTimeController controller;
+  {
+    MaybeWorkerThread m(field_trial, "test_tq",
+                        controller.GetTaskQueueFactory());
+    m.RunOrPost([&] { EXPECT_TRUE(m.IsCurrent()); });
+  }
+}
+
+TEST(MaybeWorkerThreadTest, IsCurrentCanBeCalledInDestructorInExperiment) {
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  RealTimeController controller;
+  {
+    MaybeWorkerThread m(field_trial, "test_tq",
+                        controller.GetTaskQueueFactory());
+    m.RunOrPost([&] { EXPECT_TRUE(m.IsCurrent()); });
+  }
+}
+
 }  // namespace
 }  // namespace webrtc
