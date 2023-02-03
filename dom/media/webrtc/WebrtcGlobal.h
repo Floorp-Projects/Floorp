@@ -253,7 +253,6 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
 static void WriteRTCRtpStreamStats(
     MessageWriter* aWriter, const mozilla::dom::RTCRtpStreamStats& aParam) {
   WriteParam(aWriter, aParam.mSsrc);
-  WriteParam(aWriter, aParam.mMediaType);
   WriteParam(aWriter, aParam.mKind);
   WriteParam(aWriter, aParam.mTransportId);
   WriteParam(aWriter, aParam.mCodecId);
@@ -263,7 +262,6 @@ static void WriteRTCRtpStreamStats(
 static bool ReadRTCRtpStreamStats(MessageReader* aReader,
                                   mozilla::dom::RTCRtpStreamStats* aResult) {
   return ReadParam(aReader, &(aResult->mSsrc)) &&
-         ReadParam(aReader, &(aResult->mMediaType)) &&
          ReadParam(aReader, &(aResult->mKind)) &&
          ReadParam(aReader, &(aResult->mTransportId)) &&
          ReadParam(aReader, &(aResult->mCodecId)) &&

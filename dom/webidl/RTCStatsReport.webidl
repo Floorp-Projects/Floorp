@@ -32,9 +32,8 @@ dictionary RTCStats {
 };
 
 dictionary RTCRtpStreamStats : RTCStats {
-  unsigned long ssrc;
-  DOMString mediaType;
-  DOMString kind;
+  required unsigned long ssrc;
+  required DOMString kind;
   DOMString transportId;
   DOMString codecId;
 };
