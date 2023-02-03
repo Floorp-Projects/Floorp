@@ -398,6 +398,7 @@ function initPage() {
       });
 
       shortDesc.textContent = "";
+      let skipReason = RPMGetTRRSkipReason();
 
       // enable buttons
       let trrExceptionButton = document.getElementById("trrExceptionButton");
@@ -408,7 +409,13 @@ function initPage() {
           retryThis(this);
         });
       });
-      trrExceptionButton.hidden = false;
+
+      if (RPMIsSiteSpecificTRRError()) {
+        // Only show the exclude button if the failure is specific to this
+        // domain. If the TRR server is inaccessible we don't want to allow
+        // the user to add an exception just for this domain.
+        trrExceptionButton.hidden = false;
+      }
       let trrSettingsButton = document.getElementById("trrSettingsButton");
       trrSettingsButton.addEventListener("click", () => {
         RPMSendAsyncMessage("OpenTRRPreferences");
@@ -422,8 +429,6 @@ function initPage() {
           hostname: HOST_NAME,
         }
       );
-
-      let skipReason = RPMGetTRRSkipReason();
 
       let descriptionTag = "neterror-dns-not-found-trr-unknown-problem";
       let args = { trrDomain: RPMGetTRRDomain() };
