@@ -122,6 +122,18 @@ module.exports = {
       duplicateImport:
         "The import of '{{ name }}' is redundant with one set up earlier (e.g. head.js or the browser window environment). It should be removed.",
     },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          errorForNonImports: {
+            type: "boolean",
+            default: true,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     type: "suggestion",
     fixable: "code",
   },
