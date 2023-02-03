@@ -8,18 +8,39 @@
 
 import("../../webrtc.gni")
 
-if (is_android) {
-  rtc_library("utility") {
-    visibility = [ "*" ]
+rtc_source_set("utility") {
+  sources = [
+    "maybe_worker_thread.cc",
+    "maybe_worker_thread.h",
+  ]
 
-    sources = [
+  deps = [
+    "../../api:field_trials_view",
+    "../../api:sequence_checker",
+    "../../api/task_queue",
+    "../../api/task_queue:pending_task_safety_flag",
+    "../../rtc_base:checks",
+    "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:rtc_event",
+    "../../rtc_base:rtc_task_queue",
+  ]
+
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/strings:strings",
+  ]
+
+  if (is_android) {
+    visibility = [ "*" ]
+    sources += [
       "include/helpers_android.h",
       "include/jvm_android.h",
       "source/helpers_android.cc",
       "source/jvm_android.cc",
     ]
 
-    deps = [
+    deps += [
       "../../api:sequence_checker",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
@@ -27,10 +48,27 @@ if (is_android) {
       "../../rtc_base/system:arch",
     ]
   }
-} else {
-  # Add an empty source set so that dependent targets may include utility
-  # unconditionally.
-  rtc_source_set("utility") {
-    visibility = [ "*" ]
+}
+
+if (rtc_include_tests) {
+  rtc_library("utility_unittests") {
+    testonly = true
+
+    sources = [ "maybe_worker_thread_unittests.cc" ]
+    deps = [
+      ":utility",
+      "../../api:sequence_checker",
+      "../../api/task_queue",
+      "../../api/task_queue:default_task_queue_factory",
+      "../../api/task_queue:pending_task_safety_flag",
+      "../../api/units:time_delta",
+      "../../rtc_base:rtc_event",
+      "../../rtc_base:threading",
+      "../../test:explicit_key_value_config",
+      "../../test:field_trial",
+      "../../test:test_main",
+      "../../test:test_support",
+      "../../test/time_controller",
+    ]
   }
 }
