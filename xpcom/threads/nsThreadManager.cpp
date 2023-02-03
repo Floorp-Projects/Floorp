@@ -93,6 +93,12 @@ nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> ioPool(new nsThreadPool());
   NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
+  // The io pool spends a lot of its time blocking on io, so we want to offload
+  // these jobs on a lower priority if available.
+  rv = ioPool->SetQoSForThreads(nsIThread::QOS_PRIORITY_LOW);
+  NS_ENSURE_SUCCESS(
+      rv, rv);  // note: currently infallible, keeping this for brevity.
+
   rv = ioPool->SetName("BgIOThreadPool"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 

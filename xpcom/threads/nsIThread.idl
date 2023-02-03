@@ -52,6 +52,14 @@ interface nsIThread : nsISerialEventTarget
    */
   [noscript] attribute boolean CanInvokeJS;
 
+  /**
+   * Thread QoS priorities. Currently only supported on MacOS.
+   */
+
+  cenum QoSPriority : 32 {
+    QOS_PRIORITY_NORMAL,
+    QOS_PRIORITY_LOW
+  };
 
   /**
    * Shutdown the thread.  This method prevents further dispatch of events to
@@ -200,4 +208,15 @@ interface nsIThread : nsISerialEventTarget
   [noscript] void setRunningEventDelay(in TimeDuration delay, in TimeStamp start);
 
   [noscript] void setNameForWakeupTelemetry(in ACString name);
+
+  /**
+   * Set the QoS priority of threads where this may be available. Currently
+   * restricted to MacOS. Must be on the thread to call this method.
+   *
+   * @param aPriority
+   *   The specified priority we will adjust to. Can be low (background) or
+   *   normal (default / user-interactive)
+   */
+  [noscript] void setThreadQoS(in nsIThread_QoSPriority aPriority);
+
 };
