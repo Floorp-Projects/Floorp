@@ -665,7 +665,7 @@
     <string name="preference_site_permissions">අඩවි අවසර</string>
 
     <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
-    <string name="preferences_cookie_banner">දත්තකඩ විස්තරය අවකරණය</string>
+    <string name="preferences_cookie_banner">දත්තකඩ පතාක අවකරණය</string>
 
     <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
     <string name="preferences_cookie_banner_summary_on">සක්‍රියයි</string>
@@ -674,13 +674,13 @@
     <string name="preferences_cookie_banner_summary_off">අක්‍රියයි</string>
 
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_title">දත්තකඩ විස්තරය අවකරණය</string>
+    <string name="cookie_banner_reject_all_option_title">දත්තකඩ පතාක අවකරණය</string>
 
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_summary">පිළිවන් විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමෙන් කවුළු අඩුවෙන් පෙන්වයි.</string>
+    <string name="cookie_banner_reject_all_option_summary">පිළිවන් විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමෙන් පතාක අඩුවෙන් පෙන්වයි.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
-    <string name="cookie_banner_exception_item_title">දත්තකඩ විස්තරය අවකරණය</string>
+    <string name="cookie_banner_exception_item_title">දත්තකඩ පතාක අවකරණය</string>
 
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
     <string name="cookie_banner_exception_item_description_state_on">මෙම අඩවියට සක්‍රියයි</string>
@@ -689,7 +689,7 @@
     <string name="cookie_banner_exception_item_description_state_off">මෙම අඩවියට අක්‍රියයි</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
-    <string name="cookie_banner_exception_panel_switch_title">දත්තකඩ විස්තරය අවකරණය</string>
+    <string name="cookie_banner_exception_panel_switch_title">දත්තකඩ පතාක අවකරණය</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
     <string name="cookie_banner_exception_panel_switch_state_off">මෙම අඩවියට අක්‍රියයි</string>
@@ -698,23 +698,28 @@
     <string name="cookie_banner_exception_panel_switch_state_on">මෙම අඩවියට සක්‍රියයි</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
-    <string name="cookie_banner_exception_panel_title_state_on_for_site">%1$s සඳහා දත්තකඩ අවකරණය සක්‍රිය කරන්නද?</string>
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">%1$s සඳහා දත්තකඩ පතාක අවකරණය සක්‍රිය කරන්නද?</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
-    <string name="cookie_banner_exception_panel_title_state_off_for_site">%1$s සඳහා දත්තකඩ අවකරණය අක්‍රිය කරන්නද?</string>
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">%1$s සඳහා දත්තකඩ පතාක අවකරණය අක්‍රිය කරන්නද?</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, %1$s මගින් කවුළුව සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරන නමුත් ප්‍රතික්‍ෂේප විකල්පයක් නැති නම්, %1$s මගින් පතාකය සැඟවීමට දත්තකඩ සියල්ල පිළිගනු ඇත.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s සඳහා දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේපයට තැත් කිරීමට හැකිය.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner" tools:ignore="UnusedResources">කරදරකාරී දත්තකඩ කවුළු ඉවතලීම සඳහා දත්තකඩ ඉල්ලීම් ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරයි.\n\nසැකසුම් තුළ දත්තකඩ කවුළු අභිප්‍රේත කළමනාකරණය කරන්න.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">කරදරකාරී දත්තකඩ පතාක ඉවතලීම සඳහා දත්තකඩ ඉල්ලීම් ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරයි.\n\nසැකසුම් තුළ දත්තකඩ පතාක අභිප්‍රේත කළමනාකරණය කරන්න.</string>
 
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">කරදරකාරී දත්තකඩ පතාක ඉවතලීම සඳහා දත්තකඩ ඉල්ලීම් ප්‍රතික්‍ෂේප කිරීමට %1$s උත්සාහ කරයි.\n\n%2$s තුළ දත්තකඩ පතාක අභිප්‍රේත කළමනාකරණය කරන්න.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner_underline_settings" tools:ignore="UnusedResources">සැකසුම්</string>
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">සැකසුම්</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">සැකසුම්</string>
@@ -882,6 +887,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">මාරු වන්න</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">පූර්ණ තිර ප්‍රකාරයට ඇතුල් වෙමින්</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">වහාම නව පටිත්තක සබැඳියට මාරු වන්න</string>
 
@@ -1008,10 +1016,13 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">වසන්න</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">පිරික්සුම් ඉතිහාසය මැකිණි! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name

@@ -4,6 +4,8 @@
     <string name="mozac_feature_applinks_open_in">Otevřít v…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Chcete odkaz otevřít v jiné aplikaci? Vaše prohlížení nemusí zůstat anonymní.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Otevřít v jiné aplikaci</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Otevřít</string>
     <!-- Cancels the prompt -->

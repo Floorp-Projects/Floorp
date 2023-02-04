@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">මෙහි අරින්න…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">යෙදුමෙහි අරින්නද? ඔබගේ ක්‍රියාකාරකම් තවදුරටත් පෞද්. නොවීමට හැකිය.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">අන් යෙදුමකින් අරින්න</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">මෙම අන්තර්ගතය බැලීමට %s හැර යාමට කැමතිද?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">අරින්න</string>
     <!-- Cancels the prompt -->

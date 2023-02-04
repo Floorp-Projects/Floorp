@@ -118,10 +118,6 @@
     <string name="shortcut_erase_and_open_long_label">Vymazat a otevřít %1$s</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Vyhledávejte soukromě</string>
-
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s vám dává kontrolu.</p>
@@ -482,11 +478,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">Vítá vás %1$s!</string>
-
-    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Zavřít</string>
 
     <!-- New Onboarding flow first screen title -->
@@ -509,31 +501,6 @@
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Přeskočit</string>
 
-
-    <!-- Onboarding: Description -->
-    <string moz:removedIn="106" name="onboarding_description">Vyšší úroveň soukromého prohlížení kdykoliv potřebujete</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string moz:removedIn="106" name="onboarding_incognito_title">Plášť neviditelnosti a soukromí</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string moz:removedIn="106" name="onboarding_incognito_description">%s je prohlížeč zaměřený na ochranu soukromí se zabudovanou mimořádně silnou ochranou proti sledování a před cookies.</string>
-
-    <!-- Onboarding: History Title -->
-    <string moz:removedIn="106" name="onboarding_history_title">Prohlížejte bez obav</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="106" name="onboarding_history_description2">Jediné klepnutí vymaže historii vašeho prohlížení včetně cookies, čímž vás ochrání před sledujícími reklamami.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string moz:removedIn="106" name="onboarding_protection_title">Soukromí pro každou situaci</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string moz:removedIn="106" name="onboarding_protection_description">Úroveň ochrany soukromí během prohlížení si můžete nastavit podle potřeby.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string moz:removedIn="106" name="onboarding_start_browsing">Začněte prohlížet</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
@@ -685,6 +652,50 @@
 
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Oprávnění serverů</string>
+
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Omezení cookie lišt</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Zapnuto</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Vypnuto</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Omezení cookie lišt</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Omezuje zobrazování cookie lišt a bannerů odmítnutím jejich souhlasu, kdykoliv to je možné.</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
+    <string name="cookie_banner_exception_item_title">Omezení cookie lišt</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_on">ZAPNUTO pro tento web</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">VYPNUTO pro tento web</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_title">Omezení cookie lišt</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_off">VYPNUTO pro tento web</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_on">ZAPNUTO pro tento web</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">Chcete zapnout omezení cookie lišt pro %1$s?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">Chcete vypnout omezení cookie lišt pro %1$s?</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">nastavení</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">nastavení</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatické přehrávání</string>
@@ -839,6 +850,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Přepnout</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Spuštěn režim celé obrazovky</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Přepnout ihned na odkaz v novém panelu</string>
 
@@ -950,6 +964,10 @@
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zavřít panel</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Máme je! Tomuto serveru jsme zabránili ve vašem sledování. Klepnutím na ikonu štítu se dozvíte, co bylo zablokováno.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Zavřít vyskakovací okno</string>
 
@@ -965,20 +983,29 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Zavřít</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Widget vyhledávání</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Historie prohlížení vymazána 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Přidat widget na domovskou obrazovku</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Widget přidán na domovskou obrazovku</string>
 </resources>

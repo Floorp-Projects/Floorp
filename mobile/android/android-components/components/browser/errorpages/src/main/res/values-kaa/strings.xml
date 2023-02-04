@@ -49,6 +49,17 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Jalǵanıw waqtı tawsıldı</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Sayt jalǵanıw sorawına juwap bermedi hám brauzer kútiwdi toqtattı</p>
+      <ul>
+        <li>Sayttıń serveri waqtınsha islemey qalıwı yamasa júdá bánt bolıwı múmkin. Bir neshe minuttan soń, qayta urınıp kóriń.</li>
+        <li>Eger de siz basqa saytlardı asha almay atırǵan bolsańız, qurılmańızdıń tarmaq penen baylanısın tekseriń.</li>
+        <li>Eger de siziń qurılmańız yamasa jergilikli tarmaǵıńız qáwipsizlik diywalı yamasa isenimli server menen qorǵalǵan bolsa, olardıń sazlawların tekseriń. Sebebi nadurıs sazlawlar saytlardı kóriwge tosqınlıq etiwi múmkin.</li>
+        <li>Mashqala ele saplastırılmadı ma? Járdem ushın tarmaq administratorı yamasa internet provayderińiz benen másláhátlesiń.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Jalǵanbadı</string>
 
@@ -63,8 +74,22 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Serverdan kútilmegen juwap</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Sayt tarmaq sorawına kútilgen kóriniste juwap berdi hám brauzer óz jumısın dawam ete almaydı.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Bet durıs jóneltirilmey atır</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Brauzer betti júklew háreketin toqtattı, sebebi sayt sorawdı heshqashan orınlanbaytuǵınday etip jóneltirip atır.</p>
+      <ul>
+        <li>Siz bul sayttıń islewi ushın kerek bolǵan cookiedi óshirip yamasa bloklap qoyǵan bolıwıńız múmkin.</li>
+        <li>Eger de cookiedi qosqannan keyin de mashqala saplastırılmasa, onda mashqala siziń qurılmańızdan emes, al serverdiń sazlawlarınan bolıwı múmkin.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Oflayn rejim</string>
@@ -97,6 +122,16 @@
 
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi maǵlıwmatlardı jetkerip beriwde qátelik anıqlandı.</p>
+      <ul>
+        <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kontentti sıǵıw qátesi</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Siz kóriwge háreket etip atırǵan betti kórsetip bolmaydı, sebebi ol sıǵıwdıń nadurıs yamasa qollap-quwatlamaytuǵın usılınan paydalanadı.</p>
       <ul>
         <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
       </ul>
