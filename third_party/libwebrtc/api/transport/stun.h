@@ -283,29 +283,27 @@ class StunMessage {
   bool EqualAttributes(const StunMessage* other,
                        std::function<bool(int type)> attribute_type_mask) const;
 
-  // Expose raw-buffer ValidateMessageIntegrity function for testing.
-  static bool ValidateMessageIntegrityForTesting(const char* data,
-                                                 size_t size,
-                                                 const std::string& password) {
-    return ValidateMessageIntegrity(data, size, password);
-  }
-  // Expose raw-buffer ValidateMessageIntegrity function for testing.
-  static bool ValidateMessageIntegrity32ForTesting(
-      const char* data,
-      size_t size,
-      const std::string& password) {
-    return ValidateMessageIntegrity32(data, size, password);
-  }
   // Validates that a STUN message in byte buffer form
   // has a correct MESSAGE-INTEGRITY value.
   // These functions are not recommended and will be deprecated; use
   // ValidateMessageIntegrity(password) on the parsed form instead.
-  static bool ValidateMessageIntegrity(const char* data,
-                                       size_t size,
-                                       const std::string& password);
-  static bool ValidateMessageIntegrity32(const char* data,
-                                         size_t size,
-                                         const std::string& password);
+  [[deprecated("Use member function")]] static bool ValidateMessageIntegrity(
+      const char* data,
+      size_t size,
+      const std::string& password);
+  [[deprecated("Use member function")]] static bool ValidateMessageIntegrity32(
+      const char* data,
+      size_t size,
+      const std::string& password);
+
+  // Expose raw-buffer ValidateMessageIntegrity function for testing.
+  static bool ValidateMessageIntegrityForTesting(const char* data,
+                                                 size_t size,
+                                                 const std::string& password);
+  // Expose raw-buffer ValidateMessageIntegrity function for testing.
+  static bool ValidateMessageIntegrity32ForTesting(const char* data,
+                                                   size_t size,
+                                                   const std::string& password);
 
  protected:
   // Verifies that the given attribute is allowed for this message.
