@@ -529,11 +529,11 @@ Code to break and collect objects within reference cycles
       - David Baron
     * - Includes
       -
-        | `xpcom/base/nsCycleCollector.\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/base/nsCycleCollector.\*>`__
+        | `xpcom/base/nsCycleCollect\* <https://searchfox.org/mozilla-central/search?q=&path=xpcom/base/nsCycleCollect\*>`__
     * - Group
       - dev-platform
     * - Bugzilla Components
-      - Core::XPCOM
+      - Core::Cycle Collector
 
 Core: DLL Services
 ~~~~~~~~~~~~~~~~~~
