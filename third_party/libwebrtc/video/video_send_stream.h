@@ -22,6 +22,7 @@
 #include "call/bitrate_allocator.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
+#include "modules/utility/maybe_worker_thread.h"
 #include "rtc_base/event.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "video/encoder_rtcp_feedback.h"
@@ -98,7 +99,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
   absl::optional<float> GetPacingFactorOverride() const;
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
-  TaskQueueBase* const rtp_transport_queue_;
+  MaybeWorkerThread* const rtp_transport_queue_;
   RtpTransportControllerSendInterface* const transport_;
   rtc::Event thread_sync_event_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> transport_queue_safety_ =

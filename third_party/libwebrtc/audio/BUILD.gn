@@ -84,6 +84,7 @@ rtc_library("audio") {
     "../modules/pacing",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../modules/utility:utility",
     "../rtc_base:audio_format_to_string",
     "../rtc_base:buffer",
     "../rtc_base:checks",
@@ -111,6 +112,7 @@ rtc_library("audio") {
     "utility:audio_frame_operations",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
@@ -185,6 +187,7 @@ if (rtc_include_tests) {
       "../modules/pacing",
       "../modules/rtp_rtcp:mock_rtp_rtcp",
       "../modules/rtp_rtcp:rtp_rtcp_format",
+      "../modules/utility:utility",
       "../rtc_base:checks",
       "../rtc_base:macromagic",
       "../rtc_base:refcount",
@@ -202,6 +205,7 @@ if (rtc_include_tests) {
       "../test:scoped_key_value_config",
       "../test:test_common",
       "../test:test_support",
+      "../test/time_controller:time_controller",
       "utility:utility_tests",
       "//testing/gtest",
     ]

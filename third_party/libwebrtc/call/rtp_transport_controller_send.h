@@ -20,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "api/network_state_predictor.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_control.h"
 #include "api/units/data_rate.h"
@@ -32,6 +33,7 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/pacing/task_queue_paced_sender.h"
+#include "modules/utility/maybe_worker_thread.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/task_queue.h"
@@ -79,7 +81,7 @@ class RtpTransportControllerSend final
       RtpVideoSenderInterface* rtp_video_sender) override;
 
   // Implements RtpTransportControllerSendInterface
-  rtc::TaskQueue* GetWorkerQueue() override;
+  MaybeWorkerThread* GetWorkerQueue() override;
   PacketRouter* packet_router() override;
 
   NetworkStateEstimateObserver* network_state_estimate_observer() override;
@@ -208,10 +210,8 @@ class RtpTransportControllerSend final
   // Protected by internal locks.
   RateLimiter retransmission_rate_limiter_;
 
-  // TODO(perkj): `task_queue_` is supposed to replace `process_thread_`.
-  // `task_queue_` is defined last to ensure all pending tasks are cancelled
-  // and deleted before any other members.
-  rtc::TaskQueue task_queue_;
+  ScopedTaskSafety safety_;
+  MaybeWorkerThread task_queue_;
 
   const FieldTrialsView& field_trials_;
 };
