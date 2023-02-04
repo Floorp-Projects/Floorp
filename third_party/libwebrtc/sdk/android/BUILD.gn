@@ -625,7 +625,6 @@ if (current_os == "linux" || is_android) {
       "src/jni/encoded_image.h",
       "src/jni/h264_utils.cc",
       "src/jni/java_i420_buffer.cc",
-      "src/jni/jni_generator_helper.h",
       "src/jni/native_capturer_observer.cc",
       "src/jni/native_capturer_observer.h",
       "src/jni/nv12_buffer.cc",
