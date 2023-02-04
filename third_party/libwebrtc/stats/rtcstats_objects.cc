@@ -100,13 +100,8 @@ RTCCertificateStats::RTCCertificateStats(std::string&& id, int64_t timestamp_us)
       base64_certificate("base64Certificate"),
       issuer_certificate_id("issuerCertificateId") {}
 
-RTCCertificateStats::RTCCertificateStats(const RTCCertificateStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      fingerprint(other.fingerprint),
-      fingerprint_algorithm(other.fingerprint_algorithm),
-      base64_certificate(other.base64_certificate),
-      issuer_certificate_id(other.issuer_certificate_id) {}
-
+RTCCertificateStats::RTCCertificateStats(const RTCCertificateStats& other) =
+    default;
 RTCCertificateStats::~RTCCertificateStats() {}
 
 // clang-format off
@@ -131,14 +126,7 @@ RTCCodecStats::RTCCodecStats(std::string&& id, int64_t timestamp_us)
       channels("channels"),
       sdp_fmtp_line("sdpFmtpLine") {}
 
-RTCCodecStats::RTCCodecStats(const RTCCodecStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      transport_id(other.transport_id),
-      payload_type(other.payload_type),
-      mime_type(other.mime_type),
-      clock_rate(other.clock_rate),
-      channels(other.channels),
-      sdp_fmtp_line(other.sdp_fmtp_line) {}
+RTCCodecStats::RTCCodecStats(const RTCCodecStats& other) = default;
 
 RTCCodecStats::~RTCCodecStats() {}
 
@@ -169,16 +157,8 @@ RTCDataChannelStats::RTCDataChannelStats(std::string&& id, int64_t timestamp_us)
       messages_received("messagesReceived"),
       bytes_received("bytesReceived") {}
 
-RTCDataChannelStats::RTCDataChannelStats(const RTCDataChannelStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      label(other.label),
-      protocol(other.protocol),
-      data_channel_identifier(other.data_channel_identifier),
-      state(other.state),
-      messages_sent(other.messages_sent),
-      bytes_sent(other.bytes_sent),
-      messages_received(other.messages_received),
-      bytes_received(other.bytes_received) {}
+RTCDataChannelStats::RTCDataChannelStats(const RTCDataChannelStats& other) =
+    default;
 
 RTCDataChannelStats::~RTCDataChannelStats() {}
 
@@ -239,30 +219,7 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(std::string&& id,
       bytes_discarded_on_send("bytesDiscardedOnSend") {}
 
 RTCIceCandidatePairStats::RTCIceCandidatePairStats(
-    const RTCIceCandidatePairStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      transport_id(other.transport_id),
-      local_candidate_id(other.local_candidate_id),
-      remote_candidate_id(other.remote_candidate_id),
-      state(other.state),
-      priority(other.priority),
-      nominated(other.nominated),
-      writable(other.writable),
-      packets_sent(other.packets_sent),
-      packets_received(other.packets_received),
-      bytes_sent(other.bytes_sent),
-      bytes_received(other.bytes_received),
-      total_round_trip_time(other.total_round_trip_time),
-      current_round_trip_time(other.current_round_trip_time),
-      available_outgoing_bitrate(other.available_outgoing_bitrate),
-      available_incoming_bitrate(other.available_incoming_bitrate),
-      requests_received(other.requests_received),
-      requests_sent(other.requests_sent),
-      responses_received(other.responses_received),
-      responses_sent(other.responses_sent),
-      consent_requests_sent(other.consent_requests_sent),
-      packets_discarded_on_send(other.packets_discarded_on_send),
-      bytes_discarded_on_send(other.bytes_discarded_on_send) {}
+    const RTCIceCandidatePairStats& other) = default;
 
 RTCIceCandidatePairStats::~RTCIceCandidatePairStats() {}
 
@@ -316,26 +273,8 @@ RTCIceCandidateStats::RTCIceCandidateStats(std::string&& id,
       vpn("vpn"),
       network_adapter_type("networkAdapterType") {}
 
-RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      transport_id(other.transport_id),
-      is_remote(other.is_remote),
-      network_type(other.network_type),
-      ip(other.ip),
-      address(other.address),
-      port(other.port),
-      protocol(other.protocol),
-      relay_protocol(other.relay_protocol),
-      candidate_type(other.candidate_type),
-      priority(other.priority),
-      url(other.url),
-      foundation(other.foundation),
-      related_address(other.related_address),
-      related_port(other.related_port),
-      username_fragment(other.username_fragment),
-      tcp_type(other.tcp_type),
-      vpn(other.vpn),
-      network_adapter_type(other.network_adapter_type) {}
+RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other) =
+    default;
 
 RTCIceCandidateStats::~RTCIceCandidateStats() {}
 
@@ -390,10 +329,8 @@ RTCMediaStreamStats::RTCMediaStreamStats(std::string&& id, int64_t timestamp_us)
       stream_identifier("streamIdentifier"),
       track_ids("trackIds") {}
 
-RTCMediaStreamStats::RTCMediaStreamStats(const RTCMediaStreamStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      stream_identifier(other.stream_identifier),
-      track_ids(other.track_ids) {}
+RTCMediaStreamStats::RTCMediaStreamStats(const RTCMediaStreamStats& other) =
+    default;
 
 RTCMediaStreamStats::~RTCMediaStreamStats() {}
 
@@ -496,46 +433,7 @@ RTCMediaStreamTrackStats::RTCMediaStreamTrackStats(std::string&& id,
 }
 
 RTCMediaStreamTrackStats::RTCMediaStreamTrackStats(
-    const RTCMediaStreamTrackStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      track_identifier(other.track_identifier),
-      media_source_id(other.media_source_id),
-      remote_source(other.remote_source),
-      ended(other.ended),
-      detached(other.detached),
-      kind(other.kind),
-      jitter_buffer_delay(other.jitter_buffer_delay),
-      jitter_buffer_emitted_count(other.jitter_buffer_emitted_count),
-      frame_width(other.frame_width),
-      frame_height(other.frame_height),
-      frames_sent(other.frames_sent),
-      huge_frames_sent(other.huge_frames_sent),
-      frames_received(other.frames_received),
-      frames_decoded(other.frames_decoded),
-      frames_dropped(other.frames_dropped),
-      audio_level(other.audio_level),
-      total_audio_energy(other.total_audio_energy),
-      echo_return_loss(other.echo_return_loss),
-      echo_return_loss_enhancement(other.echo_return_loss_enhancement),
-      total_samples_received(other.total_samples_received),
-      total_samples_duration(other.total_samples_duration),
-      concealed_samples(other.concealed_samples),
-      silent_concealed_samples(other.silent_concealed_samples),
-      concealment_events(other.concealment_events),
-      inserted_samples_for_deceleration(
-          other.inserted_samples_for_deceleration),
-      removed_samples_for_acceleration(other.removed_samples_for_acceleration),
-      jitter_buffer_flushes(other.jitter_buffer_flushes),
-      delayed_packet_outage_samples(other.delayed_packet_outage_samples),
-      relative_packet_arrival_delay(other.relative_packet_arrival_delay),
-      interruption_count(other.interruption_count),
-      total_interruption_duration(other.total_interruption_duration),
-      total_frames_duration(other.total_frames_duration),
-      sum_squared_frame_durations(other.sum_squared_frame_durations),
-      freeze_count(other.freeze_count),
-      pause_count(other.pause_count),
-      total_freezes_duration(other.total_freezes_duration),
-      total_pauses_duration(other.total_pauses_duration) {}
+    const RTCMediaStreamTrackStats& other) = default;
 
 RTCMediaStreamTrackStats::~RTCMediaStreamTrackStats() {}
 
@@ -556,10 +454,7 @@ RTCPeerConnectionStats::RTCPeerConnectionStats(std::string&& id,
       data_channels_closed("dataChannelsClosed") {}
 
 RTCPeerConnectionStats::RTCPeerConnectionStats(
-    const RTCPeerConnectionStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      data_channels_opened(other.data_channels_opened),
-      data_channels_closed(other.data_channels_closed) {}
+    const RTCPeerConnectionStats& other) = default;
 
 RTCPeerConnectionStats::~RTCPeerConnectionStats() {}
 
@@ -586,14 +481,7 @@ RTCRTPStreamStats::RTCRTPStreamStats(std::string&& id, int64_t timestamp_us)
       codec_id("codecId"),
       media_type("mediaType") {}
 
-RTCRTPStreamStats::RTCRTPStreamStats(const RTCRTPStreamStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      ssrc(other.ssrc),
-      kind(other.kind),
-      track_id(other.track_id),
-      transport_id(other.transport_id),
-      codec_id(other.codec_id),
-      media_type(other.media_type) {}
+RTCRTPStreamStats::RTCRTPStreamStats(const RTCRTPStreamStats& other) = default;
 
 RTCRTPStreamStats::~RTCRTPStreamStats() {}
 
@@ -615,10 +503,7 @@ RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(std::string&& id,
       packets_lost("packetsLost") {}
 
 RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(
-    const RTCReceivedRtpStreamStats& other)
-    : RTCRTPStreamStats(other),
-      jitter(other.jitter),
-      packets_lost(other.packets_lost) {}
+    const RTCReceivedRtpStreamStats& other) = default;
 
 RTCReceivedRtpStreamStats::~RTCReceivedRtpStreamStats() {}
 
@@ -639,10 +524,8 @@ RTCSentRtpStreamStats::RTCSentRtpStreamStats(std::string&& id,
       packets_sent("packetsSent"),
       bytes_sent("bytesSent") {}
 
-RTCSentRtpStreamStats::RTCSentRtpStreamStats(const RTCSentRtpStreamStats& other)
-    : RTCRTPStreamStats(other),
-      packets_sent(other.packets_sent),
-      bytes_sent(other.bytes_sent) {}
+RTCSentRtpStreamStats::RTCSentRtpStreamStats(
+    const RTCSentRtpStreamStats& other) = default;
 
 RTCSentRtpStreamStats::~RTCSentRtpStreamStats() {}
 
@@ -774,64 +657,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       min_playout_delay("minPlayoutDelay") {}
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
-    const RTCInboundRTPStreamStats& other)
-    : RTCReceivedRtpStreamStats(other),
-      track_identifier(other.track_identifier),
-      mid(other.mid),
-      remote_id(other.remote_id),
-      packets_received(other.packets_received),
-      packets_discarded(other.packets_discarded),
-      fec_packets_received(other.fec_packets_received),
-      fec_packets_discarded(other.fec_packets_discarded),
-      bytes_received(other.bytes_received),
-      header_bytes_received(other.header_bytes_received),
-      last_packet_received_timestamp(other.last_packet_received_timestamp),
-      jitter_buffer_delay(other.jitter_buffer_delay),
-      jitter_buffer_target_delay(other.jitter_buffer_target_delay),
-      jitter_buffer_minimum_delay(other.jitter_buffer_minimum_delay),
-      jitter_buffer_emitted_count(other.jitter_buffer_emitted_count),
-      total_samples_received(other.total_samples_received),
-      concealed_samples(other.concealed_samples),
-      silent_concealed_samples(other.silent_concealed_samples),
-      concealment_events(other.concealment_events),
-      inserted_samples_for_deceleration(
-          other.inserted_samples_for_deceleration),
-      removed_samples_for_acceleration(other.removed_samples_for_acceleration),
-      audio_level(other.audio_level),
-      total_audio_energy(other.total_audio_energy),
-      total_samples_duration(other.total_samples_duration),
-      frames_received(other.frames_received),
-      frame_width(other.frame_width),
-      frame_height(other.frame_height),
-      frames_per_second(other.frames_per_second),
-      frames_decoded(other.frames_decoded),
-      key_frames_decoded(other.key_frames_decoded),
-      frames_dropped(other.frames_dropped),
-      total_decode_time(other.total_decode_time),
-      total_processing_delay(other.total_processing_delay),
-      total_assembly_time(other.total_assembly_time),
-      frames_assembled_from_multiple_packets(
-          other.frames_assembled_from_multiple_packets),
-      total_inter_frame_delay(other.total_inter_frame_delay),
-      total_squared_inter_frame_delay(other.total_squared_inter_frame_delay),
-      pause_count(other.pause_count),
-      total_pauses_duration(other.total_pauses_duration),
-      freeze_count(other.freeze_count),
-      total_freezes_duration(other.total_freezes_duration),
-      content_type(other.content_type),
-      estimated_playout_timestamp(other.estimated_playout_timestamp),
-      decoder_implementation(other.decoder_implementation),
-      fir_count(other.fir_count),
-      pli_count(other.pli_count),
-      nack_count(other.nack_count),
-      qp_sum(other.qp_sum),
-      jitter_buffer_flushes(other.jitter_buffer_flushes),
-      delayed_packet_outage_samples(other.delayed_packet_outage_samples),
-      relative_packet_arrival_delay(other.relative_packet_arrival_delay),
-      interruption_count(other.interruption_count),
-      total_interruption_duration(other.total_interruption_duration),
-      min_playout_delay(other.min_playout_delay) {}
-
+    const RTCInboundRTPStreamStats& other) = default;
 RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {}
 
 // clang-format off
@@ -909,39 +735,7 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string&& id,
       active("active") {}
 
 RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
-    const RTCOutboundRTPStreamStats& other)
-    : RTCRTPStreamStats(other),
-      media_source_id(other.media_source_id),
-      remote_id(other.remote_id),
-      mid(other.mid),
-      rid(other.rid),
-      packets_sent(other.packets_sent),
-      retransmitted_packets_sent(other.retransmitted_packets_sent),
-      bytes_sent(other.bytes_sent),
-      header_bytes_sent(other.header_bytes_sent),
-      retransmitted_bytes_sent(other.retransmitted_bytes_sent),
-      target_bitrate(other.target_bitrate),
-      frames_encoded(other.frames_encoded),
-      key_frames_encoded(other.key_frames_encoded),
-      total_encode_time(other.total_encode_time),
-      total_encoded_bytes_target(other.total_encoded_bytes_target),
-      frame_width(other.frame_width),
-      frame_height(other.frame_height),
-      frames_per_second(other.frames_per_second),
-      frames_sent(other.frames_sent),
-      huge_frames_sent(other.huge_frames_sent),
-      total_packet_send_delay(other.total_packet_send_delay),
-      quality_limitation_reason(other.quality_limitation_reason),
-      quality_limitation_durations(other.quality_limitation_durations),
-      quality_limitation_resolution_changes(
-          other.quality_limitation_resolution_changes),
-      content_type(other.content_type),
-      encoder_implementation(other.encoder_implementation),
-      fir_count(other.fir_count),
-      pli_count(other.pli_count),
-      nack_count(other.nack_count),
-      qp_sum(other.qp_sum),
-      active(other.active) {}
+    const RTCOutboundRTPStreamStats& other) = default;
 
 RTCOutboundRTPStreamStats::~RTCOutboundRTPStreamStats() {}
 
@@ -972,13 +766,7 @@ RTCRemoteInboundRtpStreamStats::RTCRemoteInboundRtpStreamStats(
       round_trip_time_measurements("roundTripTimeMeasurements") {}
 
 RTCRemoteInboundRtpStreamStats::RTCRemoteInboundRtpStreamStats(
-    const RTCRemoteInboundRtpStreamStats& other)
-    : RTCReceivedRtpStreamStats(other),
-      local_id(other.local_id),
-      round_trip_time(other.round_trip_time),
-      fraction_lost(other.fraction_lost),
-      total_round_trip_time(other.total_round_trip_time),
-      round_trip_time_measurements(other.round_trip_time_measurements) {}
+    const RTCRemoteInboundRtpStreamStats& other) = default;
 
 RTCRemoteInboundRtpStreamStats::~RTCRemoteInboundRtpStreamStats() {}
 
@@ -1011,14 +799,7 @@ RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
       total_round_trip_time("totalRoundTripTime") {}
 
 RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
-    const RTCRemoteOutboundRtpStreamStats& other)
-    : RTCSentRtpStreamStats(other),
-      local_id(other.local_id),
-      remote_timestamp(other.remote_timestamp),
-      reports_sent(other.reports_sent),
-      round_trip_time(other.round_trip_time),
-      round_trip_time_measurements(other.round_trip_time_measurements),
-      total_round_trip_time(other.total_round_trip_time) {}
+    const RTCRemoteOutboundRtpStreamStats& other) = default;
 
 RTCRemoteOutboundRtpStreamStats::~RTCRemoteOutboundRtpStreamStats() {}
 
@@ -1037,10 +818,8 @@ RTCMediaSourceStats::RTCMediaSourceStats(std::string&& id, int64_t timestamp_us)
       track_identifier("trackIdentifier"),
       kind("kind") {}
 
-RTCMediaSourceStats::RTCMediaSourceStats(const RTCMediaSourceStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      track_identifier(other.track_identifier),
-      kind(other.kind) {}
+RTCMediaSourceStats::RTCMediaSourceStats(const RTCMediaSourceStats& other) =
+    default;
 
 RTCMediaSourceStats::~RTCMediaSourceStats() {}
 
@@ -1065,13 +844,8 @@ RTCAudioSourceStats::RTCAudioSourceStats(std::string&& id, int64_t timestamp_us)
       echo_return_loss("echoReturnLoss"),
       echo_return_loss_enhancement("echoReturnLossEnhancement") {}
 
-RTCAudioSourceStats::RTCAudioSourceStats(const RTCAudioSourceStats& other)
-    : RTCMediaSourceStats(other),
-      audio_level(other.audio_level),
-      total_audio_energy(other.total_audio_energy),
-      total_samples_duration(other.total_samples_duration),
-      echo_return_loss(other.echo_return_loss),
-      echo_return_loss_enhancement(other.echo_return_loss_enhancement) {}
+RTCAudioSourceStats::RTCAudioSourceStats(const RTCAudioSourceStats& other) =
+    default;
 
 RTCAudioSourceStats::~RTCAudioSourceStats() {}
 
@@ -1094,12 +868,8 @@ RTCVideoSourceStats::RTCVideoSourceStats(std::string&& id, int64_t timestamp_us)
       frames("frames"),
       frames_per_second("framesPerSecond") {}
 
-RTCVideoSourceStats::RTCVideoSourceStats(const RTCVideoSourceStats& other)
-    : RTCMediaSourceStats(other),
-      width(other.width),
-      height(other.height),
-      frames(other.frames),
-      frames_per_second(other.frames_per_second) {}
+RTCVideoSourceStats::RTCVideoSourceStats(const RTCVideoSourceStats& other) =
+    default;
 
 RTCVideoSourceStats::~RTCVideoSourceStats() {}
 
@@ -1148,25 +918,7 @@ RTCTransportStats::RTCTransportStats(std::string&& id, int64_t timestamp_us)
       ice_local_username_fragment("iceLocalUsernameFragment"),
       ice_state("iceState") {}
 
-RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
-    : RTCStats(other.id(), other.timestamp_us()),
-      bytes_sent(other.bytes_sent),
-      packets_sent(other.packets_sent),
-      bytes_received(other.bytes_received),
-      packets_received(other.packets_received),
-      rtcp_transport_stats_id(other.rtcp_transport_stats_id),
-      dtls_state(other.dtls_state),
-      selected_candidate_pair_id(other.selected_candidate_pair_id),
-      local_certificate_id(other.local_certificate_id),
-      remote_certificate_id(other.remote_certificate_id),
-      tls_version(other.tls_version),
-      dtls_cipher(other.dtls_cipher),
-      dtls_role(other.dtls_role),
-      srtp_cipher(other.srtp_cipher),
-      selected_candidate_pair_changes(other.selected_candidate_pair_changes),
-      ice_role(other.ice_role),
-      ice_local_username_fragment(other.ice_local_username_fragment),
-      ice_state(other.ice_state) {}
+RTCTransportStats::RTCTransportStats(const RTCTransportStats& other) = default;
 
 RTCTransportStats::~RTCTransportStats() {}
 
