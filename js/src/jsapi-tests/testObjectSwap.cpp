@@ -13,6 +13,8 @@
  * created and the result of swapping every combination checked.
  */
 
+#include "mozilla/Sprintf.h"
+
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 #include "jsapi-tests/tests.h"
@@ -373,7 +375,7 @@ uint32_t GetPropertyCount(NativeObject* obj) {
 
 jsid CreatePropName(uint32_t id) {
   char buffer[32];
-  sprintf(buffer, "prop%u", id);
+  SprintfLiteral(buffer, "prop%u", id);
 
   RootedString atom(cx, JS_AtomizeString(cx, buffer));
   if (!atom) {

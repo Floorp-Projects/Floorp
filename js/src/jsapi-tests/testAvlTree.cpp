@@ -152,8 +152,9 @@ class CmpInt {
   }
   int get() const { return x_; }
   char* show() const {
-    char* str = (char*)calloc(16, 1);
-    sprintf(str, "%d", x_);
+    const size_t length = 16;
+    char* str = (char*)calloc(length, 1);
+    snprintf(str, length, "%d", x_);
     return str;
   }
 };
