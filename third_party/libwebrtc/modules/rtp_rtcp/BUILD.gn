@@ -369,6 +369,7 @@ rtc_source_set("rtp_rtcp_legacy") {
     "../remote_bitrate_estimator",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
