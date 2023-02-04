@@ -91,6 +91,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     const FieldTrialsView& trials)
     : clock_(clock),
       event_log_(event_log),
+      task_queue_factory_(task_queue_factory),
       bitrate_configurator_(bitrate_config),
       pacer_started_(false),
       pacer_settings_(trials),
@@ -157,7 +158,7 @@ RtpVideoSenderInterface* RtpTransportControllerSend::CreateRtpVideoSender(
       this, event_log, &retransmission_rate_limiter_, std::move(fec_controller),
       frame_encryption_config.frame_encryptor,
       frame_encryption_config.crypto_options, std::move(frame_transformer),
-      field_trials_));
+      field_trials_, task_queue_factory_));
   return video_rtp_senders_.back().get();
 }
 

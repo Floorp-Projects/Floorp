@@ -17,17 +17,17 @@
 
 #include "absl/memory/memory.h"
 #include "api/rtp_headers.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "api/test/mock_frame_encryptor.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/units/timestamp.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_timing.h"
-#include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
-#include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor.h"
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.h"
@@ -36,12 +36,13 @@
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
 #include "modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.h"
 #include "rtc_base/arraysize.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/rate_limiter.h"
-#include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
+#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 
@@ -78,7 +79,7 @@ constexpr uint32_t kTimestamp = 10;
 constexpr uint16_t kSeqNum = 33;
 constexpr uint32_t kSsrc = 725242;
 constexpr int kMaxPacketLength = 1500;
-constexpr uint64_t kStartTime = 123456789;
+constexpr Timestamp kStartTime = Timestamp::Millis(123456789);
 constexpr int64_t kDefaultExpectedRetransmissionTimeMs = 125;
 
 class LoopbackTransportTest : public webrtc::Transport {
@@ -1392,11 +1393,11 @@ INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
 class RtpSenderVideoWithFrameTransformerTest : public ::testing::Test {
  public:
   RtpSenderVideoWithFrameTransformerTest()
-      : fake_clock_(kStartTime),
-        retransmission_rate_limiter_(&fake_clock_, 1000),
+      : time_controller_(kStartTime),
+        retransmission_rate_limiter_(time_controller_.GetClock(), 1000),
         rtp_module_(ModuleRtpRtcpImpl2::Create([&] {
           RtpRtcpInterface::Configuration config;
-          config.clock = &fake_clock_;
+          config.clock = time_controller_.GetClock();
           config.outgoing_transport = &transport_;
           config.retransmission_rate_limiter = &retransmission_rate_limiter_;
           config.field_trials = &field_trials_;
@@ -1410,17 +1411,17 @@ class RtpSenderVideoWithFrameTransformerTest : public ::testing::Test {
   std::unique_ptr<RTPSenderVideo> CreateSenderWithFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> transformer) {
     RTPSenderVideo::Config config;
-    config.clock = &fake_clock_;
+    config.clock = time_controller_.GetClock();
     config.rtp_sender = rtp_module_->RtpSender();
     config.field_trials = &field_trials_;
     config.frame_transformer = transformer;
+    config.task_queue_factory = time_controller_.GetTaskQueueFactory();
     return std::make_unique<RTPSenderVideo>(config);
   }
 
  protected:
-  rtc::AutoThread main_thread_;
+  GlobalSimulatedTimeController time_controller_;
   FieldTrialBasedConfig field_trials_;
-  SimulatedClock fake_clock_;
   LoopbackTransportTest transport_;
   RateLimiter retransmission_rate_limiter_;
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_module_;
@@ -1514,15 +1515,91 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest, OnTransformedFrameSendsVideo) {
           [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
             callback->OnTransformedFrame(std::move(frame));
           });
-  TaskQueueForTest encoder_queue;
-  encoder_queue.SendTask(
-      [&] {
-        rtp_sender_video->SendEncodedImage(
-            kPayload, kType, kTimestamp, *encoded_image, video_header,
-            kDefaultExpectedRetransmissionTimeMs);
-      });
-  encoder_queue.WaitForPreviouslyPostedTasks();
+  auto encoder_queue = time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+      "encoder_queue", TaskQueueFactory::Priority::NORMAL);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
   EXPECT_EQ(transport_.packets_sent(), 1);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 2);
+}
+
+// Task queue which behaves as if it was a hardware encoder thread where no
+// CurrentTaskQueue is set.
+class HardwareEncoderTaskQueue : public TaskQueueBase {
+ public:
+  HardwareEncoderTaskQueue() = default;
+
+  void Delete() override {}
+  void PostTask(absl::AnyInvocable<void() &&> task) override {
+    CurrentTaskQueueSetter null_setter(nullptr);
+    std::move(task)();
+  }
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       TimeDelta delay) override {
+    // Not implemented.
+    RTC_CHECK_NOTREACHED();
+  }
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    TimeDelta delay) override {
+    // Not implemented.
+    RTC_CHECK_NOTREACHED();
+  }
+};
+
+TEST_F(RtpSenderVideoWithFrameTransformerTest,
+       OnTransformedFrameSendsVideoOnNewQueueForHwEncoders) {
+  auto mock_frame_transformer =
+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
+  rtc::scoped_refptr<TransformedFrameCallback> callback;
+  EXPECT_CALL(*mock_frame_transformer, RegisterTransformedFrameSinkCallback)
+      .WillOnce(SaveArg<0>(&callback));
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  ASSERT_TRUE(callback);
+
+  auto encoded_image = CreateDefaultEncodedImage();
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  ON_CALL(*mock_frame_transformer, Transform)
+      .WillByDefault(
+          [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
+            callback->OnTransformedFrame(std::move(frame));
+          });
+
+  // Hardware encoder task queue has no TaskQueue::Current() set, and so a new
+  // task queue should be created to handle the callback.
+  HardwareEncoderTaskQueue hw_encoder_queue;
+  hw_encoder_queue.PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+
+  // No packets sent yet since a task should be posted onto a new task queue.
+  EXPECT_EQ(transport_.packets_sent(), 0);
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 1);
+
+  // Check software encoder fallback.
+  auto encoder_queue = time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+      "encoder_queue", TaskQueueFactory::Priority::NORMAL);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 2);
 }
 
 TEST_F(RtpSenderVideoWithFrameTransformerTest,

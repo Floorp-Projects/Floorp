@@ -616,6 +616,7 @@ if (rtc_include_tests) {
       "../../api:time_controller",
       "../../api:transport_api",
       "../../api/rtc_event_log",
+      "../../api/task_queue",
       "../../api/transport:field_trial_based_config",
       "../../api/transport/rtp:dependency_descriptor",
       "../../api/units:data_rate",

@@ -188,6 +188,7 @@ rtc_library("rtp_sender") {
     "../api:sequence_checker",
     "../api:transport_api",
     "../api/rtc_event_log",
+    "../api/task_queue",
     "../api/transport:field_trial_based_config",
     "../api/transport:goog_cc",
     "../api/transport:network_control",
