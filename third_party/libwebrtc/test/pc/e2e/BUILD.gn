@@ -42,6 +42,7 @@ if (!build_with_chromium) {
         ":names_collection_test",
         ":peer_connection_e2e_smoke_test",
         ":peer_connection_quality_test_metric_names_test",
+        ":simulcast_dummy_buffer_helper_test",
         ":single_process_encoded_image_data_injector_unittest",
         ":stats_poller_test",
         ":video_dumping_test",
@@ -125,6 +126,17 @@ if (!build_with_chromium) {
       "analyzer/video/simulcast_dummy_buffer_helper.h",
     ]
     deps = [ "../../../api/video:video_frame" ]
+  }
+
+  rtc_library("simulcast_dummy_buffer_helper_test") {
+    testonly = true
+    sources = [ "analyzer/video/simulcast_dummy_buffer_helper_test.cc" ]
+    deps = [
+      ":simulcast_dummy_buffer_helper",
+      "../..:test_support",
+      "../../../api/video:video_frame",
+      "../../../rtc_base:random",
+    ]
   }
 
   rtc_library("quality_analyzing_video_decoder") {
