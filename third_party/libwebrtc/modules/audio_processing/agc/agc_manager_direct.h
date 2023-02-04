@@ -153,7 +153,6 @@ class AgcManagerDirect final {
   const absl::optional<int> min_mic_level_override_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   static std::atomic<int> instance_counter_;
-  const bool use_min_channel_level_;
   const int num_capture_channels_;
   const bool disable_digital_adaptive_;
 
