@@ -38,6 +38,7 @@
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
+#include "api/video/video_timing.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -2701,6 +2702,42 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   EXPECT_TRUE(report->Get(*expected_video.track_id));
   EXPECT_TRUE(report->Get(*expected_video.transport_id));
   EXPECT_TRUE(report->Get(*expected_video.codec_id));
+}
+
+TEST_F(RTCStatsCollectorTest, CollectGoogTimingFrameInfo) {
+  cricket::VideoMediaInfo video_media_info;
+
+  video_media_info.receivers.push_back(cricket::VideoReceiverInfo());
+  video_media_info.receivers[0].local_stats.push_back(
+      cricket::SsrcReceiverInfo());
+  video_media_info.receivers[0].local_stats[0].ssrc = 1;
+  TimingFrameInfo timing_frame_info;
+  timing_frame_info.rtp_timestamp = 1;
+  timing_frame_info.capture_time_ms = 2;
+  timing_frame_info.encode_start_ms = 3;
+  timing_frame_info.encode_finish_ms = 4;
+  timing_frame_info.packetization_finish_ms = 5;
+  timing_frame_info.pacer_exit_ms = 6;
+  timing_frame_info.network_timestamp_ms = 7;
+  timing_frame_info.network2_timestamp_ms = 8;
+  timing_frame_info.receive_start_ms = 9;
+  timing_frame_info.receive_finish_ms = 10;
+  timing_frame_info.decode_start_ms = 11;
+  timing_frame_info.decode_finish_ms = 12;
+  timing_frame_info.render_time_ms = 13;
+  timing_frame_info.flags = 14;
+  video_media_info.receivers[0].timing_frame_info = timing_frame_info;
+
+  pc_->AddVideoChannel("Mid0", "Transport0", video_media_info);
+  stats_->SetupRemoteTrackAndReceiver(
+      cricket::MEDIA_TYPE_VIDEO, "RemoteVideoTrackID", "RemoteStreamId", 1);
+
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+  auto inbound_rtps = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  ASSERT_EQ(inbound_rtps.size(), 1u);
+  ASSERT_TRUE(inbound_rtps[0]->goog_timing_frame_info.is_defined());
+  EXPECT_EQ(*inbound_rtps[0]->goog_timing_frame_info,
+            "1,2,3,4,5,6,7,8,9,10,11,12,13,1,0");
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
