@@ -72,6 +72,9 @@
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Yaq, raxmet</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Siz %1$stı siltemelerdi baǵdarlamalarda avtomatikalıq ashatuǵın etip sazlawıńız múmkin.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Sazlawlardı ashıw</string>
 
@@ -102,6 +105,9 @@
     <string name="tab_tray_inactive_onboarding_button_text">Sazlawlarda óshiriń</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Bir aydan soń avtomatikalıq jabılsın ba?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s ótken ay dawamında kórilmegen betlerdi jabıwı múmkin.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Jabıw</string>
 
@@ -184,6 +190,11 @@
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s de ashıw</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s tárepinen islep shıǵıldı</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Oqıw kórinisi</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">Oqıw kórinisin jabıw</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -223,6 +234,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Ruqsat etpew</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Jeke seanslarda izlew usınısına ruxsat berilsinbe?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s mánzil qatarına kirgizgen hámme zattı standart izlew sisteması menen bólisedi.</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s izlew</string>
     <!-- Search engine suggestion description text -->
@@ -302,19 +315,33 @@
 
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Jeke bette skrinshot alıwǵa ruqsat beriw</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Eger ruqsat berilse, bir neshe baǵdarlamalar ashıq waqıtta da qupıya betler kórinedi</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Qupıya kóriw operativ buyrıǵın qosıw</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Tek HTTPS rejimi</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Qosıwlı</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarnamalardaǵı cookie sorawlardı avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Bul sayt ushın óshirilgen</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Bul sayt ushın qosıwlı</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sayt házirshe qollap-quwatlanbaydı</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomatikalıq biykarlawǵa háreket qılıwı múmkin.</string>
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie haqqındaǵı xabarnamalar joq bolıp ketti!</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
 
@@ -347,6 +374,12 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Bas bet</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Háreketler</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Jeke sazlaw</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Betler, saylandılar, paroller hám basqalardı sáykeslestiriw ushın kiriń.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Akkaunt</string>
     <!-- Preference for language -->
@@ -356,12 +389,18 @@
     <string name="preferences_data_choices">Maǵlıwmatlardı tańlaw</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Maǵlıwmatlardı jıynaw</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Aralıqtan USB arqalı nasazlıqtı sazlaw</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">Izlew sistemaların kórsetiw</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Izlew usınısların kórsetiw</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Dawıslı izlewdi kórsetiw</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Jeke seanslarda kórsetiw</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Almasıw buferi usınısların kórsetiw</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Brauzer tariyxınan izlew</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -370,6 +409,8 @@
     <string name="preferences_search_synced_tabs">Sáykeslestirilgen betlerdi izlew</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Akkaunt sazlawları</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URLs nı avtomatikalıq toltırıw</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
     <!-- Preference for open download with an external download manager app -->
@@ -384,6 +425,9 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Ruqsat etilmedi</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Arnawlı qosımshalar toplamı</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">YAQSHI</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -524,6 +568,10 @@
     <string name="library_downloads">Júklengenler</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Saylandılar</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Kompyuter saylandıları</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Saylandılar menyusı</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
     <string name="library_desktop_bookmarks_toolbar">Saylandılar paneli</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
@@ -573,6 +621,8 @@
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Dizim</string>
 
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Keste</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Betlerdi jabıw</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -584,12 +634,17 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Bir aydan keyin</string>
 
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Baslawısh ekran</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Bas bet</string>
 
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Aqırǵı bet</string>
 
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Tórt saatlıq háreketsizlikten soń bas bet</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Qolda jabıw</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -606,12 +661,20 @@
     <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity_summary">Tórt saattan soń bas bette ashıw</string>
 
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Eski betlerdi passiv jaǵdayǵa ótkeriw</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Eki hápte dawamında kórilmegen betler passiv bólimge ótkeriledi.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Alıp taslaw</string>
 
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktiv</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s waqtı-waqtı menen izleniwlerdi ornatıwı hám júrgiziwi múmkin.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Dialog message shown after removing a study -->
@@ -975,6 +1038,8 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Jeke betlerdı jabıw</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_title">%1$s tez hám qupıya</string>
@@ -1061,6 +1126,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Shıǵıw</string>
 
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Óshiriw ushın waqıt aralıǵı</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Aqırǵı saat</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1187,9 +1254,13 @@
     <string name="about_support">Qollap-quwatlaw</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Nasazlıqlar</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Qupıyalıq esletpeleri</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Huqıqlarıńızdı biliń </string>
 
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Licenziya maǵlıwmatları</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bizler paydalanatuǵın kitapxanalar</string>
 
@@ -1236,6 +1307,8 @@
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Loginlardı sáykeslestiriw</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Loginlerdi qurılmalar arasında sáykeslew</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saqlanǵan loginler</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1291,6 +1364,8 @@
     <string name="logins_biometric_prompt_message_pin">Qurılmańızdı bloktan shıǵarıń</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Barlıq veb-saytlarda kólemin úlkeytiw</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Bul háreket tıyım salınǵan veb-saytlarda da kólemin ózgertiwge ruqsat etiw ushın qosıń.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Atı boyınsha (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1308,6 +1383,8 @@
     <string name="preferences_credit_cards">Bank kartaları</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Kartalardı saqlaw hám avtomatikalıq toltırıw</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Kartalardı qurılmalar arasında sáykeslew</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kartalardı sáykeslestiriw</string>
     <!-- Preference option for adding a credit card -->
@@ -1322,6 +1399,9 @@
 
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Mánzillerdi saqlaw hám avtomatikalıq toltırıw</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Sanlar, elektron pochta hám jetkerip beriw mánzilleri sıyaqlı maǵlıwmatlardı óz ishine aladı</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Karta qosıw</string>
@@ -1429,6 +1509,8 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Atı</string>
 
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Paydalanıw ushın izlew qatarı</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sorawdı “%s” menen almastırıń. Mısalı:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1461,6 +1543,8 @@
     <string name="quick_settings_sheet_insecure_connection_2">Jalǵanıw qáwipsiz emes</string>
     <!-- Label to clear site data -->
     <string name="clear_site_data">Cookie hám sayt maǵlıwmatların tazalaw</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Siz bul <b>%s</b> sayt ushın barlıq cookie hám maǵlıwmatlardı óshiriwińizge isenimińiz kámil me?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Siz bul sayt ushın bul ruqsatnamanı óshiriwge isenimińiz kámil me?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
@@ -1603,6 +1687,8 @@
 
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Kóbirek biliń</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">%s tárepinen qollap-quwatlanadı.</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Tolıǵıraq úyreniw</string>
 
