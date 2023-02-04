@@ -254,8 +254,11 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
   absl::optional<Timestamp> render_time = first_frame.RenderTimestamp();
   int64_t receive_time_ms = first_frame.ReceivedTime();
   // Gracefully handle bad RTP timestamps and render time issues.
-  if (!render_time ||
-      FrameHasBadRenderTiming(*render_time, now, timing_->TargetVideoDelay())) {
+  if (!render_time || FrameHasBadRenderTiming(*render_time, now) ||
+      TargetVideoDelayIsTooLarge(timing_->TargetVideoDelay())) {
+    RTC_LOG(LS_WARNING) << "Resetting jitter estimator and timing module due "
+                           "to bad render timing for rtp_timestamp="
+                        << first_frame.Timestamp();
     jitter_estimator_.Reset();
     timing_->Reset();
     render_time = timing_->RenderTime(first_frame.Timestamp(), now);

@@ -213,7 +213,11 @@ void VideoStreamBufferController::OnFrameReady(
     keyframe_required_ = false;
 
   // Gracefully handle bad RTP timestamps and render time issues.
-  if (FrameHasBadRenderTiming(render_time, now, timing_->TargetVideoDelay())) {
+  if (FrameHasBadRenderTiming(render_time, now) ||
+      TargetVideoDelayIsTooLarge(timing_->TargetVideoDelay())) {
+    RTC_LOG(LS_WARNING) << "Resetting jitter estimator and timing module due "
+                           "to bad render timing for rtp_timestamp="
+                        << first_frame.Timestamp();
     jitter_estimator_.Reset();
     timing_->Reset();
     render_time = timing_->RenderTime(first_frame.Timestamp(), now);
