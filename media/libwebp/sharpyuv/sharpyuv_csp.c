@@ -13,7 +13,7 @@
 
 #include <assert.h>
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 
 static int ToFixed16(float f) { return (int)floor(f * (1 << 16) + 0.5f); }
 

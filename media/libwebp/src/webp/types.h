@@ -42,11 +42,7 @@ typedef long long int int64_t;
 # if defined(__GNUC__) && __GNUC__ >= 4
 #  define WEBP_EXTERN extern __attribute__ ((visibility ("default")))
 # else
-#  if defined(_MSC_VER) && defined(WEBP_DLL)
-#   define WEBP_EXTERN __declspec(dllexport)
-#  else
-#   define WEBP_EXTERN extern
-#  endif
+#  define WEBP_EXTERN extern
 # endif  /* __GNUC__ >= 4 */
 #endif  /* WEBP_EXTERN */
 

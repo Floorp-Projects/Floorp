@@ -1336,7 +1336,7 @@ static int ReadTransform(int* const xsize, int const* ysize,
        ok = ok && ExpandColorMap(num_colors, transform);
       break;
     }
-    case SUBTRACT_GREEN_TRANSFORM:
+    case SUBTRACT_GREEN:
       break;
     default:
       assert(0);    // can't happen

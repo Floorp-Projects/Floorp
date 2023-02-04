@@ -16,6 +16,11 @@
 #if defined(WEBP_USE_SSE2)
 #include <stdlib.h>
 #include <emmintrin.h>
+#endif
+
+extern void InitSharpYuvSSE2(void);
+
+#if defined(WEBP_USE_SSE2)
 
 static uint16_t clip_SSE2(int v, int max) {
   return (v < 0) ? 0 : (v > max) ? max : (uint16_t)v;
@@ -193,8 +198,6 @@ WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvSSE2(void) {
   SharpYuvFilterRow = SharpYuvFilterRow_SSE2;
 }
 #else  // !WEBP_USE_SSE2
-
-extern void InitSharpYuvSSE2(void);
 
 void InitSharpYuvSSE2(void) {}
 
