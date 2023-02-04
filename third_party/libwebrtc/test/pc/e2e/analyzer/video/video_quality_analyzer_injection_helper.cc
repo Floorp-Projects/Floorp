@@ -19,6 +19,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "api/video/i420_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -186,16 +187,15 @@ void VideoQualityAnalyzerInjectionHelper::Stop() {
 
 void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
                                                   const VideoFrame& frame) {
-  rtc::scoped_refptr<I420BufferInterface> i420_buffer =
-      frame.video_frame_buffer()->ToI420();
-  if (IsDummyFrameBuffer(i420_buffer)) {
+  if (IsDummyFrame(frame)) {
     // This is dummy frame, so we  don't need to process it further.
     return;
   }
   // Copy entire video frame including video buffer to ensure that analyzer
   // won't hold any WebRTC internal buffers.
   VideoFrame frame_copy = frame;
-  frame_copy.set_video_frame_buffer(I420Buffer::Copy(*i420_buffer));
+  frame_copy.set_video_frame_buffer(
+      I420Buffer::Copy(*frame.video_frame_buffer()->ToI420()));
   analyzer_->OnFrameRendered(peer_name, frame_copy);
 
   if (frame.id() != VideoFrame::kNotSetId) {
