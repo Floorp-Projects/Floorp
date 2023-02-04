@@ -3294,6 +3294,19 @@ void BrowserChild::PaintWhileInterruptingJS(
   RecvRenderLayers(true /* aEnabled */, aEpoch);
 }
 
+void BrowserChild::UnloadLayersWhileInterruptingJS(
+    const layers::LayersObserverEpoch& aEpoch) {
+  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasWindowRenderer()) {
+    // Don't bother doing anything now. Better to wait until we receive the
+    // message on the PContent channel.
+    return;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
+  nsAutoScriptBlocker scriptBlocker;
+  RecvRenderLayers(false /* aEnabled */, aEpoch);
+}
+
 nsresult BrowserChild::CanCancelContentJS(
     nsIRemoteTab::NavigationType aNavigationType, int32_t aNavigationIndex,
     nsIURI* aNavigationURI, int32_t aEpoch, bool* aCanCancel) {

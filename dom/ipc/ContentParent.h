@@ -572,6 +572,9 @@ class ContentParent final : public PContentParent,
   void PaintTabWhileInterruptingJS(BrowserParent* aBrowserParent,
                                    const layers::LayersObserverEpoch& aEpoch);
 
+  void UnloadLayersWhileInterruptingJS(
+      BrowserParent* aBrowserParent, const layers::LayersObserverEpoch& aEpoch);
+
   void CancelContentJSExecutionIfRunning(
       BrowserParent* aBrowserParent,
       nsIRemoteTab::NavigationType aNavigationType,

@@ -53,6 +53,11 @@ class ProcessHangMonitor final : public nsIObserver {
   static void PaintWhileInterruptingJS(
       PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
       const layers::LayersObserverEpoch& aEpoch);
+
+  static void UnloadLayersWhileInterruptingJS(
+      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
+      const layers::LayersObserverEpoch& aEpoch);
+
   static void ClearPaintWhileInterruptingJS(
       const layers::LayersObserverEpoch& aEpoch);
   static void MaybeStartPaintWhileInterruptingJS();

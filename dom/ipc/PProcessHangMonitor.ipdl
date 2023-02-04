@@ -38,6 +38,7 @@ child:
   async EndStartingDebugger();
 
   async PaintWhileInterruptingJS(TabId tabId, LayersObserverEpoch aEpoch);
+  async UnloadLayersWhileInterruptingJS(TabId tabId, LayersObserverEpoch aEpoch);
 
   async CancelContentJSExecutionIfRunning(
       TabId tabId, NavigationType aNavigationType,
