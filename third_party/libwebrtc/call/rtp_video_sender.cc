@@ -19,6 +19,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/video_codec.h"
 #include "call/rtp_transport_controller_send_interface.h"
@@ -198,8 +199,10 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
     FrameEncryptorInterface* frame_encryptor,
     const CryptoOptions& crypto_options,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    const FieldTrialsView& trials) {
+    const FieldTrialsView& trials,
+    TaskQueueFactory* task_queue_factory) {
   RTC_DCHECK_GT(rtp_config.ssrcs.size(), 0);
+  RTC_DCHECK(task_queue_factory);
 
   RtpRtcpInterface::Configuration configuration;
   configuration.clock = clock;
@@ -290,7 +293,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
       video_config.fec_overhead_bytes = fec_generator->MaxPacketOverhead();
     }
     video_config.frame_transformer = frame_transformer;
-    video_config.send_transport_queue = transport->GetWorkerQueue()->Get();
+    video_config.task_queue_factory = task_queue_factory;
     auto sender_video = std::make_unique<RTPSenderVideo>(video_config);
     rtp_streams.emplace_back(std::move(rtp_rtcp), std::move(sender_video),
                              std::move(fec_generator));
@@ -368,7 +371,8 @@ RtpVideoSender::RtpVideoSender(
     FrameEncryptorInterface* frame_encryptor,
     const CryptoOptions& crypto_options,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    const FieldTrialsView& field_trials)
+    const FieldTrialsView& field_trials,
+    TaskQueueFactory* task_queue_factory)
     : field_trials_(field_trials),
       send_side_bwe_with_overhead_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
@@ -393,7 +397,8 @@ RtpVideoSender::RtpVideoSender(
                                           frame_encryptor,
                                           crypto_options,
                                           std::move(frame_transformer),
-                                          field_trials_)),
+                                          field_trials_,
+                                          task_queue_factory)),
       rtp_config_(rtp_config),
       codec_type_(GetVideoCodecType(rtp_config)),
       transport_(transport),

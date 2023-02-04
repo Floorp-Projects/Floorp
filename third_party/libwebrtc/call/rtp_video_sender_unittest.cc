@@ -153,7 +153,8 @@ class RtpVideoSenderTestFixture {
         &transport_controller_, &event_log_, &retransmission_rate_limiter_,
         std::make_unique<FecControllerDefault>(time_controller_.GetClock()),
         nullptr, CryptoOptions{}, frame_transformer,
-        field_trials ? *field_trials : field_trials_);
+        field_trials ? *field_trials : field_trials_,
+        time_controller_.GetTaskQueueFactory());
   }
 
   RtpVideoSenderTestFixture(
