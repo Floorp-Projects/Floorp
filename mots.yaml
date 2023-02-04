@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-02T16:09:32.463568'
+updated_at: '2023-02-03T16:23:06.801270'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1347,7 +1347,7 @@ modules:
   - name: 'Core: Cycle Collector'
     description: Code to break and collect objects within reference cycles
     includes:
-      - xpcom/base/nsCycleCollector.*
+      - xpcom/base/nsCycleCollect*
       # TODO "and some support headers"
       # NOTE: not always clean lines between modules and file boundaries. This module is deeply intertwines with other modules (e.g. XPCOM)
     meta:
@@ -1355,7 +1355,7 @@ modules:
         - David Baron
       group: dev-platform
       components:
-        - Core::XPCOM
+        - Core::Cycle Collector
     owners:
       - *mccr8
     peers:
@@ -3931,5 +3931,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 8209f49523a804df62b97420eae97d2ae800fe43
-  export: 4975afe4d10423da5fef7a9e802869e8103e28c3
+  config: 47714db6c02039502e3b27e09f3b9dceef4f53e2
+  export: 007d59b012c8e4f69356ff653d1b98e1927f3934
