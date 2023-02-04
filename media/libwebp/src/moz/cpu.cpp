@@ -38,3 +38,4 @@ static int MozCPUInfo(CPUFeature feature)
 }
 
 VP8CPUInfo VP8GetCPUInfo = MozCPUInfo;
+VP8CPUInfo SharpYuvGetCPUInfo = MozCPUInfo;
