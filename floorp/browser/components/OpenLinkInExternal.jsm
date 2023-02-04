@@ -15,9 +15,38 @@ const { ExtensionCommon } = ChromeUtils.import(
   "resource://gre/modules/ExtensionCommon.jsm"
 );
 
-function OpenLinkInExternal(path, url) {
+function getBrowsersPath() {
+    let browsersPath = [];
+    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+        Ci.nsIWindowsRegKey
+    );
+    key.open(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Clients\\StartMenuInternet",
+        Ci.nsIWindowsRegKey.ACCESS_READ
+    );
+    for (let i = 0; i < key.childCount; i++) {
+        let keyname = key.getChildName(i);
+        let keysub = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+            Ci.nsIWindowsRegKey
+        );
+        keysub.open(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+            `Software\\Clients\\StartMenuInternet\\${keyname}\\shell\\open\\command`,
+            Ci.nsIWindowsRegKey.ACCESS_READ
+        );
+        let regValue = keysub.readStringValue("");
+        let browserPath = regValue.replace(/^\"/, "").replace(/\"$/, "");
+        browsersPath.push(browserPath);
+        keysub.close();
+    }
+    key.close();
+    return browsersPath;
+}
+
+function OpenLinkInExternal(url) {
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    process.init(path);
+    process.init(FileUtils.File(getBrowsersPath()[0]));
     process.runAsync([url], 1) 
 }
 
@@ -34,7 +63,7 @@ let documentObserver = {
             if (window_.location.href == "chrome://browser/content/browser.xhtml") {
                 let tabContextMenu = document_.querySelector("#tabContextMenu");
                 window_.OpenLinkInExternalMenu = function (url) {
-                    OpenLinkInExternal(FileUtils.File("C:\\Users\\user\\AppData\\Local\\Vivaldi\\Application\\vivaldi.exe"), url);
+                    OpenLinkInExternal(url);
                 }
                 let openLinkInExternal = document_.createXULElement("menuitem");
                 openLinkInExternal.id = "open-link-in-external";
