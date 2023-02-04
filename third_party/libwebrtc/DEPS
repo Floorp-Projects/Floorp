@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '70faffcc69f4c6f3887dcdf86f36fc1918418a63',
+  'chromium_revision': 'c4c6808d37408465ab80802430bdeac64ad51277',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -40,24 +40,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@5419c4cba6edabd0cc98b3e2249b90fd28207bef',
+    'https://chromium.googlesource.com/chromium/src/base@02876e287d4eb6f774567ffff6cc921472f3a2a4',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@f8bd41b27f419f87262062fb80d66c0587f57ad8',
+    'https://chromium.googlesource.com/chromium/src/build@b04f54cc4854df3a80a0efc6e5b7ba7b5d283f7a',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@f4d21475bff29e0a8c8cb5e87bb675caed2f7dfe',
+    'https://chromium.googlesource.com/chromium/src/buildtools@3de5f08aae19523850387df9e4faa6d1df7ef2ea',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@a7d71939fe575a8352ba5ac3b0908f8ec4073c5c',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@35886884a26435ca7e1137439ced7f8b728d7c97',
     'condition': 'checkout_ios',
   },
   'src/testing':
     'https://chromium.googlesource.com/chromium/src/testing@c2eb333023f95f253a6f18c00f28517eb9c85a84',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@92b84a6a12d80145bd9b8ff63f6c664ed79ab7e8',
+    'https://chromium.googlesource.com/chromium/src/third_party@dafa01197fccf0ababba4423ca70b21a39a8bd92',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -103,7 +103,7 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@31d65528d85f27f0363a4f8c71dc5646fca6eff0',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@625a5eb4c70878cdd35a1eb3958035c756a35fd8',
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@db2a783a7d1ef0f0ef31da4b6e3de0c31fcfd93f',
   'src/buildtools/third_party/libunwind/trunk':
@@ -166,7 +166,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e085b3b50bde862d0cf3ce4594e3f391bcf5faec',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@6cc3b1e4ab164b9b31e1b86a8ec2dc2e1e2f8b98',
+    'https://chromium.googlesource.com/catapult.git@7628c078b5ab080404c28fb08d97f26c82f412e4',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -243,7 +243,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@626735b5d9b233ae6ce10bf70f7fa397398e103f',
+    'https://android.googlesource.com/platform/external/perfetto.git@5c42ac9c2c8efd77f14d56462d18eb644f36b78b',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@9d6d0624d7943a09cc0be9df1a7402522989ac1a',
   'src/third_party/libyuv':
@@ -292,7 +292,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@7f1c4a860fc91a794a7a9ccc3e30eaf6a47c9a16',
+    'https://chromium.googlesource.com/chromium/src/tools@69e1017c3f74029752279d7b1cdd16f630203b83',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
