@@ -106,6 +106,7 @@ rtc_source_set("stun_types") {
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base",
     "../../rtc_base:socket_address",
+    "../../system_wrappers:metrics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }

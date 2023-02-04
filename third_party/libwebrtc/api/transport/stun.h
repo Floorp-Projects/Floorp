@@ -159,11 +159,14 @@ class StunMessage {
 
   // The verification status of the message. This is checked on parsing,
   // or set by AddMessageIntegrity.
+  // These values are persisted to logs. Entries should not be renumbered and
+  // numeric values should never be reused.
   enum class IntegrityStatus {
-    kNotSet,
-    kNoIntegrity,   // Message-integrity attribute missing
-    kIntegrityOk,   // Message-integrity checked OK
-    kIntegrityBad,  // Message-integrity verification failed
+    kNotSet = 0,
+    kNoIntegrity = 1,   // Message-integrity attribute missing
+    kIntegrityOk = 2,   // Message-integrity checked OK
+    kIntegrityBad = 3,  // Message-integrity verification failed
+    kMaxValue = kIntegrityBad,
   };
 
   int type() const { return type_; }
