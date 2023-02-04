@@ -36,6 +36,7 @@
 #include "api/test/simulated_network.h"
 #include "api/test/stats_observer_interface.h"
 #include "api/test/track_id_stream_info_map.h"
+#include "api/test/video/video_frame_writer.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "api/transport/network_control.h"
 #include "api/units/time_delta.h"
@@ -262,9 +263,17 @@ class PeerConnectionE2EQualityTestFixture {
     // the frame ids in the same order as original frames in the output
     // file with stream content. File will contain one frame id per line.
     // (Default: false)
-    explicit VideoDumpOptions(absl::string_view output_directory,
-                              int sampling_modulo = kDefaultSamplingModulo,
-                              bool export_frame_ids = false);
+    // `video_frame_writer_factory` - factory function to create a video frame
+    // writer for input and output video files. (Default: Y4M video writer
+    // factory).
+    explicit VideoDumpOptions(
+        absl::string_view output_directory,
+        int sampling_modulo = kDefaultSamplingModulo,
+        bool export_frame_ids = false,
+        std::function<std::unique_ptr<test::VideoFrameWriter>(
+            absl::string_view file_name_prefix,
+            const VideoResolution& resolution)> video_frame_writer_factory =
+            Y4mVideoFrameWriterFactory);
     VideoDumpOptions(absl::string_view output_directory, bool export_frame_ids);
 
     VideoDumpOptions(const VideoDumpOptions&) = default;
@@ -276,6 +285,21 @@ class PeerConnectionE2EQualityTestFixture {
     int sampling_modulo() const { return sampling_modulo_; }
     bool export_frame_ids() const { return export_frame_ids_; }
 
+    std::unique_ptr<test::VideoFrameWriter> CreateInputDumpVideoFrameWriter(
+        absl::string_view stream_label,
+        const VideoResolution& resolution) const;
+
+    std::unique_ptr<test::VideoFrameWriter> CreateOutputDumpVideoFrameWriter(
+        absl::string_view stream_label,
+        absl::string_view receiver,
+        const VideoResolution& resolution) const;
+
+    std::string ToString() const;
+
+   private:
+    static std::unique_ptr<test::VideoFrameWriter> Y4mVideoFrameWriterFactory(
+        absl::string_view file_name_prefix,
+        const VideoResolution& resolution);
     std::string GetInputDumpFileName(absl::string_view stream_label) const;
     // Returns file name for input frame ids dump if `export_frame_ids()` is
     // true, absl::nullopt otherwise.
@@ -289,12 +313,13 @@ class PeerConnectionE2EQualityTestFixture {
         absl::string_view stream_label,
         absl::string_view receiver) const;
 
-    std::string ToString() const;
-
-   private:
     std::string output_directory_;
     int sampling_modulo_ = 1;
     bool export_frame_ids_ = false;
+    std::function<std::unique_ptr<test::VideoFrameWriter>(
+        absl::string_view file_name_prefix,
+        const VideoResolution& resolution)>
+        video_frame_writer_factory_;
   };
 
   // Contains properties of single video stream.

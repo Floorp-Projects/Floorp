@@ -15,8 +15,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/video/video_frame_writer.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "test/testsupport/video_frame_writer.h"
@@ -44,13 +43,12 @@ class VideoWriter final : public rtc::VideoSinkInterface<VideoFrame> {
   int64_t frames_counter_ = 0;
 };
 
-// Creates a `VideoFrameWriter` to dump video frames into the specified file
-// `file_name`. If `frame_ids_dump_file_name` is specified then created writer
-// will also log ids of those frames into the specified file.
-std::unique_ptr<test::VideoFrameWriter> CreateVideoFrameWriter(
-    absl::string_view file_name,
-    absl::optional<std::string> frame_ids_dump_file_name,
-    const PeerConnectionE2EQualityTestFixture::VideoResolution& resolution);
+// Creates a `VideoFrameWriter` to dump video frames together with their ids.
+// It uses provided `video_writer_delegate` to write video itself. Frame ids
+// will be logged into the specified file.
+std::unique_ptr<test::VideoFrameWriter> CreateVideoFrameWithIdsWriter(
+    std::unique_ptr<test::VideoFrameWriter> video_writer_delegate,
+    absl::string_view frame_ids_dump_file_name);
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

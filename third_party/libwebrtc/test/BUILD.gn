@@ -427,6 +427,7 @@ rtc_library("fixed_fps_video_frame_writer_adapter") {
   ]
   deps = [
     ":video_test_support",
+    "../api/test/video:video_frame_writer",
     "../api/units:time_delta",
     "../api/video:video_frame",
     "../rtc_base:checks",
@@ -457,6 +458,7 @@ rtc_library("video_test_support") {
     ":video_test_common",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/test/video:video_frame_writer",
     "../api/video:encoded_image",
     "../api/video:video_frame",
     "../api/video_codecs:video_codecs_api",
@@ -648,6 +650,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:simulcast_test_fixture_api",
       "../api/task_queue:task_queue_test",
       "../api/test/video:function_video_factory",
+      "../api/test/video:video_frame_writer",
       "../api/units:time_delta",
       "../api/video:encoded_image",
       "../api/video:video_frame",

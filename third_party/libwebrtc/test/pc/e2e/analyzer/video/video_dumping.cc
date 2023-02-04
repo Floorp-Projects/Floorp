@@ -17,9 +17,9 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/video/video_frame_writer.h"
 #include "api/video/video_frame.h"
+#include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
 #include "test/testsupport/video_frame_writer.h"
 
@@ -101,18 +101,13 @@ void VideoWriter::OnFrame(const VideoFrame& frame) {
   RTC_CHECK(result) << "Failed to write frame";
 }
 
-std::unique_ptr<test::VideoFrameWriter> CreateVideoFrameWriter(
-    absl::string_view file_name,
-    absl::optional<std::string> frame_ids_dump_file_name,
-    const PeerConnectionE2EQualityTestFixture::VideoResolution& resolution) {
+std::unique_ptr<test::VideoFrameWriter> CreateVideoFrameWithIdsWriter(
+    std::unique_ptr<test::VideoFrameWriter> video_writer_delegate,
+    absl::string_view frame_ids_dump_file_name) {
   std::vector<std::unique_ptr<test::VideoFrameWriter>> requested_writers;
-  requested_writers.push_back(std::make_unique<test::Y4mVideoFrameWriterImpl>(
-      std::string(file_name), resolution.width(), resolution.height(),
-      resolution.fps()));
-  if (frame_ids_dump_file_name.has_value()) {
-    requested_writers.push_back(
-        std::make_unique<VideoFrameIdsWriter>(*frame_ids_dump_file_name));
-  }
+  requested_writers.push_back(std::move(video_writer_delegate));
+  requested_writers.push_back(
+      std::make_unique<VideoFrameIdsWriter>(frame_ids_dump_file_name));
   return std::make_unique<BroadcastingFrameWriter>(
       std::move(requested_writers));
 }

@@ -17,7 +17,6 @@
 
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_frame_buffer.h"
@@ -35,9 +34,6 @@ namespace {
 using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::Test;
-
-using VideoResolution = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoResolution;
 
 uint8_t RandByte(Random& random) {
   return random.Rand(255);
@@ -122,38 +118,19 @@ class VideoDumpingTest : public Test {
   std::string ids_filename_;
 };
 
-using CreateVideoFrameWriterTest = VideoDumpingTest;
+using CreateVideoFrameWithIdsWriterTest = VideoDumpingTest;
 
-TEST_F(CreateVideoFrameWriterTest, VideoIsWritenCorrectly) {
+TEST_F(CreateVideoFrameWithIdsWriterTest, VideoIsWritenWithFrameIds) {
   Random random(/*seed=*/100);
   VideoFrame frame1 = CreateRandom2x2VideoFrame(1, random);
   VideoFrame frame2 = CreateRandom2x2VideoFrame(2, random);
 
-  std::unique_ptr<test::VideoFrameWriter> writer = CreateVideoFrameWriter(
-      video_filename_,
-      /*frame_ids_dump_file_name=*/absl::nullopt,
-      VideoResolution(/*width=*/2, /*height=*/2, /*fps=*/2));
-
-  ASSERT_TRUE(writer->WriteFrame(frame1));
-  ASSERT_TRUE(writer->WriteFrame(frame2));
-  writer->Close();
-
-  test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,
-                                        /*height=*/2);
-  ASSERT_TRUE(frame_reader.Init());
-  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(2));
-  AssertFramesEqual(frame_reader.ReadFrame(), frame1.video_frame_buffer());
-  AssertFramesEqual(frame_reader.ReadFrame(), frame2.video_frame_buffer());
-}
-
-TEST_F(CreateVideoFrameWriterTest, VideoIsWritenWithFrameIds) {
-  Random random(/*seed=*/100);
-  VideoFrame frame1 = CreateRandom2x2VideoFrame(1, random);
-  VideoFrame frame2 = CreateRandom2x2VideoFrame(2, random);
-
-  std::unique_ptr<test::VideoFrameWriter> writer = CreateVideoFrameWriter(
-      video_filename_, ids_filename_,
-      VideoResolution(/*width=*/2, /*height=*/2, /*fps=*/2));
+  std::unique_ptr<test::VideoFrameWriter> writer =
+      CreateVideoFrameWithIdsWriter(
+          std::make_unique<test::Y4mVideoFrameWriterImpl>(
+              std::string(video_filename_),
+              /*width=*/2, /*height=*/2, /*fps=*/2),
+          ids_filename_);
 
   ASSERT_TRUE(writer->WriteFrame(frame1));
   ASSERT_TRUE(writer->WriteFrame(frame2));
@@ -176,15 +153,14 @@ TEST_F(VideoWriterTest, AllFramesAreWrittenWithSamplingModulo1) {
   VideoFrame frame2 = CreateRandom2x2VideoFrame(2, random);
 
   {
-    std::unique_ptr<test::VideoFrameWriter> frame_writer =
-        CreateVideoFrameWriter(
-            video_filename_, /*frame_ids_dump_file_name=*/absl::nullopt,
-            VideoResolution(/*width=*/2, /*height=*/2, /*fps=*/2));
-    VideoWriter writer(frame_writer.get(), /*sampling_modulo=*/1);
+    test::Y4mVideoFrameWriterImpl frame_writer(std::string(video_filename_),
+                                               /*width=*/2, /*height=*/2,
+                                               /*fps=*/2);
+    VideoWriter writer(&frame_writer, /*sampling_modulo=*/1);
 
     writer.OnFrame(frame1);
     writer.OnFrame(frame2);
-    frame_writer->Close();
+    frame_writer.Close();
   }
 
   test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,
@@ -202,16 +178,15 @@ TEST_F(VideoWriterTest, OnlyEvery2ndFramesIsWrittenWithSamplingModulo2) {
   VideoFrame frame3 = CreateRandom2x2VideoFrame(3, random);
 
   {
-    std::unique_ptr<test::VideoFrameWriter> frame_writer =
-        CreateVideoFrameWriter(
-            video_filename_, /*frame_ids_dump_file_name=*/absl::nullopt,
-            VideoResolution(/*width=*/2, /*height=*/2, /*fps=*/2));
-    VideoWriter writer(frame_writer.get(), /*sampling_modulo=*/2);
+    test::Y4mVideoFrameWriterImpl frame_writer(std::string(video_filename_),
+                                               /*width=*/2, /*height=*/2,
+                                               /*fps=*/2);
+    VideoWriter writer(&frame_writer, /*sampling_modulo=*/2);
 
     writer.OnFrame(frame1);
     writer.OnFrame(frame2);
     writer.OnFrame(frame3);
-    frame_writer->Close();
+    frame_writer.Close();
   }
 
   test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,

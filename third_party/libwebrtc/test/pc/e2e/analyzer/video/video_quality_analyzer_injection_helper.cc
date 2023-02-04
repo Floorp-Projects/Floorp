@@ -116,11 +116,9 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
     const VideoConfig& config) {
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   if (config.input_dump_options.has_value()) {
-    std::unique_ptr<test::VideoFrameWriter> writer = CreateVideoFrameWriter(
-        config.input_dump_options->GetInputDumpFileName(*config.stream_label),
-        config.input_dump_options->GetInputFrameIdsDumpFileName(
-            *config.stream_label),
-        config.GetResolution());
+    std::unique_ptr<test::VideoFrameWriter> writer =
+        config.input_dump_options->CreateInputDumpVideoFrameWriter(
+            *config.stream_label, config.GetResolution());
     sinks.push_back(std::make_unique<VideoWriter>(
         writer.get(), config.input_dump_options->sampling_modulo()));
     video_writers_.push_back(std::move(writer));
@@ -226,12 +224,10 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
 
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   if (config.output_dump_options.has_value()) {
-    std::unique_ptr<test::VideoFrameWriter> writer = CreateVideoFrameWriter(
-        config.output_dump_options->GetOutputDumpFileName(
-            receiver_stream.stream_label, receiver_stream.peer_name),
-        config.output_dump_options->GetOutputFrameIdsDumpFileName(
-            receiver_stream.stream_label, receiver_stream.peer_name),
-        config.GetResolution());
+    std::unique_ptr<test::VideoFrameWriter> writer =
+        config.output_dump_options->CreateOutputDumpVideoFrameWriter(
+            receiver_stream.stream_label, receiver_stream.peer_name,
+            config.GetResolution());
     if (config.output_dump_use_fixed_framerate) {
       writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
           config.fps, clock_, std::move(writer));
