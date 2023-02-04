@@ -16,7 +16,7 @@ include "mozilla/net/NeckoMessageUtils.h";
 include "mozilla/net/ClassOfService.h";
 
 using class mozilla::net::nsHttpRequestHead from "nsHttpRequestHead.h";
-using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
+using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
 [RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";

@@ -155,7 +155,7 @@ using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
 [RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
-using Wireframe from "mozilla/dom/DocumentBinding.h";
+using mozilla::dom::Wireframe from "mozilla/dom/DocumentBinding.h";
 using mozilla::PerfStats::MetricMask from "mozilla/PerfStats.h";
 [RefCounted] using class nsIX509Cert from "nsIX509Cert.h";
 using nsIDNSService::ResolverMode from "nsIDNSService.h";

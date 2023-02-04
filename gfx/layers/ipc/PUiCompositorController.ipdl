@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using CSSRect from "Units.h";
-using CSSToScreenScale from "Units.h";
-using ScreenIntSize from "Units.h";
-using ScreenPoint from "Units.h";
+using mozilla::CSSRect from "Units.h";
+using mozilla::CSSToScreenScale from "Units.h";
+using mozilla::ScreenIntSize from "Units.h";
+using mozilla::ScreenPoint from "Units.h";
 
 include "mozilla/GfxMessageUtils.h";
 
