@@ -12,12 +12,10 @@ flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
 flat varying vec4 vClipCenter_Radius_BL;
 flat varying vec4 vClipCenter_Radius_BR;
-    #ifdef SWGL_DRAW_SPAN
-        flat varying vec4 vClipCorner_TL;
-        flat varying vec4 vClipCorner_TR;
-        flat varying vec4 vClipCorner_BL;
-        flat varying vec4 vClipCorner_BR;
-    #endif
+flat varying vec3 vClipPlane_TL;
+flat varying vec3 vClipPlane_TR;
+flat varying vec3 vClipPlane_BL;
+flat varying vec3 vClipPlane_BR;
 #endif
 // Clip mode. Packed in to a vector to work around bug 1630356.
 flat varying vec2 vClipMode;
@@ -133,26 +131,24 @@ void main(void) {
                                  clip_rect.p1.y - r_bl.y,
                                  inverse_radii_squared(r_bl));
 
-    #ifdef SWGL_DRAW_SPAN
-        // For the half-space span shader, we need to know the half-spaces of
-        // the corners separate from the center and radius. We compute a point
-        // that falls on the diagonal (which is just an inner vertex pushed out
-        // along one axis, but not on both). We also compute the direction of
-        // the half-space, which is a perpendicular vertex (-y,x) of the vector
-        // of the diagonal. We leave the scales of the vectors unchanged.
-        vClipCorner_TL = vec4(clip_rect.p0.x,
-                              clip_rect.p0.y + r_tl.y,
-                              -r_tl.yx);
-        vClipCorner_TR = vec4(clip_rect.p1.x - r_tr.x,
-                              clip_rect.p0.y,
-                              vec2(r_tr.y, -r_tr.x));
-        vClipCorner_BR = vec4(clip_rect.p1.x,
-                              clip_rect.p1.y - r_br.y,
-                              r_br.yx);
-        vClipCorner_BL = vec4(clip_rect.p0.x + r_bl.x,
-                              clip_rect.p1.y,
-                              vec2(-r_bl.y, r_bl.x));
-    #endif
+    // We need to know the half-spaces of the corners separate from the center
+    // and radius. We compute a point that falls on the diagonal (which is just
+    // an inner vertex pushed out along one axis, but not on both) to get the
+    // plane offset of the half-space. We also compute the direction vector of
+    // the half-space, which is a perpendicular vertex (-y,x) of the vector of
+    // the diagonal. We leave the scales of the vectors unchanged.
+    vec2 n_tl = -r_tl.yx;
+    vec2 n_tr = vec2(r_tr.y, -r_tr.x);
+    vec2 n_br = r_br.yx;
+    vec2 n_bl = vec2(-r_bl.y, r_bl.x);
+    vClipPlane_TL = vec3(n_tl,
+                         dot(n_tl, vec2(clip_rect.p0.x, clip_rect.p0.y + r_tl.y)));
+    vClipPlane_TR = vec3(n_tr,
+                         dot(n_tr, vec2(clip_rect.p1.x - r_tr.x, clip_rect.p0.y)));
+    vClipPlane_BR = vec3(n_br,
+                         dot(n_br, vec2(clip_rect.p1.x, clip_rect.p1.y - r_br.y)));
+    vClipPlane_BL = vec3(n_bl,
+                         dot(n_bl, vec2(clip_rect.p0.x + r_bl.x, clip_rect.p1.y)));
 #endif
 }
 #endif
@@ -180,9 +176,13 @@ void main(void) {
 #else
     float dist = distance_to_rounded_rect(
         local_pos,
+        vClipPlane_TL,
         vClipCenter_Radius_TL,
+        vClipPlane_TR,
         vClipCenter_Radius_TR,
+        vClipPlane_BR,
         vClipCenter_Radius_BR,
+        vClipPlane_BL,
         vClipCenter_Radius_BL,
         vTransformBounds
     );
@@ -316,27 +316,28 @@ void swgl_drawSpanR8() {
     // scale, but we do this with reference to the normal vector of the diagonal
     // using dot(normal, apex) / dot(normal, local_step), where the apex vector
     // is (0.7071 - 0.5) * abs(normal).yx * sign(normal).
-    vec4 start_plane = vec4(1.0e6);
-    vec4 end_plane = vec4(1.0e6);
+    vec3 start_plane = vec3(1.0e6);
+    vec3 end_plane = vec3(1.0e6);
 
-    #define CLIP_CORNER(offset, normal, info) do {                            \
-        float dist = dot(local_pos0 - (offset), (normal));                    \
-        float scale = -dot(local_step, (normal));                             \
+    // plane is assumed to be a vec3 with normal in (X, Y) and offset in Z.
+    #define CLIP_CORNER(plane, info) do {                                     \
+        float dist = dot(local_pos0, plane.xy) - plane.z;                     \
+        float scale = -dot(local_step, plane.xy);                             \
         if (scale >= 0.0) {                                                   \
             if (dist > opaque_start * scale) {                                \
                 SET_CORNER(start_corner, info);                               \
-                start_plane = vec4(offset, normal);                           \
+                start_plane = plane;                                          \
                 float inv_scale = recip(max(scale, 1.0e-6));                  \
                 opaque_start = dist * inv_scale;                              \
-                float apex = (0.7071 - 0.5) * 2.0 * abs(normal.x * normal.y); \
+                float apex = (0.7071 - 0.5) * 2.0 * abs(plane.x * plane.y);   \
                 aa_start = opaque_start - apex * inv_scale;                   \
             }                                                                 \
         } else if (dist > opaque_end * scale) {                               \
             SET_CORNER(end_corner, info);                                     \
-            end_plane = vec4(offset, normal);                                 \
+            end_plane = plane;                                                \
             float inv_scale = recip(min(scale, -1.0e-6));                     \
             opaque_end = dist * inv_scale;                                    \
-            float apex = (0.7071 - 0.5) * 2.0 * abs(normal.x * normal.y);     \
+            float apex = (0.7071 - 0.5) * 2.0 * abs(plane.x * plane.y);       \
             aa_end = opaque_end - apex * inv_scale;                           \
         }                                                                     \
     } while (false)
@@ -347,24 +348,26 @@ void swgl_drawSpanR8() {
         // half-space for each corner. To do this we just need to push out the
         // vertex in the right direction on a single axis, leaving the other
         // unchanged.
-        vec2 corner_tl = -vClipParams.xy - vec2(vClipParams.z, 0.0);
-        vec2 corner_tr = vec2(vClipParams.x, -vClipParams.y - vClipParams.z);
-        vec2 corner_br = vClipParams.xy + vec2(vClipParams.z, 0.0);
-        vec2 corner_bl = vec2(-vClipParams.x, vClipParams.y + vClipParams.z);
+        // However, since the corner radii are all the same, and since the local
+        // origin of each ellipse is assumed to be at (0, 0), the plane offset
+        // of the half-space is the same for each case. So given a corner offset
+        // of (x+z, y) and a vector of (z, z), the dot product becomes:
+        //   (x+z)*z + y*z == x*z + y*z + z*z 
         // The direction vector of the corner half-space has constant length,
         // but just needs an appropriate direction set.
-        vec2 n_tl = -vClipParams.zz;
-        vec2 n_tr = vec2(vClipParams.z, -vClipParams.z);
-        vec2 n_br = vClipParams.zz;
-        vec2 n_bl = vec2(-vClipParams.z, vClipParams.z);
+        float offset = (vClipParams.x + vClipParams.y + vClipParams.z) * vClipParams.z;
+        vec3 plane_tl = vec3(-vClipParams.zz, offset);
+        vec3 plane_tr = vec3(vClipParams.z, -vClipParams.z, offset);
+        vec3 plane_br = vec3(vClipParams.zz, offset);
+        vec3 plane_bl = vec3(-vClipParams.z, vClipParams.z, offset);
 
         #define SET_CORNER(corner, info)
 
         // Clip against the corner half-spaces.
-        CLIP_CORNER(corner_tl, n_tl, );
-        CLIP_CORNER(corner_tr, n_tr, );
-        CLIP_CORNER(corner_br, n_br, );
-        CLIP_CORNER(corner_bl, n_bl, );
+        CLIP_CORNER(plane_tl, );
+        CLIP_CORNER(plane_tr, );
+        CLIP_CORNER(plane_br, );
+        CLIP_CORNER(plane_bl, );
 
         // Later we need to calculate distance AA for both corners and the
         // outer bounding rect. For the fast-path, this is all done inside
@@ -384,10 +387,10 @@ void swgl_drawSpanR8() {
 
         // Clip against the corner half-spaces. We have already computed the
         // corner half-spaces in the vertex shader.
-        CLIP_CORNER(vClipCorner_TL.xy, vClipCorner_TL.zw, vClipCenter_Radius_TL);
-        CLIP_CORNER(vClipCorner_TR.xy, vClipCorner_TR.zw, vClipCenter_Radius_TR);
-        CLIP_CORNER(vClipCorner_BR.xy, vClipCorner_BR.zw, vClipCenter_Radius_BR);
-        CLIP_CORNER(vClipCorner_BL.xy, vClipCorner_BL.zw, vClipCenter_Radius_BL);
+        CLIP_CORNER(vClipPlane_TL, vClipCenter_Radius_TL);
+        CLIP_CORNER(vClipPlane_TR, vClipCenter_Radius_TR);
+        CLIP_CORNER(vClipPlane_BR, vClipCenter_Radius_BR);
+        CLIP_CORNER(vClipPlane_BL, vClipCenter_Radius_BL);
 
         // Later we need to calculate distance AA for both corners and the
         // outer bounding rect. For the general case, we need to explicitly
@@ -439,7 +442,7 @@ void swgl_drawSpanR8() {
         // either the corner or rect distance depending on which side we're on.
         while (swgl_SpanLength > opaque_start_len) {
             float alpha = distance_aa(aa_range,
-                dot(local_pos - start_plane.xy, start_plane.zw) > 0.0
+                dot(local_pos, start_plane.xy) > start_plane.z
                     ? AA_CORNER(local_pos, start_corner)
                     : AA_RECT(local_pos));
             swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
@@ -470,7 +473,7 @@ void swgl_drawSpanR8() {
         // and use either the corner or rect distance as appropriate.
         while (swgl_SpanLength > aa_end_len) {
             float alpha = distance_aa(aa_range,
-                dot(local_pos - end_plane.xy, end_plane.zw) > 0.0
+                dot(local_pos, end_plane.xy) > end_plane.z
                     ? AA_CORNER(local_pos, end_corner)
                     : AA_RECT(local_pos));
             swgl_commitColorR8(mix(alpha, 1.0 - alpha, vClipMode.x));
