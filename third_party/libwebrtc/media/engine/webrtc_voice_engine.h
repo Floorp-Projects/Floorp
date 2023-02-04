@@ -321,6 +321,8 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   // Unsignaled streams have an option to have a frame decryptor set on them.
   rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
       unsignaled_frame_decryptor_;
+  rtc::scoped_refptr<webrtc::FrameTransformerInterface>
+      unsignaled_frame_transformer_;
 };
 }  // namespace cricket
 
