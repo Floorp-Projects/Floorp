@@ -149,7 +149,7 @@ VideoSendStream::VideoSendStream(
     const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
     std::unique_ptr<FecController> fec_controller,
     const FieldTrialsView& field_trials)
-    : rtp_transport_queue_(transport->GetWorkerQueue()->Get()),
+    : rtp_transport_queue_(transport->GetWorkerQueue()),
       transport_(transport),
       stats_proxy_(clock, config, encoder_config.content_type, field_trials),
       config_(std::move(config)),
@@ -186,7 +186,6 @@ VideoSendStream::VideoSendStream(
                                           config_.frame_transformer)),
       send_stream_(clock,
                    &stats_proxy_,
-                   rtp_transport_queue_,
                    transport,
                    bitrate_allocator,
                    video_stream_encoder_.get(),
@@ -236,7 +235,7 @@ void VideoSendStream::UpdateActiveSimulcastLayers(
   RTC_LOG(LS_INFO) << "UpdateActiveSimulcastLayers: "
                    << active_layers_string.str();
 
-  rtp_transport_queue_->PostTask(
+  rtp_transport_queue_->RunOrPost(
       SafeTask(transport_queue_safety_, [this, active_layers] {
         send_stream_.UpdateActiveSimulcastLayers(active_layers);
       }));
@@ -252,17 +251,14 @@ void VideoSendStream::Start() {
 
   running_ = true;
 
-  rtp_transport_queue_->PostTask([this] {
-    transport_queue_safety_->SetAlive();
-    send_stream_.Start();
-    thread_sync_event_.Set();
-  });
-
   // It is expected that after VideoSendStream::Start has been called, incoming
   // frames are not dropped in VideoStreamEncoder. To ensure this, Start has to
   // be synchronized.
   // TODO(tommi): ^^^ Validate if this still holds.
-  thread_sync_event_.Wait(rtc::Event::kForever);
+  rtp_transport_queue_->RunSynchronous([this] {
+    transport_queue_safety_->SetAlive();
+    send_stream_.Start();
+  });
 }
 
 void VideoSendStream::Stop() {
@@ -271,7 +267,7 @@ void VideoSendStream::Stop() {
     return;
   RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   running_ = false;
-  rtp_transport_queue_->PostTask(SafeTask(transport_queue_safety_, [this] {
+  rtp_transport_queue_->RunOrPost(SafeTask(transport_queue_safety_, [this] {
     // As the stream can get re-used and implicitly restarted via changing
     // the state of the active layers, we do not mark the
     // `transport_queue_safety_` flag with `SetNotAlive()` here. That's only
@@ -333,18 +329,17 @@ void VideoSendStream::StopPermanentlyAndGetRtpStates(
   // Always run these cleanup steps regardless of whether running_ was set
   // or not. This will unregister callbacks before destruction.
   // See `VideoSendStreamImpl::StopVideoSendStream` for more.
-  rtp_transport_queue_->PostTask([this, rtp_state_map, payload_state_map]() {
-    transport_queue_safety_->SetNotAlive();
-    send_stream_.Stop();
-    *rtp_state_map = send_stream_.GetRtpStates();
-    *payload_state_map = send_stream_.GetRtpPayloadStates();
-    thread_sync_event_.Set();
-  });
-  thread_sync_event_.Wait(rtc::Event::kForever);
+  rtp_transport_queue_->RunSynchronous(
+      [this, rtp_state_map, payload_state_map]() {
+        transport_queue_safety_->SetNotAlive();
+        send_stream_.Stop();
+        *rtp_state_map = send_stream_.GetRtpStates();
+        *payload_state_map = send_stream_.GetRtpPayloadStates();
+      });
 }
 
 void VideoSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
-  // Called on a network thread.
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   send_stream_.DeliverRtcp(packet, length);
 }
 

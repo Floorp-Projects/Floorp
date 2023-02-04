@@ -42,6 +42,7 @@ class TaskQueue;
 namespace webrtc {
 
 class FrameEncryptorInterface;
+class MaybeWorkerThread;
 class TargetTransferRateObserver;
 class Transport;
 class PacketRouter;
@@ -93,7 +94,9 @@ struct RtpSenderFrameEncryptionConfig {
 class RtpTransportControllerSendInterface {
  public:
   virtual ~RtpTransportControllerSendInterface() {}
-  virtual rtc::TaskQueue* GetWorkerQueue() = 0;
+  // TODO(webrtc:14502): Remove MaybeWorkerThread when experiment has been
+  // evaluated.
+  virtual MaybeWorkerThread* GetWorkerQueue() = 0;
   virtual PacketRouter* packet_router() = 0;
 
   virtual RtpVideoSenderInterface* CreateRtpVideoSender(
