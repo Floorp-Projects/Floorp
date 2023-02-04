@@ -668,10 +668,6 @@ RTCError PeerConnection::Initialize(
       },
       delay_ms);
 
-  // Record the number of configured ICE servers for all connections.
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Configured",
-                              configuration_.servers.size(), 0, 31, 32);
-
   return RTCError::OK();
 }
 
@@ -1984,10 +1980,6 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
   }
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer", pranswer,
                             kProvisionalAnswerMax);
-
-  // Record the number of configured ICE servers for connected connections.
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Connected",
-                              configuration_.servers.size(), 0, 31, 32);
 
   // Record the number of valid / invalid ice-ufrag. We do allow certain
   // non-spec ice-char for backward-compat reasons. At this point we know
