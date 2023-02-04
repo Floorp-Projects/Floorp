@@ -472,6 +472,7 @@ rtc_library("video_test_support") {
     "../rtc_base:criticalsection",
     "../rtc_base:logging",
     "../rtc_base:rtc_event",
+    "../rtc_base:stringutils",
     "../rtc_base/system:file_wrapper",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
