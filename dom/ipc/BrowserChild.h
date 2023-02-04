@@ -599,6 +599,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Request that the docshell be marked as active.
   void PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch);
 
+  void UnloadLayersWhileInterruptingJS(
+      const layers::LayersObserverEpoch& aEpoch);
+
   nsresult CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                               int32_t aNavigationIndex, nsIURI* aNavigationURI,
                               int32_t aEpoch, bool* aCanCancel);
