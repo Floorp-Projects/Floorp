@@ -1453,7 +1453,6 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
 
         if (mDocumentURI && (net::SchemeIsHTTP(mDocumentURI) ||
                              net::SchemeIsHTTPS(mDocumentURI))) {
-          GetContentBlockingLog()->ReportOrigins();
           GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
         }
       }

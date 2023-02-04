@@ -22,7 +22,6 @@ if not CONFIG["MOZ_SYSTEM_JPEG"]:
     external_dirs += ["media/libjpeg"]
 
 DIRS += [
-    "/third_party/prio",
     "/third_party/msgpack",
     "/third_party/sipcc",
 ]
