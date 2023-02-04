@@ -44,6 +44,7 @@ if (!build_with_chromium) {
         ":peer_connection_quality_test_metric_names_test",
         ":single_process_encoded_image_data_injector_unittest",
         ":stats_poller_test",
+        ":video_dumping_test",
         ":video_frame_tracking_id_injector_unittest",
       ]
     }
@@ -177,6 +178,40 @@ if (!build_with_chromium) {
   }
 
   if (rtc_include_tests) {
+    rtc_library("video_dumping") {
+      testonly = true
+      sources = [
+        "analyzer/video/video_dumping.cc",
+        "analyzer/video/video_dumping.h",
+      ]
+      deps = [
+        "../..:video_test_support",
+        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/video:video_frame",
+        "../../../system_wrappers",
+      ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/strings",
+        "//third_party/abseil-cpp/absl/types:optional",
+      ]
+    }
+
+    rtc_library("video_dumping_test") {
+      testonly = true
+      sources = [ "analyzer/video/video_dumping_test.cc" ]
+      deps = [
+        ":video_dumping",
+        "../..:fileutils",
+        "../..:test_support",
+        "../..:video_test_support",
+        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api:scoped_refptr",
+        "../../../api/video:video_frame",
+        "../../../rtc_base:random",
+      ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    }
+
     rtc_library("video_quality_analyzer_injection_helper") {
       visibility = [ "*" ]
       testonly = true
@@ -189,6 +224,7 @@ if (!build_with_chromium) {
         ":quality_analyzing_video_decoder",
         ":quality_analyzing_video_encoder",
         ":simulcast_dummy_buffer_helper",
+        ":video_dumping",
         "../..:fixed_fps_video_frame_writer_adapter",
         "../..:test_renderer",
         "../../../api:array_view",
