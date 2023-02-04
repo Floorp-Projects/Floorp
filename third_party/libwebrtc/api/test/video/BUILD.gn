@@ -21,3 +21,11 @@ rtc_library("function_video_factory") {
     "../../video_codecs:video_codecs_api",
   ]
 }
+
+rtc_library("video_frame_writer") {
+  visibility = [ "*" ]
+  testonly = true
+  public = [ "video_frame_writer.h" ]
+
+  deps = [ "../../video:video_frame" ]
+}

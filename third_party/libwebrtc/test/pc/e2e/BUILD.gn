@@ -8,6 +8,23 @@
 
 import("../../../webrtc.gni")
 
+rtc_library("video_dumping") {
+  testonly = true
+  sources = [
+    "analyzer/video/video_dumping.cc",
+    "analyzer/video/video_dumping.h",
+  ]
+  deps = [
+    "../..:video_test_support",
+    "../../../api/test/video:video_frame_writer",
+    "../../../api/video:video_frame",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
 if (!build_with_chromium) {
   group("e2e") {
     testonly = true
@@ -190,24 +207,6 @@ if (!build_with_chromium) {
   }
 
   if (rtc_include_tests) {
-    rtc_library("video_dumping") {
-      testonly = true
-      sources = [
-        "analyzer/video/video_dumping.cc",
-        "analyzer/video/video_dumping.h",
-      ]
-      deps = [
-        "../..:video_test_support",
-        "../../../api:peer_connection_quality_test_fixture_api",
-        "../../../api/video:video_frame",
-        "../../../system_wrappers",
-      ]
-      absl_deps = [
-        "//third_party/abseil-cpp/absl/strings",
-        "//third_party/abseil-cpp/absl/types:optional",
-      ]
-    }
-
     rtc_library("video_dumping_test") {
       testonly = true
       sources = [ "analyzer/video/video_dumping_test.cc" ]
@@ -216,7 +215,6 @@ if (!build_with_chromium) {
         "../..:fileutils",
         "../..:test_support",
         "../..:video_test_support",
-        "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:scoped_refptr",
         "../../../api/video:video_frame",
         "../../../rtc_base:random",

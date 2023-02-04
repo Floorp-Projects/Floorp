@@ -18,6 +18,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/test/video/video_frame_writer.h"
 #include "api/video/i420_buffer.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
