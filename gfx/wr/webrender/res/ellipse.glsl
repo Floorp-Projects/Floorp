@@ -47,34 +47,42 @@ float distance_to_ellipse(vec2 p, vec2 radii) {
 
 float distance_to_rounded_rect(
     vec2 pos,
+    vec3 plane_tl,
     vec4 center_radius_tl,
+    vec3 plane_tr,
     vec4 center_radius_tr,
+    vec3 plane_br,
     vec4 center_radius_br,
+    vec3 plane_bl,
     vec4 center_radius_bl,
     vec4 rect_bounds
 ) {
     // Clip against each ellipse. If the fragment is in a corner, one of the
     // branches below will select it as the corner to calculate the distance
-    // to. We want to choose the smallest distance inside either of the axis
-    // bounds as the overall distance we use to compare which corner is closer
-    // than another. If outside any ellipse, default to a small offset so a
-    // negative distance is returned for it.
+    // to. We use half-space planes to detect which corner's ellipse the
+    // fragment is inside, where the plane is defined by a normal and offset.
+    // If outside any ellipse, default to a small offset so a negative distance
+    // is returned for it.
     vec4 corner = vec4(vec2(1.0e-6), vec2(1.0));
+
+    // Calculate the ellipse parameters for each corner.
     center_radius_tl.xy = center_radius_tl.xy - pos;
     center_radius_tr.xy = (center_radius_tr.xy - pos) * vec2(-1.0, 1.0);
     center_radius_br.xy = pos - center_radius_br.xy;
     center_radius_bl.xy = (center_radius_bl.xy - pos) * vec2(1.0, -1.0);
-    if (min(center_radius_tl.x, center_radius_tl.y) > min(corner.x, corner.y)) {
-        corner = center_radius_tl;
+
+    // Evaluate each half-space plane in turn to select a corner.
+    if (dot(pos, plane_tl.xy) > plane_tl.z) {
+      corner = center_radius_tl;
     }
-    if (min(center_radius_tr.x, center_radius_tr.y) > min(corner.x, corner.y)) {
-        corner = center_radius_tr;
+    if (dot(pos, plane_tr.xy) > plane_tr.z) {
+      corner = center_radius_tr;
     }
-    if (min(center_radius_br.x, center_radius_br.y) > min(corner.x, corner.y)) {
-        corner = center_radius_br;
+    if (dot(pos, plane_br.xy) > plane_br.z) {
+      corner = center_radius_br;
     }
-    if (min(center_radius_bl.x, center_radius_bl.y) > min(corner.x, corner.y)) {
-        corner = center_radius_bl;
+    if (dot(pos, plane_bl.xy) > plane_bl.z) {
+      corner = center_radius_bl;
     }
 
     // Calculate the distance of the selected corner and the rectangle bounds,

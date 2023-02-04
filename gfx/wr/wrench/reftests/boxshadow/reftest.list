@@ -11,7 +11,7 @@ platform(linux,mac) == inset-offset.yaml inset-offset.png
 platform(linux,mac) == inset-neg-offset.yaml inset-neg-offset.png
 == box-shadow-empty.yaml blank.yaml
 platform(linux,mac) == box-shadow-suite-no-blur.yaml box-shadow-suite-no-blur.png
-platform(linux,mac) == box-shadow-suite-blur.yaml box-shadow-suite-blur.png
+platform(linux,mac) fuzzy(1,84) == box-shadow-suite-blur.yaml box-shadow-suite-blur.png
 fuzzy(1,8) == box-shadow-large-blur-radius.yaml box-shadow-large-blur-radius-ref.yaml
 fuzzy(1,6388) == rounding.yaml rounding-ref.yaml
 platform(linux,mac) == box-shadow-border-radii.yaml box-shadow-border-radii.png
