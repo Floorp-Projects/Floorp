@@ -106,7 +106,6 @@ DIRS += [
     "simpledb",
     "reporting",
     "localstorage",
-    "prio",
     "l10n",
     "origin-trials",
     "webscheduling",

@@ -190,13 +190,6 @@ add_task(async function navigate_around() {
     },
   };
 
-  if (AppConstants.NIGHTLY_BUILD) {
-    knownProblematicPrefs["toolkit.telemetry.cachedClientID"] = {
-      // Bug 1712391: Only an issue in tests where pref is not populated early on
-      // in startup. Code path is only accessed in Nightly builds.
-    };
-  }
-
   if (SpecialPowers.useRemoteSubframes) {
     // We access this when considering starting a new content process.
     // Because there is no complete list of content process types,
