@@ -607,8 +607,13 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
   if (video_receiver_info.framerate_decoded > 0) {
     inbound_video->frames_per_second = video_receiver_info.framerate_decoded;
   }
-  if (video_receiver_info.qp_sum)
+  if (video_receiver_info.qp_sum) {
     inbound_video->qp_sum = *video_receiver_info.qp_sum;
+  }
+  if (video_receiver_info.timing_frame_info.has_value()) {
+    inbound_video->goog_timing_frame_info =
+        video_receiver_info.timing_frame_info->ToString();
+  }
   inbound_video->total_decode_time =
       video_receiver_info.total_decode_time.seconds<double>();
   inbound_video->total_processing_delay =
