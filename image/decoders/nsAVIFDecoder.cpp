@@ -545,6 +545,10 @@ class Dav1dDecoder final : AVIFDecoderInterface {
       if (colorPic->p.bpc != alphaPic->p.bpc) {
         return AsVariant(NonDecoderResult::AlphaYColorDepthMismatch);
       }
+
+      if (colorPic->stride[0] != alphaPic->stride[0]) {
+        return AsVariant(NonDecoderResult::AlphaYSizeMismatch);
+      }
     }
 
     MOZ_ASSERT_IF(!alphaPic, !aAVIFInfo.premultiplied_alpha);
@@ -803,6 +807,11 @@ class AOMDecoder final : AVIFDecoderInterface {
       if (mOwnedImage->GetImage()->bit_depth !=
           mOwnedAlphaPlane->GetImage()->bit_depth) {
         return AsVariant(NonDecoderResult::AlphaYColorDepthMismatch);
+      }
+
+      if (mOwnedImage->GetImage()->stride[AOM_PLANE_Y] !=
+          mOwnedAlphaPlane->GetImage()->stride[AOM_PLANE_Y]) {
+        return AsVariant(NonDecoderResult::AlphaYSizeMismatch);
       }
     }
 
