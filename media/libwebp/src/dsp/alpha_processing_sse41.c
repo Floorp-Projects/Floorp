@@ -26,7 +26,7 @@ static int ExtractAlpha_SSE41(const uint8_t* WEBP_RESTRICT argb,
   // value is not 0xff if any of the alpha[] is not equal to 0xff.
   uint32_t alpha_and = 0xff;
   int i, j;
-  const __m128i all_0xff = _mm_set1_epi32(~0);
+  const __m128i all_0xff = _mm_set1_epi32(~0u);
   __m128i all_alphas = all_0xff;
 
   // We must be able to access 3 extra bytes after the last written byte

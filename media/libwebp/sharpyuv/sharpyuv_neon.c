@@ -17,6 +17,11 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <arm_neon.h>
+#endif
+
+extern void InitSharpYuvNEON(void);
+
+#if defined(WEBP_USE_NEON)
 
 static uint16_t clip_NEON(int v, int max) {
   return (v < 0) ? 0 : (v > max) ? max : (uint16_t)v;
@@ -164,8 +169,6 @@ static void SharpYuvFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
 
 //------------------------------------------------------------------------------
 
-extern void InitSharpYuvNEON(void);
-
 WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvNEON(void) {
   SharpYuvUpdateY = SharpYuvUpdateY_NEON;
   SharpYuvUpdateRGB = SharpYuvUpdateRGB_NEON;
@@ -173,8 +176,6 @@ WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvNEON(void) {
 }
 
 #else  // !WEBP_USE_NEON
-
-extern void InitSharpYuvNEON(void);
 
 void InitSharpYuvNEON(void) {}
 

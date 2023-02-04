@@ -11,9 +11,9 @@ origin:
   url: "https://chromium.googlesource.com/webm/libwebp"
   license: BSD-3-Clause
 
-  release: v1.3.0 (2022-12-19T16:23:35-08:00).
+  release: v1.2.4 (2022-08-05T16:49:26-07:00).
 
-  revision: "v1.3.0"
+  revision: "v1.2.4"
 
   license-file: COPYING
 
@@ -59,5 +59,3 @@ vendoring:
   update-actions:
     - action: delete-path
       path: src/dsp/cpu.c
-    - action: delete-path
-      path: sharpyuv/sharpyuv_cpu.c

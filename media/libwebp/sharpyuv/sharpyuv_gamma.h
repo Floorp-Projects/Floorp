@@ -12,7 +12,7 @@
 #ifndef WEBP_SHARPYUV_SHARPYUV_GAMMA_H_
 #define WEBP_SHARPYUV_SHARPYUV_GAMMA_H_
 
-#include "src/webp/types.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

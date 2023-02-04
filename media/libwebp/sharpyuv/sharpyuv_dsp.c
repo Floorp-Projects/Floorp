@@ -16,7 +16,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "sharpyuv/sharpyuv_cpu.h"
+#include "src/dsp/cpu.h"
 
 //-----------------------------------------------------------------------------
 
@@ -75,24 +75,23 @@ void (*SharpYuvFilterRow)(const int16_t* A, const int16_t* B, int len,
 extern void InitSharpYuvSSE2(void);
 extern void InitSharpYuvNEON(void);
 
-void SharpYuvInitDsp(void) {
+void SharpYuvInitDsp(VP8CPUInfo cpu_info_func) {
+  (void)cpu_info_func;
+
 #if !WEBP_NEON_OMIT_C_CODE
   SharpYuvUpdateY = SharpYuvUpdateY_C;
   SharpYuvUpdateRGB = SharpYuvUpdateRGB_C;
   SharpYuvFilterRow = SharpYuvFilterRow_C;
 #endif
 
-  if (SharpYuvGetCPUInfo != NULL) {
 #if defined(WEBP_HAVE_SSE2)
-    if (SharpYuvGetCPUInfo(kSSE2)) {
-      InitSharpYuvSSE2();
-    }
-#endif  // WEBP_HAVE_SSE2
+  if (cpu_info_func == NULL || cpu_info_func(kSSE2)) {
+    InitSharpYuvSSE2();
   }
+#endif  // WEBP_HAVE_SSE2
 
 #if defined(WEBP_HAVE_NEON)
-  if (WEBP_NEON_OMIT_C_CODE ||
-      (SharpYuvGetCPUInfo != NULL && SharpYuvGetCPUInfo(kNEON))) {
+  if (WEBP_NEON_OMIT_C_CODE || cpu_info_func == NULL || cpu_info_func(kNEON)) {
     InitSharpYuvNEON();
   }
 #endif  // WEBP_HAVE_NEON

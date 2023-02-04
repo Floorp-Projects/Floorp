@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "src/webp/types.h"
 
