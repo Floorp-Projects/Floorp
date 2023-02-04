@@ -524,7 +524,8 @@ DefaultUnsignalledSsrcHandler::DefaultUnsignalledSsrcHandler()
 
 UnsignalledSsrcHandler::Action DefaultUnsignalledSsrcHandler::OnUnsignalledSsrc(
     WebRtcVideoChannel* channel,
-    uint32_t ssrc) {
+    uint32_t ssrc,
+    absl::optional<uint32_t> rtx_ssrc) {
   absl::optional<uint32_t> default_recv_ssrc =
       channel->GetDefaultReceiveStreamSsrc();
 
@@ -536,7 +537,9 @@ UnsignalledSsrcHandler::Action DefaultUnsignalledSsrcHandler::OnUnsignalledSsrc(
 
   StreamParams sp = channel->unsignaled_stream_params();
   sp.ssrcs.push_back(ssrc);
-
+  if (rtx_ssrc) {
+    sp.AddFidSsrc(ssrc, *rtx_ssrc);
+  }
   RTC_LOG(LS_INFO) << "Creating default receive stream for SSRC=" << ssrc
                    << ".";
   if (!channel->AddRecvStream(sp, /*default_stream=*/true)) {
@@ -1692,6 +1695,7 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
             break;
         }
 
+        absl::optional<uint32_t> rtx_ssrc;
         uint32_t ssrc = ParseRtpSsrc(packet);
 
         if (unknown_ssrc_packet_buffer_) {
@@ -1711,10 +1715,25 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
         // know what stream it associates with, and we shouldn't ever create an
         // implicit channel for these.
         for (auto& codec : recv_codecs_) {
-          if (payload_type == codec.rtx_payload_type ||
-              payload_type == codec.ulpfec.red_rtx_payload_type ||
+          if (payload_type == codec.ulpfec.red_rtx_payload_type ||
               payload_type == codec.ulpfec.ulpfec_payload_type) {
             return;
+          }
+          if (payload_type == codec.rtx_payload_type) {
+            // As we don't support receiving simulcast there can only be one RTX
+            // stream, which will be associated with unsignaled media stream.
+            // It is not possible to update the ssrcs of a receive stream, so we
+            // recreate it insead if found.
+            auto default_ssrc = GetDefaultReceiveStreamSsrc();
+            if (!default_ssrc) {
+              return;
+            }
+            rtx_ssrc = ssrc;
+            ssrc = *default_ssrc;
+            // Allow recreating the receive stream even if the RTX packet is
+            // received just after the media packet.
+            last_unsignalled_ssrc_creation_time_ms_.reset();
+            break;
           }
         }
         if (payload_type == recv_flexfec_payload_type_) {
@@ -1745,7 +1764,8 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
           }
         }
         // Let the unsignalled ssrc handler decide whether to drop or deliver.
-        switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc)) {
+        switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc,
+                                                             rtx_ssrc)) {
           case UnsignalledSsrcHandler::kDropPacket:
             return;
           case UnsignalledSsrcHandler::kDeliverPacket:
