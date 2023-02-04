@@ -253,7 +253,7 @@ float SVGGeometryElement::GetPathLengthScale(PathLengthScaleForType aFor) {
   MOZ_ASSERT(aFor == eForTextPath || aFor == eForStroking, "Unknown enum");
   if (mPathLength.IsExplicitlySet()) {
     float authorsPathLengthEstimate = mPathLength.GetAnimValue();
-    if (authorsPathLengthEstimate > 0) {
+    if (authorsPathLengthEstimate >= 0) {
       RefPtr<Path> path = GetOrBuildPathForMeasuring();
       if (!path) {
         // The path is empty or invalid so its length must be zero and
