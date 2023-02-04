@@ -161,6 +161,15 @@ class Visitor:
         for arg in ec.args:
             arg.accept(self)
 
+    def visitExprMove(self, ec):
+        self.visitExprCall(ec)
+
+    def visitExprNothing(self, ec):
+        self.visitExprCall(ec)
+
+    def visitExprSome(self, ec):
+        self.visitExprCall(ec)
+
     def visitExprNew(self, en):
         en.ctype.accept(self)
         if en.newargs is not None:
@@ -844,6 +853,16 @@ class ExprCall(Node):
 class ExprMove(ExprCall):
     def __init__(self, arg):
         ExprCall.__init__(self, ExprVar("std::move"), args=[arg])
+
+
+class ExprNothing(ExprCall):
+    def __init__(self):
+        ExprCall.__init__(self, ExprVar("mozilla::Nothing"))
+
+
+class ExprSome(ExprCall):
+    def __init__(self, arg):
+        ExprCall.__init__(self, ExprVar("mozilla::Some"), args=[arg])
 
 
 class ExprNew(Node):

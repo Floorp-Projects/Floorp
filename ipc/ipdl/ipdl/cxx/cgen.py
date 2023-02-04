@@ -386,9 +386,6 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.writeExprList(ec.args)
         self.write(")")
 
-    def visitExprMove(self, em):
-        self.visitExprCall(em)
-
     def visitExprNew(self, en):
         self.write("new ")
         if en.newargs is not None:

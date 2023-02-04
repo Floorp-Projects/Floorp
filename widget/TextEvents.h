@@ -22,6 +22,7 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/widget/IMEData.h"
+#include "mozilla/ipc/IPCForwards.h"
 #include "nsCOMPtr.h"
 #include "nsHashtablesFwd.h"
 #include "nsISelectionListener.h"
@@ -129,6 +130,7 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
   friend struct IPC::ParamTraits<WidgetKeyboardEvent>;
+  ALLOW_DEPRECATED_READPARAM
 
  protected:
   WidgetKeyboardEvent()
@@ -844,6 +846,7 @@ class WidgetCompositionEvent : public WidgetGUIEvent {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
   WidgetCompositionEvent() : mOriginalMessage(eVoidEvent) {}
 
@@ -938,6 +941,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
  private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
   WidgetQueryContentEvent()
       : mUseNativeLineBreak(true),
@@ -1324,6 +1328,7 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
   WidgetSelectionEvent()
       : mOffset(0),

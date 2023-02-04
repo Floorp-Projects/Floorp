@@ -138,13 +138,13 @@ class WidgetSimpleGestureEvent : public WidgetMouseEventBase {
  * mozilla::WidgetTouchEvent
  ******************************************************************************/
 
-class WidgetTouchEvent : public WidgetInputEvent {
+class WidgetTouchEvent final : public WidgetInputEvent {
  public:
   typedef nsTArray<RefPtr<mozilla::dom::Touch>> TouchArray;
   typedef AutoTArray<RefPtr<mozilla::dom::Touch>, 10> AutoTouchArray;
   typedef AutoTouchArray::base_type TouchArrayBase;
 
-  virtual WidgetTouchEvent* AsTouchEvent() override { return this; }
+  WidgetTouchEvent* AsTouchEvent() override { return this; }
 
   MOZ_COUNTED_DEFAULT_CTOR(WidgetTouchEvent)
 
@@ -162,6 +162,20 @@ class WidgetTouchEvent : public WidgetInputEvent {
     mFlags.mHandledByAPZ = aOther.mFlags.mHandledByAPZ;
   }
 
+  WidgetTouchEvent(WidgetTouchEvent&& aOther)
+      : WidgetInputEvent(std::move(aOther)) {
+    MOZ_COUNT_CTOR(WidgetTouchEvent);
+    mModifiers = aOther.mModifiers;
+    mTimeStamp = aOther.mTimeStamp;
+    mTouches = std::move(aOther.mTouches);
+    mInputSource = aOther.mInputSource;
+    mButton = aOther.mButton;
+    mButtons = aOther.mButtons;
+    mFlags = aOther.mFlags;
+  }
+
+  WidgetTouchEvent& operator=(WidgetTouchEvent&&) = default;
+
   WidgetTouchEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
       : WidgetInputEvent(aIsTrusted, aMessage, aWidget, eTouchEventClass) {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
@@ -170,7 +184,7 @@ class WidgetTouchEvent : public WidgetInputEvent {
 
   MOZ_COUNTED_DTOR_OVERRIDE(WidgetTouchEvent)
 
-  virtual WidgetEvent* Duplicate() const override {
+  WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eTouchEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.

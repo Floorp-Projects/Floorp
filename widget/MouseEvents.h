@@ -11,6 +11,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/ipc/IPCForwards.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -90,6 +91,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
   friend class dom::PBrowserBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
  protected:
   WidgetMouseEventBase()
@@ -175,6 +177,7 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
   friend class dom::PBrowserBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
  public:
   typedef bool ReasonType;
@@ -325,6 +328,7 @@ class WidgetDragEvent : public WidgetMouseEvent {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
  protected:
   WidgetDragEvent()
@@ -437,6 +441,7 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
  private:
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
   WidgetWheelEvent()
       : mDeltaX(0.0),
@@ -683,6 +688,7 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
 class WidgetPointerEvent : public WidgetMouseEvent {
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
+  ALLOW_DEPRECATED_READPARAM
 
  public:
   virtual WidgetPointerEvent* AsPointerEvent() override { return this; }

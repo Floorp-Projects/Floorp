@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "mozilla/widget/IMEData.h"
+#include "mozilla/ipc/IPCForwards.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
@@ -206,7 +207,7 @@ class ContentCache {
     Caret() = default;
 
     friend struct IPC::ParamTraits<ContentCache::Caret>;
-    friend struct IPC::ParamTraits<Maybe<ContentCache::Caret>>;
+    ALLOW_DEPRECATED_READPARAM
   };
   Maybe<Caret> mCaret;
 
@@ -279,7 +280,7 @@ class ContentCache {
     TextRectArray() = default;
 
     friend struct IPC::ParamTraits<ContentCache::TextRectArray>;
-    friend struct IPC::ParamTraits<Maybe<ContentCache::TextRectArray>>;
+    ALLOW_DEPRECATED_READPARAM
   };
   Maybe<TextRectArray> mTextRectArray;
   Maybe<TextRectArray> mLastCommitStringTextRectArray;
@@ -294,6 +295,7 @@ class ContentCache {
   friend std::ostream& operator<<(
       std::ostream& aStream,
       const Selection& aSelection);  // For e(Prev|Next)CharRect
+  ALLOW_DEPRECATED_READPARAM
 };
 
 class ContentCacheInChild final : public ContentCache {

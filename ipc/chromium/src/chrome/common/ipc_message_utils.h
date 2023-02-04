@@ -287,13 +287,59 @@ template <class P>
 struct ParamTraits;
 
 template <typename P>
-static inline void WriteParam(MessageWriter* writer, P&& p) {
+inline void WriteParam(MessageWriter* writer, P&& p) {
   ParamTraits<std::decay_t<P>>::Write(writer, std::forward<P>(p));
 }
 
+namespace detail {
+
 template <typename P>
-static inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
-  return ParamTraits<P>::Read(reader, p);
+inline constexpr auto ParamTraitsReadUsesOutParam()
+    -> decltype(ParamTraits<P>::Read(std::declval<MessageReader*>(),
+                                     std::declval<P*>())) {
+  return true;
+}
+
+template <typename P>
+inline constexpr auto ParamTraitsReadUsesOutParam()
+    -> decltype(ParamTraits<P>::Read(std::declval<MessageReader*>()), bool{}) {
+  return false;
+}
+
+}  // namespace detail
+
+template <typename P>
+inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
+  if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
+    auto maybe = ParamTraits<P>::Read(reader);
+    if (maybe.isNothing()) {
+      return false;
+    }
+    *p = maybe.extract();
+    return true;
+  } else {
+    return ParamTraits<P>::Read(reader, p);
+  }
+}
+
+template <typename P>
+inline mozilla::Maybe<P> WARN_UNUSED_RESULT ReadParam(MessageReader* reader) {
+  if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
+    return ParamTraits<P>::Read(reader);
+  } else if constexpr (std::is_default_constructible_v<P>) {
+    mozilla::Maybe<P> p{std::in_place};
+    if (!ParamTraits<P>::Read(reader, p.ptr())) {
+      p.reset();
+    }
+    return p;
+  } else {
+    static_assert(P::kHasDeprecatedReadParamPrivateConstructor);
+    P p{};
+    if (!ParamTraits<P>::Read(reader, &p)) {
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(std::move(p));
+  }
 }
 
 class MOZ_STACK_CLASS MessageBufferWriter {

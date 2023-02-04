@@ -1038,13 +1038,13 @@ macro_rules! impl_basic_serde_funcs {
         }
 
         #[no_mangle]
-        pub extern "C" fn $de_name(input: &ByteBuf, v: &mut $computed_type) -> bool {
+        pub unsafe extern "C" fn $de_name(input: &ByteBuf, v: *mut $computed_type) -> bool {
             let buf = match deserialize(view_byte_buf(input)) {
                 Ok(buf) => buf,
                 Err(..) => return false,
             };
 
-            *v = buf;
+            std::ptr::write(v, buf);
             true
         }
     };

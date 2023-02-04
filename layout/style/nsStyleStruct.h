@@ -1217,7 +1217,8 @@ struct StyleTransition {
   }
 
  private:
-  StyleComputedTimingFunction mTimingFunction;
+  StyleComputedTimingFunction mTimingFunction{
+      StyleComputedTimingFunction::LinearKeyword()};
   mozilla::StyleTime mDuration{0.0};
   mozilla::StyleTime mDelay{0.0};
   nsCSSPropertyID mProperty;
@@ -1256,7 +1257,8 @@ struct StyleAnimation {
   }
 
  private:
-  StyleComputedTimingFunction mTimingFunction;
+  StyleComputedTimingFunction mTimingFunction{
+      StyleComputedTimingFunction::LinearKeyword()};
   StyleTime mDuration{0.0f};
   StyleTime mDelay{0.0f};
   RefPtr<nsAtom> mName;  // nsGkAtoms::_empty for 'none'
@@ -1265,7 +1267,7 @@ struct StyleAnimation {
   StyleAnimationPlayState mPlayState;
   StyleAnimationIterationCount mIterationCount;
   dom::CompositeOperation mComposition;
-  StyleAnimationTimeline mTimeline;
+  StyleAnimationTimeline mTimeline{StyleAnimationTimeline::Auto()};
 };
 
 struct StyleScrollTimeline {

@@ -19,6 +19,7 @@ namespace net {
 nsHttpRequestHead::nsHttpRequestHead() { MOZ_COUNT_CTOR(nsHttpRequestHead); }
 
 nsHttpRequestHead::nsHttpRequestHead(const nsHttpRequestHead& aRequestHead) {
+  MOZ_COUNT_CTOR(nsHttpRequestHead);
   nsHttpRequestHead& other = const_cast<nsHttpRequestHead&>(aRequestHead);
   RecursiveMutexAutoLock monitor(other.mRecursiveMutex);
 
@@ -34,6 +35,7 @@ nsHttpRequestHead::nsHttpRequestHead(const nsHttpRequestHead& aRequestHead) {
 }
 
 nsHttpRequestHead::nsHttpRequestHead(nsHttpRequestHead&& aRequestHead) {
+  MOZ_COUNT_CTOR(nsHttpRequestHead);
   nsHttpRequestHead& other = aRequestHead;
   RecursiveMutexAutoLock monitor(other.mRecursiveMutex);
 
