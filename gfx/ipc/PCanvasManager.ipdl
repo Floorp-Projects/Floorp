@@ -9,7 +9,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include protocol PWebGL;
 include protocol PWebGPU;
 
-using layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::webgl::FrontBufferSnapshotIpc from "mozilla/dom/WebGLIpdl.h";
 
 namespace mozilla {

@@ -24,7 +24,7 @@ using mozilla::dom::EffectsInfo from "mozilla/dom/EffectsInfo.h";
 using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
 using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct nsRect from "nsRect.h";
-using CallerType from "mozilla/dom/BindingDeclarations.h";
+using mozilla::dom::CallerType from "mozilla/dom/BindingDeclarations.h";
 using nsIntRect from "nsRect.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
 [RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";

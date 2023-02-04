@@ -9,11 +9,11 @@ include "ipc/nsGUIEventIPC.h";
 
 include protocol PCompositorBridge;
 
-using CSSRect from "Units.h";
-using LayoutDeviceCoord from "Units.h";
+using mozilla::CSSRect from "Units.h";
+using mozilla::LayoutDeviceCoord from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
-using ScreenPoint from "Units.h";
-using ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
+using mozilla::ScreenPoint from "Units.h";
+using mozilla::layers::ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";

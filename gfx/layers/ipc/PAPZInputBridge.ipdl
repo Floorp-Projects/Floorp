@@ -5,12 +5,12 @@
 
 include "ipc/nsGUIEventIPC.h";
 
-using LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::APZEventResult from "mozilla/layers/APZInputBridge.h";
 using struct mozilla::layers::APZHandledResult from "mozilla/layers/APZInputBridge.h";
 
-using EventMessage from "mozilla/EventForwards.h";
+using mozilla::EventMessage from "mozilla/EventForwards.h";
 using class mozilla::MultiTouchInput from "InputData.h";
 using class mozilla::MouseInput from "InputData.h";
 using class mozilla::PanGestureInput from "InputData.h";

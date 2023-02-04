@@ -16,7 +16,7 @@ include DOMTypes;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
-using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
+using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 
 namespace mozilla {

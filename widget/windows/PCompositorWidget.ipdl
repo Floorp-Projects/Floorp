@@ -11,7 +11,7 @@ include "mozilla/widget/WidgetMessageUtils.h";
 
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
-using TransparencyMode from "nsIWidget.h";
+using mozilla::widget::TransparencyMode from "nsIWidget.h";
 using nsSizeMode from "nsIWidget.h";
 
 namespace mozilla {
