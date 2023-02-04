@@ -1307,7 +1307,7 @@ rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
     }
   }
   if (rtpstream_ids.empty())
-    return RTCStatsReport::Create(report->timestamp_us());
+    return RTCStatsReport::Create(report->timestamp());
   return TakeReferencedStats(report->Copy(), rtpstream_ids);
 }
 
@@ -1469,7 +1469,7 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThread(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  partial_report_ = RTCStatsReport::Create(timestamp_us);
+  partial_report_ = RTCStatsReport::Create(Timestamp::Micros(timestamp_us));
 
   ProducePartialResultsOnSignalingThreadImpl(timestamp_us,
                                              partial_report_.get());
@@ -1505,7 +1505,7 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
 
   // Touching `network_report_` on this thread is safe by this method because
   // `network_report_event_` is reset before this method is invoked.
-  network_report_ = RTCStatsReport::Create(timestamp_us);
+  network_report_ = RTCStatsReport::Create(Timestamp::Micros(timestamp_us));
 
   std::set<std::string> transport_names;
   if (sctp_transport_name) {

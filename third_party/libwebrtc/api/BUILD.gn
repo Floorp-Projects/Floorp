@@ -719,6 +719,7 @@ rtc_source_set("rtc_stats_api") {
     "../rtc_base:checks",
     "../rtc_base:refcount",
     "../rtc_base/system:rtc_export",
+    "units:timestamp",
   ]
 }
 
