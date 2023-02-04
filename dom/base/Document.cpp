@@ -1398,6 +1398,12 @@ Document::Document(const char* aContentType)
       mIsRunningExecCommand(false),
       mSetCompleteAfterDOMContentLoaded(false),
       mDidHitCompleteSheetCache(false),
+      mUseCountersInitialized(false),
+      mShouldReportUseCounters(false),
+      mShouldSendPageUseCounters(false),
+      mUserHasInteracted(false),
+      mHasUserInteractionTimerScheduled(false),
+      mShouldResistFingerprinting(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -1430,11 +1436,6 @@ Document::Document(const char* aContentType)
       mBFCacheEntry(nullptr),
       mInSyncOperationCount(0),
       mBlockDOMContentLoaded(0),
-      mUseCountersInitialized(false),
-      mShouldReportUseCounters(false),
-      mShouldSendPageUseCounters(false),
-      mUserHasInteracted(false),
-      mHasUserInteractionTimerScheduled(false),
       mStackRefCnt(0),
       mUpdateNestLevel(0),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
@@ -2786,6 +2787,8 @@ nsresult Document::Init() {
 
   mStyleSet = MakeUnique<ServoStyleSet>(*this);
 
+  RecomputeResistFingerprinting();
+
   return NS_OK;
 }
 
@@ -2839,6 +2842,7 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   }
 
   mChannel = aChannel;
+  RecomputeResistFingerprinting();
 }
 
 void Document::DisconnectNodeTree() {
@@ -3460,6 +3464,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   RetrieveRelevantHeaders(aChannel);
 
   mChannel = aChannel;
+  RecomputeResistFingerprinting();
   nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(mChannel);
   if (inStrmChan) {
     bool isSrcdocChannel;
@@ -12032,6 +12037,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
       uri = Document::GetDocumentURI();
     }
     clone->mChannel = channel;
+    clone->mShouldResistFingerprinting = mShouldResistFingerprinting;
     if (uri) {
       clone->ResetToURI(uri, loadGroup, NodePrincipal(), mPartitionedPrincipal);
     }
@@ -15881,6 +15887,12 @@ void Document::SendPageUseCounters() {
   wgc->SendAccumulatePageUseCounters(counters);
 }
 
+void Document::RecomputeResistFingerprinting() {
+  mShouldResistFingerprinting =
+      !nsContentUtils::IsChromeDoc(this) &&
+      nsContentUtils::ShouldResistFingerprinting(mChannel);
+}
+
 WindowContext* Document::GetWindowContextForPageUseCounters() const {
   if (mDisplayDocument) {
     // If we are a resource document, then go through it to find the
@@ -17806,8 +17818,7 @@ ColorScheme Document::DefaultColorScheme() const {
 }
 
 ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
-  if (aIgnoreRFP == IgnoreRFP::No &&
-      nsContentUtils::ShouldResistFingerprinting(this)) {
+  if (ShouldResistFingerprinting() && aIgnoreRFP == IgnoreRFP::No) {
     return ColorScheme::Light;
   }
 

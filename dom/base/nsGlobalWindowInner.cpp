@@ -1627,7 +1627,7 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 
 bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   if (mDoc) {
-    return nsContentUtils::ShouldResistFingerprinting(mDoc);
+    return mDoc->ShouldResistFingerprinting();
   }
   return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
@@ -6518,7 +6518,7 @@ void nsGlobalWindowInner::DisableDeviceSensor(uint32_t aType) {
 
 #if defined(MOZ_WIDGET_ANDROID)
 void nsGlobalWindowInner::EnableOrientationChangeListener() {
-  if (!nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
+  if (!ShouldResistFingerprinting()) {
     mHasOrientationChangeListeners = true;
     mOrientationAngle = Orientation(CallerType::System);
   }
@@ -6845,7 +6845,7 @@ void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
 
   // navigator.getGamepads() always returns an empty array when
   // privacy.resistFingerprinting is true.
-  if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
+  if (ShouldResistFingerprinting()) {
     return;
   }
 
@@ -7499,7 +7499,7 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
     return;
   }
 
-  if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
+  if (ShouldResistFingerprinting()) {
     bool innerWidthSpecified = false;
     bool innerHeightSpecified = false;
     bool outerWidthSpecified = false;
