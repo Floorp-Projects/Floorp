@@ -25,6 +25,11 @@ this.tabswitch = class extends ExtensionAPI {
             .QueryInterface(Ci.nsIResProtocolHandler);
           resProto.setSubstitution("talos-tabswitch", uri);
 
+          const processScriptURL = context.extension.baseURI.resolve(
+            "content/tabswitch-content-process.js"
+          );
+          Services.ppmm.loadProcessScript(processScriptURL, true);
+
           let tabSwitchTalosActors = {
             parent: {
               esModuleURI:
@@ -44,6 +49,7 @@ this.tabswitch = class extends ExtensionAPI {
           );
 
           return () => {
+            Services.ppmm.sendAsyncMessage("Tabswitch:Teardown");
             ChromeUtils.unregisterWindowActor(
               "TalosTabSwitch",
               tabSwitchTalosActors
