@@ -63,12 +63,6 @@ constexpr int kOverrideWaitFrames = 0;
 using AnalogAgcConfig =
     AudioProcessing::Config::GainController1::AnalogGainController;
 
-// Returns whether a fall-back solution to choose the maximum level should be
-// chosen.
-bool UseMaxAnalogChannelLevel() {
-  return field_trial::IsEnabled("WebRTC-UseMaxAnalogAgcChannelLevel");
-}
-
 // If the "WebRTC-Audio-2ndAgcMinMicLevelExperiment" field trial is specified,
 // parses it and returns a value between 0 and 255 depending on the field-trial
 // string. Returns an unspecified value if the field trial is not specified, if
@@ -486,7 +480,6 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
     : analog_controller_enabled_(analog_config.enabled),
       min_mic_level_override_(GetMinMicLevelOverride()),
       data_dumper_(new ApmDataDumper(instance_counter_.fetch_add(1) + 1)),
-      use_min_channel_level_(!UseMaxAnalogChannelLevel()),
       num_capture_channels_(num_capture_channels),
       disable_digital_adaptive_(!analog_config.enable_digital_adaptive),
       frames_since_clipped_(analog_config.clipped_wait_frames),
@@ -714,21 +707,11 @@ void AgcManagerDirect::AggregateChannelLevels() {
   int new_recommended_input_volume =
       channel_agcs_[0]->recommended_analog_level();
   channel_controlling_gain_ = 0;
-  if (use_min_channel_level_) {
-    for (size_t ch = 1; ch < channel_agcs_.size(); ++ch) {
-      int level = channel_agcs_[ch]->recommended_analog_level();
-      if (level < new_recommended_input_volume) {
-        new_recommended_input_volume = level;
-        channel_controlling_gain_ = static_cast<int>(ch);
-      }
-    }
-  } else {
-    for (size_t ch = 1; ch < channel_agcs_.size(); ++ch) {
-      int level = channel_agcs_[ch]->recommended_analog_level();
-      if (level > new_recommended_input_volume) {
-        new_recommended_input_volume = level;
-        channel_controlling_gain_ = static_cast<int>(ch);
-      }
+  for (size_t ch = 1; ch < channel_agcs_.size(); ++ch) {
+    int level = channel_agcs_[ch]->recommended_analog_level();
+    if (level < new_recommended_input_volume) {
+      new_recommended_input_volume = level;
+      channel_controlling_gain_ = static_cast<int>(ch);
     }
   }
 
