@@ -59,11 +59,17 @@ rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Create(
   return rtc::scoped_refptr<RTCStatsReport>(new RTCStatsReport(timestamp_us));
 }
 
+rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Create(Timestamp timestamp) {
+  return rtc::scoped_refptr<RTCStatsReport>(new RTCStatsReport(timestamp));
+}
+
 RTCStatsReport::RTCStatsReport(int64_t timestamp_us)
-    : timestamp_us_(timestamp_us) {}
+    : RTCStatsReport(Timestamp::Micros(timestamp_us)) {}
+
+RTCStatsReport::RTCStatsReport(Timestamp timestamp) : timestamp_(timestamp) {}
 
 rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Copy() const {
-  rtc::scoped_refptr<RTCStatsReport> copy = Create(timestamp_us_);
+  rtc::scoped_refptr<RTCStatsReport> copy = Create(timestamp_);
   for (auto it = stats_.begin(); it != stats_.end(); ++it) {
     copy->AddStats(it->second->copy());
   }
