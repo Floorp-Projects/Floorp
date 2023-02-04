@@ -148,6 +148,7 @@ if (rtc_include_tests) {
       "../../rtc_base:byte_order",
       "../../rtc_base:macromagic",
       "../../rtc_base:socket_address",
+      "../../system_wrappers:metrics",
       "../../test:test_support",
       "//testing/gtest",
     ]
