@@ -220,6 +220,11 @@ class StunMessage {
   // This uses the buffered raw-format message stored by Read().
   IntegrityStatus ValidateMessageIntegrity(const std::string& password);
 
+  // Revalidates the STUN message with (possibly) a new password.
+  // Indicates that calling logic needs review - probably previous call
+  // was checking with the wrong password.
+  IntegrityStatus RevalidateMessageIntegrity(const std::string& password);
+
   // Returns the current integrity status of the message.
   IntegrityStatus integrity() const { return integrity_; }
 
