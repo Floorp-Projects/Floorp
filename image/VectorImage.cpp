@@ -848,8 +848,8 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
       return ImgDrawResult::TEMPORARY_ERROR;
     }
 
-    if (!SurfaceCache::IsLegalSize(aSize) ||
-        !Factory::AllowedSurfaceSize(aSize)) {
+    if (!SurfaceCache::IsLegalSize(rasterSize) ||
+        !Factory::AllowedSurfaceSize(rasterSize)) {
       // If either of these is true then the InitWithDrawable call below will
       // fail, so fail early and use this opportunity to return NOT_SUPPORTED
       // instead of TEMPORARY_ERROR as we do for any InitWithDrawable failure.
