@@ -73,10 +73,10 @@
       'has_native_resultdb_integration': True
     }
   },
-  'ios-device-15.3': {
+  'ios-device-15.7': {
     'swarming': {
       'dimensions': {
-        'os': 'iOS-15.3',
+        'os': 'iOS-15.7',
         'pool': 'chrome.tests'
       }
     }
