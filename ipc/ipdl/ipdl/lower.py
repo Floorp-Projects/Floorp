@@ -627,13 +627,13 @@ def _cxxTypeNeedsMoveForData(ipdltype, context="root", visited=None):
 
     visited.add(ipdltype)
 
-    if ipdltype.isUniquePtr():
-        return True
-
     if ipdltype.isCxx():
         return ipdltype.isDataMoveOnly()
 
     if ipdltype.isIPDL():
+        if ipdltype.isUniquePtr():
+            return True
+
         # When nested within a maybe or array, arrays are no longer copyable.
         if context == "wrapper" and ipdltype.isArray():
             return True
@@ -3551,7 +3551,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if using.header is None:
             return
 
-        if using.canBeForwardDeclared() and not using.decl.type.isUniquePtr():
+        if using.canBeForwardDeclared():
             spec = using.type.spec
 
             self.usingDecls.extend(
