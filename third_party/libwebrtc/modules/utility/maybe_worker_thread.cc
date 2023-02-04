@@ -76,9 +76,6 @@ TaskQueueBase* MaybeWorkerThread::TaskQueueForDelayedTasks() const {
 }
 
 TaskQueueBase* MaybeWorkerThread::TaskQueueForPost() const {
-  RTC_DLOG_IF(LS_WARNING, IsCurrent())
-      << "TaskQueueForPost called on the current thread. Ok only in unit "
-         "tests.";
   return owned_task_queue_ ? owned_task_queue_.get() : worker_thread_;
 }
 
