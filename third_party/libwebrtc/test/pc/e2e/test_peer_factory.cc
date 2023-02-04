@@ -23,6 +23,7 @@
 #include "media/engine/webrtc_media_engine_defaults.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "p2p/client/basic_port_allocator.h"
+#include "rtc_base/thread.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/echo/echo_emulation.h"
 #include "test/pc/e2e/peer_configurer.h"
@@ -339,15 +340,21 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
       CreateMediaEngine(components->pcf_dependencies.get(),
                         audio_device_module);
 
-  std::unique_ptr<rtc::Thread> worker_thread =
-      time_controller_.CreateThread("worker_thread");
+  std::unique_ptr<rtc::Thread> owned_worker_thread =
+      components->worker_thread != nullptr
+          ? nullptr
+          : time_controller_.CreateThread("worker_thread");
+  if (components->worker_thread == nullptr) {
+    components->worker_thread = owned_worker_thread.get();
+  }
+
   // Store `webrtc::AudioProcessing` into local variable before move of
   // `components->pcf_dependencies`
   rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing =
       components->pcf_dependencies->audio_processing;
   PeerConnectionFactoryDependencies pcf_deps = CreatePCFDependencies(
       std::move(components->pcf_dependencies), std::move(media_engine),
-      signaling_thread_, worker_thread.get(), components->network_thread);
+      signaling_thread_, components->worker_thread, components->network_thread);
   rtc::scoped_refptr<PeerConnectionFactoryInterface> peer_connection_factory =
       CreateModularPeerConnectionFactory(std::move(pcf_deps));
 
@@ -362,10 +369,11 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
           .MoveValue();
   peer_connection->SetBitrate(params->bitrate_settings);
 
-  return absl::WrapUnique(new TestPeer(
-      peer_connection_factory, peer_connection, std::move(observer),
-      std::move(*params), std::move(*configurable_params),
-      std::move(video_sources), audio_processing, std::move(worker_thread)));
+  return absl::WrapUnique(
+      new TestPeer(peer_connection_factory, peer_connection,
+                   std::move(observer), std::move(*params),
+                   std::move(*configurable_params), std::move(video_sources),
+                   audio_processing, std::move(owned_worker_thread)));
 }
 
 }  // namespace webrtc_pc_e2e
