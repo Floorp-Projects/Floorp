@@ -1870,7 +1870,7 @@ TEST_F(StunTest, ValidateMessageIntegrityWithParser) {
                 "WebRTC.Stun.Integrity.Request",
                 static_cast<int>(StunMessage::IntegrityStatus::kIntegrityOk)),
             1);
-  EXPECT_EQ(message.ValidateMessageIntegrity("Invalid password"),
+  EXPECT_EQ(message.RevalidateMessageIntegrity("Invalid password"),
             StunMessage::IntegrityStatus::kIntegrityBad);
   EXPECT_EQ(webrtc::metrics::NumEvents(
                 "WebRTC.Stun.Integrity.Request",
