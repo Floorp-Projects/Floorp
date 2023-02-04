@@ -184,6 +184,12 @@ class PeerConfigurerImpl final
     components_->pcf_dependencies->audio_mixer = audio_mixer;
     return this;
   }
+
+  virtual PeerConfigurer* SetUseNetworkThreadAsWorkerThread() override {
+    components_->worker_thread = components_->network_thread;
+    return this;
+  }
+
   PeerConfigurer* SetRtcEventLogPath(std::string path) override {
     params_->rtc_event_log_path = std::move(path);
     return this;

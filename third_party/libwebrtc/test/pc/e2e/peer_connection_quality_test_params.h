@@ -10,6 +10,7 @@
 #ifndef TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
 #define TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
@@ -95,6 +96,7 @@ struct InjectableComponents {
                        rtc::NetworkManager* network_manager,
                        rtc::PacketSocketFactory* packet_socket_factory)
       : network_thread(network_thread),
+        worker_thread(nullptr),
         pcf_dependencies(std::make_unique<PeerConnectionFactoryComponents>()),
         pc_dependencies(
             std::make_unique<PeerConnectionComponents>(network_manager,
@@ -103,6 +105,7 @@ struct InjectableComponents {
   }
 
   rtc::Thread* const network_thread;
+  rtc::Thread* worker_thread;
 
   std::unique_ptr<PeerConnectionFactoryComponents> pcf_dependencies;
   std::unique_ptr<PeerConnectionComponents> pc_dependencies;
