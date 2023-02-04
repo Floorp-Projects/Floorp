@@ -6898,6 +6898,41 @@ TEST_F(WebRtcVideoChannelTest, RedRtxPacketDoesntCreateUnsignalledStream) {
                                   false /* expect_created_receive_stream */);
 }
 
+TEST_F(WebRtcVideoChannelTest,
+       RtxAfterMediaPacketRecreatesUnsignalledStream) {
+  AssignDefaultAptRtxTypes();
+  const cricket::VideoCodec vp8 = GetEngineCodec("VP8");
+  const int payload_type = vp8.id;
+  const int rtx_vp8_payload_type = default_apt_rtx_types_[vp8.id];
+  const uint32_t ssrc = kIncomingUnsignalledSsrc;
+  const uint32_t rtx_ssrc = ssrc + 1;
+
+  // Send media packet.
+  RtpPacket packet;
+  packet.SetPayloadType(payload_type);
+  packet.SetSsrc(ssrc);
+  ReceivePacketAndAdvanceTime(packet.Buffer(), /* packet_time_us */ -1);
+  EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size())
+      << "Should have created a receive stream for payload type: "
+      << payload_type;
+
+  // Send rtx packet.
+  RtpPacket rtx_packet;
+  rtx_packet.SetPayloadType(rtx_vp8_payload_type);
+  rtx_packet.SetSsrc(rtx_ssrc);
+  ReceivePacketAndAdvanceTime(rtx_packet.Buffer(), /* packet_time_us */ -1);
+  EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size())
+      << "RTX packet should not have added or removed a receive stream";
+
+  // Check receive stream has been recreated with correct ssrcs.
+  auto recv_stream = fake_call_->GetVideoReceiveStreams().front();
+  auto& config = recv_stream->GetConfig();
+  EXPECT_EQ(config.rtp.remote_ssrc, ssrc)
+      << "Receive stream should have correct media ssrc";
+  EXPECT_EQ(config.rtp.rtx_ssrc, rtx_ssrc)
+      << "Receive stream should have correct rtx ssrc";
+}
+
 // Test that receiving any unsignalled SSRC works even if it changes.
 // The first unsignalled SSRC received will create a default receive stream.
 // Any different unsignalled SSRC received will replace the default.
