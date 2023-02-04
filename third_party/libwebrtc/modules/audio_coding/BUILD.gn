@@ -1709,6 +1709,7 @@ if (rtc_include_tests) {
         "../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../api/neteq:neteq_api",
         "../../rtc_base:checks",
+        "../../rtc_base:stringutils",
         "../../system_wrappers",
         "../../test:fileutils",
         "../../test:test_support",
