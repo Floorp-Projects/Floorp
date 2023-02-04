@@ -26,7 +26,7 @@ namespace webrtc {
 namespace test {
 namespace {
 
-const absl::string_view kFileHeader = "YUV4MPEG2 W50 H20 F30:1 C420\n";
+const absl::string_view kFileHeader = "YUV4MPEG2 W2 H2 F30:1 C420\n";
 const absl::string_view kFrameHeader = "FRAME\n";
 const absl::string_view kInputVideoContents = "abcdef";
 
@@ -88,6 +88,16 @@ TEST_F(Y4mFrameReaderTest, ReadFrame) {
 TEST_F(Y4mFrameReaderTest, ReadFrameUninitialized) {
   Y4mFrameReaderImpl file_reader(temp_filename_, kFrameWidth, kFrameHeight);
   EXPECT_FALSE(file_reader.ReadFrame());
+}
+
+TEST_F(Y4mFrameReaderTest, ReadFrameDifferentWidth) {
+  Y4mFrameReaderImpl file_reader(temp_filename_, kFrameWidth + 1, kFrameHeight);
+  EXPECT_FALSE(file_reader.Init());
+}
+
+TEST_F(Y4mFrameReaderTest, ReadFrameDifferentHeight) {
+  Y4mFrameReaderImpl file_reader(temp_filename_, kFrameWidth, kFrameHeight + 1);
+  EXPECT_FALSE(file_reader.Init());
 }
 
 }  // namespace test
