@@ -120,9 +120,6 @@ class Type:
     def isRefcounted(self):
         return False
 
-    def isUniquePtr(self):
-        return False
-
     def typename(self):
         return self.__class__.__name__
 
@@ -218,6 +215,9 @@ class IPDLType(Type):
         return False
 
     def isMaybe(self):
+        return False
+
+    def isUniquePtr(self):
         return False
 
     def isAtom(self):
