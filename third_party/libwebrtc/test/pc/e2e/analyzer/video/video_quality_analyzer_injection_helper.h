@@ -134,38 +134,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
     }
   };
 
-  class VideoFrameIdsWriter final : public test::VideoFrameWriter {
-   public:
-    explicit VideoFrameIdsWriter(absl::string_view file_name);
-    ~VideoFrameIdsWriter() { Close(); }
-
-    bool WriteFrame(const VideoFrame& frame) override;
-
-    void Close() override;
-
-   private:
-    const std::string file_name_;
-    FILE* output_file_;
-  };
-
-  class VideoWriter final : public rtc::VideoSinkInterface<VideoFrame> {
-   public:
-    VideoWriter(test::VideoFrameWriter* video_writer, int sampling_modulo);
-    ~VideoWriter() override = default;
-
-    void OnFrame(const VideoFrame& frame) override;
-
-   private:
-    test::VideoFrameWriter* const video_writer_;
-    const int sampling_modulo_;
-
-    int64_t frames_counter_ = 0;
-  };
-
-  test::VideoFrameWriter* CreateVideoWriter(
-      absl::string_view file_name,
-      absl::optional<std::string> frame_ids_dump_file_name,
-      const PeerConnectionE2EQualityTestFixture::VideoConfig& config);
   // Creates a deep copy of the frame and passes it to the video analyzer, while
   // passing real frame to the sinks
   void OnFrame(absl::string_view peer_name, const VideoFrame& frame);
