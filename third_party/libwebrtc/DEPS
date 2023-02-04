@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '91846fcc74d3919a7b6cda4f751171c17cf6cb57',
+  'chromium_revision': 'a0a8dd53880c54091d0f49395f7af3a9f1abea21',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -40,24 +40,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@76b24d347561923368063752efd5ef4284116873',
+    'https://chromium.googlesource.com/chromium/src/base@729e7c8a7ad62958c697c45600c85bb3c1884534',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@ec49149b56a0bd44a2d4be778183e937ee0c0211',
+    'https://chromium.googlesource.com/chromium/src/build@e7f64d4887d84cc060f83d547d61258b730f3348',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@f4e35bb2e9f801a88416dfa0615c24fac537d5ed',
+    'https://chromium.googlesource.com/chromium/src/buildtools@24fa2da896a027e7202bb8886177cccfe885b67d',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@1ee501e94356dc15c04fa0f1a6105a090f481a3e',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@9097830861f1d81d5dd17d1a5c28dc2ae565d6b5',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@a1ea80d1c64dfb3450701eaf6ec013e4b4c56497',
+    'https://chromium.googlesource.com/chromium/src/testing@56e949104bb2cd685b21ed3c2fc5e1b834a488d1',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@b6f2dde3816382e26d40dbcab0ca75186c60ed5c',
+    'https://chromium.googlesource.com/chromium/src/third_party@3616c2efe643a29e036cc910cbd8fcb73aba269d',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -103,7 +103,7 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@ebf2d34001903baf5169f4bee0b4823025d36da6',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@64d36e572d3f9719c5d75011a718f33f11126851',
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@849e53c238d1bb46f9fca95ae57d539559564596',
   'src/buildtools/third_party/libunwind/trunk':
@@ -166,7 +166,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e085b3b50bde862d0cf3ce4594e3f391bcf5faec',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@978c34bea3e5d056785891cb3715b8b617d6d8a9',
+    'https://chromium.googlesource.com/catapult.git@e9d00911512b1412c72eda19785a332ae13cfa69',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -175,7 +175,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@ab896c761c0529a9ea0437b967a25aa4368957a1',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@5b5ee2de1b2b405061b92185c129a7016c6d62b4',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b9f01c3c54576330b2cf8918c54d5ee5be8faefe',
   'src/third_party/grpc/src': {
@@ -369,7 +369,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'cHra4lihGuEjjePdvusuSkcTCUXWaEJe0n_RtvAbUfwC',
+          'version': 'JAK1JohWSJjm36wDo8wmTCudJ4_FjnqO3PuS7EC2EZoC',
       },
     ],
     'condition': 'checkout_android',
