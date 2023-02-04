@@ -465,6 +465,7 @@ if (rtc_enable_protobuf) {
       "../rtc_base/system:file_wrapper",
     ]
     absl_deps = [
+      "//third_party/abseil-cpp/absl/base:core_headers",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
