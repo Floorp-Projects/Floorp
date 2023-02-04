@@ -799,42 +799,10 @@ renaming_overrides_prefixing = true
   inline nsRect ToLayoutRect(nscoord aAutoSize = NS_MAXSIZE) const;
 """
 
-"GenericRotate" = """
- public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleGenericRotate(): tag(Tag::None) {}
-"""
-
-"GenericScale" = """
- public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleGenericScale(): tag(Tag::None) {}
-"""
-
-"GenericTranslate" = """
- public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleGenericTranslate(): tag(Tag::None) {}
-"""
-
-"GenericOffsetPath" = """
- public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleGenericOffsetPath(): tag(Tag::None) {}
-"""
-
-"GenericPositionOrAuto" = """
- public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleGenericPositionOrAuto(): tag(Tag::Auto) {}
-"""
-
 "TimingFunction" = """
  public:
-  // The implementation of IPC LayersMessages needs this to be public.
-  StyleTimingFunction() : tag(Tag::Keyword) { ::new (&keyword._0) (StyleTimingKeyword) (StyleTimingKeyword::Linear); }
-
   bool IsLinearKeyword() const { return IsKeyword() && AsKeyword() == StyleTimingKeyword::Linear; }
+  static StyleTimingFunction LinearKeyword() { return Keyword(StyleTimingKeyword::Linear); }
 
   inline double At(double, bool aBeforeFlag) const;
   inline void AppendToString(nsACString&) const;
@@ -920,11 +888,6 @@ renaming_overrides_prefixing = true
   static StyleSingleFontFamily Parse(const nsACString& aName);
   void AppendToString(nsACString& aFamily, bool aIncludeQuotes = true) const;
   bool IsNamedFamily(const nsAString&) const;
-"""
-
-"AnimationTimeline" = """
- public:
-  StyleAnimationTimeline(): tag(Tag::Auto) {}
 """
 
 "TimelineOrKeyframesName" = """

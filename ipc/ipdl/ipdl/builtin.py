@@ -52,7 +52,7 @@ HeaderIncludes = (
     "mozilla/UniquePtr.h",
     "mozilla/ipc/ByteBuf.h",
     "mozilla/ipc/FileDescriptor.h",
-    "mozilla/ipc/ProtocolUtilsFwd.h",
+    "mozilla/ipc/IPCForwards.h",
     "mozilla/ipc/Shmem.h",
 )
 

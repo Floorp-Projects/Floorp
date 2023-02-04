@@ -19,6 +19,7 @@
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ipc/IPCForwards.h"
 
 template <class E>
 struct already_AddRefed;
@@ -257,6 +258,7 @@ class MouseInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   MouseInput();
 
@@ -321,6 +323,7 @@ class PanGestureInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   PanGestureInput();
 
@@ -499,6 +502,7 @@ class PinchGestureInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   PinchGestureInput();
 
@@ -610,6 +614,7 @@ class TapGestureInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   TapGestureInput();
 
@@ -660,6 +665,7 @@ class ScrollWheelInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   typedef mozilla::layers::APZWheelAction APZWheelAction;
 
@@ -819,6 +825,7 @@ class KeyboardInput : public InputData {
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+  ALLOW_DEPRECATED_READPARAM
 
   KeyboardInput();
 };

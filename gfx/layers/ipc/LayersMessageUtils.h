@@ -1122,13 +1122,20 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
       MOZ_ASSERT(rv, "Serialize ##type_## failed");                         \
       WriteParam(aWriter, std::move(v));                                    \
     }                                                                       \
-    static bool Read(MessageReader* aReader, paramType* aResult) {          \
+    static mozilla::Maybe<paramType> Read(MessageReader* aReader) {         \
       mozilla::ipc::ByteBuf in;                                             \
-      bool rv = ReadParam(aReader, &in);                                    \
-      if (!rv) {                                                            \
-        return false;                                                       \
+      mozilla::Maybe<paramType> result;                                     \
+      if (!ReadParam(aReader, &in) || !in.mData) {                          \
+        return result;                                                      \
       }                                                                     \
-      return in.mData && Servo_##type_##_Deserialize(&in, aResult);         \
+      /* TODO: Should be able to initialize `result` in-place instead */    \
+      mozilla::AlignedStorage2<paramType> value;                            \
+      if (!Servo_##type_##_Deserialize(&in, value.addr())) {                \
+        return result;                                                      \
+      }                                                                     \
+      result.emplace(std::move(*value.addr()));                             \
+      value.addr()->~paramType();                                           \
+      return result;                                                        \
     }                                                                       \
   };
 

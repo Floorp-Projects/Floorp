@@ -11,6 +11,7 @@
 #include <utility>
 #include "js/TypeDecls.h"
 #include "mozilla/Result.h"
+#include "mozilla/ipc/IPCForwards.h"
 #include "nsISupports.h"
 #include "nsError.h"
 #include "nsString.h"
@@ -39,6 +40,7 @@ class KeyPath {
   // This private constructor is only to be used by IPDL-generated classes.
   friend class IndexMetadata;
   friend class ObjectStoreMetadata;
+  ALLOW_DEPRECATED_READPARAM
 
   KeyPath() : mType(KeyPathType::NonExistent) { MOZ_COUNT_CTOR(KeyPath); }
 

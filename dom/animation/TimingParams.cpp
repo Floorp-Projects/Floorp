@@ -191,7 +191,7 @@ TimingParams TimingParams::MergeOptionalEffectTiming(
 /* static */
 Maybe<StyleComputedTimingFunction> TimingParams::ParseEasing(
     const nsACString& aEasing, ErrorResult& aRv) {
-  StyleComputedTimingFunction timingFunction;
+  auto timingFunction = StyleComputedTimingFunction::LinearKeyword();
   if (!ServoCSSParser::ParseEasing(aEasing, timingFunction)) {
     aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
     return Nothing();
