@@ -7,7 +7,6 @@
 #include "FileSystemManagerParent.h"
 
 #include "FileSystemDatabaseManager.h"
-#include "FileSystemStreamCallbacks.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandle.h"
@@ -123,69 +122,39 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   EntryId entryId = aRequest.entryId();
 
   FileSystemAccessHandle::Create(mDataManager, entryId)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr(this), request = std::move(aRequest),
-           resolver = std::move(aResolver)](
-              FileSystemAccessHandle::CreatePromise::ResolveOrRejectValue&&
-                  aValue) {
-            if (aValue.IsReject()) {
-              resolver(aValue.RejectValue());
-              return;
-            }
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this), request = std::move(aRequest),
+              resolver = std::move(aResolver)](
+                 FileSystemAccessHandle::CreatePromise::ResolveOrRejectValue&&
+                     aValue) {
+               if (aValue.IsReject()) {
+                 resolver(aValue.RejectValue());
+                 return;
+               }
 
-            fs::Registered<FileSystemAccessHandle> accessHandle =
-                std::move(aValue.ResolveValue());
+               FileSystemAccessHandle::CreateResult result =
+                   std::move(aValue.ResolveValue());
 
-            auto resolveAndReturn = [&resolver](nsresult rv) { resolver(rv); };
+               fs::Registered<FileSystemAccessHandle> accessHandle =
+                   std::move(result.first);
 
-            nsString type;
-            fs::TimeStamp lastModifiedMilliSeconds;
-            fs::Path path;
-            nsCOMPtr<nsIFile> file;
-            QM_TRY(MOZ_TO_RESULT(
-                       self->mDataManager->MutableDatabaseManagerPtr()->GetFile(
-                           request.entryId(), type, lastModifiedMilliSeconds,
-                           path, file)),
-                   resolveAndReturn);
+               RandomAccessStreamParams streamParams = std::move(result.second);
 
-            if (LOG_ENABLED()) {
-              nsAutoString path;
-              if (NS_SUCCEEDED(file->GetPath(path))) {
-                LOG(("Opening SyncAccessHandle %s",
-                     NS_ConvertUTF16toUTF8(path).get()));
-              }
-            }
+               auto accessHandleParent =
+                   MakeRefPtr<FileSystemAccessHandleParent>(
+                       accessHandle.inspect());
 
-            QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
-                          CreateFileRandomAccessStream(
-                              quota::PERSISTENCE_TYPE_DEFAULT,
-                              self->mDataManager->OriginMetadataRef(),
-                              quota::Client::FILESYSTEM, file, -1, -1,
-                              nsIFileRandomAccessStream::DEFER_OPEN),
-                          resolveAndReturn);
+               if (!self->SendPFileSystemAccessHandleConstructor(
+                       accessHandleParent)) {
+                 resolver(NS_ERROR_FAILURE);
+                 return;
+               }
 
-            self->EnsureStreamCallbacks();
+               accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
 
-            RandomAccessStreamParams streamParams =
-                mozilla::ipc::SerializeRandomAccessStream(
-                    WrapMovingNotNullUnchecked(std::move(stream)),
-                    self->mStreamCallbacks);
-
-            auto accessHandleParent = MakeRefPtr<FileSystemAccessHandleParent>(
-                accessHandle.inspect());
-
-            if (!self->SendPFileSystemAccessHandleConstructor(
-                    accessHandleParent)) {
-              resolver(NS_ERROR_FAILURE);
-              return;
-            }
-
-            accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
-
-            resolver(FileSystemAccessHandleProperties(
-                std::move(streamParams), accessHandleParent, nullptr));
-          });
+               resolver(FileSystemAccessHandleProperties(
+                   std::move(streamParams), accessHandleParent, nullptr));
+             });
 
   return IPC_OK();
 }
@@ -493,11 +462,6 @@ void FileSystemManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   DEBUGONLY(mActorDestroyed = true);
 
-  if (mStreamCallbacks) {
-    mStreamCallbacks->CloseAllRemoteQuotaObjectParents();
-    mStreamCallbacks = nullptr;
-  }
-
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
                 self->mDataManager->UnregisterActor(WrapNotNull(self));
@@ -506,14 +470,6 @@ void FileSystemManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 
                 return BoolPromise::CreateAndResolve(true, __func__);
               });
-}
-
-void FileSystemManagerParent::EnsureStreamCallbacks() {
-  if (mStreamCallbacks) {
-    return;
-  }
-
-  mStreamCallbacks = MakeRefPtr<FileSystemStreamCallbacks>();
 }
 
 }  // namespace mozilla::dom

@@ -7,6 +7,7 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMACCESSHANDLE_H_
 #define DOM_FS_PARENT_FILESYSTEMACCESSHANDLE_H_
 
+#include "FileSystemStreamCallbacks.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
@@ -18,6 +19,10 @@
 enum class nsresult : uint32_t;
 
 namespace mozilla {
+
+namespace ipc {
+class RandomAccessStreamParams;
+}
 
 namespace dom {
 
@@ -35,21 +40,20 @@ class FileSystemDataManager;
 }  // namespace data
 }  // namespace fs
 
-class FileSystemAccessHandle {
+class FileSystemAccessHandle : public FileSystemStreamCallbacks {
  public:
-  // IsExclusive is true because we want to allow moving of
-  // fs::Registered<FileSystemAccessHandle> to avoid excessive
-  // Register/Unregister calls. There's always just one consumer anyway
-  // (When IsExclusive is true, there can be at most one call to either
-  // Then or ChainTo).
-  using CreatePromise =
-      MozPromise<fs::Registered<FileSystemAccessHandle>, nsresult,
-                 /* IsExclusive */ true>;
+  using CreateResult = std::pair<fs::Registered<FileSystemAccessHandle>,
+                                 mozilla::ipc::RandomAccessStreamParams>;
+  // IsExclusive is true because we want to allow moving of CreateResult.
+  // There's always just one consumer anyway (When IsExclusive is true, there
+  // can be at most one call to either Then or ChainTo).
+  using CreatePromise = MozPromise<CreateResult, nsresult,
+                                   /* IsExclusive */ true>;
   static RefPtr<CreatePromise> Create(
       RefPtr<fs::data::FileSystemDataManager> aDataManager,
       const fs::EntryId& aEntryId);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemAccessHandle)
+  NS_DECL_ISUPPORTS_INHERITED
 
   void Register();
 
@@ -71,7 +75,10 @@ class FileSystemAccessHandle {
 
   bool IsInactive() const;
 
-  RefPtr<BoolPromise> BeginInit();
+  using InitPromise =
+      MozPromise<mozilla::ipc::RandomAccessStreamParams, nsresult,
+                 /* IsExclusive */ true>;
+  RefPtr<InitPromise> BeginInit();
 
   const fs::EntryId mEntryId;
   RefPtr<fs::data::FileSystemDataManager> mDataManager;

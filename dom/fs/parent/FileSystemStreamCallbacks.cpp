@@ -10,11 +10,8 @@
 
 namespace mozilla::dom {
 
-void FileSystemStreamCallbacks::CloseAllRemoteQuotaObjectParents() {
-  for (auto& actor : mRemoteQuotaObjectParents.ForwardRange()) {
-    actor->Close();
-  }
-}
+FileSystemStreamCallbacks::FileSystemStreamCallbacks()
+    : mRemoteQuotaObjectParent(nullptr) {}
 
 NS_IMPL_ISUPPORTS(FileSystemStreamCallbacks, nsIInterfaceRequestor,
                   quota::RemoteQuotaObjectParentTracker)
@@ -26,16 +23,16 @@ FileSystemStreamCallbacks::GetInterface(const nsIID& aIID, void** aResult) {
 
 void FileSystemStreamCallbacks::RegisterRemoteQuotaObjectParent(
     NotNull<quota::RemoteQuotaObjectParent*> aActor) {
-  MOZ_ASSERT(!mRemoteQuotaObjectParents.Contains(aActor));
+  MOZ_ASSERT(!mRemoteQuotaObjectParent);
 
-  mRemoteQuotaObjectParents.AppendElement(aActor);
+  mRemoteQuotaObjectParent = aActor;
 }
 
 void FileSystemStreamCallbacks::UnregisterRemoteQuotaObjectParent(
     NotNull<quota::RemoteQuotaObjectParent*> aActor) {
-  MOZ_ASSERT(mRemoteQuotaObjectParents.Contains(aActor));
+  MOZ_ASSERT(mRemoteQuotaObjectParent);
 
-  mRemoteQuotaObjectParents.RemoveElement(aActor);
+  mRemoteQuotaObjectParent = nullptr;
 }
 
 }  // namespace mozilla::dom
