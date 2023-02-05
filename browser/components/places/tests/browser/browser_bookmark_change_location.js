@@ -102,6 +102,9 @@ add_task(async function test_change_location_from_Toolbar() {
             "InstantEditBookmark: The location is the expected one."
           );
 
+          // To check whether the lastModified field will be updated correctly.
+          let lastModified = _getLastModified(toolbarBookmark.guid);
+
           let promiseLocationChange = PlacesTestUtils.waitForNotification(
             "bookmark-url-changed",
             events => events.some(e => e.url === TEST_URL2),
@@ -120,11 +123,17 @@ add_task(async function test_change_location_from_Toolbar() {
           );
           locationPicker.blur();
           await promiseLocationChange;
+
           Assert.equal(
             dialogWin.gEditItemOverlay.uri.spec,
             TEST_URL2,
             "InstantEditBookmark: The location is the expected one."
           );
+          await TestUtils.waitForCondition(
+            () => _getLastModified(toolbarBookmark.guid) > lastModified,
+            "InstantEditBookmark: The lastModified will be greater than before updating."
+          );
+
           locationPicker.focus();
           // Confirm and close the dialog.
           EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
@@ -176,6 +185,9 @@ add_task(async function test_change_location_from_Toolbar() {
           "EditBookmark: The current location is the expected one."
         );
 
+        // To check whether the lastModified field will be updated correctly.
+        let lastModified = _getLastModified(toolbarBookmark.guid);
+
         // Update the "location" field.
         fillBookmarkTextField(
           "editBMPanel_locationField",
@@ -195,6 +207,11 @@ add_task(async function test_change_location_from_Toolbar() {
         locationPicker.focus();
         // Confirm and close the dialog.
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
+
+        await TestUtils.waitForCondition(
+          () => _getLastModified(toolbarBookmark.guid) > lastModified,
+          "EditBookmark: The lastModified will be greater than before updating."
+        );
       }
     );
 
@@ -232,6 +249,9 @@ add_task(async function test_change_location_from_Toolbar() {
               "Sidebar - InstantEditBookmark: The current location is the expected one."
             );
 
+            // To check whether the lastModified field will be updated correctly.
+            let lastModified = _getLastModified(bm.guid);
+
             let promiseLocationChange = PlacesTestUtils.waitForNotification(
               "bookmark-url-changed",
               events => events.some(e => e.url === TEST_URL3),
@@ -253,6 +273,11 @@ add_task(async function test_change_location_from_Toolbar() {
             // Confirm and close the dialog.
             EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
             await promiseLocationChange;
+
+            await TestUtils.waitForCondition(
+              () => _getLastModified(bm.guid) > lastModified,
+              "Sidebar - InstantEditBookmark: The lastModified will be greater than before updating."
+            );
 
             let updatedBm = await PlacesUtils.bookmarks.fetch(bm.guid);
             Assert.equal(
@@ -285,12 +310,14 @@ add_task(async function test_change_location_from_Toolbar() {
           let locationPicker = dialogWin.document.getElementById(
             "editBMPanel_locationField"
           );
-
           Assert.equal(
             locationPicker.value,
             TEST_URL3,
             "Sidebar - EditBookmark: The current location is the expected one."
           );
+
+          // To check whether the lastModified field will be updated correctly.
+          let lastModified = _getLastModified(bm.guid);
 
           // Update the "location" field.
           fillBookmarkTextField(
@@ -308,6 +335,11 @@ add_task(async function test_change_location_from_Toolbar() {
 
           // Confirm and close the dialog.
           EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
+
+          await TestUtils.waitForCondition(
+            () => _getLastModified(bm.guid) > lastModified,
+            "Sidebar - EditBookmark: The lastModified will be greater than before updating."
+          );
         }
       );
 
@@ -320,3 +352,22 @@ add_task(async function test_change_location_from_Toolbar() {
     });
   });
 });
+
+function _getLastModified(guid) {
+  const toolbarNode = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid
+  ).root;
+
+  try {
+    for (let i = 0; i < toolbarNode.childCount; i++) {
+      const node = toolbarNode.getChild(i);
+      if (node.bookmarkGuid === guid) {
+        return node.lastModified;
+      }
+    }
+
+    throw new Error(`Node for ${guid} was not found`);
+  } finally {
+    toolbarNode.containerOpen = false;
+  }
+}
