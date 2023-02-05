@@ -17,9 +17,12 @@ const { ExtensionCommon } = ChromeUtils.import(
 
 function getBrowsers() {
     let browsers = [];
-    let ROOT_KEY = Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
+    let ROOT_KEYS = [
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    ];
 
-    for (let c = 0; c < 2; c++) {
+    for (let ROOT_KEY of ROOT_KEYS) {
         let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
             Ci.nsIWindowsRegKey
         );
@@ -71,8 +74,6 @@ function getBrowsers() {
             });
         }
         key.close();
-
-        ROOT_KEY = Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
     }
     return browsers;
 }
