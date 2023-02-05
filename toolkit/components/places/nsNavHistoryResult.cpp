@@ -4401,7 +4401,7 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(
             urlEvent->mParentGuid, urlEvent->mId,
             OnItemUrlChanged(urlEvent->mId, urlEvent->mGuid, url,
-                             urlEvent->mLastModified));
+                             urlEvent->mLastModified * 1000));
         break;
       }
       case PlacesEventType::Page_title_changed: {
