@@ -230,18 +230,20 @@
 }
 
 .urlbarView-dynamic-weather-currentConditions {
-  background-color: var(--autocomplete-popup-hover-background);
+  /* Same colors as the switch-to-tab action chiclet */
+  color: var(--urlbar-box-text-color);
+  background-color: var(--urlbar-box-focus-bgcolor);
   padding: 0.61em 0.61em 0.84em;
   margin-inline-end: 0.92em;
   border-radius: 2px;
   text-align: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  .urlbarView-dynamic-weather-currentConditions {
-    background-color: var(--autocomplete-popup-highlight-background);
-    color: var(--autocomplete-popup-highlight-color);
-  }
+.urlbarView-row[dynamicType=weather]:hover > .urlbarView-row-inner > .urlbarView-dynamic-weather-currentConditions,
+.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-currentConditions {
+  /* Same colors as the switch-to-tab action chiclet */
+  color: var(--toolbar-field-focus-color);
+  background-color: var(--toolbar-field-focus-background-color);
 }
 
 .urlbarView-dynamic-weather-currently {
