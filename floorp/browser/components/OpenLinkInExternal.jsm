@@ -15,38 +15,71 @@ const { ExtensionCommon } = ChromeUtils.import(
   "resource://gre/modules/ExtensionCommon.jsm"
 );
 
-function getBrowsersPath() {
-    let browsersPath = [];
-    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-        Ci.nsIWindowsRegKey
-    );
-    key.open(
-        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        "Software\\Clients\\StartMenuInternet",
-        Ci.nsIWindowsRegKey.ACCESS_READ
-    );
-    for (let i = 0; i < key.childCount; i++) {
-        let keyname = key.getChildName(i);
-        let keysub = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+function getBrowsers() {
+    let browsers = [];
+    let ROOT_KEY = Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
+
+    for (let c = 0; c < 2; c++) {
+        let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
             Ci.nsIWindowsRegKey
         );
-        keysub.open(
-            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-            `Software\\Clients\\StartMenuInternet\\${keyname}\\shell\\open\\command`,
+        key.open(
+            ROOT_KEY,
+            "Software\\Clients\\StartMenuInternet",
             Ci.nsIWindowsRegKey.ACCESS_READ
         );
-        let regValue = keysub.readStringValue("");
-        let browserPath = regValue.replace(/^\"/, "").replace(/\"$/, "");
-        browsersPath.push(browserPath);
-        keysub.close();
+        for (let i = 0; i < key.childCount; i++) {
+            let keyname = key.getChildName(i);
+            if (browsers.filter(browser => browser.keyName === keyname).length >= 1) continue;
+
+            let keyPath = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+                Ci.nsIWindowsRegKey
+            );
+            keyPath.open(
+                ROOT_KEY,
+                `Software\\Clients\\StartMenuInternet\\${keyname}\\shell\\open\\command`,
+                Ci.nsIWindowsRegKey.ACCESS_READ
+            );
+            let browserPathRegValue = keyPath.readStringValue("");
+            let browserPath = browserPathRegValue.replace(/^\"/, "").replace(/\"$/, "");
+            keyPath.close();
+
+            let urlAssociations = {};
+            let keyUrlAssociations = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+                Ci.nsIWindowsRegKey
+            );
+            try {
+                keyUrlAssociations.open(
+                    ROOT_KEY,
+                    `Software\\Clients\\StartMenuInternet\\${keyname}\\Capabilities\\URLAssociations`,
+                    Ci.nsIWindowsRegKey.ACCESS_READ
+                );
+                for (let j = 0; j < keyUrlAssociations.valueCount; j++) {
+                    let valuename = keyUrlAssociations.getValueName(j);
+                    let urlAssociationRegValue = keyUrlAssociations.readStringValue(valuename);
+                    urlAssociations[valuename] = urlAssociationRegValue;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            keyUrlAssociations.close();
+
+            browsers.push({
+                keyName: keyname,
+                path: browserPath,
+                urlAssociations: urlAssociations
+            });
+        }
+        key.close();
+
+        ROOT_KEY = Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
     }
-    key.close();
-    return browsersPath;
+    return browsers;
 }
 
 function OpenLinkInExternal(url) {
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    process.init(FileUtils.File(getBrowsersPath()[0]));
+    process.init(FileUtils.File(getBrowsers()[0]["path"]));
     process.runAsync([url], 1) 
 }
 
