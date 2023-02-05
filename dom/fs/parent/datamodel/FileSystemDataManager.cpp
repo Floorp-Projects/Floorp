@@ -312,6 +312,26 @@ void FileSystemDataManager::UnregisterActor(
   }
 }
 
+void FileSystemDataManager::RegisterAccessHandle(
+    NotNull<FileSystemAccessHandle*> aAccessHandle) {
+  MOZ_ASSERT(!mBackgroundThreadAccessible.Access()->mAccessHandles.Contains(
+      aAccessHandle));
+
+  mBackgroundThreadAccessible.Access()->mAccessHandles.Insert(aAccessHandle);
+}
+
+void FileSystemDataManager::UnregisterAccessHandle(
+    NotNull<FileSystemAccessHandle*> aAccessHandle) {
+  MOZ_ASSERT(mBackgroundThreadAccessible.Access()->mAccessHandles.Contains(
+      aAccessHandle));
+
+  mBackgroundThreadAccessible.Access()->mAccessHandles.Remove(aAccessHandle);
+
+  if (IsInactive()) {
+    BeginClose();
+  }
+}
+
 RefPtr<BoolPromise> FileSystemDataManager::OnOpen() {
   MOZ_ASSERT(mState == State::Opening);
 
@@ -357,7 +377,8 @@ void FileSystemDataManager::UnlockShared(const EntryId& aEntryId) {
 }
 
 bool FileSystemDataManager::IsInactive() const {
-  return !mRegCount && !mBackgroundThreadAccessible.Access()->mActors.Count();
+  auto data = mBackgroundThreadAccessible.Access();
+  return !mRegCount && !data->mActors.Count() && !data->mAccessHandles.Count();
 }
 
 void FileSystemDataManager::RequestAllowToClose() {
