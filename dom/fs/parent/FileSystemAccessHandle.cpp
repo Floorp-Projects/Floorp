@@ -6,10 +6,18 @@
 
 #include "FileSystemAccessHandle.h"
 
+#include "FileSystemDatabaseManager.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemLog.h"
+#include "mozilla/dom/quota/FileStreams.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/RemoteQuotaObjectParent.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/RandomAccessStreamParams.h"
+#include "mozilla/ipc/RandomAccessStreamUtils.h"
+#include "nsIFileStreams.h"
 
 namespace mozilla::dom {
 
@@ -41,14 +49,21 @@ RefPtr<FileSystemAccessHandle::CreatePromise> FileSystemAccessHandle::Create(
   return accessHandle->BeginInit()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [accessHandle = fs::Registered<FileSystemAccessHandle>(accessHandle)](
-          const BoolPromise::ResolveOrRejectValue& value) {
+          InitPromise::ResolveOrRejectValue&& value) mutable {
         if (value.IsReject()) {
           return CreatePromise::CreateAndReject(value.RejectValue(), __func__);
         }
 
-        return CreatePromise::CreateAndResolve(accessHandle, __func__);
+        mozilla::ipc::RandomAccessStreamParams streamParams =
+            std::move(value.ResolveValue());
+
+        return CreatePromise::CreateAndResolve(
+            std::pair(std::move(accessHandle), std::move(streamParams)),
+            __func__);
       });
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(FileSystemAccessHandle, FileSystemStreamCallbacks)
 
 void FileSystemAccessHandle::Register() { ++mRegCount; }
 
@@ -90,6 +105,10 @@ void FileSystemAccessHandle::Close() {
 
   mClosed = true;
 
+  if (mRemoteQuotaObjectParent) {
+    mRemoteQuotaObjectParent->Close();
+  }
+
   if (mLocked) {
     mDataManager->UnlockExclusive(mEntryId);
   }
@@ -110,22 +129,54 @@ bool FileSystemAccessHandle::IsInactive() const {
   return !mRegCount && !mActor;
 }
 
-RefPtr<BoolPromise> FileSystemAccessHandle::BeginInit() {
+RefPtr<FileSystemAccessHandle::InitPromise>
+FileSystemAccessHandle::BeginInit() {
   if (!mDataManager->LockExclusive(mEntryId)) {
-    return BoolPromise::CreateAndReject(
+    return InitPromise::CreateAndReject(
         NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, __func__);
   }
 
   mLocked = true;
 
+  auto CreateAndRejectInitPromise = [](const char* aFunc, nsresult aRv) {
+    return CreateAndRejectMozPromise<InitPromise>(aFunc, aRv);
+  };
+
+  nsString type;
+  fs::TimeStamp lastModifiedMilliSeconds;
+  fs::Path path;
+  nsCOMPtr<nsIFile> file;
+  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
+             mEntryId, type, lastModifiedMilliSeconds, path, file)),
+         CreateAndRejectInitPromise);
+
+  if (LOG_ENABLED()) {
+    nsAutoString path;
+    if (NS_SUCCEEDED(file->GetPath(path))) {
+      LOG(("Opening SyncAccessHandle %s", NS_ConvertUTF16toUTF8(path).get()));
+    }
+  }
+
+  QM_TRY_UNWRAP(
+      nsCOMPtr<nsIRandomAccessStream> stream,
+      CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
+                                   mDataManager->OriginMetadataRef(),
+                                   quota::Client::FILESYSTEM, file, -1, -1,
+                                   nsIFileRandomAccessStream::DEFER_OPEN),
+      CreateAndRejectInitPromise);
+
+  mozilla::ipc::RandomAccessStreamParams streamParams =
+      mozilla::ipc::SerializeRandomAccessStream(
+          WrapMovingNotNullUnchecked(std::move(stream)), this);
+
   return InvokeAsync(
       mDataManager->MutableBackgroundTargetPtr(), __func__,
-      [self = RefPtr(this)]() {
+      [self = RefPtr(this), streamParams = std::move(streamParams)]() mutable {
         self->mDataManager->RegisterAccessHandle(WrapNotNull(self));
 
         self->mRegistered = true;
 
-        return BoolPromise::CreateAndResolve(true, __func__);
+        return InitPromise::CreateAndResolve(std::move(streamParams), __func__);
       });
 }
 
