@@ -902,13 +902,37 @@ popupnotificationcontent {
 #historySwipeAnimationNextArrow {
   will-change: transform;
 }
+
 #historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl),
 #historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
   transform: scaleX(-1);
 }
+
 #historySwipeAnimationPreviousArrow > svg,
 #historySwipeAnimationNextArrow > svg {
   margin: auto 0;
+}
+
+#historySwipeAnimationPreviousArrow,
+#historySwipeAnimationNextArrow {
+  --swipe-nav-icon-primary-color: #0060DF;
+  --swipe-nav-icon-accent-color: #FFFFFF;
+}
+
+@media (-moz-content-prefers-color-scheme: dark) {
+  #historySwipeAnimationPreviousArrow,
+  #historySwipeAnimationNextArrow {
+    --swipe-nav-icon-primary-color: #00DDFF;
+    --swipe-nav-icon-accent-color: #000000;
+  }
+}
+
+@media (prefers-contrast) {
+  #historySwipeAnimationPreviousArrow,
+  #historySwipeAnimationNextArrow {
+    --swipe-nav-icon-primary-color: SelectedItemText;
+    --swipe-nav-icon-accent-color: SelectedItem;
+  }
 }
 
 /*
@@ -923,63 +947,46 @@ popupnotificationcontent {
    * Styles for the swipe navigation SVG icon.
    *
    * `will-navigate` class name is added to the <svg> element when the user's
-   *  swipe gesture reached to the point where history navigation will be
+   * swipe gesture reached to the point where history navigation will be
    * triggered. It's used for triggering three animations, an arrow color change,
    * a circle color change and a glowing effect outer the circle.
    */
-  @media not (prefers-contrast) {
-    .swipe-nav-icon circle {
-      fill: #FFFFFF;
-      stroke: #0060DF;
-    }
-    .swipe-nav-icon circle:first-of-type {
-      fill: #0060DF;
-    }
-    .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
-      fill: #0060DF;
-    }
-    .swipe-nav-icon path {
-      fill: #0060DF;
-    }
-    .swipe-nav-icon.will-navigate > path {
-      fill: #FFFFFF;
-      stroke: #FFFFFF;
-    }
-  }
-
-  @media (prefers-contrast) {
-    .swipe-nav-icon circle {
-      fill: SelectedItem;
-      stroke: SelectedItemText;
-    }
-    .swipe-nav-icon circle:first-of-type {
-      fill: SelectedItemText;
-    }
-    .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
-      fill: SelectedItemText;
-    }
-
-    .swipe-nav-icon path {
-      fill: SelectedItemText;
-    }
-    .swipe-nav-icon.will-navigate > path {
-      fill: SelectedItem;
-      stroke: SelectedItem;
-    }
+  .swipe-nav-icon circle {
+    fill: var(--swipe-nav-icon-accent-color);
+    stroke: var(--swipe-nav-icon-primary-color);
   }
 
   .swipe-nav-icon circle:first-of-type {
+    fill: var(--swipe-nav-icon-primary-color);
     transition: opacity 1s;
     will-change: opacity; /* a workaround for bug 1804189 */
     opacity: 0;
   }
+
+  .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
+
+  .swipe-nav-icon circle:not(:first-of-type) {
+    transition: fill 1s;
+  }
+
   .swipe-nav-icon.will-navigate > circle:first-of-type {
     transition-delay: 0.2s;
     opacity: 0.2;
   }
 
-  .swipe-nav-icon circle:not(:first-of-type) {
-    transition: fill 1s;
+  .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
+
+  .swipe-nav-icon path {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
+
+  .swipe-nav-icon.will-navigate > path {
+    fill: var(--swipe-nav-icon-accent-color);
+    stroke: var(--swipe-nav-icon-accent-color);
   }
 }
 
@@ -991,31 +998,19 @@ popupnotificationcontent {
    * swipe gesture reached to the point where history navigation will be
    * triggered.
    */
-  @media not (prefers-contrast) {
-    .swipe-nav-icon path {
-      fill: #FFFFFF;
-      stroke: #0060DF;
-    }
-    .swipe-nav-icon.will-navigate > path {
-      stroke: #FFFFFF;
-    }
-    .swipe-nav-icon.will-navigate > path:first-of-type {
-      fill: #0060DF;
-    }
+  .swipe-nav-icon path {
+    fill: var(--swipe-nav-icon-accent-color);
+    stroke: var(--swipe-nav-icon-primary-color);;
+  }
+  .swipe-nav-icon.will-navigate > path {
+    stroke: var(--swipe-nav-icon-accent-color);
+  }
+  .swipe-nav-icon.will-navigate > path:first-of-type {
+    fill: var(--swipe-nav-icon-primary-color);
   }
   @media (prefers-contrast) {
-    .swipe-nav-icon path {
-      fill: SelectedItem;
-      stroke: SelectedItemText;
-    }
-    .swipe-nav-icon.will-navigate > path {
-      stroke: SelectedItem;
-    }
-    .swipe-nav-icon.will-navigate > path:first-of-type {
-      fill: SelectedItemText;
-    }
     .swipe-nav-icon.will-navigate > path:not(:first-of-type) {
-      fill: SelectedItem;
+      fill: var(--swipe-nav-icon-accent-color);
     }
   }
 }
