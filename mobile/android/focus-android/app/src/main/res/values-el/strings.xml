@@ -731,16 +731,19 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %1$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %1$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">Το %1$s προσπαθεί να απορρίπτει αυτόματα τα αιτήματα cookie.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει τα αιτήματα cookie για να κλείσει τα ενοχλητικά μπάνερ cookie.\n\nΔιαχειριστείτε τις προτιμήσεις για τα μπάνερ cookie στις ρυθμίσεις.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει τα αιτήματα cookie για να κλείσει τα ενοχλητικά μπάνερ cookie.\n\nΔιαχειριστείτε τις προτιμήσεις για τα μπάνερ cookie στις ρυθμίσεις.</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">Το %1$s προσπαθεί να απορρίψει τα αιτήματα cookie για να κλείσει τα ενοχλητικά μπάνερ cookie.\n\nΔιαχειριστείτε τις προτιμήσεις για τα μπάνερ cookie στις %2$s.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string moz:RemovedIn="111" name="cfr_for_cookie_banner_underline_settings" tools:ignore="UnusedResources">ρυθμίσεις</string>
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ρυθμίσεις</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">ρυθμίσεις</string>
@@ -908,6 +911,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Εναλλαγή</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Είσοδος σε λειτουργία πλήρους οθόνης</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Άμεση αλλαγή στον σύνδεσμο νέας καρτέλας</string>
 
@@ -1039,13 +1045,18 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Κλείσιμο</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Γραφικό στοιχείο αναζήτησης</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Το ιστορικό περιήγησης διαγράφηκε! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
@@ -1055,13 +1066,19 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">Θα σας αφήσουμε στην ιδιωτική σας περιήγηση, αλλά ξεκινήστε πιο γρήγορα την επόμενη φορά με το γραφικό στοιχείο %1$s στην αρχική σας οθόνη.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Προσθήκη γραφικού στοιχείου στην αρχική οθόνη</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Το γραφικό στοιχείο προστέθηκε στην αρχική οθόνη</string>
 </resources>

@@ -33,6 +33,11 @@
     <string name="mozac_feature_sitepermissions_never_allow">Heshqashan</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">%1$s ushın maǵlıwmatlardı turaqlı saqlaw ornında saqlawǵa ruqsat etiw kerek pe?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">%1$s ushın avtor huqıqları menen qorǵalǵan kontentti qoyıwdı ruqsat etiw kerek pe?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">%1$s ǵa %2$s daǵi cookielerdi paydalanıwǵa ruqsat etilsin be?</string>
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">Eger siz %s saytına bul maǵlıwmatlar nege kerek ekenligin túsinbeseńiz, kiriwdi bloklawıńız múmkin.</string>

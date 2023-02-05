@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompts_ok">YAQSHI</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Biykarlaw</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Bul bette qosımsha dialog aynalar jaratılıwına tıyım salıw</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Ornatıw</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -117,7 +119,7 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Karta ámel qılıw múddeti jańalansın ba?</string>
 
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Karta nomeri shifrlanadı. Qupıyalıq kodı saqlanbaydı.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Karta nomeri shifrlenedi. Qupıyalıq kodı saqlanbaydı.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->

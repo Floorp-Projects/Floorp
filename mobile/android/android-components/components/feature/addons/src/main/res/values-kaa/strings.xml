@@ -56,6 +56,8 @@
     <string name="mozac_feature_addons_permissions_native_messaging_description">Bunnan basqa baǵdarlamalar menen xabar almasıw</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Sizge xabarnamalardı kórsetiw</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Kriptografiyalıq audentifikaciya xızmetleri menen támiyinlew</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Brauzer proksi sazlawların basqarıw</string>
     <!-- Description for sessions permission. -->
@@ -64,6 +66,8 @@
     <string name="mozac_feature_addons_permissions_tab_hide_description">Brauzer betlerin jasırıw hám kórsetiw</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Brauzer tariyxına kiriw</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Ashıq betlerde maǵlıwmatlarıńızǵa kiriw ushın baǵdarlamashı ásbapların keńeytiw</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versiya</string>
     <!-- The authors of an add-on. -->
@@ -138,6 +142,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">Jańa ruqsatnama talap etiledi</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Qosımsha jańalanıwlar</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Qollap-quwatlanatuǵın qosımshalar tekseriwi</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">Jańa qosımsha bar</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
@@ -148,6 +154,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s hám %2$slardı %3$sǵa qosıw</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Olardı %1$sǵa qosıw</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox qosımsha texnologiyası qayta ózgermekte. Bul qosmshalar Firefox 75 hám onnan keyingi versiyalarǵa mas kelmeytuǵın quram-bóleklerden paydalanadı.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Qosımsha tastıyıqlanıp hám júklenip atır…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -188,6 +196,8 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">Jańalanıw joq</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Qáte</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Jańalanıw haqqında maǵlıwmat</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Sońǵı urınıw:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->

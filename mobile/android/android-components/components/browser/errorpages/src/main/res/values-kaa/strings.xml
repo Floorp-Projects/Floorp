@@ -13,14 +13,34 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Qáwipsiz qosılıw ámelge aspadı</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi alınǵan maǵlıwmatlardıń isenimli ekenligin tekseriw ámelge aspadı.</li>
+        <li>Ótinish, sayt iyeleri menen bul mashqala haqqında xabar beriw ushın baylanısıń.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Qáwipsiz jalǵanıw ámelge aspadı</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Buǵan nadurıs server sazlawları sebep bolıwı múmkin yamasa birew sizge kerek bolǵan serverdi basqasına almastırıwǵa háreket qılmaqta.</li>
+        <li>Eger siz aldın bul serverge sátli jalǵanǵan bolsańız, bul qáte waqtınsha bolıwı múmkin hám keyinirek qayta urınıp kóriń.</li>
+      </ul>
+    ]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Qosımsha…</string>
 
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Birew sizge kerek bolǵan sayttı basqasına almastırıwǵa háreket qılıp atırǵan bolıwı múmkin, sonlıqtan siz dawam etpegenińiz maqul.</label>
+        <br><br>
+        <label>Veb-saytlar óziniń jeke maǵlıwmatların sertifikat arqalı tastıyıqlaydı. %1$s <b>%2$s</b>ǵa isenbeydi sebebi onıń sertifikat beriwshisi belgisiz, sertifikatqa sayttıń ózi arqalı qol qoyılǵan yamasa onıń serveri aradaǵı durıs sertifikatlardı jibermey atır.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_back">Arqaǵa qaytıw (Usınıs etiledi)</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Artqa qaytıw (Usınıs etiledi)</string>
 
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Qáwipti qabıllaw hám dawam etiw</string>
@@ -28,9 +48,26 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Bul sayt qáwipsiz jalǵanıwdı talap etedi.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi bul sayt qáwipsiz jalǵanıwdı talap etedi.</li>
+         <li>Bul mashqala sayttıń ózi menen baylanıslı bolıwı múmkin hám siz bul jaǵdayda heshnárse isley almaysız.</li>
+         <li>Siz bul mashqala haqqında sayttıń administratorın xabarlandırıwıńız múmkin.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Qosımsha…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> HTTP qatań transport qáwipsizligi (HSTS) dep atalǵan qáwipsizlik siyasatına iye, yaǵnıy <b>%2$s</b> oǵan tek ǵana qáwipsiz jalǵanıwı múmkin. Bul saytqa kiriw ushın esaptan tısqarılardı qosa almaysız.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> HTTP qatań transport qáwipsizligi (HSTS) dep atalǵan qáwipsizlik siyasatına iye, yaǵnıy <b>%2$s</b> oǵan tek ǵana qáwipsiz jalǵanıwı múmkin. Bul saytqa kiriw ushın esaptan tısqarılardı qosa almaysız.
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Artqa qaytıw</string>
 
@@ -61,8 +98,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_title">Jalǵanbadı</string>
-
+    <string name="mozac_browser_errorpages_connection_failure_title">Jalǵanıw ámelge aspadı</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
@@ -94,17 +130,43 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Oflayn rejim</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Brauzer oflayn rejimde islemekte hám soralǵan sayt penen baylanıs ornata almaydı.</p>
+      <ul>
+        <li>Qurılmańız islep turǵan tarmaqqa jalǵanǵanına isenim kámil etiń.</li>
+        <li>Online rejimǵe qaytıw hám betti jańalaw ushın «Qayta urınıw» túymesine basıń.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port qáwipsizlik sebepli sheklengen</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Soralǵan mánzil ushın ádette veb-saytlar menen islew ushın <em>qollanılmaytuǵın</em> port kórsetilgen (mısalı: <q>mozilla.org:80</q> - bul mozilla.orgdaǵı 80-port). Qáwipsizligińiz ushın brauzer bul sorawdı biykar etdi.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Jalǵanıw qayta ornatıldı</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Sayt penen jalǵanıwdı ornatıw waqtında baylanıs úzildi.
+Ótinish, qayta urınıp kóriń.</p>
+      <ul>
+        <li>Sayt waqtınsha islemey qalıwı yamasa júdá bánt bolıwı múmkin. Bir neshe minuttan soń, qayta urınıp kóriń.</li>
+        <li>Eger siz birde-bir betti júkley almasańız, qurılmańız mobil internetin yamasa Wi-Fi jalǵanıwın tekseriń.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Qáwipli fayl túri</string>
 
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
-    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul><li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Ótinish, sayt iyeleri menen bul mashqala haqqında xabar beriw ushın baylanısıń.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Buzılǵan kontent qátesi</string>
@@ -113,7 +175,7 @@
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       <p>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi maǵlıwmatlardı jetkerip beriwde qátelik anıqlandı.</p>
       <ul>
-        <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
+        <li>Ótinish, sayt iyeleri menen bul mashqala haqqında xabar beriw ushın baylanısıń.</li>
       </ul>
     ]]></string>
 
@@ -123,7 +185,7 @@
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Siz kórmekshi bolǵan betti kórsetip bolmaydı, sebebi maǵlıwmatlardı jetkerip beriwde qátelik anıqlandı.</p>
       <ul>
-        <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
+        <li>Ótinish, sayt iyeleri menen bul mashqala haqqında xabar beriw ushın baylanısıń.</li>
       </ul>
     ]]></string>
 
@@ -133,12 +195,23 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       <p>Siz kóriwge háreket etip atırǵan betti kórsetip bolmaydı, sebebi ol sıǵıwdıń nadurıs yamasa qollap-quwatlamaytuǵın usılınan paydalanadı.</p>
       <ul>
-        <li>Ótinish, sayt iyeleri menen bul qátelik boyınsha baylanısıń.</li>
+        <li>Ótinish, sayt iyeleri menen bul mashqala haqqında xabar beriw ushın baylanısıń.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Mánzil tawılmadı</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Brauzer kórsetilgen mánzil boyınsha serverdi taba almadı.</p>
+      <ul>
+        <li>Mánzilde qátelik joqlıǵın tekserıń, Mısalı:
+          <strong>www</strong>.example.com ornına
+          <strong>ww</strong>.example.com.</li>
+        <li>Eger siz birde-bir betti júkley almasańız, qurılmańız mobil internetin yamasa Wi-Fi jalǵanıwın tekseriń.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Internet jalǵanbaǵan</string>
@@ -155,32 +228,92 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Mánzil jaramsız</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Sayt mánzilleri ádette usınday kóriniste jazıladi <strong>http://www.example.com/</strong></li>
+        <li>Qıya sızıqtan (/) paydalanıp atırǵanıńızǵa isenim kámil etıń (Mısalı: <strong>/</strong>).</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Belgisiz Protokol</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Mánzil (<q>wxyz://</q> uqsaǵan) belgisiz protokoldı óz ishine aladı, sonıń ushın brauzer sayt penen durıs baylanıs ornata almaydı.</p>
+      <ul>
+        <li>Eger de siz multimedia yamasa basqa da tekst emes xızmetlerdi ashıwǵa urınıp atırǵan bolsańız, sayttıń ayırım talapların tekseriń.</li>
+        <li>Brauzer anıqlawı ushın ayırım protokollar sırtqı baǵdarlamalardı yamasa plaginlerdi ornatıwdı talap etiwi múmkin.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Fayl tawılmadı</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Fayl ózgertilgen, óshirilgen yamasa kóshirilgen bolıwı múmkin.</li>
+        <li>Mánzildi kiritgende qátelik ketpegenin tekseriń.</li>
+        <li>Soralǵan fayldı kóriwge jeterli dárejede huqıqqa iyeligińizge isenim kámil etiń.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Faylǵa kiriw biykar etilgen</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Fayl óshirilgen, kóshirilgen yamasa faylǵa ruqsatlar kóriwge tosqınlıq etip atırǵan bolıwı múmkin.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proksi server qosılıwdı biykarladı</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Brauzer isenimli serverden paydalanıwǵa sazlanǵan, biraq isenimli server baylanıstı biykarladı.</p>
+      <ul>
+        <li>Brauzerdiń isenimli serveri sazlawların tekseriń hám qayta urınıp kóriń.</li>
+        <li>Isenimli server bul tarmaqtan baylanısıwǵa ruqsat bere me?</li>
+        <li>Mashqala ele saplastırılmadı ma? Járdem ushın tarmaq administratorı yamasa internet provayderińiz benen másláhátlesiń.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proksi server tawılmadı</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Brauzer isenimli serverden paydalanıwǵa sazlanǵan, biraq isenimli server tabılmadı.</p>
+      <ul>
+        <li>Brauzerdiń isenimli serveri sazlawların tekseriń hám qayta urınıp kóriń.</li>
+        <li>Qurılmańız islep turǵan tarmaqqa jalǵanǵanına isenim kámil etiń.</li>
+        <li>Mashqala ele saplastırılmadı ma? Járdem ushın tarmaq administratorı yamasa internet provayderińiz benen másláhátlesiń.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Zıyanlı sayt mashqalası</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[%1$s saytı paydalanıwshılardıń qurılmalarına hújim islew ushın qollanılatuǵınlıǵı haqqında maǵlıwmat bar hám siziń qawipsizlik sazlawlarıńız tiykarında bloklanǵan.]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Kútilmegen sayt mashqalası</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>%1$s saytı unamsız baǵdarlamalardı tarqatıw ushın paydalanılǵanı haqqında maǵlıwmat bar hám siziń qáwipsizlik sazlawlarıńız tiykarında bloklanǵan.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Zıyanlı sayt mashqalası</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>%1$s saytı itimallı zıyanlı ekenligi haqqında maǵlıwmat bar hám siziń qawipsizlik sazlawlarıńız tiykarında bloklanǵan.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Aldamshı sayt mashqalası</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$sdaǵı bul veb bet jalǵan ekenligi haqqında maǵlıwmat bar hám siziń qáwipsizlik sazlawlarıńız tiykarında bloklanǵan.</p>]]></string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Qáwipsiz sayt joq</string>
