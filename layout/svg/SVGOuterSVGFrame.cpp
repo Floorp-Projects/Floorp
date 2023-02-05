@@ -75,7 +75,6 @@ SVGOuterSVGFrame::SVGOuterSVGFrame(ComputedStyle* aStyle,
     : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID),
       mCallingReflowSVG(false),
       mFullZoom(PresContext()->GetFullZoom()),
-      mViewportInitialized(false),
       mIsRootContent(false),
       mIsInObjectOrEmbed(false),
       mIsInIframe(false) {
@@ -356,7 +355,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
       ("enter SVGOuterSVGFrame::Reflow: availSize=%d,%d",
        aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+  MOZ_ASSERT(HasAnyStateBits(NS_FRAME_IN_REFLOW), "frame is not in reflow");
 
   aDesiredSize.Width() =
       aReflowInput.ComputedWidth() +
@@ -372,7 +371,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   auto* anonKid = static_cast<SVGOuterSVGAnonChildFrame*>(
       PrincipalChildList().FirstChild());
 
-  if (mState & NS_FRAME_FIRST_REFLOW) {
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Initialize
     svgElem->UpdateHasChildrenOnlyTransform();
   }
@@ -422,10 +421,9 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
     changeBits |= FULL_ZOOM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
   }
-  if (changeBits) {
+  if (changeBits && !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     NotifyViewportOrTransformChanged(changeBits);
   }
-  mViewportInitialized = true;
 
   // Now that we've marked the necessary children as dirty, call
   // ReflowSVG() or ReflowSVGNonDisplayText() on them, depending
@@ -624,11 +622,6 @@ void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
                                     FULL_ZOOM_CHANGED)),
              "Unexpected aFlags value");
 
-  // No point in doing anything when were not init'ed yet:
-  if (!mViewportInitialized) {
-    return;
-  }
-
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
@@ -662,9 +655,11 @@ void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
     // Make sure our canvas transform matrix gets (lazily) recalculated:
     mCanvasTM = nullptr;
 
-    if (haveNonFulLZoomTransformChange && !(mState & NS_FRAME_IS_NONDISPLAY)) {
-      uint32_t flags =
-          (mState & NS_FRAME_IN_REFLOW) ? SVGSVGElement::eDuringReflow : 0;
+    if (haveNonFulLZoomTransformChange &&
+        !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+      uint32_t flags = HasAnyStateBits(NS_FRAME_IN_REFLOW)
+                           ? SVGSVGElement::eDuringReflow
+                           : 0;
       content->ChildrenOnlyTransformChanged(flags);
     }
   }
