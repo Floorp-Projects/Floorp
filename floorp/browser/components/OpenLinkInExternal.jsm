@@ -51,19 +51,23 @@ function getBrowsers() {
             let keyUrlAssociations = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
                 Ci.nsIWindowsRegKey
             );
+            let error = null;
             try {
                 keyUrlAssociations.open(
                     ROOT_KEY,
                     `Software\\Clients\\StartMenuInternet\\${keyname}\\Capabilities\\URLAssociations`,
                     Ci.nsIWindowsRegKey.ACCESS_READ
                 );
+            } catch (e) {
+                error = e;
+                console.error(e);
+            }
+            if (error === null) {
                 for (let j = 0; j < keyUrlAssociations.valueCount; j++) {
                     let valuename = keyUrlAssociations.getValueName(j);
                     let urlAssociationRegValue = keyUrlAssociations.readStringValue(valuename);
                     urlAssociations[valuename] = urlAssociationRegValue;
                 }
-            } catch (e) {
-                console.error(e);
             }
             keyUrlAssociations.close();
 
