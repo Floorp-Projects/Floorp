@@ -108,4 +108,3 @@ speechd init
 thread
 thread shutdown
 wifi tickler
-WMFCDMThread

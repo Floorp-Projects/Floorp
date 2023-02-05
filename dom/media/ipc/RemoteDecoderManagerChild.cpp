@@ -29,10 +29,6 @@
 #  include "MFMediaEngineChild.h"
 #endif
 
-#ifdef MOZ_MF_CDM
-#  include "MFCDMChild.h"
-#endif
-
 namespace mozilla {
 
 #define LOG(msg, ...) \
@@ -692,20 +688,6 @@ bool RemoteDecoderManagerChild::DeallocPMFMediaEngineChild(
 #ifdef MOZ_WMF_MEDIA_ENGINE
   MFMediaEngineChild* child = static_cast<MFMediaEngineChild*>(actor);
   child->IPDLActorDestroyed();
-#endif
-  return true;
-}
-
-PMFCDMChild* RemoteDecoderManagerChild::AllocPMFCDMChild(const nsAString&) {
-  MOZ_ASSERT_UNREACHABLE(
-      "RemoteDecoderManagerChild cannot create PMFContentDecryptionModuleChild "
-      "classes");
-  return nullptr;
-}
-
-bool RemoteDecoderManagerChild::DeallocPMFCDMChild(PMFCDMChild* actor) {
-#ifdef MOZ_MF_CDM
-  static_cast<MFCDMChild*>(actor)->IPDLActorDestroyed();
 #endif
   return true;
 }

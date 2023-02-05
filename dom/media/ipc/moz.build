@@ -74,21 +74,6 @@ if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         "../platforms/wmf",
     ]
 
-if CONFIG["MOZ_MF_CDM"]:
-    IPDL_SOURCES += [
-        "PMFCDM.ipdl",
-    ]
-    EXPORTS.mozilla += [
-        "MFCDMChild.h",
-        "MFCDMParent.h",
-    ]
-    UNIFIED_SOURCES += [
-        "MFCDMChild.cpp",
-    ]
-    SOURCES += [
-        "MFCDMParent.cpp",
-    ]
-
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
 LOCAL_INCLUDES += [
     "/xpcom/base",

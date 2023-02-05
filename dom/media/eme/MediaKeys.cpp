@@ -36,9 +36,6 @@
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #endif
-#ifdef MOZ_MF_CDM
-#  include "mozilla/WMFCDMProxy.h"
-#endif
 
 namespace mozilla::dom {
 
@@ -433,14 +430,6 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
 #ifdef MOZ_WIDGET_ANDROID
   if (IsWidevineKeySystem(mKeySystem)) {
     proxy = new MediaDrmCDMProxy(
-        this, mKeySystem,
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required);
-  } else
-#endif
-#ifdef MOZ_MF_CDM
-      if (IsPlayReadyKeySystem(mKeySystem)) {
-    proxy = new WMFCDMProxy(
         this, mKeySystem,
         mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
         mConfig.mPersistentState == MediaKeysRequirement::Required);
