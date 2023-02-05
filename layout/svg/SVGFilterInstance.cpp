@@ -370,7 +370,7 @@ nsresult SVGFilterInstance::BuildPrimitives(
   }
 
   // Get the filter primitive elements.
-  nsTArray<RefPtr<SVGFE>> primitives;
+  AutoTArray<RefPtr<SVGFE>, 8> primitives;
   for (nsIContent* child = mFilterElement->nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
     RefPtr<SVGFE> primitive;
@@ -400,7 +400,7 @@ nsresult SVGFilterInstance::BuildPrimitives(
     IntRect primitiveSubregion = ComputeFilterPrimitiveSubregion(
         filter, aPrimitiveDescrs, sourceIndices);
 
-    nsTArray<bool> sourcesAreTainted;
+    AutoTArray<bool, 8> sourcesAreTainted;
     GetInputsAreTainted(aPrimitiveDescrs, sourceIndices, aInputIsTainted,
                         sourcesAreTainted);
 

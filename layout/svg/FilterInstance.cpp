@@ -537,7 +537,7 @@ gfxRect FilterInstance::FilterSpaceToUserSpace(
 nsresult FilterInstance::BuildPrimitives(Span<const StyleFilter> aFilterChain,
                                          nsIFrame* aTargetFrame,
                                          bool aFilterInputIsTainted) {
-  nsTArray<FilterPrimitiveDescription> primitiveDescriptions;
+  AutoTArray<FilterPrimitiveDescription, 8> primitiveDescriptions;
 
   for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
     bool inputIsTainted = primitiveDescriptions.IsEmpty()
