@@ -21,6 +21,11 @@ inline constexpr char kClearKeyKeySystemName[] = "org.w3.clearkey";
 inline constexpr char kClearKeyWithProtectionQueryKeySystemName[] =
     "org.mozilla.clearkey_with_protection_query";
 inline constexpr char kWidevineKeySystemName[] = "com.widevine.alpha";
+#ifdef MOZ_MF_CDM
+// https://learn.microsoft.com/en-us/playready/overview/key-system-strings
+inline constexpr char kPlayReadyKeySystemName[] =
+    "com.microsoft.playready.recommendation";
+#endif
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_EME_KEY_SYSTEM_NAMES_H_

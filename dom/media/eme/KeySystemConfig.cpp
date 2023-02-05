@@ -20,6 +20,10 @@
 #  include "nsMimeTypes.h"
 #endif
 
+#ifdef MOZ_MF_CDM
+#  include "mediafoundation/WMFCDMImpl.h"
+#endif
+
 namespace mozilla {
 
 /* static */
@@ -33,6 +37,11 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
 #ifdef MOZ_WIDGET_ANDROID
   // Check if we can use MediaDrm for this keysystem.
   if (mozilla::java::MediaDrmProxy::IsSchemeSupported(name)) {
+    return true;
+  }
+#endif
+#if MOZ_MF_CDM
+  if (WMFCDMImpl::Supports(aKeySystem)) {
     return true;
   }
 #endif
@@ -166,6 +175,12 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
 #endif
     return true;
   }
+#ifdef MOZ_MF_CDM
+  if (IsPlayReadyKeySystem(aKeySystem)) {
+    RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
+    return cdm->GetCapabilities(aConfig);
+  }
+#endif
   return false;
 }
 
