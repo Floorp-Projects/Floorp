@@ -7,9 +7,10 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMACCESSHANDLE_H_
 #define DOM_FS_PARENT_FILESYSTEMACCESSHANDLE_H_
 
+#include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "nsISupportsUtils.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 
 enum class nsresult : uint32_t;
@@ -21,19 +22,35 @@ class Result;
 
 namespace dom {
 
-namespace fs::data {
+class FileSystemAccessHandleParent;
+
+namespace fs {
+
+template <class T>
+class Registered;
+
+namespace data {
 
 class FileSystemDataManager;
 
-}  // namespace fs::data
+}  // namespace data
+}  // namespace fs
 
 class FileSystemAccessHandle {
  public:
-  static Result<RefPtr<FileSystemAccessHandle>, nsresult> Create(
+  static Result<fs::Registered<FileSystemAccessHandle>, nsresult> Create(
       RefPtr<fs::data::FileSystemDataManager> aDataManager,
       const fs::EntryId& aEntryId);
 
   NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(FileSystemAccessHandle)
+
+  void Register();
+
+  void Unregister();
+
+  void RegisterActor(NotNull<FileSystemAccessHandleParent*> aActor);
+
+  void UnregisterActor(NotNull<FileSystemAccessHandleParent*> aActor);
 
   bool IsOpen() const;
 
@@ -45,8 +62,12 @@ class FileSystemAccessHandle {
 
   ~FileSystemAccessHandle();
 
+  bool IsInactive() const;
+
   const fs::EntryId mEntryId;
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
+  FileSystemAccessHandleParent* mActor;
+  nsAutoRefCnt mRegCount;
   bool mClosed;
 };
 

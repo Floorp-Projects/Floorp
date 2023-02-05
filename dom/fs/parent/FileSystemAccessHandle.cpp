@@ -8,6 +8,7 @@
 
 #include "mozilla/Result.h"
 #include "mozilla/dom/FileSystemDataManager.h"
+#include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemLog.h"
 
 namespace mozilla::dom {
@@ -17,16 +18,17 @@ FileSystemAccessHandle::FileSystemAccessHandle(
     const fs::EntryId& aEntryId)
     : mEntryId(aEntryId),
       mDataManager(std::move(aDataManager)),
+      mActor(nullptr),
+      mRegCount(0),
       mClosed(false) {}
 
 FileSystemAccessHandle::~FileSystemAccessHandle() {
-  if (IsOpen()) {
-    Close();
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mClosed);
 }
 
 // static
-Result<RefPtr<FileSystemAccessHandle>, nsresult> FileSystemAccessHandle::Create(
+Result<fs::Registered<FileSystemAccessHandle>, nsresult>
+FileSystemAccessHandle::Create(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const fs::EntryId& aEntryId) {
   MOZ_ASSERT(aDataManager);
@@ -39,19 +41,54 @@ Result<RefPtr<FileSystemAccessHandle>, nsresult> FileSystemAccessHandle::Create(
   RefPtr<FileSystemAccessHandle> accessHandle =
       new FileSystemAccessHandle(std::move(aDataManager), aEntryId);
 
-  return accessHandle;
+  return fs::Registered<FileSystemAccessHandle>(accessHandle);
+}
+
+void FileSystemAccessHandle::Register() { ++mRegCount; }
+
+void FileSystemAccessHandle::Unregister() {
+  MOZ_ASSERT(mRegCount > 0);
+
+  --mRegCount;
+
+  if (IsInactive() && IsOpen()) {
+    Close();
+  }
+}
+
+void FileSystemAccessHandle::RegisterActor(
+    NotNull<FileSystemAccessHandleParent*> aActor) {
+  MOZ_ASSERT(!mActor);
+
+  mActor = aActor;
+}
+
+void FileSystemAccessHandle::UnregisterActor(
+    NotNull<FileSystemAccessHandleParent*> aActor) {
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mActor == aActor);
+
+  mActor = nullptr;
+
+  if (IsInactive() && IsOpen()) {
+    Close();
+  }
 }
 
 bool FileSystemAccessHandle::IsOpen() const { return !mClosed; }
 
 void FileSystemAccessHandle::Close() {
-  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(IsOpen());
 
   LOG(("Closing AccessHandle"));
 
   mClosed = true;
 
   mDataManager->UnlockExclusive(mEntryId);
+}
+
+bool FileSystemAccessHandle::IsInactive() const {
+  return !mRegCount && !mActor;
 }
 
 }  // namespace mozilla::dom
