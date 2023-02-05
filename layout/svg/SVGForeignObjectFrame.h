@@ -12,7 +12,6 @@
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
-#include "nsRegion.h"
 
 class gfxContext;
 
@@ -82,8 +81,6 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
   bool IsDisplayContainer() override { return true; }
 
   gfxMatrix GetCanvasTM();
-
-  nsRect GetInvalidRegion();
 
   // Return our ::-moz-svg-foreign-content anonymous box.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;

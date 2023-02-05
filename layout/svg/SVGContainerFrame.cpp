@@ -234,11 +234,9 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                                         const gfxMatrix& aTransform,
                                         imgDrawingParams& aImgParams,
                                         const nsIntRect* aDirtyRect) {
-  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                   (mState & NS_FRAME_IS_NONDISPLAY) ||
+  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
                    PresContext()->Document()->IsSVGGlyphsDocument(),
-               "If display lists are enabled, only painting of non-display "
-               "SVG should take this code path");
+               "Only painting of non-display SVG should take this code path");
 
   if (StyleEffects()->mOpacity == 0.0) {
     return;
@@ -272,10 +270,9 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
 }
 
 nsIFrame* SVGDisplayContainerFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
-                   (mState & NS_FRAME_IS_NONDISPLAY),
-               "If display lists are enabled, only hit-testing of a "
-               "clipPath's contents should take this code path");
+  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
+               "Only hit-testing of a clipPath's contents should take this "
+               "code path");
   return SVGUtils::HitTestChildren(this, aPoint);
 }
 

@@ -13825,18 +13825,6 @@
   value: ""
   mirror: never
 
-# Enable the use of display-lists for SVG hit-testing.
-- name: svg.display-lists.hit-testing.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Enable the use of display-lists for SVG painting.
-- name: svg.display-lists.painting.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for the new getBBox method from SVG 2 enabled?
 # See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 - name: svg.new-getBBox.enabled

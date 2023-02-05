@@ -61,14 +61,6 @@ using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-bool NS_SVGDisplayListHitTestingEnabled() {
-  return mozilla::StaticPrefs::svg_display_lists_hit_testing_enabled();
-}
-
-bool NS_SVGDisplayListPaintingEnabled() {
-  return mozilla::StaticPrefs::svg_display_lists_painting_enabled();
-}
-
 bool NS_SVGNewGetBBoxEnabled() {
   return mozilla::StaticPrefs::svg_new_getBBox_enabled();
 }
@@ -551,11 +543,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      imgDrawingParams& aImgParams,
                                      const nsIntRect* aDirtyRect) {
-  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                   aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
+  NS_ASSERTION(aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
                    aFrame->PresContext()->Document()->IsSVGGlyphsDocument(),
-               "If display lists are enabled, only painting of non-display "
-               "SVG should take this code path");
+               "Only painting of non-display SVG should take this code path");
 
   ISVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame) {

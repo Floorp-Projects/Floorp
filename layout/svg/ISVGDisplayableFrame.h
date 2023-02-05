@@ -59,12 +59,10 @@ class ISVGDisplayableFrame : public nsQueryFrame {
    * always painted using recursive PaintSVG calls since display list painting
    * would provide no advantages (they wouldn't be retained for invalidation).
    * Displayed SVG is normally painted via a display list tree created under
-   * SVGOuterSVGFrame::BuildDisplayList, unless the
-   * svg.display-lists.painting.enabled pref has been set to false by the user
-   * in which case it is done via an SVGOuterSVGFrame::PaintSVG() call that
-   * recurses over the entire SVG frame tree.  In future we may use PaintSVG()
-   * calls on SVG container frames to avoid display list construction when it
-   * is expensive and unnecessary (see bug 934411).
+   * SVGOuterSVGFrame::BuildDisplayList, In future we may use a PaintSVG() call
+   * that recurses over the entire SVG frame tree on SVG container frames to
+   * avoid display list construction when it is expensive and unnecessary (see
+   * bug 934411).
    *
    * @param aTransform The transform that has to be multiplied onto the
    *   DrawTarget in order for drawing to be in this frame's SVG user space.

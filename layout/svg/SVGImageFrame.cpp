@@ -367,8 +367,7 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     nsRect dirtyRect;  // only used if aDirtyRect is non-null
     if (aDirtyRect) {
-      NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                       (mState & NS_FRAME_IS_NONDISPLAY),
+      NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                    "Display lists handle dirty rect intersection test");
       dirtyRect = ToAppUnits(*aDirtyRect, appUnitsPerDevPx);
 
