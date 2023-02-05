@@ -16,7 +16,6 @@
 
 namespace mozilla {
 
-class PMFCDMChild;
 class PMFMediaEngineChild;
 class RemoteDecoderChild;
 
@@ -123,9 +122,6 @@ class RemoteDecoderManagerChild final
 
   PMFMediaEngineChild* AllocPMFMediaEngineChild();
   bool DeallocPMFMediaEngineChild(PMFMediaEngineChild* actor);
-
-  PMFCDMChild* AllocPMFCDMChild(const nsAString& aKeySystem);
-  bool DeallocPMFCDMChild(PMFCDMChild* actor);
 
  private:
   explicit RemoteDecoderManagerChild(RemoteDecodeIn aLocation);

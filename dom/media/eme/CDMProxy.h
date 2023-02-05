@@ -81,6 +81,18 @@ class CDMProxy {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   // Main thread only.
+  CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
+           bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired)
+      : mKeys(aKeys),
+        mKeySystem(aKeySystem),
+        mCapabilites("CDMProxy::mCDMCaps"),
+        mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired),
+        mPersistentStateRequired(aPersistentStateRequired),
+        mMainThread(GetMainThreadSerialEventTarget()) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  // Main thread only.
   // Loads the CDM corresponding to mKeySystem.
   // Calls MediaKeys::OnCDMCreated() when the CDM is created.
   virtual void Init(PromiseId aPromiseId, const nsAString& aOrigin,
@@ -180,7 +192,7 @@ class CDMProxy {
   virtual void Terminated() = 0;
 
   // Threadsafe.
-  const nsCString& GetNodeId() const { return mNodeId; };
+  virtual const nsCString& GetNodeId() const = 0;
 
   // Main thread only.
   virtual void OnSetSessionId(uint32_t aCreateSessionToken,
@@ -227,9 +239,9 @@ class CDMProxy {
   virtual void ResolvePromise(PromiseId aId) = 0;
 
   // Threadsafe.
-  const nsString& KeySystem() const { return mKeySystem; };
+  virtual const nsString& KeySystem() const = 0;
 
-  DataMutex<CDMCaps>& Capabilites() { return mCapabilites; };
+  virtual DataMutex<CDMCaps>& Capabilites() = 0;
 
   // Main thread only.
   virtual void OnKeyStatusesChange(const nsAString& aSessionId) = 0;
@@ -247,18 +259,6 @@ class CDMProxy {
   virtual ChromiumCDMProxy* AsChromiumCDMProxy() { return nullptr; }
 
  protected:
-  // Main thread only.
-  CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
-           bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired)
-      : mKeys(aKeys),
-        mKeySystem(aKeySystem),
-        mCapabilites("CDMProxy::mCDMCaps"),
-        mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired),
-        mPersistentStateRequired(aPersistentStateRequired),
-        mMainThread(GetMainThreadSerialEventTarget()) {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
   virtual ~CDMProxy() {}
 
   // Helper to enforce that a raw pointer is only accessed on the main thread.

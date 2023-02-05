@@ -6,10 +6,6 @@
 #ifdef MOZ_WMF_MEDIA_ENGINE
   include protocol PMFMediaEngine;
 #endif
-#ifdef MOZ_MF_CDM
-  include protocol PMFCDM;
-#endif
-
 include protocol PTexture;
 include protocol PRemoteDecoder;
 include LayersSurfaces;
@@ -45,16 +41,10 @@ sync protocol PRemoteDecoderManager
 #ifdef MOZ_WMF_MEDIA_ENGINE
   manages PMFMediaEngine;
 #endif
-#ifdef MOZ_MF_CDM
-  manages PMFCDM;
-#endif
 
 parent:
 #ifdef MOZ_WMF_MEDIA_ENGINE
   async PMFMediaEngine();
-#endif
-#ifdef MOZ_MF_CDM
-  async PMFCDM(nsString keySystem);
 #endif
   async PRemoteDecoder(RemoteDecoderInfoIPDL info,
                        OptionSet options,
