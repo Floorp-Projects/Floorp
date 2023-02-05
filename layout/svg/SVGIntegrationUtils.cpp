@@ -620,12 +620,9 @@ static MaskPaintResult CreateAndPaintMaskSurface(
 }
 
 static bool ValidateSVGFrame(nsIFrame* aFrame) {
-#ifdef DEBUG
   NS_ASSERTION(!aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
-                   (NS_SVGDisplayListPaintingEnabled() &&
-                    !aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)),
+                   !aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Should not use SVGIntegrationUtils on this SVG frame");
-#endif
 
   bool hasSVGLayout = aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT);
   if (hasSVGLayout) {

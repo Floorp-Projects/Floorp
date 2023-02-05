@@ -2980,9 +2980,6 @@ void SVGTextFrame::FindCloserFrameForSelection(
 
     if (!userRect.IsEmpty()) {
       gfxMatrix m;
-      if (!NS_SVGDisplayListHitTestingEnabled()) {
-        m = GetCanvasTM();
-      }
       nsRect rect =
           SVGUtils::ToCanvasBounds(userRect.ToThebesRect(), m, presContext);
 
@@ -3143,8 +3140,7 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
 
   // Check if we need to draw anything.
   if (aDirtyRect) {
-    NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                     (mState & NS_FRAME_IS_NONDISPLAY),
+    NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                  "Display lists handle dirty rect intersection test");
     nsRect dirtyRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width,
                      aDirtyRect->height);

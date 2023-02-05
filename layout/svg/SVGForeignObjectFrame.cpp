@@ -193,10 +193,8 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      imgDrawingParams& aImgParams,
                                      const nsIntRect* aDirtyRect) {
-  NS_ASSERTION(
-      !NS_SVGDisplayListPaintingEnabled() || (mState & NS_FRAME_IS_NONDISPLAY),
-      "If display lists are enabled, only painting of non-display "
-      "SVG should take this code path");
+  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
+               "Only painting of non-display SVG should take this code path");
 
   if (IsDisabled()) {
     return;
@@ -216,9 +214,6 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   /* Check if we need to draw anything. */
   if (aDirtyRect) {
-    NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
-                     (mState & NS_FRAME_IS_NONDISPLAY),
-                 "Display lists handle dirty rect intersection test");
     // Transform the dirty rect into app units in our userspace.
     gfxMatrix invmatrix = aTransform;
     DebugOnly<bool> ok = invmatrix.Invert();
@@ -283,10 +278,9 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 }
 
 nsIFrame* SVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
-                   (mState & NS_FRAME_IS_NONDISPLAY),
-               "If display lists are enabled, only hit-testing of a "
-               "clipPath's contents should take this code path");
+  NS_ASSERTION(
+      HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
+      "Only hit-testing of non-display SVG should take this code path");
 
   if (IsDisabled() || HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     return nullptr;
@@ -537,21 +531,6 @@ void SVGForeignObjectFrame::DoReflow() {
                     ReflowChildFlags::NoMoveFrame);
 
   mInReflow = false;
-}
-
-nsRect SVGForeignObjectFrame::GetInvalidRegion() {
-  MOZ_ASSERT(!NS_SVGDisplayListPaintingEnabled(),
-             "Only called by nsDisplayOuterSVG code");
-
-  nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (kid->HasInvalidFrameInSubtree()) {
-    gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
-    r.Scale(1.0 / AppUnitsPerCSSPixel());
-    nsRect rect = SVGUtils::ToCanvasBounds(r, GetCanvasTM(), PresContext());
-    rect = SVGUtils::GetPostFilterInkOverflowRect(this, rect);
-    return rect;
-  }
-  return nsRect();
 }
 
 void SVGForeignObjectFrame::AppendDirectlyOwnedAnonBoxes(
