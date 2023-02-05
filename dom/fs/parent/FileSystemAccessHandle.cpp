@@ -27,21 +27,22 @@ FileSystemAccessHandle::~FileSystemAccessHandle() {
 }
 
 // static
-Result<fs::Registered<FileSystemAccessHandle>, nsresult>
-FileSystemAccessHandle::Create(
+RefPtr<FileSystemAccessHandle::CreatePromise> FileSystemAccessHandle::Create(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const fs::EntryId& aEntryId) {
   MOZ_ASSERT(aDataManager);
   aDataManager->AssertIsOnIOTarget();
 
   if (!aDataManager->LockExclusive(aEntryId)) {
-    return Err(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return CreatePromise::CreateAndReject(
+        NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, __func__);
   }
 
   RefPtr<FileSystemAccessHandle> accessHandle =
       new FileSystemAccessHandle(std::move(aDataManager), aEntryId);
 
-  return fs::Registered<FileSystemAccessHandle>(accessHandle);
+  return CreatePromise::CreateAndResolve(
+      fs::Registered<FileSystemAccessHandle>(accessHandle), __func__);
 }
 
 void FileSystemAccessHandle::Register() { ++mRegCount; }

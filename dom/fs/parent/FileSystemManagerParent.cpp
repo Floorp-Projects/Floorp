@@ -120,57 +120,72 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  auto resolveAndReturn = [aResolver](nsresult rv) {
-    aResolver(rv);
-    return IPC_OK();
-  };
+  EntryId entryId = aRequest.entryId();
 
-  QM_TRY_UNWRAP(
-      fs::Registered<FileSystemAccessHandle> accessHandle,
-      FileSystemAccessHandle::Create(mDataManager, aRequest.entryId()),
-      resolveAndReturn);
+  FileSystemAccessHandle::Create(mDataManager, entryId)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this), request = std::move(aRequest),
+           resolver = std::move(aResolver)](
+              FileSystemAccessHandle::CreatePromise::ResolveOrRejectValue&&
+                  aValue) {
+            if (aValue.IsReject()) {
+              resolver(aValue.RejectValue());
+              return;
+            }
 
-  nsString type;
-  fs::TimeStamp lastModifiedMilliSeconds;
-  fs::Path path;
-  nsCOMPtr<nsIFile> file;
-  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
-         resolveAndReturn);
+            fs::Registered<FileSystemAccessHandle> accessHandle =
+                std::move(aValue.ResolveValue());
 
-  if (LOG_ENABLED()) {
-    nsAutoString path;
-    if (NS_SUCCEEDED(file->GetPath(path))) {
-      LOG(("Opening SyncAccessHandle %s", NS_ConvertUTF16toUTF8(path).get()));
-    }
-  }
+            auto resolveAndReturn = [&resolver](nsresult rv) { resolver(rv); };
 
-  QM_TRY_UNWRAP(
-      nsCOMPtr<nsIRandomAccessStream> stream,
-      CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
-                                   mDataManager->OriginMetadataRef(),
-                                   quota::Client::FILESYSTEM, file, -1, -1,
-                                   nsIFileRandomAccessStream::DEFER_OPEN),
-      resolveAndReturn);
+            nsString type;
+            fs::TimeStamp lastModifiedMilliSeconds;
+            fs::Path path;
+            nsCOMPtr<nsIFile> file;
+            QM_TRY(MOZ_TO_RESULT(
+                       self->mDataManager->MutableDatabaseManagerPtr()->GetFile(
+                           request.entryId(), type, lastModifiedMilliSeconds,
+                           path, file)),
+                   resolveAndReturn);
 
-  EnsureStreamCallbacks();
+            if (LOG_ENABLED()) {
+              nsAutoString path;
+              if (NS_SUCCEEDED(file->GetPath(path))) {
+                LOG(("Opening SyncAccessHandle %s",
+                     NS_ConvertUTF16toUTF8(path).get()));
+              }
+            }
 
-  RandomAccessStreamParams streamParams =
-      mozilla::ipc::SerializeRandomAccessStream(
-          WrapMovingNotNullUnchecked(std::move(stream)), mStreamCallbacks);
+            QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
+                          CreateFileRandomAccessStream(
+                              quota::PERSISTENCE_TYPE_DEFAULT,
+                              self->mDataManager->OriginMetadataRef(),
+                              quota::Client::FILESYSTEM, file, -1, -1,
+                              nsIFileRandomAccessStream::DEFER_OPEN),
+                          resolveAndReturn);
 
-  auto accessHandleParent =
-      MakeRefPtr<FileSystemAccessHandleParent>(accessHandle.inspect());
+            self->EnsureStreamCallbacks();
 
-  if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
+            RandomAccessStreamParams streamParams =
+                mozilla::ipc::SerializeRandomAccessStream(
+                    WrapMovingNotNullUnchecked(std::move(stream)),
+                    self->mStreamCallbacks);
 
-  accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
+            auto accessHandleParent = MakeRefPtr<FileSystemAccessHandleParent>(
+                accessHandle.inspect());
 
-  aResolver(FileSystemAccessHandleProperties(std::move(streamParams),
-                                             accessHandleParent, nullptr));
+            if (!self->SendPFileSystemAccessHandleConstructor(
+                    accessHandleParent)) {
+              resolver(NS_ERROR_FAILURE);
+              return;
+            }
+
+            accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
+
+            resolver(FileSystemAccessHandleProperties(
+                std::move(streamParams), accessHandleParent, nullptr));
+          });
 
   return IPC_OK();
 }
