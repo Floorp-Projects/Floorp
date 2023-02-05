@@ -126,7 +126,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   };
 
   QM_TRY_UNWRAP(
-      RefPtr<FileSystemAccessHandle> accessHandle,
+      fs::Registered<FileSystemAccessHandle> accessHandle,
       FileSystemAccessHandle::Create(mDataManager, aRequest.entryId()),
       resolveAndReturn);
 
@@ -160,12 +160,14 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
           WrapMovingNotNullUnchecked(std::move(stream)), mStreamCallbacks);
 
   auto accessHandleParent =
-      MakeRefPtr<FileSystemAccessHandleParent>(accessHandle);
+      MakeRefPtr<FileSystemAccessHandleParent>(accessHandle.inspect());
 
   if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
     aResolver(NS_ERROR_FAILURE);
     return IPC_OK();
   }
+
+  accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
 
   aResolver(FileSystemAccessHandleProperties(std::move(streamParams),
                                              accessHandleParent, nullptr));

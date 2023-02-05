@@ -29,6 +29,8 @@ void FileSystemAccessHandleParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   DEBUGONLY(mActorDestroyed = true);
 
+  mAccessHandle->UnregisterActor(WrapNotNullUnchecked(this));
+
   mAccessHandle = nullptr;
 }
 
