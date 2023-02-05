@@ -1154,6 +1154,24 @@ void CookieService::GetCookiesForURI(
   aCookieList.Sort(CompareCookiesForSending());
 }
 
+static bool ContainsUnicodeChars(const nsCString& str) {
+  const auto* start = str.BeginReading();
+  const auto* end = str.EndReading();
+
+  return std::find_if(start, end, [](unsigned char c) { return c >= 0x80; }) !=
+         end;
+}
+
+static void RecordUnicodeTelemetry(const CookieStruct& cookieData) {
+  auto label = Telemetry::LABELS_NETWORK_COOKIE_UNICODE_BYTE::none;
+  if (ContainsUnicodeChars(cookieData.name())) {
+    label = Telemetry::LABELS_NETWORK_COOKIE_UNICODE_BYTE::unicodeName;
+  } else if (ContainsUnicodeChars(cookieData.value())) {
+    label = Telemetry::LABELS_NETWORK_COOKIE_UNICODE_BYTE::unicodeValue;
+  }
+  Telemetry::AccumulateCategorical(label);
+}
+
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
 bool CookieService::CanSetCookie(
@@ -1224,6 +1242,8 @@ bool CookieService::CanSetCookie(
         "CookieOversize"_ns, params);
     return newCookie;
   }
+
+  RecordUnicodeTelemetry(aCookieData);
 
   if (!CookieCommons::CheckName(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
@@ -2531,6 +2551,8 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
     if (!CookieCommons::CheckNameAndValueSize(cookieData)) {
       return false;
     }
+
+    RecordUnicodeTelemetry(cookieData);
 
     if (!CookieCommons::CheckName(cookieData)) {
       return false;
