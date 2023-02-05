@@ -12,7 +12,7 @@ const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
 );
 const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
+    "resource://gre/modules/ExtensionCommon.jsm"
 );
 
 function getBrowsers() {
@@ -83,9 +83,35 @@ function getBrowsers() {
 }
 
 function OpenLinkInExternal(url) {
+    let browsers = getBrowsers();
+    let browser;
+    if (url.startsWith("http")) {
+        let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+            Ci.nsIWindowsRegKey
+        );
+        key.open(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+            "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",
+            Ci.nsIWindowsRegKey.ACCESS_READ
+        );
+        let regValue = key.readStringValue("ProgID");
+        browser = browsers.filter(browser => browser["urlAssociations"]["http"] === regValue)[0];
+    } else if (url.startsWith("https")) {
+        let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+            Ci.nsIWindowsRegKey
+        );
+        key.open(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+            "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\https\\UserChoice",
+            Ci.nsIWindowsRegKey.ACCESS_READ
+        );
+        let regValue = key.readStringValue("ProgID");
+        browser = browsers.filter(browser => browser["urlAssociations"]["https"] === regValue)[0];
+    }
+    let browserPath = browser["path"];
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    process.init(FileUtils.File(getBrowsers()[0]["path"]));
-    process.runAsync([url], 1) 
+    process.init(FileUtils.File(browserPath));
+    process.runAsync([url], 1);
 }
 
 let seenDocuments = new WeakSet();
@@ -105,7 +131,7 @@ let documentObserver = {
                 }
                 let openLinkInExternal = document_.createXULElement("menuitem");
                 openLinkInExternal.id = "open-link-in-external";
-                openLinkInExternal.label = "Vivaldiで開く";
+                openLinkInExternal.label = "デフォルトのブラウザーで開く";
                 openLinkInExternal.setAttribute(
                     "oncommand",
                     "OpenLinkInExternalMenu(TabContextMenu.contextTab.linkedBrowser.currentURI.spec);"
