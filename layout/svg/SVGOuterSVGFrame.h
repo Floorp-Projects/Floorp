@@ -203,7 +203,6 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
 
   float mFullZoom;
 
-  bool mViewportInitialized;
   bool mIsRootContent;
   bool mIsInObjectOrEmbed;
   bool mIsInIframe;
