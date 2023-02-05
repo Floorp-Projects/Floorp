@@ -11,6 +11,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 
@@ -48,7 +49,7 @@ class FileSystemAccessHandle {
       RefPtr<fs::data::FileSystemDataManager> aDataManager,
       const fs::EntryId& aEntryId);
 
-  NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(FileSystemAccessHandle)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemAccessHandle)
 
   void Register();
 
@@ -70,10 +71,14 @@ class FileSystemAccessHandle {
 
   bool IsInactive() const;
 
+  RefPtr<BoolPromise> BeginInit();
+
   const fs::EntryId mEntryId;
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
   FileSystemAccessHandleParent* mActor;
   nsAutoRefCnt mRegCount;
+  bool mLocked;
+  bool mRegistered;
   bool mClosed;
 };
 

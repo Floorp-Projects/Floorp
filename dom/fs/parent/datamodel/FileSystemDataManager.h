@@ -28,6 +28,7 @@ class Result;
 
 namespace dom {
 
+class FileSystemAccessHandle;
 class FileSystemManagerParent;
 
 namespace fs {
@@ -104,6 +105,10 @@ class FileSystemDataManager
 
   void UnregisterActor(NotNull<FileSystemManagerParent*> aActor);
 
+  void RegisterAccessHandle(NotNull<FileSystemAccessHandle*> aAccessHandle);
+
+  void UnregisterAccessHandle(NotNull<FileSystemAccessHandle*> aAccessHandle);
+
   bool IsOpen() const { return mState == State::Open; }
 
   RefPtr<BoolPromise> OnOpen();
@@ -138,6 +143,7 @@ class FileSystemDataManager
   // Things touched on background thread only.
   struct BackgroundThreadAccessible {
     nsTHashSet<FileSystemManagerParent*> mActors;
+    nsTHashSet<FileSystemAccessHandle*> mAccessHandles;
   };
   ThreadBound<BackgroundThreadAccessible> mBackgroundThreadAccessible;
 

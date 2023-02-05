@@ -20,6 +20,8 @@ FileSystemAccessHandle::FileSystemAccessHandle(
       mDataManager(std::move(aDataManager)),
       mActor(nullptr),
       mRegCount(0),
+      mLocked(false),
+      mRegistered(false),
       mClosed(false) {}
 
 FileSystemAccessHandle::~FileSystemAccessHandle() {
@@ -33,16 +35,19 @@ RefPtr<FileSystemAccessHandle::CreatePromise> FileSystemAccessHandle::Create(
   MOZ_ASSERT(aDataManager);
   aDataManager->AssertIsOnIOTarget();
 
-  if (!aDataManager->LockExclusive(aEntryId)) {
-    return CreatePromise::CreateAndReject(
-        NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, __func__);
-  }
-
   RefPtr<FileSystemAccessHandle> accessHandle =
       new FileSystemAccessHandle(std::move(aDataManager), aEntryId);
 
-  return CreatePromise::CreateAndResolve(
-      fs::Registered<FileSystemAccessHandle>(accessHandle), __func__);
+  return accessHandle->BeginInit()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [accessHandle = fs::Registered<FileSystemAccessHandle>(accessHandle)](
+          const BoolPromise::ResolveOrRejectValue& value) {
+        if (value.IsReject()) {
+          return CreatePromise::CreateAndReject(value.RejectValue(), __func__);
+        }
+
+        return CreatePromise::CreateAndResolve(accessHandle, __func__);
+      });
 }
 
 void FileSystemAccessHandle::Register() { ++mRegCount; }
@@ -85,11 +90,43 @@ void FileSystemAccessHandle::Close() {
 
   mClosed = true;
 
-  mDataManager->UnlockExclusive(mEntryId);
+  if (mLocked) {
+    mDataManager->UnlockExclusive(mEntryId);
+  }
+
+  InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
+              [self = RefPtr(this)]() {
+                if (self->mRegistered) {
+                  self->mDataManager->UnregisterAccessHandle(WrapNotNull(self));
+                }
+
+                self->mDataManager = nullptr;
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 }
 
 bool FileSystemAccessHandle::IsInactive() const {
   return !mRegCount && !mActor;
+}
+
+RefPtr<BoolPromise> FileSystemAccessHandle::BeginInit() {
+  if (!mDataManager->LockExclusive(mEntryId)) {
+    return BoolPromise::CreateAndReject(
+        NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, __func__);
+  }
+
+  mLocked = true;
+
+  return InvokeAsync(
+      mDataManager->MutableBackgroundTargetPtr(), __func__,
+      [self = RefPtr(this)]() {
+        self->mDataManager->RegisterAccessHandle(WrapNotNull(self));
+
+        self->mRegistered = true;
+
+        return BoolPromise::CreateAndResolve(true, __func__);
+      });
 }
 
 }  // namespace mozilla::dom
