@@ -82,32 +82,29 @@ function getBrowsers() {
     return browsers;
 }
 
-function OpenLinkInExternal(url) {
-    let browsers = getBrowsers();
-    let browser;
-    if (url.startsWith("http")) {
-        let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-            Ci.nsIWindowsRegKey
-        );
-        key.open(
-            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",
-            Ci.nsIWindowsRegKey.ACCESS_READ
-        );
-        let regValue = key.readStringValue("ProgID");
-        browser = browsers.filter(browser => browser["urlAssociations"]["http"] === regValue)[0];
-    } else if (url.startsWith("https")) {
-        let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-            Ci.nsIWindowsRegKey
-        );
-        key.open(
-            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\https\\UserChoice",
-            Ci.nsIWindowsRegKey.ACCESS_READ
-        );
-        let regValue = key.readStringValue("ProgID");
-        browser = browsers.filter(browser => browser["urlAssociations"]["https"] === regValue)[0];
+function getDefaultBrowser(protocol, browsers = null) {
+    if (browsers === null) {
+        browsers = getBrowsers();
     }
+    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+        Ci.nsIWindowsRegKey
+    );
+    key.open(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        `Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\${protocol}\\UserChoice`,
+        Ci.nsIWindowsRegKey.ACCESS_READ
+    );
+    let regValue = key.readStringValue("ProgID");
+    let browser = browsers.filter(browser => browser["urlAssociations"][protocol] === regValue)[0];
+    return browser;
+}
+
+function OpenLinkInExternal(url) {
+    let protocol;
+    if (url.startsWith("http")) protocol = "http";
+    if (url.startsWith("https")) protocol = "https";
+    let browsers = getBrowsers();
+    let browser = getDefaultBrowser(protocol, browsers);
     let browserPath = browser["path"];
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(FileUtils.File(browserPath));
