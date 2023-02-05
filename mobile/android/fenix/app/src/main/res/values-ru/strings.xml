@@ -89,7 +89,7 @@
     <string name="open_in_app_cfr_negative_button_text">Пропустить</string>
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Убрать</string>
+    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Убрать</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -179,7 +179,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дополнения</string>
     <!-- Browser menu button that opens account settings -->
-    <string name="browser_menu_account_settings">Сведения об учётной записи</string>
+    <string name="browser_menu_account_settings">Ваша учётка</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Дополнения отсутствуют</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -452,11 +452,11 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Специальные возможности</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Пользовательский сервер Аккаунта Firefox</string>
+    <string name="preferences_override_fxa_server">Пользовательский сервер аккаунта Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Пользовательский сервер Синхронизации</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Сервер Аккаунта/Синхронизации Firefox был изменён. Закрываем приложение, чтобы применить изменения…</string>
+    <string name="toast_override_fxa_sync_server_done">Сервер аккаунтов/синхронизации Firefox был изменён. Закрываем приложение, чтобы применить изменения…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Аккаунт</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -500,7 +500,7 @@
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
     <string name="preferences_search_synced_tabs">Поиск облачных вкладок</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Настройки Аккаунта</string>
+    <string name="preferences_account_settings">Настройки аккаунта</string>
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Автозаполнение сетевых адресов</string>
@@ -852,7 +852,7 @@
     <!-- Text shown in the tabs tray inactive tabs section -->
     <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Недавно закрытые</string>
     <!-- Text shown in the menu to view account settings -->
-    <string name="tab_tray_menu_account_settings">Настройки Аккаунта</string>
+    <string name="tab_tray_menu_account_settings">Настройки аккаунта</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Настройки вкладок</string>
     <!-- Text shown in the menu for closing all tabs -->
