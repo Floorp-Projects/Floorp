@@ -981,7 +981,8 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
                                    LOCAL_GL_TEXTURE_EXTERNAL);
   surfaceTexture->UpdateTexImage();
   const auto transform3 = Mat3::I();
-  const auto srcOrigin = OriginPos::TopLeft;
+  // const auto srcOrigin = OriginPos::TopLeft;
+  const auto srcOrigin = OriginPos::BottomLeft;
   const bool yFlip = (srcOrigin != destOrigin);
   const auto& prog = GetDrawBlitProg(
       {kFragHeader_TexExt, {kFragSample_OnePlane, kFragConvert_None}});
