@@ -39,9 +39,6 @@
   font-size: 15px;
   /* override --in-content-page-background from common-shared.css */
   background-color: transparent;
-}
-
-body {
   --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
   --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
   --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
@@ -58,7 +55,9 @@ body {
   --in-content-button-background-hover: var(--fxview-element-background-hover);
   --in-content-button-background-active: var(--fxview-element-background-active);
   --in-content-button-text-color-hover: var(--fxview-text-color-hover);
+}
 
+body {
   display: flex;
   justify-content: center;
   padding-block: var(--header-spacing) var(--footer-spacing);
@@ -69,12 +68,12 @@ body {
   color: var(--newtab-text-primary-color);
 }
 
-body:not([lwt-newtab]) {
+:root:not([lwt-newtab]) {
   --in-content-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
 @media (prefers-color-scheme: dark) {
-  body {
+  :root {
     --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 80%, white);
     --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 60%, white);
     --newtab-background-color-secondary: #42414d;
@@ -82,7 +81,7 @@ body:not([lwt-newtab]) {
 }
 
 @media (prefers-contrast) {
-  body {
+  :root {
     --fxview-element-background-hover: ButtonText;
     --fxview-element-background-active: ButtonText;
     --fxview-text-color-hover: ButtonFace;

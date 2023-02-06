@@ -23,7 +23,7 @@ $shadow-card: 0 2px 6px rgba(0, 0, 0, 0.15);
 $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
 // Default theme
-body {
+:root {
   // General styles
   --newtab-background-color: #{$in-content-page-background};
   --newtab-background-color-secondary: #{$newtab-background-secondary};
@@ -93,7 +93,7 @@ body {
 }
 
 @media (prefers-contrast) {
-  body {
+  :root {
     --newtab-text-secondary-color: var(--newtab-text-primary-color);
   }
 }
