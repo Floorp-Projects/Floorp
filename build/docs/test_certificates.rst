@@ -17,9 +17,9 @@ To add a new **CA**, add a ``${cert_name}.ca.keyspec`` as well as a correspondin
 
 .. hint::
 
-   * The full syntax for .certspec files is documented at https://searchfox.org/mozilla-central/source/security/manager/ssl/tests/unit/pycert.py
+   * The full syntax for .certspec files is documented at https://searchfox.org/mozilla-central/source/security/manager/tools/pycert.py
 
-   * The full syntax for .keyspec files is documented at https://searchfox.org/mozilla-central/source/security/manager/ssl/tests/unit/pykey.py
+   * The full syntax for .keyspec files is documented at https://searchfox.org/mozilla-central/source/security/manager/tools/pykey.py
 
 Then regenerate the certificates by running:::
 
