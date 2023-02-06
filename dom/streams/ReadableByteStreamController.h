@@ -309,8 +309,6 @@ struct PullIntoDescriptor final
   ~PullIntoDescriptor() = default;
 };
 
-namespace streams_abstract {
-
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerRespond(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv);
@@ -360,8 +358,6 @@ MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamControllerFromUnderlyingSource(
     JS::Handle<JSObject*> aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     ErrorResult& aRv);
-
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 

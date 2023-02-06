@@ -58,7 +58,6 @@ class TransformStreamDefaultController final : public nsISupports,
   RefPtr<TransformerAlgorithmsBase> mTransformerAlgorithms;
 };
 
-namespace streams_abstract {
 void SetUpTransformStreamDefaultController(
     JSContext* aCx, TransformStream& aStream,
     TransformStreamDefaultController& aController,
@@ -67,7 +66,6 @@ void SetUpTransformStreamDefaultController(
 void SetUpTransformStreamDefaultControllerFromTransformer(
     JSContext* aCx, TransformStream& aStream,
     JS::Handle<JSObject*> aTransformer, Transformer& aTransformerDict);
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 

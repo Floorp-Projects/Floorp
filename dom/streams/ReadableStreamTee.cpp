@@ -26,8 +26,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ReadableStreamDefaultTeeSourceAlgorithms,
                                    UnderlyingSourceAlgorithmsBase, mTeeState)
 NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultTeeSourceAlgorithms,
@@ -959,7 +957,6 @@ void ForwardReaderError(TeeState* aTeeState,
       RefPtr(aTeeState), RefPtr(aThisReader));
 }
 
-namespace streams_abstract {
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
                            nsTArray<RefPtr<ReadableStream>>& aResult,
@@ -1006,6 +1003,4 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   aResult.AppendElement(teeState->Branch1());
   aResult.AppendElement(teeState->Branch2());
 }
-}  // namespace streams_abstract
-
 }  // namespace mozilla::dom
