@@ -213,13 +213,17 @@ add_task(function normandy() {
 
 add_task(function normandyErrorHandling() {
   return NormandyTestUtils.decorate(
-    NormandyTestUtils.withStub(PreferenceExperiments, "getAllActive", {
-      returnValue: Promise.reject("Expected error - PreferenceExperiments"),
-    }),
-    NormandyTestUtils.withStub(AddonStudies, "getAllActive", {
+    NormandyTestUtils.withStub(
+      PreferenceExperiments,
+      "getAllActiveExperiments",
+      {
+        returnValue: Promise.reject("Expected error - PreferenceExperiments"),
+      }
+    ),
+    NormandyTestUtils.withStub(AddonStudies, "getAllActiveExperiments", {
       returnValue: Promise.reject("Expected error - AddonStudies"),
     }),
-    NormandyTestUtils.withStub(PreferenceRollouts, "getAllActive", {
+    NormandyTestUtils.withStub(PreferenceRollouts, "getAllActiveExperiments", {
       returnValue: Promise.reject("Expected error - PreferenceRollouts"),
     }),
     async function testNormandyErrorHandling() {

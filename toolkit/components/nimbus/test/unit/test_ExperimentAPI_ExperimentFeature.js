@@ -238,7 +238,7 @@ add_task(async function test_onUpdate_before_store_ready() {
   const stub = sandbox.stub();
   const manager = ExperimentFakes.manager();
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
-  sandbox.stub(manager.store, "getAllActive").returns([
+  sandbox.stub(manager.store, "getAllActiveExperiments").returns([
     ExperimentFakes.experiment("foo-experiment", {
       branch: {
         slug: "control",
@@ -293,7 +293,7 @@ add_task(async function test_ExperimentFeature_test_ready_late() {
     },
   });
 
-  sandbox.stub(manager.store, "getAllRollouts").returns([rollout]);
+  sandbox.stub(manager.store, "getAllActiveRollouts").returns([rollout]);
 
   await manager.onStartup();
 

@@ -164,7 +164,7 @@ var AddonStudies = {
   },
 
   async init() {
-    for (const study of await this.getAllActive()) {
+    for (const study of await this.getAllActiveExperiments()) {
       // If an active study's add-on has been removed since we last ran, stop it.
       const addon = await lazy.AddonManager.getAddonByID(study.addonId);
       if (!addon) {
@@ -247,7 +247,7 @@ var AddonStudies = {
     },
 
     async migration02RemoveOldAddonStudyAction() {
-      const studies = await AddonStudies.getAllActive({
+      const studies = await AddonStudies.getAllActiveExperiments({
         branched: AddonStudies.FILTER_NOT_BRANCHED,
       });
       if (!studies.length) {
@@ -340,7 +340,7 @@ var AddonStudies = {
    * Fetch all studies in storage.
    * @return {Array<Study>}
    */
-  async getAllActive(options) {
+  async getAllActiveExperiments(options) {
     return (await this.getAll(options)).filter(study => study.active);
   },
 

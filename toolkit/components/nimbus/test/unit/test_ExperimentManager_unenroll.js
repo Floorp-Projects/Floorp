@@ -394,7 +394,7 @@ add_task(async function test_remove_rollout_onFinalize() {
   const manager = ExperimentFakes.manager(store);
   const rollout = ExperimentFakes.rollout("foo");
 
-  sinon.stub(store, "getAllRollouts").returns([rollout]);
+  sinon.stub(store, "getAllActiveRollouts").returns([rollout]);
   sinon.stub(store, "get").returns(rollout);
   sinon.spy(manager, "unenroll");
   sinon.spy(manager, "sendFailureTelemetry");
@@ -427,7 +427,7 @@ add_task(async function test_rollout_telemetry_events() {
   globalSandbox.spy(TelemetryEnvironment, "setExperimentInactive");
   globalSandbox.spy(TelemetryEvents, "sendEvent");
 
-  sinon.stub(store, "getAllRollouts").returns([rollout]);
+  sinon.stub(store, "getAllActiveRollouts").returns([rollout]);
   sinon.stub(store, "get").returns(rollout);
   sinon.spy(manager, "sendFailureTelemetry");
 
