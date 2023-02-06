@@ -786,6 +786,41 @@ browser.ui:
       - 'main'
 
 browser.ui.interaction:
+  all_tabs_panel_dragstart_tab_event_count:
+    bug_numbers:
+      - 1804722
+    description: >
+      Records a count of how many times a drag event started for a tab within the All
+      Tabs panel.
+    expires: never
+    kind: uint
+    notification_emails:
+      - shong@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  all_tabs_panel_entrypoint:
+    bug_numbers:
+      - 1804722
+    description: >
+      Records a count of how many times the All Tabs Panel was opened, keyed on a string
+      describing the entrypoint.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - shong@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   keyboard:
     bug_numbers:
       - 1620358
@@ -906,6 +941,25 @@ browser.ui.interaction:
     notification_emails:
       - shong@mozilla.com
       - dtownsend@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  tabs_context_entrypoint:
+    bug_numbers:
+      - 1804722
+    description: >
+      Records a count for each entrypoint (the container of the trigger node) when an
+      item from the tabs context menu is selected.
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - shong@mozilla.com
+      - mconley@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

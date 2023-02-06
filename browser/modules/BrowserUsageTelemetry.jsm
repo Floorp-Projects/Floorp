@@ -110,9 +110,14 @@ const BROWSER_UI_CONTAINER_IDS = {
   "page-action-buttons": "pageaction-urlbar",
   pageActionPanel: "pageaction-panel",
   "unified-extensions-area": "unified-extensions-area",
+  "allTabsMenu-allTabsView": "alltabs-menu",
 
   // This should appear last as some of the above are inside the nav bar.
   "nav-bar": "nav-bar",
+};
+
+const ENTRYPOINT_TRACKED_CONTEXT_MENU_IDS = {
+  [BROWSER_UI_CONTAINER_IDS.tabContextMenu]: "tabs-context-entrypoint",
 };
 
 // A list of the expected panes in about:preferences
@@ -853,6 +858,21 @@ let BrowserUsageTelemetry = {
       }
       if (SET_USAGE_PREF_BUTTONS.includes(item)) {
         Services.prefs.setBoolPref(`browser.engagement.${item}.has-used`, true);
+      }
+    }
+
+    if (ENTRYPOINT_TRACKED_CONTEXT_MENU_IDS[source]) {
+      let contextMenu = ENTRYPOINT_TRACKED_CONTEXT_MENU_IDS[source];
+      let triggerContainer = this._getWidgetContainer(
+        node.closest("menupopup")?.triggerNode
+      );
+      if (triggerContainer) {
+        let scalar = `browser.ui.interaction.${contextMenu.replace(/-/g, "_")}`;
+        Services.telemetry.keyedScalarAdd(
+          scalar,
+          telemetryId(triggerContainer),
+          1
+        );
       }
     }
   },
