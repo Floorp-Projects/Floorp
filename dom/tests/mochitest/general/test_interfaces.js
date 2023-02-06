@@ -401,12 +401,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "EventTarget", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "FeaturePolicyViolationReportBody",
-    insecureContext: true,
-    nightly: true,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "File", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "FileList", insecureContext: true },
