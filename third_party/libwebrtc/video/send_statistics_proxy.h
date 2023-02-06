@@ -126,9 +126,9 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
   void FrameCountUpdated(const FrameCounts& frame_counts,
                          uint32_t ssrc) override;
 
+  // From SendSideDelayObserver.
   void SendSideDelayUpdated(int avg_delay_ms,
                             int max_delay_ms,
-                            uint64_t total_delay_ms,
                             uint32_t ssrc) override;
 
  private:

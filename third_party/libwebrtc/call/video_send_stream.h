@@ -77,9 +77,10 @@ class VideoSendStream {
     // TODO(holmer): Move bitrate_bps out to the webrtc::Call layer.
     int total_bitrate_bps = 0;
     int retransmit_bitrate_bps = 0;
+    // `avg_delay_ms` and `max_delay_ms` are only used in tests. Consider
+    // deleting.
     int avg_delay_ms = 0;
     int max_delay_ms = 0;
-    uint64_t total_packet_send_delay_ms = 0;
     StreamDataCounters rtp_stats;
     RtcpPacketTypeCounter rtcp_packet_type_counts;
     // A snapshot of the most recent Report Block with additional data of
