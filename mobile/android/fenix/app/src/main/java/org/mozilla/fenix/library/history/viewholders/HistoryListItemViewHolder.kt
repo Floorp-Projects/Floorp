@@ -73,9 +73,9 @@ class HistoryListItemViewHolder(
             is History.Group -> {
                 val numChildren = item.items.size - groupPendingDeletionCount
                 val stringId = if (numChildren == 1) {
-                    R.string.history_search_group_site
+                    R.string.history_search_group_site_1
                 } else {
-                    R.string.history_search_group_sites
+                    R.string.history_search_group_sites_1
                 }
                 String.format(itemView.context.getString(stringId), numChildren)
             }

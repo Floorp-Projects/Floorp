@@ -314,9 +314,9 @@ private fun RecentlyVisitedCaption(
     modifier: Modifier,
 ) {
     val stringId = if (count == 1) {
-        R.string.history_search_group_site
+        R.string.history_search_group_site_1
     } else {
-        R.string.history_search_group_sites
+        R.string.history_search_group_sites_1
     }
 
     Text(
