@@ -349,7 +349,7 @@ pref("browser.theme.colorway-closet", true);
 // theme with the same id (as part of preparing to remove from mozilla-central
 // all the expired built-in colorways themes, after existing users have been
 // migrated to colorways themes hosted on AMO).
-pref("browser.theme.colorway-migration", false);
+pref("browser.theme.colorway-migration", true);
 
 // Whether using `ctrl` when hitting return/enter in the URL bar
 // (or clicking 'go') should prefix 'www.' and suffix
