@@ -7,8 +7,9 @@
 #ifndef MOZILLA_GFX_RenderAndroidHardwareBufferTextureHost_H
 #define MOZILLA_GFX_RenderAndroidHardwareBufferTextureHost_H
 
+#include "GLContextTypes.h"
 #include "GLTypes.h"
-#include "RenderTextureHost.h"
+#include "RenderTextureHostSWGL.h"
 
 namespace mozilla {
 
@@ -18,7 +19,8 @@ class AndroidHardwareBuffer;
 
 namespace wr {
 
-class RenderAndroidHardwareBufferTextureHost final : public RenderTextureHost {
+class RenderAndroidHardwareBufferTextureHost final
+    : public RenderTextureHostSWGL {
  public:
   explicit RenderAndroidHardwareBufferTextureHost(
       layers::AndroidHardwareBuffer* aAndroidHardwareBuffer);
@@ -28,18 +30,41 @@ class RenderAndroidHardwareBufferTextureHost final : public RenderTextureHost {
 
   size_t Bytes() override;
 
+  RenderAndroidHardwareBufferTextureHost*
+  AsRenderAndroidHardwareBufferTextureHost() override {
+    return this;
+  }
+
+  // RenderTextureHostSWGL
+  gfx::SurfaceFormat GetFormat() const override;
+  gfx::ColorDepth GetColorDepth() const override {
+    return gfx::ColorDepth::COLOR_8;
+  }
+  size_t GetPlaneCount() const override { return 1; }
+  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
+                PlaneInfo& aPlaneInfo) override;
+  void UnmapPlanes() override;
+
+  layers::AndroidHardwareBuffer* GetAndroidHardwareBuffer() {
+    return mAndroidHardwareBuffer;
+  }
+
+  gfx::IntSize GetSize() const;
+
  private:
   virtual ~RenderAndroidHardwareBufferTextureHost();
   bool EnsureLockable();
   void DestroyEGLImage();
   void DeleteTextureHandle();
-  gfx::IntSize GetSize() const;
+  already_AddRefed<gfx::DataSourceSurface> ReadTexImage();
 
   const RefPtr<layers::AndroidHardwareBuffer> mAndroidHardwareBuffer;
-  EGLImage mEGLImage;
 
   RefPtr<gl::GLContext> mGL;
+  EGLImage mEGLImage;
   GLuint mTextureHandle;
+
+  RefPtr<gfx::DataSourceSurface> mReadback;
 };
 
 }  // namespace wr

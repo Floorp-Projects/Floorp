@@ -178,6 +178,14 @@ RenderTextureHostSWGL* RenderTextureHostWrapper::AsRenderTextureHostSWGL() {
   return mTextureHost->AsRenderTextureHostSWGL();
 }
 
+RenderAndroidHardwareBufferTextureHost*
+RenderTextureHostWrapper::AsRenderAndroidHardwareBufferTextureHost() {
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderAndroidHardwareBufferTextureHost();
+}
+
 RenderAndroidSurfaceTextureHost*
 RenderTextureHostWrapper::AsRenderAndroidSurfaceTextureHost() {
   if (!mTextureHost) {
