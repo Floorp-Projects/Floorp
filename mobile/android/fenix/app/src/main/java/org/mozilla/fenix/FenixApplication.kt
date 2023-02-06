@@ -248,7 +248,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         setupLeakCanary()
         startMetricsIfEnabled()
         setupPush()
-        migrateTopicSpecificSearchEngines()
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
@@ -792,6 +791,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         name.set("custom")
                     }
                 }
+
+                migrateTopicSpecificSearchEngines()
             }
         }
     }
