@@ -69,6 +69,19 @@ void ReadExif(jpeg_decompress_struct* const cinfo,
   }
 }
 
+JpegliDataType ConvertDataType(JxlDataType type) {
+  switch (type) {
+    case JXL_TYPE_UINT8:
+      return JPEGLI_TYPE_UINT8;
+    case JXL_TYPE_UINT16:
+      return JPEGLI_TYPE_UINT16;
+    case JXL_TYPE_FLOAT:
+      return JPEGLI_TYPE_FLOAT;
+    default:
+      return JPEGLI_TYPE_UINT8;
+  }
+}
+
 void MyErrorExit(j_common_ptr cinfo) {
   jmp_buf* env = static_cast<jmp_buf*>(cinfo->client_data);
   (*cinfo->err->output_message)(cinfo);
@@ -169,9 +182,8 @@ Status DecodeJpeg(const std::vector<uint8_t>& compressed,
     ppf->info.num_color_channels = nbcomp;
     ppf->info.orientation = JXL_ORIENT_IDENTITY;
 
-    // Set output bit depth.
-    cinfo.quantize_colors = FALSE;
-    cinfo.desired_number_of_colors = 1 << ppf->info.bits_per_sample;
+    jpegli_set_output_format(&cinfo, ConvertDataType(output_data_type),
+                             JPEGLI_NATIVE_ENDIAN);
     jpegli_start_decompress(&cinfo);
     JXL_ASSERT(cinfo.output_components == nbcomp);
 

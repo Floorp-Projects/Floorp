@@ -70,7 +70,7 @@ void ProcessSOF(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
   cinfo->image_height = ReadUint16(data, &pos);
   cinfo->image_width = ReadUint16(data, &pos);
   cinfo->num_components = ReadUint8(data, &pos);
-  JPEG_VERIFY_INPUT(cinfo->data_precision, 8, 8);
+  JPEG_VERIFY_INPUT(cinfo->data_precision, kJpegPrecision, kJpegPrecision);
   JPEG_VERIFY_INPUT(cinfo->image_height, 1, kMaxDimPixels);
   JPEG_VERIFY_INPUT(cinfo->image_width, 1, kMaxDimPixels);
   JPEG_VERIFY_INPUT(cinfo->num_components, 1, kMaxComponents);
@@ -150,7 +150,7 @@ void ProcessSOF(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
       DivCeil(cinfo->image_width, cinfo->max_h_samp_factor * DCTSIZE);
   // Compute the block dimensions for each component.
   for (int i = 0; i < cinfo->num_components; ++i) {
-    JPEGComponent* c = &m->components_[i];
+    DecJPEGComponent* c = &m->components_[i];
     jpeg_component_info* comp = &cinfo->comp_info[i];
     if (cinfo->max_h_samp_factor % comp->h_samp_factor != 0 ||
         cinfo->max_v_samp_factor % comp->v_samp_factor != 0) {

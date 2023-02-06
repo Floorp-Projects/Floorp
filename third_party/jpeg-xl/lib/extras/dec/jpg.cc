@@ -165,7 +165,7 @@ void MyOutputMessage(j_common_ptr cinfo) {
 Status DecodeImageJPG(const Span<const uint8_t> bytes,
                       const ColorHints& color_hints,
                       const SizeConstraints& constraints,
-                      size_t output_bit_depth, PackedPixelFile* ppf) {
+                      PackedPixelFile* ppf) {
   // Don't do anything for non-JPEG files (no need to report an error)
   if (!IsJPG(bytes)) return false;
 
@@ -175,15 +175,8 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
   // the call to setjmp().
   std::unique_ptr<JSAMPLE[]> row;
 
-  if (output_bit_depth == 0 || output_bit_depth > 16) {
-    return JXL_FAILURE("Invalid output bitdepth");
-  }
-
   const auto try_catch_block = [&]() -> bool {
-    jpeg_decompress_struct cinfo;
-    // cinfo is initialized by libjpeg, which we are not instrumenting with
-    // msan, therefore we need to initialize cinfo here.
-    msan::UnpoisonMemory(&cinfo, sizeof(cinfo));
+    jpeg_decompress_struct cinfo = {};
     // Setup error handling in jpeg library so we can deal with broken jpegs in
     // the fuzzer.
     jpeg_error_mgr jerr;
@@ -256,18 +249,8 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
     ppf->info.num_color_channels = nbcomp;
     ppf->info.orientation = JXL_ORIENT_IDENTITY;
 
-    // Try setting output bit depth. In libjpeg-turbo, this combination of
-    // parameters will be ignored, but in libjpegli it will override output bit
-    // depth.
-    cinfo.quantize_colors = FALSE;
-    cinfo.desired_number_of_colors = 1 << output_bit_depth;
     jpeg_start_decompress(&cinfo);
     JXL_ASSERT(cinfo.output_components == nbcomp);
-    if (cinfo.desired_number_of_colors == 0) {
-      // We know that the output bit depth was set because
-      // desired_number_of_colors was reset to zero by libjpegli.
-      ppf->info.bits_per_sample = output_bit_depth;
-    }
     JxlDataType data_type =
         ppf->info.bits_per_sample <= 8 ? JXL_TYPE_UINT8 : JXL_TYPE_UINT16;
 

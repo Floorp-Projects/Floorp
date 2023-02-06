@@ -1680,16 +1680,17 @@ static bool CanDoFastLossless(const JxlEncoderFrameSettings* frame_settings,
       frame_settings->enc->metadata.m.num_extra_channels != 0) {
     return false;
   }
-  if (frame_settings->enc->metadata.m.bit_depth.floating_point_sample ||
-      frame_settings->enc->metadata.m.bit_depth.bits_per_sample > 16) {
+  if (frame_settings->enc->metadata.m.bit_depth.bits_per_sample > 16) {
     return false;
   }
-  if (pixel_format->data_type != JxlDataType::JXL_TYPE_UINT16 &&
+  if (pixel_format->data_type != JxlDataType::JXL_TYPE_FLOAT16 &&
+      pixel_format->data_type != JxlDataType::JXL_TYPE_UINT16 &&
       pixel_format->data_type != JxlDataType::JXL_TYPE_UINT8) {
     return false;
   }
   if ((frame_settings->enc->metadata.m.bit_depth.bits_per_sample > 8) !=
-      (pixel_format->data_type == JxlDataType::JXL_TYPE_UINT16)) {
+      (pixel_format->data_type == JxlDataType::JXL_TYPE_UINT16 ||
+       pixel_format->data_type == JxlDataType::JXL_TYPE_FLOAT16)) {
     return false;
   }
   if (!((pixel_format->num_channels == 1 || pixel_format->num_channels == 3) &&

@@ -21,15 +21,17 @@ This repository contains a reference implementation of JPEG XL (encoder and
 decoder), called `libjxl`. This software library is
 [used by many applications that support JPEG XL](doc/software_support.md).
 
-JPEG XL is in the final stages of standardization and its codestream and file format
-are frozen.
+JPEG XL was standardized in 2022 as [ISO/IEC 18181](https://jpeg.org/jpegxl/workplan.html).
+The [core codestream](doc/format_overview.md#codestream-features) is specified in 18181-1,
+the [file format](doc/format_overview.md#file-format-features) in 18181-2.
+[Decoder conformance](https://github.com/libjxl/conformance) is defined in 18181-3,
+and 18181-4 is the [reference software](https://github.com/libjxl/libjxl).
 
 The library API, command line options, and tools in this repository are subject
-to change, however files encoded with `cjxl` conform to the JPEG XL format
-specification and can be decoded with current and future `djxl` decoders or
-`libjxl` decoding library.
+to change, however files encoded with `cjxl` conform to the JPEG XL specification
+and can be decoded with current and future `djxl` decoders or `libjxl` decoding library.
 
-## Quick start guide
+## Compilation
 
 For more details and other workflows see the "Advanced guide" below.
 
@@ -105,13 +107,18 @@ The encoder/decoder tools will be available in the `build/tools` directory.
 sudo cmake --install .
 ```
 
-### Basic encoder/decoder
+## Usage
 
 To encode a source image to JPEG XL with default settings:
 
 ```bash
 build/tools/cjxl input.png output.jxl
 ```
+
+The desired visual fidelity can be selected using the `--distance` parameter
+(in units of just-noticeable difference, where 0 is lossless and the most useful lossy range is 0.5 .. 3.0),
+or using `--quality` (on a scale from 0 to 100, roughly matching libjpeg).
+The [encode effort](doc/encode_effort.md) can be selected using the `--effort` parameter.
 
 For more settings run `build/tools/cjxl --help` or for a full list of options
 run `build/tools/cjxl -v -v --help`.
@@ -124,6 +131,9 @@ build/tools/djxl input.jxl output.png
 
 When possible `cjxl`/`djxl` are able to read/write the following
 image formats: .exr, .gif, .jpeg/.jpg, .pfm, .pgm/.ppm, .pgx, .png.
+Specifically for JPEG files, the default `cjxl` behavior is to apply lossless
+recompression and the default `djxl` behavior is to reconstruct the original
+JPEG file.
 
 ### Benchmarking
 
@@ -134,6 +144,12 @@ benchmarking purposes.
 
 For more comprehensive benchmarking options, see the
 [benchmarking guide](doc/benchmarking.md).
+
+### Library API
+
+Besides the `libjxl` library [API documentation](https://libjxl.readthedocs.io/en/latest/),
+there are [example applications](examples/) and [plugins](plugins/) that can be used as a reference or
+starting point for developers who wish to integrate `libjxl` in their project.
 
 ## Advanced guide
 

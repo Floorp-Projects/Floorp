@@ -238,8 +238,8 @@ HWY_INLINE void AssertNaN(D d, VecArg<V> v, const char* file, int line) {
 struct TestNaN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
     HWY_ASSERT_NAN(d, nan);
 
     // Arithmetic
@@ -299,16 +299,13 @@ struct TestNaN {
     HWY_ASSERT_NAN(d, MaxOfLanes(d, nan));
 #endif
 
-    // Min
-#if HWY_ARCH_X86 && (HWY_TARGET != HWY_SCALAR && HWY_TARGET != HWY_EMU128)
-    // x86 SIMD returns the second operand if any input is NaN.
+    // Min/Max
+#if (HWY_ARCH_X86 || HWY_ARCH_WASM) && (HWY_TARGET < HWY_EMU128)
+    // Native WASM or x86 SIMD return the second operand if any input is NaN.
     HWY_ASSERT_VEC_EQ(d, v1, Min(nan, v1));
     HWY_ASSERT_VEC_EQ(d, v1, Max(nan, v1));
     HWY_ASSERT_NAN(d, Min(v1, nan));
     HWY_ASSERT_NAN(d, Max(v1, nan));
-#elif HWY_ARCH_WASM
-    // Should return NaN if any input is NaN, but does not for scalar.
-    // TODO(janwas): remove once this is fixed.
 #elif HWY_TARGET == HWY_NEON && HWY_ARCH_ARM_V7
     // ARMv7 NEON returns NaN if any input is NaN.
     HWY_ASSERT_NAN(d, Min(v1, nan));
