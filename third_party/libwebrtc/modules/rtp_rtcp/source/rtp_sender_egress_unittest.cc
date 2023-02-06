@@ -81,10 +81,7 @@ class MockStreamDataCountersCallback : public StreamDataCountersCallback {
 
 class MockSendSideDelayObserver : public SendSideDelayObserver {
  public:
-  MOCK_METHOD(void,
-              SendSideDelayUpdated,
-              (int, int, uint64_t, uint32_t),
-              (override));
+  MOCK_METHOD(void, SendSideDelayUpdated, (int, int, uint32_t), (override));
 };
 
 class FieldTrialConfig : public FieldTrialsView {
@@ -303,8 +300,7 @@ TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
 
   // Send packet with 10 ms send-side delay. The average, max and total should
   // be 10 ms.
-  EXPECT_CALL(send_side_delay_observer,
-              SendSideDelayUpdated(10, 10, 10, kSsrc));
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(10, 10, kSsrc));
   int64_t capture_time_ms = clock_->TimeInMilliseconds();
   time_controller_.AdvanceTime(TimeDelta::Millis(10));
   sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
@@ -312,8 +308,7 @@ TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
 
   // Send another packet with 20 ms delay. The average, max and total should be
   // 15, 20 and 30 ms respectively.
-  EXPECT_CALL(send_side_delay_observer,
-              SendSideDelayUpdated(15, 20, 30, kSsrc));
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(15, 20, kSsrc));
   capture_time_ms = clock_->TimeInMilliseconds();
   time_controller_.AdvanceTime(TimeDelta::Millis(20));
   sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
@@ -323,7 +318,7 @@ TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
   // Since this packet has 0 ms delay, the average is now 5 ms and max is 10 ms.
   // The total counter stays the same though.
   // TODO(terelius): Is is not clear that this is the right behavior.
-  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(5, 10, 30, kSsrc));
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(5, 10, kSsrc));
   capture_time_ms = clock_->TimeInMilliseconds();
   sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
                      PacedPacketInfo());
@@ -332,7 +327,7 @@ TEST_P(RtpSenderEgressTest, OnSendSideDelayUpdated) {
   // out, so both max and average should be the delay of this packet. The total
   // keeps increasing.
   time_controller_.AdvanceTime(TimeDelta::Seconds(1));
-  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(1, 1, 31, kSsrc));
+  EXPECT_CALL(send_side_delay_observer, SendSideDelayUpdated(1, 1, kSsrc));
   capture_time_ms = clock_->TimeInMilliseconds();
   time_controller_.AdvanceTime(TimeDelta::Millis(1));
   sender->SendPacket(BuildRtpPacket(/*marker=*/true, capture_time_ms).get(),
@@ -574,9 +569,11 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   std::unique_ptr<RtpPacketToSend> media_packet = BuildRtpPacket();
   media_packet->SetPayloadSize(6);
   media_packet->SetSequenceNumber(kStartSequenceNumber);
+  media_packet->set_time_in_send_queue(TimeDelta::Millis(10));
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.payload_bytes += media_packet->payload_size();
   expected_transmitted_counter.header_bytes += media_packet->headers_size();
+  expected_transmitted_counter.total_packet_delay += TimeDelta::Millis(10);
 
   EXPECT_CALL(
       mock_rtp_stats_callback_,
@@ -596,18 +593,21 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   retransmission_packet->SetSequenceNumber(kStartSequenceNumber);
   retransmission_packet->set_retransmitted_sequence_number(
       kStartSequenceNumber);
+  retransmission_packet->set_time_in_send_queue(TimeDelta::Millis(20));
   media_packet->SetPayloadSize(7);
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.payload_bytes +=
       retransmission_packet->payload_size();
   expected_transmitted_counter.header_bytes +=
       retransmission_packet->headers_size();
+  expected_transmitted_counter.total_packet_delay += TimeDelta::Millis(20);
 
   expected_retransmission_counter.packets += 1;
   expected_retransmission_counter.payload_bytes +=
       retransmission_packet->payload_size();
   expected_retransmission_counter.header_bytes +=
       retransmission_packet->headers_size();
+  expected_retransmission_counter.total_packet_delay += TimeDelta::Millis(20);
 
   EXPECT_CALL(
       mock_rtp_stats_callback_,
@@ -625,9 +625,11 @@ TEST_P(RtpSenderEgressTest, StreamDataCountersCallbacks) {
   padding_packet->set_packet_type(RtpPacketMediaType::kPadding);
   padding_packet->SetPadding(224);
   padding_packet->SetSequenceNumber(kStartSequenceNumber + 1);
+  padding_packet->set_time_in_send_queue(TimeDelta::Millis(30));
   expected_transmitted_counter.packets += 1;
   expected_transmitted_counter.padding_bytes += padding_packet->padding_size();
   expected_transmitted_counter.header_bytes += padding_packet->headers_size();
+  expected_transmitted_counter.total_packet_delay += TimeDelta::Millis(30);
 
   EXPECT_CALL(
       mock_rtp_stats_callback_,
@@ -828,10 +830,9 @@ TEST_P(RtpSenderEgressTest, SendPacketUpdatesStats) {
   time_controller_.AdvanceTime(TimeDelta::Millis(kDiffMs));
 
   EXPECT_CALL(send_side_delay_observer,
-              SendSideDelayUpdated(kDiffMs, kDiffMs, kDiffMs, kSsrc));
-  EXPECT_CALL(
-      send_side_delay_observer,
-      SendSideDelayUpdated(kDiffMs, kDiffMs, 2 * kDiffMs, kFlexFecSsrc));
+              SendSideDelayUpdated(kDiffMs, kDiffMs, kSsrc));
+  EXPECT_CALL(send_side_delay_observer,
+              SendSideDelayUpdated(kDiffMs, kDiffMs, kFlexFecSsrc));
 
   EXPECT_CALL(send_packet_observer_, OnSendPacket(1, capture_time_ms, kSsrc));
 

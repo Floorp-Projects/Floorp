@@ -765,8 +765,7 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
   outbound_video->frames_sent = video_sender_info.frames_sent;
   outbound_video->huge_frames_sent = video_sender_info.huge_frames_sent;
   outbound_video->total_packet_send_delay =
-      static_cast<double>(video_sender_info.total_packet_send_delay_ms) /
-      rtc::kNumMillisecsPerSec;
+      video_sender_info.total_packet_send_delay.seconds<double>();
   outbound_video->quality_limitation_reason =
       QualityLimitationReasonToRTCQualityLimitationReason(
           video_sender_info.quality_limitation_reason);
