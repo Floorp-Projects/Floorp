@@ -1,0 +1,51 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Firefox
+  component: Translation
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: bergamot-translator
+
+  description: The JavaScript emscripten worker to run Project Bergamot.
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/mozilla/bergamot-translator/
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: v0.4.4
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 5ae1b1ebb3fa9a3eabed8a64ca6798154bd486eb
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MPL-2.0
+
+  notes: >
+    The generated emscripten code contains many global variables. When updating
+    the code, paste it into the following function to protect the global scope.
+
+    ```
+    /* This Source Code Form is subject to the terms of the Mozilla Public
+     * License, v. 2.0. If a copy of the MPL was not distributed with this
+     * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+    function loadBergamot(Module) {
+      {insertCodeHere}
+      return Module;
+    }
+    ```
+
+    Then replace `console.log()` calls with `log()` calls so that logging preferences
+    are respected.
