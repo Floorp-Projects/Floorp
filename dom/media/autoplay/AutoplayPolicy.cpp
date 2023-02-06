@@ -68,16 +68,9 @@ static uint32_t SiteAutoplayPerm(nsPIDOMWindowInner* aWindow) {
   return topContext->GetAutoplayPermission();
 }
 
-static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
+static bool IsWindowAllowedToPlayByUserGesture(nsPIDOMWindowInner* aWindow) {
   if (!aWindow) {
     return false;
-  }
-
-  if (IsActivelyCapturingOrHasAPermission(aWindow)) {
-    AUTOPLAY_LOG(
-        "Allow autoplay as document has camera or microphone or screen"
-        " permission.");
-    return true;
   }
 
   WindowContext* topContext =
@@ -86,6 +79,20 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     AUTOPLAY_LOG(
         "Allow autoplay as top-level context has been activated by user "
         "gesture.");
+    return true;
+  }
+  return false;
+}
+
+static bool IsWindowAllowedToPlayByTraits(nsPIDOMWindowInner* aWindow) {
+  if (!aWindow) {
+    return false;
+  }
+
+  if (IsActivelyCapturingOrHasAPermission(aWindow)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has camera or microphone or screen"
+        " permission.");
     return true;
   }
 
@@ -108,6 +115,11 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   }
 
   return false;
+}
+
+static bool IsWindowAllowedToPlayOverall(nsPIDOMWindowInner* aWindow) {
+  return IsWindowAllowedToPlayByUserGesture(aWindow) ||
+         IsWindowAllowedToPlayByTraits(aWindow);
 }
 
 static uint32_t DefaultAutoplayBehaviour() {
@@ -139,7 +151,7 @@ static bool IsMediaElementInaudible(const HTMLMediaElement& aElement) {
 static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
   // Offline context won't directly output sound to audio devices.
   return aContext.IsOffline() ||
-         IsWindowAllowedToPlay(aContext.GetParentObject());
+         IsWindowAllowedToPlayOverall(aContext.GetParentObject());
 }
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
@@ -152,7 +164,7 @@ static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
   const uint32_t policy = StaticPrefs::media_autoplay_blocking_policy();
   if (policy == sPOLICY_STICKY_ACTIVATION) {
     const bool isAllowed =
-        IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+        IsWindowAllowedToPlayOverall(aElement.OwnerDoc()->GetInnerWindow());
     AUTOPLAY_LOG("Use 'sticky-activation', isAllowed=%d", isAllowed);
     return isAllowed;
   }
@@ -304,7 +316,7 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
     return true;
   }
 
-  return IsWindowAllowedToPlay(window);
+  return IsWindowAllowedToPlayOverall(window);
 }
 
 enum class DocumentAutoplayPolicy : uint8_t {
@@ -316,7 +328,7 @@ enum class DocumentAutoplayPolicy : uint8_t {
 /* static */
 DocumentAutoplayPolicy IsDocAllowedToPlay(const Document& aDocument) {
   const bool isWindowAllowedToPlay =
-      IsWindowAllowedToPlay(aDocument.GetInnerWindow());
+      IsWindowAllowedToPlayOverall(aDocument.GetInnerWindow());
 
 #if defined(MOZ_WIDGET_ANDROID)
   if (StaticPrefs::media_geckoview_autoplay_request()) {
