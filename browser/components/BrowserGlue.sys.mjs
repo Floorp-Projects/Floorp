@@ -777,6 +777,8 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  // The older translations feature backed by external services.
+  // This is being replaced by a newer ML-backed translation service. See Bug 971044.
   Translation: {
     parent: {
       moduleURI: "resource:///modules/translation/TranslationParent.jsm",

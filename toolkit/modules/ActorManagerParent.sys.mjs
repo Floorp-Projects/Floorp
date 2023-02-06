@@ -89,6 +89,22 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  AboutTranslations: {
+    parent: {
+      esModuleURI: "resource://gre/actors/AboutTranslationsParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/AboutTranslationsChild.sys.mjs",
+      events: {
+        // Run the actor before any content of the page appears.
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["about:translations"],
+
+    enablePreference: "browser.translations.enable",
+  },
+
   AudioPlayback: {
     parent: {
       moduleURI: "resource://gre/actors/AudioPlaybackParent.jsm",
@@ -474,6 +490,21 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource://gre/actors/ThumbnailsChild.jsm",
     },
+  },
+
+  // The newer translations feature backed by local machine learning models.
+  // See Bug 971044.
+  Translations: {
+    parent: {
+      esModuleURI: "resource://gre/actors/TranslationsParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/TranslationsChild.sys.mjs",
+      events: {
+        pageshow: {},
+      },
+    },
+    enablePreference: "browser.translations.enable",
   },
 
   UAWidgets: {
