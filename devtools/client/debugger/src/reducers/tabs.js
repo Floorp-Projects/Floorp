@@ -38,7 +38,7 @@ function update(state = initialTabState(), action) {
       return removeSourcesFromTabList(state, action);
 
     case "INSERT_SOURCE_ACTORS":
-      return addVisibleTabs(state, action.items);
+      return addVisibleTabs(state, action.sourceActors);
 
     case "NAVIGATE": {
       return resetTabState(state);

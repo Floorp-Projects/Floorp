@@ -75,7 +75,7 @@ async function waitForSourceActorToBeRegisteredInStore(sourceActorId) {
       let currentSize = null;
       function check() {
         const previousSize = currentSize;
-        currentSize = store.getState().sourceActors.size;
+        currentSize = store.getState().sourceActors.mutableSourceActors.size;
         // For perf reason, avoid any extra computation if sources did not change
         if (previousSize == currentSize) {
           return;

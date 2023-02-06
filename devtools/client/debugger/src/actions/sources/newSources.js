@@ -108,7 +108,7 @@ function loadSourceMap(cx, sourceActor) {
       dispatch({
         type: "CLEAR_SOURCE_ACTOR_MAP_URL",
         cx,
-        id: sourceActor.id,
+        sourceActorId: sourceActor.id,
       });
       return [];
     }
