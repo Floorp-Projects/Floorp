@@ -140,6 +140,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             TelemetryWrapper.openFromIconEvent()
         }
 
+        val launchCount = settings.getAppLaunchCount()
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .edit()
+            .putInt(getString(R.string.app_launch_count), launchCount + 1)
+            .apply()
+
         AppReviewUtils.showAppReview(this)
 
         privateNotificationFeature = PrivateNotificationFeature(
@@ -297,7 +303,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private fun handleAppNavigation(intent: SafeIntent) {
         if (components.appStore.state.screen == Screen.Locked()) {
             components.appStore.dispatch(AppAction.Lock(intent.extras))
-        } else if (settings.isFirstRun) {
+        } else if (settings.getAppLaunchCount() == 0) {
             setSplashScreenPreDrawListener(intent)
         } else {
             ExternalIntentNavigation.handleAppNavigation(

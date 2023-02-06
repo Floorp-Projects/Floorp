@@ -382,6 +382,7 @@
     <ID>UndocumentedPublicFunction:SecretSettingsUnlocker.kt$SecretSettingsUnlocker$fun increment()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun addSearchWidgetInstalled(count: Int)</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun createTrackingProtectionPolicy( shouldBlockCookiesValue: String = shouldBlockCookiesValue(), ): EngineSession.TrackingProtectionPolicy</ID>
+    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getAppLaunchCount()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getClearBrowsingSessions()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getCurrentCookieBannerOptionFromSharePref(): CookieBannerOption</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getHttpsOnlyMode(): Engine.HttpsOnlyMode</ID>
