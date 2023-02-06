@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function checkObject(object, expected) {
+function checkObject(object, expected, message) {
   if (object && object.getGrip) {
     object = object.getGrip();
   }
@@ -17,28 +17,35 @@ function checkObject(object, expected) {
   for (const name of Object.keys(expected)) {
     const expectedValue = expected[name];
     const value = object[name];
-    checkValue(name, value, expectedValue);
+    checkValue(name, value, expectedValue, message);
   }
 }
 
-function checkValue(name, value, expected) {
+function checkValue(name, value, expected, message) {
+  if (message) {
+    message = ` for '${message}'`;
+  }
+
   if (expected === null) {
-    is(value, null, `'${name}' is null`);
+    is(value, null, `'${name}' is null${message}`);
   } else if (expected === undefined) {
-    is(value, expected, `'${name}' is undefined`);
+    is(value, expected, `'${name}' is undefined${message}`);
   } else if (
     typeof expected == "string" ||
     typeof expected == "number" ||
     typeof expected == "boolean"
   ) {
-    is(value, expected, "property '" + name + "'");
+    is(value, expected, "property '" + name + "'" + message);
   } else if (expected instanceof RegExp) {
-    ok(expected.test(value), name + ": " + expected + " matched " + value);
+    ok(
+      expected.test(value),
+      name + ": " + expected + " matched " + value + message
+    );
   } else if (Array.isArray(expected)) {
-    info("checking array for property '" + name + "'");
-    checkObject(value, expected);
+    info("checking array for property '" + name + "'" + message);
+    checkObject(value, expected, message);
   } else if (typeof expected == "object") {
-    info("checking object for property '" + name + "'");
-    checkObject(value, expected);
+    info("checking object for property '" + name + "'" + message);
+    checkObject(value, expected, message);
   }
 }
