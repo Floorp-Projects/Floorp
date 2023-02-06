@@ -489,8 +489,14 @@ function nativeHasNoSideEffects(fn) {
       return true;
   }
 
+  // This needs to use isSameNativeWithJitInfo instead of isSameNative, given
+  // DOM getters share single native function with different JSJitInto,
+  // and isSameNative cannot distinguish between side-effect-free getters
+  // and others.
+  //
+  // See bug 1806598 for more info.
   const natives = gSideEffectFreeNatives.get(fn.name);
-  return natives && natives.some(n => fn.isSameNative(n));
+  return natives && natives.some(n => fn.isSameNativeWithJitInfo(n));
 }
 
 function updateConsoleInputEvaluation(dbg, webConsole) {
