@@ -2034,10 +2034,15 @@ DeviceColor gfxPlatform::TransformPixel(const sRGBColor& in,
   return DeviceColor(in.r, in.g, in.b, in.a);
 }
 
+nsTArray<uint8_t> gfxPlatform::GetPlatformCMSOutputProfileData() {
+  return GetPrefCMSOutputProfileData();
+}
+
 nsTArray<uint8_t> gfxPlatform::GetPrefCMSOutputProfileData() {
-  const auto mirror = StaticPrefs::gfx_color_management_display_profile();
-  const auto fname = *mirror;
-  if (fname == "") {
+  nsAutoCString fname;
+  Preferences::GetCString("gfx.color_management.display_profile", fname);
+
+  if (fname.IsEmpty()) {
     return nsTArray<uint8_t>();
   }
 
