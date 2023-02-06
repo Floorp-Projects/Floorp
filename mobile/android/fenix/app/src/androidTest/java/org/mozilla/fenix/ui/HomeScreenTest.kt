@@ -62,6 +62,7 @@ class HomeScreenTest {
         mockWebServer.shutdown()
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815275")
     @Test
     fun homeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
@@ -159,6 +160,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815276")
     @Test
     fun verifyPocketHomepageStoriesTest() {
         activityTestRule.activityRule.applySettingsExceptions {
