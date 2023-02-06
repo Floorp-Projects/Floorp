@@ -12,12 +12,18 @@ add_task(async function testGlobalPrivacyControlDisabled() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["privacy.globalprivacycontrol.enabled", false],
     ["privacy.globalprivacycontrol.functionality.enabled", true],
-  ]});
-  await fetch("file_gpc_server.sjs")
+  ]})
+  .then(() => fetch("file_gpc_server.sjs"))
   .then((response) => response.text())
   .then((response) => {
     is(response, "false", "GPC disabled so header unsent");
     is(navigator.globalPrivacyControl, false, "GPC disabled so navigator property is 0");
+
+    let worker = new Worker(window.URL.createObjectURL(new Blob(["postMessage(navigator.globalPrivacyControl);"])));
+    return new Promise((resolve) => { worker.onmessage = (e) => { resolve(e.data) } });
+  })
+  .then((response) => {
+    is(response, false, "GPC disabled so worker's navigator property is 0");
   });
 });
 
@@ -25,12 +31,18 @@ add_task(async function testGlobalPrivacyControlEnabled() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["privacy.globalprivacycontrol.enabled", true],
     ["privacy.globalprivacycontrol.functionality.enabled", true],
-  ]});
-  await fetch("file_gpc_server.sjs")
+  ]})
+  .then(() => fetch("file_gpc_server.sjs"))
   .then((response) => response.text())
   .then((response) => {
     is(response, "true", "GPC enabled so header sent and received");
     is(navigator.globalPrivacyControl, true, "GPC enabled so navigator property is 1");
+
+    let worker = new Worker(window.URL.createObjectURL(new Blob(["postMessage(navigator.globalPrivacyControl);"])));
+    return new Promise((resolve) => { worker.onmessage = (e) => { resolve(e.data) } });
+  })
+  .then((response) => {
+    is(response, true, "GPC enabled so worker's navigator property is 1");
   });
 });
 

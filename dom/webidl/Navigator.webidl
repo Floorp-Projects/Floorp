@@ -41,6 +41,7 @@ Navigator includes NavigatorConcurrentHardware;
 Navigator includes NavigatorStorage;
 Navigator includes NavigatorAutomationInformation;
 Navigator includes GPUProvider;
+Navigator includes GlobalPrivacyControl;
 
 interface mixin NavigatorID {
   // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
@@ -119,7 +120,7 @@ partial interface Navigator {
 };
 
 // https://globalprivacycontrol.github.io/gpc-spec/
-partial interface Navigator {
+interface mixin GlobalPrivacyControl {
   [Pref="privacy.globalprivacycontrol.functionality.enabled"]
   readonly attribute boolean globalPrivacyControl;
 };

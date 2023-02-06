@@ -12728,7 +12728,7 @@
 # true - Send the header with a value of 1 to indicate opting-out
 # false - Do not send header to indicate opting-in
 - name: privacy.globalprivacycontrol.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -12736,7 +12736,7 @@
 # of 'undecided' by leaving the navigator property undefined and not attaching
 # the Sec-GPC HTTP header.
 - name: privacy.globalprivacycontrol.functionality.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
