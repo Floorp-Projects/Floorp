@@ -57,20 +57,20 @@ const RESPONSE_HISTOGRAM_VALUES = {
 
 const WEATHER_SUGGESTION = {
   title: "Weather for San Francisco",
-  url: "http://example.com/weather",
+  url: "https://example.com/weather",
   provider: "accuweather",
   is_sponsored: false,
   score: 0.2,
   icon: null,
   city_name: "San Francisco",
   current_conditions: {
-    url: "http://example.com/weather-current-conditions",
+    url: "https://example.com/weather-current-conditions",
     summary: "Mostly cloudy",
     icon_id: 6,
     temperature: { c: 15.5, f: 60.0 },
   },
   forecast: {
-    url: "http://example.com/weather-forecast",
+    url: "https://example.com/weather-forecast",
     summary: "Pleasant Saturday",
     high: { c: 21.1, f: 70.0 },
     low: { c: 13.9, f: 57.0 },
