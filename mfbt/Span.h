@@ -105,7 +105,7 @@ class span_iterator {
  public:
   using iterator_category = std::random_access_iterator_tag;
   using value_type = std::remove_const_t<element_type_>;
-  using difference_type = typename SpanT::index_type;
+  using difference_type = ptrdiff_t;
 
   using reference =
       std::conditional_t<IsConst, const element_type_, element_type_>&;
