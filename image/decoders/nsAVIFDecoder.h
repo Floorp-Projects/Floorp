@@ -76,7 +76,7 @@ class nsAVIFDecoder final : public Decoder {
   void RecordDecodeResultTelemetry(const DecodeResult& aResult);
 
   Vector<uint8_t> mBufferedData;
-  UniquePtr<AVIFDecoderStream> mBufferStream;
+  RefPtr<AVIFDecoderStream> mBufferStream;
 
   /// Pointer to the next place to read from mBufferedData
   const uint8_t* mReadCursor = nullptr;
