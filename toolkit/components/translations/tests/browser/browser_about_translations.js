@@ -55,3 +55,94 @@ add_task(async function test_about_translations_disabled() {
     },
   });
 });
+
+add_task(async function test_about_translations_dropdowns() {
+  const { appLocaleAsBCP47 } = Services.locale;
+  if (!appLocaleAsBCP47.startsWith("en")) {
+    console.warn(
+      "This test assumes to be running in an 'en' app locale, however the app locale " +
+        `is set to ${appLocaleAsBCP47}. Skipping the test.`
+    );
+    ok(true, "Skipping test.");
+    return;
+  }
+
+  await openAboutTranslations({
+    languagePairs: [
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
+      // This is not a bi-directional translation.
+      { fromLang: "is", toLang: "en" },
+    ],
+    runInPage: async ({ selectors }) => {
+      const { document } = content;
+
+      /**
+       * Some languages can be marked as hidden in the dropbdown. This function
+       * asserts the configuration of the options.
+       *
+       * @param {object} args
+       * @param {string} args.message
+       * @param {HTMLSelectElement} args.select
+       * @param {string[]} args.availableOptions
+       * @param {string} args.selectedValue
+       */
+      function assertOptions({
+        message,
+        select,
+        availableOptions,
+        selectedValue,
+      }) {
+        const options = [...select.options]
+          .filter(option => !option.hidden)
+          .map(option => option.value);
+
+        info(message);
+        Assert.deepEqual(
+          options,
+          availableOptions,
+          "The available options match."
+        );
+        is(selectedValue, select.value, "The selected value matches.");
+      }
+
+      /** @type {HTMLSelectElement} */
+      const fromSelect = document.querySelector(selectors.fromLanguageSelect);
+      /** @type {HTMLSelectElement} */
+      const toSelect = document.querySelector(selectors.toLanguageSelect);
+
+      assertOptions({
+        message: "From languages have English already selected.",
+        select: fromSelect,
+        availableOptions: ["", "en", "is", "es"],
+        selectedValue: "en",
+      });
+
+      assertOptions({
+        message:
+          'The "to" options do not have "en" in the list, and nothing is selected.',
+        select: toSelect,
+        availableOptions: ["", "is", "es"],
+        selectedValue: "",
+      });
+
+      info('Switch the "to" language to Spanish.');
+      toSelect.value = "es";
+      toSelect.dispatchEvent(new Event("input"));
+
+      assertOptions({
+        message: 'The "from" languages no longer suggest Spanish.',
+        select: fromSelect,
+        availableOptions: ["", "en", "is"],
+        selectedValue: "en",
+      });
+
+      assertOptions({
+        message: 'The "to" options remain the same.',
+        select: toSelect,
+        availableOptions: ["", "is", "es"],
+        selectedValue: "es",
+      });
+    },
+  });
+});

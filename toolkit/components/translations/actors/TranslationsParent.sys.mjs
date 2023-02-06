@@ -62,6 +62,13 @@ export class TranslationsParent extends JSWindowActorParent {
   /** @type {RemoteSettingsClient | null} */
   #wasmRemoteClient = null;
 
+  /**
+   * The translation engine can be mocked for testing.
+   *
+   * @type {Array<{ fromLang: string, toLang: string }>}
+   */
+  static #mockedLanguagePairs = null;
+
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:GetBergamotWasmArrayBuffer": {
@@ -103,7 +110,10 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   async #getSupportedLanguages() {
     const languages = new Set();
-    for (const { fromLang } of (await this.#getModelRecords()).values()) {
+    const languagePairs =
+      TranslationsParent.#mockedLanguagePairs ??
+      (await this.#getModelRecords()).values();
+    for (const { fromLang } of languagePairs) {
       languages.add(fromLang);
     }
 
@@ -415,6 +425,15 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     return results;
+  }
+
+  /**
+   * For testing purposes, allow the Translations Engine to be mocked.
+   * @param {Array<{ fromLang: string, toLang: string }>} languagePairs
+   */
+  mock(languagePairs) {
+    lazy.console.log("Mocking language pairs", languagePairs);
+    TranslationsParent.#mockedLanguagePairs = languagePairs;
   }
 }
 
