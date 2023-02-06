@@ -184,7 +184,7 @@ class PreferenceRolloutAction extends BaseAction {
    */
   async _verifyRolloutPrefs({ slug, preferences }) {
     const existingManagedPrefs = new Set();
-    for (const rollout of await lazy.PreferenceRollouts.getAllActiveExperiments()) {
+    for (const rollout of await lazy.PreferenceRollouts.getAllActive()) {
       if (rollout.slug === slug) {
         continue;
       }
