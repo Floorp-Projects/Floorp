@@ -244,12 +244,12 @@ class ExperimentStore extends SharedDataMap {
   async init() {
     await super.init();
 
-    this.getAllActiveExperiments().forEach(({ branch, featureIds }) => {
+    this.getAllActive().forEach(({ branch, featureIds }) => {
       (featureIds || getAllBranchFeatureIds(branch)).forEach(featureId =>
         this._emitFeatureUpdate(featureId, "feature-experiment-loaded")
       );
     });
-    this.getAllActiveRollouts().forEach(({ featureIds }) => {
+    this.getAllRollouts().forEach(({ featureIds }) => {
       featureIds.forEach(featureId =>
         this._emitFeatureUpdate(featureId, "feature-rollout-loaded")
       );
@@ -269,7 +269,7 @@ class ExperimentStore extends SharedDataMap {
    */
   getExperimentForFeature(featureId) {
     return (
-      this.getAllActiveExperiments().find(
+      this.getAllActive().find(
         experiment =>
           experiment.featureIds?.includes(featureId) ||
           // Supports <v1.3.0, which was when .featureIds was added
@@ -309,10 +309,9 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
-   * Returns all active experiments
    * @returns {Enrollment[]}
    */
-  getAllActiveExperiments() {
+  getAllActive() {
     return this.getAll().filter(
       enrollment => enrollment.active && !enrollment.isRollout
     );
@@ -320,9 +319,9 @@ class ExperimentStore extends SharedDataMap {
 
   /**
    * Returns all active rollouts
-   * @returns {Enrollment[]}
+   * @returns {array}
    */
-  getAllActiveRollouts() {
+  getAllRollouts() {
     return this.getAll().filter(
       enrollment => enrollment.active && enrollment.isRollout
     );
@@ -335,7 +334,7 @@ class ExperimentStore extends SharedDataMap {
    */
   getRolloutForFeature(featureId) {
     return (
-      this.getAllActiveRollouts().find(r => r.featureIds.includes(featureId)) ||
+      this.getAllRollouts().find(r => r.featureIds.includes(featureId)) ||
       lazy.syncDataStore.getDefault(featureId)
     );
   }

@@ -168,7 +168,7 @@ add_task(async function test_hasExperimentForFeature() {
   );
 });
 
-add_task(async function test_getAll_getAllActiveExperiments() {
+add_task(async function test_getAll_getAllActive() {
   const store = ExperimentFakes.store();
 
   await store.init();
@@ -183,13 +183,13 @@ add_task(async function test_getAll_getAllActiveExperiments() {
     ".getAll() should return all experiments"
   );
   Assert.deepEqual(
-    store.getAllActiveExperiments().map(e => e.slug),
+    store.getAllActive().map(e => e.slug),
     ["qux"],
-    ".getAllActiveExperiments() should return all experiments that are active"
+    ".getAllActive() should return all experiments that are active"
   );
 });
 
-add_task(async function test_getAll_getAllActiveExperiments() {
+add_task(async function test_getAll_getAllActive_no_rollouts() {
   const store = ExperimentFakes.store();
 
   await store.init();
@@ -205,13 +205,13 @@ add_task(async function test_getAll_getAllActiveExperiments() {
     ".getAll() should return all experiments and rollouts"
   );
   Assert.deepEqual(
-    store.getAllActiveExperiments().map(e => e.slug),
+    store.getAllActive().map(e => e.slug),
     ["qux"],
-    ".getAllActiveExperiments() should return all experiments that are active and no rollouts"
+    ".getAllActive() should return all experiments that are active and no rollouts"
   );
 });
 
-add_task(async function test_getAllActiveRollouts() {
+add_task(async function test_getAllRollouts() {
   const store = ExperimentFakes.store();
 
   await store.init();
@@ -226,9 +226,9 @@ add_task(async function test_getAllActiveRollouts() {
     ".getAll() should return all experiments and rollouts"
   );
   Assert.deepEqual(
-    store.getAllActiveRollouts().map(e => e.slug),
+    store.getAllRollouts().map(e => e.slug),
     ["foo", "bar", "baz"],
-    ".getAllActiveRollouts() should return all rollouts"
+    ".getAllRollouts() should return all rollouts"
   );
 });
 
