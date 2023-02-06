@@ -20,12 +20,13 @@ class NimbusMessagingController(
     /**
      * Called when a message is just about to be shown to the user.
      *
-     * Update the display count and time shown metadata for the given [message].
+     * Update the display count, time shown and boot identifier metadata for the given [message].
      */
-    fun updateMessageAsDisplayed(message: Message): Message {
+    fun updateMessageAsDisplayed(message: Message, bootIdentifier: String? = null): Message {
         val updatedMetadata = message.metadata.copy(
             displayCount = message.metadata.displayCount + 1,
             lastTimeShown = now(),
+            latestBootIdentifier = bootIdentifier,
         )
         return message.copy(
             metadata = updatedMetadata,

@@ -48,6 +48,8 @@ data class Message(
      * @param pressed Indicates if a message has been clicked.
      * @param dismissed Indicates if a message has been closed.
      * @param lastTimeShown A timestamp indicating when was the last time, the message was shown.
+     * @param latestBootIdentifier A unique boot identifier for when the message was last displayed
+     * (this may be a boot count or a boot id).
      */
     data class Metadata(
         val id: String,
@@ -55,5 +57,6 @@ data class Message(
         val pressed: Boolean = false,
         val dismissed: Boolean = false,
         val lastTimeShown: Long = 0L,
+        val latestBootIdentifier: String? = null,
     )
 }

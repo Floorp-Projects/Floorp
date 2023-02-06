@@ -20,19 +20,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.experiments.nimbus.GleanPlumbInterface
-import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.nimbus.Messaging
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnDiskMessageMetadataStorageTest {
 
     private lateinit var storage: OnDiskMessageMetadataStorage
-    private lateinit var metadataStorage: MessageMetadataStorage
-    private lateinit var gleanPlumb: GleanPlumbInterface
-    private lateinit var messagingFeature: FeatureHolder<Messaging>
-    private lateinit var messaging: Messaging
 
     @Before
     fun setup() {
@@ -98,10 +91,11 @@ class OnDiskMessageMetadataStorageTest {
             pressed = false,
             dismissed = false,
             lastTimeShown = 0L,
+            latestBootIdentifier = "9",
         )
 
         val expected =
-            """{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0}"""
+            """{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0,"latestBootIdentifier":"9"}"""
 
         assertEquals(expected, metadata.toJson())
     }
@@ -109,7 +103,7 @@ class OnDiskMessageMetadataStorageTest {
     @Test
     fun `WHEN calling toMetadata THEN return Metadata representation`() {
         val json =
-            """{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0}"""
+            """{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0,"latestBootIdentifier":"9"}"""
 
         val jsonObject = JSONObject(json)
 
@@ -119,6 +113,7 @@ class OnDiskMessageMetadataStorageTest {
             pressed = false,
             dismissed = false,
             lastTimeShown = 0L,
+            latestBootIdentifier = "9",
         )
 
         assertEquals(metadata, jsonObject.toMetadata())
@@ -127,7 +122,7 @@ class OnDiskMessageMetadataStorageTest {
     @Test
     fun `WHEN calling toMetadataMap THEN return map representation`() {
         val json =
-            """[{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0}]"""
+            """[{"id":"id","displayCount":1,"pressed":false,"dismissed":false,"lastTimeShown":0,"latestBootIdentifier":"9"}]"""
 
         val jsonArray = JSONArray(json)
 
@@ -137,6 +132,7 @@ class OnDiskMessageMetadataStorageTest {
             pressed = false,
             dismissed = false,
             lastTimeShown = 0L,
+            latestBootIdentifier = "9",
         )
 
         assertEquals(metadata, jsonArray.toMetadataMap()[metadata.id])

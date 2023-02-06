@@ -27,6 +27,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.onboarding.MARKETING_CHANNEL_ID
+import org.mozilla.fenix.utils.BootUtils
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.createBaseNotification
 import java.util.concurrent.TimeUnit
@@ -54,16 +55,26 @@ class MessageNotificationWorker(
                 messagingStorage.getNextMessage(MessageSurfaceId.NOTIFICATION, messages)
                     ?: return@launch
 
+            val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
+            val messageMetadata = nextMessage.metadata
+            //  Device has NOT been power cycled.
+            if (messageMetadata.latestBootIdentifier == currentBootUniqueIdentifier) {
+                return@launch
+            }
+
             val nimbusMessagingController = NimbusMessagingController(messagingStorage)
 
             // Update message as displayed.
             val updatedMessage =
-                nimbusMessagingController.updateMessageAsDisplayed(nextMessage)
+                nimbusMessagingController.updateMessageAsDisplayed(
+                    nextMessage,
+                    currentBootUniqueIdentifier,
+                )
             nimbusMessagingController.onMessageDisplayed(updatedMessage)
 
             NotificationManagerCompat.from(context).notify(
                 MESSAGE_TAG,
-                SharedIdsHelper.getNextIdForTag(context, updatedMessage.id),
+                SharedIdsHelper.getIdForTag(context, updatedMessage.id),
                 buildNotification(
                     context,
                     updatedMessage,

@@ -51,17 +51,46 @@ class NimbusMessagingControllerTest {
     }
 
     @Test
-    fun `WHEN calling updateMessageAsDisplayed message THEN message metadata is updated`() =
+    fun `WHEN calling updateMessageAsDisplayed with message & no boot id THEN metadata for count and lastTimeShown is updated`() =
         coroutineScope.runTest {
             val message = createMessage("id-1")
             assertEquals(0, message.metadata.displayCount)
             assertEquals(0L, message.metadata.lastTimeShown)
+            assertNull(message.metadata.latestBootIdentifier)
 
             val expectedMessage = with(message) {
-                copy(metadata = metadata.copy(displayCount = 1, lastTimeShown = MOCK_TIME_MILLIS))
+                copy(
+                    metadata = metadata.copy(
+                        displayCount = 1,
+                        lastTimeShown = MOCK_TIME_MILLIS,
+                        latestBootIdentifier = null,
+                    ),
+                )
             }
 
             assertEquals(expectedMessage, controller.updateMessageAsDisplayed(message))
+        }
+
+    @Test
+    fun `WHEN calling updateMessageAsDisplayed with message & boot id THEN metadata for count, lastTimeShown & latestBootIdentifier is updated`() =
+        coroutineScope.runTest {
+            val message = createMessage("id-1")
+            assertEquals(0, message.metadata.displayCount)
+            assertEquals(0L, message.metadata.lastTimeShown)
+            assertNull(message.metadata.latestBootIdentifier)
+
+            val bootId = "test boot id"
+            val expectedMessage = with(message) {
+                copy(
+                    metadata = metadata.copy(
+                        displayCount = 1,
+                        lastTimeShown = MOCK_TIME_MILLIS,
+                        latestBootIdentifier = bootId,
+                    ),
+                )
+            }
+
+            assertEquals(expectedMessage, controller.updateMessageAsDisplayed(message, bootId))
         }
 
     @Test

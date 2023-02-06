@@ -81,7 +81,7 @@ internal fun JSONArray.toMetadataMap(): Map<String, Message.Metadata> {
 
 @Suppress("MaxLineLength") // To avoid adding any extra space to the string.
 internal fun Message.Metadata.toJson(): String {
-    return """{"id":"$id","displayCount":$displayCount,"pressed":$pressed,"dismissed":$dismissed,"lastTimeShown":$lastTimeShown}"""
+    return """{"id":"$id","displayCount":$displayCount,"pressed":$pressed,"dismissed":$dismissed,"lastTimeShown":$lastTimeShown,"latestBootIdentifier":"$latestBootIdentifier"}"""
 }
 
 internal fun JSONObject.toMetadata(): Message.Metadata {
@@ -91,5 +91,6 @@ internal fun JSONObject.toMetadata(): Message.Metadata {
         pressed = optBoolean("pressed"),
         dismissed = optBoolean("dismissed"),
         lastTimeShown = optLong("lastTimeShown"),
+        latestBootIdentifier = optString("latestBootIdentifier"),
     )
 }
