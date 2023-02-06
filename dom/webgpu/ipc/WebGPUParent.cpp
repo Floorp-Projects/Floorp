@@ -776,6 +776,11 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
                             uint8_t* userdata) {
   UniquePtr<PresentRequest> req(reinterpret_cast<PresentRequest*>(userdata));
 
+  if (!req->mRemoteTextureOwner->IsRegistered(req->mOwnerId)) {
+    // SwapChain is already Destroyed
+    return;
+  }
+
   PresentationData* data = req->mData.get();
   // get the buffer ID
   RawId bufferId;
