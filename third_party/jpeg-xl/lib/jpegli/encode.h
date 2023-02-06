@@ -69,9 +69,6 @@ void jpegli_write_m_header(j_compress_ptr cinfo, int marker,
 
 void jpegli_write_m_byte(j_compress_ptr cinfo, int val);
 
-void jpegli_write_marker(j_compress_ptr cinfo, int marker,
-                         const JOCTET* dataptr, unsigned int datalen);
-
 void jpegli_write_icc_profile(j_compress_ptr cinfo, const JOCTET* icc_data_ptr,
                               unsigned int icc_data_len);
 
@@ -81,8 +78,6 @@ JDIMENSION jpegli_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
                                   JDIMENSION num_lines);
 
 void jpegli_finish_compress(j_compress_ptr cinfo);
-
-void jpegli_abort_compress(j_compress_ptr cinfo);
 
 void jpegli_destroy_compress(j_compress_ptr cinfo);
 
@@ -99,29 +94,24 @@ void jpegli_set_distance(j_compress_ptr cinfo, float distance);
 // Returns the butteraugli target distance for the given quality parameter.
 float jpegli_quality_to_distance(int quality);
 
-// Changes the default behaviour of the encoder in the selection of quantization
-// matrices and chroma subsampling. Must be called before jpegli_set_defaults()
-// because some default setting depend on the XYB mode.
+// Writes an ICC profile for the XYB color space and internally converts the
+// input image to XYB.
 void jpegli_set_xyb_mode(j_compress_ptr cinfo);
+
+typedef enum {
+  JPEGLI_TYPE_FLOAT = 0,
+  JPEGLI_TYPE_UINT8 = 2,
+  JPEGLI_TYPE_UINT16 = 3,
+} JpegliDataType;
+
+typedef enum {
+  JPEGLI_NATIVE_ENDIAN = 0,
+  JPEGLI_LITTLE_ENDIAN = 1,
+  JPEGLI_BIG_ENDIAN = 2,
+} JpegliEndianness;
 
 void jpegli_set_input_format(j_compress_ptr cinfo, JpegliDataType data_type,
                              JpegliEndianness endianness);
-
-// Sets whether or not the encoder uses adaptive quantization for createing more
-// zero coefficients based on the local properties of the image.
-// Enabled by default.
-void jpegli_enable_adaptive_quantization(j_compress_ptr cinfo, boolean value);
-
-// Sets the default progression parameters, where level 0 is sequential, and
-// greater level value means more progression steps. Default is 2.
-void jpegli_set_progressive_level(j_compress_ptr cinfo, int level);
-
-// If this function is called before starting compression, the quality and
-// linear quality parameters will be used to scale the standard quantization
-// tables from Annex K of the JPEG standard. By default jpegli uses a different
-// set of quantization tables and used different scaling parameters for DC and
-// AC coefficients.
-void jpegli_use_standard_quant_tables(j_compress_ptr cinfo);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }  // extern "C"

@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <hwy/base.h>
 
+#include "hwy/base.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/printf_macros.h"
 

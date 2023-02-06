@@ -10,20 +10,36 @@
 #include <sys/types.h>
 
 #include <array>
-#include <hwy/aligned_allocator.h>
 #include <set>
 #include <vector>
 
-#include "lib/jpegli/common.h"
-#include "lib/jpegli/common_internal.h"
+#include "hwy/aligned_allocator.h"
 #include "lib/jpegli/huffman.h"
+#include "lib/jxl/base/compiler_specific.h"  // for ssize_t
 
 namespace jpegli {
 
+template <typename T1, typename T2>
+constexpr inline T1 DivCeil(T1 a, T2 b) {
+  return (a + b - 1) / b;
+}
+
+constexpr int kMaxComponents = 4;
+constexpr int kJpegDCAlphabetSize = 12;
+
 typedef int16_t coeff_t;
 
+enum DecodeState {
+  kNull,
+  kStart,
+  kInHeader,
+  kHeaderDone,
+  kProcessMarkers,
+  kProcessScan,
+};
+
 // Represents one component of a jpeg file.
-struct DecJPEGComponent {
+struct JPEGComponent {
   // The DCT coefficients of this component, laid out block-by-block, divided
   // through the quantization matrix values.
   hwy::AlignedFreeUniquePtr<coeff_t[]> coeffs;
@@ -36,6 +52,42 @@ struct MCUCodingState {
   int eobrun;
   std::vector<coeff_t> coeffs;
 };
+
+class RowBuffer {
+ public:
+  void Allocate(size_t num_rows, size_t stride) {
+    ysize_ = num_rows;
+    stride_ = stride;
+    data_ = hwy::AllocateAligned<float>(ysize_ * stride_);
+  }
+
+  float* Row(ssize_t y) { return &data_[((ysize_ + y) % ysize_) * stride_]; }
+
+  size_t stride() const { return stride_; }
+  size_t memstride() const { return stride_ * sizeof(data_[0]); }
+
+ private:
+  size_t ysize_ = 0;
+  size_t stride_ = 0;
+  hwy::AlignedFreeUniquePtr<float[]> data_;
+};
+
+/* clang-format off */
+constexpr uint32_t kJPEGNaturalOrder[80] = {
+  0,   1,  8, 16,  9,  2,  3, 10,
+  17, 24, 32, 25, 18, 11,  4,  5,
+  12, 19, 26, 33, 40, 48, 41, 34,
+  27, 20, 13,  6,  7, 14, 21, 28,
+  35, 42, 49, 56, 57, 50, 43, 36,
+  29, 22, 15, 23, 30, 37, 44, 51,
+  58, 59, 52, 45, 38, 31, 39, 46,
+  53, 60, 61, 54, 47, 55, 62, 63,
+  // extra entries for safety in decoder
+  63, 63, 63, 63, 63, 63, 63, 63,
+  63, 63, 63, 63, 63, 63, 63, 63
+};
+
+/* clang-format on */
 
 }  // namespace jpegli
 
@@ -58,7 +110,7 @@ struct jpeg_decomp_master {
   size_t icc_index_ = 0;
   size_t icc_total_ = 0;
   std::vector<uint8_t> icc_profile_;
-  std::vector<jpegli::DecJPEGComponent> components_;
+  std::vector<jpegli::JPEGComponent> components_;
   std::vector<jpegli::HuffmanTableEntry> dc_huff_lut_;
   std::vector<jpegli::HuffmanTableEntry> ac_huff_lut_;
   uint8_t huff_slot_defined_[256] = {};
@@ -91,8 +143,7 @@ struct jpeg_decomp_master {
   //
   // Rendering state.
   //
-  JpegliDataType output_data_type_ = JPEGLI_TYPE_UINT8;
-  bool swap_endianness_ = false;
+  size_t output_bit_depth_ = 8;
   size_t xoffset_ = 0;
 
   JSAMPARRAY scanlines_;
@@ -100,8 +151,8 @@ struct jpeg_decomp_master {
   size_t num_output_rows_;
 
   std::array<size_t, jpegli::kMaxComponents> raw_height_;
-  std::array<jpegli::RowBuffer<float>, jpegli::kMaxComponents> raw_output_;
-  std::array<jpegli::RowBuffer<float>, jpegli::kMaxComponents> render_output_;
+  std::array<jpegli::RowBuffer, jpegli::kMaxComponents> raw_output_;
+  std::array<jpegli::RowBuffer, jpegli::kMaxComponents> render_output_;
 
   hwy::AlignedFreeUniquePtr<float[]> idct_scratch_;
   hwy::AlignedFreeUniquePtr<float[]> upsample_scratch_;

@@ -393,7 +393,7 @@
 #define HWY_HAVE_RUNTIME_DISPATCH 1
 // On Arm, currently only GCC does, and we require Linux to detect CPU
 // capabilities.
-#elif HWY_ARCH_ARM && HWY_COMPILER_GCC_ACTUAL && HWY_OS_LINUX && !defined(TOOLCHAIN_MISS_SYS_AUXV_H)
+#elif HWY_ARCH_ARM && HWY_COMPILER_GCC_ACTUAL && HWY_OS_LINUX
 #define HWY_HAVE_RUNTIME_DISPATCH 1
 #else
 #define HWY_HAVE_RUNTIME_DISPATCH 0

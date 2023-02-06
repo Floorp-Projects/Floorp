@@ -24,9 +24,6 @@
 
 namespace jxl {
 
-// Helper function to create rows that are multiples of SIMD vector size.
-size_t VectorSize();
-
 // Type-independent parts of Plane<> - reduces code duplication and facilitates
 // moving member function implementations to cc file.
 struct PlaneBase {

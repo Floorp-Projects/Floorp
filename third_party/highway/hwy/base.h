@@ -146,31 +146,6 @@
 #define HWY_DEFAULT_UNROLL
 #endif
 
-// Tell a compiler that the expression always evaluates to true.
-// The expression should be free from any side effects.
-// Some older compilers may have trouble with complex expressions, therefore
-// it is advisable to split multiple conditions into separate assume statements,
-// and manually check the generated code.
-// OK but could fail:
-//   HWY_ASSUME(x == 2 && y == 3);
-// Better:
-//   HWY_ASSUME(x == 2);
-//   HWY_ASSUME(y == 3);
-#if defined(__has_cpp_attribute) && __has_cpp_attribute(assume)
-#define HWY_ASSUME(expr) [[assume(expr)]]
-#elif HWY_COMPILER_MSVC || HWY_COMPILER_ICC
-#define HWY_ASSUME(expr) __assume(expr)
-// __builtin_assume() was added in clang 3.6.
-#elif HWY_COMPILER_CLANG && HWY_HAS_BUILTIN(__builtin_assume)
-#define HWY_ASSUME(expr) __builtin_assume(expr)
-// __builtin_unreachable() was added in GCC 4.5, but __has_builtin() was added
-// later, so check for the compiler version directly.
-#elif HWY_COMPILER_GCC_ACTUAL >= 405
-#define HWY_ASSUME(expr) \
-  ((expr) ? static_cast<void>(0) : __builtin_unreachable())
-#else
-#define HWY_ASSUME(expr) static_cast<void>(0)
-#endif
 
 // Compile-time fence to prevent undesirable code reordering. On Clang x86, the
 // typical asm volatile("" : : : "memory") has no effect, whereas atomic fence
@@ -421,11 +396,10 @@ HWY_API constexpr bool IsSame() {
   hwy::EnableIf<sizeof(T) == (bytes)>* = nullptr
 #define HWY_IF_NOT_LANE_SIZE(T, bytes) \
   hwy::EnableIf<sizeof(T) != (bytes)>* = nullptr
-// bit_array = 0x102 means 1 or 8 bytes. There is no NONE_OF because it sounds
-// too similar. If you want the opposite of this (2 or 4 bytes), ask for those
-// bits explicitly (0x14) instead of attempting to 'negate' 0x102.
-#define HWY_IF_LANE_SIZE_ONE_OF(T, bit_array) \
-  hwy::EnableIf<((size_t{1} << sizeof(T)) & (bit_array)) != 0>* = nullptr
+#define HWY_IF_LANE_SIZE_LT(T, bytes) \
+  hwy::EnableIf<sizeof(T) < (bytes)>* = nullptr
+#define HWY_IF_LANE_SIZE_GE(T, bytes) \
+  hwy::EnableIf<sizeof(T) >= (bytes)>* = nullptr
 
 #define HWY_IF_LANES_PER_BLOCK(T, N, LANES) \
   hwy::EnableIf<HWY_MIN(sizeof(T) * N, 16) / sizeof(T) == (LANES)>* = nullptr
@@ -900,20 +874,6 @@ template <typename TI>
   return x == TI{1}
              ? 0
              : static_cast<size_t>(FloorLog2(static_cast<TI>(x - 1)) + 1);
-}
-
-template <typename T>
-HWY_INLINE constexpr T AddWithWraparound(hwy::FloatTag /*tag*/, T t, size_t n) {
-  return t + static_cast<T>(n);
-}
-
-template <typename T>
-HWY_INLINE constexpr T AddWithWraparound(hwy::NonFloatTag /*tag*/, T t,
-                                         size_t n) {
-  using TU = MakeUnsigned<T>;
-  return static_cast<T>(
-      static_cast<TU>(static_cast<TU>(t) + static_cast<TU>(n)) &
-      hwy::LimitsMax<TU>());
 }
 
 #if HWY_COMPILER_MSVC && HWY_ARCH_X86_64

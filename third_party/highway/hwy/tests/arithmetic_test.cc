@@ -53,25 +53,8 @@ struct TestPlusMinus {
   }
 };
 
-struct TestPlusMinusOverflow {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Iota(d, T(1));
-    const auto vMax = Iota(d, LimitsMax<T>());
-    const auto vMin = Iota(d, LimitsMin<T>());
-
-    // Check that no UB triggered.
-    // "assert" here is formal - to avoid compiler dropping calculations
-    HWY_ASSERT_VEC_EQ(d, Add(v1, vMax), Add(vMax, v1));
-    HWY_ASSERT_VEC_EQ(d, Add(vMax, vMax), Add(vMax, vMax));
-    HWY_ASSERT_VEC_EQ(d, Sub(vMin, v1), Sub(vMin, v1));
-    HWY_ASSERT_VEC_EQ(d, Sub(vMin, vMax), Sub(vMin, vMax));
-  }
-};
-
 HWY_NOINLINE void TestAllPlusMinus() {
   ForAllTypes(ForPartialVectors<TestPlusMinus>());
-  ForIntegerTypes(ForPartialVectors<TestPlusMinusOverflow>());
 }
 
 struct TestUnsignedSaturatingArithmetic {
@@ -121,26 +104,6 @@ struct TestSignedSaturatingArithmetic {
   }
 };
 
-struct TestSaturatingArithmeticOverflow {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Iota(d, T(1));
-    const auto vMax = Iota(d, LimitsMax<T>());
-    const auto vMin = Iota(d, LimitsMin<T>());
-
-    // Check that no UB triggered.
-    // "assert" here is formal - to avoid compiler dropping calculations
-    HWY_ASSERT_VEC_EQ(d, SaturatedAdd(v1, vMax), SaturatedAdd(vMax, v1));
-    HWY_ASSERT_VEC_EQ(d, SaturatedAdd(vMax, vMax), SaturatedAdd(vMax, vMax));
-    HWY_ASSERT_VEC_EQ(d, SaturatedAdd(vMin, vMax), SaturatedAdd(vMin, vMax));
-    HWY_ASSERT_VEC_EQ(d, SaturatedAdd(vMin, vMin), SaturatedAdd(vMin, vMin));
-    HWY_ASSERT_VEC_EQ(d, SaturatedSub(vMin, v1), SaturatedSub(vMin, v1));
-    HWY_ASSERT_VEC_EQ(d, SaturatedSub(vMin, vMax), SaturatedSub(vMin, vMax));
-    HWY_ASSERT_VEC_EQ(d, SaturatedSub(vMax, vMin), SaturatedSub(vMax, vMin));
-    HWY_ASSERT_VEC_EQ(d, SaturatedSub(vMin, vMin), SaturatedSub(vMin, vMin));
-  }
-};
-
 HWY_NOINLINE void TestAllSaturatingArithmetic() {
   const ForPartialVectors<TestUnsignedSaturatingArithmetic> test_unsigned;
   test_unsigned(uint8_t());
@@ -149,12 +112,6 @@ HWY_NOINLINE void TestAllSaturatingArithmetic() {
   const ForPartialVectors<TestSignedSaturatingArithmetic> test_signed;
   test_signed(int8_t());
   test_signed(int16_t());
-
-  const ForPartialVectors<TestSaturatingArithmeticOverflow> test_overflow;
-  test_overflow(int8_t());
-  test_overflow(uint8_t());
-  test_overflow(int16_t());
-  test_overflow(uint16_t());
 }
 
 struct TestAverage {
@@ -229,20 +186,9 @@ struct TestNeg {
   }
 };
 
-struct TestNegOverflow {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto vn = Set(d, LimitsMin<T>());
-    const auto vp = Set(d, LimitsMax<T>());
-    HWY_ASSERT_VEC_EQ(d, Neg(vn), Neg(vn));
-    HWY_ASSERT_VEC_EQ(d, Neg(vp), Neg(vp));
-  }
-};
-
 HWY_NOINLINE void TestAllNeg() {
   ForSignedTypes(ForPartialVectors<TestNeg>());
   ForFloatTypes(ForPartialVectors<TestNeg>());
-  ForSignedTypes(ForPartialVectors<TestNegOverflow>());
 }
 
 struct TestUnsignedMinMax {

@@ -74,34 +74,29 @@ class Checker {
   size_t num_verified_ = 0;
 };
 
-template <template <size_t> class PackT, size_t kVectors, size_t kBits>
+template <class PackT>
 struct TestPack {
   template <typename T, class D>
   void operator()(T /* t */, D d) {
-    constexpr size_t kLoops = 16;  // working set slightly larger than L1
     const size_t N = Lanes(d);
     RandomState rng(N * 129);
-    static_assert(kBits <= kVectors, "");
-    const size_t num_per_loop = N * kVectors;
-    const size_t num = num_per_loop * kLoops;
-    const size_t num_packed_per_loop = N * kBits;
-    const size_t num_packed = num_packed_per_loop * kLoops;
+    const size_t num = N * PackT::kRawVectors;
+    const size_t packed_size = N * PackT::kPackedVectors;
     Checker<T> checker(num);
     AlignedFreeUniquePtr<T[]> raw = hwy::AllocateAligned<T>(num);
     AlignedFreeUniquePtr<T[]> raw2 = hwy::AllocateAligned<T>(num);
-    AlignedFreeUniquePtr<T[]> packed = hwy::AllocateAligned<T>(num_packed);
+    AlignedFreeUniquePtr<T[]> packed = hwy::AllocateAligned<T>(packed_size);
 
     for (size_t i = 0; i < num; ++i) {
-      raw[i] = Random<kBits, T>(rng);
+      raw[i] = Random<PackT::kBits, T>(rng);
       checker.NotifyRaw(raw[i]);
     }
 
     best_target = HWY_MIN(best_target, HWY_TARGET);
-    const bool run_bench = HWY_BIT_PACK_BENCHMARK && (kBits != last_bits) &&
+    const bool run_bench = HWY_BIT_PACK_BENCHMARK &&
+                           (PackT::kBits != last_bits) &&
                            (HWY_TARGET == best_target);
-    last_bits = kBits;
-
-    const PackT<kBits> func;
+    last_bits = PackT::kBits;
 
     if (run_bench) {
       const size_t kNumInputs = 1;
@@ -115,15 +110,8 @@ struct TestPack {
       p.target_rel_mad = 0.002;
       const size_t num_results = MeasureClosure(
           [&](FuncInput) HWY_ATTR {
-            for (size_t i = 0, pi = 0; i < num;
-                 i += num_per_loop, pi += num_packed_per_loop) {
-              func.Pack(d, raw.get() + i, packed.get() + pi);
-            }
-            packed.get()[Random32(&rng) % num_packed] += Unpredictable1() - 1;
-            for (size_t i = 0, pi = 0; i < num;
-                 i += num_per_loop, pi += num_packed_per_loop) {
-              func.Unpack(d, packed.get() + pi, raw2.get() + i);
-            }
+            PackT().Pack(d, raw.get(), packed.get());
+            PackT().Unpack(d, packed.get(), raw2.get());
             return raw2[Random32(&rng) % num];
           },
           inputs, kNumInputs, results, p);
@@ -131,62 +119,46 @@ struct TestPack {
         fprintf(stderr, "MeasureClosure failed.\n");
         return;
       }
-      // Print throughput for pack+unpack round trip
+      // Print cycles per element
       for (size_t i = 0; i < num_results; ++i) {
-        const size_t bytes_per_element = (kBits + 7) / 8;
-        const double bytes = results[i].input * bytes_per_element;
-        const double seconds =
-            results[i].ticks / platform::InvariantTicksPerSecond();
-        printf("Bits:%2d elements:%3d GB/s:%4.1f (+/-%3.1f%%)\n",
-               static_cast<int>(kBits), static_cast<int>(results[i].input),
-               1E-9 * bytes / seconds, results[i].variability * 100.0);
+        const double cycles_per_item =
+            results[i].ticks / static_cast<double>(results[i].input);
+        const double mad = results[i].variability * cycles_per_item;
+        printf("Bits:%2d elements:%3d cyc/elt:%6.3f (+/- %5.3f)\n",
+               static_cast<int>(PackT::kBits),
+               static_cast<int>(results[i].input), cycles_per_item, mad);
       }
     } else {
-      for (size_t i = 0, pi = 0; i < num;
-           i += num_per_loop, pi += num_packed_per_loop) {
-        func.Pack(d, raw.get() + i, packed.get() + pi);
-      }
-      packed.get()[Random32(&rng) % num_packed] += Unpredictable1() - 1;
-      for (size_t i = 0, pi = 0; i < num;
-           i += num_per_loop, pi += num_packed_per_loop) {
-        func.Unpack(d, packed.get() + pi, raw2.get() + i);
-      }
+      PackT().Pack(d, raw.get(), packed.get());
+      PackT().Unpack(d, packed.get(), raw2.get());
     }
 
     for (size_t i = 0; i < num; ++i) {
-      checker.NotifyRawOutput(kBits, raw2[i]);
+      checker.NotifyRawOutput(PackT::kBits, raw2[i]);
     }
   }
 };
 
 void TestAllPack8() {
-  ForShrinkableVectors<TestPack<Pack8, 8, 1>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 2>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 3>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 4>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 5>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 6>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 7>>()(uint8_t());
-  ForShrinkableVectors<TestPack<Pack8, 8, 8>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<1>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<2>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<3>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<4>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<5>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<6>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<7>>>()(uint8_t());
+  ForShrinkableVectors<TestPack<detail::Pack8<8>>>()(uint8_t());
 }
 
 void TestAllPack16() {
-  ForShrinkableVectors<TestPack<Pack16, 16, 1>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 2>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 3>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 4>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 5>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 6>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 7>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 8>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 9>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 10>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 11>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 12>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 13>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 14>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 15>>()(uint16_t());
-  ForShrinkableVectors<TestPack<Pack16, 16, 16>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<1>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<2>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<3>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<4>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<5>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<6>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<7>>>()(uint16_t());
+  ForShrinkableVectors<TestPack<detail::Pack16<8>>>()(uint16_t());
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

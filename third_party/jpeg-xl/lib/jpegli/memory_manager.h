@@ -7,6 +7,7 @@
 #define LIB_JPEGLI_MEMORY_MANAGER_H_
 
 /* clang-format off */
+#include <stdint.h>
 #include <stdio.h>
 #include <jpeglib.h>
 #include <stdlib.h>
@@ -20,12 +21,6 @@ struct MemoryManager {
   struct jpeg_memory_mgr pub;
   std::vector<void*> owned_ptrs;
 };
-
-jpeg_memory_mgr* CreateMemoryManager();
-
-void ReleaseMemory(jpeg_memory_mgr* p);
-
-void DestroyMemoryManager(jpeg_memory_mgr* p);
 
 template <typename T>
 T* Allocate(j_common_ptr cinfo, size_t len) {

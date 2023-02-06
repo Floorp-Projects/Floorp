@@ -111,9 +111,7 @@ Vec256<T> Iota(const Full256<T> d, const T2 first) {
   const Half<decltype(d)> dh;
   Vec256<T> ret;
   ret.v0 = Iota(dh, first);
-  // NB: for floating types the gap between parts might be a bit uneven.
-  ret.v1 = Iota(dh, AddWithWraparound(hwy::IsFloatTag<T>(),
-                                      static_cast<T>(first), Lanes(dh)));
+  ret.v1 = Iota(dh, first + static_cast<T2>(Lanes(dh)));
   return ret;
 }
 
@@ -518,11 +516,6 @@ HWY_API Vec256<T> Xor(Vec256<T> a, Vec256<T> b) {
   a.v0 = Xor(a.v0, b.v0);
   a.v1 = Xor(a.v1, b.v1);
   return a;
-}
-
-template <typename T>
-HWY_API Vec256<T> Xor3(Vec256<T> x1, Vec256<T> x2, Vec256<T> x3) {
-  return Xor(x1, Xor(x2, x3));
 }
 
 template <typename T>
@@ -1148,7 +1141,7 @@ HWY_API Vec256<T> Reverse8(Full256<T> d, const Vec256<T> v) {
   return ret;
 }
 
-template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x6)>  // 1 or 2 bytes
+template <typename T, HWY_IF_LANE_SIZE_LT(T, 4)>
 HWY_API Vec256<T> Reverse8(Full256<T> d, Vec256<T> v) {
   const Half<decltype(d)> dh;
   v.v0 = Reverse8(dh, v.v0);
@@ -1578,7 +1571,7 @@ HWY_API Vec256<int32_t> NearestInt(const Vec256<float> v) {
 // ------------------------------ LoadMaskBits (TestBit)
 
 // `p` points to at least 8 readable bytes, not all of which need be valid.
-template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x110)>  // 4 or 8 bytes
+template <typename T, HWY_IF_LANE_SIZE_GE(T, 4)>
 HWY_API Mask256<T> LoadMaskBits(Full256<T> d,
                                 const uint8_t* HWY_RESTRICT bits) {
   const Half<decltype(d)> dh;
@@ -1592,7 +1585,7 @@ HWY_API Mask256<T> LoadMaskBits(Full256<T> d,
   return ret;
 }
 
-template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x6)>  // 1 or 2 bytes
+template <typename T, HWY_IF_LANE_SIZE_LT(T, 4)>
 HWY_API Mask256<T> LoadMaskBits(Full256<T> d,
                                 const uint8_t* HWY_RESTRICT bits) {
   const Half<decltype(d)> dh;
@@ -1608,7 +1601,7 @@ HWY_API Mask256<T> LoadMaskBits(Full256<T> d,
 // ------------------------------ Mask
 
 // `p` points to at least 8 writable bytes.
-template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x110)>  // 4 or 8 bytes
+template <typename T, HWY_IF_LANE_SIZE_GE(T, 4)>
 HWY_API size_t StoreMaskBits(const Full256<T> d, const Mask256<T> mask,
                              uint8_t* bits) {
   const Half<decltype(d)> dh;
@@ -1622,7 +1615,7 @@ HWY_API size_t StoreMaskBits(const Full256<T> d, const Mask256<T> mask,
   return (kBitsPerHalf * 2 + 7) / 8;
 }
 
-template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x6)>  // 1 or 2 bytes
+template <typename T, HWY_IF_LANE_SIZE_LT(T, 4)>
 HWY_API size_t StoreMaskBits(const Full256<T> d, const Mask256<T> mask,
                              uint8_t* bits) {
   const Half<decltype(d)> dh;
@@ -1871,14 +1864,6 @@ HWY_API Vec256<TW> ReorderWidenMulAccumulate(Full256<TW> d, Vec256<TN> a,
   const Half<decltype(d)> dh;
   sum0.v0 = ReorderWidenMulAccumulate(dh, a.v0, b.v0, sum0.v0, sum1.v0);
   sum0.v1 = ReorderWidenMulAccumulate(dh, a.v1, b.v1, sum0.v1, sum1.v1);
-  return sum0;
-}
-
-// ------------------------------ RearrangeToOddPlusEven
-template <typename TW>
-HWY_API Vec256<TW> RearrangeToOddPlusEven(Vec256<TW> sum0, Vec256<TW> sum1) {
-  sum0.v0 = RearrangeToOddPlusEven(sum0.v0, sum1.v0);
-  sum0.v1 = RearrangeToOddPlusEven(sum0.v1, sum1.v1);
   return sum0;
 }
 

@@ -34,6 +34,11 @@ namespace {
 
 HWY_EXPORT(GetVectorSize);  // Local function.
 
+size_t VectorSize() {
+  static size_t bytes = HWY_DYNAMIC_DISPATCH(GetVectorSize)();
+  return bytes;
+}
+
 // Returns distance [bytes] between the start of two consecutive rows, a
 // multiple of vector/cache line size but NOT CacheAligned::kAlias - see below.
 size_t BytesPerRow(const size_t xsize, const size_t sizeof_t) {
@@ -65,11 +70,6 @@ size_t BytesPerRow(const size_t xsize, const size_t sizeof_t) {
 }
 
 }  // namespace
-
-size_t VectorSize() {
-  static size_t bytes = HWY_DYNAMIC_DISPATCH(GetVectorSize)();
-  return bytes;
-}
 
 PlaneBase::PlaneBase(const size_t xsize, const size_t ysize,
                      const size_t sizeof_t)

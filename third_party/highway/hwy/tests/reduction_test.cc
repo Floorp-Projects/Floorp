@@ -27,27 +27,6 @@ namespace hwy {
 namespace HWY_NAMESPACE {
 
 struct TestSumOfLanes {
-  template <typename T, size_t N, int P,
-            hwy::EnableIf<!IsSigned<T>() || ((N & 1) != 0)>* = nullptr>
-  HWY_NOINLINE void SignedEvenLengthVectorTests(Simd<T, N, P>) {
-    // do nothing
-  }
-  template <typename T, size_t N, int P,
-            hwy::EnableIf<IsSigned<T>() && ((N & 1) == 0)>* = nullptr>
-  HWY_NOINLINE void SignedEvenLengthVectorTests(Simd<T, N, P> d) {
-    const T pairs = static_cast<T>(Lanes(d) / 2);
-
-    // Lanes are the repeated sequence -2, 1, [...]; each pair sums to -1,
-    // so the eventual total is just -(N/2).
-    Vec<decltype(d)> v =
-        InterleaveLower(Set(d, static_cast<T>(-2)), Set(d, T{1}));
-    HWY_ASSERT_VEC_EQ(d, Set(d, static_cast<T>(-pairs)), SumOfLanes(d, v));
-
-    // Similar test with a positive result.
-    v = InterleaveLower(Set(d, static_cast<T>(-2)), Set(d, T{4}));
-    HWY_ASSERT_VEC_EQ(d, Set(d, static_cast<T>(pairs * 2)), SumOfLanes(d, v));
-  }
-
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
@@ -70,20 +49,12 @@ struct TestSumOfLanes {
       sum += static_cast<double>(i);
     }
     HWY_ASSERT_VEC_EQ(d, Set(d, T(sum)), SumOfLanes(d, Iota(d, 0)));
-
-    // Run more tests only for signed types with even vector lengths. Some of
-    // this code may not otherwise compile, so put it in a templated function.
-    SignedEvenLengthVectorTests(d);
   }
 };
 
 HWY_NOINLINE void TestAllSumOfLanes() {
   ForUIF3264(ForPartialVectors<TestSumOfLanes>());
   ForUI16(ForPartialVectors<TestSumOfLanes>());
-
-#if HWY_TARGET == HWY_NEON || HWY_TARGET == HWY_SSE4 || HWY_TARGET == HWY_SSSE3
-  ForUI8(ForGEVectors<64, TestSumOfLanes>());
-#endif
 }
 
 struct TestMinOfLanes {
@@ -202,11 +173,6 @@ HWY_NOINLINE void TestAllMinMaxOfLanes() {
   ForUIF3264(test_max);
   ForUI16(test_min);
   ForUI16(test_max);
-
-#if HWY_TARGET == HWY_NEON || HWY_TARGET == HWY_SSE4 || HWY_TARGET == HWY_SSSE3
-  ForUI8(ForGEVectors<64, TestMinOfLanes>());
-  ForUI8(ForGEVectors<64, TestMaxOfLanes>());
-#endif
 }
 
 struct TestSumsOf8 {

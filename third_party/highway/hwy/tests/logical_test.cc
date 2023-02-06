@@ -29,10 +29,11 @@ HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
-struct TestNot {
+struct TestLogicalInteger {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const auto v0 = Zero(d);
+    const auto vi = Iota(d, 0);
     const auto ones = VecFromMask(d, Eq(v0, v0));
     const auto v1 = Set(d, 1);
     const auto vnot1 = Set(d, T(~T(1)));
@@ -41,34 +42,6 @@ struct TestNot {
     HWY_ASSERT_VEC_EQ(d, ones, Not(v0));
     HWY_ASSERT_VEC_EQ(d, v1, Not(vnot1));
     HWY_ASSERT_VEC_EQ(d, vnot1, Not(v1));
-  }
-};
-
-HWY_NOINLINE void TestAllNot() {
-  ForIntegerTypes(ForPartialVectors<TestNot>());
-}
-
-struct TestLogical {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto vi = Iota(d, 0);
-
-    auto v = vi;
-    v = And(v, vi);
-    HWY_ASSERT_VEC_EQ(d, vi, v);
-    v = And(v, v0);
-    HWY_ASSERT_VEC_EQ(d, v0, v);
-
-    v = Or(v, vi);
-    HWY_ASSERT_VEC_EQ(d, vi, v);
-    v = Or(v, v0);
-    HWY_ASSERT_VEC_EQ(d, vi, v);
-
-    v = Xor(v, vi);
-    HWY_ASSERT_VEC_EQ(d, v0, v);
-    v = Xor(v, v0);
-    HWY_ASSERT_VEC_EQ(d, v0, v);
 
     HWY_ASSERT_VEC_EQ(d, v0, And(v0, vi));
     HWY_ASSERT_VEC_EQ(d, v0, And(vi, v0));
@@ -95,15 +68,6 @@ struct TestLogical {
     HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, v0, vi));
     HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, vi, vi));
 
-    HWY_ASSERT_VEC_EQ(d, v0, Xor3(v0, v0, v0));
-    HWY_ASSERT_VEC_EQ(d, vi, Xor3(v0, vi, v0));
-    HWY_ASSERT_VEC_EQ(d, vi, Xor3(v0, v0, vi));
-    HWY_ASSERT_VEC_EQ(d, v0, Xor3(v0, vi, vi));
-    HWY_ASSERT_VEC_EQ(d, vi, Xor3(vi, v0, v0));
-    HWY_ASSERT_VEC_EQ(d, v0, Xor3(vi, vi, v0));
-    HWY_ASSERT_VEC_EQ(d, v0, Xor3(vi, v0, vi));
-    HWY_ASSERT_VEC_EQ(d, vi, Xor3(vi, vi, vi));
-
     HWY_ASSERT_VEC_EQ(d, v0, OrAnd(v0, v0, v0));
     HWY_ASSERT_VEC_EQ(d, v0, OrAnd(v0, vi, v0));
     HWY_ASSERT_VEC_EQ(d, v0, OrAnd(v0, v0, vi));
@@ -112,11 +76,71 @@ struct TestLogical {
     HWY_ASSERT_VEC_EQ(d, vi, OrAnd(vi, vi, v0));
     HWY_ASSERT_VEC_EQ(d, vi, OrAnd(vi, v0, vi));
     HWY_ASSERT_VEC_EQ(d, vi, OrAnd(vi, vi, vi));
+
+    auto v = vi;
+    v = And(v, vi);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+    v = And(v, v0);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
+
+    v = Or(v, vi);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+    v = Or(v, v0);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+
+    v = Xor(v, vi);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
+    v = Xor(v, v0);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
   }
 };
 
-HWY_NOINLINE void TestAllLogical() {
-  ForAllTypes(ForPartialVectors<TestLogical>());
+HWY_NOINLINE void TestAllLogicalInteger() {
+  ForIntegerTypes(ForPartialVectors<TestLogicalInteger>());
+}
+
+struct TestLogicalFloat {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v0 = Zero(d);
+    const auto vi = Iota(d, 0);
+
+    HWY_ASSERT_VEC_EQ(d, v0, And(v0, vi));
+    HWY_ASSERT_VEC_EQ(d, v0, And(vi, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, And(vi, vi));
+
+    HWY_ASSERT_VEC_EQ(d, vi, Or(v0, vi));
+    HWY_ASSERT_VEC_EQ(d, vi, Or(vi, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, Or(vi, vi));
+
+    HWY_ASSERT_VEC_EQ(d, vi, Xor(v0, vi));
+    HWY_ASSERT_VEC_EQ(d, vi, Xor(vi, v0));
+    HWY_ASSERT_VEC_EQ(d, v0, Xor(vi, vi));
+
+    HWY_ASSERT_VEC_EQ(d, vi, AndNot(v0, vi));
+    HWY_ASSERT_VEC_EQ(d, v0, AndNot(vi, v0));
+    HWY_ASSERT_VEC_EQ(d, v0, AndNot(vi, vi));
+
+    auto v = vi;
+    v = And(v, vi);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+    v = And(v, v0);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
+
+    v = Or(v, vi);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+    v = Or(v, v0);
+    HWY_ASSERT_VEC_EQ(d, vi, v);
+
+    v = Xor(v, vi);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
+    v = Xor(v, v0);
+    HWY_ASSERT_VEC_EQ(d, v0, v);
+  }
+};
+
+HWY_NOINLINE void TestAllLogicalFloat() {
+  ForFloatTypes(ForPartialVectors<TestLogicalFloat>());
 }
 
 struct TestCopySign {
@@ -235,8 +259,8 @@ HWY_AFTER_NAMESPACE();
 
 namespace hwy {
 HWY_BEFORE_TEST(HwyLogicalTest);
-HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllNot);
-HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllLogical);
+HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllLogicalInteger);
+HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllLogicalFloat);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllCopySign);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllBroadcastSignBit);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllTestBit);

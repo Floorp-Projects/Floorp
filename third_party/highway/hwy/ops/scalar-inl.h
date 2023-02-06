@@ -182,13 +182,6 @@ HWY_API Vec1<T> operator^(const Vec1<T> a, const Vec1<T> b) {
   return Xor(a, b);
 }
 
-// ------------------------------ Xor3
-
-template <typename T>
-HWY_API Vec1<T> Xor3(Vec1<T> x1, Vec1<T> x2, Vec1<T> x3) {
-  return Xor(x1, Xor(x2, x3));
-}
-
 // ------------------------------ Or3
 
 template <typename T>
@@ -561,22 +554,13 @@ HWY_API Vec1<uint16_t> AverageRound(const Vec1<uint16_t> a,
 template <typename T>
 HWY_API Vec1<T> Abs(const Vec1<T> a) {
   const T i = a.raw;
-  if (i >= 0 || i == hwy::LimitsMin<T>()) return a;
-  return Vec1<T>(static_cast<T>(-i & T{-1}));
+  return (i >= 0 || i == hwy::LimitsMin<T>()) ? a : Vec1<T>(static_cast<T>(-i));
 }
-HWY_API Vec1<float> Abs(Vec1<float> a) {
-  int32_t i;
-  CopyBytes<sizeof(i)>(&a.raw, &i);
-  i &= 0x7FFFFFFF;
-  CopyBytes<sizeof(i)>(&i, &a.raw);
-  return a;
+HWY_API Vec1<float> Abs(const Vec1<float> a) {
+  return Vec1<float>(fabsf(a.raw));
 }
-HWY_API Vec1<double> Abs(Vec1<double> a) {
-  int64_t i;
-  CopyBytes<sizeof(i)>(&a.raw, &i);
-  i &= 0x7FFFFFFFFFFFFFFFL;
-  CopyBytes<sizeof(i)>(&i, &a.raw);
-  return a;
+HWY_API Vec1<double> Abs(const Vec1<double> a) {
+  return Vec1<double>(fabs(a.raw));
 }
 
 // ------------------------------ Min/Max
@@ -652,19 +636,17 @@ HWY_API Vec1<T> Neg(const Vec1<T> v) {
 
 template <typename T, HWY_IF_FLOAT(T)>
 HWY_API Vec1<T> operator*(const Vec1<T> a, const Vec1<T> b) {
-  return Vec1<T>(static_cast<T>(double{a.raw} * b.raw));
+  return Vec1<T>(static_cast<T>(double(a.raw) * b.raw));
 }
 
 template <typename T, HWY_IF_SIGNED(T)>
 HWY_API Vec1<T> operator*(const Vec1<T> a, const Vec1<T> b) {
-  return Vec1<T>(static_cast<T>(static_cast<uint64_t>(a.raw) *
-                                static_cast<uint64_t>(b.raw)));
+  return Vec1<T>(static_cast<T>(int64_t(a.raw) * b.raw));
 }
 
 template <typename T, HWY_IF_UNSIGNED(T)>
 HWY_API Vec1<T> operator*(const Vec1<T> a, const Vec1<T> b) {
-  return Vec1<T>(static_cast<T>(static_cast<uint64_t>(a.raw) *
-                                static_cast<uint64_t>(b.raw)));
+  return Vec1<T>(static_cast<T>(uint64_t(a.raw) * b.raw));
 }
 
 template <typename T>
@@ -753,18 +735,10 @@ HWY_API Vec1<float> ApproximateReciprocalSqrt(const Vec1<float> v) {
 
 // Square root
 HWY_API Vec1<float> Sqrt(const Vec1<float> v) {
-#if HWY_COMPILER_GCC && defined(HWY_NO_LIBCXX)
-  return Vec1<float>(__builtin_sqrt(v.raw));
-#else
   return Vec1<float>(sqrtf(v.raw));
-#endif
 }
 HWY_API Vec1<double> Sqrt(const Vec1<double> v) {
-#if HWY_COMPILER_GCC && defined(HWY_NO_LIBCXX)
-  return Vec1<float>(__builtin_sqrt(v.raw));
-#else
   return Vec1<double>(sqrt(v.raw));
-#endif
 }
 
 // ------------------------------ Floating-point rounding
@@ -1144,8 +1118,8 @@ HWY_API Vec1<ToT> PromoteTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
 // so we overload for FromT=double and ToT={float,int32_t}.
 HWY_API Vec1<float> DemoteTo(Sisd<float> /* tag */, Vec1<double> from) {
   // Prevent ubsan errors when converting float to narrower integer/float
-  if (IsInf(from).bits ||
-      Abs(from).raw > static_cast<double>(HighestValue<float>())) {
+  if (isinf(from.raw) ||
+      fabs(from.raw) > static_cast<double>(HighestValue<float>())) {
     return Vec1<float>(detail::SignBit(from.raw) ? LowestValue<float>()
                                                  : HighestValue<float>());
   }
@@ -1153,8 +1127,8 @@ HWY_API Vec1<float> DemoteTo(Sisd<float> /* tag */, Vec1<double> from) {
 }
 HWY_API Vec1<int32_t> DemoteTo(Sisd<int32_t> /* tag */, Vec1<double> from) {
   // Prevent ubsan errors when converting int32_t to narrower integer/int32_t
-  if (IsInf(from).bits ||
-      Abs(from).raw > static_cast<double>(HighestValue<int32_t>())) {
+  if (isinf(from.raw) ||
+      fabs(from.raw) > static_cast<double>(HighestValue<int32_t>())) {
     return Vec1<int32_t>(detail::SignBit(from.raw) ? LowestValue<int32_t>()
                                                    : HighestValue<int32_t>());
   }
@@ -1250,8 +1224,7 @@ HWY_API Vec1<ToT> ConvertTo(Sisd<ToT> /* tag */, Vec1<FromT> from) {
   // float## -> int##: return closest representable value. We cannot exactly
   // represent LimitsMax<ToT> in FromT, so use double.
   const double f = static_cast<double>(from.raw);
-  if (IsInf(from).bits ||
-      Abs(Vec1<double>(f)).raw > static_cast<double>(LimitsMax<ToT>())) {
+  if (isinf(from.raw) || fabs(f) > static_cast<double>(LimitsMax<ToT>())) {
     return Vec1<ToT>(detail::SignBit(from.raw) ? LimitsMin<ToT>()
                                                : LimitsMax<ToT>());
   }
@@ -1461,24 +1434,24 @@ HWY_API Vec1<TI> TableLookupBytesOr0(const Vec1<T> in, const Vec1<TI> indices) {
 // ------------------------------ ZipLower
 
 HWY_API Vec1<uint16_t> ZipLower(const Vec1<uint8_t> a, const Vec1<uint8_t> b) {
-  return Vec1<uint16_t>(static_cast<uint16_t>((uint32_t{b.raw} << 8) + a.raw));
+  return Vec1<uint16_t>(static_cast<uint16_t>((uint32_t(b.raw) << 8) + a.raw));
 }
 HWY_API Vec1<uint32_t> ZipLower(const Vec1<uint16_t> a,
                                 const Vec1<uint16_t> b) {
-  return Vec1<uint32_t>((uint32_t{b.raw} << 16) + a.raw);
+  return Vec1<uint32_t>((uint32_t(b.raw) << 16) + a.raw);
 }
 HWY_API Vec1<uint64_t> ZipLower(const Vec1<uint32_t> a,
                                 const Vec1<uint32_t> b) {
-  return Vec1<uint64_t>((uint64_t{b.raw} << 32) + a.raw);
+  return Vec1<uint64_t>((uint64_t(b.raw) << 32) + a.raw);
 }
 HWY_API Vec1<int16_t> ZipLower(const Vec1<int8_t> a, const Vec1<int8_t> b) {
-  return Vec1<int16_t>(static_cast<int16_t>((int32_t{b.raw} << 8) + a.raw));
+  return Vec1<int16_t>(static_cast<int16_t>((int32_t(b.raw) << 8) + a.raw));
 }
 HWY_API Vec1<int32_t> ZipLower(const Vec1<int16_t> a, const Vec1<int16_t> b) {
-  return Vec1<int32_t>((int32_t{b.raw} << 16) + a.raw);
+  return Vec1<int32_t>((int32_t(b.raw) << 16) + a.raw);
 }
 HWY_API Vec1<int64_t> ZipLower(const Vec1<int32_t> a, const Vec1<int32_t> b) {
-  return Vec1<int64_t>((int64_t{b.raw} << 32) + a.raw);
+  return Vec1<int64_t>((int64_t(b.raw) << 32) + a.raw);
 }
 
 template <typename T, typename TW = MakeWide<T>, class VW = Vec1<TW>>
@@ -1595,13 +1568,6 @@ HWY_API Vec1<int32_t> ReorderWidenMulAccumulate(Sisd<int32_t> /* tag */,
                                                 const Vec1<int32_t> sum0,
                                                 Vec1<int32_t>& /* sum1 */) {
   return Vec1<int32_t>(a.raw * b.raw + sum0.raw);
-}
-
-// ------------------------------ RearrangeToOddPlusEven
-template <typename TW>
-HWY_API Vec1<TW> RearrangeToOddPlusEven(const Vec1<TW> sum0,
-                                        Vec1<TW> /* sum1 */) {
-  return sum0;  // invariant already holds
 }
 
 // ================================================== REDUCTIONS

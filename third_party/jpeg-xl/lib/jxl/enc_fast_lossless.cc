@@ -3355,7 +3355,7 @@ void WriteACSectionPalette(const unsigned char* rgba, size_t x0, size_t y0,
 
   row_encoder.t = &encoder;
   encoder.output = &output;
-  encoder.code = &code[1];
+  encoder.code = &code[0];
   ProcessImageAreaPalette<
       ChannelRowProcessor<ChunkEncoder<UpTo8Bits>, UpTo8Bits>>(
       rgba, x0, y0, xs, 0, ys, row_stride, lookup, nb_chans, &row_encoder);
@@ -3374,8 +3374,8 @@ void CollectSamples(const unsigned char* rgba, size_t x0, size_t y0, size_t xs,
         row_sample_collectors[4];
     for (size_t c = 0; c < nb_chans; c++) {
       row_sample_collectors[c].t = &sample_collectors[c];
-      sample_collectors[c].raw_counts = raw_counts[1];
-      sample_collectors[c].lz77_counts = lz77_counts[1];
+      sample_collectors[c].raw_counts = raw_counts[c];
+      sample_collectors[c].lz77_counts = lz77_counts[c];
     }
     ProcessImageAreaPalette<
         ChannelRowProcessor<ChunkSampleCollector<UpTo8Bits>, UpTo8Bits>>(

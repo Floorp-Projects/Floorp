@@ -4,13 +4,8 @@
 # license that can be found in the LICENSE file.
 
 set(JPEGLI_INTERNAL_SOURCES
-  jpegli/adaptive_quantization.h
-  jpegli/adaptive_quantization.cc
-  jpegli/bitstream.h
-  jpegli/bitstream.cc
   jpegli/color_transform.h
   jpegli/color_transform.cc
-  jpegli/common_internal.h
   jpegli/common.h
   jpegli/common.cc
   jpegli/dct.h
@@ -35,7 +30,6 @@ set(JPEGLI_INTERNAL_SOURCES
   jpegli/idct.h
   jpegli/idct.cc
   jpegli/memory_manager.h
-  jpegli/memory_manager.cc
   jpegli/quant.h
   jpegli/quant.cc
   jpegli/render.h
@@ -61,7 +55,7 @@ target_include_directories(jpegli-static PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-  "$<BUILD_INTERFACE:$<TARGET_PROPERTY:$<IF:$<TARGET_EXISTS:hwy::hwy>,hwy::hwy,hwy>,INTERFACE_INCLUDE_DIRECTORIES>>"
+  "$<BUILD_INTERFACE:$<TARGET_PROPERTY:hwy,INTERFACE_INCLUDE_DIRECTORIES>>"
 )
 target_include_directories(jpegli-static PUBLIC "${JPEG_INCLUDE_DIRS}")
 target_link_libraries(jpegli-static PUBLIC ${JPEGLI_INTERNAL_LIBS})

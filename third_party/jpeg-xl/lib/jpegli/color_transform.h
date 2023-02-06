@@ -12,18 +12,7 @@
 
 namespace jpegli {
 
-void CMYKToYCCK(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
-                float* JXL_RESTRICT row2, float* JXL_RESTRICT row3,
-                size_t xsize);
-
-void YCCKToCMYK(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
-                float* JXL_RESTRICT row2, float* JXL_RESTRICT row3,
-                size_t xsize);
-
 void YCbCrToRGB(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
-                float* JXL_RESTRICT row2, size_t xsize);
-
-void RGBToYCbCr(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
                 float* JXL_RESTRICT row2, size_t xsize);
 
 }  // namespace jpegli
