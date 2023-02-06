@@ -431,7 +431,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       let MozXULElement = document.defaultView.MozXULElement;
       downloadListItemFragment = MozXULElement.parseXULToFragment(`
         <hbox class="downloadMainArea" flex="1" align="center">
-          <image class="downloadTypeIcon" validate="always"/>
+          <image class="downloadTypeIcon"/>
           <vbox class="downloadContainer" flex="1" pack="center">
             <description class="downloadTarget" crop="center"/>
             <description class="downloadDetails downloadDetailsNormal"

@@ -91,12 +91,6 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
    * */
   void UpdateImage();
 
-  /**
-   * Update mLoadFlags from content attributes. Does not attempt to reload the
-   * image using the new load flags.
-   */
-  void UpdateLoadFlags();
-
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
@@ -140,8 +134,6 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
 
   RefPtr<imgRequestProxy> mImageRequest;
   nsCOMPtr<imgINotificationObserver> mListener;
-
-  int32_t mLoadFlags;
 
   // Boolean variable to determine if the current image request has been
   // registered with the refresh driver.
