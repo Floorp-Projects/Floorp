@@ -10,6 +10,9 @@
 #include "mozilla/Observer.h"
 #include "mozilla/TypedEnumBits.h"
 
+// Undo X11/X.h's definition of None
+#undef None
+
 namespace mozilla::hal {
 
 // Make sure that any change to ScreenOrientation values are also made in

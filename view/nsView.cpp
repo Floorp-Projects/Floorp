@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/widget/Screen.h"
 #include "nsIWidget.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"

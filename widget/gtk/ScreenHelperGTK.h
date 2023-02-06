@@ -29,7 +29,7 @@ class ScreenGetter {
   virtual void Init(){};
 
   virtual void RefreshScreens(){};
-  virtual RefPtr<nsIScreen> GetScreenForWindow(nsWindow* aWindow) {
+  virtual RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow) {
     return nullptr;
   }
 };
@@ -70,7 +70,7 @@ class ScreenGetterWayland : public ScreenGetter {
   bool RemoveMonitorConfig(int aId);
   already_AddRefed<Screen> MakeScreenWayland(gint aMonitor);
 
-  RefPtr<nsIScreen> GetScreenForWindow(nsWindow* aWindow);
+  RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow);
 
   // For internal use from signal callback functions
   void RefreshScreens();
@@ -95,7 +95,7 @@ class ScreenHelperGTK final : public ScreenManager::Helper {
   ~ScreenHelperGTK();
 
   static gint GetGTKMonitorScaleFactor(gint aMonitorNum = 0);
-  static RefPtr<nsIScreen> GetScreenForWindow(nsWindow* aWindow);
+  static RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow);
 };
 
 }  // namespace widget

@@ -55,6 +55,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/widget/Screen.h"
 #include <algorithm>
 
 namespace mozilla {

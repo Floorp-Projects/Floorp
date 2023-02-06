@@ -500,7 +500,8 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
   return -1;
 }
 
-RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
+RefPtr<widget::Screen> ScreenGetterWayland::GetScreenForWindow(
+    nsWindow* aWindow) {
   if (mMonitors.IsEmpty()) {
     return nullptr;
   }
@@ -522,7 +523,7 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
 }
 #endif
 
-RefPtr<nsIScreen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
+RefPtr<widget::Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   return gScreenGetter->GetScreenForWindow(aWindow);
 }
 

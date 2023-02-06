@@ -89,6 +89,7 @@ class nsIFrame;
 class nsIHTMLCollection;
 class nsIMozBrowserFrame;
 class nsIPrincipal;
+class nsIScreen;
 class nsIScrollableFrame;
 class nsIURI;
 class nsMappedAttributes;

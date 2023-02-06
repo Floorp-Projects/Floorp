@@ -96,6 +96,7 @@
 #include "nsViewManager.h"
 #include "nsXPLookAndFeel.h"
 #include "prlink.h"
+#include "Screen.h"
 #include "ScreenHelperGTK.h"
 #include "SystemTimeConverter.h"
 #include "WidgetUtilsGtk.h"
@@ -7284,29 +7285,20 @@ void nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
                      nullptr);
 }
 
-already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
+already_AddRefed<widget::Screen> nsWindow::GetWidgetScreen() {
   // Wayland can read screen directly
   if (GdkIsWaylandDisplay()) {
-    RefPtr<nsIScreen> screen = ScreenHelperGTK::GetScreenForWindow(this);
-    if (screen) {
+    if (RefPtr<Screen> screen = ScreenHelperGTK::GetScreenForWindow(this)) {
       return screen.forget();
     }
   }
 
-  nsCOMPtr<nsIScreenManager> screenManager;
-  screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenManager) {
-    return nullptr;
-  }
-
   // GetScreenBounds() is slow for the GTK port so we override and use
   // mBounds directly.
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
   LayoutDeviceIntRect bounds = mBounds;
   DesktopIntRect deskBounds = RoundedToInt(bounds / GetDesktopToDeviceScale());
-  nsCOMPtr<nsIScreen> screen;
-  screenManager->ScreenForRect(deskBounds.x, deskBounds.y, deskBounds.width,
-                               deskBounds.height, getter_AddRefs(screen));
-  return screen.forget();
+  return screenManager.ScreenForRect(deskBounds);
 }
 
 RefPtr<VsyncDispatcher> nsWindow::GetVsyncDispatcher() {

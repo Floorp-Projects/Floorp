@@ -110,6 +110,10 @@ class TimeStamp;
 #ifdef MOZ_X11
 class CurrentX11TimeGetter;
 #endif
+
+namespace widget {
+class Screen;
+}  // namespace widget
 }  // namespace mozilla
 
 class nsWindow final : public nsBaseWidget {
@@ -197,7 +201,7 @@ class nsWindow final : public nsBaseWidget {
   void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                    uint16_t aDuration, nsISupports* aData,
                                    nsIRunnable* aCallback) override;
-  already_AddRefed<nsIScreen> GetWidgetScreen() override;
+  already_AddRefed<Screen> GetWidgetScreen() override;
   nsresult MakeFullScreen(bool aFullScreen) override;
   void HideWindowChrome(bool aShouldHide) override;
 
