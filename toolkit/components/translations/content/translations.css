@@ -9,4 +9,86 @@ body {
   inset: 0;
   position: absolute;
   visibility: hidden;
+  flex-direction: column;
+}
+
+.about-translations-header {
+  display: flex;
+}
+
+.about-translations-header > * {
+  flex: 1;
+  display: flex;
+}
+
+.about-translations-header-start {
+  justify-content: start;
+}
+
+.about-translations-header-end {
+  justify-content: end;
+}
+
+/* Increase the selector specificity to override the base `select` styles. */
+select.about-translations-select {
+  position: relative;
+  padding-inline: 10px;
+  padding-block: 0px;
+  min-width: 50%;
+  margin: 5px;
+  --select-arrow-inset: 5px;
+  background-position: right var(--select-arrow-inset) center;
+}
+
+select.about-translations-select:dir(rtl) {
+  background-position-x: left var(--select-arrow-inset);
+}
+
+.about-translations-contents {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: calc(100% - 40px);
+  max-width: 1200px;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 4px;
+}
+
+.about-translations-input {
+  display: flex;
+  width: 100%;
+  --input-padding: 20px;
+  --input-height: 400px;
+  border-top: 1px solid var(--in-content-box-border-color)
+}
+
+.about-translations-input-start {
+  border-inline-end: 1px solid var(--in-content-box-border-color)
+}
+
+.about-translations-input > * {
+  position: relative;
+  width: 50%;
+}
+
+.about-translations-input-textarea {
+  /* Override user's dragging of the textarea width. */
+  width: 100% !important;
+  height: var(--input-height);
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--input-padding);
+  border: 0;
+}
+
+.about-translations-input-results-blank {
+  opacity: 0.7;
+}
+
+.about-translations-input-results {
+  position: absolute;
+  inset: 0;
+  padding: var(--input-padding);
+  box-sizing: border-box;
 }

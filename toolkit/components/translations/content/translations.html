@@ -22,5 +22,48 @@
   </head>
   <body>
     <h1 data-l10n-id="about-translations-header"></h1>
+    <main class="about-translations-contents">
+
+      <header class="about-translations-header">
+        <div class="about-translations-header-start">
+          <select
+            class="about-translations-select"
+            id="language-from"
+            disabled>
+            <option data-l10n-id="about-translations-select" value=""></option>
+          </select>
+        </div>
+        <div class="about-translations-header-end">
+          <select
+            class="about-translations-select"
+            id="language-to"
+            disabled>
+            <option data-l10n-id="about-translations-select" value=""></option>
+          </select>
+        </div>
+      </header>
+
+      <main class="about-translations-input">
+        <div class="about-translations-input-start">
+          <textarea
+            class="about-translations-input-textarea"
+            data-l10n-id="about-translations-textarea"
+            id="translation-from"
+            ></textarea>
+        </div>
+        <div class="about-translations-input-end">
+          <div
+            class="about-translations-input-results about-translations-input-results-blank"
+            data-l10n-id="about-translations-results-placeholder"
+            id="translation-to-blank">
+          </div>
+          <div
+            class="about-translations-input-results"
+            id="translation-to">
+          </div>
+        </div>
+      </main>
+
+    </div>
   </body>
 </html>
