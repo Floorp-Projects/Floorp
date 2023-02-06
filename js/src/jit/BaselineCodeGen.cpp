@@ -2641,8 +2641,6 @@ bool BaselineCodeGen<Handler>::emit_Ne() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitCompare() {
-  // CODEGEN
-
   // Keep top JSStack value in R0 and R1.
   frame.popRegsAndSync(2);
 
@@ -3048,7 +3046,7 @@ bool BaselineCodeGen<Handler>::emitDelElem(bool strict) {
 
   masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
   frame.popn(2);
-  frame.push(R1);
+  frame.push(R1, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -3070,7 +3068,7 @@ bool BaselineCodeGen<Handler>::emit_In() {
     return false;
   }
 
-  frame.push(R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -3082,7 +3080,7 @@ bool BaselineCodeGen<Handler>::emit_HasOwn() {
     return false;
   }
 
-  frame.push(R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -3097,7 +3095,7 @@ bool BaselineCodeGen<Handler>::emit_CheckPrivateField() {
     return false;
   }
 
-  frame.push(R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -3361,7 +3359,7 @@ bool BaselineCodeGen<Handler>::emitDelProp(bool strict) {
 
   masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
   frame.pop();
-  frame.push(R1);
+  frame.push(R1, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -4368,7 +4366,7 @@ bool BaselineCodeGen<Handler>::emit_Instanceof() {
     return false;
   }
 
-  frame.push(R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
@@ -4858,7 +4856,7 @@ bool BaselineCodeGen<Handler>::emit_CanSkipAwait() {
   }
 
   masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
-  frame.push(R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
   return true;
 }
 
