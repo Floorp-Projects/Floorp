@@ -405,7 +405,7 @@ class ProviderSearchTips extends UrlbarProvider {
     // a specific tip can be shown to the user, and the
     // the url is a default SERP.
     let shouldShowPersistTip =
-      lazy.UrlbarPrefs.get("showSearchTerms.featureGate") &&
+      lazy.UrlbarPrefs.isPersistedSearchTermsEnabled() &&
       (lazy.UrlbarPrefs.get(`tipShownCount.${TIPS.PERSIST}`) <
         MAX_SHOWN_COUNT ||
         ignoreShowLimits) &&
