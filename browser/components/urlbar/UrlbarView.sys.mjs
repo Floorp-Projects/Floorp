@@ -2063,7 +2063,18 @@ export class UrlbarView {
    */
   #getClosestSelectableElement(element) {
     let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
-    return closest && this.#isElementVisible(closest) ? closest : null;
+    if (closest && this.#isElementVisible(closest)) {
+      return closest;
+    }
+    // When clicking on a gap within a row or on its border or padding, treat
+    // this as if the main part was clicked.
+    if (
+      element.classList.contains("urlbarView-row") &&
+      element.hasAttribute("row-selectable")
+    ) {
+      return element._content;
+    }
+    return null;
   }
 
   /**
