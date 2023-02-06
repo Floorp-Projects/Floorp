@@ -24,8 +24,6 @@ class FlattenedPath : public PathSink {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FlattenedPath, override)
 
-  FlattenedPath() : mCachedLength(0), mCalculatedLength(false) {}
-
   virtual void MoveTo(const Point& aPoint) override;
   virtual void LineTo(const Point& aPoint) override;
   virtual void BezierTo(const Point& aCP1, const Point& aCP2,
@@ -43,10 +41,26 @@ class FlattenedPath : public PathSink {
   Point ComputePointAtLength(Float aLength, Point* aTangent);
 
  private:
-  Float mCachedLength;
-  bool mCalculatedLength;
+  Float mCachedLength = 0.0f;
+  bool mCalculatedLength = false;
 
   std::vector<FlatPathOp> mPathOps;
+
+  // Used to accelerate ComputePointAtLength for the common case of iterating
+  // forward along the path.
+  struct {
+    uint32_t mIndex = 0;
+    Float mLength = 0.0f;
+    Point mCurrentPoint;
+    Point mLastPointSinceMove;
+
+    void Reset() {
+      mIndex = 0;
+      mLength = 0.0f;
+      mCurrentPoint = Point();
+      mLastPointSinceMove = Point();
+    }
+  } mCursor;
 };
 
 }  // namespace gfx

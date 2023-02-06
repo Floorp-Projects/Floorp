@@ -138,46 +138,52 @@ Float FlattenedPath::ComputeLength() {
 }
 
 Point FlattenedPath::ComputePointAtLength(Float aLength, Point* aTangent) {
-  // We track the last point that -wasn't- in the same place as the current
-  // point so if we pass the edge of the path with a bunch of zero length
-  // paths we still get the correct tangent vector.
-  Point lastPointSinceMove;
-  Point currentPoint;
-  for (uint32_t i = 0; i < mPathOps.size(); i++) {
-    if (mPathOps[i].mType == FlatPathOp::OP_MOVETO) {
-      if (Distance(currentPoint, mPathOps[i].mPoint)) {
-        lastPointSinceMove = currentPoint;
+  if (aLength < mCursor.mLength) {
+    // If cursor is beyond the target length, reset to the beginning.
+    mCursor.Reset();
+  } else {
+    // Adjust aLength to account for the position where we'll start searching.
+    aLength -= mCursor.mLength;
+  }
+
+  while (mCursor.mIndex < mPathOps.size()) {
+    const auto& op = mPathOps[mCursor.mIndex];
+    if (op.mType == FlatPathOp::OP_MOVETO) {
+      if (Distance(mCursor.mCurrentPoint, op.mPoint) > 0.0f) {
+        mCursor.mLastPointSinceMove = mCursor.mCurrentPoint;
       }
-      currentPoint = mPathOps[i].mPoint;
+      mCursor.mCurrentPoint = op.mPoint;
     } else {
-      Float segmentLength = Distance(currentPoint, mPathOps[i].mPoint);
+      Float segmentLength = Distance(mCursor.mCurrentPoint, op.mPoint);
 
       if (segmentLength) {
-        lastPointSinceMove = currentPoint;
+        mCursor.mLastPointSinceMove = mCursor.mCurrentPoint;
         if (segmentLength > aLength) {
-          Point currentVector = mPathOps[i].mPoint - currentPoint;
+          Point currentVector = op.mPoint - mCursor.mCurrentPoint;
           Point tangent = currentVector / segmentLength;
           if (aTangent) {
             *aTangent = tangent;
           }
-          return currentPoint + tangent * aLength;
+          return mCursor.mCurrentPoint + tangent * aLength;
         }
       }
 
       aLength -= segmentLength;
-      currentPoint = mPathOps[i].mPoint;
+      mCursor.mLength += segmentLength;
+      mCursor.mCurrentPoint = op.mPoint;
     }
+    mCursor.mIndex++;
   }
 
   if (aTangent) {
-    Point currentVector = currentPoint - lastPointSinceMove;
+    Point currentVector = mCursor.mCurrentPoint - mCursor.mLastPointSinceMove;
     if (auto h = hypotf(currentVector.x, currentVector.y)) {
       *aTangent = currentVector / h;
     } else {
       *aTangent = Point();
     }
   }
-  return currentPoint;
+  return mCursor.mCurrentPoint;
 }
 
 // This function explicitly permits aControlPoints to refer to the same object
