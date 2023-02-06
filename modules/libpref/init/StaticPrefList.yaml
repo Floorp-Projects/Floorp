@@ -3452,7 +3452,7 @@
 
 - name: dom.reporting.featurePolicy.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.reporting.crash.enabled
