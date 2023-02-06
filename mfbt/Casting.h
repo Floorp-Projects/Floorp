@@ -122,7 +122,7 @@ bool IsInBounds(In aIn) {
       }
     } else {
       uint64_t asInteger = static_cast<uint64_t>(aIn);
-      if (asInteger < 0 || asInteger > outMax) {
+      if (asInteger > outMax) {
         return false;
       }
     }
