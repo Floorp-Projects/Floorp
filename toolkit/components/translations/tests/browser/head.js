@@ -22,8 +22,16 @@
  *
  * @param {boolean} [options.disabled]
  * Disable the panel through a pref.
+ *
+ * @param {Array<{ fromLang: string, toLang: string}>} options.languagePairs
+ * The translation languages pairs to mock for the test.
  */
-async function openAboutTranslations({ dataForContent, disabled, runInPage }) {
+async function openAboutTranslations({
+  dataForContent,
+  disabled,
+  runInPage,
+  languagePairs,
+}) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
@@ -44,11 +52,24 @@ async function openAboutTranslations({ dataForContent, disabled, runInPage }) {
     translationResultBlank: "#translation-to-blank",
   };
 
+  // Start the tab at about:blank.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:translations",
+    "about:blank",
     true // waitForLoad
   );
+
+  // Before loading about:translations, handle any mocking of the actor.
+  if (languagePairs) {
+    const translations = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Translations"
+    );
+    translations.mock(languagePairs);
+  }
+
+  // Now load the about:translations page, since the actor could be mocked.
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:translations");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(
     tab.linkedBrowser,
@@ -56,6 +77,13 @@ async function openAboutTranslations({ dataForContent, disabled, runInPage }) {
     runInPage
   );
 
+  if (languagePairs) {
+    // Revert the mock.
+    const translations = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Translations"
+    );
+    translations.mock(null);
+  }
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
 }
