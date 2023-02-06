@@ -7,7 +7,6 @@ DevToolsModules(
     "console-messages.js",
     "cookie.js",
     "css-changes.js",
-    "css-messages.js",
     "error-messages.js",
     "extension-storage.js",
     "indexed-db.js",

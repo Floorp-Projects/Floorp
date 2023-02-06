@@ -18,6 +18,13 @@ const {
   WebConsoleUtils,
 } = require("resource://devtools/server/actors/webconsole/utils.js");
 
+loader.lazyRequireGetter(
+  this,
+  ["getStyleSheetText"],
+  "resource://devtools/server/actors/utils/stylesheet-utils.js",
+  true
+);
+
 const {
   TYPES: { CSS_MESSAGE },
 } = require("resource://devtools/server/actors/resources/index.js");
@@ -41,9 +48,7 @@ class CSSMessageWatcher extends nsIConsoleListenerWatcher {
 
     // Calling ensureCSSErrorReportingEnabled will make the server parse the stylesheets to
     // retrieve the warnings if the docShell wasn't already watching for CSS messages.
-    if (targetActor.ensureCSSErrorReportingEnabled) {
-      targetActor.ensureCSSErrorReportingEnabled();
-    }
+    await this.#ensureCSSErrorReportingEnabled(targetActor);
   }
 
   /**
@@ -134,6 +139,64 @@ class CSSMessageWatcher extends nsIConsoleListenerWatcher {
       resourceType: CSS_MESSAGE,
       cssSelectors: error.cssSelectors,
     };
+  }
+
+  /**
+   * Ensure that CSS error reporting is enabled for the provided target actor.
+   *
+   * @param {TargetActor} targetActor
+   *        The target actor for which CSS Error Reporting should be enabled.
+   * @return {Promise} Promise that resolves when cssErrorReportingEnabled was
+   *         set in all the docShells owned by the provided target, and existing
+   *         stylesheets have been re-parsed if needed.
+   */
+  async #ensureCSSErrorReportingEnabled(targetActor) {
+    const docShells = targetActor.docShells;
+    if (!docShells) {
+      // If the target actor does not expose a docShells getter (ie is not an
+      // instance of WindowGlobalTargetActor), nothing to do here.
+      return;
+    }
+
+    const promises = docShells.map(async docShell => {
+      if (docShell.cssErrorReportingEnabled) {
+        // CSS Error Reporting already enabled here, nothing to do.
+        return;
+      }
+
+      try {
+        docShell.cssErrorReportingEnabled = true;
+      } catch (e) {
+        return;
+      }
+
+      // After enabling CSS Error Reporting, reparse existing stylesheets to
+      // detect potential CSS errors.
+
+      // Ensure docShell.document is available.
+      docShell.QueryInterface(Ci.nsIWebNavigation);
+      // We don't really want to reparse UA sheets and such, but want to do
+      // Shadow DOM / XBL.
+      const sheets = InspectorUtils.getAllStyleSheets(
+        docShell.document,
+        /* documentOnly = */ true
+      );
+      for (const sheet of sheets) {
+        if (InspectorUtils.hasRulesModifiedByCSSOM(sheet)) {
+          continue;
+        }
+
+        try {
+          // Reparse the sheet so that we see the existing errors.
+          const text = await getStyleSheetText(sheet);
+          InspectorUtils.parseStyleSheet(sheet, text, /* aUpdate = */ false);
+        } catch (e) {
+          console.error("Error while parsing stylesheet");
+        }
+      }
+    });
+
+    await Promise.all(promises);
   }
 }
 module.exports = CSSMessageWatcher;
