@@ -750,10 +750,10 @@ let JSWINDOWACTORS = {
 
   ASRouter: {
     parent: {
-      moduleURI: "resource:///actors/ASRouterParent.jsm",
+      esModuleURI: "resource:///actors/ASRouterParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ASRouterChild.jsm",
+      esModuleURI: "resource:///actors/ASRouterChild.sys.mjs",
       events: {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.

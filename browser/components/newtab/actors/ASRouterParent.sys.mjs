@@ -3,15 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { MESSAGE_TYPE_HASH } from "resource://activity-stream/common/ActorConstants.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["ASRouterParent", "ASRouterTabs"];
-
-const {
-  MESSAGE_TYPE_HASH: { BLOCK_MESSAGE_BY_ID },
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/common/ActorConstants.sys.mjs"
-);
 const { ASRouterNewTabHook } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
 );
@@ -19,7 +12,7 @@ const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
 );
 
-class ASRouterTabs {
+export class ASRouterTabs {
   constructor({ asRouterNewTabHook }) {
     this.actors = new Set();
     this.destroy = () => {};
@@ -61,7 +54,7 @@ class ASRouterTabs {
 const defaultTabsFactory = () =>
   new ASRouterTabs({ asRouterNewTabHook: ASRouterNewTabHook });
 
-class ASRouterParent extends JSWindowActorParent {
+export class ASRouterParent extends JSWindowActorParent {
   static tabs = null;
 
   static nextTabId = 0;
@@ -95,7 +88,7 @@ class ASRouterParent extends JSWindowActorParent {
 
   receiveMessage({ name, data }) {
     return ASRouterParent.tabs.loadingMessageHandler.then(handler => {
-      if (name === BLOCK_MESSAGE_BY_ID) {
+      if (name === MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID) {
         return Promise.all([
           handler.handleMessage(name, data, this.getTab()),
           // All tabs should clear messages not just preloaded, for example
