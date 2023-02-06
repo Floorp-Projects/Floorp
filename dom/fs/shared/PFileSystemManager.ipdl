@@ -131,7 +131,7 @@ struct FileSystemGetAccessHandleRequest
 struct FileSystemAccessHandleProperties
 {
   RandomAccessStreamParams streamParams;
-  PFileSystemAccessHandle accessHandle;
+  ManagedEndpoint<PFileSystemAccessHandleChild> accessHandleChildEndpoint;
 };
 
 union FileSystemGetAccessHandleResponse
@@ -413,7 +413,6 @@ async protocol PFileSystemManager
       returns (uint64_t aQuotaGranted);
 
  child:
-  async PFileSystemAccessHandle();
   async PFileSystemWritableFileStream();
 
   async CloseAll()
