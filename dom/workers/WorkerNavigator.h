@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/workerinternals/RuntimeService.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -94,6 +95,11 @@ class WorkerNavigator final : public nsWrapperCache {
 
   // Worker thread only!
   void SetOnLine(bool aOnline) { mOnline = aOnline; }
+
+  bool GlobalPrivacyControl() const {
+    return StaticPrefs::privacy_globalprivacycontrol_enabled() &&
+           StaticPrefs::privacy_globalprivacycontrol_functionality_enabled();
+  }
 
   void SetLanguages(const nsTArray<nsString>& aLanguages);
 
