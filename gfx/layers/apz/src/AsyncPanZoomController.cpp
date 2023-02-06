@@ -4767,12 +4767,15 @@ ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
   return GetEffectiveScrollOffset(aMode, lock) * GetEffectiveZoom(aMode, lock);
 }
 
-CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
+CSSRect AsyncPanZoomController::GetCurrentAsyncVisualViewport(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
-  return GetEffectiveScrollOffset(aMode, lock);
+  return CSSRect(
+      GetEffectiveScrollOffset(aMode, lock),
+      FrameMetrics::CalculateCompositedSizeInCssPixels(
+          Metrics().GetCompositionBounds(), GetEffectiveZoom(aMode, lock)));
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
