@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+background-tasks:
+  description: |
+    This ping is generic for background tasks. Each background task can
+    gather its metrics under this ping and submit it when the task finishes.
+    Note that the ping submission must be done manually.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1788986
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1788986
+  notification_emails:
+    - krosylight@mozilla.com
+    - vgosu@mozilla.com

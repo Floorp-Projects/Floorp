@@ -35,5 +35,6 @@ interface nsIBackgroundTasksRunner : nsISupports
   void removeDirectoryInDetachedProcess(in ACString aParentDirPath,
                                         in ACString aChildDirName,
                                         in ACString aSecondsToWait,
-                                        in ACString aOtherFoldersSuffix);
+                                        in ACString aOtherFoldersSuffix,
+                                        [optional] in ACString aMetricsId);
 };
