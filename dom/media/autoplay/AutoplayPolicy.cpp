@@ -327,12 +327,11 @@ enum class DocumentAutoplayPolicy : uint8_t {
 
 /* static */
 DocumentAutoplayPolicy IsDocAllowedToPlay(const Document& aDocument) {
-  const bool isWindowAllowedToPlay =
-      IsWindowAllowedToPlayOverall(aDocument.GetInnerWindow());
+  RefPtr<nsPIDOMWindowInner> window = aDocument.GetInnerWindow();
 
 #if defined(MOZ_WIDGET_ANDROID)
   if (StaticPrefs::media_geckoview_autoplay_request()) {
-    nsPIDOMWindowInner* window = aDocument.GetInnerWindow();
+    const bool isWindowAllowedToPlay = IsWindowAllowedToPlayOverall(window);
     if (IsGVAutoplayRequestAllowed(window, RType::eAUDIBLE)) {
       return DocumentAutoplayPolicy::Allowed;
     }
@@ -346,19 +345,27 @@ DocumentAutoplayPolicy IsDocAllowedToPlay(const Document& aDocument) {
                                  : DocumentAutoplayPolicy::Disallowed;
   }
 #endif
-  const uint32_t sitePermission = SiteAutoplayPerm(aDocument.GetInnerWindow());
+  const uint32_t sitePermission = SiteAutoplayPerm(window);
   const uint32_t globalPermission = DefaultAutoplayBehaviour();
+  const uint32_t policy = StaticPrefs::media_autoplay_blocking_policy();
+  const bool isWindowAllowedToPlayByGesture =
+      policy != sPOLICY_USER_INPUT_DEPTH &&
+      IsWindowAllowedToPlayByUserGesture(window);
+  const bool isWindowAllowedToPlayByTraits =
+      IsWindowAllowedToPlayByTraits(window);
 
   AUTOPLAY_LOG(
-      "IsAllowedToPlay(doc), sitePermission=%d, globalPermission=%d, "
-      "isWindowAllowed=%d",
-      sitePermission, globalPermission, isWindowAllowedToPlay);
+      "IsDocAllowedToPlay(), policy=%d, sitePermission=%d, "
+      "globalPermission=%d, isWindowAllowedToPlayByGesture=%d, "
+      "isWindowAllowedToPlayByTraits=%d",
+      policy, sitePermission, globalPermission, isWindowAllowedToPlayByGesture,
+      isWindowAllowedToPlayByTraits);
 
   if ((globalPermission == nsIAutoplay::ALLOWED &&
        (sitePermission != nsIPermissionManager::DENY_ACTION &&
         sitePermission != nsIAutoplay::BLOCKED_ALL)) ||
       sitePermission == nsIPermissionManager::ALLOW_ACTION ||
-      isWindowAllowedToPlay) {
+      isWindowAllowedToPlayByGesture || isWindowAllowedToPlayByTraits) {
     return DocumentAutoplayPolicy::Allowed;
   }
 
