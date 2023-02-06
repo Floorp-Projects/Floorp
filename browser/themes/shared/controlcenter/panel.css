@@ -854,7 +854,8 @@
 
 /* Cookie banner enabled for site, so hide enable controls */
 #protections-popup-cookieBannerView:not([hasException]) #protections-popup-cookieBannerView-enable-button,
-#protections-popup-cookieBannerView:not([hasException]) description#cookieBannerView-enable-site {
+#protections-popup-cookieBannerView:not([hasException]) description#cookieBannerView-enable-site,
+#protections-popup-cookieBannerView:not([hasException]) description#cookieBannerView-enable-site-description {
   display: none;
 }
 
