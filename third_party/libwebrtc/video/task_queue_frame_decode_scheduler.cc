@@ -49,8 +49,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
       SafeTask(task_safety_.flag(),
                [this, rtp, schedule, cb = std::move(cb)]() mutable {
                  RTC_DCHECK_RUN_ON(bookkeeping_queue_);
-                 // If the next frame rtp  has changed since this task was
-                 // this scheduled  release should be skipped.
+                 // If the next frame rtp has changed since this task was
+                 // this scheduled release should be skipped.
                  if (scheduled_rtp_ != rtp)
                    return;
                  scheduled_rtp_ = absl::nullopt;
