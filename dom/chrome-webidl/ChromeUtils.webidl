@@ -655,6 +655,11 @@ partial namespace ChromeUtils {
   boolean isDarkBackground(Element element);
 
   /**
+   * Starts the JSOracle process for ORB JavaScript validation, if it hasn't started already.
+   */
+  undefined ensureJSOracleStarted();
+
+  /**
    * The number of currently alive utility processes.
    */
   [ChromeOnly]
