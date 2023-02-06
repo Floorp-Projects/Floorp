@@ -4,7 +4,6 @@
 
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
 
@@ -387,19 +386,18 @@ export class SafariProfileMigrator extends MigratorBase {
     return resources;
   }
 
-  getLastUsedDate() {
-    let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
-    let datePromises = ["Bookmarks.plist", "History.plist"].map(file => {
-      let path = OS.Path.join(profileDir.path, file);
-      return OS.File.stat(path)
-        .catch(() => null)
-        .then(info => {
-          return info ? info.lastModificationDate : 0;
-        });
-    });
-    return Promise.all(datePromises).then(dates => {
-      return new Date(Math.max.apply(Math, dates));
-    });
+  async getLastUsedDate() {
+    const profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
+    const dates = await Promise.all(
+      ["Bookmarks.plist", "History.plist"].map(file => {
+        const path = PathUtils.join(profileDir.path, file);
+        return IOUtils.stat(path)
+          .then(info => info.lastModified)
+          .catch(() => 0);
+      })
+    );
+
+    return new Date(Math.max(...dates));
   }
 
   async hasPermissions() {
