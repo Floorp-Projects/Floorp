@@ -41,6 +41,8 @@
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
@@ -106,6 +108,7 @@ void ReadableByteStreamController::ClearPendingPullIntos() {
   mPendingPullIntos.clear();
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollergetbyobrequest
 already_AddRefed<ReadableStreamBYOBRequest>
 ReadableByteStreamControllerGetBYOBRequest(
@@ -150,6 +153,7 @@ ReadableByteStreamControllerGetBYOBRequest(
   RefPtr<ReadableStreamBYOBRequest> request(aController->GetByobRequest());
   return request.forget();
 }
+}  // namespace streams_abstract
 
 already_AddRefed<ReadableStreamBYOBRequest>
 ReadableByteStreamController::GetByobRequest(JSContext* aCx, ErrorResult& aRv) {
@@ -185,6 +189,8 @@ JSObject* ReadableByteStreamController::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return ReadableByteStreamController_Binding::Wrap(aCx, this, aGivenProto);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-invalidate-byob-request
 static void ReadableByteStreamControllerInvalidateBYOBRequest(
@@ -316,6 +322,8 @@ void ReadableByteStreamControllerClose(
   ReadableStreamClose(aCx, stream, aRv);
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rbs-controller-close
 void ReadableByteStreamController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 1.
@@ -333,6 +341,8 @@ void ReadableByteStreamController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 3.
   ReadableByteStreamControllerClose(aCx, this, aRv);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue-chunk-to-queue
 void ReadableByteStreamControllerEnqueueChunkToQueue(
@@ -928,6 +938,8 @@ void ReadableByteStreamControllerEnqueue(
   ReadableByteStreamControllerCallPullIfNeeded(aCx, aController, aRv);
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rbs-controller-enqueue
 void ReadableByteStreamController::Enqueue(JSContext* aCx,
                                            const ArrayBufferView& aChunk,
@@ -1000,6 +1012,7 @@ already_AddRefed<Promise> ReadableByteStreamController::CancelSteps(
   return result.forget();
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-handle-queue-drain
 void ReadableByteStreamControllerHandleQueueDrain(
     JSContext* aCx, ReadableByteStreamController* aController,
@@ -1022,6 +1035,7 @@ void ReadableByteStreamControllerHandleQueueDrain(
   // Step 3.1
   ReadableByteStreamControllerCallPullIfNeeded(aCx, aController, aRv);
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
 void ReadableByteStreamController::PullSteps(JSContext* aCx,
@@ -1109,6 +1123,8 @@ void ReadableByteStreamController::ReleaseSteps() {
     PendingPullIntos().insertBack(firstPendingPullInto);
   }
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-shift-pending-pull-into
 already_AddRefed<PullIntoDescriptor>
@@ -1962,5 +1978,7 @@ void SetUpReadableByteStreamControllerFromUnderlyingSource(
   SetUpReadableByteStreamController(aCx, aStream, controller, algorithms,
                                     aHighWaterMark, autoAllocateChunkSize, aRv);
 }
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
