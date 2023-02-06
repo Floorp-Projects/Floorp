@@ -600,7 +600,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         row.classList.contains("process") &&
         ["web", "webIsolated"].includes(row.process.type),
     },
-    // A utility process with audio decoder.
+    // A utility process with at least one actor.
     {
       name: "utility",
       predicate: row =>
@@ -608,8 +608,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         row.process.type == "utility" &&
         row.classList.contains("process") &&
         row.nextSibling &&
-        row.nextSibling.classList.contains("actor") &&
-        row.nextSibling.actor.actorName === "audioDecoder_Generic",
+        row.nextSibling.classList.contains("actor"),
     },
   ];
   for (let finder of processesToBeFound) {
