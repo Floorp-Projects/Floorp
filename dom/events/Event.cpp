@@ -858,7 +858,7 @@ void Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType) {
   const char16_t* name = GetEventName(aEvent->mMessage);
 
   if (name) {
-    aType.Assign(name);
+    aType.AssignLiteral(name, nsString::char_traits::length(name));
     return;
   } else if (aEvent->mMessage == eUnidentifiedEvent &&
              aEvent->mSpecifiedEventType) {
