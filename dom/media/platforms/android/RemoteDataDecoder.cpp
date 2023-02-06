@@ -557,7 +557,9 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
                      java::sdk::MediaFormat::Param aFormat,
                      const nsString& aDrmStubId)
       : RemoteDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType,
-                          aFormat, aDrmStubId) {
+                          aFormat, aDrmStubId),
+        mOutputChannels(AssertedCast<int32_t>(aConfig.mChannels)),
+        mOutputSampleRate(AssertedCast<int32_t>(aConfig.mRate)) {
     JNIEnv* const env = jni::GetEnvForThread();
 
     bool formatHasCSD = false;
