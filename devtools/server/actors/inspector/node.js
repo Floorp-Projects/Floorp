@@ -10,7 +10,6 @@ const {
   nodeListSpec,
 } = require("resource://devtools/shared/specs/node.js");
 
-const InspectorUtils = require("InspectorUtils");
 const {
   PSEUDO_CLASSES,
 } = require("resource://devtools/shared/css/constants.js");

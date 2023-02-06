@@ -4,7 +4,6 @@
 
 "use strict";
 
-const InspectorUtils = require("InspectorUtils");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 /**

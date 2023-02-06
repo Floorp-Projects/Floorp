@@ -10,7 +10,6 @@ const {
 } = require("resource://devtools/shared/specs/css-properties.js");
 
 const { cssColors } = require("resource://devtools/shared/css/color-db.js");
-const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(
   this,

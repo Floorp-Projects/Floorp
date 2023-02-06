@@ -41,7 +41,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/layout/utils.js",
   true
 );
-loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "isXUL",

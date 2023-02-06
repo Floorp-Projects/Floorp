@@ -7,7 +7,6 @@
 
 const { colorUtils } = require("resource://devtools/shared/css/color.js");
 const { cssColors } = require("resource://devtools/shared/css/color-db.js");
-const InspectorUtils = require("InspectorUtils");
 
 function isValid(colorName) {
   ok(

@@ -5,7 +5,6 @@
 "use strict";
 
 const { openToolboxAndLog, reloadPageAndLog } = require("../head");
-const InspectorUtils = require("InspectorUtils");
 
 /*
  * These methods are used for working with debugger state changes in order

@@ -15,7 +15,6 @@ var { require } = ChromeUtils.importESModule(
 var {
   generateCssProperties,
 } = require("resource://devtools/server/actors/css-properties.js");
-const InspectorUtils = require("InspectorUtils");
 
 // xpcshell can output extra information, so place some delimiter text between
 // the output of the css properties database.

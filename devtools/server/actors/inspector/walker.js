@@ -10,7 +10,6 @@ const { walkerSpec } = require("resource://devtools/shared/specs/walker.js");
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
-const InspectorUtils = require("InspectorUtils");
 const {
   EXCLUDED_LISTENER,
 } = require("resource://devtools/server/actors/inspector/constants.js");

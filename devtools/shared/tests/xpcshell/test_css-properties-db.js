@@ -30,7 +30,6 @@ const {
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const InspectorUtils = require("InspectorUtils");
 
 function run_test() {
   const propertiesErrorMessage =

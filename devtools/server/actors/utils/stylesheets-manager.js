@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,
 } = require("resource://devtools/server/actors/utils/source-map-utils.js");

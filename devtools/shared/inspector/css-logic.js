@@ -4,8 +4,6 @@
 
 "use strict";
 
-const InspectorUtils = require("InspectorUtils");
-
 const MAX_DATA_URL_LENGTH = 40;
 /**
  * Provide access to the style information in a page.
