@@ -189,9 +189,37 @@
   margin: var(--console-output-vertical-padding) 4px;
 }
 
-@media (max-width: 500px) {
+/* Use a container query as the inline-size of the output might vary when the console is in editor mode */
+@container console-output (width < 500px) {
   .message > .timestamp {
     display: none;
+  }
+
+  /**
+   * This element might have:
+   * - the message body
+   * - the repeat bubble
+   * - the location
+   *
+   * What we want here is to display the location one its own line, at the bottom of the
+   * element:
+   * +----------------------------+
+   * |  Message body   | [repeat] |
+   * +----------------------------+
+   * |                   location |
+   * +----------------------------+
+   */
+  .message:not(.message-did-catch) .message-flex-body:not(.error-note) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    row-gap: 8px;
+  }
+
+  .message-flex-body .message-location {
+    max-width: unset;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
   }
 }
 
@@ -324,7 +352,7 @@
 }
 
 .message-location {
-  max-width: 40vw;
+  max-width: 40%;
   flex-shrink: 0;
   color: var(--frame-link-source);
   margin-left: 1ch;

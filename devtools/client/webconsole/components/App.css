@@ -21,6 +21,8 @@ body {
   overflow-anchor: none;
   user-select: text;
   position: relative;
+  container-name: console-output;
+  container-type: inline-size;
 }
 
 .webconsole-app {
