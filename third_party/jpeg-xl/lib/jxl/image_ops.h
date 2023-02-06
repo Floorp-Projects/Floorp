@@ -304,8 +304,6 @@ Plane<T> Product(const Plane<T>& a, const Plane<T>& b) {
   return c;
 }
 
-float DotProduct(const ImageF& a, const ImageF& b);
-
 template <typename T>
 void FillImage(const T value, Plane<T>* image) {
   for (size_t y = 0; y < image->ysize(); ++y) {

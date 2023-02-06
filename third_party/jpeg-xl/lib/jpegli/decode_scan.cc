@@ -343,7 +343,7 @@ void SaveMCUCodingState(j_decompress_ptr cinfo) {
   size_t offset = 0;
   for (int i = 0; i < cinfo->comps_in_scan; ++i) {
     const jpeg_component_info* comp = cinfo->cur_comp_info[i];
-    JPEGComponent* c = &m->components_[comp->component_index];
+    DecJPEGComponent* c = &m->components_[comp->component_index];
     int block_x = m->scan_mcu_col_ * comp->MCU_width;
     for (int iy = 0; iy < comp->MCU_height; ++iy) {
       int block_y = m->scan_mcu_row_ * comp->MCU_height + iy;
@@ -363,7 +363,7 @@ void RestoreMCUCodingState(j_decompress_ptr cinfo) {
   size_t offset = 0;
   for (int i = 0; i < cinfo->comps_in_scan; ++i) {
     const jpeg_component_info* comp = cinfo->cur_comp_info[i];
-    JPEGComponent* c = &m->components_[comp->component_index];
+    DecJPEGComponent* c = &m->components_[comp->component_index];
     int block_x = m->scan_mcu_col_ * comp->MCU_width;
     for (int iy = 0; iy < comp->MCU_height; ++iy) {
       int block_y = m->scan_mcu_row_ * comp->MCU_height + iy;
@@ -429,7 +429,7 @@ int ProcessScan(j_decompress_ptr cinfo) {
     bool scan_ok = true;
     for (int i = 0; i < cinfo->comps_in_scan; ++i) {
       const jpeg_component_info* comp = cinfo->cur_comp_info[i];
-      JPEGComponent* c = &m->components_[comp->component_index];
+      DecJPEGComponent* c = &m->components_[comp->component_index];
       const HuffmanTableEntry* dc_lut =
           &m->dc_huff_lut_[comp->dc_tbl_no * kJpegHuffmanLutSize];
       const HuffmanTableEntry* ac_lut =

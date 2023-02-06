@@ -149,7 +149,6 @@ if(JPEGXL_ENABLE_TOOLS)
   include(jxl_extras.cmake)
 endif()
 include(jxl_threads.cmake)
-# We only build JPEGLI on linux for now.
 find_package(JPEG)
 if (JPEG_FOUND AND JPEGXL_ENABLE_JPEGLI)
   include(jpegli.cmake)

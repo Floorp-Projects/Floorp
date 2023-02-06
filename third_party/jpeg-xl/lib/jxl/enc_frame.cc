@@ -44,6 +44,7 @@
 #include "lib/jxl/enc_coeff_order.h"
 #include "lib/jxl/enc_context_map.h"
 #include "lib/jxl/enc_entropy_coder.h"
+#include "lib/jxl/enc_gaborish.h"
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_modular.h"
 #include "lib/jxl/enc_noise.h"
@@ -56,7 +57,6 @@
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/frame_header.h"
-#include "lib/jxl/gaborish.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
@@ -1101,6 +1101,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                    const JxlCmsInterface& cms, ThreadPool* pool,
                    BitWriter* writer, AuxOut* aux_out) {
   CompressParams cparams = cparams_orig;
+  if (cparams.speed_tier == SpeedTier::kGlacier && !cparams.IsLossless()) {
+    cparams.speed_tier = SpeedTier::kTortoise;
+  }
   if (cparams.speed_tier == SpeedTier::kGlacier) {
     std::vector<CompressParams> all_params;
     std::vector<size_t> size;

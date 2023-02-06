@@ -25,7 +25,7 @@ if(POLICY CMP0111)
   cmake_policy(SET CMP0111 OLD)
 endif()
 
-project(hwy VERSION 1.0.2)  # Keep in sync with highway.h version
+project(hwy VERSION 1.0.3)  # Keep in sync with highway.h version
 
 # Directly define the ABI version from the cmake project() version values:
 set(LIBRARY_VERSION "${hwy_VERSION}")
@@ -258,6 +258,12 @@ else()
 
 endif()  # !MSVC
 
+include(CheckIncludeFile)
+check_include_file(sys/auxv.h  HAVE_SYS_AUXV_H)
+if (NOT HAVE_SYS_AUXV_H)
+  list(APPEND HWY_FLAGS -DTOOLCHAIN_MISS_SYS_AUXV_H=1)
+endif()
+
 # By default prefer STATIC build (legacy behavior)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(HWY_FORCE_STATIC_LIBS "Ignore BUILD_SHARED_LIBS" OFF)
@@ -299,21 +305,6 @@ if(UNIX AND NOT APPLE)
   set_property(TARGET hwy APPEND_STRING PROPERTY
     LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/hwy/hwy.version")
 endif()
-
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "unknown")
-  # uname -p is broken on this system.  Try uname -m
-  EXECUTE_PROCESS( COMMAND uname -m
-		   OUTPUT_STRIP_TRAILING_WHITESPACE
-		   ERROR_QUIET
-		   OUTPUT_VARIABLE HWY_ARCH)
-else (CMAKE_SYSTEM_PROCESSOR MATCHES "unknown")
-  set(HWY_ARCH ${CMAKE_SYSTEM_PROCESSOR})
-endif (CMAKE_SYSTEM_PROCESSOR MATCHES "unknown")
-message(STATUS "Architecture: " ${HWY_ARCH})
-if (HWY_ARCH MATCHES "mips")
-  target_link_options(hwy PUBLIC "LINKER:-z,noexecstack")
-endif (HWY_ARCH MATCHES "mips")
-
 
 if (HWY_ENABLE_CONTRIB)
 add_library(hwy_contrib ${HWY_LIBRARY_TYPE} ${HWY_CONTRIB_SOURCES})

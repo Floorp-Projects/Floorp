@@ -233,10 +233,7 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   if (BITS_IN_JSAMPLE != 8 || sizeof(JSAMPLE) != 1) {
     return JXL_FAILURE("Only 8 bit JSAMPLE is supported.");
   }
-  jpeg_compress_struct cinfo;
-  // cinfo is initialized by libjpeg, which we are not instrumenting with
-  // msan.
-  msan::UnpoisonMemory(&cinfo, sizeof(cinfo));
+  jpeg_compress_struct cinfo = {};
   jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
   jpeg_create_compress(&cinfo);

@@ -25,7 +25,9 @@
 #define HIGHWAY_HWY_OPS_SHARED_TOGGLE
 #endif
 
+#ifndef HWY_NO_LIBCXX
 #include <math.h>
+#endif
 
 #include "hwy/base.h"
 
@@ -247,6 +249,8 @@ using Full128 = Simd<T, 16 / sizeof(T), 0>;
 #define HWY_IF_NOT_FLOAT_D(D) HWY_IF_NOT_FLOAT(TFromD<D>)
 #define HWY_IF_LANE_SIZE_D(D, bytes) HWY_IF_LANE_SIZE(TFromD<D>, bytes)
 #define HWY_IF_NOT_LANE_SIZE_D(D, bytes) HWY_IF_NOT_LANE_SIZE(TFromD<D>, bytes)
+#define HWY_IF_LANE_SIZE_ONE_OF_D(D, bit_array) \
+  HWY_IF_LANE_SIZE_ONE_OF(TFromD<D>, bit_array)
 
 // MSVC workaround: use PrivateN directly instead of MaxLanes.
 #define HWY_IF_LT128_D(D) \
@@ -260,6 +264,8 @@ using Full128 = Simd<T, 16 / sizeof(T), 0>;
 #define HWY_IF_FLOAT_V(V) HWY_IF_FLOAT(TFromV<V>)
 #define HWY_IF_LANE_SIZE_V(V, bytes) HWY_IF_LANE_SIZE(TFromV<V>, bytes)
 #define HWY_IF_NOT_LANE_SIZE_V(V, bytes) HWY_IF_NOT_LANE_SIZE(TFromV<V>, bytes)
+#define HWY_IF_LANE_SIZE_ONE_OF_V(V, bit_array) \
+  HWY_IF_LANE_SIZE_ONE_OF(TFromV<V>, bit_array)
 
 template <class D>
 HWY_INLINE HWY_MAYBE_UNUSED constexpr int Pow2(D /* d */) {

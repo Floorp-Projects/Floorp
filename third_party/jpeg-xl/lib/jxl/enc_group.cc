@@ -5,9 +5,8 @@
 
 #include "lib/jxl/enc_group.h"
 
+#include <hwy/aligned_allocator.h>
 #include <utility>
-
-#include "hwy/aligned_allocator.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/enc_group.cc"

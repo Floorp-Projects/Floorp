@@ -9,10 +9,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-namespace jpegli {
+#include "lib/jpegli/common_internal.h"
 
-constexpr int kJpegHuffmanAlphabetSize = 256;
-constexpr size_t kJpegHuffmanMaxBitLength = 16;
+namespace jpegli {
 
 constexpr int kJpegHuffmanRootTableBits = 8;
 // Maximum huffman lookup table size.

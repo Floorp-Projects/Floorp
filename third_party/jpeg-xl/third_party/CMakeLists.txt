@@ -30,7 +30,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/highway/CMakeLists.txt" AND
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/highway/LICENSE"
                  ${PROJECT_BINARY_DIR}/LICENSE.highway COPYONLY)
 else()
-  find_package(HWY 0.15.0)
+  find_package(HWY 1.0.0)
   if (NOT HWY_FOUND)
     message(FATAL_ERROR
         "Highway library (hwy) not found. Install libhwy-dev or download it "
@@ -61,19 +61,9 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/brotli/c/include/brotli/decode.h" OR
 else()
   # Compile brotli from sources.
   set(BROTLI_DISABLE_TESTS ON CACHE STRING "Disable Brotli tests")
-  # Override default "no-install" policy.
-  if((NOT SANITIZER STREQUAL "asan") AND (NOT SANITIZER STREQUAL "msan"))
-    set(BROTLI_BUNDLED_MODE OFF CACHE INTERNAL "")
-  endif()
-  add_subdirectory(brotli)
+  add_subdirectory(brotli EXCLUDE_FROM_ALL)
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/brotli/LICENSE"
                  ${PROJECT_BINARY_DIR}/LICENSE.brotli COPYONLY)
-  if(BROTLI_EMSCRIPTEN)
-    # Brotli only defines the -static targets when using emscripten.
-    foreach(brlib IN ITEMS brotlienc brotlidec brotlicommon)
-      add_library(${brlib} ALIAS ${brlib}-static)
-    endforeach()
-  endif()  # BROTLI_EMSCRIPTEN
   if(APPLE)
     if(NOT DEFINED CMAKE_MACOSX_RPATH)
       # Use @rpath in install_name when CMAKE_MACOSX_RPATH is not set.
