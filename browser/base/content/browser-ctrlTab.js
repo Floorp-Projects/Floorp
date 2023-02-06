@@ -438,15 +438,15 @@ var ctrlTab = {
     var select = aPreview || this.selected;
 
     if (select == this.showAllButton) {
-      this.showAllTabs();
+      this.showAllTabs("ctrltab-all-tabs-button");
     } else {
       this.close(select._tab);
     }
   },
 
-  showAllTabs: function ctrlTab_showAllTabs(aPreview) {
+  showAllTabs: function ctrlTab_showAllTabs(aEntrypoint = "unknown") {
     this.close();
-    document.getElementById("Browser:ShowAllTabs").doCommand();
+    gTabsPanel.showAllTabsPanel(null, aEntrypoint);
   },
 
   remove: function ctrlTab_remove(aPreview) {
@@ -577,7 +577,7 @@ var ctrlTab = {
     }
 
     if (event.shiftKey) {
-      this.showAllTabs();
+      this.showAllTabs("shift-tab");
       return;
     }
 
@@ -610,8 +610,10 @@ var ctrlTab = {
         this.remove(this.selected);
         break;
       case this.keys.find:
+        this.showAllTabs("ctrltab-key-find");
+        break;
       case this.keys.selectAll:
-        this.showAllTabs();
+        this.showAllTabs("ctrltab-key-selectAll");
         break;
     }
   },

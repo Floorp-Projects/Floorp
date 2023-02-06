@@ -5,6 +5,10 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
 const URL1 = "data:text/plain,tab1";
 const URL2 = "data:text/plain,tab2";
 const URL3 = "data:text/plain,tab3";
@@ -77,6 +81,8 @@ async function testWithNewWindow(func) {
 
 add_task(async function test_reorder() {
   await testWithNewWindow(async function(newWindow) {
+    Services.telemetry.clearScalars();
+
     const list = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
     );
@@ -126,6 +132,13 @@ add_task(async function test_reorder() {
       [0, 1, 2, 3, 4, 5],
       "after moving up again"
     );
+
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
+      3
+    );
   });
 });
 
@@ -135,6 +148,8 @@ function tabOf(row) {
 
 add_task(async function test_move_to_tab_bar() {
   await testWithNewWindow(async function(newWindow) {
+    Services.telemetry.clearScalars();
+
     const list = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
     );
@@ -175,6 +190,13 @@ add_task(async function test_move_to_tab_bar() {
       [0, 1, 2, 3, 4, 5],
       "after moving down with tab bar"
     );
+
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
+      2
+    );
   });
 });
 
@@ -182,6 +204,8 @@ add_task(async function test_move_to_different_tab_bar() {
   const newWindow2 = await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
 
   await testWithNewWindow(async function(newWindow) {
+    Services.telemetry.clearScalars();
+
     const list = newWindow.document.getElementById(
       "allTabsMenu-allTabsView-tabs"
     );
@@ -219,6 +243,13 @@ add_task(async function test_move_to_different_tab_bar() {
       getOrderOfTabs(newWindow2.gBrowser.tabs),
       [3, 0],
       "after moving to other window in newWindow2"
+    );
+
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "browser.ui.interaction.all_tabs_panel_dragstart_tab_event_count",
+      1
     );
   });
 

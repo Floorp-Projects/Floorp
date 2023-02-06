@@ -140,7 +140,7 @@ var gTabsPanel = {
     return isElementVisible(this.allTabsButton);
   },
 
-  showAllTabsPanel(event) {
+  showAllTabsPanel(event, entrypoint = "unknown") {
     // Note that event may be null.
 
     // Only space and enter should open the popup, ignore other keypresses:
@@ -149,6 +149,11 @@ var gTabsPanel = {
     }
     this.init();
     if (this.canOpen) {
+      Services.telemetry.keyedScalarAdd(
+        "browser.ui.interaction.all_tabs_panel_entrypoint",
+        entrypoint,
+        1
+      );
       PanelUI.showSubView(
         this.kElements.allTabsView,
         this.allTabsButton,
@@ -163,7 +168,7 @@ var gTabsPanel = {
     }
   },
 
-  showHiddenTabsPanel(event) {
+  showHiddenTabsPanel(event, entrypoint = "unknown") {
     this.init();
     if (!this.canOpen) {
       return;
@@ -178,7 +183,7 @@ var gTabsPanel = {
       },
       { once: true }
     );
-    this.showAllTabsPanel(event);
+    this.showAllTabsPanel(event, entrypoint);
   },
 
   searchTabs() {

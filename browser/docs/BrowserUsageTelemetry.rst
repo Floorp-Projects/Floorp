@@ -129,3 +129,20 @@ full path to the file will typically look something like
 
 This value is meant to be resilient to re-installation, so that file will not
 be removed when Firefox is uninstalled.
+
+Context menu entrypoints
+========================
+
+Some context menus are re-used in multiple places. By default, we simply count
+the number of interactions per item within a context menu, and do not record
+the entrypoint that caused the context menu to open.
+
+It is possible to opt-in to recording the entrypoint that caused the context
+menu to open. This is done by adding an entry to
+``ENTRYPOINT_TRACKED_CONTEXT_MENU_IDS``, mapping the ID of the context menu
+to a keyed Scalar under ``browser.ui.interaction.``. This scalar is recorded
+only if an interaction is recorded within the context menu itself.
+
+When the keyed scalar is recorded, the key will be a unique ID for the
+trigger node that caused the context menu to open. The value is the count
+of openings from that trigger node.
