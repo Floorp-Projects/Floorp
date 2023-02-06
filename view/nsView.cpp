@@ -219,23 +219,14 @@ static LayoutDeviceIntRect MaybeRoundToDisplayPixels(
     return aRect;
   }
 
-  auto Truncate = [&](int32_t i) { return (i / aRound) * aRound; };
-  auto Round = [&](int32_t i) { return Truncate(i + aRound / 2); };
-  auto RoundSize = [&](int32_t i) {
-    if (i % aRound == 0) {
-      return i;
-    }
-    const auto truncated = Truncate(i);
-    if (NS_WARN_IF(aTransparency == TransparencyMode::Opaque)) {
-      // If the widget doesn't support transparency, we prefer truncating to
-      // ceiling, so that we don't have extra pixels not painted by our frame.
-      return truncated;
-    }
-    return truncated + aRound;
-  };
-
-  return LayoutDeviceIntRect(Round(aRect.x), Round(aRect.y),
-                             RoundSize(aRect.width), RoundSize(aRect.height));
+  // If the widget doesn't support transparency, we prefer truncating to
+  // ceiling, so that we don't have extra pixels not painted by our frame.
+  auto size = aTransparency == TransparencyMode::Opaque
+                  ? aRect.Size().TruncatedToMultiple(aRound)
+                  : aRect.Size().CeiledToMultiple(aRound);
+  Unused << NS_WARN_IF(aTransparency == TransparencyMode::Opaque &&
+                       size != aRect.Size());
+  return {aRect.TopLeft().RoundedToMultiple(aRound), size};
 }
 
 LayoutDeviceIntRect nsView::CalcWidgetBounds(WindowType aType,
