@@ -53,11 +53,6 @@ void FileSystemManagerChild::Shutdown() {
   Close();
 }
 
-already_AddRefed<PFileSystemAccessHandleChild>
-FileSystemManagerChild::AllocPFileSystemAccessHandleChild() {
-  return MakeAndAddRef<FileSystemAccessHandleChild>();
-}
-
 already_AddRefed<PFileSystemWritableFileStreamChild>
 FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
   return MakeAndAddRef<FileSystemWritableFileStreamChild>();

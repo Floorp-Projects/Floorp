@@ -61,6 +61,11 @@ void FileSystemManager::Shutdown() {
   }
 }
 
+const RefPtr<FileSystemManagerChild>& FileSystemManager::ActorStrongRef()
+    const {
+  return mBackgroundRequestHandler->FileSystemManagerChildStrongRef();
+}
+
 void FileSystemManager::RegisterPromiseRequestHolder(
     PromiseRequestHolder<BoolPromise>* aHolder) {
   mPromiseRequestHolders.AppendElement(aHolder);

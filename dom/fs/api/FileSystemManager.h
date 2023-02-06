@@ -68,6 +68,8 @@ class FileSystemManager : public nsISupports {
 
   void Shutdown();
 
+  const RefPtr<FileSystemManagerChild>& ActorStrongRef() const;
+
   void RegisterPromiseRequestHolder(PromiseRequestHolder<BoolPromise>* aHolder);
 
   void UnregisterPromiseRequestHolder(

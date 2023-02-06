@@ -16,6 +16,7 @@
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/FileSystemSyncAccessHandleBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -92,8 +93,8 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
 
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    RefPtr<FileSystemAccessHandleChild> aActor, RefPtr<TaskQueue> aIOTaskQueue,
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+    RefPtr<FileSystemAccessHandleChild> aActor, RefPtr<TaskQueue> aIOTaskQueue,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
@@ -121,9 +122,16 @@ FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
 Result<RefPtr<FileSystemSyncAccessHandle>, nsresult>
 FileSystemSyncAccessHandle::Create(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    RefPtr<FileSystemAccessHandleChild> aActor,
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+    mozilla::ipc::ManagedEndpoint<PFileSystemAccessHandleChild>&&
+        aAccessHandleChildEndpoint,
     const fs::FileSystemEntryMetadata& aMetadata) {
+  auto accessHandleChild = MakeRefPtr<FileSystemAccessHandleChild>();
+
+  QM_TRY(MOZ_TO_RESULT(
+      aManager->ActorStrongRef()->BindPFileSystemAccessHandleEndpoint(
+          std::move(aAccessHandleChildEndpoint), accessHandleChild)));
+
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
                                         MOZ_SELECT_OVERLOAD(do_GetService),
@@ -134,8 +142,8 @@ FileSystemSyncAccessHandle::Create(
   QM_TRY(MOZ_TO_RESULT(ioTaskQueue));
 
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
-      aGlobal, aManager, std::move(aActor), std::move(ioTaskQueue),
-      std::move(aStreamParams), aMetadata);
+      aGlobal, aManager, std::move(aStreamParams), std::move(accessHandleChild),
+      std::move(ioTaskQueue), aMetadata);
 
   auto autoClose = MakeScopeExit([result] {
     MOZ_ASSERT(result->mState == State::Initial);

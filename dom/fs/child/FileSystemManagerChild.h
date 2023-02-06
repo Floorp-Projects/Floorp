@@ -30,9 +30,6 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
 
   virtual void Shutdown();
 
-  already_AddRefed<PFileSystemAccessHandleChild>
-  AllocPFileSystemAccessHandleChild();
-
   already_AddRefed<PFileSystemWritableFileStreamChild>
   AllocPFileSystemWritableFileStreamChild();
 
