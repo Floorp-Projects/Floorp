@@ -1530,11 +1530,6 @@ static bool XrayResolveAttribute(
 
   cacheOnHolder = true;
 
-  JS::Rooted<jsid> getterId(cx);
-  if (!JS::ToGetterId(cx, id, &getterId)) {
-    return false;
-  }
-
   // Because of centralization, we need to make sure we fault in the JitInfos as
   // well. At present, until the JSAPI changes, the easiest way to do this is
   // wrap them up as functions ourselves.
@@ -1542,21 +1537,16 @@ static bool XrayResolveAttribute(
   // They all have getters, so we can just make it.
   JS::Rooted<JSObject*> getter(
       cx, XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.getter.native, 0,
-                             getterId));
+                             id));
   if (!getter) {
     return false;
   }
 
   JS::Rooted<JSObject*> setter(cx);
   if (attrSpec.u.accessors.setter.native.op) {
-    JS::Rooted<jsid> setterId(cx);
-    if (!JS::ToSetterId(cx, id, &setterId)) {
-      return false;
-    }
-
     // We have a setter! Make it.
     setter = XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.setter.native,
-                                1, setterId);
+                                1, id);
     if (!setter) {
       return false;
     }

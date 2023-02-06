@@ -21,7 +21,6 @@ import buildconfig
 # that we don't care about in the context of the devtools.
 PURE_INTERFACE_ALLOWLIST = set(
     [
-        "Window",
         "Document",
         "Node",
         "DOMTokenList",
@@ -78,101 +77,28 @@ for filepath in file_list["webidls"]:
         parser.parse(f.read(), filepath)
 results = parser.finish()
 
-# TODO: Bug 1616013 - Move more of these to be part of the pure list.
-pure_output = {
-    "Document": {
-        "instance": {
-            "getters": [
-                "location",
-            ],
-        },
-        "prototype": {
-            "methods": [
-                "getSelection",
-                "hasStorageAccess",
-            ],
-        },
-    },
-    "Range": {
-        "prototype": {
-            "methods": [
-                "isPointInRange",
-                "comparePoint",
-                "intersectsNode",
-                # These two functions aren't pure because they do trigger
-                # layout when they are called, but in the context of eager
-                # evaluation, that should be a totally fine thing to do.
-                "getClientRects",
-                "getBoundingClientRect",
-            ],
-        }
-    },
-    "Selection": {
-        "prototype": {
-            "methods": ["getRangeAt", "containsNode"],
-        }
-    },
-    "Window": {
-        "instance": {
-            "getters": [
-                "location",
-            ],
-        },
-    },
-    "Location": {
-        "instance": {
-            "getters": [
-                "href",
-                "origin",
-                "protocol",
-                "host",
-                "hostname",
-                "port",
-                "pathname",
-                "search",
-                "hash",
-            ],
-        },
-    },
-}
+pure_output = {}
 deprecated_output = {}
 for result in results:
     if isinstance(result, WebIDL.IDLInterface):
         iface = result.identifier.name
 
-        is_global = result.getExtendedAttribute("Global")
-
         for member in result.members:
             name = member.identifier.name
 
-            if (member.isMethod() or member.isAttr()) and member.affects == "Nothing":
+            # We only care about methods because eager evaluation assumes that
+            # all getter functions are side-effect-free.
+            if member.isMethod() and member.affects == "Nothing":
                 if (
                     PURE_INTERFACE_ALLOWLIST and not iface in PURE_INTERFACE_ALLOWLIST
                 ) or name.startswith("_"):
                     continue
-
-                if iface not in pure_output:
-                    pure_output[iface] = {}
-
-                if is_global:
-                    owner_type = "instance"
-                elif member.isStatic():
-                    owner_type = "static"
+                if not iface in pure_output:
+                    pure_output[iface] = []
+                if member.isStatic():
+                    pure_output[iface].append([name])
                 else:
-                    owner_type = "prototype"
-
-                if owner_type not in pure_output[iface]:
-                    pure_output[iface][owner_type] = {}
-
-                if member.isMethod():
-                    prop_type = "methods"
-                else:
-                    prop_type = "getters"
-
-                if prop_type not in pure_output[iface][owner_type]:
-                    pure_output[iface][owner_type][prop_type] = []
-
-                pure_output[iface][owner_type][prop_type].append(name)
+                    pure_output[iface].append(["prototype", name])
             if (
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
                 and (member.isMethod() or member.isAttr())
