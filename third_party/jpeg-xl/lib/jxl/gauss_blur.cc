@@ -20,7 +20,7 @@
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_ops.h"
-#include "lib/jxl/linalg.h"
+#include "lib/jxl/matrix_ops.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
@@ -542,7 +542,7 @@ hwy::AlignedUniquePtr<RecursiveGaussian> CreateRecursiveGaussian(double sigma) {
   const double gamma[3] = {1, radius * radius - sigma * sigma,  // (55)
                            zeta_15 * rho[0] + zeta_35 * rho[1] + rho[2]};
   double beta[3];
-  MatMul(A, gamma, 3, 3, 1, beta);  // (53)
+  Mul3x3Vector(A, gamma, beta);  // (53)
 
   // Sanity check: correctly solved for beta (IIR filter weights are normalized)
   const double sum = beta[0] * p_1 + beta[1] * p_3 + beta[2] * p_5;  // (39)

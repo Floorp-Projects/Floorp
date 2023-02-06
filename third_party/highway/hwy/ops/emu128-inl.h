@@ -123,29 +123,12 @@ HWY_API Vec128<T, N> Undefined(Simd<T, N, 0> d) {
   return Zero(d);
 }
 
-namespace detail {
-
-template <typename T>
-HWY_INLINE constexpr T IncrementWithWraparound(hwy::FloatTag /*tag*/, T t) {
-  return t + T{1};
-}
-
-template <typename T>
-HWY_INLINE constexpr T IncrementWithWraparound(hwy::NonFloatTag /*tag*/, T t) {
-  using TU = MakeUnsigned<T>;
-  return static_cast<T>(static_cast<TU>(static_cast<TU>(t) + TU{1}) &
-                        hwy::LimitsMax<TU>());
-}
-
-}  // namespace detail
-
 template <typename T, size_t N, typename T2>
 HWY_API Vec128<T, N> Iota(const Simd<T, N, 0> /* tag */, T2 first) {
   Vec128<T, N> v;
-  T counter = static_cast<T>(first);
   for (size_t i = 0; i < N; ++i) {
-    v.raw[i] = counter;
-    counter = detail::IncrementWithWraparound(hwy::IsFloatTag<T>(), counter);
+    v.raw[i] =
+        AddWithWraparound(hwy::IsFloatTag<T>(), static_cast<T>(first), i);
   }
   return v;
 }
@@ -220,6 +203,13 @@ HWY_API Vec128<T, N> Xor(const Vec128<T, N> a, const Vec128<T, N> b) {
 template <typename T, size_t N>
 HWY_API Vec128<T, N> operator^(const Vec128<T, N> a, const Vec128<T, N> b) {
   return Xor(a, b);
+}
+
+// ------------------------------ Xor3
+
+template <typename T, size_t N>
+HWY_API Vec128<T, N> Xor3(Vec128<T, N> x1, Vec128<T, N> x2, Vec128<T, N> x3) {
+  return Xor(x1, Xor(x2, x3));
 }
 
 // ------------------------------ Or3
@@ -767,7 +757,8 @@ template <typename T, size_t N>
 HWY_INLINE Vec128<T, N> Mul(SignedTag /*tag*/, Vec128<T, N> a,
                             const Vec128<T, N> b) {
   for (size_t i = 0; i < N; ++i) {
-    a.raw[i] = static_cast<T>(static_cast<int64_t>(a.raw[i]) * b.raw[i]);
+    a.raw[i] = static_cast<T>(static_cast<uint64_t>(a.raw[i]) *
+                              static_cast<uint64_t>(b.raw[i]));
   }
   return a;
 }
@@ -776,7 +767,8 @@ template <typename T, size_t N>
 HWY_INLINE Vec128<T, N> Mul(UnsignedTag /*tag*/, Vec128<T, N> a,
                             const Vec128<T, N> b) {
   for (size_t i = 0; i < N; ++i) {
-    a.raw[i] = static_cast<T>(static_cast<uint64_t>(a.raw[i]) * b.raw[i]);
+    a.raw[i] = static_cast<T>(static_cast<uint64_t>(a.raw[i]) *
+                              static_cast<uint64_t>(b.raw[i]));
   }
   return a;
 }
@@ -2333,7 +2325,7 @@ HWY_API intptr_t FindFirstTrue(Simd<T, N, 0> /* tag */,
 
 template <typename T>
 struct CompressIsPartition {
-  enum { value = 1 };
+  enum { value = (sizeof(T) != 1) };
 };
 
 template <typename T, size_t N>
@@ -2426,28 +2418,36 @@ HWY_API Vec128<float, N> ReorderWidenMulAccumulate(Simd<float, N, 0> df32,
                                                    Vec128<bfloat16_t, 2 * N> b,
                                                    const Vec128<float, N> sum0,
                                                    Vec128<float, N>& sum1) {
-  const Rebind<bfloat16_t, decltype(df32)> dbf16;
+  const Rebind<uint32_t, decltype(df32)> du32;
+  using VU32 = VFromD<decltype(du32)>;
+  const VU32 odd = Set(du32, 0xFFFF0000u);  // bfloat16 is the upper half of f32
   // Avoid ZipLower/Upper so this also works on big-endian systems.
-  const Vec128<float, N> a0 = PromoteTo(df32, LowerHalf(dbf16, a));
-  const Vec128<float, N> a1 = PromoteTo(df32, UpperHalf(dbf16, a));
-  const Vec128<float, N> b0 = PromoteTo(df32, LowerHalf(dbf16, b));
-  const Vec128<float, N> b1 = PromoteTo(df32, UpperHalf(dbf16, b));
-  sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
-  return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
+  const VU32 ae = ShiftLeft<16>(BitCast(du32, a));
+  const VU32 ao = And(BitCast(du32, a), odd);
+  const VU32 be = ShiftLeft<16>(BitCast(du32, b));
+  const VU32 bo = And(BitCast(du32, b), odd);
+  sum1 = MulAdd(BitCast(df32, ao), BitCast(df32, bo), sum1);
+  return MulAdd(BitCast(df32, ae), BitCast(df32, be), sum0);
 }
 
 template <size_t N>
 HWY_API Vec128<int32_t, N> ReorderWidenMulAccumulate(
     Simd<int32_t, N, 0> d32, Vec128<int16_t, 2 * N> a, Vec128<int16_t, 2 * N> b,
     const Vec128<int32_t, N> sum0, Vec128<int32_t, N>& sum1) {
-  const Rebind<int16_t, decltype(d32)> d16;
-  // Avoid ZipLower/Upper so this also works on big-endian systems.
-  const Vec128<int32_t, N> a0 = PromoteTo(d32, LowerHalf(d16, a));
-  const Vec128<int32_t, N> a1 = PromoteTo(d32, UpperHalf(d16, a));
-  const Vec128<int32_t, N> b0 = PromoteTo(d32, LowerHalf(d16, b));
-  const Vec128<int32_t, N> b1 = PromoteTo(d32, UpperHalf(d16, b));
-  sum1 = MulAdd(BitCast(d32, a1), BitCast(d32, b1), sum1);
-  return MulAdd(BitCast(d32, a0), BitCast(d32, b0), sum0);
+  using VI32 = VFromD<decltype(d32)>;
+  // Manual sign extension requires two shifts for even lanes.
+  const VI32 ae = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, a)));
+  const VI32 be = ShiftRight<16>(ShiftLeft<16>(BitCast(d32, b)));
+  const VI32 ao = ShiftRight<16>(BitCast(d32, a));
+  const VI32 bo = ShiftRight<16>(BitCast(d32, b));
+  sum1 = Add(Mul(ao, bo), sum1);
+  return Add(Mul(ae, be), sum0);
+}
+
+// ------------------------------ RearrangeToOddPlusEven
+template <class VW>
+HWY_API VW RearrangeToOddPlusEven(const VW sum0, const VW sum1) {
+  return Add(sum0, sum1);
 }
 
 // ================================================== REDUCTIONS

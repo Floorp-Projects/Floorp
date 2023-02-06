@@ -15,11 +15,9 @@
 #include <vector>
 
 #include "lib/extras/dec/decode.h"
-#include "lib/extras/dec/jpegli.h"
 #include "lib/extras/dec/pgx.h"
 #include "lib/extras/dec/pnm.h"
 #include "lib/extras/enc/encode.h"
-#include "lib/extras/enc/jpegli.h"
 #include "lib/extras/packed_image_convert.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
@@ -37,7 +35,6 @@ namespace jxl {
 namespace extras {
 namespace {
 
-using test::ButteraugliDistance;
 using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::Field;
@@ -179,7 +176,6 @@ struct TestImageParams {
   bool add_alpha;
   bool big_endian;
   bool add_extra_channels;
-  bool jpegli_decode = false;
 
   bool ShouldTestRoundtrip() const {
     if (codec == Codec::kPNG) {
@@ -279,15 +275,8 @@ void TestRoundTrip(const TestImageParams& params, ThreadPool* pool) {
     color_hints.Add("color_space",
                     params.is_gray ? "Gra_D65_Rel_SRG" : "RGB_D65_SRG_Rel_SRG");
   }
-  if (params.codec == Codec::kJPG && params.jpegli_decode) {
-#if JPEGXL_ENABLE_JPEG
-    ASSERT_TRUE(
-        DecodeJpeg(encoded.bitstreams[0], JXL_TYPE_UINT8, pool, &ppf_out));
-#endif
-  } else {
-    ASSERT_TRUE(DecodeBytes(Span<const uint8_t>(encoded.bitstreams[0]),
-                            color_hints, SizeConstraints(), &ppf_out));
-  }
+  ASSERT_TRUE(DecodeBytes(Span<const uint8_t>(encoded.bitstreams[0]),
+                          color_hints, SizeConstraints(), &ppf_out));
   if (params.codec == Codec::kPNG && ppf_out.icc.empty()) {
     // Decoding a PNG may drop the ICC profile if there's a valid cICP chunk.
     // Rendering intent is not preserved in this case.
@@ -349,10 +338,6 @@ TEST(CodecTest, TestRoundTrip) {
               params.add_extra_channels = true;
               TestRoundTrip(params, &pool);
             }
-            if (codec == Codec::kJPG) {
-              params.jpegli_decode = true;
-              TestRoundTrip(params, &pool);
-            }
           }
         }
       }
@@ -392,94 +377,6 @@ TEST(CodecTest, LosslessPNMRoundtrip) {
     }
   }
 }
-
-#if JPEGXL_ENABLE_JPEG
-namespace {
-Status ReadTestImagePPF(const std::string& pathname, PackedPixelFile* ppf) {
-  const PaddedBytes encoded = ReadTestData(pathname);
-  ColorHints color_hints;
-  if (pathname.find(".ppm") != std::string::npos) {
-    color_hints.Add("color_space", "RGB_D65_SRG_Rel_SRG");
-  } else if (pathname.find(".pgm") != std::string::npos) {
-    color_hints.Add("color_space", "Gra_D65_Rel_SRG");
-  }
-  return DecodeBytes(Span<const uint8_t>(encoded), color_hints,
-                     SizeConstraints(), ppf);
-}
-
-Status DecodeImagePPF(const std::vector<uint8_t>& compressed,
-                      PackedPixelFile* ppf) {
-  return DecodeBytes(Span<const uint8_t>(compressed), ColorHints(),
-                     SizeConstraints(), ppf);
-}
-
-std::string Description(const JxlColorEncoding& color_encoding) {
-  ColorEncoding c_enc;
-  JXL_CHECK(ConvertExternalToInternalColorEncoding(color_encoding, &c_enc));
-  return Description(c_enc);
-}
-
-float BitsPerPixel(const PackedPixelFile& ppf,
-                   const std::vector<uint8_t>& compressed) {
-  const size_t num_pixels = ppf.info.xsize * ppf.info.ysize;
-  return compressed.size() * 8.0 / num_pixels;
-}
-}  // namespace
-
-TEST(CodecTest, JpegliXYBEncodeTest) {
-  std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
-  PackedPixelFile ppf_in;
-  ASSERT_TRUE(ReadTestImagePPF(testimage, &ppf_in));
-  EXPECT_EQ("RGB_D65_SRG_Rel_SRG", Description(ppf_in.color_encoding));
-  EXPECT_EQ(8, ppf_in.info.bits_per_sample);
-
-  std::vector<uint8_t> compressed;
-  JpegSettings settings;
-  settings.xyb = true;
-  ASSERT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
-
-  PackedPixelFile ppf_out;
-  ASSERT_TRUE(DecodeImagePPF(compressed, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(1.45f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.3f));
-}
-
-TEST(CodecTest, JpegliYUVEncodeTest) {
-  std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
-  PackedPixelFile ppf_in;
-  ASSERT_TRUE(ReadTestImagePPF(testimage, &ppf_in));
-  EXPECT_EQ("RGB_D65_SRG_Rel_SRG", Description(ppf_in.color_encoding));
-  EXPECT_EQ(8, ppf_in.info.bits_per_sample);
-
-  std::vector<uint8_t> compressed;
-  JpegSettings settings;
-  settings.xyb = false;
-  ASSERT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
-
-  PackedPixelFile ppf_out;
-  ASSERT_TRUE(DecodeImagePPF(compressed, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(1.9f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.3f));
-}
-
-TEST(CodecTest, JpegliHDRRoundtripTest) {
-  std::string testimage = "jxl/hdr_room.png";
-  PackedPixelFile ppf_in;
-  ASSERT_TRUE(ReadTestImagePPF(testimage, &ppf_in));
-  EXPECT_EQ("RGB_D65_202_Rel_HLG", Description(ppf_in.color_encoding));
-  EXPECT_EQ(16, ppf_in.info.bits_per_sample);
-
-  std::vector<uint8_t> compressed;
-  JpegSettings settings;
-  settings.xyb = false;
-  ASSERT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
-
-  PackedPixelFile ppf_out;
-  ASSERT_TRUE(DecodeJpeg(compressed, JXL_TYPE_UINT16, nullptr, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(3.0f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.05f));
-}
-#endif
 
 CodecInOut DecodeRoundtrip(const std::string& pathname, ThreadPool* pool,
                            const ColorHints& color_hints = ColorHints()) {

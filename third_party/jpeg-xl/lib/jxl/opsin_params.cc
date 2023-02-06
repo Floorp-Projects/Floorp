@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 
-#include "lib/jxl/linalg.h"
+#include "lib/jxl/matrix_ops.h"
 
 namespace jxl {
 

@@ -27,7 +27,6 @@
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/linalg.h"
 #include "lib/jxl/quant_weights.h"
 
 // Quantizes DC and AC coefficients, with separate quantization tables according

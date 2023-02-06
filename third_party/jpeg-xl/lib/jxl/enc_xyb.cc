@@ -98,6 +98,18 @@ void LinearRGBToXYB(const V r, const V g, const V b,
   // For wide-gamut inputs, r/g/b and valx (but not y/z) are often negative.
 }
 
+void LinearRGBRowToXYB(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
+                       float* JXL_RESTRICT row2,
+                       const float* JXL_RESTRICT premul_absorb, size_t xsize) {
+  const HWY_FULL(float) d;
+  for (size_t x = 0; x < xsize; x += Lanes(d)) {
+    const auto r = Load(d, row0 + x);
+    const auto g = Load(d, row1 + x);
+    const auto b = Load(d, row2 + x);
+    LinearRGBToXYB(r, g, b, premul_absorb, row0 + x, row1 + x, row2 + x);
+  }
+}
+
 // Input/output uses the codec.h scaling: nominally 0-1 if in-gamut.
 template <class V>
 V LinearFromSRGB(V encoded) {
@@ -441,15 +453,34 @@ const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
   return HWY_DYNAMIC_DISPATCH(ToXYB)(in, pool, xyb, cms, linear_storage);
 }
 
+HWY_EXPORT(LinearRGBRowToXYB);
+void LinearRGBRowToXYB(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
+                       float* JXL_RESTRICT row2,
+                       const float* JXL_RESTRICT premul_absorb, size_t xsize) {
+  HWY_DYNAMIC_DISPATCH(LinearRGBRowToXYB)
+  (row0, row1, row2, premul_absorb, xsize);
+}
+
+HWY_EXPORT(ComputePremulAbsorb);
+void ComputePremulAbsorb(float intensity_target, float* premul_absorb) {
+  HWY_DYNAMIC_DISPATCH(ComputePremulAbsorb)(intensity_target, premul_absorb);
+}
+
+void ScaleXYBRow(float* JXL_RESTRICT row0, float* JXL_RESTRICT row1,
+                 float* JXL_RESTRICT row2, size_t xsize) {
+  for (size_t x = 0; x < xsize; x++) {
+    row2[x] = (row2[x] - row1[x] + kScaledXYBOffset[2]) * kScaledXYBScale[2];
+    row0[x] = (row0[x] + kScaledXYBOffset[0]) * kScaledXYBScale[0];
+    row1[x] = (row1[x] + kScaledXYBOffset[1]) * kScaledXYBScale[1];
+  }
+}
+
 void ScaleXYB(Image3F* opsin) {
-  jxl::SubtractFrom(opsin->Plane(1), &opsin->Plane(2));
   for (size_t y = 0; y < opsin->ysize(); y++) {
-    for (size_t c = 0; c < 3; ++c) {
-      float* row = opsin->PlaneRow(c, y);
-      for (size_t x = 0; x < opsin->xsize(); x++) {
-        row[x] = (row[x] + kScaledXYBOffset[c]) * kScaledXYBScale[c];
-      }
-    }
+    float* row0 = opsin->PlaneRow(0, y);
+    float* row1 = opsin->PlaneRow(1, y);
+    float* row2 = opsin->PlaneRow(2, y);
+    ScaleXYBRow(row0, row1, row2, opsin->xsize());
   }
 }
 

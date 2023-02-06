@@ -1381,7 +1381,7 @@ cmd_bump_version() {
   local newver="${1:-}"
 
   if ! which dch >/dev/null; then
-    echo "Run:\n  sudo apt install debhelper"
+    echo "Missing dch\nTo install it run:\n  sudo apt install devscripts"
     exit 1
   fi
 

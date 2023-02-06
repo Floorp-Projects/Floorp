@@ -30,7 +30,7 @@ HWY_BEFORE_NAMESPACE();
 // the same target attribute as our code, see #834.
 HWY_DIAGNOSTICS(push)
 HWY_DIAGNOSTICS_OFF(disable : 4701, ignored "-Wuninitialized")
-#include <arm_neon.h>
+#include <arm_neon.h>  // NOLINT(build/include_order)
 HWY_DIAGNOSTICS(pop)
 
 // Must come after arm_neon.h.
@@ -204,6 +204,17 @@ namespace detail {  // for code folding and Raw128
   HWY_NEON_DEF_FUNCTION_UINT_8_16_32(name, prefix, infix, args)   \
   HWY_NEON_DEF_FUNCTION_INT_8_16_32(name, prefix, infix, args)    \
   HWY_NEON_DEF_FUNCTION_FLOAT_32(name, prefix, infix, args)
+
+// For eor3q, which is only defined for full vectors.
+#define HWY_NEON_DEF_FUNCTION_FULL_UI(name, prefix, infix, args)      \
+  HWY_NEON_DEF_FUNCTION(uint8, 16, name, prefix##q, infix, u8, args)  \
+  HWY_NEON_DEF_FUNCTION(uint16, 8, name, prefix##q, infix, u16, args) \
+  HWY_NEON_DEF_FUNCTION(uint32, 4, name, prefix##q, infix, u32, args) \
+  HWY_NEON_DEF_FUNCTION(uint64, 2, name, prefix##q, infix, u64, args) \
+  HWY_NEON_DEF_FUNCTION(int8, 16, name, prefix##q, infix, s8, args)   \
+  HWY_NEON_DEF_FUNCTION(int16, 8, name, prefix##q, infix, s16, args)  \
+  HWY_NEON_DEF_FUNCTION(int32, 4, name, prefix##q, infix, s32, args)  \
+  HWY_NEON_DEF_FUNCTION(int64, 2, name, prefix##q, infix, s64, args)
 
 // Emulation of some intrinsics on armv7.
 #if HWY_ARCH_ARM_V7
@@ -1038,7 +1049,8 @@ template <typename T, size_t N, typename T2>
 Vec128<T, N> Iota(const Simd<T, N, 0> d, const T2 first) {
   HWY_ALIGN T lanes[16 / sizeof(T)];
   for (size_t i = 0; i < 16 / sizeof(T); ++i) {
-    lanes[i] = static_cast<T>(first + static_cast<T2>(i));
+    lanes[i] =
+        AddWithWraparound(hwy::IsFloatTag<T>(), static_cast<T>(first), i);
   }
   return Load(d, lanes);
 }
@@ -1989,6 +2001,32 @@ HWY_API Vec128<T, N> Xor(const Vec128<T, N> a, const Vec128<T, N> b) {
   return BitCast(d, BitCast(du, a) ^ BitCast(du, b));
 }
 
+// ------------------------------ Xor3
+#if HWY_ARCH_ARM_A64 && defined(__ARM_FEATURE_SHA3)
+HWY_NEON_DEF_FUNCTION_FULL_UI(Xor3, veor3, _, 3)
+
+// Half vectors are not natively supported. Two Xor are likely more efficient
+// than Combine to 128-bit.
+template <typename T, size_t N, HWY_IF_LE64(T, N), HWY_IF_NOT_FLOAT(T)>
+HWY_API Vec128<T, N> Xor3(Vec128<T, N> x1, Vec128<T, N> x2, Vec128<T, N> x3) {
+  return Xor(x1, Xor(x2, x3));
+}
+
+template <typename T, size_t N, HWY_IF_FLOAT(T)>
+HWY_API Vec128<T, N> Xor3(const Vec128<T, N> x1, const Vec128<T, N> x2,
+                          const Vec128<T, N> x3) {
+  const DFromV<decltype(x1)> d;
+  const RebindToUnsigned<decltype(d)> du;
+  return BitCast(d, Xor3(BitCast(du, x1), BitCast(du, x2), BitCast(du, x3)));
+}
+
+#else
+template <typename T, size_t N>
+HWY_API Vec128<T, N> Xor3(Vec128<T, N> x1, Vec128<T, N> x2, Vec128<T, N> x3) {
+  return Xor(x1, Xor(x2, x3));
+}
+#endif
+
 // ------------------------------ Or3
 
 template <typename T, size_t N>
@@ -2653,7 +2691,7 @@ HWY_API Vec32<float> LoadU(Full32<float> /*tag*/, const float* HWY_RESTRICT p) {
   return Vec32<float>(vld1_dup_f32(p));
 }
 
-template <typename T, HWY_IF_LANE_SIZE_LT(T, 4)>
+template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x6)>  // 1 or 2 bytes
 HWY_API Vec32<T> LoadU(Full32<T> d, const T* HWY_RESTRICT p) {
   const Repartition<uint32_t, decltype(d)> d32;
   uint32_t buf;
@@ -2674,7 +2712,7 @@ HWY_API Vec128<int16_t, 1> LoadU(Simd<int16_t, 1, 0> /*tag*/,
   return Vec128<int16_t, 1>(vld1_dup_s16(p));
 }
 
-template <typename T, HWY_IF_LANE_SIZE_LT(T, 2)>
+template <typename T, HWY_IF_LANE_SIZE(T, 1)>
 HWY_API Vec128<T, 2> LoadU(Simd<T, 2, 0> d, const T* HWY_RESTRICT p) {
   const Repartition<uint16_t, decltype(d)> d16;
   uint16_t buf;
@@ -2834,7 +2872,7 @@ HWY_API void StoreU(const Vec32<float> v, Full32<float>,
   vst1_lane_f32(p, v.raw, 0);
 }
 
-template <typename T, HWY_IF_LANE_SIZE_LT(T, 4)>
+template <typename T, HWY_IF_LANE_SIZE_ONE_OF(T, 0x6)>  // 1 or 2 bytes
 HWY_API void StoreU(const Vec32<T> v, Full32<T> d, T* HWY_RESTRICT p) {
   const Repartition<uint32_t, decltype(d)> d32;
   const uint32_t buf = GetLane(BitCast(d32, v));
@@ -2852,7 +2890,7 @@ HWY_API void StoreU(const Vec128<int16_t, 1> v, Simd<int16_t, 1, 0>,
   vst1_lane_s16(p, v.raw, 0);
 }
 
-template <typename T, HWY_IF_LANE_SIZE_LT(T, 2)>
+template <typename T, HWY_IF_LANE_SIZE(T, 1)>
 HWY_API void StoreU(const Vec128<T, 2> v, Simd<T, 2, 0> d, T* HWY_RESTRICT p) {
   const Repartition<uint16_t, decltype(d)> d16;
   const uint16_t buf = GetLane(BitCast(d16, v));
@@ -4252,15 +4290,16 @@ HWY_API Vec128<float, N> ReorderWidenMulAccumulate(Simd<float, N, 0> df32,
                                                    Vec128<bfloat16_t, 2 * N> b,
                                                    const Vec128<float, N> sum0,
                                                    Vec128<float, N>& sum1) {
-  const Repartition<uint16_t, decltype(df32)> du16;
-  const RebindToUnsigned<decltype(df32)> du32;
-  const Vec128<uint16_t, 2 * N> zero = Zero(du16);
-  const Vec128<uint32_t, N> a0 = ZipLower(du32, zero, BitCast(du16, a));
-  const Vec128<uint32_t, N> a1 = ZipUpper(du32, zero, BitCast(du16, a));
-  const Vec128<uint32_t, N> b0 = ZipLower(du32, zero, BitCast(du16, b));
-  const Vec128<uint32_t, N> b1 = ZipUpper(du32, zero, BitCast(du16, b));
-  sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
-  return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
+  const Rebind<uint32_t, decltype(df32)> du32;
+  using VU32 = VFromD<decltype(du32)>;
+  const VU32 odd = Set(du32, 0xFFFF0000u);  // bfloat16 is the upper half of f32
+  // Avoid ZipLower/Upper so this also works on big-endian systems.
+  const VU32 ae = ShiftLeft<16>(BitCast(du32, a));
+  const VU32 ao = And(BitCast(du32, a), odd);
+  const VU32 be = ShiftLeft<16>(BitCast(du32, b));
+  const VU32 bo = And(BitCast(du32, b), odd);
+  sum1 = MulAdd(BitCast(df32, ao), BitCast(df32, bo), sum1);
+  return MulAdd(BitCast(df32, ae), BitCast(df32, be), sum0);
 }
 
 HWY_API Vec128<int32_t> ReorderWidenMulAccumulate(Full128<int32_t> /*d32*/,
@@ -4365,6 +4404,42 @@ HWY_API Vec128<T, N> Combine(Simd<T, N, 0> d, Vec128<T, N / 2> hi,
   // Repartition to two unsigned lanes (each the size of the valid input).
   const Simd<UnsignedFromSize<N * sizeof(T) / 2>, 2, 0> du;
   return BitCast(d, InterleaveLower(BitCast(du, lo2), BitCast(du, hi2)));
+}
+
+// ------------------------------ RearrangeToOddPlusEven (Combine)
+
+template <size_t N>
+HWY_API Vec128<float, N> RearrangeToOddPlusEven(const Vec128<float, N> sum0,
+                                                const Vec128<float, N> sum1) {
+  return Add(sum0, sum1);
+}
+
+HWY_API Vec128<int32_t> RearrangeToOddPlusEven(const Vec128<int32_t> sum0,
+                                               const Vec128<int32_t> sum1) {
+// vmlal_s16 multiplied the lower half into sum0 and upper into sum1.
+#if HWY_ARCH_ARM_A64  // pairwise sum is available and what we want
+  return Vec128<int32_t>(vpaddq_s32(sum0.raw, sum1.raw));
+#else
+  const Full128<int32_t> d;
+  const Half<decltype(d)> d64;
+  const Vec64<int32_t> hi(
+      vpadd_s32(LowerHalf(d64, sum1).raw, UpperHalf(d64, sum1).raw));
+  const Vec64<int32_t> lo(
+      vpadd_s32(LowerHalf(d64, sum0).raw, UpperHalf(d64, sum0).raw));
+  return Combine(Full128<int32_t>(), hi, lo);
+#endif
+}
+
+HWY_API Vec64<int32_t> RearrangeToOddPlusEven(const Vec64<int32_t> sum0,
+                                              const Vec64<int32_t> sum1) {
+  // vmlal_s16 multiplied the lower half into sum0 and upper into sum1.
+  return Vec64<int32_t>(vpadd_s32(sum0.raw, sum1.raw));
+}
+
+HWY_API Vec32<int32_t> RearrangeToOddPlusEven(const Vec32<int32_t> sum0,
+                                              const Vec32<int32_t> sum1) {
+  // Only one widened sum per register, so add them for sum of odd and even.
+  return sum0 + sum1;
 }
 
 // ------------------------------ ZeroExtendVector (Combine)
@@ -4995,6 +5070,55 @@ HWY_INLINE Vec128<T, 1> MaxOfLanes(hwy::SizeTag<sizeof(T)> /* tag */,
   return v;
 }
 
+// full vectors
+#if HWY_ARCH_ARM_A64
+#define HWY_NEON_BUILD_RET_REDUCTION(type, size) Vec128<type##_t, size>
+#define HWY_NEON_DEF_REDUCTION(type, size, name, prefix, infix, suffix, dup)   \
+  HWY_API HWY_NEON_BUILD_RET_REDUCTION(type, size)                             \
+      name(hwy::SizeTag<sizeof(type##_t)>, const Vec128<type##_t, size> v) {   \
+    return HWY_NEON_BUILD_RET_REDUCTION(                                       \
+        type, size)(dup##suffix(HWY_NEON_EVAL(prefix##infix##suffix, v.raw))); \
+  }
+
+#define HWY_NEON_DEF_REDUCTION_CORE_TYPES(name, prefix)                 \
+  HWY_NEON_DEF_REDUCTION(uint8, 8, name, prefix, _, u8, vdup_n_)        \
+  HWY_NEON_DEF_REDUCTION(uint8, 16, name, prefix##q, _, u8, vdupq_n_)   \
+  HWY_NEON_DEF_REDUCTION(uint16, 4, name, prefix, _, u16, vdup_n_)      \
+  HWY_NEON_DEF_REDUCTION(uint16, 8, name, prefix##q, _, u16, vdupq_n_)  \
+  HWY_NEON_DEF_REDUCTION(uint32, 2, name, prefix, _, u32, vdup_n_)      \
+  HWY_NEON_DEF_REDUCTION(uint32, 4, name, prefix##q, _, u32, vdupq_n_)  \
+  HWY_NEON_DEF_REDUCTION(int8, 8, name, prefix, _, s8, vdup_n_)         \
+  HWY_NEON_DEF_REDUCTION(int8, 16, name, prefix##q, _, s8, vdupq_n_)    \
+  HWY_NEON_DEF_REDUCTION(int16, 4, name, prefix, _, s16, vdup_n_)       \
+  HWY_NEON_DEF_REDUCTION(int16, 8, name, prefix##q, _, s16, vdupq_n_)   \
+  HWY_NEON_DEF_REDUCTION(int32, 2, name, prefix, _, s32, vdup_n_)       \
+  HWY_NEON_DEF_REDUCTION(int32, 4, name, prefix##q, _, s32, vdupq_n_)   \
+  HWY_NEON_DEF_REDUCTION(float32, 2, name, prefix, _, f32, vdup_n_)     \
+  HWY_NEON_DEF_REDUCTION(float32, 4, name, prefix##q, _, f32, vdupq_n_) \
+  HWY_NEON_DEF_REDUCTION(float64, 2, name, prefix##q, _, f64, vdupq_n_)
+
+HWY_NEON_DEF_REDUCTION_CORE_TYPES(MinOfLanes, vminv)
+HWY_NEON_DEF_REDUCTION_CORE_TYPES(MaxOfLanes, vmaxv)
+
+// u64/s64 don't have horizontal min/max for some reason, but do have add.
+#define HWY_NEON_DEF_REDUCTION_ALL_TYPES(name, prefix)                 \
+  HWY_NEON_DEF_REDUCTION_CORE_TYPES(name, prefix)                      \
+  HWY_NEON_DEF_REDUCTION(uint64, 2, name, prefix##q, _, u64, vdupq_n_) \
+  HWY_NEON_DEF_REDUCTION(int64, 2, name, prefix##q, _, s64, vdupq_n_)
+
+HWY_NEON_DEF_REDUCTION_ALL_TYPES(SumOfLanes, vaddv)
+
+#undef HWY_NEON_DEF_REDUCTION_ALL_TYPES
+#undef HWY_NEON_DEF_REDUCTION_CORE_TYPES
+#undef HWY_NEON_DEF_REDUCTION
+#undef HWY_NEON_BUILD_RET_REDUCTION
+
+// Need some fallback implementations for [ui]64x2 and [ui]16x2.
+#define HWY_IF_SUM_REDUCTION(T) HWY_IF_LANE_SIZE_ONE_OF(T, 1 << 2)
+#define HWY_IF_MINMAX_REDUCTION(T) \
+  HWY_IF_LANE_SIZE_ONE_OF(T, (1 << 8) | (1 << 2))
+
+#else
 // u32/i32/f32: N=2
 template <typename T, HWY_IF_LANE_SIZE(T, 4)>
 HWY_INLINE Vec128<T, 2> SumOfLanes(hwy::SizeTag<4> /* tag */,
@@ -5012,33 +5136,6 @@ HWY_INLINE Vec128<T, 2> MaxOfLanes(hwy::SizeTag<4> /* tag */,
   return Max(v10, Shuffle2301(v10));
 }
 
-// full vectors
-#if HWY_ARCH_ARM_A64
-HWY_INLINE Vec128<uint32_t> SumOfLanes(hwy::SizeTag<4> /* tag */,
-                                       const Vec128<uint32_t> v) {
-  return Vec128<uint32_t>(vdupq_n_u32(vaddvq_u32(v.raw)));
-}
-HWY_INLINE Vec128<int32_t> SumOfLanes(hwy::SizeTag<4> /* tag */,
-                                      const Vec128<int32_t> v) {
-  return Vec128<int32_t>(vdupq_n_s32(vaddvq_s32(v.raw)));
-}
-HWY_INLINE Vec128<float> SumOfLanes(hwy::SizeTag<4> /* tag */,
-                                    const Vec128<float> v) {
-  return Vec128<float>(vdupq_n_f32(vaddvq_f32(v.raw)));
-}
-HWY_INLINE Vec128<uint64_t> SumOfLanes(hwy::SizeTag<8> /* tag */,
-                                       const Vec128<uint64_t> v) {
-  return Vec128<uint64_t>(vdupq_n_u64(vaddvq_u64(v.raw)));
-}
-HWY_INLINE Vec128<int64_t> SumOfLanes(hwy::SizeTag<8> /* tag */,
-                                      const Vec128<int64_t> v) {
-  return Vec128<int64_t>(vdupq_n_s64(vaddvq_s64(v.raw)));
-}
-HWY_INLINE Vec128<double> SumOfLanes(hwy::SizeTag<8> /* tag */,
-                                     const Vec128<double> v) {
-  return Vec128<double>(vdupq_n_f64(vaddvq_f64(v.raw)));
-}
-#else
 // ARMv7 version for everything except doubles.
 HWY_INLINE Vec128<uint32_t> SumOfLanes(hwy::SizeTag<4> /* tag */,
                                        const Vec128<uint32_t> v) {
@@ -5069,7 +5166,6 @@ HWY_INLINE Vec128<int64_t> SumOfLanes(hwy::SizeTag<8> /* tag */,
                                       const Vec128<int64_t> v) {
   return v + Shuffle01(v);
 }
-#endif
 
 template <typename T>
 HWY_INLINE Vec128<T> MinOfLanes(hwy::SizeTag<4> /* tag */,
@@ -5088,19 +5184,51 @@ HWY_INLINE Vec128<T> MaxOfLanes(hwy::SizeTag<4> /* tag */,
   return Max(v20_31_20_31, v31_20_31_20);
 }
 
-// For u64/i64[/f64].
-template <typename T>
-HWY_INLINE Vec128<T> MinOfLanes(hwy::SizeTag<8> /* tag */,
-                                const Vec128<T> v10) {
-  const Vec128<T> v01 = Shuffle01(v10);
-  return Min(v10, v01);
-}
-template <typename T>
-HWY_INLINE Vec128<T> MaxOfLanes(hwy::SizeTag<8> /* tag */,
-                                const Vec128<T> v10) {
-  const Vec128<T> v01 = Shuffle01(v10);
-  return Max(v10, v01);
-}
+#define HWY_NEON_BUILD_TYPE_T(type, size) type##x##size##_t
+#define HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION(type, size) Vec128<type##_t, size>
+#define HWY_NEON_DEF_PAIRWISE_REDUCTION(type, size, name, prefix, suffix)    \
+  HWY_API HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION(type, size)                  \
+      name(hwy::SizeTag<sizeof(type##_t)>, const Vec128<type##_t, size> v) { \
+    HWY_NEON_BUILD_TYPE_T(type, size) tmp = prefix##_##suffix(v.raw, v.raw); \
+    if ((size / 2) > 1) tmp = prefix##_##suffix(tmp, tmp);                   \
+    if ((size / 4) > 1) tmp = prefix##_##suffix(tmp, tmp);                   \
+    return HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION(                            \
+        type, size)(HWY_NEON_EVAL(vdup##_lane_##suffix, tmp, 0));            \
+  }
+#define HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION(type, size, half, name, prefix, \
+                                             suffix)                         \
+  HWY_API HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION(type, size)                  \
+      name(hwy::SizeTag<sizeof(type##_t)>, const Vec128<type##_t, size> v) { \
+    HWY_NEON_BUILD_TYPE_T(type, half) tmp;                                   \
+    tmp = prefix##_##suffix(vget_high_##suffix(v.raw),                       \
+                            vget_low_##suffix(v.raw));                       \
+    if ((size / 2) > 1) tmp = prefix##_##suffix(tmp, tmp);                   \
+    if ((size / 4) > 1) tmp = prefix##_##suffix(tmp, tmp);                   \
+    if ((size / 8) > 1) tmp = prefix##_##suffix(tmp, tmp);                   \
+    tmp = vdup_lane_##suffix(tmp, 0);                                        \
+    return HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION(                            \
+        type, size)(HWY_NEON_EVAL(vcombine_##suffix, tmp, tmp));             \
+  }
+
+#define HWY_NEON_DEF_PAIRWISE_REDUCTIONS(name, prefix)                  \
+  HWY_NEON_DEF_PAIRWISE_REDUCTION(uint16, 4, name, prefix, u16)         \
+  HWY_NEON_DEF_PAIRWISE_REDUCTION(uint8, 8, name, prefix, u8)           \
+  HWY_NEON_DEF_PAIRWISE_REDUCTION(int16, 4, name, prefix, s16)          \
+  HWY_NEON_DEF_PAIRWISE_REDUCTION(int8, 8, name, prefix, s8)            \
+  HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION(uint16, 8, 4, name, prefix, u16) \
+  HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION(uint8, 16, 8, name, prefix, u8)  \
+  HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION(int16, 8, 4, name, prefix, s16)  \
+  HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION(int8, 16, 8, name, prefix, s8)
+
+HWY_NEON_DEF_PAIRWISE_REDUCTIONS(SumOfLanes, vpadd)
+HWY_NEON_DEF_PAIRWISE_REDUCTIONS(MinOfLanes, vpmin)
+HWY_NEON_DEF_PAIRWISE_REDUCTIONS(MaxOfLanes, vpmax)
+
+#undef HWY_NEON_DEF_PAIRWISE_REDUCTIONS
+#undef HWY_NEON_DEF_WIDE_PAIRWISE_REDUCTION
+#undef HWY_NEON_DEF_PAIRWISE_REDUCTION
+#undef HWY_NEON_BUILD_RET_PAIRWISE_REDUCTION
+#undef HWY_NEON_BUILD_TYPE_T
 
 template <size_t N, HWY_IF_GE32(uint16_t, N)>
 HWY_API Vec128<uint16_t, N> SumOfLanes(hwy::SizeTag<2> /* tag */,
@@ -5173,6 +5301,32 @@ HWY_API Vec128<int16_t, N> MaxOfLanes(hwy::SizeTag<2> /* tag */,
   // Also broadcast into odd lanes.
   return OddEven(BitCast(d, ShiftLeft<16>(min)), BitCast(d, min));
 }
+
+// Need fallback min/max implementations for [ui]64x2.
+#define HWY_IF_SUM_REDUCTION(T) HWY_IF_LANE_SIZE_ONE_OF(T, 0)
+#define HWY_IF_MINMAX_REDUCTION(T) HWY_IF_LANE_SIZE_ONE_OF(T, 1 << 8)
+
+#endif
+
+// [ui]16/[ui]64: N=2 -- special case for pairs of very small or large lanes
+template <typename T, HWY_IF_SUM_REDUCTION(T)>
+HWY_API Vec128<T, 2> SumOfLanes(hwy::SizeTag<sizeof(T)> /* tag */,
+                                const Vec128<T, 2> v10) {
+  return v10 + Reverse2(Simd<T, 2, 0>(), v10);
+}
+template <typename T, HWY_IF_MINMAX_REDUCTION(T)>
+HWY_API Vec128<T, 2> MinOfLanes(hwy::SizeTag<sizeof(T)> /* tag */,
+                                const Vec128<T, 2> v10) {
+  return Min(v10, Reverse2(Simd<T, 2, 0>(), v10));
+}
+template <typename T, HWY_IF_MINMAX_REDUCTION(T)>
+HWY_API Vec128<T, 2> MaxOfLanes(hwy::SizeTag<sizeof(T)> /* tag */,
+                                const Vec128<T, 2> v10) {
+  return Max(v10, Reverse2(Simd<T, 2, 0>(), v10));
+}
+
+#undef HWY_IF_SUM_REDUCTION
+#undef HWY_IF_MINMAX_REDUCTION
 
 }  // namespace detail
 
@@ -5573,7 +5727,7 @@ HWY_API bool AllTrue(const Simd<T, N, 0> d, const Mask128<T, N> m) {
 
 template <typename T>
 struct CompressIsPartition {
-  enum { value = 1 };
+  enum { value = (sizeof(T) != 1) };
 };
 
 namespace detail {
@@ -6033,8 +6187,8 @@ HWY_API Vec128<T, N> Compress(Vec128<T, N> v, const Mask128<T, N> mask) {
   return IfVecThenElse(swap, Shuffle01(v), v);
 }
 
-// General case
-template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 8)>
+// General case, 2 or 4 byte lanes
+template <typename T, size_t N, HWY_IF_LANE_SIZE_ONE_OF(T, 0x14)>
 HWY_API Vec128<T, N> Compress(Vec128<T, N> v, const Mask128<T, N> mask) {
   return detail::Compress(v, detail::BitsFromMask(mask));
 }
@@ -6057,8 +6211,8 @@ HWY_API Vec128<T> CompressNot(Vec128<T> v, Mask128<T> mask) {
   return IfVecThenElse(swap, Shuffle01(v), v);
 }
 
-// General case
-template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 8)>
+// General case, 2 or 4 byte lanes
+template <typename T, size_t N, HWY_IF_LANE_SIZE_ONE_OF(T, 0x14)>
 HWY_API Vec128<T, N> CompressNot(Vec128<T, N> v, Mask128<T, N> mask) {
   // For partial vectors, we cannot pull the Not() into the table because
   // BitsFromMask clears the upper bits.
@@ -6076,7 +6230,7 @@ HWY_API Vec128<uint64_t> CompressBlocksNot(Vec128<uint64_t> v,
 
 // ------------------------------ CompressBits
 
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_INLINE Vec128<T, N> CompressBits(Vec128<T, N> v,
                                      const uint8_t* HWY_RESTRICT bits) {
   uint64_t mask_bits = 0;
@@ -6090,7 +6244,7 @@ HWY_INLINE Vec128<T, N> CompressBits(Vec128<T, N> v,
 }
 
 // ------------------------------ CompressStore
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressStore(Vec128<T, N> v, const Mask128<T, N> mask,
                              Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
   const uint64_t mask_bits = detail::BitsFromMask(mask);
@@ -6099,7 +6253,7 @@ HWY_API size_t CompressStore(Vec128<T, N> v, const Mask128<T, N> mask,
 }
 
 // ------------------------------ CompressBlendedStore
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressBlendedStore(Vec128<T, N> v, Mask128<T, N> m,
                                     Simd<T, N, 0> d,
                                     T* HWY_RESTRICT unaligned) {
@@ -6115,7 +6269,7 @@ HWY_API size_t CompressBlendedStore(Vec128<T, N> v, Mask128<T, N> m,
 
 // ------------------------------ CompressBitsStore
 
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressBitsStore(Vec128<T, N> v,
                                  const uint8_t* HWY_RESTRICT bits,
                                  Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
@@ -6633,19 +6787,20 @@ namespace detail {  // for code folding
 #undef HWY_NEON_DEF_FUNCTION_ALL_FLOATS
 #undef HWY_NEON_DEF_FUNCTION_ALL_TYPES
 #undef HWY_NEON_DEF_FUNCTION_FLOAT_64
-#undef HWY_NEON_DEF_FUNCTION_INTS
-#undef HWY_NEON_DEF_FUNCTION_INTS_UINTS
+#undef HWY_NEON_DEF_FUNCTION_FULL_UI
 #undef HWY_NEON_DEF_FUNCTION_INT_16
 #undef HWY_NEON_DEF_FUNCTION_INT_32
 #undef HWY_NEON_DEF_FUNCTION_INT_8
 #undef HWY_NEON_DEF_FUNCTION_INT_8_16_32
+#undef HWY_NEON_DEF_FUNCTION_INTS
+#undef HWY_NEON_DEF_FUNCTION_INTS_UINTS
 #undef HWY_NEON_DEF_FUNCTION_TPL
 #undef HWY_NEON_DEF_FUNCTION_UIF81632
-#undef HWY_NEON_DEF_FUNCTION_UINTS
 #undef HWY_NEON_DEF_FUNCTION_UINT_16
 #undef HWY_NEON_DEF_FUNCTION_UINT_32
 #undef HWY_NEON_DEF_FUNCTION_UINT_8
 #undef HWY_NEON_DEF_FUNCTION_UINT_8_16_32
+#undef HWY_NEON_DEF_FUNCTION_UINTS
 #undef HWY_NEON_EVAL
 }  // namespace detail
 

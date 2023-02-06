@@ -1,8 +1,15 @@
+load("@rules_license//rules:license.bzl", "license")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = ["//visibility:public"],
+)
+
+license(
+    name = "license",
+    package_name = "highway",
 )
 
 licenses(["notice"])

@@ -13,7 +13,7 @@
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/fields.h"
-#include "lib/jxl/linalg.h"
+#include "lib/jxl/matrix_ops.h"
 
 namespace jxl {
 namespace {
@@ -690,8 +690,8 @@ Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
   float lms[3];
   float lms50[3];
 
-  MatMul(kBradford, w, 3, 3, 1, lms);
-  MatMul(kBradford, w50, 3, 3, 1, lms50);
+  Mul3x3Vector(kBradford, w, lms);
+  Mul3x3Vector(kBradford, w50, lms50);
 
   if (lms[0] == 0 || lms[1] == 0 || lms[2] == 0) {
     return JXL_FAILURE("Invalid white point");
@@ -705,8 +705,8 @@ Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
   }
 
   float b[9];
-  MatMul(a, kBradford, 3, 3, 3, b);
-  MatMul(kBradfordInv, b, 3, 3, 3, matrix);
+  Mul3x3Matrix(a, kBradford, b);
+  Mul3x3Matrix(kBradfordInv, b, matrix);
 
   return true;
 }
@@ -729,13 +729,13 @@ Status PrimariesToXYZ(float rx, float ry, float gx, float gy, float bx,
   // 1 / tiny float can still overflow
   JXL_RETURN_IF_ERROR(std::isfinite(w[0]) && std::isfinite(w[2]));
   float xyz[3];
-  MatMul(primaries_inv, w, 3, 3, 1, xyz);
+  Mul3x3Vector(primaries_inv, w, xyz);
 
   float a[9] = {
       xyz[0], 0, 0, 0, xyz[1], 0, 0, 0, xyz[2],
   };
 
-  MatMul(primaries, a, 3, 3, 3, matrix);
+  Mul3x3Matrix(primaries, a, matrix);
   return true;
 }
 
@@ -746,7 +746,7 @@ Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
   float d50[9];
   JXL_RETURN_IF_ERROR(AdaptToXYZD50(wx, wy, d50));
 
-  MatMul(d50, toXYZ, 3, 3, 3, matrix);
+  Mul3x3Matrix(d50, toXYZ, matrix);
   return true;
 }
 

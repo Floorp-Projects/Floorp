@@ -29,7 +29,7 @@ namespace hwy {
 // API version (https://semver.org/); keep in sync with CMakeLists.txt.
 #define HWY_MAJOR 1
 #define HWY_MINOR 0
-#define HWY_PATCH 2
+#define HWY_PATCH 3
 
 //------------------------------------------------------------------------------
 // Shorthand for tags (defined in shared-inl.h) used to select overloads.

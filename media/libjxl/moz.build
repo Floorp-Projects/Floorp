@@ -64,6 +64,7 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/modular/encoding/dec_ma.cc",
     "/third_party/jpeg-xl/lib/jxl/modular/encoding/encoding.cc",
     "/third_party/jpeg-xl/lib/jxl/modular/modular_image.cc",
+    "/third_party/jpeg-xl/lib/jxl/modular/transform/palette.cc",
     "/third_party/jpeg-xl/lib/jxl/modular/transform/rct.cc",
     "/third_party/jpeg-xl/lib/jxl/modular/transform/squeeze.cc",
     "/third_party/jpeg-xl/lib/jxl/modular/transform/transform.cc",

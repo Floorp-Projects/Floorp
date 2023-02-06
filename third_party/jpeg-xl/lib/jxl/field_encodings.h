@@ -11,9 +11,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <hwy/base.h>
 #include <vector>
 
-#include "hwy/base.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/status.h"
 
