@@ -82,11 +82,36 @@ function getBrowsers() {
             }
             keyUrlAssociations.close();
 
+            let fileAssociations = {};
+            let keyFileAssociations = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+                Ci.nsIWindowsRegKey
+            );
+            let error2 = null;
+            try {
+                keyFileAssociations.open(
+                    ROOT_KEY,
+                    `Software\\Clients\\StartMenuInternet\\${keyname}\\Capabilities\\FileAssociations`,
+                    Ci.nsIWindowsRegKey.ACCESS_READ
+                );
+            } catch (e) {
+                error2 = e;
+                console.error(e);
+            }
+            if (error2 === null) {
+                for (let j = 0; j < keyFileAssociations.valueCount; j++) {
+                    let valuename = keyFileAssociations.getValueName(j);
+                    let fileAssociationRegValue = keyFileAssociations.readStringValue(valuename);
+                    fileAssociations[valuename] = fileAssociationRegValue;
+                }
+            }
+            keyFileAssociations.close();
+
             browsers.push({
                 name: browserName,
                 keyName: keyname,
                 path: browserPath,
-                urlAssociations: urlAssociations
+                fileAssociations: fileAssociations,
+                urlAssociations: urlAssociations,
             });
         }
         key.close();
