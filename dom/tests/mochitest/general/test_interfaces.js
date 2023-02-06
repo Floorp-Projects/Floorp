@@ -1304,7 +1304,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TreeWalker", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "U2F", insecureContext: false, disabled: true },
+  { name: "U2F", insecureContext: false, android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "UIEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1854,7 +1854,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "top", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "u2f", insecureContext: false, disabled: true },
+  { name: "u2f", insecureContext: false, android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "updateCommands", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
