@@ -70,6 +70,8 @@ inline void ImplCycleCollectionUnlink(
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
     ReadableStream, (mGlobal, mController, mReader), (mStoredError))

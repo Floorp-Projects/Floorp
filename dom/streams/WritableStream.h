@@ -243,6 +243,8 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   HoldDropJSObjectsCaller mHoldDropCaller;
 };
 
+namespace streams_abstract {
+
 MOZ_CAN_RUN_SCRIPT already_AddRefed<WritableStream> CreateWritableStream(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
@@ -264,6 +266,8 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(
 
 already_AddRefed<WritableStreamDefaultWriter>
 AcquireWritableStreamDefaultWriter(WritableStream* aStream, ErrorResult& aRv);
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 
