@@ -51,6 +51,7 @@ permalink: /changelog/
 
 * **feature-media**
   * 🚒 Bug fixed [Bug 1802620](https://bugzilla.mozilla.org/show_bug.cgi?id=1802620). Handles `ForegroundServiceStartNotAllowedException`.
+  * 🚒 Bug fixed [Bug 1813416](https://bugzilla.mozilla.org/show_bug.cgi?id=1813416). Clear `FLAG_KEEP_SCREEN_ON` when playing media is finished.
 
 # 110.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v109.0.0...v110.0.0)

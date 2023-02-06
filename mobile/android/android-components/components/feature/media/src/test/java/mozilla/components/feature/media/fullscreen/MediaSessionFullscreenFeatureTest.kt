@@ -32,7 +32,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.clearInvocations
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
@@ -370,12 +371,103 @@ class MediaSessionFullscreenFeatureTest {
         store.waitUntilIdle()
         verify(activity.window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        clearInvocations(activity.window)
+
         store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction("tab1", MediaSession.PlaybackState.PLAYING))
         store.waitUntilIdle()
-        verify(activity.window, atLeastOnce()).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        verify(activity.window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction("tab1"))
         store.waitUntilIdle()
-        verify(activity.window, atLeastOnce()).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        verify(activity.window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun `GIVEN the selected tab is not in fullscreen mode WHEN it enters fullscreen THEN lock the wake lock of the device`() {
+        val activity: Activity = mock()
+        val window: Window = mock()
+
+        whenever(activity.window).thenReturn(window)
+
+        val elementMetadata = MediaSession.ElementMetadata()
+        val initialState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    id = "tab1",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        elementMetadata = elementMetadata,
+                        playbackState = MediaSession.PlaybackState.PLAYING,
+                        fullscreen = false,
+                    ),
+                ),
+            ),
+            selectedTabId = "tab1",
+        )
+        val store = BrowserStore(initialState)
+
+        val feature = MediaSessionFullscreenFeature(
+            activity,
+            store,
+            null,
+        )
+        feature.start()
+        verify(activity.window, never()).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        store.dispatch(MediaSessionAction.UpdateMediaFullscreenAction("tab1", true, elementMetadata))
+        store.waitUntilIdle()
+        verify(activity.window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        clearInvocations(activity.window)
+
+        store.dispatch(MediaSessionAction.UpdateMediaFullscreenAction("tab1", false, elementMetadata))
+        store.waitUntilIdle()
+        verify(activity.window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun `GIVEN the selected tab in fullscreen mode WHEN the active tab is changed to no media tab THEN release the wake lock of the device`() {
+        val activity: Activity = mock()
+        val window: Window = mock()
+
+        whenever(activity.window).thenReturn(window)
+
+        val elementMetadata = MediaSession.ElementMetadata()
+        val initialState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    id = "tab1",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        elementMetadata = elementMetadata,
+                        playbackState = MediaSession.PlaybackState.PLAYING,
+                        fullscreen = true,
+                    ),
+                ),
+            ),
+            selectedTabId = "tab1",
+        )
+        val store = BrowserStore(initialState)
+
+        val feature = MediaSessionFullscreenFeature(
+            activity,
+            store,
+            null,
+        )
+        feature.start()
+        verify(activity.window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        val tab2 = createTab(
+            url = "https://firefox.com",
+            id = "tab2",
+        )
+        clearInvocations(activity.window)
+        store.dispatch(TabListAction.AddTabAction(tab2, select = true))
+        store.dispatch(MediaSessionAction.UpdateMediaFullscreenAction(store.state.tabs[0].id, false, elementMetadata))
+        store.waitUntilIdle()
+        verify(activity.window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        assertEquals(tab2.id, store.state.selectedTabId)
     }
 }

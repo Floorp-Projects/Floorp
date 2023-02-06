@@ -73,6 +73,7 @@ class MediaSessionFullscreenFeature(
     private fun processDeviceSleepMode(sessionStates: List<SessionState>) {
         val activeTabState = sessionStates.firstOrNull()
         if (activeTabState == null || activeTabState.mediaSessionState?.fullscreen != true) {
+            activity.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             return
         }
         activeTabState.mediaSessionState?.let {
