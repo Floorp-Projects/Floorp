@@ -16,19 +16,19 @@
 #include "mozilla/Preferences.h"  // for Preferences
 #include "mozilla/Services.h"     // for GetObserverService
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/mozalloc.h"  // for operator new
-#include "nsCRT.h"             // for nsCRT
-#include "nsDebug.h"           // for NS_ASSERTION, etc
-#include "nsFont.h"            // for nsFont
-#include "nsFontCache.h"       // for nsFontCache
-#include "nsFontMetrics.h"     // for nsFontMetrics
-#include "nsAtom.h"            // for nsAtom, NS_Atomize
+#include "mozilla/mozalloc.h"       // for operator new
+#include "mozilla/widget/Screen.h"  // for Screen
+#include "nsCRT.h"                  // for nsCRT
+#include "nsDebug.h"                // for NS_ASSERTION, etc
+#include "nsFont.h"                 // for nsFont
+#include "nsFontCache.h"            // for nsFontCache
+#include "nsFontMetrics.h"          // for nsFontMetrics
+#include "nsAtom.h"                 // for nsAtom, NS_Atomize
 #include "nsID.h"
 #include "nsIDeviceContextSpec.h"   // for nsIDeviceContextSpec
 #include "nsLanguageAtomService.h"  // for nsLanguageAtomService
 #include "nsIObserver.h"            // for nsIObserver, etc
 #include "nsIObserverService.h"     // for nsIObserverService
-#include "nsIScreen.h"              // for nsIScreen
 #include "nsISupportsImpl.h"        // for MOZ_COUNT_CTOR, etc
 #include "nsISupportsUtils.h"       // for NS_ADDREF, NS_RELEASE
 #include "nsIWidget.h"              // for nsIWidget, NS_NATIVE_WINDOW
@@ -53,12 +53,7 @@ nsDeviceContext::nsDeviceContext()
       mFullZoom(1.0f),
       mPrintingScale(1.0f),
       mPrintingTranslate(gfxPoint(0, 0)),
-      mIsCurrentlyPrintingDoc(false)
-#ifdef DEBUG
-      ,
-      mIsInitialized(false)
-#endif
-{
+      mIsCurrentlyPrintingDoc(false) {
   MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
 }
 
@@ -106,25 +101,18 @@ void nsDeviceContext::SetDPI() {
   UpdateAppUnitsForFullZoom();
 }
 
-nsresult nsDeviceContext::Init(nsIWidget* aWidget) {
-#ifdef DEBUG
+void nsDeviceContext::Init(nsIWidget* aWidget) {
+  if (mIsInitialized && mWidget == aWidget) {
+    return;
+  }
+
   // We can't assert |!mIsInitialized| here since EndSwapDocShellsForDocument
   // re-initializes nsDeviceContext objects.  We can only assert in
   // InitForPrinting (below).
   mIsInitialized = true;
-#endif
-
-  nsresult rv = NS_OK;
-  if (mScreenManager && mWidget == aWidget) return rv;
 
   mWidget = aWidget;
   SetDPI();
-
-  if (mScreenManager) return rv;
-
-  mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
-
-  return rv;
 }
 
 // XXX This is only for printing. We should make that obvious in the name.
@@ -177,11 +165,10 @@ already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
 }
 
 uint32_t nsDeviceContext::GetDepth() {
-  nsCOMPtr<nsIScreen> screen;
-  FindScreen(getter_AddRefs(screen));
+  RefPtr<widget::Screen> screen = FindScreen();
   if (!screen) {
     ScreenManager& screenManager = ScreenManager::GetSingleton();
-    screenManager.GetPrimaryScreen(getter_AddRefs(screen));
+    screen = screenManager.GetPrimaryScreen();
     MOZ_ASSERT(screen);
   }
   int32_t depth = 0;
@@ -190,11 +177,10 @@ uint32_t nsDeviceContext::GetDepth() {
 }
 
 dom::ScreenColorGamut nsDeviceContext::GetColorGamut() {
-  nsCOMPtr<nsIScreen> screen;
-  FindScreen(getter_AddRefs(screen));
+  RefPtr<widget::Screen> screen = FindScreen();
   if (!screen) {
     auto& screenManager = ScreenManager::GetSingleton();
-    screenManager.GetPrimaryScreen(getter_AddRefs(screen));
+    screen = screenManager.GetPrimaryScreen();
     MOZ_ASSERT(screen);
   }
   dom::ScreenColorGamut colorGamut;
@@ -353,9 +339,7 @@ void nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect) {
   // monitor case, we only need to do the computation if we haven't done it
   // once already, and remember that we have because we're assured it won't
   // change.
-  nsCOMPtr<nsIScreen> screen;
-  FindScreen(getter_AddRefs(screen));
-  if (screen) {
+  if (RefPtr<widget::Screen> screen = FindScreen()) {
     *outRect = LayoutDeviceIntRect::ToAppUnits(screen->GetAvailRect(),
                                                AppUnitsPerDevPixel());
   }
@@ -367,9 +351,7 @@ void nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect) {
   // monitor case, we only need to do the computation if we haven't done it
   // once already, and remember that we have because we're assured it won't
   // change.
-  nsCOMPtr<nsIScreen> screen;
-  FindScreen(getter_AddRefs(screen));
-  if (screen) {
+  if (RefPtr<widget::Screen> screen = FindScreen()) {
     *outRect = LayoutDeviceIntRect::ToAppUnits(screen->GetRect(),
                                                AppUnitsPerDevPixel());
     mWidth = outRect->Width();
@@ -382,19 +364,19 @@ void nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect) {
 //
 // Determines which screen intersects the largest area of the given surface.
 //
-void nsDeviceContext::FindScreen(nsIScreen** outScreen) {
-  if (!mWidget || !mScreenManager) {
-    return;
+already_AddRefed<widget::Screen> nsDeviceContext::FindScreen() {
+  if (!mWidget) {
+    return nullptr;
   }
 
   CheckDPIChange();
 
-  nsCOMPtr<nsIScreen> screen = mWidget->GetWidgetScreen();
-  screen.forget(outScreen);
-
-  if (!(*outScreen)) {
-    mScreenManager->GetPrimaryScreen(outScreen);
+  if (RefPtr<widget::Screen> screen = mWidget->GetWidgetScreen()) {
+    return screen.forget();
   }
+
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  return screenManager.GetPrimaryScreen();
 }
 
 bool nsDeviceContext::CalcPrintingSize() {
@@ -451,9 +433,7 @@ void nsDeviceContext::UpdateAppUnitsForFullZoom() {
 }
 
 DesktopToLayoutDeviceScale nsDeviceContext::GetDesktopToDeviceScale() {
-  nsCOMPtr<nsIScreen> screen;
-  FindScreen(getter_AddRefs(screen));
-  if (screen) {
+  if (RefPtr<widget::Screen> screen = FindScreen()) {
     return screen->GetDesktopToLayoutDeviceScale();
   }
   return DesktopToLayoutDeviceScale(1.0);
