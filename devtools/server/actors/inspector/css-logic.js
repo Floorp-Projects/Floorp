@@ -40,7 +40,6 @@ const {
   FILTER,
   STATUS,
 } = require("resource://devtools/shared/inspector/css-logic.js");
-const InspectorUtils = require("InspectorUtils");
 
 const COMPAREMODE = {
   BOOLEAN: "bool",

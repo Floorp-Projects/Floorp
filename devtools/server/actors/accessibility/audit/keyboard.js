@@ -16,7 +16,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/inspector/css-logic.js",
   true
 );
-loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "nodeConstants",

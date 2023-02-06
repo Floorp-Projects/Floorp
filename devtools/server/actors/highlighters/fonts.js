@@ -4,7 +4,6 @@
 
 "use strict";
 
-const InspectorUtils = require("InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "loadSheet",

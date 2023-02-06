@@ -4,7 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(
   this,
   "PICKER_TYPES",

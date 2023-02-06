@@ -111,7 +111,6 @@ function lazyRequireGetter(obj, properties, module, destructure) {
 // List of pseudo modules exposed to all devtools modules.
 exports.modules = {
   HeapSnapshot,
-  InspectorUtils,
   // Expose "chrome" Promise, which aren't related to any document
   // and so are never frozen, even if the browser loader module which
   // pull it is destroyed. See bug 1402779.

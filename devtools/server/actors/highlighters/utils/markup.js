@@ -11,7 +11,6 @@ const {
   loadSheet,
 } = require("resource://devtools/shared/layout/utils.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-const InspectorUtils = require("InspectorUtils");
 
 const lazyContainer = {};
 

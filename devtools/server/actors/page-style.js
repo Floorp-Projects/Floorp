@@ -13,7 +13,6 @@ const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
-const InspectorUtils = require("InspectorUtils");
 const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 
 const {

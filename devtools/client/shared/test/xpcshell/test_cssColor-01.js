@@ -6,7 +6,6 @@
 "use strict";
 
 const { colorUtils } = require("resource://devtools/shared/css/color.js");
-const InspectorUtils = require("InspectorUtils");
 
 const CLASSIFY_TESTS = [
   { input: "rgb(255,0,192)", output: "rgb" },

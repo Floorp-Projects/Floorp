@@ -10,7 +10,6 @@ const {
 } = require("resource://devtools/shared/specs/style-rule.js");
 
 const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
-const InspectorUtils = require("InspectorUtils");
 const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 const {
   getRuleText,
