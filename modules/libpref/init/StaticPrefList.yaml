@@ -3062,14 +3062,6 @@
   value: true
   mirror: always
 
-# This pref is used to enable/disable the `document.autoplayPolicy` API which
-# returns a enum string which presents current autoplay policy and can change
-# overtime based on user session activity.
-- name: dom.media.autoplay.autoplay-policy-api
-  type: bool
-  value: false
-  mirror: always
-
 # Autoplay Policy Detection https://w3c.github.io/autoplay/
 - name: dom.media.autoplay-policy-detection.enabled
   type: RelaxedAtomicBool
