@@ -21,6 +21,7 @@ import buildconfig
 # that we don't care about in the context of the devtools.
 PURE_INTERFACE_ALLOWLIST = set(
     [
+        "Window",
         "Document",
         "Node",
         "DOMTokenList",
@@ -112,6 +113,8 @@ for result in results:
     if isinstance(result, WebIDL.IDLInterface):
         iface = result.identifier.name
 
+        is_global = result.getExtendedAttribute("Global")
+
         for member in result.members:
             name = member.identifier.name
 
@@ -124,7 +127,9 @@ for result in results:
                 if iface not in pure_output:
                     pure_output[iface] = {}
 
-                if member.isStatic():
+                if is_global:
+                    owner_type = "instance"
+                elif member.isStatic():
                     owner_type = "static"
                 else:
                     owner_type = "prototype"
