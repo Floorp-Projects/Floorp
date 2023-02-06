@@ -55,10 +55,6 @@ const windowGlobalTargetSpecPrototype = {
       request: {},
       response: {},
     },
-    ensureCSSErrorReportingEnabled: {
-      request: {},
-      response: {},
-    },
     focus: {
       request: {},
       response: {},
