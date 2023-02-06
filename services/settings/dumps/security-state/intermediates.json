@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1675392490034,
+      "derHash": "2h98vzIuVcwIInb4UZFH36HoDLr31Xmf93E1iDLtFxI=",
+      "subject": "CN=Encryption Everywhere G3 TLS ECC P384 SHA384 2023 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGYxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE+MDwGA1UEAxM1RW5jcnlwdGlvbiBFdmVyeXdoZXJlIEczIFRMUyBFQ0MgUDM4NCBTSEEzODQgMjAyMyBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c366c089312f3269094359b365076562e4cbf44a2d19a93327648eafb3aa4f90",
+        "size": 1284,
+        "filename": "zQa89-rnQxJd-XNtaDbJXJNQA1ihuhjqN0aVRPKw48Q=.pem",
+        "location": "security-state-staging/intermediates/7ac964c9-10e6-4b7e-80d8-1c63c5cbea2c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zQa89+rnQxJd+XNtaDbJXJNQA1ihuhjqN0aVRPKw48Q=",
+      "crlite_enrolled": false,
+      "id": "440561ba-1927-4680-8db4-f7079da8e2c1",
+      "last_modified": 1675393023146
+    },
+    {
       "schema": 1674831022888,
       "derHash": "z48+Opk8nQIAaLerIArJQgB0hzGCL9WzJ2ciai7k76U=",
       "subject": "CN=Sooma Digital Trust Validation,O=Sooma.com Web Services Lda,C=PT",
@@ -27325,5 +27343,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1674831423067
+  "timestamp": 1675393023146
 }
