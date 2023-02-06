@@ -212,7 +212,7 @@ var PreferenceExperiments = {
   async init() {
     CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
 
-    for (const experiment of await this.getAllActive()) {
+    for (const experiment of await this.getAllActiveExperiments()) {
       // Check that the current value of the preference is still what we set it to
       for (const [preferenceName, spec] of Object.entries(
         experiment.preferences
@@ -270,7 +270,7 @@ var PreferenceExperiments = {
     // Be careful not to store user branch prefs here, because this
     // would cause the default branch to match the user branch,
     // causing the user branch pref to get cleared.
-    const allExperiments = await this.getAllActive();
+    const allExperiments = await this.getAllActiveExperiments();
     const defaultBranchPrefs = allExperiments
       .flatMap(exp => Object.entries(exp.preferences))
       .filter(
@@ -919,7 +919,7 @@ var PreferenceExperiments = {
    * Get a list of experiment objects for all active experiments.
    * @resolves {Experiment[]}
    */
-  async getAllActive() {
+  async getAllActiveExperiments() {
     const store = await ensureStorage();
     return Object.values(store.data.experiments)
       .filter(e => !e.expired)
@@ -1051,7 +1051,7 @@ var PreferenceExperiments = {
     },
 
     async migration05RemoveOldAction() {
-      const experiments = await PreferenceExperiments.getAllActive();
+      const experiments = await PreferenceExperiments.getAllActiveExperiments();
       for (const experiment of experiments) {
         if (experiment.actionName == "SinglePreferenceExperimentAction") {
           try {

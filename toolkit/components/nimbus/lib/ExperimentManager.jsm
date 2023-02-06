@@ -110,13 +110,13 @@ class _ExperimentManager {
     Object.defineProperty(context, "activeExperiments", {
       get: async () => {
         await this.store.ready();
-        return this.store.getAllActive().map(exp => exp.slug);
+        return this.store.getAllActiveExperiments().map(exp => exp.slug);
       },
     });
     Object.defineProperty(context, "activeRollouts", {
       get: async () => {
         await this.store.ready();
-        return this.store.getAllRollouts().map(rollout => rollout.slug);
+        return this.store.getAllActiveRollouts().map(rollout => rollout.slug);
       },
     });
     return context;
@@ -132,8 +132,8 @@ class _ExperimentManager {
     await this.store.init();
     this.extraContext = extraContext;
 
-    const restoredExperiments = this.store.getAllActive();
-    const restoredRollouts = this.store.getAllRollouts();
+    const restoredExperiments = this.store.getAllActiveExperiments();
+    const restoredRollouts = this.store.getAllActiveRollouts();
 
     for (const experiment of restoredExperiments) {
       this.setExperimentActive(experiment);
@@ -241,8 +241,8 @@ class _ExperimentManager {
     if (!sourceToCheck) {
       throw new Error("When calling onFinalize, you must specify a source.");
     }
-    const activeExperiments = this.store.getAllActive();
-    const activeRollouts = this.store.getAllRollouts();
+    const activeExperiments = this.store.getAllActiveExperiments();
+    const activeRollouts = this.store.getAllActiveRollouts();
     this._checkUnseenEnrollments(
       activeExperiments,
       sourceToCheck,
@@ -570,10 +570,10 @@ class _ExperimentManager {
    */
   observe(aSubject, aTopic, aPrefName) {
     if (!this.studiesEnabled) {
-      for (const { slug } of this.store.getAllActive()) {
+      for (const { slug } of this.store.getAllActiveExperiments()) {
         this.unenroll(slug, "studies-opt-out");
       }
-      for (const { slug } of this.store.getAllRollouts()) {
+      for (const { slug } of this.store.getAllActiveRollouts()) {
         this.unenroll(slug, "studies-opt-out");
       }
     }
