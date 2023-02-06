@@ -12,8 +12,8 @@ const { ActivityStreamStorage } = ChromeUtils.import(
 const { Prefs } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
 );
-const { reducers } = ChromeUtils.import(
-  "resource://activity-stream/common/Reducers.jsm"
+const { reducers } = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Reducers.sys.mjs"
 );
 const { redux } = ChromeUtils.import(
   "resource://activity-stream/vendor/Redux.jsm"

@@ -1,4 +1,4 @@
-import { INITIAL_STATE, insertPinned, reducers } from "common/Reducers.jsm";
+import { INITIAL_STATE, insertPinned, reducers } from "common/Reducers.sys.mjs";
 const {
   TopSites,
   App,

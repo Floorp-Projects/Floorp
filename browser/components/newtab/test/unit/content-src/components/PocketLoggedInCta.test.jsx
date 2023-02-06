@@ -1,5 +1,5 @@
 import { combineReducers, createStore } from "redux";
-import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
+import { INITIAL_STATE, reducers } from "common/Reducers.sys.mjs";
 import { mount, shallow } from "enzyme";
 import {
   PocketLoggedInCta,

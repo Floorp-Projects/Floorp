@@ -1,22 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { Dedupe } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Dedupe.sys.mjs"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 
-const TOP_SITES_DEFAULT_ROWS = 1;
-const TOP_SITES_MAX_SITES_PER_ROW = 8;
+export const TOP_SITES_DEFAULT_ROWS = 1;
+export const TOP_SITES_MAX_SITES_PER_ROW = 8;
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 
 const dedupe = new Dedupe(site => site && site.url);
 
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
     initialized: false,
@@ -127,7 +122,7 @@ function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
  * @param {array} a list of pinned links
  * @return {array} resulting list of links with pinned links inserted
  */
-function insertPinned(links, pinned) {
+export function insertPinned(links, pinned) {
   // Remove any pinned links
   const pinnedUrls = pinned.map(link => link && link.url);
   let newLinks = links.filter(link =>
@@ -838,7 +833,7 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   }
 }
 
-const reducers = {
+export const reducers = {
   TopSites,
   App,
   ASRouter,
@@ -851,11 +846,3 @@ const reducers = {
   DiscoveryStream,
   Search,
 };
-
-const EXPORTED_SYMBOLS = [
-  "reducers",
-  "INITIAL_STATE",
-  "insertPinned",
-  "TOP_SITES_DEFAULT_ROWS",
-  "TOP_SITES_MAX_SITES_PER_ROW",
-];

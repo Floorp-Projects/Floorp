@@ -6,7 +6,7 @@ import {
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { mount, shallow } from "enzyme";
 import React from "react";
-import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
+import { INITIAL_STATE, reducers } from "common/Reducers.sys.mjs";
 import { Provider } from "react-redux";
 import { combineReducers, createStore } from "redux";
 

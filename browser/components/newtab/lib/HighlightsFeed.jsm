@@ -16,7 +16,9 @@ const { SectionsManager } = ChromeUtils.import(
 const {
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
-} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm");
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/common/Reducers.sys.mjs"
+);
 const { Dedupe } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Dedupe.sys.mjs"
 );
