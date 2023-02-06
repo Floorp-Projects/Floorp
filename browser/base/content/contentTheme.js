@@ -151,7 +151,7 @@
       addEventListener("LightweightTheme:Set", this);
 
       // We don't sync default theme attributes in `init()`, as we may not have
-      // a body element to attach the attribute to yet. They will be set when
+      // a root element to attach the attribute to yet. They will be set when
       // the first LightweightTheme:Set event is delivered during pageshow.
       prefersDarkQuery.addEventListener("change", this);
     },
@@ -162,20 +162,19 @@
      * @param {Object} event object containing the theme or query update.
      */
     handleEvent(event) {
-      // XUL documents don't have a body
-      const element = document.body ? document.body : document.documentElement;
+      const root = document.documentElement;
 
       if (event.type == "LightweightTheme:Set") {
         let { data } = event.detail;
         if (!data) {
           data = {};
         }
-        this._setProperties(element, data);
+        this._setProperties(root, data);
       } else if (event.type == "change") {
         // If a lightweight theme doesn't apply, update lwt-newtab-brighttext to
         // reflect prefers-color-scheme.
-        if (!element.hasAttribute("lwt-newtab")) {
-          element.toggleAttribute("lwt-newtab-brighttext", event.matches);
+        if (!root.hasAttribute("lwt-newtab")) {
+          root.toggleAttribute("lwt-newtab-brighttext", event.matches);
         }
       }
     },

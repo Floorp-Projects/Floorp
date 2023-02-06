@@ -37,7 +37,7 @@ input {
   display: none !important;
 }
 
-body {
+:root {
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: #FFF;
   --newtab-text-primary-color: #15141a;
@@ -67,7 +67,7 @@ body {
   --newtab-textbox-focus-boxshadow: 0 0 0 1px var(--newtab-primary-action-background), 0 0 0 4px rgba(var(--newtab-primary-action-background), 0.3);
   --newtab-button-secondary-color: inherit;
 }
-body[lwt-newtab-brighttext] {
+:root[lwt-newtab-brighttext] {
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: #42414d;
   --newtab-text-primary-color: #fbfbfe;
@@ -88,7 +88,7 @@ body[lwt-newtab-brighttext] {
 }
 
 @media (prefers-contrast) {
-  body {
+  :root {
     --newtab-text-secondary-color: var(--newtab-text-primary-color);
   }
 }

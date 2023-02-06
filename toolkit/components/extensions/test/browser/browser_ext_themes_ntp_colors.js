@@ -34,11 +34,11 @@ async function test_ntp_theme(theme, isBrightText) {
   } = await SpecialPowers.spawn(browser, [], function() {
     let doc = content.document;
     ok(
-      !doc.body.hasAttribute("lwt-newtab"),
+      !doc.documentElement.hasAttribute("lwt-newtab"),
       "New tab page should not have lwt-newtab attribute"
     );
     ok(
-      !doc.body.hasAttribute("lwt-newtab-brighttext"),
+      !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
       `New tab page should not have lwt-newtab-brighttext attribute`
     );
 
@@ -58,7 +58,7 @@ async function test_ntp_theme(theme, isBrightText) {
       // the Edit Top Site modal, but showing/hiding that is very verbose and
       // would make this test almost unreadable.
       originalLinks: content
-        .getComputedStyle(doc.querySelector("body"))
+        .getComputedStyle(doc.documentElement)
         .getPropertyValue("--newtab-link-primary-color"),
     };
   });
@@ -80,11 +80,11 @@ async function test_ntp_theme(theme, isBrightText) {
     async function({ isBrightText, background, card_background, color }) {
       let doc = content.document;
       ok(
-        doc.body.hasAttribute("lwt-newtab"),
+        doc.documentElement.hasAttribute("lwt-newtab"),
         "New tab page should have lwt-newtab attribute"
       );
       is(
-        doc.body.hasAttribute("lwt-newtab-brighttext"),
+        doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
         isBrightText,
         `New tab page should${
           !isBrightText ? " not" : ""
@@ -126,11 +126,11 @@ async function test_ntp_theme(theme, isBrightText) {
     function({ originalBackground, originalCardBackground, originalColor }) {
       let doc = content.document;
       ok(
-        !doc.body.hasAttribute("lwt-newtab"),
+        !doc.documentElement.hasAttribute("lwt-newtab"),
         "New tab page should not have lwt-newtab attribute"
       );
       ok(
-        !doc.body.hasAttribute("lwt-newtab-brighttext"),
+        !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
         `New tab page should not have lwt-newtab-brighttext attribute`
       );
 
