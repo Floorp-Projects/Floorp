@@ -284,6 +284,8 @@ class ChromeUtils {
   static bool IsDarkBackground(GlobalObject&, Element&);
 
   static double DateNow(GlobalObject&);
+
+  static unsigned AliveUtilityProcesses(const GlobalObject&);
 };
 
 }  // namespace dom
