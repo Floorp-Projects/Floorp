@@ -1,17 +1,17 @@
+From b415d3e199de9cb2dce6290721bcfc2871f33769 Mon Sep 17 00:00:00 2001
+From: Tom Ritter <tom@ritter.vg>
+Date: Thu, 2 Feb 2023 12:26:47 -0500
+Subject: [PATCH 3/7] Fix enum int issues
+
+---
+ mingw-w64-headers/include/windows.foundation.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/mingw-w64-headers/include/windows.foundation.h b/mingw-w64-headers/include/windows.foundation.h
-index 423d8fd30..a5a61eb76 100644
+index fd66e27d3..7981f3380 100644
 --- a/mingw-w64-headers/include/windows.foundation.h
 +++ b/mingw-w64-headers/include/windows.foundation.h
-@@ -72,7 +72,7 @@ extern "C" {
- namespace ABI {
-     namespace Windows {
-         namespace Foundation {
--            typedef enum PropertyType PropertyType;
-+            typedef enum PropertyType : int PropertyType;
-         }
-     }
- }
-@@ -146,7 +146,7 @@ typedef struct __x_ABI_CWindows_CFoundation_CTimeSpan __x_ABI_CWindows_CFoundati
+@@ -647,7 +647,7 @@ static __WIDL_INLINE HRESULT __x_ABI_CWindows_CFoundation_CIAsyncActionCompleted
  namespace ABI {
      namespace Windows {
          namespace Foundation {
@@ -20,3 +20,6 @@ index 423d8fd30..a5a61eb76 100644
                  PropertyType_Empty = 0,
                  PropertyType_UInt8 = 1,
                  PropertyType_Int16 = 2,
+-- 
+2.25.1
+
