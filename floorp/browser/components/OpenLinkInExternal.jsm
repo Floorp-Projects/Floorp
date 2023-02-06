@@ -35,6 +35,17 @@ function getBrowsers() {
             let keyname = key.getChildName(i);
             if (browsers.filter(browser => browser.keyName === keyname).length >= 1) continue;
 
+            let keyBrowserName = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+                Ci.nsIWindowsRegKey
+            );
+            keyBrowserName.open(
+                ROOT_KEY,
+                `Software\\Clients\\StartMenuInternet\\${keyname}`,
+                Ci.nsIWindowsRegKey.ACCESS_READ
+            );
+            let browserName = keyBrowserName.readStringValue("");
+            keyBrowserName.close();
+
             let keyPath = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
                 Ci.nsIWindowsRegKey
             );
@@ -72,6 +83,7 @@ function getBrowsers() {
             keyUrlAssociations.close();
 
             browsers.push({
+                name: browserName,
                 keyName: keyname,
                 path: browserPath,
                 urlAssociations: urlAssociations
@@ -79,7 +91,15 @@ function getBrowsers() {
         }
         key.close();
     }
-    return browsers;
+    return browsers.sort((a, b) => {
+        if (a["name"] < b["name"]) {
+            return -1;
+        }
+        if (a["name"] > b["name"]) {
+            return 1;
+        }
+        return 0;
+    });
 }
 
 function getDefaultBrowser(protocol, browsers = null) {
