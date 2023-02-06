@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewContentBlocking"];
 
-const { GeckoViewModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewModule.jsm"
+const { GeckoViewModule } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewModule.sys.mjs"
 );
 
 class GeckoViewContentBlocking extends GeckoViewModule {
