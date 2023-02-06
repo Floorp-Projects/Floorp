@@ -6,13 +6,23 @@
 
 const idlPureAllowlist = require("resource://devtools/server/actors/webconsole/webidl-pure-allowlist.js");
 
+// Exclude interfaces only with "instance" property, such as Location,
+// which is not available in sandbox.
+const props = [];
+for (const [iface, ifaceData] of Object.entries(idlPureAllowlist)) {
+  if ("static" in ifaceData || "prototype" in ifaceData) {
+    props.push(iface);
+  }
+}
+
 const natives = [];
+
 if (Components.Constructor && Cu) {
   const sandbox = Cu.Sandbox(
     Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
     {
       invisibleToDebugger: true,
-      wantGlobalProperties: Object.keys(idlPureAllowlist),
+      wantGlobalProperties: props,
     }
   );
 
@@ -56,4 +66,4 @@ if (Components.Constructor && Cu) {
   }
 }
 
-module.exports = natives;
+module.exports = { natives, idlPureAllowlist };

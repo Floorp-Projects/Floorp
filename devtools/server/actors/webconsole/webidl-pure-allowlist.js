@@ -180,4 +180,20 @@ module.exports = {
       methods: ["entries", "keys", "values"],
     },
   },
+  Window: {
+    instance: {
+      getters: [
+        "window",
+        "self",
+        "document",
+        "performance",
+        "browsingContext",
+        "windowUtils",
+        "windowGlobalChild",
+        "visualViewport",
+        "caches",
+        "scheduler",
+      ],
+    },
+  },
 };
