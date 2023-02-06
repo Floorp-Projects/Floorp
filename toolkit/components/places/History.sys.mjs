@@ -68,8 +68,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -84,41 +82,15 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 /**
- * Whenever we update or remove numerous pages, it is preferable
- * to yield time to the main thread every so often to avoid janking.
+ * Whenever we update numerous pages, it is preferable to yield time to the main
+ * thread every so often to avoid janking.
  * These constants determine the maximal number of notifications we
  * may emit before we yield.
  */
-const NOTIFICATION_CHUNK_SIZE = 300;
 const ONRESULT_CHUNK_SIZE = 300;
 
 // This constant determines the maximum number of remove pages before we cycle.
 const REMOVE_PAGES_CHUNKLEN = 300;
-
-/**
- * Sends a bookmarks notification through the given observers.
- *
- * @param observers
- *        array of nsINavBookmarkObserver objects.
- * @param notification
- *        the notification name.
- * @param args
- *        array of arguments to pass to the notification.
- */
-function notify(observers, notification, args = []) {
-  for (let observer of observers) {
-    try {
-      observer[notification](...args);
-    } catch (ex) {
-      if (
-        ex.result != Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED &&
-        (AppConstants.DEBUG || Cu.isInAutomation)
-      ) {
-        console.error(ex);
-      }
-    }
-  }
-}
 
 export var History = Object.freeze({
   ANNOTATION_EXPIRE_NEVER: 4,
@@ -1052,8 +1024,6 @@ function removeOrphanIcons(db) {
  */
 var notifyCleanup = async function(db, pages, transitionType = 0) {
   const notifications = [];
-  let notifiedCount = 0;
-  let bookmarkObservers = lazy.PlacesUtils.bookmarks.getObservers();
 
   for (let page of pages) {
     const isRemovedFromStore = !page.hasVisits && !page.hasForeign;
@@ -1067,41 +1037,6 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
         isPartialVisistsRemoval: !isRemovedFromStore && page.hasVisits > 0,
       })
     );
-
-    if (page.hasForeign && !page.hasVisits) {
-      lazy.PlacesUtils.bookmarks
-        .fetch({ url: page.url }, async bookmark => {
-          let itemId = await lazy.PlacesUtils.promiseItemId(bookmark.guid);
-          let parentId = await lazy.PlacesUtils.promiseItemId(
-            bookmark.parentGuid
-          );
-          notify(
-            bookmarkObservers,
-            "onItemChanged",
-            [
-              itemId,
-              "cleartime",
-              false,
-              "",
-              0,
-              lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
-              parentId,
-              bookmark.guid,
-              bookmark.parentGuid,
-              "",
-              lazy.PlacesUtils.bookmarks.SOURCES.DEFAULT,
-            ],
-            { concurrent: true }
-          );
-
-          if (++notifiedCount % NOTIFICATION_CHUNK_SIZE == 0) {
-            // Every few notifications, yield time back to the main
-            // thread to avoid jank.
-            await Promise.resolve();
-          }
-        })
-        .catch(console.error);
-    }
   }
 
   PlacesObservers.notifyListeners(notifications);

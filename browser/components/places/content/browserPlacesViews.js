@@ -550,7 +550,7 @@ class PlacesViewBase {
 
   // Opt-out of history details updates, since all the views derived from this
   // are not showing them.
-  observeHistoryDetails = false;
+  skipHistoryDetailsNotifications = true;
   nodeHistoryDetailsChanged() {}
   nodeTagsChanged() {}
   nodeDateAddedChanged() {}

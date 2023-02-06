@@ -337,6 +337,8 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   virtual nsresult OnMobilePrefChanged(bool newValue) { return NS_OK; };
 
+  nsresult OnVisitsRemoved();
+
  protected:
   virtual ~nsNavHistoryResultNode() = default;
 
@@ -503,6 +505,8 @@ class nsNavHistoryContainerResultNode
 
  public:
   virtual void OnRemoving() override;
+
+  nsresult OnVisitsRemoved(nsIURI* aURI);
 
   bool AreChildrenVisible();
 
@@ -816,6 +820,7 @@ class nsNavHistoryFolderResultNode final
                        const nsACString& aNewParentGUID, uint16_t aSource,
                        const nsACString& aURI);
   nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
+
   virtual void OnRemoving() override;
 
   // this indicates whether the folder contents are valid, they don't go away
