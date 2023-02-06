@@ -143,9 +143,7 @@ nsresult nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     UpdateImage();
     PresShell()->FrameNeedsReflow(
         this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
-  } else if (aAttribute == nsGkAtoms::validate)
-    UpdateLoadFlags();
-
+  }
   return rv;
 }
 
@@ -153,7 +151,6 @@ nsImageBoxFrame::nsImageBoxFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
     : nsLeafBoxFrame(aStyle, aPresContext, kClassID),
       mIntrinsicSize(0, 0),
-      mLoadFlags(nsIRequest::LOAD_NORMAL),
       mRequestRegistered(false),
       mUseSrcAttr(false),
       mSuppressStyleCheck(false) {
@@ -203,7 +200,6 @@ void nsImageBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
   mSuppressStyleCheck = false;
 
-  UpdateLoadFlags();
   UpdateImage();
 }
 
@@ -242,7 +238,7 @@ void nsImageBoxFrame::UpdateImage() {
       auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mContent->AsElement());
       nsresult rv = nsContentUtils::LoadImage(
           uri, mContent, doc, triggeringPrincipal, requestContextID,
-          referrerInfo, mListener, mLoadFlags, u""_ns,
+          referrerInfo, mListener, nsIRequest::LOAD_NORMAL, u""_ns,
           getter_AddRefs(mImageRequest), contentPolicyType);
 
       if (NS_SUCCEEDED(rv) && mImageRequest) {
@@ -275,23 +271,6 @@ void nsImageBoxFrame::UpdateImage() {
   // Do this _after_ locking the new image in case they are the same image.
   if (oldImageRequest) {
     oldImageRequest->UnlockImage();
-  }
-}
-
-void nsImageBoxFrame::UpdateLoadFlags() {
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::always,
-                                               nsGkAtoms::never, nullptr};
-  switch (mContent->AsElement()->FindAttrValueIn(
-      kNameSpaceID_None, nsGkAtoms::validate, strings, eCaseMatters)) {
-    case 0:
-      mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
-      break;
-    case 1:
-      mLoadFlags = nsIRequest::VALIDATE_NEVER | nsIRequest::LOAD_FROM_CACHE;
-      break;
-    default:
-      mLoadFlags = nsIRequest::LOAD_NORMAL;
-      break;
   }
 }
 
