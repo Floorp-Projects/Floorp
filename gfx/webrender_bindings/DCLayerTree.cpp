@@ -8,33 +8,9 @@
 
 // -
 
-#if (_WIN32_WINNT < _WIN32_WINNT_WIN10)
-
-#  define XSTR(x) STR(x)
-#  define STR(x) #x
-// clang-format off
-
-#  pragma message "IDCompositionFilterEffect in dcomp.h requires _WIN32_WINNT >= _WIN32_WINNT_WIN10."
-// Pedantically, it actually requires _WIN32_WINNT_WINTHRESHOLD, but that's the
-// same as _WIN32_WINNT_WIN10.
-
-#  pragma message "Forcing NTDDI_VERSION " XSTR(NTDDI_VERSION) " -> " XSTR(NTDDI_WIN10)
-#  undef NTDDI_VERSION
-#  define NTDDI_VERSION NTDDI_WIN10
-
-#  pragma message "Forcing _WIN32_WINNT " XSTR(_WIN32_WINNT) " -> " XSTR(_WIN32_WINNT_WIN10)
-#  undef _WIN32_WINNT
-#  define _WIN32_WINNT _WIN32_WINNT_WIN10
-
-// clang-format on
-#  undef STR
-#  undef XSTR
-
-#endif
-
+#include "mozilla/gfx/AllOfDcomp.h"
 #include <d3d11.h>
 #include <d3d11_1.h>
-#include <dcomp.h>
 #include <dxgi1_2.h>
 
 // -
@@ -56,6 +32,18 @@
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
+
+// -
+
+#if defined(__MINGW32__)  // 64 defines both 32 and 64
+// We need to fake some things, while we wait on updates to mingw's dcomp.h
+// header. Just enough that we can successfully fail to work there.
+#define MOZ_MINGW_DCOMP_H_OLD
+struct IDCompositionFilterEffect : public IDCompositionEffect {};
+struct IDCompositionColorMatrixEffect : public IDCompositionFilterEffect {};
+struct IDCompositionTableTransferEffect : public IDCompositionFilterEffect {};
+struct IDCompositionDevice3 : public IDCompositionDevice2 {};
+#endif  // defined(__MINGW32__)
 
 namespace mozilla {
 namespace wr {
@@ -645,7 +633,12 @@ DCSurface* DCExternalSurfaceWrapper::EnsureSurfaceForExternalImage(
     if (cmsMode == CMSMode::Off) return;
 
     const auto dcomp = mDCLayerTree->GetCompositionDevice();
-    const auto dcomp3 = QI<IDCompositionDevice3>::From(dcomp);
+    RefPtr<IDCompositionDevice3> dcomp3;
+#if !defined(MOZ_MINGW_DCOMP_H_OLD)
+    dcomp3 = QI<IDCompositionDevice3>::From(dcomp);
+#else
+    (void)dcomp;
+#endif
     if (!dcomp3) {
       NS_WARNING(
           "No IDCompositionDevice3, cannot use dcomp for color management.");
@@ -1796,6 +1789,8 @@ ColorManagementChain ColorManagementChain::From(
     const color::ColorProfileConversionDesc& conv) {
   auto ret = ColorManagementChain{};
 
+#if !defined(MOZ_MINGW_DCOMP_H_OLD)
+
   const auto Append = [&](const RefPtr<IDCompositionFilterEffect>& afterLast) {
     if (ret.last) {
       afterLast->SetInput(0, ret.last, 0);
@@ -1831,6 +1826,9 @@ ColorManagementChain ColorManagementChain::From(
   ret.dstLinearFromSrcLinear =
       MaybeAppendColorMatrix(color::mat4(conv.dstLinearFromSrcLinear));
   ret.dstTfFromDstLinear = MaybeAppendTableTransfer(conv.dstTfFromDstLinear);
+
+#endif  // !defined(MOZ_MINGW_DCOMP_H_OLD)
+
   return ret;
 }
 
