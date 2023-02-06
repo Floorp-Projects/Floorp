@@ -307,9 +307,14 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   return IsWindowAllowedToPlay(window);
 }
 
+enum class DocumentAutoplayPolicy : uint8_t {
+  Allowed,
+  Allowed_muted,
+  Disallowed
+};
+
 /* static */
-DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
-    const Document& aDocument) {
+DocumentAutoplayPolicy IsDocAllowedToPlay(const Document& aDocument) {
   const bool isWindowAllowedToPlay =
       IsWindowAllowedToPlay(aDocument.GetInnerWindow());
 
@@ -453,18 +458,18 @@ dom::AutoplayPolicy AutoplayPolicy::GetAutoplayPolicy(
 /* static */
 dom::AutoplayPolicy AutoplayPolicy::GetAutoplayPolicy(
     const dom::AutoplayPolicyMediaType& aType, const dom::Document& aDoc) {
-  dom::DocumentAutoplayPolicy policy = AutoplayPolicy::IsAllowedToPlay(aDoc);
+  DocumentAutoplayPolicy policy = IsDocAllowedToPlay(aDoc);
   // https://w3c.github.io/autoplay/#query-by-a-media-type
   if (aType == dom::AutoplayPolicyMediaType::Audiocontext) {
-    return policy == dom::DocumentAutoplayPolicy::Allowed
+    return policy == DocumentAutoplayPolicy::Allowed
                ? dom::AutoplayPolicy::Allowed
                : dom::AutoplayPolicy::Disallowed;
   }
   MOZ_ASSERT(aType == dom::AutoplayPolicyMediaType::Mediaelement);
-  if (policy == dom::DocumentAutoplayPolicy::Allowed) {
+  if (policy == DocumentAutoplayPolicy::Allowed) {
     return dom::AutoplayPolicy::Allowed;
   }
-  if (policy == dom::DocumentAutoplayPolicy::Allowed_muted) {
+  if (policy == DocumentAutoplayPolicy::Allowed_muted) {
     return dom::AutoplayPolicy::Allowed_muted;
   }
   return dom::AutoplayPolicy::Disallowed;
