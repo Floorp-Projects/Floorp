@@ -443,6 +443,53 @@ class SurfaceTextureHost : public TextureHost {
   RefPtr<SurfaceTextureSource> mTextureSource;
 };
 
+class AndroidHardwareBufferTextureSource : public TextureSource,
+                                           public TextureSourceOGL {
+ public:
+  AndroidHardwareBufferTextureSource(
+      TextureSourceProvider* aProvider,
+      AndroidHardwareBuffer* aAndroidHardwareBuffer, gfx::SurfaceFormat aFormat,
+      GLenum aTarget, GLenum aWrapMode, gfx::IntSize aSize);
+
+  const char* Name() const override { return "SurfaceTextureSource"; }
+
+  TextureSourceOGL* AsSourceOGL() override { return this; }
+
+  void BindTexture(GLenum activetex,
+                   gfx::SamplingFilter aSamplingFilter) override;
+
+  bool IsValid() const override;
+
+  gfx::IntSize GetSize() const override { return mSize; }
+
+  gfx::SurfaceFormat GetFormat() const override { return mFormat; }
+
+  GLenum GetTextureTarget() const override { return mTextureTarget; }
+
+  GLenum GetWrapMode() const override { return mWrapMode; }
+
+  void DeallocateDeviceData() override;
+
+  gl::GLContext* gl() const { return mGL; }
+
+ protected:
+  virtual ~AndroidHardwareBufferTextureSource();
+
+  bool EnsureEGLImage();
+  void DestroyEGLImage();
+  void DeleteTextureHandle();
+
+  RefPtr<gl::GLContext> mGL;
+  RefPtr<AndroidHardwareBuffer> mAndroidHardwareBuffer;
+  const gfx::SurfaceFormat mFormat;
+  const GLenum mTextureTarget;
+  const GLenum mWrapMode;
+  const gfx::IntSize mSize;
+
+  EGLImage mEGLImage;
+  GLuint mTextureHandle;
+};
+
 class AndroidHardwareBufferTextureHost : public TextureHost {
  public:
   static already_AddRefed<AndroidHardwareBufferTextureHost> Create(
@@ -499,6 +546,8 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
   AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override {
     return mAndroidHardwareBuffer;
   }
+
+  bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
 
   // gecko does not need deferred deletion with WebRender
   // GPU/hardware task end could be checked by android fence.

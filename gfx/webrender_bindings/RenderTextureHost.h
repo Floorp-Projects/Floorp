@@ -24,6 +24,7 @@ class GLContext;
 
 namespace wr {
 
+class RenderAndroidHardwareBufferTextureHost;
 class RenderAndroidSurfaceTextureHost;
 class RenderCompositor;
 class RenderDXGITextureHost;
@@ -83,6 +84,11 @@ class RenderTextureHost {
   }
 
   virtual RenderMacIOSurfaceTextureHost* AsRenderMacIOSurfaceTextureHost() {
+    return nullptr;
+  }
+
+  virtual RenderAndroidHardwareBufferTextureHost*
+  AsRenderAndroidHardwareBufferTextureHost() {
     return nullptr;
   }
 
