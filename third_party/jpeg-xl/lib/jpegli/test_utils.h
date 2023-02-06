@@ -33,8 +33,9 @@ class PNMParser {
       : pos_(data), end_(data + len) {}
 
   // Sets "pos" to the first non-header byte/pixel on success.
-  bool ParseHeader(const uint8_t** pos, size_t* xsize, size_t* ysize,
-                   size_t* num_channels, size_t* bitdepth) {
+  bool ParseHeader(const uint8_t** pos, volatile size_t* xsize,
+                   volatile size_t* ysize, volatile size_t* num_channels,
+                   volatile size_t* bitdepth) {
     if (pos_[0] != 'P' || (pos_[1] != '5' && pos_[1] != '6')) {
       fprintf(stderr, "Invalid PNM header.");
       return false;
@@ -75,7 +76,7 @@ class PNMParser {
     return IsLineBreak(c) || c == '\t' || c == ' ';
   }
 
-  bool ParseUnsigned(size_t* number) {
+  bool ParseUnsigned(volatile size_t* number) {
     if (pos_ == end_ || *pos_ < '0' || *pos_ > '9') {
       fprintf(stderr, "Expected unsigned number.\n");
       return false;
@@ -105,9 +106,11 @@ class PNMParser {
   const uint8_t* const end_;
 };
 
-static inline bool ReadPNM(const std::vector<uint8_t>& data, size_t* xsize,
-                           size_t* ysize, size_t* num_channels,
-                           size_t* bitdepth, std::vector<uint8_t>* pixels) {
+static inline bool ReadPNM(const std::vector<uint8_t>& data,
+                           volatile size_t* xsize, volatile size_t* ysize,
+                           volatile size_t* num_channels,
+                           volatile size_t* bitdepth,
+                           std::vector<uint8_t>* pixels) {
   if (data.size() < 2) {
     fprintf(stderr, "PNM file too small.\n");
     return false;

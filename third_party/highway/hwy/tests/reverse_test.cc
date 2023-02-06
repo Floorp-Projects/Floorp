@@ -52,11 +52,6 @@ struct TestReverse2 {
     const RebindToUnsigned<D> du;  // Iota does not support float16_t.
     const auto v = BitCast(d, Iota(du, 1));
     auto expected = AllocateAligned<T>(N);
-    if (N == 1) {
-      Store(v, d, expected.get());
-      HWY_ASSERT_VEC_EQ(d, expected.get(), Reverse2(d, v));
-      return;
-    }
 
     // Can't set float16_t value directly, need to permute in memory.
     auto copy = AllocateAligned<T>(N);
@@ -116,11 +111,6 @@ HWY_NOINLINE void TestAllReverse2() {
   ForUIF64(ForGEVectors<128, TestReverse2>());
   ForUIF32(ForGEVectors<64, TestReverse2>());
   ForUIF16(ForGEVectors<32, TestReverse2>());
-
-#if HWY_TARGET == HWY_SSSE3
-  // Implemented mainly for internal use.
-  ForUI8(ForPartialVectors<TestReverse2>());
-#endif
 }
 
 HWY_NOINLINE void TestAllReverse4() {

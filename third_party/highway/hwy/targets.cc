@@ -42,7 +42,7 @@
 #include <cpuid.h>
 #endif  // HWY_COMPILER_MSVC
 
-#elif HWY_ARCH_ARM && HWY_OS_LINUX && !defined(TOOLCHAIN_MISS_SYS_AUXV_H)
+#elif HWY_ARCH_ARM && HWY_OS_LINUX
 #include <sys/auxv.h>
 #endif  // HWY_ARCH_*
 

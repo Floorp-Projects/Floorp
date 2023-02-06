@@ -6,14 +6,18 @@
 #ifndef LIB_JPEGLI_QUANT_H_
 #define LIB_JPEGLI_QUANT_H_
 
-/* clang-format off */
-#include <stdio.h>
-#include <jpeglib.h>
-/* clang-format on */
+#include <vector>
+
+#include "lib/jxl/common.h"
+#include "lib/jxl/image.h"
+#include "lib/jxl/jpeg/jpeg_data.h"
 
 namespace jpegli {
 
-void FinalizeQuantMatrices(j_compress_ptr cinfo);
+void AddJpegQuantMatrices(const jxl::ImageF& qf, bool xyb, float dc_quant,
+                          float global_scale,
+                          std::vector<jxl::jpeg::JPEGQuantTable>* quant_tables,
+                          float* qm);
 
 }  // namespace jpegli
 

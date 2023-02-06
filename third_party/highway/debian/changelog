@@ -1,15 +1,3 @@
-highway (1.0.3-1) UNRELEASED; urgency=medium
-
-* Add RearrangeToOddPlusEven, Xor3, 8-bit CompressStore, HWY_ASSUME
-* Add contrib/bit_pack for 8/16-bit lanes
-* Add WASM_EMU256 target
-* Documentation improvements
-* Allow opting out of C++ stdlib usage for Compiler Explorer
-* Update for new RVV intrinsics; faster WASM min/max and extmul/q15mul
-* Fix UB, GCC atomic
-
- -- Jan Wassenberg <janwas@google.com>  Thu, 19 Jan 2023 13:00:00 +0200
-
 highway (1.0.2-1) UNRELEASED; urgency=medium
 
 * Add ExclusiveNeither, FindKnownFirstTrue, Ne128

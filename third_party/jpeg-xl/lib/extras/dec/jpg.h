@@ -25,7 +25,8 @@ namespace extras {
 // `elapsed_deinterleave`, if non-null, will be set to the time (in seconds)
 // that it took to deinterleave the raw JSAMPLEs to planar floats.
 Status DecodeImageJPG(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      const SizeConstraints& constraints, PackedPixelFile* ppf);
+                      const SizeConstraints& constraints,
+                      size_t output_bit_depth, PackedPixelFile* ppf);
 
 }  // namespace extras
 }  // namespace jxl

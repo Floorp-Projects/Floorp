@@ -108,16 +108,6 @@ The `contrib` directory contains SIMD-related utilities: an image class with
 aligned rows, a math library (16 functions already implemented, mostly
 trigonometry), and functions for computing dot products and sorting.
 
-### Other libraries
-
-If you only require x86 support, you may also use Agner Fog's
-[VCL vector class library](https://github.com/vectorclass). It includes many
-functions including a complete math library.
-
-If you have existing code using x86/NEON intrinsics, you may be interested in
-[SIMDe](https://github.com/simd-everywhere/simde), which emulates those
-intrinsics using other platforms' intrinsics or autovectorization.
-
 ## Installation
 
 This project uses CMake to generate and build. In a Debian-based system you can
@@ -135,9 +125,6 @@ installing gtest separately:
 ```bash
 sudo apt install libgtest-dev
 ```
-
-Running cross-compiled tests requires support from the OS, which on Debian is
-provided by the `qemu-user-binfmt` package.
 
 To build Highway as a shared or static library (depending on BUILD_SHARED_LIBS),
 the standard CMake workflow can be used:
@@ -274,17 +261,6 @@ Highway offers several ways to express loops where `N` need not divide `count`:
     to processing entire vectors even if we do not need all their lanes. Indeed
     this avoids the (potentially large) cost of predication or partial
     loads/stores on older targets, and does not duplicate code.
-
-*   Process whole vectors and include previously processed elements
-    in the last vector:
-    ```
-    for (size_t i = 0; i < count; i += N) LoopBody<false>(d, HWY_MIN(i, count - N), 0);
-    ```
-
-    This is the second preferred option provided that `count >= N`
-    and `LoopBody` is idempotent. Some elements might be processed twice, but
-    a single code path and full vectorization is usually worth it. Even if
-    `count < N`, it usually makes sense to pad inputs/outputs up to `N`.
 
 *   Use the `Transform*` functions in hwy/contrib/algo/transform-inl.h. This
     takes care of the loop and remainder handling and you simply define a

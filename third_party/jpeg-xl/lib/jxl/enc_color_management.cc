@@ -31,7 +31,7 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/field_encodings.h"
-#include "lib/jxl/matrix_ops.h"
+#include "lib/jxl/linalg.h"
 #include "lib/jxl/transfer_functions-inl.h"
 #if JPEGXL_ENABLE_SKCMS
 #include "lib/jxl/enc_jxl_skcms.h"
@@ -339,6 +339,11 @@ JXL_MUST_USE_RESULT cmsCIEXYZ D50_XYZ() {
   return {0.96420288, 1.0, 0.82490540};
 }
 
+JXL_MUST_USE_RESULT cmsCIExyY xyYFromCIExy(const CIExy& xy) {
+  const cmsCIExyY xyY = {xy.x, xy.y, 1.0};
+  return xyY;
+}
+
 // RAII
 
 struct ProfileDeleter {
@@ -405,6 +410,14 @@ ColorSpace ColorSpaceFromProfile(const skcms_ICCProfile& profile) {
     default:
       return ColorSpace::kUnknown;
   }
+}
+
+// "profile1" is pre-decoded to save time in DetectTransferFunction.
+Status ProfileEquivalentToICC(const skcms_ICCProfile& profile1,
+                              const PaddedBytes& icc) {
+  skcms_ICCProfile profile2;
+  JXL_RETURN_IF_ERROR(skcms_Parse(icc.data(), icc.size(), &profile2));
+  return skcms_ApproximatelyEqualProfiles(&profile1, &profile2);
 }
 
 // vector_out := matmul(matrix, vector_in)

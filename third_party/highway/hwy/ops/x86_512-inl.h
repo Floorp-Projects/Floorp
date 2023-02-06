@@ -146,8 +146,7 @@ class Vec512 {
 // Mask register: one bit per lane.
 template <typename T>
 struct Mask512 {
-  using Raw = typename detail::RawMask512<sizeof(T)>::type;
-  Raw raw;
+  typename detail::RawMask512<sizeof(T)>::type raw;
 };
 
 template <typename T>
@@ -331,18 +330,8 @@ HWY_API Vec512<double> Xor(const Vec512<double> a, const Vec512<double> b) {
   return Vec512<double>{_mm512_xor_pd(a.raw, b.raw)};
 }
 
-// ------------------------------ Xor3
-template <typename T>
-HWY_API Vec512<T> Xor3(Vec512<T> x1, Vec512<T> x2, Vec512<T> x3) {
-  const Full512<T> d;
-  const RebindToUnsigned<decltype(d)> du;
-  using VU = VFromD<decltype(du)>;
-  const __m512i ret = _mm512_ternarylogic_epi64(
-      BitCast(du, x1).raw, BitCast(du, x2).raw, BitCast(du, x3).raw, 0x96);
-  return BitCast(d, VU{ret});
-}
-
 // ------------------------------ Or3
+
 template <typename T>
 HWY_API Vec512<T> Or3(Vec512<T> o1, Vec512<T> o2, Vec512<T> o3) {
   const Full512<T> d;
@@ -354,6 +343,7 @@ HWY_API Vec512<T> Or3(Vec512<T> o1, Vec512<T> o2, Vec512<T> o3) {
 }
 
 // ------------------------------ OrAnd
+
 template <typename T>
 HWY_API Vec512<T> OrAnd(Vec512<T> o, Vec512<T> a1, Vec512<T> a2) {
   const Full512<T> d;
@@ -365,6 +355,7 @@ HWY_API Vec512<T> OrAnd(Vec512<T> o, Vec512<T> a1, Vec512<T> a2) {
 }
 
 // ------------------------------ IfVecThenElse
+
 template <typename T>
 HWY_API Vec512<T> IfVecThenElse(Vec512<T> mask, Vec512<T> yes, Vec512<T> no) {
   const Full512<T> d;
@@ -3589,8 +3580,7 @@ template <typename T, typename T2>
 Vec512<T> Iota(const Full512<T> d, const T2 first) {
   HWY_ALIGN T lanes[64 / sizeof(T)];
   for (size_t i = 0; i < 64 / sizeof(T); ++i) {
-    lanes[i] =
-        AddWithWraparound(hwy::IsFloatTag<T>(), static_cast<T>(first), i);
+    lanes[i] = static_cast<T>(first + static_cast<T2>(i));
   }
   return Load(d, lanes);
 }
@@ -3728,303 +3718,13 @@ HWY_API intptr_t FindFirstTrue(const Full512<T> d, const Mask512<T> mask) {
 
 // ------------------------------ Compress
 
-// Always implement 8-bit here even if we lack VBMI2 because we can do better
-// than generic_ops (8 at a time) via the native 32-bit compress (16 at a time).
-#ifdef HWY_NATIVE_COMPRESS8
-#undef HWY_NATIVE_COMPRESS8
-#else
-#define HWY_NATIVE_COMPRESS8
-#endif
-
-namespace detail {
-
-#if HWY_TARGET == HWY_AVX3_DL  // VBMI2
-template <size_t N>
-HWY_INLINE Vec128<uint8_t, N> NativeCompress(const Vec128<uint8_t, N> v,
-                                             const Mask128<uint8_t, N> mask) {
-  return Vec128<uint8_t, N>{_mm_maskz_compress_epi8(mask.raw, v.raw)};
-}
-HWY_INLINE Vec256<uint8_t> NativeCompress(const Vec256<uint8_t> v,
-                                          const Mask256<uint8_t> mask) {
-  return Vec256<uint8_t>{_mm256_maskz_compress_epi8(mask.raw, v.raw)};
-}
-HWY_INLINE Vec512<uint8_t> NativeCompress(const Vec512<uint8_t> v,
-                                          const Mask512<uint8_t> mask) {
-  return Vec512<uint8_t>{_mm512_maskz_compress_epi8(mask.raw, v.raw)};
+template <typename T, HWY_IF_LANE_SIZE(T, 4)>
+HWY_API Vec512<T> Compress(Vec512<T> v, Mask512<T> mask) {
+  return Vec512<T>{_mm512_maskz_compress_epi32(mask.raw, v.raw)};
 }
 
-template <size_t N>
-HWY_INLINE Vec128<uint16_t, N> NativeCompress(const Vec128<uint16_t, N> v,
-                                              const Mask128<uint16_t, N> mask) {
-  return Vec128<uint16_t, N>{_mm_maskz_compress_epi16(mask.raw, v.raw)};
-}
-HWY_INLINE Vec256<uint16_t> NativeCompress(const Vec256<uint16_t> v,
-                                           const Mask256<uint16_t> mask) {
-  return Vec256<uint16_t>{_mm256_maskz_compress_epi16(mask.raw, v.raw)};
-}
-HWY_INLINE Vec512<uint16_t> NativeCompress(const Vec512<uint16_t> v,
-                                           const Mask512<uint16_t> mask) {
-  return Vec512<uint16_t>{_mm512_maskz_compress_epi16(mask.raw, v.raw)};
-}
-
-template <size_t N>
-HWY_INLINE void NativeCompressStore(Vec128<uint8_t, N> v,
-                                    Mask128<uint8_t, N> mask,
-                                    Simd<uint8_t, N, 0> /* d */,
-                                    uint8_t* HWY_RESTRICT unaligned) {
-  _mm_mask_compressstoreu_epi8(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec256<uint8_t> v, Mask256<uint8_t> mask,
-                                    Full256<uint8_t> /* d */,
-                                    uint8_t* HWY_RESTRICT unaligned) {
-  _mm256_mask_compressstoreu_epi8(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec512<uint8_t> v, Mask512<uint8_t> mask,
-                                    Full512<uint8_t> /* d */,
-                                    uint8_t* HWY_RESTRICT unaligned) {
-  _mm512_mask_compressstoreu_epi8(unaligned, mask.raw, v.raw);
-}
-
-template <size_t N>
-HWY_INLINE void NativeCompressStore(Vec128<uint16_t, N> v,
-                                    Mask128<uint16_t, N> mask,
-                                    Simd<uint16_t, N, 0> /* d */,
-                                    uint16_t* HWY_RESTRICT unaligned) {
-  _mm_mask_compressstoreu_epi16(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec256<uint16_t> v, Mask256<uint16_t> mask,
-                                    Full256<uint16_t> /* d */,
-                                    uint16_t* HWY_RESTRICT unaligned) {
-  _mm256_mask_compressstoreu_epi16(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec512<uint16_t> v, Mask512<uint16_t> mask,
-                                    Full512<uint16_t> /* d */,
-                                    uint16_t* HWY_RESTRICT unaligned) {
-  _mm512_mask_compressstoreu_epi16(unaligned, mask.raw, v.raw);
-}
-
-#endif  // HWY_TARGET == HWY_AVX3_DL
-
-template <size_t N>
-HWY_INLINE Vec128<uint32_t, N> NativeCompress(const Vec128<uint32_t, N> v,
-                                              const Mask128<uint32_t, N> mask) {
-  return Vec128<uint32_t, N>{_mm_maskz_compress_epi32(mask.raw, v.raw)};
-}
-HWY_INLINE Vec256<uint32_t> NativeCompress(Vec256<uint32_t> v,
-                                           Mask256<uint32_t> mask) {
-  return Vec256<uint32_t>{_mm256_maskz_compress_epi32(mask.raw, v.raw)};
-}
-HWY_INLINE Vec512<uint32_t> NativeCompress(Vec512<uint32_t> v,
-                                           Mask512<uint32_t> mask) {
-  return Vec512<uint32_t>{_mm512_maskz_compress_epi32(mask.raw, v.raw)};
-}
-// We use table-based compress for 64-bit lanes, see CompressIsPartition.
-
-template <size_t N>
-HWY_INLINE void NativeCompressStore(Vec128<uint32_t, N> v,
-                                    Mask128<uint32_t, N> mask,
-                                    Simd<uint32_t, N, 0> /* d */,
-                                    uint32_t* HWY_RESTRICT unaligned) {
-  _mm_mask_compressstoreu_epi32(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec256<uint32_t> v, Mask256<uint32_t> mask,
-                                    Full256<uint32_t> /* d */,
-                                    uint32_t* HWY_RESTRICT unaligned) {
-  _mm256_mask_compressstoreu_epi32(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec512<uint32_t> v, Mask512<uint32_t> mask,
-                                    Full512<uint32_t> /* d */,
-                                    uint32_t* HWY_RESTRICT unaligned) {
-  _mm512_mask_compressstoreu_epi32(unaligned, mask.raw, v.raw);
-}
-
-template <size_t N>
-HWY_INLINE void NativeCompressStore(Vec128<uint64_t, N> v,
-                                    Mask128<uint64_t, N> mask,
-                                    Simd<uint64_t, N, 0> /* d */,
-                                    uint64_t* HWY_RESTRICT unaligned) {
-  _mm_mask_compressstoreu_epi64(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec256<uint64_t> v, Mask256<uint64_t> mask,
-                                    Full256<uint64_t> /* d */,
-                                    uint64_t* HWY_RESTRICT unaligned) {
-  _mm256_mask_compressstoreu_epi64(unaligned, mask.raw, v.raw);
-}
-HWY_INLINE void NativeCompressStore(Vec512<uint64_t> v, Mask512<uint64_t> mask,
-                                    Full512<uint64_t> /* d */,
-                                    uint64_t* HWY_RESTRICT unaligned) {
-  _mm512_mask_compressstoreu_epi64(unaligned, mask.raw, v.raw);
-}
-
-// For u8x16 and <= u16x16 we can avoid store+load for Compress because there is
-// only a single compressed vector (u32x16). Other EmuCompress are implemented
-// after the EmuCompressStore they build upon.
-template <size_t N>
-HWY_INLINE Vec128<uint8_t, N> EmuCompress(Vec128<uint8_t, N> v,
-                                          Mask128<uint8_t, N> mask) {
-  const Simd<uint8_t, N, 0> d;
-  const Rebind<uint32_t, decltype(d)> d32;
-  const auto v0 = PromoteTo(d32, v);
-
-  const uint64_t mask_bits{mask.raw};
-  // Mask type is __mmask16 if v is full 128, else __mmask8.
-  using M32 = MFromD<decltype(d32)>;
-  const M32 m0{static_cast<typename M32::Raw>(mask_bits)};
-  return TruncateTo(d, Compress(v0, m0));
-}
-
-template <size_t N>
-HWY_INLINE Vec128<uint16_t, N> EmuCompress(Vec128<uint16_t, N> v,
-                                           Mask128<uint16_t, N> mask) {
-  const Simd<uint16_t, N, 0> d;
-  const Rebind<int32_t, decltype(d)> di32;
-  const RebindToUnsigned<decltype(di32)> du32;
-  const MFromD<decltype(du32)> mask32{static_cast<__mmask8>(mask.raw)};
-  // DemoteTo is 2 ops, but likely lower latency than TruncateTo on SKX.
-  // Only i32 -> u16 is supported, whereas NativeCompress expects u32.
-  const VFromD<decltype(du32)> v32 = BitCast(du32, PromoteTo(di32, v));
-  return DemoteTo(d, BitCast(di32, NativeCompress(v32, mask32)));
-}
-
-HWY_INLINE Vec256<uint16_t> EmuCompress(Vec256<uint16_t> v,
-                                        Mask256<uint16_t> mask) {
-  const Full256<uint16_t> d;
-  const Rebind<int32_t, decltype(d)> di32;
-  const RebindToUnsigned<decltype(di32)> du32;
-  const Mask512<uint32_t> mask32{static_cast<__mmask16>(mask.raw)};
-  const Vec512<uint32_t> v32 = BitCast(du32, PromoteTo(di32, v));
-  return DemoteTo(d, BitCast(di32, NativeCompress(v32, mask32)));
-}
-
-// See above - small-vector EmuCompressStore are implemented via EmuCompress.
-template <typename T, size_t N>
-HWY_INLINE void EmuCompressStore(Vec128<T, N> v, Mask128<T, N> mask,
-                                 Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
-  StoreU(EmuCompress(v, mask), d, unaligned);
-}
-
-HWY_INLINE void EmuCompressStore(Vec256<uint16_t> v, Mask256<uint16_t> mask,
-                                 Full256<uint16_t> d,
-                                 uint16_t* HWY_RESTRICT unaligned) {
-  StoreU(EmuCompress(v, mask), d, unaligned);
-}
-
-// Main emulation logic for wider vector, starting with EmuCompressStore because
-// it is most convenient to merge pieces using memory (concatenating vectors at
-// byte offsets is difficult).
-HWY_INLINE void EmuCompressStore(Vec256<uint8_t> v, Mask256<uint8_t> mask,
-                                 Full256<uint8_t> d,
-                                 uint8_t* HWY_RESTRICT unaligned) {
-  const uint64_t mask_bits{mask.raw};
-  const Half<decltype(d)> dh;
-  const Rebind<uint32_t, decltype(dh)> d32;
-  const Vec512<uint32_t> v0 = PromoteTo(d32, LowerHalf(v));
-  const Vec512<uint32_t> v1 = PromoteTo(d32, UpperHalf(dh, v));
-  const Mask512<uint32_t> m0{static_cast<__mmask16>(mask_bits & 0xFFFFu)};
-  const Mask512<uint32_t> m1{static_cast<__mmask16>(mask_bits >> 16)};
-  const Vec128<uint8_t> c0 = TruncateTo(dh, NativeCompress(v0, m0));
-  const Vec128<uint8_t> c1 = TruncateTo(dh, NativeCompress(v1, m1));
-  uint8_t* HWY_RESTRICT pos = unaligned;
-  StoreU(c0, dh, pos);
-  StoreU(c1, dh, pos + CountTrue(d32, m0));
-}
-
-HWY_INLINE void EmuCompressStore(Vec512<uint8_t> v, Mask512<uint8_t> mask,
-                                 Full512<uint8_t> d,
-                                 uint8_t* HWY_RESTRICT unaligned) {
-  const uint64_t mask_bits{mask.raw};
-  const Half<Half<decltype(d)>> dq;
-  const Rebind<uint32_t, decltype(dq)> d32;
-  HWY_ALIGN uint8_t lanes[64];
-  Store(v, d, lanes);
-  const Vec512<uint32_t> v0 = PromoteTo(d32, LowerHalf(LowerHalf(v)));
-  const Vec512<uint32_t> v1 = PromoteTo(d32, Load(dq, lanes + 16));
-  const Vec512<uint32_t> v2 = PromoteTo(d32, Load(dq, lanes + 32));
-  const Vec512<uint32_t> v3 = PromoteTo(d32, Load(dq, lanes + 48));
-  const Mask512<uint32_t> m0{static_cast<__mmask16>(mask_bits & 0xFFFFu)};
-  const Mask512<uint32_t> m1{
-      static_cast<uint16_t>((mask_bits >> 16) & 0xFFFFu)};
-  const Mask512<uint32_t> m2{
-      static_cast<uint16_t>((mask_bits >> 32) & 0xFFFFu)};
-  const Mask512<uint32_t> m3{static_cast<__mmask16>(mask_bits >> 48)};
-  const Vec128<uint8_t> c0 = TruncateTo(dq, NativeCompress(v0, m0));
-  const Vec128<uint8_t> c1 = TruncateTo(dq, NativeCompress(v1, m1));
-  const Vec128<uint8_t> c2 = TruncateTo(dq, NativeCompress(v2, m2));
-  const Vec128<uint8_t> c3 = TruncateTo(dq, NativeCompress(v3, m3));
-  uint8_t* HWY_RESTRICT pos = unaligned;
-  StoreU(c0, dq, pos);
-  pos += CountTrue(d32, m0);
-  StoreU(c1, dq, pos);
-  pos += CountTrue(d32, m1);
-  StoreU(c2, dq, pos);
-  pos += CountTrue(d32, m2);
-  StoreU(c3, dq, pos);
-}
-
-HWY_INLINE void EmuCompressStore(Vec512<uint16_t> v, Mask512<uint16_t> mask,
-                                 Full512<uint16_t> d,
-                                 uint16_t* HWY_RESTRICT unaligned) {
-  const Repartition<int32_t, decltype(d)> di32;
-  const RebindToUnsigned<decltype(di32)> du32;
-  const Half<decltype(d)> dh;
-  const Vec512<uint32_t> promoted0 =
-      BitCast(du32, PromoteTo(di32, LowerHalf(dh, v)));
-  const Vec512<uint32_t> promoted1 =
-      BitCast(du32, PromoteTo(di32, UpperHalf(dh, v)));
-
-  const uint64_t mask_bits{mask.raw};
-  const uint64_t maskL = mask_bits & 0xFFFF;
-  const uint64_t maskH = mask_bits >> 16;
-  const Mask512<uint32_t> mask0{static_cast<__mmask16>(maskL)};
-  const Mask512<uint32_t> mask1{static_cast<__mmask16>(maskH)};
-  const Vec512<uint32_t> compressed0 = NativeCompress(promoted0, mask0);
-  const Vec512<uint32_t> compressed1 = NativeCompress(promoted1, mask1);
-
-  const Vec256<uint16_t> demoted0 = DemoteTo(dh, BitCast(di32, compressed0));
-  const Vec256<uint16_t> demoted1 = DemoteTo(dh, BitCast(di32, compressed1));
-
-  // Store 256-bit halves
-  StoreU(demoted0, dh, unaligned);
-  StoreU(demoted1, dh, unaligned + PopCount(maskL));
-}
-
-// Finally, the remaining EmuCompress for wide vectors, using EmuCompressStore.
-template <typename T>  // 1 or 2 bytes
-HWY_INLINE Vec512<T> EmuCompress(Vec512<T> v, Mask512<T> mask) {
-  const Full512<T> d;
-  HWY_ALIGN T buf[2 * 64 / sizeof(T)];
-  EmuCompressStore(v, mask, d, buf);
-  return Load(d, buf);
-}
-
-HWY_INLINE Vec256<uint8_t> EmuCompress(Vec256<uint8_t> v,
-                                       const Mask256<uint8_t> mask) {
-  const Full256<uint8_t> d;
-  HWY_ALIGN uint8_t buf[2 * 32 / sizeof(uint8_t)];
-  EmuCompressStore(v, mask, d, buf);
-  return Load(d, buf);
-}
-
-}  // namespace detail
-
-template <class V, class M, HWY_IF_LANE_SIZE_ONE_OF_V(V, 0x6)>  // 1 or 2 bytes
-HWY_API V Compress(V v, const M mask) {
-  const DFromV<decltype(v)> d;
-  const RebindToUnsigned<decltype(d)> du;
-  const auto mu = RebindMask(du, mask);
-#if HWY_TARGET == HWY_AVX3_DL  // VBMI2
-  return BitCast(d, detail::NativeCompress(BitCast(du, v), mu));
-#else
-  return BitCast(d, detail::EmuCompress(BitCast(du, v), mu));
-#endif
-}
-
-template <class V, class M, HWY_IF_LANE_SIZE_V(V, 4)>
-HWY_API V Compress(V v, const M mask) {
-  const DFromV<decltype(v)> d;
-  const RebindToUnsigned<decltype(d)> du;
-  const auto mu = RebindMask(du, mask);
-  return BitCast(d, detail::NativeCompress(BitCast(du, v), mu));
+HWY_API Vec512<float> Compress(Vec512<float> v, Mask512<float> mask) {
+  return Vec512<float>{_mm512_maskz_compress_ps(mask.raw, v.raw)};
 }
 
 template <typename T, HWY_IF_LANE_SIZE(T, 8)>
@@ -4088,10 +3788,72 @@ HWY_API Vec512<T> Compress(Vec512<T> v, Mask512<T> mask) {
   return TableLookupLanes(v, indices);
 }
 
+// 16-bit may use the 32-bit Compress and must be defined after it.
+//
+// Ignore IDE redefinition error - this is not actually defined in x86_256 if
+// we are including x86_512-inl.h.
+template <typename T, HWY_IF_LANE_SIZE(T, 2)>
+HWY_API Vec256<T> Compress(Vec256<T> v, Mask256<T> mask) {
+  const Full256<T> d;
+  const Rebind<uint16_t, decltype(d)> du;
+  const auto vu = BitCast(du, v);  // (required for float16_t inputs)
+
+#if HWY_TARGET == HWY_AVX3_DL  // VBMI2
+  const Vec256<uint16_t> cu{_mm256_maskz_compress_epi16(mask.raw, vu.raw)};
+#else
+  // Promote to i32 (512-bit vector!) so we can use the native Compress.
+  const auto vw = PromoteTo(Rebind<int32_t, decltype(d)>(), vu);
+  const Mask512<int32_t> mask32{static_cast<__mmask16>(mask.raw)};
+  const auto cu = DemoteTo(du, Compress(vw, mask32));
+#endif  // HWY_TARGET == HWY_AVX3_DL
+
+  return BitCast(d, cu);
+}
+
+// Expands to 32-bit, compresses, concatenate demoted halves.
+template <typename T, HWY_IF_LANE_SIZE(T, 2)>
+HWY_API Vec512<T> Compress(Vec512<T> v, const Mask512<T> mask) {
+  const Full512<T> d;
+  const Rebind<uint16_t, decltype(d)> du;
+  const auto vu = BitCast(du, v);  // (required for float16_t inputs)
+
+#if HWY_TARGET == HWY_AVX3_DL  // VBMI2
+  const Vec512<uint16_t> cu{_mm512_maskz_compress_epi16(mask.raw, vu.raw)};
+#else
+  const Repartition<int32_t, decltype(d)> dw;
+  const Half<decltype(du)> duh;
+  const auto promoted0 = PromoteTo(dw, LowerHalf(duh, vu));
+  const auto promoted1 = PromoteTo(dw, UpperHalf(duh, vu));
+
+  const uint32_t mask_bits{mask.raw};
+  const Mask512<int32_t> mask0{static_cast<__mmask16>(mask_bits & 0xFFFF)};
+  const Mask512<int32_t> mask1{static_cast<__mmask16>(mask_bits >> 16)};
+  const auto compressed0 = Compress(promoted0, mask0);
+  const auto compressed1 = Compress(promoted1, mask1);
+
+  const auto demoted0 = ZeroExtendVector(du, DemoteTo(duh, compressed0));
+  const auto demoted1 = ZeroExtendVector(du, DemoteTo(duh, compressed1));
+
+  // Concatenate into single vector by shifting upper with writemask.
+  const size_t num0 = CountTrue(dw, mask0);
+  const __mmask32 m_upper = ~((1u << num0) - 1);
+  alignas(64) uint16_t iota[64] = {
+      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+  const Vec512<uint16_t> idx = LoadU(du, iota + 32 - num0);
+  const Vec512<uint16_t> cu{_mm512_mask_permutexvar_epi16(
+      demoted0.raw, m_upper, idx.raw, demoted1.raw)};
+#endif  // HWY_TARGET == HWY_AVX3_DL
+
+  return BitCast(d, cu);
+}
+
 // ------------------------------ CompressNot
 
-template <class V, class M, HWY_IF_NOT_LANE_SIZE_V(V, 8)>
-HWY_API V CompressNot(V v, const M mask) {
+template <typename T, HWY_IF_NOT_LANE_SIZE(T, 8)>
+HWY_API Vec512<T> CompressNot(Vec512<T> v, const Mask512<T> mask) {
   return Compress(v, Not(mask));
 }
 
@@ -4156,57 +3918,87 @@ HWY_API Vec512<T> CompressNot(Vec512<T> v, Mask512<T> mask) {
   return TableLookupLanes(v, indices);
 }
 
-// uint64_t lanes. Only implement for 256 and 512-bit vectors because this is a
-// no-op for 128-bit.
-template <class V, class M, hwy::EnableIf<(sizeof(V) > 16)>* = nullptr>
-HWY_API V CompressBlocksNot(V v, M mask) {
+HWY_API Vec512<uint64_t> CompressBlocksNot(Vec512<uint64_t> v,
+                                           Mask512<uint64_t> mask) {
   return CompressNot(v, mask);
 }
 
 // ------------------------------ CompressBits
-template <class V>
-HWY_API V CompressBits(V v, const uint8_t* HWY_RESTRICT bits) {
-  return Compress(v, LoadMaskBits(DFromV<V>(), bits));
+template <typename T>
+HWY_API Vec512<T> CompressBits(Vec512<T> v, const uint8_t* HWY_RESTRICT bits) {
+  return Compress(v, LoadMaskBits(Full512<T>(), bits));
 }
 
 // ------------------------------ CompressStore
 
-template <class V, class D, HWY_IF_LANE_SIZE_ONE_OF_V(V, 0x6)>  // 1 or 2 bytes
-HWY_API size_t CompressStore(V v, MFromD<D> mask, D d,
-                             TFromD<D>* HWY_RESTRICT unaligned) {
-  const RebindToUnsigned<decltype(d)> du;
-  const auto mu = RebindMask(du, mask);
-  auto pu = reinterpret_cast<TFromD<decltype(du)> * HWY_RESTRICT>(unaligned);
+template <typename T, HWY_IF_LANE_SIZE(T, 2)>
+HWY_API size_t CompressStore(Vec512<T> v, Mask512<T> mask, Full512<T> d,
+                             T* HWY_RESTRICT unaligned) {
+  const Rebind<uint16_t, decltype(d)> du;
+  const auto vu = BitCast(du, v);  // (required for float16_t inputs)
+
+  const uint64_t mask_bits{mask.raw};
+
 #if HWY_TARGET == HWY_AVX3_DL  // VBMI2
-  detail::NativeCompressStore(BitCast(du, v), mu, du, pu);
+  _mm512_mask_compressstoreu_epi16(unaligned, mask.raw, vu.raw);
 #else
-  detail::EmuCompressStore(BitCast(du, v), mu, du, pu);
+  const Repartition<int32_t, decltype(d)> dw;
+  const Half<decltype(du)> duh;
+  const auto promoted0 = PromoteTo(dw, LowerHalf(duh, vu));
+  const auto promoted1 = PromoteTo(dw, UpperHalf(duh, vu));
+
+  const uint64_t maskL = mask_bits & 0xFFFF;
+  const uint64_t maskH = mask_bits >> 16;
+  const Mask512<int32_t> mask0{static_cast<__mmask16>(maskL)};
+  const Mask512<int32_t> mask1{static_cast<__mmask16>(maskH)};
+  const auto compressed0 = Compress(promoted0, mask0);
+  const auto compressed1 = Compress(promoted1, mask1);
+
+  const Half<decltype(d)> dh;
+  const auto demoted0 = BitCast(dh, DemoteTo(duh, compressed0));
+  const auto demoted1 = BitCast(dh, DemoteTo(duh, compressed1));
+
+  // Store 256-bit halves
+  StoreU(demoted0, dh, unaligned);
+  StoreU(demoted1, dh, unaligned + PopCount(maskL));
 #endif
-  const size_t count = CountTrue(d, mask);
-  detail::MaybeUnpoison(pu, count);
+
+  return PopCount(mask_bits);
+}
+
+template <typename T, HWY_IF_LANE_SIZE(T, 4)>
+HWY_API size_t CompressStore(Vec512<T> v, Mask512<T> mask, Full512<T> /* tag */,
+                             T* HWY_RESTRICT unaligned) {
+  _mm512_mask_compressstoreu_epi32(unaligned, mask.raw, v.raw);
+  const size_t count = PopCount(uint64_t{mask.raw});
+// Workaround for MSAN not marking output as initialized (b/233326619)
+#if HWY_IS_MSAN
+  __msan_unpoison(unaligned, count * sizeof(T));
+#endif
   return count;
 }
 
-template <class V, class D, HWY_IF_LANE_SIZE_ONE_OF_V(V, 0x110)>  // 4 or 8
-HWY_API size_t CompressStore(V v, MFromD<D> mask, D d,
-                             TFromD<D>* HWY_RESTRICT unaligned) {
-  const RebindToUnsigned<decltype(d)> du;
-  const auto mu = RebindMask(du, mask);
-  using TU = TFromD<decltype(du)>;
-  TU* HWY_RESTRICT pu = reinterpret_cast<TU*>(unaligned);
-  detail::NativeCompressStore(BitCast(du, v), mu, du, pu);
-  const size_t count = CountTrue(d, mask);
-  detail::MaybeUnpoison(pu, count);
+template <typename T, HWY_IF_LANE_SIZE(T, 8)>
+HWY_API size_t CompressStore(Vec512<T> v, Mask512<T> mask, Full512<T> /* tag */,
+                             T* HWY_RESTRICT unaligned) {
+  _mm512_mask_compressstoreu_epi64(unaligned, mask.raw, v.raw);
+  const size_t count = PopCount(uint64_t{mask.raw});
+// Workaround for MSAN not marking output as initialized (b/233326619)
+#if HWY_IS_MSAN
+  __msan_unpoison(unaligned, count * sizeof(T));
+#endif
   return count;
 }
 
-// Additional overloads to avoid casting to uint32_t (delay?).
 HWY_API size_t CompressStore(Vec512<float> v, Mask512<float> mask,
                              Full512<float> /* tag */,
                              float* HWY_RESTRICT unaligned) {
   _mm512_mask_compressstoreu_ps(unaligned, mask.raw, v.raw);
   const size_t count = PopCount(uint64_t{mask.raw});
-  detail::MaybeUnpoison(unaligned, count);
+// Workaround for MSAN not marking output as initialized (b/233326619)
+#if HWY_IS_MSAN
+  __msan_unpoison(unaligned, count * sizeof(float));
+#endif
   return count;
 }
 
@@ -4215,30 +4007,36 @@ HWY_API size_t CompressStore(Vec512<double> v, Mask512<double> mask,
                              double* HWY_RESTRICT unaligned) {
   _mm512_mask_compressstoreu_pd(unaligned, mask.raw, v.raw);
   const size_t count = PopCount(uint64_t{mask.raw});
-  detail::MaybeUnpoison(unaligned, count);
+// Workaround for MSAN not marking output as initialized (b/233326619)
+#if HWY_IS_MSAN
+  __msan_unpoison(unaligned, count * sizeof(double));
+#endif
   return count;
 }
 
 // ------------------------------ CompressBlendedStore
-template <class D, typename T = TFromD<D>>
-HWY_API size_t CompressBlendedStore(VFromD<D> v, MFromD<D> m, D d,
+template <typename T>
+HWY_API size_t CompressBlendedStore(Vec512<T> v, Mask512<T> m, Full512<T> d,
                                     T* HWY_RESTRICT unaligned) {
-  // Native CompressStore already does the blending at no extra cost (latency
-  // 11, rthroughput 2 - same as compress plus store).
-  if (HWY_TARGET == HWY_AVX3_DL || sizeof(T) > 2) {
+  // AVX-512 already does the blending at no extra cost (latency 11,
+  // rthroughput 2 - same as compress plus store).
+  if (HWY_TARGET == HWY_AVX3_DL || sizeof(T) != 2) {
     return CompressStore(v, m, d, unaligned);
   } else {
     const size_t count = CountTrue(d, m);
     BlendedStore(Compress(v, m), FirstN(d, count), d, unaligned);
-    detail::MaybeUnpoison(unaligned, count);
+// Workaround for MSAN not marking output as initialized (b/233326619)
+#if HWY_IS_MSAN
+    __msan_unpoison(unaligned, count * sizeof(T));
+#endif
     return count;
   }
 }
 
 // ------------------------------ CompressBitsStore
-template <class D>
-HWY_API size_t CompressBitsStore(VFromD<D> v, const uint8_t* HWY_RESTRICT bits,
-                                 D d, TFromD<D>* HWY_RESTRICT unaligned) {
+template <typename T>
+HWY_API size_t CompressBitsStore(Vec512<T> v, const uint8_t* HWY_RESTRICT bits,
+                                 Full512<T> d, T* HWY_RESTRICT unaligned) {
   return CompressStore(v, LoadMaskBits(d, bits), d, unaligned);
 }
 
@@ -4475,11 +4273,6 @@ HWY_API Vec512<int32_t> ReorderWidenMulAccumulate(Full512<int32_t> /*d32*/,
                                                   const Vec512<int32_t> sum0,
                                                   Vec512<int32_t>& /*sum1*/) {
   return sum0 + Vec512<int32_t>{_mm512_madd_epi16(a.raw, b.raw)};
-}
-
-HWY_API Vec512<int32_t> RearrangeToOddPlusEven(const Vec512<int32_t> sum0,
-                                               Vec512<int32_t> /*sum1*/) {
-  return sum0;  // invariant already holds
 }
 
 // ------------------------------ Reductions

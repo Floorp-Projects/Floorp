@@ -186,11 +186,6 @@ void jpeg_write_m_byte(j_compress_ptr cinfo, int val) {
   jpegli_write_m_byte(cinfo, val);
 }
 
-void jpeg_write_marker(j_compress_ptr cinfo, int marker, const JOCTET *dataptr,
-                       unsigned int datalen) {
-  jpegli_write_marker(cinfo, marker, dataptr, datalen);
-}
-
 void jpeg_write_icc_profile(j_compress_ptr cinfo, const JOCTET *icc_data_ptr,
                             unsigned int icc_data_len) {
   jpegli_write_icc_profile(cinfo, icc_data_ptr, icc_data_len);
@@ -208,8 +203,6 @@ JDIMENSION jpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
 void jpeg_finish_compress(j_compress_ptr cinfo) {
   jpegli_finish_compress(cinfo);
 }
-
-void jpeg_abort_compress(j_compress_ptr cinfo) { jpegli_abort_compress(cinfo); }
 
 void jpeg_destroy_compress(j_compress_ptr cinfo) {
   jpegli_destroy_compress(cinfo);

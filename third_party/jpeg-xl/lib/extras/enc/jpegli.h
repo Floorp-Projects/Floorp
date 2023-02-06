@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-#include <string>
 #include <vector>
 
 #include "lib/extras/packed_image.h"
@@ -24,10 +23,6 @@ struct JpegSettings {
   bool xyb = false;
   size_t target_size = 0;
   float distance = 1.f;
-  bool use_adaptive_quantization = true;
-  bool use_std_quant_tables = false;
-  int progressive_level = 2;
-  std::string chroma_subsampling;
 };
 
 Status EncodeJpeg(const PackedPixelFile& ppf, const JpegSettings& jpeg_settings,

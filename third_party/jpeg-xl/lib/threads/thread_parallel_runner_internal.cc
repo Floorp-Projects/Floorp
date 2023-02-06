@@ -17,10 +17,6 @@
 
 namespace {
 
-// Important: JXL_ASSERT does not guarantee running the `condition` code,
-// use only for debug mode checks.
-
-#if JXL_ENABLE_ASSERT
 // Exits the program after printing a stack trace when possible.
 bool Abort() {
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
@@ -38,6 +34,9 @@ bool Abort() {
   __builtin_trap();
 #endif
 }
+
+// Does not guarantee running the code, use only for debug mode checks.
+#if JXL_ENABLE_ASSERT
 #define JXL_ASSERT(condition) \
   do {                        \
     if (!(condition)) {       \

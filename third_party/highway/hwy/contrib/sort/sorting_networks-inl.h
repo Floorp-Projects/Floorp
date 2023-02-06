@@ -593,16 +593,19 @@ HWY_INLINE void Merge16(D d, Traits st, V& v0, V& v1, V& v2, V& v3, V& v4,
 //
 // `st` is SharedTraits<Traits*<Order*>>. This abstraction layer bridges
 //   differences in sort order and single-lane vs 128-bit keys.
+// `buf` ensures full vectors are aligned, and enables loads/stores without
+//   bounds checks.
+//
+// NOINLINE because this is large and called twice from vqsort-inl.h.
 //
 // References:
 // https://drops.dagstuhl.de/opus/volltexte/2021/13775/pdf/LIPIcs-SEA-2021-3.pdf
 // https://github.com/simd-sorting/fast-and-robust/blob/master/avx2_sort_demo/avx2sort.h
 // "Entwurf und Implementierung vektorisierter Sortieralgorithmen" (M. Blacher)
-template <class Traits, class V>
-HWY_INLINE void SortingNetwork(Traits st, size_t cols, V& v0, V& v1, V& v2,
-                               V& v3, V& v4, V& v5, V& v6, V& v7, V& v8, V& v9,
-                               V& va, V& vb, V& vc, V& vd, V& ve, V& vf) {
-  const CappedTag<typename Traits::LaneType, Constants::kMaxCols> d;
+template <class Traits, typename T>
+HWY_NOINLINE void SortingNetwork(Traits st, T* HWY_RESTRICT buf, size_t cols) {
+  const CappedTag<T, Constants::kMaxCols> d;
+  using V = decltype(Zero(d));
 
   HWY_DASSERT(cols <= Constants::kMaxCols);
 
@@ -610,6 +613,26 @@ HWY_INLINE void SortingNetwork(Traits st, size_t cols, V& v0, V& v1, V& v2,
   constexpr size_t kLanesPerKey = st.LanesPerKey();
   const size_t keys = cols / kLanesPerKey;
   constexpr size_t kMaxKeys = MaxLanes(d) / kLanesPerKey;
+
+  // These are aligned iff cols == Lanes(d). We prefer unaligned/non-constexpr
+  // offsets to duplicating this code for every value of cols.
+  static_assert(Constants::kMaxRows == 16, "Update loads/stores/args");
+  V v0 = LoadU(d, buf + 0x0 * cols);
+  V v1 = LoadU(d, buf + 0x1 * cols);
+  V v2 = LoadU(d, buf + 0x2 * cols);
+  V v3 = LoadU(d, buf + 0x3 * cols);
+  V v4 = LoadU(d, buf + 0x4 * cols);
+  V v5 = LoadU(d, buf + 0x5 * cols);
+  V v6 = LoadU(d, buf + 0x6 * cols);
+  V v7 = LoadU(d, buf + 0x7 * cols);
+  V v8 = LoadU(d, buf + 0x8 * cols);
+  V v9 = LoadU(d, buf + 0x9 * cols);
+  V va = LoadU(d, buf + 0xa * cols);
+  V vb = LoadU(d, buf + 0xb * cols);
+  V vc = LoadU(d, buf + 0xc * cols);
+  V vd = LoadU(d, buf + 0xd * cols);
+  V ve = LoadU(d, buf + 0xe * cols);
+  V vf = LoadU(d, buf + 0xf * cols);
 
   Sort16(d, st, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, va, vb, vc, vd, ve, vf);
 
@@ -639,41 +662,6 @@ HWY_INLINE void SortingNetwork(Traits st, size_t cols, V& v0, V& v1, V& v2,
       }
     }
   }
-}
-
-// As above, but loads from/stores to `buf`. This ensures full vectors are
-// aligned, and enables loads/stores without bounds checks.
-//
-// NOINLINE because this is large and called twice from vqsort-inl.h.
-template <class Traits, typename T>
-HWY_NOINLINE void SortingNetwork(Traits st, T* HWY_RESTRICT buf, size_t cols) {
-  const CappedTag<T, Constants::kMaxCols> d;
-  using V = decltype(Zero(d));
-
-  HWY_DASSERT(cols <= Constants::kMaxCols);
-
-  // These are aligned iff cols == Lanes(d). We prefer unaligned/non-constexpr
-  // offsets to duplicating this code for every value of cols.
-  static_assert(Constants::kMaxRows == 16, "Update loads/stores/args");
-  V v0 = LoadU(d, buf + 0x0 * cols);
-  V v1 = LoadU(d, buf + 0x1 * cols);
-  V v2 = LoadU(d, buf + 0x2 * cols);
-  V v3 = LoadU(d, buf + 0x3 * cols);
-  V v4 = LoadU(d, buf + 0x4 * cols);
-  V v5 = LoadU(d, buf + 0x5 * cols);
-  V v6 = LoadU(d, buf + 0x6 * cols);
-  V v7 = LoadU(d, buf + 0x7 * cols);
-  V v8 = LoadU(d, buf + 0x8 * cols);
-  V v9 = LoadU(d, buf + 0x9 * cols);
-  V va = LoadU(d, buf + 0xa * cols);
-  V vb = LoadU(d, buf + 0xb * cols);
-  V vc = LoadU(d, buf + 0xc * cols);
-  V vd = LoadU(d, buf + 0xd * cols);
-  V ve = LoadU(d, buf + 0xe * cols);
-  V vf = LoadU(d, buf + 0xf * cols);
-
-  SortingNetwork(st, cols, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, va, vb, vc,
-                 vd, ve, vf);
 
   StoreU(v0, d, buf + 0x0 * cols);
   StoreU(v1, d, buf + 0x1 * cols);

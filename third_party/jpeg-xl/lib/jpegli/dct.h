@@ -6,20 +6,18 @@
 #ifndef LIB_JPEGLI_DCT_H_
 #define LIB_JPEGLI_DCT_H_
 
-/* clang-format off */
-#include <stdio.h>
-#include <jpeglib.h>
-/* clang-format on */
-
 #include <vector>
 
-#include "lib/jpegli/encode_internal.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/jpeg/jpeg_data.h"
 
 namespace jpegli {
 
-void ComputeDCTCoefficients(j_compress_ptr cinfo,
-                            std::vector<std::vector<jpegli::coeff_t> >* coeffs);
+void ComputeDCTCoefficients(const jxl::Image3F& opsin, const bool xyb,
+                            const jxl::ImageF& qf,
+                            const float* qm,
+                            std::vector<jxl::jpeg::JPEGComponent>* components);
 
 }  // namespace jpegli
 

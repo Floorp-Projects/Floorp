@@ -85,8 +85,8 @@ HWY_NOINLINE void AssertMaskEqual(D d, VecArg<Mask<D>> a, VecArg<Mask<D>> b,
   const Repartition<uint8_t, D> d8;
 #endif
   const size_t N8 = Lanes(d8);
-  auto bits_a = AllocateAligned<uint8_t>(HWY_MAX(size_t{8}, N8));
-  auto bits_b = AllocateAligned<uint8_t>(size_t{HWY_MAX(8, N8)});
+  auto bits_a = AllocateAligned<uint8_t>(HWY_MAX(8, N8));
+  auto bits_b = AllocateAligned<uint8_t>(HWY_MAX(8, N8));
   memset(bits_a.get(), 0, N8);
   memset(bits_b.get(), 0, N8);
   const size_t num_bytes_a = StoreMaskBits(d, a, bits_a.get());

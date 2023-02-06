@@ -774,24 +774,21 @@ HWY_API V Xor(const V a, const V b) {
 }
 
 // ------------------------------ AndNot
+
 template <class V>
 HWY_API V AndNot(const V not_a, const V b) {
   return And(Not(not_a), b);
 }
 
-// ------------------------------ Xor3
-template <class V>
-HWY_API V Xor3(V x1, V x2, V x3) {
-  return Xor(x1, Xor(x2, x3));
-}
-
 // ------------------------------ Or3
+
 template <class V>
 HWY_API V Or3(V o1, V o2, V o3) {
   return Or(o1, Or(o2, o3));
 }
 
 // ------------------------------ OrAnd
+
 template <class V>
 HWY_API V OrAnd(const V o, const V a1, const V a2) {
   return Or(o, And(a1, a2));
@@ -1125,7 +1122,7 @@ HWY_RVV_FOREACH_B(HWY_RVV_RETM_ARGMM, ExclusiveNeither, xnor)
   HWY_API HWY_RVV_V(BASE, SEW, LMUL)                                           \
       NAME(HWY_RVV_M(MLEN) m, HWY_RVV_V(BASE, SEW, LMUL) yes,                  \
            HWY_RVV_V(BASE, SEW, LMUL) no) {                                    \
-    return v##OP##_vvm_##CHAR##SEW##LMUL(no, yes, m, HWY_RVV_AVL(SEW, SHIFT)); \
+    return v##OP##_vvm_##CHAR##SEW##LMUL(m, no, yes, HWY_RVV_AVL(SEW, SHIFT)); \
   }
 
 HWY_RVV_FOREACH(HWY_RVV_IF_THEN_ELSE, IfThenElse, merge, _ALL)
@@ -1144,7 +1141,7 @@ HWY_API V IfThenElseZero(const M mask, const V yes) {
                                   LMULH, SHIFT, MLEN, NAME, OP)             \
   HWY_API HWY_RVV_V(BASE, SEW, LMUL)                                        \
       NAME(HWY_RVV_M(MLEN) m, HWY_RVV_V(BASE, SEW, LMUL) no) {              \
-    return v##OP##_##CHAR##SEW##LMUL(no, 0, m, HWY_RVV_AVL(SEW, SHIFT));    \
+    return v##OP##_##CHAR##SEW##LMUL(m, no, 0, HWY_RVV_AVL(SEW, SHIFT));    \
   }
 
 HWY_RVV_FOREACH_UI(HWY_RVV_IF_THEN_ZERO_ELSE, IfThenZeroElse, merge_vxm, _ALL)
@@ -2436,13 +2433,6 @@ HWY_API V ReverseBlocks(D d, V v) {
 
 // ------------------------------ Compress
 
-// RVV supports all lane types natively.
-#ifdef HWY_NATIVE_COMPRESS8
-#undef HWY_NATIVE_COMPRESS8
-#else
-#define HWY_NATIVE_COMPRESS8
-#endif
-
 template <typename T>
 struct CompressIsPartition {
   enum { value = 0 };
@@ -2452,10 +2442,11 @@ struct CompressIsPartition {
                          SHIFT, MLEN, NAME, OP)                               \
   HWY_API HWY_RVV_V(BASE, SEW, LMUL)                                          \
       NAME(HWY_RVV_V(BASE, SEW, LMUL) v, HWY_RVV_M(MLEN) mask) {              \
-    return v##OP##_vm_##CHAR##SEW##LMUL(v, v, mask, HWY_RVV_AVL(SEW, SHIFT)); \
+    return v##OP##_vm_##CHAR##SEW##LMUL(mask, v, v, HWY_RVV_AVL(SEW, SHIFT)); \
   }
 
-HWY_RVV_FOREACH(HWY_RVV_COMPRESS, Compress, compress, _ALL)
+HWY_RVV_FOREACH_UI163264(HWY_RVV_COMPRESS, Compress, compress, _ALL)
+HWY_RVV_FOREACH_F(HWY_RVV_COMPRESS, Compress, compress, _ALL)
 #undef HWY_RVV_COMPRESS
 
 // ------------------------------ CompressNot
@@ -3152,17 +3143,16 @@ template <
 HWY_API VF32 ReorderWidenMulAccumulateBF16(Simd<float, N, kPow2> df32,
                                            VFromD<DU16> a, VFromD<DU16> b,
                                            const VF32 sum0, VF32& sum1) {
+  const DU16 du16;
   const RebindToUnsigned<DF32> du32;
   using VU32 = VFromD<decltype(du32)>;
-  const VU32 odd = Set(du32, 0xFFFF0000u);  // bfloat16 is the upper half of f32
-  // Using shift/and instead of Zip leads to the odd/even order that
-  // RearrangeToOddPlusEven prefers.
-  const VU32 ae = ShiftLeft<16>(BitCast(du32, a));
-  const VU32 ao = And(BitCast(du32, a), odd);
-  const VU32 be = ShiftLeft<16>(BitCast(du32, b));
-  const VU32 bo = And(BitCast(du32, b), odd);
-  sum1 = MulAdd(BitCast(df32, ao), BitCast(df32, bo), sum1);
-  return MulAdd(BitCast(df32, ae), BitCast(df32, be), sum0);
+  const VFromD<DU16> zero = Zero(du16);
+  const VU32 a0 = ZipLower(du32, zero, BitCast(du16, a));
+  const VU32 a1 = ZipUpper(du32, zero, BitCast(du16, a));
+  const VU32 b0 = ZipLower(du32, zero, BitCast(du16, b));
+  const VU32 b1 = ZipUpper(du32, zero, BitCast(du16, b));
+  sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
+  return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
 }
 
 #define HWY_RVV_WIDEN_MACC(BASE, CHAR, SEW, SEWD, SEWH, LMUL, LMULD, LMULH,    \
@@ -3186,7 +3176,7 @@ HWY_API VFromD<D32> ReorderWidenMulAccumulateI16(Simd<int32_t, N, kPow2> d32,
                                                  const V32 sum0, V32& sum1) {
   const Twice<decltype(d32)> d32t;
   using V32T = VFromD<decltype(d32t)>;
-  V32T sum = Combine(d32t, sum1, sum0);
+  V32T sum = Combine(d32t, sum0, sum1);
   sum = detail::WidenMulAcc(d32t, sum, a, b);
   sum1 = UpperHalf(d32, sum);
   return LowerHalf(d32, sum);
@@ -3220,42 +3210,6 @@ template <size_t N, int kPow2, class VN, class VW>
 HWY_API VW ReorderWidenMulAccumulate(Simd<int32_t, N, kPow2> d32, VN a, VN b,
                                      const VW sum0, VW& sum1) {
   return detail::ReorderWidenMulAccumulateI16(d32, a, b, sum0, sum1);
-}
-
-// ------------------------------ RearrangeToOddPlusEven
-
-template <class VW, HWY_IF_SIGNED_V(VW)>  // vint32_t*
-HWY_API VW RearrangeToOddPlusEven(const VW sum0, const VW sum1) {
-  // vwmacc doubles LMUL, so we require a pairwise sum here. This op is
-  // expected to be less frequent than ReorderWidenMulAccumulate, hence it's
-  // preferable to do the extra work here rather than do manual odd/even
-  // extraction there.
-  const DFromV<VW> di32;
-  const RebindToUnsigned<decltype(di32)> du32;
-  const Twice<decltype(di32)> di32x2;
-  const RepartitionToWide<decltype(di32x2)> di64x2;
-  const RebindToUnsigned<decltype(di64x2)> du64x2;
-  const auto combined = BitCast(di64x2, Combine(di32x2, sum1, sum0));
-  // Isolate odd/even int32 in int64 lanes.
-  const auto even = ShiftRight<32>(ShiftLeft<32>(combined));  // sign extend
-  const auto odd = ShiftRight<32>(combined);
-  return BitCast(di32, TruncateTo(du32, BitCast(du64x2, Add(even, odd))));
-}
-
-// For max LMUL, we cannot Combine again and instead manually unroll.
-HWY_API vint32m8_t RearrangeToOddPlusEven(vint32m8_t sum0, vint32m8_t sum1) {
-  const DFromV<vint32m8_t> d;
-  const Half<decltype(d)> dh;
-  const vint32m4_t lo =
-      RearrangeToOddPlusEven(LowerHalf(sum0), UpperHalf(dh, sum0));
-  const vint32m4_t hi =
-      RearrangeToOddPlusEven(LowerHalf(sum1), UpperHalf(dh, sum1));
-  return Combine(d, hi, lo);
-}
-
-template <class VW, HWY_IF_FLOAT_V(VW)>  // vfloat*
-HWY_API VW RearrangeToOddPlusEven(const VW sum0, const VW sum1) {
-  return Add(sum0, sum1);  // invariant already holds
 }
 
 // ------------------------------ Lt128

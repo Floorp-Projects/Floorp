@@ -99,23 +99,6 @@ struct TestSignedMul {
   }
 };
 
-struct TestMulOverflow {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto vMax = Set(d, LimitsMax<T>());
-    HWY_ASSERT_VEC_EQ(d, Mul(vMax, vMax), Mul(vMax, vMax));
-  }
-};
-
-struct TestDivOverflow {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto vZero = Set(d, T(0));
-    const auto v1 = Set(d, T(1));
-    HWY_ASSERT_VEC_EQ(d, Div(v1, vZero), Div(v1, vZero));
-  }
-};
-
 HWY_NOINLINE void TestAllMul() {
   const ForPartialVectors<TestUnsignedMul> test_unsigned;
   // No u8.
@@ -128,19 +111,6 @@ HWY_NOINLINE void TestAllMul() {
   test_signed(int16_t());
   test_signed(int32_t());
   test_signed(int64_t());
-
-  const ForPartialVectors<TestMulOverflow> test_mul_overflow;
-  test_mul_overflow(int16_t());
-  test_mul_overflow(int32_t());
-#if HWY_HAVE_INTEGER64
-  test_mul_overflow(int64_t());
-#endif
-
-  const ForPartialVectors<TestDivOverflow> test_div_overflow;
-  test_div_overflow(float());
-#if HWY_HAVE_FLOAT64
-  test_div_overflow(double());
-#endif
 }
 
 struct TestMulHigh {
@@ -456,54 +426,6 @@ HWY_NOINLINE void TestAllReorderWidenMulAccumulate() {
   ForShrinkableVectors<TestReorderWidenMulAccumulate>()(int16_t());
 }
 
-struct TestRearrangeToOddPlusEven {
-  template <typename TN, class DN>
-  HWY_NOINLINE void operator()(TN /*unused*/, DN dn) {
-    using TW = MakeWide<TN>;
-    const RebindToUnsigned<DN> du;
-    const RepartitionToWide<DN> dw;
-    const Half<DN> dnh;
-    const RebindToUnsigned<decltype(dnh)> duh;
-    using VW = Vec<decltype(dw)>;
-    using VN = Vec<decltype(dn)>;
-    const size_t NW = Lanes(dw);
-
-    const VW up0 = Iota(dw, TW{1});
-    const VW up1 = Iota(dw, static_cast<TW>(1 + NW));
-    // We will compute i * (N-i) to avoid per-lane overflow.
-    const VW down0 = Reverse(dw, up1);
-    const VW down1 = Reverse(dw, up0);
-
-    // Combine is not available for bf16, so cast to u16.
-    const auto a0 = BitCast(duh, DemoteTo(dnh, up0));
-    const auto a1 = BitCast(duh, DemoteTo(dnh, up1));
-    const VN a = BitCast(dn, Combine(du, a1, a0));
-    const auto b0 = BitCast(duh, DemoteTo(dnh, down0));
-    const auto b1 = BitCast(duh, DemoteTo(dnh, down1));
-    const VN b = BitCast(dn, Combine(du, b1, b0));
-
-    const auto expected = AllocateAligned<TW>(NW);
-    for (size_t iw = 0; iw < NW; ++iw) {
-      const size_t in = iw * 2;  // even, odd is +1
-      const size_t a0 = 1 + in;
-      const size_t b0 = 1 + 2 * NW - a0;
-      const size_t a1 = a0 + 1;
-      const size_t b1 = b0 - 1;
-      expected[iw] = static_cast<TW>(a0 * b0 + a1 * b1);
-    }
-
-    VW sum1 = Zero(dw);
-    const VW sum0 = ReorderWidenMulAccumulate(dw, a, b, Zero(dw), sum1);
-    const VW sum_odd_even = RearrangeToOddPlusEven(sum0, sum1);
-    HWY_ASSERT_VEC_EQ(dw, expected.get(), sum_odd_even);
-  }
-};
-
-HWY_NOINLINE void TestAllRearrangeToOddPlusEven() {
-  ForShrinkableVectors<TestRearrangeToOddPlusEven>()(bfloat16_t());
-  ForShrinkableVectors<TestRearrangeToOddPlusEven>()(int16_t());
-}
-
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace hwy
@@ -519,8 +441,6 @@ HWY_EXPORT_AND_TEST_P(HwyMulTest, TestAllMulFixedPoint15);
 HWY_EXPORT_AND_TEST_P(HwyMulTest, TestAllMulEven);
 HWY_EXPORT_AND_TEST_P(HwyMulTest, TestAllMulAdd);
 HWY_EXPORT_AND_TEST_P(HwyMulTest, TestAllReorderWidenMulAccumulate);
-HWY_EXPORT_AND_TEST_P(HwyMulTest, TestAllRearrangeToOddPlusEven);
-
 }  // namespace hwy
 
 #endif

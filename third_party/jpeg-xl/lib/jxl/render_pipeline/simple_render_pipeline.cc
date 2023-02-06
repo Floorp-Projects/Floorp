@@ -5,8 +5,7 @@
 
 #include "lib/jxl/render_pipeline/simple_render_pipeline.h"
 
-#include <hwy/base.h>
-
+#include "hwy/base.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 #include "lib/jxl/sanitizers.h"

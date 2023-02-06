@@ -290,6 +290,9 @@ Vector operator*(const float k, const Vector& vec) {
 Spline::Point operator+(const Spline::Point& p, const Vector& vec) {
   return {p.x + vec.x, p.y + vec.y};
 }
+Spline::Point operator-(const Spline::Point& p, const Vector& vec) {
+  return p + -vec;
+}
 Vector operator-(const Spline::Point& a, const Spline::Point& b) {
   return {a.x - b.x, a.y - b.y};
 }
@@ -432,7 +435,6 @@ QuantizedSpline::QuantizedSpline(const Spline& original,
 Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
                                    const int32_t quantization_adjustment,
                                    const float y_to_x, const float y_to_b,
-                                   uint64_t* total_estimated_area_reached,
                                    Spline& result) const {
   result.control_points.clear();
   result.control_points.reserve(control_points_.size() + 1);
@@ -444,11 +446,9 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
   result.control_points.push_back(Spline::Point{static_cast<float>(current_x),
                                                 static_cast<float>(current_y)});
   int current_delta_x = 0, current_delta_y = 0;
-  size_t manhattan_distance = 0;
   for (const auto& point : control_points_) {
     current_delta_x += point.first;
     current_delta_y += point.second;
-    manhattan_distance += abs(current_delta_x) + abs(current_delta_y);
     JXL_RETURN_IF_ERROR(
         ValidateSplinePointPos(current_delta_x, current_delta_y));
     current_x += current_delta_x;
@@ -470,20 +470,12 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
     result.color_dct[0][i] += y_to_x * result.color_dct[1][i];
     result.color_dct[2][i] += y_to_b * result.color_dct[1][i];
   }
-  uint64_t width_estimate = 0;
   for (int i = 0; i < 32; ++i) {
     const float inv_dct_factor = (i == 0) ? kSqrt0_5 : 1.0f;
     result.sigma_dct[i] =
         sigma_dct_[i] * inv_dct_factor * kChannelWeight[3] * inv_quant;
-    // If we include the factor kChannelWeight[3]=.3333f here, we get a
-    // realistic area estimate. We leave it out to simplify the calculations,
-    // and understand that this way we underestimate the area by a factor of
-    // 1/(0.3333*0.3333). This is taken into account in the limits below.
-    uint64_t weight = static_cast<uint64_t>(
-        static_cast<uint64_t>(ceil(inv_quant) * std::abs(sigma_dct_[i])));
-    width_estimate += weight * weight;
   }
-  *total_estimated_area_reached += (width_estimate * manhattan_distance);
+
   return true;
 }
 
@@ -601,6 +593,7 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
   segment_y_start_.clear();
   std::vector<std::pair<size_t, size_t>> segments_by_y;
   Spline spline;
+  // TODO(eustas): not in the spec; limit spline pixels with image area.
   float pixel_limit = 16.0f * image_xsize * image_ysize + (1 << 16);
   // Apply some extra cap to avoid overflows.
   constexpr size_t kHardPixelLimit = 1u << 30;
@@ -608,11 +601,10 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
                         ? static_cast<size_t>(pixel_limit)
                         : kHardPixelLimit;
   std::vector<Spline::Point> intermediate_points;
-  uint64_t total_estimated_area_reached = 0;
   for (size_t i = 0; i < splines_.size(); ++i) {
-    JXL_RETURN_IF_ERROR(splines_[i].Dequantize(
-        starting_points_[i], quantization_adjustment_, cmap.YtoXRatio(0),
-        cmap.YtoBRatio(0), &total_estimated_area_reached, spline));
+    JXL_RETURN_IF_ERROR(
+        splines_[i].Dequantize(starting_points_[i], quantization_adjustment_,
+                               cmap.YtoXRatio(0), cmap.YtoBRatio(0), spline));
     if (std::adjacent_find(spline.control_points.begin(),
                            spline.control_points.end()) !=
         spline.control_points.end()) {
@@ -644,20 +636,6 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
     if (px_limit == 0) {
       return JXL_FAILURE("Too many pixels covered with splines");
     }
-  }
-  // TODO(firsching) Change this into a JXL_FAILURE for level 5 codestreams.
-  if (total_estimated_area_reached >
-      std::min((image_xsize * image_ysize + (uint64_t(1) << 18)),
-               (uint64_t(1) << 22))) {
-    JXL_WARNING(
-        "Large total_estimated_area_reached, expect slower decoding: %" PRIu64,
-        total_estimated_area_reached);
-  }
-  if (total_estimated_area_reached >
-      std::min((64 * image_xsize * image_ysize + (uint64_t(1) << 34)),
-               (uint64_t(1) << 38))) {
-    return JXL_FAILURE("Too large total_estimated_area_reached: %" PRIu64,
-                       total_estimated_area_reached);
   }
   // TODO(eustas): consider linear sorting here.
   std::sort(segments_by_y.begin(), segments_by_y.end());
