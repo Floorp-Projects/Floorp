@@ -278,11 +278,11 @@ nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
   rv = InsertHTMLWithContextAsSubAction(aInString, u""_ns, u""_ns, u""_ns,
                                         SafeToInsertData::Yes, EditorDOMPoint(),
                                         DeleteSelectedContent::Yes,
-                                        InlineStylesAtInsertionPoint::Preserve);
+                                        InlineStylesAtInsertionPoint::Clear);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::InsertHTMLWithContextAsSubAction("
                        "SafeToInsertData::Yes, DeleteSelectedContent::Yes, "
-                       "InlineStylesAtInsertionPoint::Preserve) failed");
+                       "InlineStylesAtInsertionPoint::Clear) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
