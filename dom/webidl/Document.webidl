@@ -559,12 +559,6 @@ partial interface Document {
   Promise<undefined> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
 };
 
-enum DocumentAutoplayPolicy {
-  "allowed",       // autoplay is currently allowed
-  "allowed-muted", // muted video autoplay is currently allowed
-  "disallowed"     // autoplay is not current allowed
-};
-
 // Extension to give chrome JS the ability to determine whether
 // the user has interacted with the document or not.
 partial interface Document {
