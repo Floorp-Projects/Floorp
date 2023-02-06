@@ -1594,7 +1594,7 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       // https://streams.spec.whatwg.org/#ref-for-transfer-steps①
       // Step 1: If ! IsWritableStreamLocked(value) is true, throw a
       // "DataCloneError" DOMException.
-      return !IsWritableStreamLocked(stream);
+      return !stream->Locked();
     }
   }
 
@@ -1605,8 +1605,7 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       // https://streams.spec.whatwg.org/#ref-for-transfer-steps②
       // Step 3 + 4: If ! Is{Readable,Writable}StreamLocked(value) is true,
       // throw a "DataCloneError" DOMException.
-      return !stream->Readable()->Locked() &&
-             !IsWritableStreamLocked(stream->Writable());
+      return !stream->Readable()->Locked() && !stream->Writable()->Locked();
     }
   }
 

@@ -23,6 +23,8 @@
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 struct PipeToReadRequest;
 class WriteFinishedPromiseHandler;
 class ShutdownActionFinishedPromiseHandler;
