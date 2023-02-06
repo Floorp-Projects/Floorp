@@ -516,6 +516,20 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
     "instance" in idlPureAllowlist.Window
   ) {
     collectMethodsAndGetters(maybeEvalGlobal, idlPureAllowlist.Window.instance);
+    const maybeLocation = maybeEvalGlobal.location;
+    if (maybeLocation) {
+      collectMethodsAndGetters(
+        maybeLocation,
+        idlPureAllowlist.Location.instance
+      );
+    }
+    const maybeDocument = maybeEvalGlobal.document;
+    if (maybeDocument) {
+      collectMethodsAndGetters(
+        maybeDocument,
+        idlPureAllowlist.Document.instance
+      );
+    }
   }
 
   const natives = [
