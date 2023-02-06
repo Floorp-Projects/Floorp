@@ -2330,7 +2330,7 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
 
   if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
       sWebExtensionExemptMask) {
-    if (aURI->SchemeIs("web-extension")) {
+    if (aURI->SchemeIs("moz-extension")) {
       return false;
     }
   }
