@@ -49,7 +49,6 @@ class nsIRollupListener;
 class imgIContainer;
 class nsIContent;
 class ViewWrapper;
-class nsIScreen;
 class nsIRunnable;
 
 namespace mozilla {
@@ -87,6 +86,7 @@ class TextEventDispatcher;
 class TextEventDispatcherListener;
 class CompositorWidget;
 class CompositorWidgetInitData;
+class Screen;
 }  // namespace widget
 namespace wr {
 class DisplayListBuilder;
@@ -383,6 +383,7 @@ class nsIWidget : public nsISupports {
   using PopupLevel = mozilla::widget::PopupLevel;
   using BorderStyle = mozilla::widget::BorderStyle;
   using TransparencyMode = mozilla::widget::TransparencyMode;
+  using Screen = mozilla::widget::Screen;
 
   // Used in UpdateThemeGeometries.
   struct ThemeGeometry {
@@ -1160,7 +1161,7 @@ class nsIWidget : public nsISupports {
   /**
    * Return the screen the widget is in, or null if we don't know.
    */
-  virtual already_AddRefed<nsIScreen> GetWidgetScreen() = 0;
+  virtual already_AddRefed<Screen> GetWidgetScreen() = 0;
 
   /**
    * Put the toplevel window into or out of fullscreen mode.

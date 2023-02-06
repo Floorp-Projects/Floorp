@@ -15,7 +15,6 @@ namespace mozilla {
 namespace layers {
 
 using namespace gfx;
-using namespace widget;
 
 CompositorSession::CompositorSession(nsBaseWidget* aWidget,
                                      CompositorWidgetDelegate* aDelegate,

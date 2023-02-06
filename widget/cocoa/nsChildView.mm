@@ -82,6 +82,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/widget/Screen.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"

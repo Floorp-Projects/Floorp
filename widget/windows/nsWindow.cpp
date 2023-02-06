@@ -147,6 +147,7 @@
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/widget/nsAutoRollup.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
+#include "mozilla/widget/Screen.h"
 #include "nsStyleConsts.h"
 #include "nsBidiKeyboard.h"
 #include "nsStyleConsts.h"

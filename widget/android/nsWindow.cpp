@@ -101,6 +101,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/widget/AndroidVsync.h"
+#include "mozilla/widget/Screen.h"
 
 #define GVS_LOG(...) MOZ_LOG(sGVSupportLog, LogLevel::Warning, (__VA_ARGS__))
 

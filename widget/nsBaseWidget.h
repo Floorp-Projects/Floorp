@@ -205,7 +205,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                                    uint16_t aDuration, nsISupports* aData,
                                    nsIRunnable* aCallback) override;
   void CleanupFullscreenTransition() override {}
-  already_AddRefed<nsIScreen> GetWidgetScreen() override;
+  already_AddRefed<Screen> GetWidgetScreen() override;
   nsresult MakeFullScreen(bool aFullScreen) override;
   void InfallibleMakeFullScreen(bool aFullScreen);
 

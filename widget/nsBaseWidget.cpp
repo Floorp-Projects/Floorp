@@ -2000,20 +2000,11 @@ LayersId nsBaseWidget::GetRootLayerTreeId() {
                             : LayersId{0};
 }
 
-already_AddRefed<nsIScreen> nsBaseWidget::GetWidgetScreen() {
-  nsCOMPtr<nsIScreenManager> screenManager;
-  screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenManager) {
-    return nullptr;
-  }
-
+already_AddRefed<widget::Screen> nsBaseWidget::GetWidgetScreen() {
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
   LayoutDeviceIntRect bounds = GetScreenBounds();
   DesktopIntRect deskBounds = RoundedToInt(bounds / GetDesktopToDeviceScale());
-  nsCOMPtr<nsIScreen> screen;
-  screenManager->ScreenForRect(deskBounds.X(), deskBounds.Y(),
-                               deskBounds.Width(), deskBounds.Height(),
-                               getter_AddRefs(screen));
-  return screen.forget();
+  return screenManager.ScreenForRect(deskBounds);
 }
 
 mozilla::DesktopToLayoutDeviceScale
