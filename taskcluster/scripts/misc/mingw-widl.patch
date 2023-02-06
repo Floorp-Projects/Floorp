@@ -1,0 +1,35 @@
+From 534ecbfb4da9a27c287a9a44ea18ef44ccf2aac2 Mon Sep 17 00:00:00 2001
+From: Tom Ritter <tom@ritter.vg>
+Date: Thu, 2 Feb 2023 13:28:39 -0500
+Subject: [PATCH 5/7] Fix widl
+
+In commit c94f44f9b455 (in wine's repo) open_typelib was changed
+from returning a file descriptor (null on error) to aborting if
+an error was encountered.
+
+This is incorrect, because read_importlib in typelib.c has a
+fallback behavior where it calls open_typelib again if it
+fails the first time. And _then_ it will error if it couldn't do
+it either time.
+
+Restore the original behavior for open_typelib
+---
+ mingw-w64-tools/widl/src/widl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mingw-w64-tools/widl/src/widl.c b/mingw-w64-tools/widl/src/widl.c
+index 986aa3624..39bc8ac21 100644
+--- a/mingw-w64-tools/widl/src/widl.c
++++ b/mingw-w64-tools/widl/src/widl.c
+@@ -710,7 +710,7 @@ int open_typelib( const char *name )
+             TRYOPEN( strmake( "%s%s/%s", default_dirs[i], pe_dir, name ));
+         }
+     }
+-    error( "cannot find %s\n", name );
++    return -1;
+ #undef TRYOPEN
+ }
+ 
+-- 
+2.25.1
+
