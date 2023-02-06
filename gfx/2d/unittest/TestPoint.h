@@ -14,4 +14,5 @@ class TestPoint : public TestBase {
 
   void Addition();
   void Subtraction();
+  void RoundToMultiple();
 };

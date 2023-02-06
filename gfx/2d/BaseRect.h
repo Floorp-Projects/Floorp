@@ -17,8 +17,7 @@
 #include "mozilla/gfx/ScaleFactors2D.h"
 #include "Types.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 /**
  * Rectangles have two interpretations: a set of (zero-size) points,
@@ -740,7 +739,6 @@ struct BaseRect {
   }
 };
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
 
 #endif /* MOZILLA_GFX_BASERECT_H_ */

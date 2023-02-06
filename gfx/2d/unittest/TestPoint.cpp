@@ -13,6 +13,7 @@ using namespace mozilla::gfx;
 TestPoint::TestPoint() {
   REGISTER_TEST(TestPoint, Addition);
   REGISTER_TEST(TestPoint, Subtraction);
+  REGISTER_TEST(TestPoint, RoundToMultiple);
 }
 
 void TestPoint::Addition() {
@@ -39,4 +40,14 @@ void TestPoint::Subtraction() {
 
   VERIFY(a.x == -3.f);
   VERIFY(a.y == 7.f);
+}
+
+void TestPoint::RoundToMultiple() {
+  const int32_t roundTo = 2;
+
+  IntPoint p(478, -394);
+  VERIFY(p.RoundedToMultiple(roundTo) == p);
+
+  IntPoint p2(478, 393);
+  VERIFY(p2.RoundedToMultiple(roundTo) != p2);
 }

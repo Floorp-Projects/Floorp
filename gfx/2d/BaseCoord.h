@@ -12,8 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 /**
  * Do not use this class directly. Subclass it, pass that subclass as the
@@ -97,7 +96,6 @@ struct BaseCoord {
   }
 };
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
 
 #endif /* MOZILLA_GFX_BASECOORD_H_ */
