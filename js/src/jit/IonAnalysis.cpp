@@ -4119,6 +4119,10 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
             continue;
           }
 
+          if (!graph.alloc().ensureBallast()) {
+            return false;
+          }
+
           // Enter a GC unsafe region while the elements/slots are on the stack.
           auto* enter = MDebugEnterGCUnsafeRegion::New(graph.alloc());
           use->block()->insertAfter(ins, enter);
