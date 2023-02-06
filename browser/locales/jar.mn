@@ -15,6 +15,7 @@
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
   preview/cookieBannerPreferences.ftl              (../components/preferences/cookieBannerPreferences.ftl)
   locales-preview/migrationWizard.ftl              (../locales-preview/migrationWizard.ftl)
+  locales-preview/translations.ftl                 (../locales-preview/translations.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
