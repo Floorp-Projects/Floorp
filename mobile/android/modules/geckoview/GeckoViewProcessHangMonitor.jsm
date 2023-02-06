@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewProcessHangMonitor"];
 
-const { GeckoViewModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewModule.jsm"
+const { GeckoViewModule } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewModule.sys.mjs"
 );
 
 class GeckoViewProcessHangMonitor extends GeckoViewModule {
