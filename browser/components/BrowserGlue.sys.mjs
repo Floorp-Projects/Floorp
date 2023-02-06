@@ -4360,25 +4360,20 @@ BrowserGlue.prototype = {
     let tab;
 
     const upgradeTabsProgressListener = {
-      onLocationChange(
-        aBrowser,
-        aWebProgress,
-        aRequest,
-        aLocationURI,
-        aFlags,
-        aIsSimulated
-      ) {
+      onLocationChange(aBrowser) {
         if (aBrowser === tab.linkedBrowser) {
-          // We're now far enough along in the load that we no longer have to
-          // worry about a call to onLocationChange triggering SubDialog.abort,
-          // so display the dialog
-          const config = {
-            type: "SHOW_SPOTLIGHT",
-            data,
-          };
-          lazy.SpecialMessageActions.handleAction(config, tab.linkedBrowser);
+          lazy.setTimeout(() => {
+            // We're now far enough along in the load that we no longer have to
+            // worry about a call to onLocationChange triggering SubDialog.abort,
+            // so display the dialog
+            const config = {
+              type: "SHOW_SPOTLIGHT",
+              data,
+            };
+            lazy.SpecialMessageActions.handleAction(config, tab.linkedBrowser);
 
-          gBrowser.removeTabsProgressListener(upgradeTabsProgressListener);
+            gBrowser.removeTabsProgressListener(upgradeTabsProgressListener);
+          }, 0);
         }
       },
     };
