@@ -81,11 +81,9 @@ struct ReadableStreamDefaultTeeReadRequest final : public ReadRequest {
   ~ReadableStreamDefaultTeeReadRequest() override = default;
 };
 
-namespace streams_abstract {
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamTee(
     JSContext* aCx, ReadableStream* aStream,
     nsTArray<RefPtr<ReadableStream>>& aResult, ErrorResult& aRv);
-}
 
 }  // namespace mozilla::dom
 #endif

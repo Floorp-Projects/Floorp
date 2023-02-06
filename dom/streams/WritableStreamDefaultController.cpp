@@ -22,8 +22,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 // Note: Using the individual macros vs NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE
 // because I need to specificy a manual implementation of
 // NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN.
@@ -119,8 +117,6 @@ void WritableStreamDefaultController::SetSignal(AbortSignal* aSignal) {
   MOZ_ASSERT(aSignal);
   mSignal = aSignal;
 }
-
-namespace streams_abstract {
 
 MOZ_CAN_RUN_SCRIPT static void
 WritableStreamDefaultControllerAdvanceQueueIfNeeded(
@@ -558,7 +554,5 @@ double WritableStreamDefaultControllerGetChunkSize(
   // Step 3. Return returnValue.[[Value]].
   return chunkSize;
 }
-
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom

@@ -35,8 +35,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
     WritableStream,
     (mGlobal, mCloseRequest, mController, mInFlightWriteRequest,
@@ -501,7 +499,6 @@ already_AddRefed<WritableStream> WritableStream::Constructor(
   return writableStream.forget();
 }
 
-namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-abort
 already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
                                               WritableStream* aStream,
@@ -579,7 +576,6 @@ already_AddRefed<Promise> WritableStreamAbort(JSContext* aCx,
   // Step 12. Return promise.
   return promise.forget();
 }
-}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#ws-abort
 already_AddRefed<Promise> WritableStream::Abort(JSContext* aCx,
@@ -597,7 +593,6 @@ already_AddRefed<Promise> WritableStream::Abort(JSContext* aCx,
   return WritableStreamAbort(aCx, thisRefPtr, aReason, aRv);
 }
 
-namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-close
 already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
                                               WritableStream* aStream,
@@ -649,7 +644,6 @@ already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
   // Step 10. Return promise.
   return promise.forget();
 }
-}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#ws-close
 already_AddRefed<Promise> WritableStream::Close(JSContext* aCx,
@@ -672,8 +666,6 @@ already_AddRefed<Promise> WritableStream::Close(JSContext* aCx,
   RefPtr<WritableStream> thisRefPtr = this;
   return WritableStreamClose(aCx, thisRefPtr, aRv);
 }
-
-namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer
 already_AddRefed<WritableStreamDefaultWriter>
@@ -722,14 +714,11 @@ already_AddRefed<WritableStream> CreateWritableStream(
   return stream.forget();
 }
 
-}  // namespace streams_abstract
-
 already_AddRefed<WritableStreamDefaultWriter> WritableStream::GetWriter(
     ErrorResult& aRv) {
   return AcquireWritableStreamDefaultWriter(this, aRv);
 }
 
-namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-add-write-request
 already_AddRefed<Promise> WritableStreamAddWriteRequest(
     WritableStream* aStream) {
@@ -749,7 +738,6 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(
   // Step 5. Return promise.
   return promise.forget();
 }
-}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#writablestream-set-up
 void WritableStream::SetUpNative(JSContext* aCx,

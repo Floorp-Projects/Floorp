@@ -30,8 +30,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 static void PackAndPostMessage(JSContext* aCx, MessagePort* aPort,
                                const nsAString& aType,
                                JS::Handle<JS::Value> aValue, ErrorResult& aRv) {

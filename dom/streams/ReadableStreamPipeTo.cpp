@@ -23,8 +23,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 struct PipeToReadRequest;
 class WriteFinishedPromiseHandler;
 class ShutdownActionFinishedPromiseHandler;
@@ -886,7 +884,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PipeToPump)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastWritePromise)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-namespace streams_abstract {
 // https://streams.spec.whatwg.org/#readable-stream-pipe-to
 already_AddRefed<Promise> ReadableStreamPipeTo(
     ReadableStream* aSource, WritableStream* aDest, bool aPreventClose,
@@ -953,6 +950,5 @@ already_AddRefed<Promise> ReadableStreamPipeTo(
   // Step 16. Return promise.
   return promise.forget();
 }
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom

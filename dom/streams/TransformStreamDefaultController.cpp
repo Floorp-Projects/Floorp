@@ -17,8 +17,6 @@
 
 namespace mozilla::dom {
 
-using namespace streams_abstract;
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStreamDefaultController, mGlobal,
                                       mStream, mTransformerAlgorithms)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransformStreamDefaultController)
@@ -194,8 +192,6 @@ void TransformStreamDefaultController::Terminate(JSContext* aCx,
   TransformStreamErrorWritableAndUnblockWrite(aCx, stream, error, aRv);
 }
 
-namespace streams_abstract {
-
 // https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
 void SetUpTransformStreamDefaultController(
     JSContext* aCx, TransformStream& aStream,
@@ -232,7 +228,5 @@ void SetUpTransformStreamDefaultControllerFromTransformer(
   // transformAlgorithm, flushAlgorithm).
   SetUpTransformStreamDefaultController(aCx, aStream, *controller, *algorithms);
 }
-
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom

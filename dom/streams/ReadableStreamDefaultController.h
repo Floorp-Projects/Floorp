@@ -113,8 +113,6 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   RefPtr<QueuingStrategySize> mStrategySizeAlgorithm;
 };
 
-namespace streams_abstract {
-
 MOZ_CAN_RUN_SCRIPT void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
@@ -155,8 +153,6 @@ bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
 
 bool ReadableStreamDefaultControllerShouldCallPull(
     ReadableStreamDefaultController* aController);
-
-}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 
