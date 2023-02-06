@@ -6002,7 +6002,7 @@ struct PrefListEntry {
   size_t mLen;
 };
 
-// These prefs are not useful in child processes.
+// These prefs are not useful in child processes - do not send them
 static const PrefListEntry sParentOnlyPrefBranchList[] = {
     // Remove prefs with user data
     PREF_LIST_ENTRY("datareporting.policy."),
@@ -6051,6 +6051,9 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("toolkit.telemetry.previousBuildID"),
 };
 
+// These prefs are dynamically-named (i.e. not specified in prefs.js or
+// StaticPrefList) and would normally by blocklisted but we allow them through
+// anyway, so this override list acts as an allowlist
 static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("apz.subtest"),
     PREF_LIST_ENTRY("autoadmin.global_config_url"),  // Bug 1780575
