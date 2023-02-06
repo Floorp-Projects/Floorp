@@ -771,6 +771,13 @@ bool ReflowInput::ShouldApplyAutomaticMinimumOnBlockAxis() const {
          mStylePosition->MinBSize(GetWritingMode()).IsAuto();
 }
 
+bool ReflowInput::IsInFragmentedContext() const {
+  // We consider mFrame with a prev-in-flow being in a fragmented context
+  // because nsColumnSetFrame can reflow its last column with an unconstrained
+  // available block-size.
+  return AvailableBSize() != NS_UNCONSTRAINEDSIZE || mFrame->GetPrevInFlow();
+}
+
 /* static */
 LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
                                                   nsIFrame* aFrame,

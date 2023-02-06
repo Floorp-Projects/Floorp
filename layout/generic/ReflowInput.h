@@ -848,6 +848,19 @@ struct ReflowInput : public SizeComputationInput {
   // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
   bool ShouldApplyAutomaticMinimumOnBlockAxis() const;
 
+  // Returns true if mFrame has a constrained available block-size, or if mFrame
+  // is a continuation. When this method returns true, mFrame can be considered
+  // to be in a "fragmented context."
+  //
+  // Note: this method usually returns true when mFrame is in a paged
+  // environment (e.g. printing) or has a multi-column container ancestor.
+  // However, this doesn't include several cases when we're intentionally
+  // performing layout in a fragmentation-ignoring way, e.g. 1) mFrame is a flex
+  // or grid item, and this ReflowInput is for a measuring reflow with an
+  // unconstrained available block-size, or 2) mFrame is (or is inside of) an
+  // element that forms an orthogonal writing-mode.
+  bool IsInFragmentedContext() const;
+
   // Compute the offsets for a relative position element
   //
   // @param aWM the writing mode of aCBSize and the returned offsets.

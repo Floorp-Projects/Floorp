@@ -813,11 +813,10 @@ class nsFlexContainerFrame::FlexItem final {
   // Indicates whether we think this flex item needs a "final" reflow
   // (after its final flexed size & final position have been determined).
   //
-  // @param aAvailableBSizeForItem the available block-size for this item (in
-  //                               flex container's writing-mode)
+  // @param aParentReflowInput the flex container's reflow input.
   // @return true if such a reflow is needed, or false if we believe it can
   // simply be moved to its final position and skip the reflow.
-  bool NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const;
+  bool NeedsFinalReflow(const ReflowInput& aParentReflowInput) const;
 
   // Gets the block frame that contains the flex item's content.  This is
   // Frame() itself or one of its descendants.
@@ -2374,12 +2373,7 @@ static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
   return false;
 }
 
-bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
-  MOZ_ASSERT(
-      aAvailableBSizeForItem == NS_UNCONSTRAINEDSIZE ||
-          aAvailableBSizeForItem > 0,
-      "We can only handle unconstrained or positive available block-size.");
-
+bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   if (!StaticPrefs::layout_flexbox_item_final_reflow_optimization_enabled()) {
     FLEX_LOG(
         "[perf] Flex item %p needed a final reflow due to optimization being "
@@ -2388,8 +2382,7 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     return true;
   }
 
-  // NOTE: even if aAvailableBSizeForItem == NS_UNCONSTRAINEDSIZE we can still
-  // have continuations from an earlier constrained reflow.
+  // NOTE: We can have continuations from an earlier constrained reflow.
   if (mFrame->GetPrevInFlow() || mFrame->GetNextInFlow()) {
     // This is an item has continuation(s). Reflow it.
     FLEX_LOG("[frag] Flex item %p needed a final reflow due to continuation(s)",
@@ -2397,13 +2390,17 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
     return true;
   }
 
-  // Bug 1637091: We can do better and skip this flex item's final reflow if
-  // both this flex item's block-size and overflow areas can fit the
-  // aAvailableBSizeForItem.
-  if (aAvailableBSizeForItem != NS_UNCONSTRAINEDSIZE) {
+  // A flex item can grow its block-size in a fragmented context if there's any
+  // force break within it (bug 1663079), or if it has a repeated table header
+  // or footer (bug 1744363). We currently always reflow it.
+  //
+  // Bug 1815294: investigate if we can design a more specific condition to
+  // prevent triggering O(n^2) behavior when printing a deeply-nested flex
+  // container.
+  if (aParentReflowInput.IsInFragmentedContext()) {
     FLEX_LOG(
         "[frag] Flex item %p needed both a measuring reflow and a final "
-        "reflow due to constrained available block-size",
+        "reflow due to being in a fragmented context.",
         mFrame);
     return true;
   }
@@ -5233,7 +5230,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
             "next-in-flow due to position below available space's block-end",
             item.Frame());
         pushedItems.Insert(item.Frame());
-      } else if (item.NeedsFinalReflow(availableBSizeForItem)) {
+      } else if (item.NeedsFinalReflow(aReflowInput)) {
         // The available size must be in item's writing-mode.
         const WritingMode itemWM = item.GetWritingMode();
         const auto availableSize =
