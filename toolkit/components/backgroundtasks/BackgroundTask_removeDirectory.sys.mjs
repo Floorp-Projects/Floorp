@@ -7,13 +7,78 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
+
+class Metrics {
+  /**
+   * @param {string} metricsId
+   */
+  constructor(metricsId) {
+    this.metricsId = metricsId;
+    this.startedTime = new Date();
+
+    this.wasFirst = true;
+    this.retryCount = 0;
+    this.removalCountObj = { value: 0 };
+    this.succeeded = true;
+
+    this.suffixRemovalCountObj = { value: 0 };
+    this.suffixEverFailed = false;
+  }
+
+  async report() {
+    if (!this.metricsId) {
+      console.warn(`Skipping Glean as no metrics id is passed`);
+      return;
+    }
+    if (AppConstants.MOZ_APP_NAME !== "firefox") {
+      console.warn(
+        `Skipping Glean as the app is not Firefox: ${AppConstants.MOZ_APP_NAME}`
+      );
+      return;
+    }
+
+    const elapsedMs = new Date().valueOf() - this.startedTime.valueOf();
+
+    // Note(krosylight): This FOG initialization happens within a unique
+    // temporary directory created for each background task, which will
+    // be removed after each run.
+    // That means any failed submission will be lost, but we are fine with
+    // that as we only have a single submission.
+    Services.fog.initializeFOG(undefined, "firefox.desktop.background.tasks");
+
+    const gleanMetrics = Glean[`backgroundTasksRmdir${this.metricsId}`];
+    if (!gleanMetrics) {
+      throw new Error(
+        `The metrics id "${this.metricsId}" is not available in toolkit/components/backgroundtasks/metrics.yaml. ` +
+          `Make sure that the id has no typo and is in PascalCase. ` +
+          `Note that you can omit the id for testing.`
+      );
+    }
+
+    gleanMetrics.elapsedMs.set(elapsedMs);
+    gleanMetrics.wasFirst.set(this.wasFirst);
+    gleanMetrics.retryCount.set(this.retryCount);
+    gleanMetrics.removalCount.set(this.removalCountObj.value);
+    gleanMetrics.succeeded.set(this.succeeded);
+    gleanMetrics.suffixRemovalCount.set(this.suffixRemovalCountObj.value);
+    gleanMetrics.suffixEverFailed.set(this.suffixEverFailed);
+
+    GleanPings.backgroundTasks.submit();
+
+    // XXX: We wait for arbitrary time for Glean to submit telemetry.
+    // Bug 1790702 should add a better way.
+    console.error("Pinged glean, waiting for submission.");
+    await new Promise(resolve => lazy.setTimeout(resolve, 5000));
+  }
+}
 
 // Recursively removes a directory.
 // Returns true if it succeeds, false otherwise.
-function tryRemoveDir(aFile) {
+function tryRemoveDir(aFile, countObj) {
   try {
-    aFile.remove(true);
+    aFile.remove(true, countObj);
   } catch (e) {
     return false;
   }
@@ -26,7 +91,8 @@ const FILE_CHECK_ITERATION_TIMEOUT_MS = 1000;
 async function deleteChildDirectory(
   parentDirPath,
   childDirName,
-  secondsToWait
+  secondsToWait,
+  metrics
 ) {
   if (!childDirName || !childDirName.length) {
     return;
@@ -44,17 +110,16 @@ async function deleteChildDirectory(
     Ci.nsICachePurgeLock
   );
 
-  let wasFirst = false;
   let locked = false;
   try {
     dirLock.lock(childDirName);
     locked = true;
-    wasFirst = !dirLock.isOtherInstanceRunning();
+    metrics.wasFirst = !dirLock.isOtherInstanceRunning();
   } catch (e) {
     console.error("Failed to check dirLock");
   }
 
-  if (!wasFirst) {
+  if (!metrics.wasFirst) {
     if (locked) {
       dirLock.unlock();
       locked = false;
@@ -67,9 +132,11 @@ async function deleteChildDirectory(
   // PR_CreateProcessDetached in CacheFileIOManager::SyncRemoveAllCacheFiles
   // Only if spawning the process is successful is the cache folder renamed,
   // so we need to wait until that is done.
-  let retryCount = 0;
   while (!targetFile.exists()) {
-    if (retryCount * FILE_CHECK_ITERATION_TIMEOUT_MS > secondsToWait * 1000) {
+    if (
+      metrics.retryCount * FILE_CHECK_ITERATION_TIMEOUT_MS >
+      secondsToWait * 1000
+    ) {
       // We don't know for sure if the folder was renamed or if a different
       // task removed it already. The second variant is more likely but to
       // be sure we'd have to consult a log file, which introduces
@@ -84,8 +151,8 @@ async function deleteChildDirectory(
     await new Promise(resolve =>
       lazy.setTimeout(resolve, FILE_CHECK_ITERATION_TIMEOUT_MS)
     );
-    retryCount++;
-    console.error(`Cache folder attempt no ${retryCount}`);
+    metrics.retryCount++;
+    console.error(`Cache folder attempt no ${metrics.retryCount}`);
   }
 
   if (!targetFile.isDirectory()) {
@@ -97,16 +164,29 @@ async function deleteChildDirectory(
   }
 
   console.error(`started removing ${targetFile.path}`);
-  targetFile.remove(true);
-  console.error(`done removing ${targetFile.path}`);
-
-  if (locked) {
-    dirLock.unlock();
-    locked = false;
+  try {
+    targetFile.remove(true, metrics.removalCountObj);
+  } catch (err) {
+    console.error(
+      `failed removing ${targetFile.path}. removed ${metrics.removalCountObj.value} entries.`
+    );
+    throw err;
+  } finally {
+    console.error(
+      `done removing ${targetFile.path}. removed ${metrics.removalCountObj.value} entries.`
+    );
+    if (locked) {
+      dirLock.unlock();
+      locked = false;
+    }
   }
 }
 
-async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
+async function cleanupOtherDirectories(
+  parentDirPath,
+  otherFoldersSuffix,
+  metrics
+) {
   if (!otherFoldersSuffix || !otherFoldersSuffix.length) {
     return;
   }
@@ -152,11 +232,12 @@ async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
     }
 
     // Remove directory recursively.
-    let removedDir = tryRemoveDir(entry);
+    let removedDir = tryRemoveDir(entry, metrics.suffixRemovalCountObj);
     if (!removedDir && entry.exists()) {
       // If first deletion of the directory failed, then we try again once more
       // just in case.
-      removedDir = tryRemoveDir(entry);
+      metrics.suffixEverFailed = true;
+      removedDir = tryRemoveDir(entry, metrics.suffixRemovalCountObj);
     }
     console.error(
       `Deletion of folder ${entry.leafName} - success=${removedDir}`
@@ -166,8 +247,10 @@ async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
 }
 
 // Usage:
-// removeDirectory parentDirPath childDirName secondsToWait [otherFoldersSuffix] [--test-sleep testSleep]
+// removeDirectory parentDirPath childDirName secondsToWait [otherFoldersSuffix]
 //                  arg0           arg1     arg2            arg3
+//                 [--test-sleep testSleep]
+//                 [--metrics-id metricsId]
 // parentDirPath - The path to the parent directory that includes the target directory
 // childDirName - The "leaf name" of the moved cache directory
 //                If empty, the background task will only purge folders that have the "otherFoldersSuffix".
@@ -177,10 +260,14 @@ async function cleanupOtherDirectories(parentDirPath, otherFoldersSuffix) {
 //                      the parent dir that end with this suffix
 // testSleep - [optional] A test-only argument to sleep for a given milliseconds before removal.
 //             This exists to test whether a long-running task can survive.
+// metricsId - [optional] The identifier for Glean metrics, in PascalCase.
+//             It'll be submitted only when the matching identifier exists in
+//             toolkit/components/backgroundtasks/metrics.yaml.
 export async function runBackgroundTask(commandLine) {
   const testSleep = Number.parseInt(
     commandLine.handleFlagWithParam("test-sleep", false)
   );
+  const metricsId = commandLine.handleFlagWithParam("metrics-id", false) || "";
 
   if (commandLine.length < 3) {
     throw new Error("Insufficient arguments");
@@ -206,16 +293,34 @@ export async function runBackgroundTask(commandLine) {
     );
   }
 
-  console.error(parentDirPath, childDirName, secondsToWait, otherFoldersSuffix);
+  console.error(
+    parentDirPath,
+    childDirName,
+    secondsToWait,
+    otherFoldersSuffix,
+    metricsId
+  );
 
   if (!Number.isNaN(testSleep)) {
     await new Promise(resolve => lazy.setTimeout(resolve, testSleep));
   }
 
-  await deleteChildDirectory(parentDirPath, childDirName, secondsToWait);
-  await cleanupOtherDirectories(parentDirPath, otherFoldersSuffix);
+  const metrics = new Metrics(metricsId);
 
-  // TODO: event telemetry with timings, and how often we have left over cache folders from previous runs.
+  try {
+    await deleteChildDirectory(
+      parentDirPath,
+      childDirName,
+      secondsToWait,
+      metrics
+    );
+    await cleanupOtherDirectories(parentDirPath, otherFoldersSuffix, metrics);
+  } catch (err) {
+    metrics.succeeded = false;
+    throw err;
+  } finally {
+    await metrics.report();
+  }
 
   return EXIT_CODE.SUCCESS;
 }
