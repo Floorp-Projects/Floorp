@@ -533,6 +533,30 @@ bool nsNavHistoryContainerResultNode::AreChildrenVisible() {
   return true;
 }
 
+nsresult nsNavHistoryContainerResultNode::OnVisitsRemoved(nsIURI* aURI) {
+  if (!AreChildrenVisible()) {
+    return NS_OK;
+  }
+
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+  if (result->CanSkipHistoryDetailsNotifications()) {
+    return NS_OK;
+  }
+
+  nsAutoCString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMArray<nsNavHistoryResultNode> nodes;
+  FindChildrenByURI(spec, &nodes);
+  for (int32_t i = 0; i < nodes.Count(); i++) {
+    nodes[i]->OnVisitsRemoved();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::GetContainerOpen(bool* aContainerOpen) {
   *aContainerOpen = mExpanded;
@@ -3346,14 +3370,7 @@ nsNavHistoryResultNode::OnItemChanged(
 
   bool shouldNotify = !mParent || mParent->AreChildrenVisible();
 
-  if (aProperty.EqualsLiteral("cleartime")) {
-    PRTime oldTime = mTime;
-    mTime = 0;
-    if (shouldNotify && !result->CanSkipHistoryDetailsNotifications()) {
-      NOTIFY_RESULT_OBSERVERS(
-          result, NodeHistoryDetailsChanged(this, oldTime, mAccessCount));
-    }
-  } else if (aProperty.EqualsLiteral("keyword")) {
+  if (aProperty.EqualsLiteral("keyword")) {
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeKeywordChanged(this, aNewValue));
   } else
@@ -3367,6 +3384,18 @@ nsNavHistoryResultNode::OnItemChanged(
   int32_t ourIndex = mParent->FindChild(this);
   NS_ASSERTION(ourIndex >= 0, "Could not find self in parent");
   if (ourIndex >= 0) mParent->EnsureItemPosition(ourIndex);
+
+  return NS_OK;
+}
+
+nsresult nsNavHistoryResultNode::OnVisitsRemoved() {
+  PRTime oldTime = mTime;
+  mTime = 0;
+
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+  NOTIFY_RESULT_OBSERVERS(
+      result, NodeHistoryDetailsChanged(this, oldTime, mAccessCount));
 
   return NS_OK;
 }
@@ -3905,35 +3934,35 @@ nsNavHistoryResult::RemoveObserver(nsINavHistoryResultObserver* aObserver) {
 }
 
 bool nsNavHistoryResult::UpdateHistoryDetailsObservers() {
-  bool observersWantHistoryDetails = false;
-  // One observer set to true is enough to set observersWantHistoryDetails.
-  for (uint32_t i = 0; i < mObservers.Length() && !observersWantHistoryDetails;
-       ++i) {
+  bool skipHistoryDetailsNotifications = false;
+  // One observer set to true is enough to set mObserversWantHistoryDetails.
+  for (uint32_t i = 0;
+       i < mObservers.Length() && !skipHistoryDetailsNotifications; ++i) {
     const nsCOMPtr<nsINavHistoryResultObserver>& entry =
         mObservers.ElementAt(i).GetValue();
     if (entry) {
-      // If the observer doesn't implement the attribute, we assume true.
-      bool observe;
-      observersWantHistoryDetails =
-          NS_FAILED(entry->GetObserveHistoryDetails(&observe)) || observe;
+      entry->GetSkipHistoryDetailsNotifications(
+          &skipHistoryDetailsNotifications);
     }
   }
 
-  mObserversWantHistoryDetails = observersWantHistoryDetails;
+  mObserversWantHistoryDetails = !skipHistoryDetailsNotifications;
   // If one observer wants history details we may have to add the listener.
   if (!CanSkipHistoryDetailsNotifications()) {
     if (!mIsHistoryDetailsObserver) {
-      AutoTArray<PlacesEventType, 2> events;
+      AutoTArray<PlacesEventType, 3> events;
       events.AppendElement(PlacesEventType::Page_visited);
       events.AppendElement(PlacesEventType::Page_title_changed);
+      events.AppendElement(PlacesEventType::Page_removed);
       PlacesObservers::AddListener(events, this);
       mIsHistoryDetailsObserver = true;
       return true;
     }
   } else {
-    AutoTArray<PlacesEventType, 2> events;
+    AutoTArray<PlacesEventType, 3> events;
     events.AppendElement(PlacesEventType::Page_visited);
     events.AppendElement(PlacesEventType::Page_title_changed);
+    events.AppendElement(PlacesEventType::Page_removed);
     PlacesObservers::RemoveListener(events, this);
     mIsHistoryDetailsObserver = false;
   }
@@ -4444,6 +4473,10 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
               OnPageRemovedVisits(uri, removeEvent->mIsPartialVisistsRemoval,
                                   removeEvent->mPageGuid, removeEvent->mReason,
                                   removeEvent->mTransitionType));
+
+          if (!removeEvent->mIsPartialVisistsRemoval && mRootNode) {
+            mRootNode->OnVisitsRemoved(uri);
+          }
         }
 
         break;

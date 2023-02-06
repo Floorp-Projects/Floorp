@@ -58,28 +58,16 @@ add_task(async function test_remove_page() {
   let guids = new Set(gBookmarkGuids);
   Assert.equal(guids.size, 2);
   let promiseNotifications = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (
-      id,
-      property,
-      isAnno,
-      newValue,
-      lastModified,
-      itemType,
-      parentId,
-      guid
-    ) => {
-      info(`Got a changed notification for ${guid}.`);
-      Assert.equal(property, "cleartime");
-      Assert.ok(!isAnno);
-      Assert.equal(newValue, "");
-      Assert.equal(lastModified, 0);
-      Assert.equal(itemType, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-      guids.delete(guid);
-      return guids.size == 0;
-    }
+    "page-removed",
+    events =>
+      events.some(
+        event =>
+          event.url === "http://book.ma.rk/" &&
+          !event.isRemovedFromStore &&
+          !event.isPartialVisistsRemoval
+      ),
+    "places"
   );
-
   await PlacesUtils.history.remove("http://book.ma.rk/");
   await promiseNotifications;
 });

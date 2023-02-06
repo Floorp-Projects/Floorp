@@ -311,12 +311,12 @@ interface nsINavHistoryResultObserver : nsISupports
   /**
    * Whether the observer is interested into history details changes.
    * Those include visits additions and removals. If the observer doesn't
-   * provide this attribute, it will default to true.
+   * provide this attribute, it will default to false.
    * In practice, the observer won't receive nodeHistoryDetailsChanged.
    * Note: this is only read when the observer is added, it cannot be changed
    * dynamically.
    */
-  readonly attribute boolean observeHistoryDetails;
+  readonly attribute boolean skipHistoryDetailsNotifications;
 
   /**
    * Called when 'aItem' is inserted into 'aParent' at index 'aNewIndex'.
