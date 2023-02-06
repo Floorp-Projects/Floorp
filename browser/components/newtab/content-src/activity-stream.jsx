@@ -12,7 +12,7 @@ import { initStore } from "content-src/lib/init-store";
 import { Provider } from "react-redux";
 import React from "react";
 import ReactDOM from "react-dom";
-import { reducers } from "common/Reducers.jsm";
+import { reducers } from "common/Reducers.sys.mjs";
 
 export const NewTab = ({ store }) => (
   <Provider store={store}>

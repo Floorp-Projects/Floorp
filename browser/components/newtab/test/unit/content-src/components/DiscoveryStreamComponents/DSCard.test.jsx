@@ -16,7 +16,7 @@ import {
 } from "common/Actions.sys.mjs";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
-import { INITIAL_STATE } from "common/Reducers.jsm";
+import { INITIAL_STATE } from "common/Reducers.sys.mjs";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
 import { shallow, mount } from "enzyme";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";

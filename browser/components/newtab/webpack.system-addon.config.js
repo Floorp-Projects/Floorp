@@ -4,6 +4,7 @@
 
 const path = require("path");
 const webpack = require("webpack");
+const { ResourceUriPlugin } = require("./resourceUriPlugin");
 
 const absolute = relPath => path.join(__dirname, relPath);
 
@@ -20,6 +21,7 @@ module.exports = (env = {}) => ({
   // TODO: switch to eval-source-map for faster builds. Requires CSP changes
   devtool: env.development ? "inline-source-map" : false,
   plugins: [
+    new ResourceUriPlugin(),
     new webpack.BannerPlugin(
       `THIS FILE IS AUTO-GENERATED: ${path.basename(__filename)}`
     ),

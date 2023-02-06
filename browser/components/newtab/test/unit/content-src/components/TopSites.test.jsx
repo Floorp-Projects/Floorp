@@ -7,7 +7,7 @@ import { MIN_RICH_FAVICON_SIZE } from "content-src/components/TopSites/TopSitesC
 import {
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
-} from "common/Reducers.jsm";
+} from "common/Reducers.sys.mjs";
 import {
   TopSite,
   TopSiteLink,

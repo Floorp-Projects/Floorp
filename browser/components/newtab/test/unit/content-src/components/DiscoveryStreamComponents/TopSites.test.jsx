@@ -3,7 +3,7 @@ import {
   INITIAL_STATE,
   reducers,
   TOP_SITES_DEFAULT_ROWS,
-} from "common/Reducers.jsm";
+} from "common/Reducers.sys.mjs";
 import { mount } from "enzyme";
 import { TopSites as OldTopSites } from "content-src/components/TopSites/TopSites";
 import { Provider } from "react-redux";

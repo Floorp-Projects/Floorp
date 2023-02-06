@@ -9,7 +9,7 @@ import {
   insertPinned,
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
-} from "common/Reducers.jsm";
+} from "common/Reducers.sys.mjs";
 import { getDefaultOptions } from "lib/ActivityStreamStorage.jsm";
 import injector from "inject!lib/TopSitesFeed.jsm";
 import { Screenshots } from "lib/Screenshots.jsm";
