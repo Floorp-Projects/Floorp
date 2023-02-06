@@ -1220,7 +1220,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
 Mp4parseStatus nsAVIFDecoder::CreateParser() {
   if (!mParser) {
     Mp4parseIo io = {nsAVIFDecoder::ReadSource, this};
-    mBufferStream = MakeUnique<AVIFDecoderStream>(&mBufferedData);
+    mBufferStream = new AVIFDecoderStream(&mBufferedData);
     Mp4parseStatus status =
         AVIFParser::Create(&io, mBufferStream.get(), mParser);
 
