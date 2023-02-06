@@ -80,6 +80,12 @@
   function handleReportNormal(aProcess, aPath, aKind, aUnits, aAmount,
                               aDescription)
   {
+    if (aProcess.startsWith(`Utility `)) {
+      // The Utility process that runs the ORB JavaScript validator starts on first
+      // idle in the parent process. This makes it notoriously hard to know _if_ it
+      // actually has started. So we bail. See Bug 1813985.
+      return;
+    }
     // Record the values of some notable reporters.
     if (aPath === "vsize") {
       vsizeAmounts.push(aAmount);
@@ -230,7 +236,7 @@
     if (SpecialPowers.Services.io.socketProcessLaunched) {
       socketProcessRunning = 1;
     }
-    ok(aAmounts.length == (1 + socketProcessRunning),
+    is(aAmounts.length, 1 + socketProcessRunning,
        aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
     if (!aCanBeUnreasonable) {
