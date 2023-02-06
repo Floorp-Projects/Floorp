@@ -1,17 +1,17 @@
-From ae5fe7a557873f05a4954f4b3a47e4b41053a406 Mon Sep 17 00:00:00 2001
+From 753c3ad7018936ef9a9d2af8b75efbfa14c149b7 Mon Sep 17 00:00:00 2001
 From: Tom Ritter <tom@ritter.vg>
-Date: Tue, 29 Jun 2021 23:10:24 -0400
-Subject: [PATCH] Add back the IUnknown_QI functions
+Date: Thu, 2 Feb 2023 12:26:22 -0500
+Subject: [PATCH 2/7] Add back the IUnknown_QI functions
 
 ---
  mingw-w64-headers/include/unknwn.h | 23 +++++++++++++++++++++++
  1 file changed, 23 insertions(+)
 
 diff --git a/mingw-w64-headers/include/unknwn.h b/mingw-w64-headers/include/unknwn.h
-index d8c309071..968c41d61 100644
+index f3ada04a2..f33e8f270 100644
 --- a/mingw-w64-headers/include/unknwn.h
 +++ b/mingw-w64-headers/include/unknwn.h
-@@ -167,6 +167,29 @@ static FORCEINLINE ULONG IUnknown_Release(IUnknown* This) {
+@@ -169,6 +169,29 @@ static __WIDL_INLINE ULONG IUnknown_Release(IUnknown* This) {
  
  #endif
  
