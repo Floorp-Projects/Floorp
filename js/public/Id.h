@@ -255,16 +255,6 @@ MOZ_ALWAYS_INLINE void AssertIdIsNotGray(jsid id) {
 extern JS_PUBLIC_API PropertyKey GetWellKnownSymbolKey(JSContext* cx,
                                                        SymbolCode which);
 
-/**
- * Generate getter/setter id for given id, by adding "get " or "set " prefix.
- */
-extern JS_PUBLIC_API bool ToGetterId(
-    JSContext* cx, JS::Handle<JS::PropertyKey> id,
-    JS::MutableHandle<JS::PropertyKey> getterId);
-extern JS_PUBLIC_API bool ToSetterId(
-    JSContext* cx, JS::Handle<JS::PropertyKey> id,
-    JS::MutableHandle<JS::PropertyKey> setterId);
-
 }  // namespace JS
 
 namespace js {

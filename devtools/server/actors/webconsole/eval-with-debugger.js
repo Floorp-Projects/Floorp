@@ -107,8 +107,6 @@ function isObject(value) {
  *        - eager: Set to true if you want the evaluation to bail if it may have side effects.
  *        - url: the url to evaluate the script as. Defaults to "debugger eval code",
  *        or "debugger eager eval code" if eager is true.
- * @param object webConsole
- *
  * @return object
  *         An object that holds the following properties:
  *         - dbg: the debugger where the string was evaluated.
@@ -128,11 +126,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
-  const { dbgGlobal, bindSelf, evalGlobal } = getDbgGlobal(
-    options,
-    dbg,
-    webConsole
-  );
+  const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
   const helpers = getHelpers(dbgGlobal, options, webConsole);
   let { bindings, helperCache } = bindCommands(
     isCommand(string),
@@ -164,7 +158,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
 
   let noSideEffectDebugger = null;
   if (options.eager) {
-    noSideEffectDebugger = makeSideeffectFreeDebugger(false, evalGlobal);
+    noSideEffectDebugger = makeSideeffectFreeDebugger();
   }
 
   let result;
@@ -363,15 +357,10 @@ function forceLexicalInitForVariableDeclarationsInThrowingExpression(
  *
  * @param boolean skipCheckingEffectfulOffsets
  *        If true, effectful offsets are excluded from the checks for side effects.
- * @param object maybeEvalGlobal
- *        If provided, raw debuggee global to get `window` accessors.
  * @return object
  *         Side-effect-free debugger.
  */
-function makeSideeffectFreeDebugger(
-  skipCheckingEffectfulOffsets,
-  maybeEvalGlobal
-) {
+function makeSideeffectFreeDebugger(skipCheckingEffectfulOffsets) {
   // We ensure that the metadata for native functions is loaded before we
   // initialize sideeffect-prevention because the data is lazy-loaded, and this
   // logic can run inside of debuggee compartments because the
@@ -380,7 +369,7 @@ function makeSideeffectFreeDebugger(
   // because building the list of valid native functions is itself a
   // side-effectful operation because it needs to populate a
   // module cache, among any number of other things.
-  ensureSideEffectFreeNatives(maybeEvalGlobal);
+  ensureSideEffectFreeNatives();
 
   // Note: It is critical for debuggee performance that we implement all of
   // this debuggee tracking logic with a separate Debugger instance.
@@ -436,11 +425,11 @@ function makeSideeffectFreeDebugger(
   // so we need to add this hook on "dbg" even though the rest of our hooks work via "newDbg".
   dbg.onNativeCall = (callee, reason) => {
     try {
-      // Setters are always effectful. Natives called normally or called via
-      // getters are handled with an allowlist.
+      // Getters are never considered effectful, and setters are always effectful.
+      // Natives called normally are handled with an allowlist.
       if (
-        (reason == "get" || reason == "call") &&
-        nativeHasNoSideEffects(callee)
+        reason == "get" ||
+        (reason == "call" && nativeHasNoSideEffects(callee))
       ) {
         // Returning undefined causes execution to continue normally.
         return undefined;
@@ -463,67 +452,9 @@ exports.makeSideeffectFreeDebugger = makeSideeffectFreeDebugger;
 // Native functions which are considered to be side effect free.
 let gSideEffectFreeNatives; // string => Array(Function)
 
-/**
- * Generate gSideEffectFreeNatives map.
- *
- * @param object maybeEvalGlobal
- *        If provided, raw debuggee global to get `window` accessors.
- */
-function ensureSideEffectFreeNatives(maybeEvalGlobal) {
+function ensureSideEffectFreeNatives() {
   if (gSideEffectFreeNatives) {
     return;
-  }
-
-  const { natives: domNatives, idlPureAllowlist } = eagerFunctionAllowlist;
-
-  const instanceFunctionAllowlist = [];
-
-  function collectMethodsAndGetters(obj, methodsAndGetters) {
-    // This can retrieve xray function if the obj comes from web content.
-    // Xray function has original native and JitInfo even if the property is
-    // modified by the web content.
-
-    if ("methods" in methodsAndGetters) {
-      for (const name of methodsAndGetters.methods) {
-        const func = obj[name];
-        if (func) {
-          instanceFunctionAllowlist.push(func);
-        }
-      }
-    }
-    if ("getters" in methodsAndGetters) {
-      for (const name of methodsAndGetters.getters) {
-        const func = Object.getOwnPropertyDescriptor(obj, name)?.get;
-        if (func) {
-          instanceFunctionAllowlist.push(func);
-        }
-      }
-    }
-  }
-
-  // `Window` can be undefined if this is inside sandbox.
-  if (
-    maybeEvalGlobal &&
-    typeof Window === "function" &&
-    Window.isInstance(maybeEvalGlobal) &&
-    "Window" in idlPureAllowlist &&
-    "instance" in idlPureAllowlist.Window
-  ) {
-    collectMethodsAndGetters(maybeEvalGlobal, idlPureAllowlist.Window.instance);
-    const maybeLocation = maybeEvalGlobal.location;
-    if (maybeLocation) {
-      collectMethodsAndGetters(
-        maybeLocation,
-        idlPureAllowlist.Location.instance
-      );
-    }
-    const maybeDocument = maybeEvalGlobal.document;
-    if (maybeDocument) {
-      collectMethodsAndGetters(
-        maybeDocument,
-        idlPureAllowlist.Document.instance
-      );
-    }
   }
 
   const natives = [
@@ -531,9 +462,7 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
 
     // Pull in all of the non-ECMAScript native functions that we want to
     // allow as well.
-    ...domNatives,
-
-    ...instanceFunctionAllowlist,
+    ...eagerFunctionAllowlist,
   ];
 
   const map = new Map();
@@ -560,14 +489,8 @@ function nativeHasNoSideEffects(fn) {
       return true;
   }
 
-  // This needs to use isSameNativeWithJitInfo instead of isSameNative, given
-  // DOM getters share single native function with different JSJitInto,
-  // and isSameNative cannot distinguish between side-effect-free getters
-  // and others.
-  //
-  // See bug 1806598 for more info.
   const natives = gSideEffectFreeNatives.get(fn.name);
-  return natives && natives.some(n => fn.isSameNativeWithJitInfo(n));
+  return natives && natives.some(n => fn.isSameNative(n));
 }
 
 function updateConsoleInputEvaluation(dbg, webConsole) {
@@ -629,22 +552,6 @@ function getFrameDbg(options, webConsole) {
   );
 }
 
-/**
- * Get debugger object for given debugger and Web Console.
- *
- * @param object options
- *        See the `options` parameter of evalWithDebugger
- * @param {Debugger} dbg
- *        Debugger object
- * @param {WebConsoleActor} webConsole
- *        A reference to a webconsole actor which is used to get the target
- *        eval global and optionally the target actor
- * @return object
- *         An object that holds the following properties:
- *         - bindSelf: (optional) the self object for the evaluation
- *         - dbgGlobal: the global object reference in the debugger
- *         - evalGlobal: the raw global object
- */
 function getDbgGlobal(options, dbg, webConsole) {
   let evalGlobal = webConsole.evalGlobal;
 
@@ -663,7 +570,7 @@ function getDbgGlobal(options, dbg, webConsole) {
   // If we have an object to bind to |_self|, create a Debugger.Object
   // referring to that object, belonging to dbg.
   if (!options.selectedObjectActor) {
-    return { bindSelf: null, dbgGlobal, evalGlobal };
+    return { bindSelf: null, dbgGlobal };
   }
 
   // For objects related to console messages, they will be registered under the Target Actor
@@ -674,12 +581,12 @@ function getDbgGlobal(options, dbg, webConsole) {
     webConsole.parentActor.getActorByID(options.selectedObjectActor);
 
   if (!actor) {
-    return { bindSelf: null, dbgGlobal, evalGlobal };
+    return { bindSelf: null, dbgGlobal };
   }
 
   const jsVal = actor instanceof LongStringActor ? actor.str : actor.rawValue();
   if (!isObject(jsVal)) {
-    return { bindSelf: jsVal, dbgGlobal, evalGlobal };
+    return { bindSelf: jsVal, dbgGlobal };
   }
 
   // If we use the makeDebuggeeValue method of jsVal's own global, then
@@ -687,7 +594,7 @@ function getDbgGlobal(options, dbg, webConsole) {
   // that is, without wrappers. The evalWithBindings call will then wrap
   // jsVal appropriately for the evaluation compartment.
   const bindSelf = dbgGlobal.makeDebuggeeValue(jsVal);
-  return { bindSelf, dbgGlobal, evalGlobal };
+  return { bindSelf, dbgGlobal };
 }
 
 function getHelpers(dbgGlobal, options, webConsole) {
