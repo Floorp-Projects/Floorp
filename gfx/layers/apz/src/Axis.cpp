@@ -530,9 +530,15 @@ ParentLayerCoord AxisX::GetRectLength(const ParentLayerRect& aRect) const {
   return aRect.Width();
 }
 
+CSSCoord AxisX::GetRectLength(const CSSRect& aRect) const {
+  return aRect.Width();
+}
+
 ParentLayerCoord AxisX::GetRectOffset(const ParentLayerRect& aRect) const {
   return aRect.X();
 }
+
+CSSCoord AxisX::GetRectOffset(const CSSRect& aRect) const { return aRect.X(); }
 
 float AxisX::GetTransformScale(
     const AsyncTransformComponentMatrix& aMatrix) const {
@@ -609,9 +615,15 @@ ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const {
   return aRect.Height();
 }
 
+CSSCoord AxisY::GetRectLength(const CSSRect& aRect) const {
+  return aRect.Height();
+}
+
 ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const {
   return aRect.Y();
 }
+
+CSSCoord AxisY::GetRectOffset(const CSSRect& aRect) const { return aRect.Y(); }
 
 float AxisY::GetTransformScale(
     const AsyncTransformComponentMatrix& aMatrix) const {

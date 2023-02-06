@@ -90,7 +90,8 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       mDragFinished(true),
       mUserChanged(false),
       mScrollingWithAPZ(false),
-      mSuppressionActive(false) {}
+      mSuppressionActive(false),
+      mThumbMinLength(0) {}
 
 // stop timer
 nsSliderFrame::~nsSliderFrame() {
@@ -461,6 +462,8 @@ void nsSliderFrame::BuildDisplayListForChildren(
       const float appUnitsPerCss = float(AppUnitsPerCSSPixel());
       const CSSCoord thumbLength = NSAppUnitsToFloatPixels(
           isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
+      const CSSCoord minThumbLength =
+          NSAppUnitsToFloatPixels(mThumbMinLength, appUnitsPerCss);
 
       nsIFrame* scrollbarBox = GetScrollbar();
       bool isAsyncDraggable = !UsesCustomScrollbarMediator(scrollbarBox);
@@ -532,7 +535,7 @@ void nsSliderFrame::BuildDisplayListForChildren(
           /* aIndex = */ nsDisplayOwnLayer::OwnLayerForScrollThumb, &masterList,
           ownLayerASR, nsDisplayOwnLayerFlags::None,
           ScrollbarData::CreateForThumb(*scrollDirection, GetThumbRatio(),
-                                        thumbStart, thumbLength,
+                                        thumbStart, thumbLength, minThumbLength,
                                         isAsyncDraggable, sliderTrackStart,
                                         sliderTrackLength, scrollTargetId),
           true, false);
@@ -580,9 +583,12 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState) {
   maxPos = std::max(minPos, maxPos);
   curPos = clamped(curPos, minPos, maxPos);
 
+  // If modifying the logic here, be sure to modify the corresponding
+  // compositor-side calculation in ScrollThumbUtils::ApplyTransformForAxis().
   nscoord& availableLength =
       IsXULHorizontal() ? clientRect.width : clientRect.height;
   nscoord& thumbLength = IsXULHorizontal() ? thumbSize.width : thumbSize.height;
+  mThumbMinLength = thumbLength;
 
   if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetXULFlex() > 0) {
     float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
