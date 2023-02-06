@@ -9,6 +9,7 @@ import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusBuilder
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
@@ -16,6 +17,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
 import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.nimbus.NimbusSystem
+import org.mozilla.fenix.utils.Settings
 
 /**
  * The maximum amount of time the app launch will be blocked to load experiments from disk.
@@ -85,5 +88,26 @@ fun NimbusException.isReportableError(): Boolean {
         is NimbusException.ResponseException,
         -> false
         else -> true
+    }
+}
+
+/**
+ * Call `fetchExperiments` if the time since the last fetch is over a threshold.
+ *
+ * The threshold is given by the [NimbusSystem] feature object, defined in the
+ * `nimbus.fml.yaml` file.
+ */
+fun NimbusInterface.maybeFetchExperiments(
+    context: Context,
+    feature: NimbusSystem = FxNimbus.features.nimbusSystem.value(),
+    currentTimeMillis: Long = System.currentTimeMillis(),
+) {
+    val lastFetchTimeMillis = context.settings().nimbusLastFetchTime
+    val minimumPeriodMinutes = feature.refreshIntervalForeground
+    val minimumPeriodMillis = minimumPeriodMinutes * Settings.ONE_MINUTE_MS
+
+    if (currentTimeMillis - lastFetchTimeMillis >= minimumPeriodMillis) {
+        context.settings().nimbusLastFetchTime = currentTimeMillis
+        fetchExperiments()
     }
 }

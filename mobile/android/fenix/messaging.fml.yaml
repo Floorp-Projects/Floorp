@@ -1,5 +1,16 @@
 ---
 features:
+  nimbus-system:
+    description: |
+      Configuration of the Nimbus System in Fenix.
+    variables:
+      refresh-interval-foreground:
+        description: |
+          The minimum interval in minutes between fetching experiment 
+          recipes in the foreground.
+        type: Int
+        default: 60 # 1 hour
+
   messaging:
     description: |
       Configuration for the messaging system.

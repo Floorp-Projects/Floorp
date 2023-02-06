@@ -60,6 +60,14 @@ mr2022:
     sections-enabled:
       type: json
       description: This property provides a lookup table of whether or not the given section should be enabled.
+nimbus-system:
+  description: "Configuration of the Nimbus System in Fenix.\n"
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    refresh-interval-foreground:
+      type: int
+      description: "The minimum interval in minutes between fetching experiment \nrecipes in the foreground.\n"
 nimbus-validation:
   description: A feature that does not correspond to an application feature suitable for showing that Nimbus is working. This should never be used in production.
   hasExposure: true
