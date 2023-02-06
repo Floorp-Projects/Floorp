@@ -38,7 +38,7 @@
 #if defined(__MINGW32__)  // 64 defines both 32 and 64
 // We need to fake some things, while we wait on updates to mingw's dcomp.h
 // header. Just enough that we can successfully fail to work there.
-#define MOZ_MINGW_DCOMP_H_OLD
+#  define MOZ_MINGW_DCOMP_H_OLD
 struct IDCompositionFilterEffect : public IDCompositionEffect {};
 struct IDCompositionColorMatrixEffect : public IDCompositionFilterEffect {};
 struct IDCompositionTableTransferEffect : public IDCompositionFilterEffect {};
