@@ -53,15 +53,6 @@ html|img#editBookmarkPanelFavicon[src] {
   margin: 0;
 }
 
-#editBookmarkPanelContent,
-#editBookmarkPanelBottomContent {
-  padding: var(--arrowpanel-padding);
-}
-
-#editBookmarkPanelContent {
-  padding-bottom: 0;
-}
-
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
   min-width: 27em;
@@ -69,6 +60,7 @@ html|img#editBookmarkPanelFavicon[src] {
 
 #editBMPanel_newFolderButton {
   appearance: none;
+  margin: 0;
   border: 0;
   border-radius: 4px;
   background-color: var(--button-bgcolor);
@@ -80,9 +72,6 @@ html|img#editBookmarkPanelFavicon[src] {
   /* This button is deeper in the visual hierarchy than others (notably the
      buttons at the bottom of the panel), so it should be slightly smaller. */
   font-size: 90%;
-
-  /* This button needs to align with the tree above it. */
-  margin-inline-start: 4px;
 }
 
 #editBMPanel_newFolderButton:hover {
@@ -103,15 +92,19 @@ html|img#editBookmarkPanelFavicon[src] {
   font: caption;
 }
 
-#editBookmarkPanelContent > label:not(.editBMPanel_nameRow),
+#editBookmarkPanelContent > label:not(.editBMPanel_nameRow) {
+  padding-top: var(--arrowpanel-padding);
+}
+
 #editBookmarkPanelContent > #editBMPanel_folderTreeRow,
+#editBookmarkPanelContent > #editBMPanel_folderTreeRow > #editBMPanel_newFolderBox,
 #editBookmarkPanelContent > #editBMPanel_tagsSelectorRow {
-  padding-block: var(--arrowpanel-padding) 0;
+  padding-top: 4px;
 }
 
 #editBookmarkPanelContent label[control] {
-  margin-inline-start: 0;
-  margin-block: 0 4px;
+  margin: 0;
+  margin-bottom: 4px;
 }
 
 #editBookmarkPanel .caption-label {

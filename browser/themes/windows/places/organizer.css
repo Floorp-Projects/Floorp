@@ -384,6 +384,7 @@ treechildren::-moz-tree-separator(selected) {
   background-color: var(--organizer-content-background);
   border: 1px solid var(--organizer-border-color);
   border-radius: 4px;
+  margin: 4px;
 }
 
 #editBMPanel_tagsSelector > richlistitem {
