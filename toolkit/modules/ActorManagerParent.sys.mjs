@@ -96,8 +96,9 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI: "resource://gre/actors/AboutTranslationsChild.sys.mjs",
       events: {
-        // Run the actor before any content of the page appears.
+        // Run the actor before any content of the page appears to inject functions.
         DOMDocElementInserted: {},
+        DOMContentLoaded: {},
       },
     },
     matches: ["about:translations"],
