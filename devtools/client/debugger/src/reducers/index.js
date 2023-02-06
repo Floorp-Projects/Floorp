@@ -8,7 +8,7 @@
  */
 
 import expressions, { initialExpressionState } from "./expressions";
-import sourceActors from "./source-actors";
+import sourceActors, { initialSourceActorsState } from "./source-actors";
 import sources, { initialSourcesState } from "./sources";
 import sourceBlackBox, { initialSourceBlackBoxState } from "./source-blackbox";
 import sourcesContent, { initialSourcesContentState } from "./sources-content";
@@ -44,7 +44,7 @@ export function initialState() {
     sources: initialSourcesState(),
     sourcesContent: initialSourcesContentState(),
     expressions: initialExpressionState(),
-    sourceActors: new Map(),
+    sourceActors: initialSourceActorsState(),
     sourceBlackBox: initialSourceBlackBoxState(),
     tabs: initialTabState(),
     breakpoints: initialBreakpointsState(),
