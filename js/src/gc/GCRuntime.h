@@ -379,6 +379,10 @@ class GCRuntime {
     return stats().addressOfAllocsSinceMinorGCNursery();
   }
 
+  const void* addressOfLastBufferedWholeCell() {
+    return storeBuffer_.refNoCheck().addressOfLastBufferedWholeCell();
+  }
+
 #ifdef JS_GC_ZEAL
   const uint32_t* addressOfZealModeBits() { return &zealModeBits.refNoCheck(); }
   void getZealBits(uint32_t* zealBits, uint32_t* frequency,

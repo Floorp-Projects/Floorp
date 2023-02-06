@@ -4888,17 +4888,27 @@ static void EmitPostWriteBarrier(MacroAssembler& masm, CompileRuntime* runtime,
   Label callVM;
   Label exit;
 
+  Register temp = regs.takeAny();
+
   // We already have a fast path to check whether a global is in the store
   // buffer.
-  if (!isGlobal && maybeConstant) {
-    EmitStoreBufferCheckForConstant(masm, &maybeConstant->asTenured(), regs,
-                                    &exit, &callVM);
+  if (!isGlobal) {
+    if (maybeConstant) {
+      // Check store buffer bitmap directly for known object.
+      EmitStoreBufferCheckForConstant(masm, &maybeConstant->asTenured(), regs,
+                                      &exit, &callVM);
+    } else {
+      // Check one element cache to avoid VM call.
+      masm.loadPtr(AbsoluteAddress(runtime->addressOfLastBufferedWholeCell()),
+                   temp);
+      masm.branchPtr(Assembler::Equal, temp, objreg, &exit);
+    }
   }
 
   // Call into the VM to barrier the write.
   masm.bind(&callVM);
 
-  Register runtimereg = regs.takeAny();
+  Register runtimereg = temp;
   masm.mov(ImmPtr(runtime), runtimereg);
 
   masm.setupAlignedABICall();

@@ -234,6 +234,8 @@ void StoreBuffer::WholeCellBuffer::clear() {
   if (storage_) {
     storage_->used() ? storage_->releaseAll() : storage_->freeAll();
   }
+
+  last_ = nullptr;
 }
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;

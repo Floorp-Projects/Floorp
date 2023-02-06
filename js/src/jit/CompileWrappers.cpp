@@ -88,6 +88,10 @@ const void* CompileRuntime::addressOfStringToAtomCache() {
   return &runtime()->caches().stringToAtomCache;
 }
 
+const void* CompileRuntime::addressOfLastBufferedWholeCell() {
+  return runtime()->gc.addressOfLastBufferedWholeCell();
+}
+
 const DOMCallbacks* CompileRuntime::DOMcallbacks() {
   return runtime()->DOMcallbacks;
 }

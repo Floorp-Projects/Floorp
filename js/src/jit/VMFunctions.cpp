@@ -871,8 +871,7 @@ bool CreateThisFromIon(JSContext* cx, HandleObject callee,
 
 void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell) {
   AutoUnsafeCallWithABI unsafe;
-  MOZ_ASSERT(!IsInsideNursery(cell));
-  rt->gc.storeBuffer().putWholeCell(cell);
+  rt->gc.storeBuffer().putWholeCellDontCheckLast(cell);
 }
 
 static const size_t MAX_WHOLE_CELL_BUFFER_SIZE = 4096;
@@ -925,7 +924,8 @@ void PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj) {
   MOZ_ASSERT(obj->JSObject::is<GlobalObject>());
 
   if (!obj->realm()->globalWriteBarriered) {
-    PostWriteBarrier(rt, obj);
+    AutoUnsafeCallWithABI unsafe;
+    rt->gc.storeBuffer().putWholeCell(obj);
     obj->realm()->globalWriteBarriered = 1;
   }
 }
