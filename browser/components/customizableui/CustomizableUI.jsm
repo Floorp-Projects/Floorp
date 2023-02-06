@@ -3679,6 +3679,24 @@ var CustomizableUIInternal = {
     return true;
   },
 
+  getCollapsedToolbarIds(window) {
+    let collapsedToolbars = new Set();
+    for (let toolbarId of CustomizableUIInternal._builtinToolbars) {
+      let toolbar = window.document.getElementById(toolbarId);
+
+      // Menubar toolbars are special in that they're hidden with the autohide
+      // attribute.
+      let hidingAttribute =
+        toolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
+
+      if (toolbar.getAttribute(hidingAttribute) == "true") {
+        collapsedToolbars.add(toolbarId);
+      }
+    }
+
+    return collapsedToolbars;
+  },
+
   setToolbarVisibility(aToolbarId, aIsVisible) {
     // We only persist the attribute the first time.
     let isFirstChangedToolbar = true;
@@ -4526,6 +4544,19 @@ var CustomizableUI = {
    */
   setToolbarVisibility(aToolbarId, aIsVisible) {
     CustomizableUIInternal.setToolbarVisibility(aToolbarId, aIsVisible);
+  },
+
+  /**
+   * Returns a Set with the IDs of any registered toolbar areas that are
+   * currently collapsed in a particular window. Menubars that are set to
+   * autohide and are in the temporary "open" state are still considered
+   * collapsed by default.
+   *
+   * @param {Window} window The browser window to check for collapsed toolbars.
+   * @return {Set<string>}
+   */
+  getCollapsedToolbarIds(window) {
+    return CustomizableUIInternal.getCollapsedToolbarIds(window);
   },
 
   /**
