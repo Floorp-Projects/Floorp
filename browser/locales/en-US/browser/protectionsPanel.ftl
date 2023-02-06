@@ -110,3 +110,24 @@ protections-panel-content-blocking-breakage-report-view-cancel =
   .label = Cancel
 protections-panel-content-blocking-breakage-report-view-send-report =
   .label = Send Report
+
+# Cookie Banner Handling
+
+protections-panel-cookie-banner-handling-header = Cookie Banner Reduction
+protections-panel-cookie-banner-handling-enabled = On for this site
+protections-panel-cookie-banner-handling-disabled = Off for this site
+protections-panel-cookie-banner-handling-undetected = Site currently not supported
+
+protections-panel-cookie-banner-view-title =
+  .title = Cookie Banner Reduction
+protections-panel-cookie-banner-view-go-back =
+  .aria-label = Back
+# Variables
+#  $host (String): the hostname of the site that is being displayed.
+protections-panel-cookie-banner-view-turn-off-for-site = Turn off Cookie Banner Reduction for { $host }?
+protections-panel-cookie-banner-view-turn-on-for-site = Turn on Cookie Banner Reduction for this site?
+protections-panel-cookie-banner-view-cookie-clear-warning = { -brand-short-name } will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts.
+protections-panel-cookie-banner-view-turn-on-description = { -brand-short-name } tries to automatically reject all cookie requests on supported sites.
+protections-panel-cookie-banner-view-cancel = Cancel
+protections-panel-cookie-banner-view-turn-off = Turn Off
+protections-panel-cookie-banner-view-turn-on = Turn On
