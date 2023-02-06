@@ -595,6 +595,15 @@
   --pip-highlight-style: solid rgba(0, 254, 255, 1);
 }
 
+/* Adjust sizing of toggle wrapper to correctly show the
+ * focus outline when navigating via keyboard. */
+.pip-wrapper[has-used] {
+  height: var(--pip-icon-width-with-margins);
+  width: var(--pip-icon-width-with-margins);
+  border-radius: 50%;
+  margin-right: calc(var(--pip-icon-width-with-margins) * -1);
+}
+
 .pip-wrapper[policy="hidden"] {
   display: none;
 }
@@ -626,6 +635,18 @@
 
 .pip-wrapper[position="left"] {
   left: var(--pip-toggle-distanceFromVideoEdge);
+}
+
+/* If the PiP toggle is keyboard focused, always show it */
+.pip-wrapper:not([policy="hidden"]):focus-visible {
+  opacity: 1;
+}
+
+/* If showing the expanded PiP toggle, don't outline the
+ * parent wrapper element - the expanded toggle handles its
+ * own outline */
+.pip-wrapper:not([policy="hidden"], [has-used]):focus-visible {
+  outline: none;
 }
 
 .pip-expanded,
