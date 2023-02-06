@@ -378,6 +378,8 @@
 Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomatikalıq biykarlawǵa háreket qılıwı múmkin.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s qollap-quwatlanǵan saytlardaǵı barlıq cookie sorawların avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie haqqındaǵı xabarnamalar joq bolıp ketti!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -403,6 +405,10 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Qalqıp turıwshı aynalardı ótkizip jiberiw</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$sqa sayttıń cookie haqqındaǵı sorawların biykar etiwge ruqsat beriw, múmkinshilik bolmasa cookielerge ruqsat beriw kerek pe?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Múmkinshiligi bolsa, %1$sǵa sayttıń cookielerge ruqsat beriw haqqındaǵı sorawların biykarlawǵa ruqsat berilsin be?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Ruqsat beriw</string>
 
@@ -428,6 +434,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="errorpage_httpsonly_title">Qáwipsiz sayt joq</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Úlken itimal menen, veb-sayt HTTPSdı qollap-quwatlamaydı.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Biraq, hújimshi qatnasıwı múmkin. Eger de siz saytqa ótiwdi dawam etetuǵın bolsańız, ol saytta ózińizdiń jeke maǵlıwmatlarıńızdı kirgizbeń. Eger dawam etetuǵın bolsańız, tek HTTPS rejimi bul sayt ushın waqtınsha óshiriledi.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Arnawlı imkaniyatlar</string>
     <!-- Preference to override the Firefox Account server -->
@@ -560,6 +568,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="wallpaper_limited_edition_description_with_learn_more">Jańa &quot;Ǵarezsiz Dawıslar&quot; toplamı. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
     <string name="wallpaper_limited_edition_description">Jańa &quot;Ǵarezsiz Dawıslar&quot; toplamı. %s</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Reńdi shayqap kóriń</string>
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">Talǵamıńızǵa mas fon temasın tańlań.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
@@ -1348,6 +1358,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="onboarding_firefox_account_sync_is_on">Sáykeslestiriw baslandı</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Bastan ornatılǵan qupıyalıq qorǵanıwı</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Baqlawshılarǵa cookielerdi paydalanıp sizdi saytlar aralıq baqlawına jol qoymaw ushın tolıq qorǵanıw menen támiyinleydi.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standart (bastan ornatılǵan)</string>
     <!-- text for standard blocking option button description -->
@@ -1362,6 +1374,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="onboarding_toolbar_placement_description">Bunı tómende qaldırıń yamasa joqarıǵa kóshiriń.</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Ozińiz maǵlıwmatlarıńızdı basqarız</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox nelerdi online hám nelerdi bizler menen bólisiwińizdi basqarıwdı sizge beredi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Qupıyalıq esletpelerimizdi oqıń</string>
     <!-- Text for the conclusion onboarding message -->
@@ -1423,6 +1437,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="preference_enhanced_tracking_protection">Baqlawdan keńeytilgen qorǵanıw</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Internetti baqlawlarsız qollanıń</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Maǵlıwmatlarıńızdı ózińizde saqlań. %s siziń onlayn ne qılıp atırǵanıńızdı baqlap barıwshı eń keń tarqalǵan baqlawshılardan qorǵaydı.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1474,14 +1490,24 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="enhanced_tracking_protection_allowed">Ruqsat etildi</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Social tarmaq baqlawshıları</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Social tarmaqlar ushın siziń brauzer betlerindegi háreketlerińizdi baqlap barıw múmkinshiligin shekleydi.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Saytlar aralıq baqlawshı cookielar</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">Saytlar aralıq cookielar</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Kóplegen saytlarda siziń kórgen betlerińizdi jıynaw ushın reklama tarmaqları hám analitikalıq kompaniyalar paydalanatuǵın cookielerdi bloklaydı.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Tolıq cookie qorǵanıwı cookielerdi siz kirgen saytlardan ajıratadı, sonlıqtan reklama tarmaqları sıyaqlı baqlawshılar olardı saytlar arasında sizdi baqlap barıw ushın qollana almaydı.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kriptomaynerler</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Cifrlıq valyutanı óndiretuǵın zıyanlı scriptlerdiń qurılmańızǵa kiriwiniń aldın aladı.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Barmaq izlerin jıynawshılar</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Baqlaw maqsetlerinde isletiliwi múmkin bolǵan qurılmańız haqqındaǵı jalǵız identifikaciya qılınatuǵın maǵlıwmatlar toplamın toqtatadı.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Baqlawshı content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1884,6 +1910,8 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
 
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Házir sóyleń</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Bul paydalanıwshı atındaǵı login álleqashan bar</string>
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
