@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">Odpri v …</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Odprem v aplikaciji? Vaša dejavnost morda ne bo več zasebna.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Odpiranje v drugi aplikaciji</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Ali želite za ogled te vsebine zapustiti %s?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Odpri</string>
     <!-- Cancels the prompt -->

@@ -699,13 +699,7 @@
     <string name="cookie_banner_reject_all_option_title">Ograniczanie informacji o ciasteczkach</string>
 
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_summary">Wyświetla mniej informacji o ciasteczkach przez automatyczne odrzucanie próśb o ich zaakceptowanie, jeśli to możliwe.</string>
-
-    <!--  Checkbox Preference title inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_title">Mocniej ogranicz informacje o ciasteczkach</string>
-
-    <!--  Checkbox Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to reject_or_accept_all or reject_all. -->
-    <string name="cookie_banner_further_reduce_option_summary">Prośby o ciasteczka będą akceptowane, aby wyświetlać jeszcze mniej informacji o ciasteczkach.</string>
+    <string name="cookie_banner_reject_all_option_summary">Wyświetla mniej informacji o ciasteczkach przez automatyczne odrzucanie próśb o ich zaakceptowanie, kiedy to możliwe.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Ograniczanie informacji o ciasteczkach</string>
@@ -735,7 +729,20 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s usunie ciasteczka tej witryny i odświeży stronę. Usunięcie wszystkich ciasteczek może spowodować wylogowanie ze strony lub opróżnienie koszyka w sklepie.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site">%1$s może próbować automatycznie odrzucać prośby o akceptację ciasteczek. Jeśli nie ma możliwości odrzucenia, %1$s może zaakceptować wszystkie ciasteczka, aby zamknąć prośbę.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s może próbować automatycznie odrzucać prośby o akceptację ciasteczek. Jeśli nie ma możliwości odrzucenia, %1$s może zaakceptować wszystkie ciasteczka, aby zamknąć prośbę.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s może próbować automatycznie odrzucać prośby o akceptację ciasteczek.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s próbuje odrzucać irytujące prośby o akceptację ciasteczek.\n\nZarządzaj preferencjami odrzucania w ustawieniach.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s próbuje odrzucać irytujące prośby o akceptację ciasteczek.\n\nZarządzaj preferencjami odrzucania w %2$s.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ustawieniach</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">ustawieniach</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatyczne odtwarzanie</string>
@@ -893,6 +900,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Przejdź</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Włączono tryb pełnoekranowy</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Przechodzenie do odnośnika w nowej karcie bez pytania</string>
 
@@ -1026,13 +1036,18 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Zamknij</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Widżet wyszukiwania</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Usunięto historię przeglądania! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
@@ -1042,13 +1057,19 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">Następnym razem możesz szybciej zacząć przeglądanie prywatne za pomocą widżetu %1$s na ekranie głównym.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Dodaj widżet do ekranu głównego</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Dodano widżet do ekranu głównego</string>
 </resources>

@@ -724,12 +724,23 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s가 이 사이트의 쿠키를 지우고 페이지를 새로고침할 것입니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니 등이 비워질 수 있습니다.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s는 자동으로 쿠키 요청을 거부하려고 시도합니다. 거부가 되지 않으면, %1$s는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s는 쿠키 요청을 자동으로 거부할 수 있습니다.</string>
+
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
     <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s가 성가신 쿠키 배너를 해제하기 위해 쿠키 요청을 거부하려고 시도합니다.\n\n설정에서 쿠키 배너 설정을 관리하세요.</string>
 
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s는 성가신 쿠키 배너를 닫기 위해 쿠키 요청을 거부하려고 시도합니다.\n\n%2$s에서 쿠키 배너 설정을 관리하세요.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">설정</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">설정</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">자동 재생</string>
@@ -886,6 +897,9 @@
 
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">전환</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">전체 화면 모드로 들어가기</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">새탭의 링크로 즉시 전환</string>

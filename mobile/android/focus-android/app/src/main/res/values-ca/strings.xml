@@ -723,6 +723,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_on_for_site">El %1$s esborrarà les galetes d’aquest lloc i actualitzarà la pàgina. En esborrar totes les galetes, pot ser que se us tanquin les sessions o que se us buidin els carros de la compra.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">El %1$s pot intentar rebutjar automàticament les sol·licituds de galetes. Si no hi ha l’opció de rebutjar-les, el %1$s podria acceptar totes les galetes per tancar el bàner.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">El %1$s pot intentar rebutjar automàticament les sol·licituds de galetes.</string>
+
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
     <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">El %1$s intenta rebutjar les sol·licituds de galetes per tancar els molestos bàners de galetes.\n\nGestioneu les preferències dels bàners de galetes en els paràmetres.</string>
@@ -888,6 +894,9 @@
 
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Vés-hi</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Esteu en mode de pantalla completa</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">En obrir un enllaç en una pestanya nova, vés-hi immediatament</string>
