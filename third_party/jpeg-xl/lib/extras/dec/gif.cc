@@ -38,21 +38,6 @@ struct PackedRgb {
   uint8_t r, g, b;
 };
 
-// Gif does not support partial transparency, so this considers any nonzero
-// alpha channel value as opaque.
-bool AllOpaque(const PackedImage& color) {
-  for (size_t y = 0; y < color.ysize; ++y) {
-    const PackedRgba* const JXL_RESTRICT row =
-        static_cast<const PackedRgba*>(color.pixels()) + y * color.xsize;
-    for (size_t x = 0; x < color.xsize; ++x) {
-      if (row[x].a == 0) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 void ensure_have_alpha(PackedFrame* frame) {
   if (!frame->extra_channels.empty()) return;
   const JxlPixelFormat alpha_format{

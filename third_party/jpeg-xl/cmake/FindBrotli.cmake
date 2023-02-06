@@ -31,11 +31,6 @@ foreach(brlib IN ITEMS ${brlibs})
       set_property(TARGET ${brlib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BROTLI_INCLUDE_DIR})
       target_link_libraries(${brlib} INTERFACE ${${BRPREFIX}_LIBRARY})
       set_property(TARGET ${brlib} PROPERTY INTERFACE_COMPILE_OPTIONS ${PC_${BRPREFIX}_CFLAGS_OTHER})
-
-      add_library(${brlib}-static INTERFACE IMPORTED GLOBAL)
-      set_property(TARGET ${brlib}-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BROTLI_INCLUDE_DIR})
-      target_link_libraries(${brlib}-static INTERFACE ${${BRPREFIX}_LIBRARY})
-      set_property(TARGET ${brlib}-static PROPERTY INTERFACE_COMPILE_OPTIONS ${PC_${BRPREFIX}_CFLAGS_OTHER})
     else()
     add_library(${brlib} INTERFACE IMPORTED GLOBAL)
       target_include_directories(${brlib}
@@ -46,11 +41,6 @@ foreach(brlib IN ITEMS ${brlibs})
         INTERFACE ${PC_${BRPREFIX}_LDFLAGS_OTHER})
       target_compile_options(${brlib}
         INTERFACE ${PC_${BRPREFIX}_CFLAGS_OTHER})
-
-      # TODO(deymo): Remove the -static library versions, this target is
-      # currently needed by brunsli.cmake. When importing it this way, the
-      # brotli*-static target is just an alias.
-      add_library(${brlib}-static ALIAS ${brlib})
     endif()
   endif()
 endforeach()

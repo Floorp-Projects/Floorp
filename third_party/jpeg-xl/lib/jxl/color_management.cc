@@ -26,7 +26,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/field_encodings.h"
-#include "lib/jxl/linalg.h"  // MatMul, Inv3x3Matrix
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/transfer_functions-inl.h"
 

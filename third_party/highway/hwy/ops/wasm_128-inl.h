@@ -240,7 +240,8 @@ template <typename T, size_t N, typename T2, HWY_IF_LE128(T, N)>
 Vec128<T, N> Iota(const Simd<T, N, 0> d, const T2 first) {
   HWY_ALIGN T lanes[16 / sizeof(T)];
   for (size_t i = 0; i < 16 / sizeof(T); ++i) {
-    lanes[i] = static_cast<T>(first + static_cast<T2>(i));
+    lanes[i] =
+        AddWithWraparound(hwy::IsFloatTag<T>(), static_cast<T>(first), i);
   }
   return Load(d, lanes);
 }
@@ -696,7 +697,9 @@ HWY_API Vec128<int64_t, N> Min(Vec128<int64_t, N> a, Vec128<int64_t, N> b) {
 // Float
 template <size_t N>
 HWY_API Vec128<float, N> Min(Vec128<float, N> a, Vec128<float, N> b) {
-  return Vec128<float, N>{wasm_f32x4_min(a.raw, b.raw)};
+  // Equivalent to a < b ? a : b (taking into account our swapped arg order,
+  // so that Min(NaN, x) is x to match x86).
+  return Vec128<float, N>{wasm_f32x4_pmin(b.raw, a.raw)};
 }
 
 // ------------------------------ Maximum
@@ -751,7 +754,9 @@ HWY_API Vec128<int64_t, N> Max(Vec128<int64_t, N> a, Vec128<int64_t, N> b) {
 // Float
 template <size_t N>
 HWY_API Vec128<float, N> Max(Vec128<float, N> a, Vec128<float, N> b) {
-  return Vec128<float, N>{wasm_f32x4_max(a.raw, b.raw)};
+  // Equivalent to b < a ? a : b (taking into account our swapped arg order,
+  // so that Max(NaN, x) is x to match x86).
+  return Vec128<float, N>{wasm_f32x4_pmax(b.raw, a.raw)};
 }
 
 // ------------------------------ Integer multiplication
@@ -784,13 +789,8 @@ HWY_API Vec128<int32_t, N> operator*(const Vec128<int32_t, N> a,
 template <size_t N>
 HWY_API Vec128<uint16_t, N> MulHigh(const Vec128<uint16_t, N> a,
                                     const Vec128<uint16_t, N> b) {
-  // TODO(eustas): replace, when implemented in WASM.
-  const auto al = wasm_u32x4_extend_low_u16x8(a.raw);
-  const auto ah = wasm_u32x4_extend_high_u16x8(a.raw);
-  const auto bl = wasm_u32x4_extend_low_u16x8(b.raw);
-  const auto bh = wasm_u32x4_extend_high_u16x8(b.raw);
-  const auto l = wasm_i32x4_mul(al, bl);
-  const auto h = wasm_i32x4_mul(ah, bh);
+  const auto l = wasm_u32x4_extmul_low_u16x8(a.raw, b.raw);
+  const auto h = wasm_u32x4_extmul_high_u16x8(a.raw, b.raw);
   // TODO(eustas): shift-right + narrow?
   return Vec128<uint16_t, N>{
       wasm_i16x8_shuffle(l, h, 1, 3, 5, 7, 9, 11, 13, 15)};
@@ -798,13 +798,8 @@ HWY_API Vec128<uint16_t, N> MulHigh(const Vec128<uint16_t, N> a,
 template <size_t N>
 HWY_API Vec128<int16_t, N> MulHigh(const Vec128<int16_t, N> a,
                                    const Vec128<int16_t, N> b) {
-  // TODO(eustas): replace, when implemented in WASM.
-  const auto al = wasm_i32x4_extend_low_i16x8(a.raw);
-  const auto ah = wasm_i32x4_extend_high_i16x8(a.raw);
-  const auto bl = wasm_i32x4_extend_low_i16x8(b.raw);
-  const auto bh = wasm_i32x4_extend_high_i16x8(b.raw);
-  const auto l = wasm_i32x4_mul(al, bl);
-  const auto h = wasm_i32x4_mul(ah, bh);
+  const auto l = wasm_i32x4_extmul_low_i16x8(a.raw, b.raw);
+  const auto h = wasm_i32x4_extmul_high_i16x8(a.raw, b.raw);
   // TODO(eustas): shift-right + narrow?
   return Vec128<int16_t, N>{
       wasm_i16x8_shuffle(l, h, 1, 3, 5, 7, 9, 11, 13, 15)};
@@ -813,25 +808,13 @@ HWY_API Vec128<int16_t, N> MulHigh(const Vec128<int16_t, N> a,
 template <size_t N>
 HWY_API Vec128<int16_t, N> MulFixedPoint15(Vec128<int16_t, N> a,
                                            Vec128<int16_t, N> b) {
-  const DFromV<decltype(a)> d;
-  const RebindToUnsigned<decltype(d)> du;
-
-  const Vec128<uint16_t, N> lo = BitCast(du, Mul(a, b));
-  const Vec128<int16_t, N> hi = MulHigh(a, b);
-  // We want (lo + 0x4000) >> 15, but that can overflow, and if it does we must
-  // carry that into the result. Instead isolate the top two bits because only
-  // they can influence the result.
-  const Vec128<uint16_t, N> lo_top2 = ShiftRight<14>(lo);
-  // Bits 11: add 2, 10: add 1, 01: add 1, 00: add 0.
-  const Vec128<uint16_t, N> rounding = ShiftRight<1>(Add(lo_top2, Set(du, 1)));
-  return Add(Add(hi, hi), BitCast(d, rounding));
+  return Vec128<int16_t, N>{wasm_i16x8_q15mulr_sat(a.raw, b.raw)};
 }
 
 // Multiplies even lanes (0, 2 ..) and returns the double-width result.
 template <size_t N>
 HWY_API Vec128<int64_t, (N + 1) / 2> MulEven(const Vec128<int32_t, N> a,
                                              const Vec128<int32_t, N> b) {
-  // TODO(eustas): replace, when implemented in WASM.
   const auto kEvenMask = wasm_i32x4_make(-1, 0, -1, 0);
   const auto ae = wasm_v128_and(a.raw, kEvenMask);
   const auto be = wasm_v128_and(b.raw, kEvenMask);
@@ -840,7 +823,6 @@ HWY_API Vec128<int64_t, (N + 1) / 2> MulEven(const Vec128<int32_t, N> a,
 template <size_t N>
 HWY_API Vec128<uint64_t, (N + 1) / 2> MulEven(const Vec128<uint32_t, N> a,
                                               const Vec128<uint32_t, N> b) {
-  // TODO(eustas): replace, when implemented in WASM.
   const auto kEvenMask = wasm_i32x4_make(-1, 0, -1, 0);
   const auto ae = wasm_v128_and(a.raw, kEvenMask);
   const auto be = wasm_v128_and(b.raw, kEvenMask);
@@ -905,8 +887,6 @@ template <size_t N>
 HWY_API Vec128<float, N> MulAdd(const Vec128<float, N> mul,
                                 const Vec128<float, N> x,
                                 const Vec128<float, N> add) {
-  // TODO(eustas): replace, when implemented in WASM.
-  // TODO(eustas): is it wasm_f32x4_qfma?
   return mul * x + add;
 }
 
@@ -915,7 +895,6 @@ template <size_t N>
 HWY_API Vec128<float, N> NegMulAdd(const Vec128<float, N> mul,
                                    const Vec128<float, N> x,
                                    const Vec128<float, N> add) {
-  // TODO(eustas): replace, when implemented in WASM.
   return add - mul * x;
 }
 
@@ -924,8 +903,6 @@ template <size_t N>
 HWY_API Vec128<float, N> MulSub(const Vec128<float, N> mul,
                                 const Vec128<float, N> x,
                                 const Vec128<float, N> sub) {
-  // TODO(eustas): replace, when implemented in WASM.
-  // TODO(eustas): is it wasm_f32x4_qfms?
   return mul * x - sub;
 }
 
@@ -934,7 +911,6 @@ template <size_t N>
 HWY_API Vec128<float, N> NegMulSub(const Vec128<float, N> mul,
                                    const Vec128<float, N> x,
                                    const Vec128<float, N> sub) {
-  // TODO(eustas): replace, when implemented in WASM.
   return Neg(mul) * x - sub;
 }
 
@@ -1260,6 +1236,13 @@ HWY_API Vec128<T, N> Or(Vec128<T, N> a, Vec128<T, N> b) {
 template <typename T, size_t N>
 HWY_API Vec128<T, N> Xor(Vec128<T, N> a, Vec128<T, N> b) {
   return Vec128<T, N>{wasm_v128_xor(a.raw, b.raw)};
+}
+
+// ------------------------------ Xor3
+
+template <typename T, size_t N>
+HWY_API Vec128<T, N> Xor3(Vec128<T, N> x1, Vec128<T, N> x2, Vec128<T, N> x3) {
+  return Xor(x1, Xor(x2, x3));
 }
 
 // ------------------------------ Or3
@@ -4143,7 +4126,7 @@ struct CompressIsPartition {
 #if HWY_TARGET == HWY_WASM_EMU256
   enum { value = 0 };
 #else
-  enum { value = 1 };
+  enum { value = (sizeof(T) != 1) };
 #endif
 };
 
@@ -4165,8 +4148,8 @@ HWY_API Vec128<T> Compress(Vec128<T> v, Mask128<T> mask) {
   return IfVecThenElse(swap, Shuffle01(v), v);
 }
 
-// General case
-template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 8)>
+// General case, 2 or 4 byte lanes
+template <typename T, size_t N, HWY_IF_LANE_SIZE_ONE_OF(T, 0x14)>
 HWY_API Vec128<T, N> Compress(Vec128<T, N> v, Mask128<T, N> mask) {
   return detail::Compress(v, detail::BitsFromMask(mask));
 }
@@ -4189,8 +4172,8 @@ HWY_API Vec128<T> CompressNot(Vec128<T> v, Mask128<T> mask) {
   return IfVecThenElse(swap, Shuffle01(v), v);
 }
 
-// General case
-template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 8)>
+// General case, 2 or 4 byte lanes
+template <typename T, size_t N, HWY_IF_LANE_SIZE_ONE_OF(T, 0x14)>
 HWY_API Vec128<T, N> CompressNot(Vec128<T, N> v, Mask128<T, N> mask) {
   // For partial vectors, we cannot pull the Not() into the table because
   // BitsFromMask clears the upper bits.
@@ -4199,6 +4182,7 @@ HWY_API Vec128<T, N> CompressNot(Vec128<T, N> v, Mask128<T, N> mask) {
   }
   return detail::CompressNot(v, detail::BitsFromMask(mask));
 }
+
 // ------------------------------ CompressBlocksNot
 HWY_API Vec128<uint64_t> CompressBlocksNot(Vec128<uint64_t> v,
                                            Mask128<uint64_t> /* m */) {
@@ -4206,8 +4190,7 @@ HWY_API Vec128<uint64_t> CompressBlocksNot(Vec128<uint64_t> v,
 }
 
 // ------------------------------ CompressBits
-
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API Vec128<T, N> CompressBits(Vec128<T, N> v,
                                   const uint8_t* HWY_RESTRICT bits) {
   uint64_t mask_bits = 0;
@@ -4221,7 +4204,7 @@ HWY_API Vec128<T, N> CompressBits(Vec128<T, N> v,
 }
 
 // ------------------------------ CompressStore
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressStore(Vec128<T, N> v, const Mask128<T, N> mask,
                              Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
   const uint64_t mask_bits = detail::BitsFromMask(mask);
@@ -4231,7 +4214,7 @@ HWY_API size_t CompressStore(Vec128<T, N> v, const Mask128<T, N> mask,
 }
 
 // ------------------------------ CompressBlendedStore
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressBlendedStore(Vec128<T, N> v, Mask128<T, N> m,
                                     Simd<T, N, 0> d,
                                     T* HWY_RESTRICT unaligned) {
@@ -4247,7 +4230,7 @@ HWY_API size_t CompressBlendedStore(Vec128<T, N> v, Mask128<T, N> m,
 
 // ------------------------------ CompressBitsStore
 
-template <typename T, size_t N>
+template <typename T, size_t N, HWY_IF_NOT_LANE_SIZE(T, 1)>
 HWY_API size_t CompressBitsStore(Vec128<T, N> v,
                                  const uint8_t* HWY_RESTRICT bits,
                                  Simd<T, N, 0> d, T* HWY_RESTRICT unaligned) {
@@ -4296,15 +4279,17 @@ HWY_API Vec128<float, N> ReorderWidenMulAccumulate(Simd<float, N, 0> df32,
                                                    Vec128<bfloat16_t, 2 * N> b,
                                                    const Vec128<float, N> sum0,
                                                    Vec128<float, N>& sum1) {
-  const Repartition<uint16_t, decltype(df32)> du16;
-  const RebindToUnsigned<decltype(df32)> du32;
-  const Vec128<uint16_t, 2 * N> zero = Zero(du16);
-  const Vec128<uint32_t, N> a0 = ZipLower(du32, zero, BitCast(du16, a));
-  const Vec128<uint32_t, N> a1 = ZipUpper(du32, zero, BitCast(du16, a));
-  const Vec128<uint32_t, N> b0 = ZipLower(du32, zero, BitCast(du16, b));
-  const Vec128<uint32_t, N> b1 = ZipUpper(du32, zero, BitCast(du16, b));
-  sum1 = MulAdd(BitCast(df32, a1), BitCast(df32, b1), sum1);
-  return MulAdd(BitCast(df32, a0), BitCast(df32, b0), sum0);
+  const Rebind<uint32_t, decltype(df32)> du32;
+  using VU32 = VFromD<decltype(du32)>;
+  const VU32 odd = Set(du32, 0xFFFF0000u);  // bfloat16 is the upper half of f32
+  // Using shift/and instead of Zip leads to the odd/even order that
+  // RearrangeToOddPlusEven prefers.
+  const VU32 ae = ShiftLeft<16>(BitCast(du32, a));
+  const VU32 ao = And(BitCast(du32, a), odd);
+  const VU32 be = ShiftLeft<16>(BitCast(du32, b));
+  const VU32 bo = And(BitCast(du32, b), odd);
+  sum1 = MulAdd(BitCast(df32, ao), BitCast(df32, bo), sum1);
+  return MulAdd(BitCast(df32, ae), BitCast(df32, be), sum0);
 }
 
 // Even if N=1, the input is always at least 2 lanes, hence i32x4_dot_i16x8 is
@@ -4315,6 +4300,19 @@ HWY_API Vec128<int32_t, N> ReorderWidenMulAccumulate(
     Vec128<int16_t, 2 * N> b, const Vec128<int32_t, N> sum0,
     Vec128<int32_t, N>& /*sum1*/) {
   return sum0 + Vec128<int32_t, N>{wasm_i32x4_dot_i16x8(a.raw, b.raw)};
+}
+
+// ------------------------------ RearrangeToOddPlusEven
+template <size_t N>
+HWY_API Vec128<int32_t, N> RearrangeToOddPlusEven(
+    const Vec128<int32_t, N> sum0, const Vec128<int32_t, N> /*sum1*/) {
+  return sum0;  // invariant already holds
+}
+
+template <size_t N>
+HWY_API Vec128<float, N> RearrangeToOddPlusEven(const Vec128<float, N> sum0,
+                                                const Vec128<float, N> sum1) {
+  return Add(sum0, sum1);
 }
 
 // ------------------------------ Reductions

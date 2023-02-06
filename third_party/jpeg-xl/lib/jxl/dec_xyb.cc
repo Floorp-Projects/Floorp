@@ -19,6 +19,7 @@
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/matrix_ops.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/quantizer.h"
 #include "lib/jxl/sanitizers.h"
@@ -286,11 +287,11 @@ Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
                                         c_desired.GetWhitePoint().y,
                                         adapt_to_d50));
       float xyzd50_to_original[9];
-      MatMul(adapt_to_d50, &original_to_xyz[0][0], 3, 3, 3, xyzd50_to_original);
+      Mul3x3Matrix(adapt_to_d50, &original_to_xyz[0][0], xyzd50_to_original);
       JXL_RETURN_IF_ERROR(Inv3x3Matrix(xyzd50_to_original));
       float srgb_to_original[9];
-      MatMul(xyzd50_to_original, srgb_to_xyzd50, 3, 3, 3, srgb_to_original);
-      MatMul(srgb_to_original, orig_inverse_matrix, 3, 3, 3, inverse_matrix);
+      Mul3x3Matrix(xyzd50_to_original, srgb_to_xyzd50, srgb_to_original);
+      Mul3x3Matrix(srgb_to_original, orig_inverse_matrix, inverse_matrix);
       inverse_matrix_is_default = false;
     }
   }
@@ -302,7 +303,7 @@ Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
     memcpy(&srgb_to_luma[0], luminances, sizeof(luminances));
     memcpy(&srgb_to_luma[3], luminances, sizeof(luminances));
     memcpy(&srgb_to_luma[6], luminances, sizeof(luminances));
-    MatMul(srgb_to_luma, tmp_inv_matrix, 3, 3, 3, inverse_matrix);
+    Mul3x3Matrix(srgb_to_luma, tmp_inv_matrix, inverse_matrix);
   }
 
   // The internal XYB color space uses absolute luminance, so we scale back the

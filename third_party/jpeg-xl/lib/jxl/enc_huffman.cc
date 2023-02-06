@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "lib/jxl/huffman_tree.h"
+#include "lib/jxl/enc_huffman_tree.h"
 
 namespace jxl {
 

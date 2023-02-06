@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/huffman_tree.h"
+#include "lib/jxl/enc_huffman_tree.h"
 
 #include <algorithm>
 #include <limits>

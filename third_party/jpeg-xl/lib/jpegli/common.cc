@@ -10,33 +10,24 @@
 #include "lib/jpegli/memory_manager.h"
 
 void jpegli_abort(j_common_ptr cinfo) {
-  auto mem = reinterpret_cast<jpegli::MemoryManager*>(cinfo->mem);
-  if (mem == nullptr) {
-    return;
-  }
-  for (void* ptr : mem->owned_ptrs) {
-    free(ptr);
-  }
-  mem->owned_ptrs.clear();
+  if (cinfo->mem == nullptr) return;
+  jpegli::ReleaseMemory(cinfo->mem);
   if (cinfo->is_decompressor) {
-    cinfo->global_state = jpegli::DecodeState::kStart;
+    cinfo->global_state = jpegli::kDecStart;
+  } else {
+    cinfo->global_state = jpegli::kEncStart;
   }
 }
 
 void jpegli_destroy(j_common_ptr cinfo) {
-  auto mem = reinterpret_cast<jpegli::MemoryManager*>(cinfo->mem);
-  if (mem == nullptr) {
-    return;
-  }
-  for (void* ptr : mem->owned_ptrs) {
-    free(ptr);
-  }
-  delete mem;
+  if (cinfo->mem == nullptr) return;
+  jpegli::DestroyMemoryManager(cinfo->mem);
   cinfo->mem = nullptr;
   if (cinfo->is_decompressor) {
-    cinfo->global_state = jpegli::DecodeState::kNull;
+    cinfo->global_state = jpegli::kDecNull;
     delete reinterpret_cast<j_decompress_ptr>(cinfo)->master;
   } else {
+    cinfo->global_state = jpegli::kEncNull;
     delete reinterpret_cast<j_compress_ptr>(cinfo)->master;
   }
 }
@@ -51,4 +42,17 @@ JHUFF_TBL* jpegli_alloc_huff_table(j_common_ptr cinfo) {
   JHUFF_TBL* table = jpegli::Allocate<JHUFF_TBL>(cinfo, 1);
   table->sent_table = FALSE;
   return table;
+}
+
+int jpegli_bytes_per_sample(JpegliDataType data_type) {
+  switch (data_type) {
+    case JPEGLI_TYPE_UINT8:
+      return 1;
+    case JPEGLI_TYPE_UINT16:
+      return 2;
+    case JPEGLI_TYPE_FLOAT:
+      return 4;
+    default:
+      return 0;
+  }
 }

@@ -13,7 +13,7 @@
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/linalg.h"
+#include "lib/jxl/matrix_ops.h"
 #include "lib/jxl/opsin_params.h"
 
 namespace jxl {
