@@ -114,6 +114,15 @@ list of valid flavors.
 # of all the log files on treeherder.
 MOZ_LOG = ""
 
+########################################
+# Option for web server log            #
+########################################
+
+# If True, debug logging from the web server will be
+# written to mochitest-server-%d.txt artifacts on
+# treeherder.
+MOCHITEST_SERVER_LOGGING = False
+
 #####################
 # Test log handling #
 #####################
@@ -461,6 +470,8 @@ class MochitestServer(object):
 
     "Web server used to serve Mochitests, for closer fidelity to the real web."
 
+    instance_count = 0
+
     def __init__(self, options, logger):
         if isinstance(options, Namespace):
             options = vars(options)
@@ -481,6 +492,10 @@ class MochitestServer(object):
             "server": shutdownServer,
             "port": self.httpPort,
         }
+        self.debugURL = "http://%(server)s:%(port)s/server/debug?2" % {
+            "server": shutdownServer,
+            "port": self.httpPort,
+        }
         self.testPrefix = "undefined"
 
         if options.get("httpdPath"):
@@ -488,6 +503,8 @@ class MochitestServer(object):
         else:
             self._httpdPath = SCRIPT_DIR
         self._httpdPath = os.path.abspath(self._httpdPath)
+
+        MochitestServer.instance_count += 1
 
     def start(self):
         "Run the Mochitest server, returning the process ID of the server."
@@ -541,11 +558,31 @@ class MochitestServer(object):
             self._utilityPath, "xpcshell" + mozinfo.info["bin_suffix"]
         )
         command = [xpcshell] + args
-        self._process = mozprocess.ProcessHandler(command, cwd=SCRIPT_DIR, env=env)
+        server_logfile = None
+        if MOCHITEST_SERVER_LOGGING and "MOZ_UPLOAD_DIR" in os.environ:
+            server_logfile = os.path.join(
+                os.environ["MOZ_UPLOAD_DIR"],
+                "mochitest-server-%d.txt" % MochitestServer.instance_count,
+            )
+        self._process = mozprocess.ProcessHandler(
+            command, cwd=SCRIPT_DIR, env=env, logfile=server_logfile
+        )
         self._process.run()
         self._log.info("%s : launching %s" % (self.__class__.__name__, command))
         pid = self._process.pid
         self._log.info("runtests.py | Server pid: %d" % pid)
+        if MOCHITEST_SERVER_LOGGING and "MOZ_UPLOAD_DIR" in os.environ:
+            self._log.info("runtests.py enabling server debugging...")
+            i = 0
+            while i < 5:
+                try:
+                    with closing(urlopen(self.debugURL)) as c:
+                        self._log.info(six.ensure_text(c.read()))
+                    break
+                except Exception as e:
+                    self._log.info("exception when enabling debugging: %s" % str(e))
+                    time.sleep(1)
+                    i += 1
 
     def ensureReady(self, timeout):
         assert timeout >= 0
