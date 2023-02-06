@@ -14427,7 +14427,7 @@
 
 - name: webgl.disable-DOM-blit-uploads
   type: RelaxedAtomicBool
-#if defined(_ARM64_) && defined(XP_MACOSX)
+#if defined(MOZ_AARCH64) && defined(XP_MACOSX)
   value: true
 #else
   value: false
