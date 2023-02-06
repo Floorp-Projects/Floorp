@@ -910,15 +910,9 @@ function getDocument(src) {
     const val = src[key];
     switch (key) {
       case "url":
-        if (val instanceof URL) {
-          params[key] = val.href;
+        {
           continue;
         }
-        try {
-          params[key] = new URL(val, window.location).href;
-          continue;
-        } catch (ex) {}
-        throw new Error("Invalid PDF url data: " + "either string or URL-object is expected in the url property.");
       case "range":
         rangeTransport = val;
         continue;
@@ -939,6 +933,7 @@ function getDocument(src) {
     }
     params[key] = val;
   }
+  params.cMapPacked = params.cMapPacked !== false;
   params.CMapReaderFactory = params.CMapReaderFactory || DefaultCMapReaderFactory;
   params.StandardFontDataFactory = params.StandardFontDataFactory || DefaultStandardFontDataFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
@@ -1043,7 +1038,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   const transfers = source.data ? [source.data.buffer] : null;
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.3.122',
+    apiVersion: '3.4.37',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -1892,9 +1887,9 @@ class PDFWorker {
 }
 exports.PDFWorker = PDFWorker;
 class WorkerTransport {
+  #methodPromises = new Map();
   #pageCache = new Map();
   #pagePromises = new Map();
-  #metadataPromise = null;
   constructor(messageHandler, loadingTask, networkStream, params) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
@@ -1922,6 +1917,15 @@ class WorkerTransport {
     this._lastProgress = null;
     this.downloadInfoCapability = (0, _util.createPromiseCapability)();
     this.setupMessageHandler();
+  }
+  #cacheSimpleMethod(name, data = null) {
+    const cachedPromise = this.#methodPromises.get(name);
+    if (cachedPromise) {
+      return cachedPromise;
+    }
+    const promise = this.messageHandler.sendWithPromise(name, data);
+    this.#methodPromises.set(name, promise);
+    return promise;
   }
   get annotationStorage() {
     return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
@@ -1990,9 +1994,7 @@ class WorkerTransport {
     Promise.all(waitOn).then(() => {
       this.commonObjs.clear();
       this.fontLoader.clear();
-      this.#metadataPromise = null;
-      this._getFieldObjectsPromise = null;
-      this._hasJSActionsPromise = null;
+      this.#methodPromises.clear();
       if (this._networkStream) {
         this._networkStream.cancelAllRequests(new _util.AbortException("Worker was terminated."));
       }
@@ -2337,10 +2339,10 @@ class WorkerTransport {
     });
   }
   getFieldObjects() {
-    return this._getFieldObjectsPromise ||= this.messageHandler.sendWithPromise("GetFieldObjects", null);
+    return this.#cacheSimpleMethod("GetFieldObjects");
   }
   hasJSActions() {
-    return this._hasJSActionsPromise ||= this.messageHandler.sendWithPromise("HasJSActions", null);
+    return this.#cacheSimpleMethod("HasJSActions");
   }
   getCalculationOrderIds() {
     return this.messageHandler.sendWithPromise("GetCalculationOrderIds", null);
@@ -2402,7 +2404,12 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetPermissions", null);
   }
   getMetadata() {
-    return this.#metadataPromise ||= this.messageHandler.sendWithPromise("GetMetadata", null).then(results => {
+    const name = "GetMetadata",
+      cachedPromise = this.#methodPromises.get(name);
+    if (cachedPromise) {
+      return cachedPromise;
+    }
+    const promise = this.messageHandler.sendWithPromise(name, null).then(results => {
       return {
         info: results[0],
         metadata: results[1] ? new _metadata.Metadata(results[1]) : null,
@@ -2410,6 +2417,8 @@ class WorkerTransport {
         contentLength: this._fullReader?.contentLength ?? null
       };
     });
+    this.#methodPromises.set(name, promise);
+    return promise;
   }
   getMarkInfo() {
     return this.messageHandler.sendWithPromise("GetMarkInfo", null);
@@ -2429,9 +2438,7 @@ class WorkerTransport {
     if (!keepLoadedFonts) {
       this.fontLoader.clear();
     }
-    this.#metadataPromise = null;
-    this._getFieldObjectsPromise = null;
-    this._hasJSActionsPromise = null;
+    this.#methodPromises.clear();
   }
   get loadingParams() {
     const params = this._params;
@@ -2642,9 +2649,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.3.122';
+const version = '3.4.37';
 exports.version = version;
-const build = '562045607';
+const build = 'e69866492';
 exports.build = build;
 
 /***/ }),
@@ -4273,7 +4280,7 @@ exports.BaseCanvasFactory = BaseCanvasFactory;
 class BaseCMapReaderFactory {
   constructor({
     baseUrl = null,
-    isCompressed = false
+    isCompressed = true
   }) {
     if (this.constructor === BaseCMapReaderFactory) {
       (0, _util.unreachable)("Cannot initialize BaseCMapReaderFactory.");
@@ -8804,6 +8811,9 @@ class AnnotationEditorLayer {
     this.#accessibilityManager = options.accessibilityManager;
     this.#uiManager.addLayer(this);
   }
+  get isEmpty() {
+    return this.#editors.size === 0;
+  }
   updateToolbar(mode) {
     this.#uiManager.updateToolbar(mode);
   }
@@ -8816,8 +8826,11 @@ class AnnotationEditorLayer {
       this.enableClick();
     }
     this.#uiManager.unselectAll();
-    this.div.classList.toggle("freeTextEditing", mode === _util.AnnotationEditorType.FREETEXT);
-    this.div.classList.toggle("inkEditing", mode === _util.AnnotationEditorType.INK);
+    if (mode !== _util.AnnotationEditorType.NONE) {
+      this.div.classList.toggle("freeTextEditing", mode === _util.AnnotationEditorType.FREETEXT);
+      this.div.classList.toggle("inkEditing", mode === _util.AnnotationEditorType.INK);
+      this.div.hidden = false;
+    }
   }
   addInkEditorIfNeeded(isCommitting) {
     if (!isCommitting && this.#uiManager.getMode() !== _util.AnnotationEditorType.INK) {
@@ -8853,6 +8866,10 @@ class AnnotationEditorLayer {
     this.div.style.pointerEvents = "none";
     for (const editor of this.#editors.values()) {
       editor.disableEditing();
+    }
+    this.#cleanup();
+    if (this.isEmpty) {
+      this.div.hidden = true;
     }
   }
   setActiveEditor(editor) {
@@ -13041,8 +13058,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.3.122';
-const pdfjsBuild = '562045607';
+const pdfjsVersion = '3.4.37';
+const pdfjsBuild = 'e69866492';
 })();
 
 /******/ 	return __webpack_exports__;

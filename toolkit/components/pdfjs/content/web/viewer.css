@@ -954,20 +954,6 @@
   height: var(--viewer-container-height);
 }
 
-.pdfViewer.removePageBorders .page {
-  margin: 0 auto 10px;
-  border: none;
-}
-
-.pdfViewer.singlePageView {
-  display: inline-block;
-}
-
-.pdfViewer.singlePageView .page {
-  margin: 0;
-  border: none;
-}
-
 .pdfViewer.scrollHorizontal,
 .pdfViewer.scrollWrapped,
 .spread {
@@ -981,7 +967,6 @@
   white-space: nowrap;
 }
 
-.pdfViewer.removePageBorders,
 .pdfViewer.scrollHorizontal .spread,
 .pdfViewer.scrollWrapped .spread {
   margin-left: 0;
@@ -1005,13 +990,6 @@
   margin-right: var(--spreadHorizontalWrapped-margin-LR);
 }
 
-.pdfViewer.removePageBorders .spread .page,
-.pdfViewer.removePageBorders.scrollHorizontal .page,
-.pdfViewer.removePageBorders.scrollWrapped .page {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
 .pdfViewer .page canvas {
   margin: 0;
   display: block;
@@ -1026,22 +1004,28 @@
   height: 100%;
 }
 
-.pdfViewer .page .loadingIcon {
+.pdfViewer .page.loadingIcon:after {
   position: absolute;
-  display: block;
-  left: 0;
   top: 0;
-  right: 0;
-  bottom: 0;
+  left: 0;
+  content: "";
+  width: 100%;
+  height: 100%;
   background: url("images/loading-icon.gif") center no-repeat;
-  visibility: visible;
+  visibility: hidden;
   /* Using a delay with background-image doesn't work,
      consequently we use the visibility. */
   transition-property: visibility;
   transition-delay: var(--loading-icon-delay);
   z-index: 5;
+  contain: strict;
 }
-.pdfViewer .page .loadingIcon.notVisible {
+
+.pdfViewer .page.loading:after {
+  visibility: visible;
+}
+
+.pdfViewer .page:not(.loading):after {
   transition-property: none;
   visibility: hidden;
 }
@@ -1066,10 +1050,12 @@
 
 :root {
   --dir-factor: 1;
+  --inline-start: inline-start;
+  --inline-end: inline-end;
+
   --sidebar-width: 200px;
   --sidebar-transition-duration: 200ms;
   --sidebar-transition-timing-function: ease;
-  --scale-select-width: 140px;
 
   --toolbar-icon-opacity: 0.7;
   --doorhanger-icon-opacity: 0.9;
@@ -1232,6 +1218,12 @@
     --doorhanger-separator-color: GrayText;
     --toolbarSidebar-box-shadow: none;
     --toolbarSidebar-border-bottom: 1px solid var(--toolbar-border-color);
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  :root {
+    --sidebar-transition-duration: 0;
   }
 }
 
@@ -1693,11 +1685,11 @@ body {
 
 #toolbarViewerLeft,
 #toolbarSidebarLeft {
-  float: inline-start;
+  float: var(--inline-start);
 }
 #toolbarViewerRight,
 #toolbarSidebarRight {
-  float: inline-end;
+  float: var(--inline-end);
 }
 
 #toolbarViewerLeft > *,
@@ -1707,7 +1699,7 @@ body {
 #toolbarSidebarRight *,
 .findbar * {
   position: relative;
-  float: inline-start;
+  float: var(--inline-start);
 }
 
 #toolbarViewerLeft {
@@ -1725,7 +1717,7 @@ body {
   display: inline-block;
 }
 .splitToolbarButton > .toolbarButton {
-  float: inline-start;
+  float: var(--inline-start);
 }
 
 .toolbarButton,
@@ -1775,7 +1767,7 @@ body {
 }
 
 .splitToolbarButtonSeparator {
-  float: inline-start;
+  float: var(--inline-start);
   margin: 4px 0;
   width: 1px;
   height: 20px;
@@ -1828,6 +1820,10 @@ body {
 }
 
 .dropdownToolbarButton {
+  /* Define this variable here, and not in :root, to avoid reflowing the
+     entire viewer when updating the width. */
+  --scale-select-width: 140px;
+
   width: var(--scale-select-width);
   padding: 0;
   background-color: var(--dropdown-btn-bg-color);
@@ -2192,7 +2188,7 @@ a.secondaryToolbarButton[href="#"] {
 }
 
 .thumbnail {
-  float: inline-start;
+  float: var(--inline-start);
   margin: 0 10px 5px;
 }
 
@@ -2274,13 +2270,13 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   padding-inline-start: 4px;
 }
 #layersView .treeItem > a > label > input {
-  float: inline-start;
+  float: var(--inline-start);
   margin-top: 1px;
 }
 
 .treeItemToggler {
   position: relative;
-  float: inline-start;
+  float: var(--inline-start);
   height: 0;
   width: 0;
   color: rgba(255, 255, 255, 0.5);
