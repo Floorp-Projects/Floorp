@@ -875,6 +875,108 @@ add_task(async function setupAndTeardown() {
   );
 });
 
+// Tests setup and teardown of the remote settings client depending on whether
+// keyword-based weather suggestions are enabled.
+add_task(async function setupAndTeardown_weather() {
+  // Disable the suggest prefs so the settings client starts out torn down.
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+  UrlbarPrefs.set("suggest.weather", false);
+  UrlbarPrefs.set("weather.featureGate", false);
+  UrlbarPrefs.set("weather.zeroPrefix", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client is null after turning of all features"
+  );
+
+  UrlbarPrefs.set("merino.endpointURL", "");
+  UrlbarPrefs.set("merino.enabled", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client remains null after setting merino.enabled"
+  );
+
+  UrlbarPrefs.set("suggest.weather", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client remains null after setting suggest.weather"
+  );
+
+  UrlbarPrefs.set("weather.zeroPrefix", false);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client remains null after disabling weather.zeroPrefix"
+  );
+
+  UrlbarPrefs.set("weather.featureGate", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    QuickSuggest.remoteSettings._test_rs,
+    "Settings client is non-null after turning on keyword-based weather"
+  );
+
+  UrlbarPrefs.set("weather.zeroPrefix", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client is null after turning on weather.zeroPrefix"
+  );
+
+  UrlbarPrefs.set("weather.zeroPrefix", false);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    QuickSuggest.remoteSettings._test_rs,
+    "Settings client is non-null after turning off weather.zeroPrefix"
+  );
+
+  UrlbarPrefs.set("suggest.weather", false);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client is null after turning off suggest.weather"
+  );
+
+  UrlbarPrefs.set("suggest.weather", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    QuickSuggest.remoteSettings._test_rs,
+    "Settings client is non-null after turning on suggest.weather"
+  );
+
+  UrlbarPrefs.set("weather.featureGate", false);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client is null after turning off weather.featureGate"
+  );
+
+  UrlbarPrefs.set("weather.featureGate", true);
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    QuickSuggest.remoteSettings._test_rs,
+    "Settings client is non-null after turning on weather.featureGate"
+  );
+
+  // Leave the prefs in the same state as when the task started.
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.clear("suggest.weather");
+  UrlbarPrefs.clear("weather.featureGate");
+  UrlbarPrefs.clear("weather.zeroPrefix");
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("merino.enabled", false);
+  UrlbarPrefs.clear("merino.endpointURL");
+  await QuickSuggest.remoteSettings.readyPromise;
+  Assert.ok(
+    !QuickSuggest.remoteSettings._test_rs,
+    "Settings client remains null at end of task"
+  );
+});
+
 // Timestamp templates in URLs should be replaced with real timestamps.
 add_task(async function timestamps() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);

@@ -1896,21 +1896,19 @@ export class UrlbarView {
    *   returns an l10n object for the label's l10n string: `{ id, args }`
    */
   #rowLabel(row, currentLabel) {
-    if (!lazy.UrlbarPrefs.get("groupLabels.enabled") || row.result.heuristic) {
+    if (!lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       return null;
     }
 
-    if (!this.#queryContext?.searchString) {
-      if (row.result.providerName == lazy.UrlbarProviderWeather.name) {
-        // Add top pick label for weather suggestion
-        return { id: "urlbar-group-best-match" };
-      }
-
-      return null;
-    }
-
-    if (row.result.isBestMatch) {
+    if (
+      row.result.isBestMatch ||
+      row.result.providerName == lazy.UrlbarProviderWeather.name
+    ) {
       return { id: "urlbar-group-best-match" };
+    }
+
+    if (!this.#queryContext?.searchString || row.result.heuristic) {
+      return null;
     }
 
     switch (row.result.type) {

@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -45,6 +46,17 @@ export class Weather extends BaseFeature {
     return this.#suggestion;
   }
 
+  /**
+   * @returns {Set}
+   *   The set of keywords that should trigger weather suggestions. This just
+   *   reflects the keywords array stored in the remote settings config, so it
+   *   may be non-empty even if `browser.urlbar.weather.zeroPrefix` is true.
+   *   Check the pref before allowing keyword-based suggestions.
+   */
+  get keywords() {
+    return this.#keywords;
+  }
+
   enable(enabled) {
     if (enabled) {
       this.#init();
@@ -68,6 +80,12 @@ export class Weather extends BaseFeature {
   }
 
   #init() {
+    this.#onConfigSet = () => this.#updateKeywords();
+    lazy.QuickSuggest.remoteSettings.emitter.on(
+      "config-set",
+      this.#onConfigSet
+    );
+
     this.#merino = new lazy.MerinoClient(this.constructor.name);
 
     this.#fetchInterval = lazy.setInterval(
@@ -80,10 +98,17 @@ export class Weather extends BaseFeature {
   }
 
   #uninit() {
+    lazy.QuickSuggest.remoteSettings.emitter.off(
+      "config-set",
+      this.#onConfigSet
+    );
+    this.#onConfigSet = null;
+
     this.#merino = null;
     this.#suggestion = null;
     lazy.clearInterval(this.#fetchInterval);
     this.#fetchInterval = 0;
+    this.#keywords.clear();
   }
 
   async #fetch() {
@@ -137,6 +162,11 @@ export class Weather extends BaseFeature {
     }
   }
 
+  #updateKeywords() {
+    let { weather_keywords } = lazy.QuickSuggest.remoteSettings.config;
+    this.#keywords = new Set(weather_keywords || []);
+  }
+
   get _test_merino() {
     return this.#merino;
   }
@@ -168,4 +198,6 @@ export class Weather extends BaseFeature {
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;
   #pendingFetchCount = 0;
+  #onConfigSet = null;
+  #keywords = new Set();
 }

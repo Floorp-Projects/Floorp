@@ -1031,6 +1031,13 @@ async function check_results({
         `result.providerName at result index ${i}`
       );
     }
+    if (expected.hasOwnProperty("suggestedIndex")) {
+      Assert.equal(
+        actual.suggestedIndex,
+        expected.suggestedIndex,
+        `result.suggestedIndex at result index ${i}`
+      );
+    }
 
     if (expected.payload) {
       Assert.deepEqual(
