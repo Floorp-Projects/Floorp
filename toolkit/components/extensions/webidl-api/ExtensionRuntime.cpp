@@ -24,6 +24,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionRuntime)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onStartup"_ns, OnStartup)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onInstalled"_ns, OnInstalled)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onUpdateAvailable"_ns,
+                        OnUpdateAvailable)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onConnect"_ns, OnConnect)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onConnectExternal"_ns,
+                        OnConnectExternal)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onMessage"_ns, OnMessage)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onMessageExternal"_ns,
+                        OnMessageExternal)
+
 ExtensionRuntime::ExtensionRuntime(nsIGlobalObject* aGlobal,
                                    ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -50,62 +61,6 @@ void ExtensionRuntime::GetLastError(JSContext* aCx,
 
 void ExtensionRuntime::GetId(DOMString& aRetval) {
   GetWebExtPropertyAsString(u"id"_ns, aRetval);
-}
-
-ExtensionEventManager* ExtensionRuntime::OnStartup() {
-  if (!mOnStartupEventMgr) {
-    mOnStartupEventMgr = CreateEventManager(u"onStartup"_ns);
-  }
-
-  return mOnStartupEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnInstalled() {
-  if (!mOnInstalledEventMgr) {
-    mOnInstalledEventMgr = CreateEventManager(u"onInstalled"_ns);
-  }
-
-  return mOnInstalledEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnUpdateAvailable() {
-  if (!mOnUpdateAvailableEventMgr) {
-    mOnUpdateAvailableEventMgr = CreateEventManager(u"onUpdateAvailable"_ns);
-  }
-
-  return mOnUpdateAvailableEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnConnect() {
-  if (!mOnConnectEventMgr) {
-    mOnConnectEventMgr = CreateEventManager(u"onConnect"_ns);
-  }
-
-  return mOnConnectEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnConnectExternal() {
-  if (!mOnConnectExternalEventMgr) {
-    mOnConnectExternalEventMgr = CreateEventManager(u"onConnectExternal"_ns);
-  }
-
-  return mOnConnectExternalEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnMessage() {
-  if (!mOnMessageEventMgr) {
-    mOnMessageEventMgr = CreateEventManager(u"onMessage"_ns);
-  }
-
-  return mOnMessageEventMgr;
-}
-
-ExtensionEventManager* ExtensionRuntime::OnMessageExternal() {
-  if (!mOnMessageExternalEventMgr) {
-    mOnMessageExternalEventMgr = CreateEventManager(u"onMessageExternal"_ns);
-  }
-
-  return mOnMessageExternalEventMgr;
 }
 
 }  // namespace extensions

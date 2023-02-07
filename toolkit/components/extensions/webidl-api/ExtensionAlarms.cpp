@@ -22,6 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionAlarms)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionAlarms, u"onAlarm"_ns, OnAlarm)
+
 ExtensionAlarms::ExtensionAlarms(nsIGlobalObject* aGlobal,
                                  ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -42,14 +44,6 @@ JSObject* ExtensionAlarms::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionAlarms::GetParentObject() const { return mGlobal; }
-
-ExtensionEventManager* ExtensionAlarms::OnAlarm() {
-  if (!mOnAlarmEventMgr) {
-    mOnAlarmEventMgr = CreateEventManager(u"onAlarm"_ns);
-  }
-
-  return mOnAlarmEventMgr;
-}
 
 }  // namespace extensions
 }  // namespace mozilla
