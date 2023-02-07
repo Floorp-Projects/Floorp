@@ -85,11 +85,14 @@ $background-dark: rgb(28, 27, 34);
         width: fit-content;
 
         .main-content {
+          position: relative;
           overflow: hidden;
           border: 1px solid #CFCFD8;
           box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
           border-radius: 4px;
-          padding-block: 0 24px;
+          padding-top: 0;
+          // Subtract 4px, the block margin of buttons
+          padding-bottom: 30px - 4px;
           width: 25em;
           background-color: $background;
           @media (prefers-color-scheme: dark) {
@@ -97,8 +100,13 @@ $background-dark: rgb(28, 27, 34);
           }
 
           .steps {
-            align-self: baseline;
-            margin: -38px 30px -30px;
+            height: auto;
+            position: absolute;
+            // 30px is the margin of the CTAs from the bottom. The CTAs are 32px
+            // tall, and the steps are 8px tall. So we need to offset the steps
+            // by half the difference in order to center them. = 36px
+            bottom: 30px + math.div(32px, 2) - math.div(8px, 2);
+            margin: 0 30px;
             padding-block: 0;
 
             .indicator {
@@ -131,8 +139,6 @@ $background-dark: rgb(28, 27, 34);
       }
 
       .action-buttons {
-        margin-block: 0 16px;
-
         .primary,
         .secondary-cta .secondary {
           padding: 4px 16px;

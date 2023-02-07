@@ -58,11 +58,13 @@
   width: fit-content;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content {
+  position: relative;
   overflow: hidden;
   border: 1px solid #CFCFD8;
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   border-radius: 4px;
-  padding-block: 0 24px;
+  padding-top: 0;
+  padding-bottom: 26px;
   width: 25em;
   background-color: #FFF;
 }
@@ -72,8 +74,10 @@
   }
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps {
-  align-self: baseline;
-  margin: -38px 30px -30px;
+  height: auto;
+  position: absolute;
+  bottom: 42px;
+  margin: 0 30px;
   padding-block: 0;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator {
@@ -97,9 +101,6 @@
   .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
     background-color: #1c1b22;
   }
-}
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons {
-  margin-block: 0 16px;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary {
