@@ -77,8 +77,8 @@ struct FuncImportInstanceData {
 
   // A GC pointer which keeps the callee alive and is used to recover import
   // values for lazy table initialization.
-  GCPtr<JSFunction*> fun;
-  static_assert(sizeof(GCPtr<JSFunction*>) == sizeof(void*), "for JIT access");
+  GCPtr<JSObject*> callable;
+  static_assert(sizeof(GCPtr<JSObject*>) == sizeof(void*), "for JIT access");
 };
 
 // TableInstanceData describes the region of wasm global memory allocated in the

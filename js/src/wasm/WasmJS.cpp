@@ -434,11 +434,14 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
     switch (import.kind) {
       case DefinitionKind::Function: {
-        if (!IsFunctionObject(v)) {
+        // For now reject cross-compartment wrappers. These have more
+        // complicated realm semantics (we use nonCCWRealm in a few places) and
+        // may require unwrapping to test for specific function types.
+        if (!IsCallable(v) || IsCrossCompartmentWrapper(&v.toObject())) {
           return ThrowBadImportType(cx, import.field, "Function");
         }
 
-        if (!imports->funcs.append(&v.toObject().as<JSFunction>())) {
+        if (!imports->funcs.append(&v.toObject())) {
           return false;
         }
 
