@@ -65,7 +65,6 @@ add_task(function makeResultGroups_true() {
         // extensions using the omnibox API
         {
           group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
-          availableSpan: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
         },
         // main group
         {
@@ -162,7 +161,6 @@ add_task(function makeResultGroups_false() {
         // extensions using the omnibox API
         {
           group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
-          availableSpan: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
         },
         // main group
         {
