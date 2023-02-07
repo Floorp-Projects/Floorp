@@ -511,7 +511,8 @@ class Dav1dDecoder final : AVIFDecoderInterface {
     return AsVariant(r);
   }
 
-  DecodeResult Decode(bool aIsMetadataDecode, const Mp4parseAvifInfo& aAVIFInfo,
+  DecodeResult Decode(bool aShouldSendTelemetry,
+                      const Mp4parseAvifInfo& aAVIFInfo,
                       const AVIFImage& aSamples) override {
     MOZ_ASSERT(mColorContext);
     MOZ_ASSERT(!mDecodedData);
@@ -522,7 +523,7 @@ class Dav1dDecoder final : AVIFDecoderInterface {
     OwnedDav1dPicture colorPic = OwnedDav1dPicture(new Dav1dPicture());
     OwnedDav1dPicture alphaPic = nullptr;
     Dav1dResult r = GetPicture(*mColorContext, *aSamples.mColorImage,
-                               colorPic.get(), aIsMetadataDecode);
+                               colorPic.get(), aShouldSendTelemetry);
     if (r != 0) {
       return AsVariant(r);
     }
@@ -533,7 +534,7 @@ class Dav1dDecoder final : AVIFDecoderInterface {
 
       alphaPic = OwnedDav1dPicture(new Dav1dPicture());
       Dav1dResult r = GetPicture(*mAlphaContext, *aSamples.mAlphaImage,
-                                 alphaPic.get(), aIsMetadataDecode);
+                                 alphaPic.get(), aShouldSendTelemetry);
       if (r != 0) {
         return AsVariant(r);
       }
@@ -594,7 +595,7 @@ class Dav1dDecoder final : AVIFDecoderInterface {
   static Dav1dResult GetPicture(Dav1dContext& aContext,
                                 const MediaRawData& aBytes,
                                 Dav1dPicture* aPicture,
-                                bool aIsMetadataDecode) {
+                                bool aShouldSendTelemetry) {
     MOZ_ASSERT(aPicture);
 
     Dav1dData dav1dData;
@@ -623,15 +624,12 @@ class Dav1dDecoder final : AVIFDecoderInterface {
     MOZ_LOG(sAVIFLog, r == 0 ? LogLevel::Debug : LogLevel::Error,
             ("dav1d_get_picture -> %d", r));
 
-    // When bug 1682662 is fixed, revise this assert and subsequent condition
-    MOZ_ASSERT(aIsMetadataDecode || r == 0);
-
     // We already have the AVIF_DECODE_RESULT histogram to record all the
     // successful calls, so only bother recording what type of errors we see
     // via events. Unlike AOM, dav1d returns an int, not an enum, so this is
     // the easiest way to see if we're getting unexpected behavior to
     // investigate.
-    if (aIsMetadataDecode && r != 0) {
+    if (aShouldSendTelemetry && r != 0) {
       // Uncomment once bug 1691156 is fixed
       // mozilla::Telemetry::SetEventRecordingEnabled("avif"_ns, true);
 
@@ -758,7 +756,8 @@ class AOMDecoder final : AVIFDecoderInterface {
     return AsVariant(AOMResult(e));
   }
 
-  DecodeResult Decode(bool aIsMetadataDecode, const Mp4parseAvifInfo& aAVIFInfo,
+  DecodeResult Decode(bool aShouldSendTelemetry,
+                      const Mp4parseAvifInfo& aAVIFInfo,
                       const AVIFImage& aSamples) override {
     MOZ_ASSERT(mColorContext.isSome());
     MOZ_ASSERT(!mDecodedData);
@@ -766,7 +765,7 @@ class AOMDecoder final : AVIFDecoderInterface {
 
     aom_image_t* aomImg = nullptr;
     DecodeResult r = GetImage(*mColorContext, *aSamples.mColorImage, &aomImg,
-                              aIsMetadataDecode);
+                              aShouldSendTelemetry);
     if (!IsDecodeSuccess(r)) {
       return r;
     }
@@ -787,7 +786,7 @@ class AOMDecoder final : AVIFDecoderInterface {
 
       aom_image_t* alphaImg = nullptr;
       DecodeResult r = GetImage(*mAlphaContext, *aSamples.mAlphaImage,
-                                &alphaImg, aIsMetadataDecode);
+                                &alphaImg, aShouldSendTelemetry);
       if (!IsDecodeSuccess(r)) {
         return r;
       }
@@ -868,14 +867,14 @@ class AOMDecoder final : AVIFDecoderInterface {
 
   static DecodeResult GetImage(aom_codec_ctx_t& aContext,
                                const MediaRawData& aData, aom_image_t** aImage,
-                               bool aIsMetadataDecode) {
+                               bool aShouldSendTelemetry) {
     aom_codec_err_t r =
         aom_codec_decode(&aContext, aData.Data(), aData.Size(), nullptr);
 
     MOZ_LOG(sAVIFLog, r == AOM_CODEC_OK ? LogLevel::Verbose : LogLevel::Error,
             ("aom_codec_decode -> %d", r));
 
-    if (aIsMetadataDecode) {
+    if (aShouldSendTelemetry) {
       switch (r) {
         case AOM_CODEC_OK:
           // No need to record any telemetry for the common case
@@ -1475,6 +1474,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
 
   MaybeIntSize parsedImageSize = GetImageSize(parsedInfo);
 
+  bool sendDecodeTelemetry = IsMetadataDecode();
   if (parsedImageSize.isSome()) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] Parser returned image size %d x %d (%d/%d bit)", this,
@@ -1490,6 +1490,9 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
           ("[this=%p] Finishing metadata decode without image decode", this));
       return AsVariant(NonDecoderResult::Complete);
     }
+    // If we're continuing to decode here, this means we skipped decode
+    // telemetry for the metadata decode pass. Send it this time.
+    sendDecodeTelemetry = true;
   } else {
     MOZ_LOG(sAVIFLog, LogLevel::Error,
             ("[this=%p] Parser returned no image size, decoding...", this));
@@ -1497,7 +1500,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
 
   CreateDecoder();
   MOZ_ASSERT(mDecoder);
-  r = mDecoder->Decode(IsMetadataDecode(), parsedInfo, parsedImage);
+  r = mDecoder->Decode(sendDecodeTelemetry, parsedInfo, parsedImage);
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
           ("[this=%p] Decoder%s->Decode() %s", this,
            StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",

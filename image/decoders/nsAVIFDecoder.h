@@ -259,7 +259,7 @@ class AVIFDecoderInterface {
   virtual ~AVIFDecoderInterface() = default;
 
   // Set the mDecodedData if Decode() succeeds
-  virtual DecodeResult Decode(bool aIsMetadataDecode,
+  virtual DecodeResult Decode(bool aShouldSendTelemetry,
                               const Mp4parseAvifInfo& aAVIFInfo,
                               const AVIFImage& aSamples) = 0;
   // Must be called only once after Decode() succeeds
