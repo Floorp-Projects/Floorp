@@ -196,23 +196,20 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
 }
 
 bool IsProcessDead(ProcessHandle handle, bool blocking) {
-  auto handleForkServer = [handle]() -> mozilla::Maybe<bool> {
 #ifdef MOZ_ENABLE_FORKSERVER
-    if (errno == ECHILD && mozilla::ipc::ForkServiceChild::Get()) {
-      // We only know if a process exists, but not if it has crashed.
-      //
-      // Since content processes are not direct children of the chrome
-      // process any more, it is impossible to use |waitpid()| to wait for
-      // them.
-      const int r = kill(handle, 0);
-      // FIXME: for unexpected errors we should probably log a warning
-      // and return true, so that the caller doesn't loop / hang /
-      // try to kill the process.  (Bug 1658072 will rewrite this code.)
-      return mozilla::Some(r < 0 && errno == ESRCH);
-    }
+  if (mozilla::ipc::ForkServiceChild::Get()) {
+    // We only know if a process exists, but not if it has crashed.
+    //
+    // Since content processes are not direct children of the chrome
+    // process any more, it is impossible to use |waitpid()| to wait for
+    // them.
+    const int r = kill(handle, 0);
+    // FIXME: for unexpected errors we should probably log a warning
+    // and return true, so that the caller doesn't loop / hang /
+    // try to kill the process.  (Bug 1658072 will rewrite this code.)
+    return r < 0 && errno == ESRCH;
+  }
 #endif
-    return mozilla::Nothing();
-  };
 
 #ifdef HAVE_WAITID
 
@@ -225,10 +222,6 @@ bool IsProcessDead(ProcessHandle handle, bool blocking) {
   const int wflags = WEXITED | WNOWAIT | (blocking ? 0 : WNOHANG);
   int result = HANDLE_EINTR(waitid(P_PID, handle, &si, wflags));
   if (result == -1) {
-    if (auto forkServerReturn = handleForkServer()) {
-      return *forkServerReturn;
-    }
-
     // This shouldn't happen, but sometimes it does.  The error is
     // probably ECHILD and the reason is probably that a pid was
     // waited on again after a previous wait reclaimed its zombie.
@@ -294,10 +287,6 @@ bool IsProcessDead(ProcessHandle handle, bool blocking) {
   int status;
   const int result = waitpid(handle, &status, blocking ? 0 : WNOHANG);
   if (result == -1) {
-    if (auto forkServerReturn = handleForkServer()) {
-      return *forkServerReturn;
-    }
-
     CHROMIUM_LOG(ERROR) << "waitpid failed pid:" << handle
                         << " errno:" << errno;
     return true;
