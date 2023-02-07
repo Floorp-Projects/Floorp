@@ -5,192 +5,195 @@
 "use strict";
 
 const {
-  StorageActors,
+  BaseStorageActor,
   DEFAULT_VALUE,
 } = require("resource://devtools/server/actors/resources/storage/index.js");
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
 
-/**
- * Helper method to create the overriden object required in
- * StorageActors.createActor for Local Storage and Session Storage.
- * This method exists as both Local Storage and Session Storage have almost
- * identical actors.
- */
-function getObjectForLocalOrSessionStorage(type) {
-  return {
-    getNamesForHost(host) {
-      const storage = this.hostVsStores.get(host);
-      return storage ? Object.keys(storage) : [];
-    },
+class LocalOrSessionStorageActor extends BaseStorageActor {
+  constructor(storageActor, typeName) {
+    super(storageActor, typeName);
 
-    getValuesForHost(host, name) {
-      const storage = this.hostVsStores.get(host);
-      if (!storage) {
-        return [];
+    Services.obs.addObserver(this, "dom-storage2-changed");
+    Services.obs.addObserver(this, "dom-private-storage2-changed");
+  }
+
+  destroy() {
+    if (this.isDestroyed()) {
+      return;
+    }
+    Services.obs.removeObserver(this, "dom-storage2-changed");
+    Services.obs.removeObserver(this, "dom-private-storage2-changed");
+
+    super.destroy();
+  }
+
+  getNamesForHost(host) {
+    const storage = this.hostVsStores.get(host);
+    return storage ? Object.keys(storage) : [];
+  }
+
+  getValuesForHost(host, name) {
+    const storage = this.hostVsStores.get(host);
+    if (!storage) {
+      return [];
+    }
+    if (name) {
+      const value = storage ? storage.getItem(name) : null;
+      return [{ name, value }];
+    }
+    if (!storage) {
+      return [];
+    }
+
+    // local and session storage cannot be iterated over using Object.keys()
+    // because it skips keys that are duplicated on the prototype
+    // e.g. "key", "getKeys" so we need to gather the real keys using the
+    // storage.key() function.
+    const storageArray = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      storageArray.push({
+        name: key,
+        value: storage.getItem(key),
+      });
+    }
+    return storageArray;
+  }
+
+  populateStoresForHost(host, window) {
+    try {
+      this.hostVsStores.set(host, window[this.typeName]);
+    } catch (ex) {
+      console.warn(
+        `Failed to enumerate ${this.typeName} for host ${host}: ${ex}`
+      );
+    }
+  }
+
+  populateStoresForHosts() {
+    this.hostVsStores = new Map();
+    for (const window of this.windows) {
+      const host = this.getHostName(window.location);
+      if (host) {
+        this.populateStoresForHost(host, window);
       }
-      if (name) {
-        const value = storage ? storage.getItem(name) : null;
-        return [{ name, value }];
-      }
-      if (!storage) {
-        return [];
-      }
+    }
+  }
 
-      // local and session storage cannot be iterated over using Object.keys()
-      // because it skips keys that are duplicated on the prototype
-      // e.g. "key", "getKeys" so we need to gather the real keys using the
-      // storage.key() function.
-      const storageArray = [];
-      for (let i = 0; i < storage.length; i++) {
-        const key = storage.key(i);
-        storageArray.push({
-          name: key,
-          value: storage.getItem(key),
-        });
-      }
-      return storageArray;
-    },
+  async getFields() {
+    return [
+      { name: "name", editable: true },
+      { name: "value", editable: true },
+    ];
+  }
 
-    populateStoresForHost(host, window) {
-      try {
-        this.hostVsStores.set(host, window[type]);
-      } catch (ex) {
-        console.warn(`Failed to enumerate ${type} for host ${host}: ${ex}`);
-      }
-    },
+  async addItem(guid, host) {
+    const storage = this.hostVsStores.get(host);
+    if (!storage) {
+      return;
+    }
+    storage.setItem(guid, DEFAULT_VALUE);
+  }
 
-    populateStoresForHosts() {
-      this.hostVsStores = new Map();
-      for (const window of this.windows) {
-        const host = this.getHostName(window.location);
-        if (host) {
-          this.populateStoresForHost(host, window);
-        }
-      }
-    },
+  /**
+   * Edit localStorage or sessionStorage fields.
+   *
+   * @param {Object} data
+   *        See editCookie() for format details.
+   */
+  async editItem({ host, field, oldValue, items }) {
+    const storage = this.hostVsStores.get(host);
+    if (!storage) {
+      return;
+    }
 
-    async getFields() {
-      return [
-        { name: "name", editable: true },
-        { name: "value", editable: true },
-      ];
-    },
+    if (field === "name") {
+      storage.removeItem(oldValue);
+    }
 
-    async addItem(guid, host) {
-      const storage = this.hostVsStores.get(host);
-      if (!storage) {
-        return;
-      }
-      storage.setItem(guid, DEFAULT_VALUE);
-    },
+    storage.setItem(items.name, items.value);
+  }
 
-    /**
-     * Edit localStorage or sessionStorage fields.
-     *
-     * @param {Object} data
-     *        See editCookie() for format details.
-     */
-    async editItem({ host, field, oldValue, items }) {
-      const storage = this.hostVsStores.get(host);
-      if (!storage) {
-        return;
-      }
+  async removeItem(host, name) {
+    const storage = this.hostVsStores.get(host);
+    if (!storage) {
+      return;
+    }
+    storage.removeItem(name);
+  }
 
-      if (field === "name") {
-        storage.removeItem(oldValue);
-      }
+  async removeAll(host) {
+    const storage = this.hostVsStores.get(host);
+    if (!storage) {
+      return;
+    }
+    storage.clear();
+  }
 
-      storage.setItem(items.name, items.value);
-    },
+  observe(subject, topic, data) {
+    if (
+      (topic != "dom-storage2-changed" &&
+        topic != "dom-private-storage2-changed") ||
+      data != this.typeName
+    ) {
+      return null;
+    }
 
-    async removeItem(host, name) {
-      const storage = this.hostVsStores.get(host);
-      if (!storage) {
-        return;
-      }
-      storage.removeItem(name);
-    },
+    const host = this.getSchemaAndHost(subject.url);
 
-    async removeAll(host) {
-      const storage = this.hostVsStores.get(host);
-      if (!storage) {
-        return;
-      }
-      storage.clear();
-    },
+    if (!this.hostVsStores.has(host)) {
+      return null;
+    }
 
-    observe(subject, topic, data) {
-      if (
-        (topic != "dom-storage2-changed" &&
-          topic != "dom-private-storage2-changed") ||
-        data != type
-      ) {
-        return null;
-      }
+    let action = "changed";
+    if (subject.key == null) {
+      return this.storageActor.update("cleared", this.typeName, [host]);
+    } else if (subject.oldValue == null) {
+      action = "added";
+    } else if (subject.newValue == null) {
+      action = "deleted";
+    }
+    const updateData = {};
+    updateData[host] = [subject.key];
+    return this.storageActor.update(action, this.typeName, updateData);
+  }
 
-      const host = this.getSchemaAndHost(subject.url);
+  /**
+   * Given a url, correctly determine its protocol + hostname part.
+   */
+  getSchemaAndHost(url) {
+    const uri = Services.io.newURI(url);
+    if (!uri.host) {
+      return uri.spec;
+    }
+    return uri.scheme + "://" + uri.hostPort;
+  }
 
-      if (!this.hostVsStores.has(host)) {
-        return null;
-      }
+  toStoreObject(item) {
+    if (!item) {
+      return null;
+    }
 
-      let action = "changed";
-      if (subject.key == null) {
-        return this.storageActor.update("cleared", type, [host]);
-      } else if (subject.oldValue == null) {
-        action = "added";
-      } else if (subject.newValue == null) {
-        action = "deleted";
-      }
-      const updateData = {};
-      updateData[host] = [subject.key];
-      return this.storageActor.update(action, type, updateData);
-    },
-
-    /**
-     * Given a url, correctly determine its protocol + hostname part.
-     */
-    getSchemaAndHost(url) {
-      const uri = Services.io.newURI(url);
-      if (!uri.host) {
-        return uri.spec;
-      }
-      return uri.scheme + "://" + uri.hostPort;
-    },
-
-    toStoreObject(item) {
-      if (!item) {
-        return null;
-      }
-
-      return {
-        name: item.name,
-        value: new LongStringActor(this.conn, item.value || ""),
-      };
-    },
-  };
+    return {
+      name: item.name,
+      value: new LongStringActor(this.conn, item.value || ""),
+    };
+  }
 }
 
-/**
- * The Local Storage actor and front.
- */
-exports.LocalStorageActor = StorageActors.createActor(
-  {
-    typeName: "localStorage",
-    observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"],
-  },
-  getObjectForLocalOrSessionStorage("localStorage")
-);
+class LocalStorageActor extends LocalOrSessionStorageActor {
+  constructor(storageActor) {
+    super(storageActor, "localStorage");
+  }
+}
+exports.LocalStorageActor = LocalStorageActor;
 
-/**
- * The Session Storage actor and front.
- */
-exports.SessionStorageActor = StorageActors.createActor(
-  {
-    typeName: "sessionStorage",
-    observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"],
-  },
-  getObjectForLocalOrSessionStorage("sessionStorage")
-);
+class SessionStorageActor extends LocalOrSessionStorageActor {
+  constructor(storageActor) {
+    super(storageActor, "sessionStorage");
+  }
+}
+exports.SessionStorageActor = SessionStorageActor;
