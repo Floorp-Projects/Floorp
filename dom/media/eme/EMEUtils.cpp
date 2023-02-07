@@ -65,6 +65,12 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kWidevineKeySystemName);
 }
 
+#ifdef MOZ_MF_CDM
+bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
+  return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName);
+}
+#endif
+
 nsString KeySystemToGMPName(const nsAString& aKeySystem) {
   if (IsClearkeyKeySystem(aKeySystem)) {
     return u"gmp-clearkey"_ns;
