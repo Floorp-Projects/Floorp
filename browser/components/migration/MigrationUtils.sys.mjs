@@ -526,7 +526,7 @@ class MigrationUtils {
         const FEATURES = "dialog,centerscreen,resizable=no";
         const win = Services.ww.openWindow(
           aOpener,
-          "chrome://browser/content/migration/migration-dialog.html",
+          "chrome://browser/content/migration/migration-dialog-window.html",
           "_blank",
           FEATURES,
           {

@@ -578,8 +578,16 @@ richlistitem[selected] .actionsMenu:focus-visible {
   visibility: hidden;
 }
 
+html|dialog::backdrop,
 .dialogOverlay[topmost="true"] {
   background-color: rgba(0,0,0,0.5);
+}
+
+html|dialog,
+.dialogBox {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
 }
 
 .dialogBox {
@@ -588,9 +596,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
   color: var(--in-content-page-color);
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
-  border: 1px solid transparent;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
   display: -moz-box;
   margin: 0;
   padding: 0;
@@ -599,6 +604,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 
 @media (prefers-color-scheme: dark) {
   @media not (prefers-contrast) {
+    html|dialog,
     .dialogBox {
       --in-content-page-background: #42414d;
     }

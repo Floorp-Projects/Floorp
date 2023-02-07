@@ -133,9 +133,9 @@ add_task(async function test_successful_migrations() {
     null
   );
 
-  await withMigrationWizardSubdialog(async subdialogWin => {
-    let dialogBody = subdialogWin.document.body;
-    let wizard = dialogBody.querySelector("#wizard");
+  await withMigrationWizardDialog(async prefsWin => {
+    let dialogBody = prefsWin.document.body;
+    let wizard = dialogBody.querySelector("migration-wizard");
     let wizardDone = BrowserTestUtils.waitForEvent(
       wizard,
       "MigrationWizard:DoneMigration"
@@ -158,9 +158,9 @@ add_task(async function test_successful_migrations() {
     null
   );
 
-  await withMigrationWizardSubdialog(async subdialogWin => {
-    let dialogBody = subdialogWin.document.body;
-    let wizard = dialogBody.querySelector("#wizard");
+  await withMigrationWizardDialog(async prefsWin => {
+    let dialogBody = prefsWin.document.body;
+    let wizard = dialogBody.querySelector("migration-wizard");
     let wizardDone = BrowserTestUtils.waitForEvent(
       wizard,
       "MigrationWizard:DoneMigration"

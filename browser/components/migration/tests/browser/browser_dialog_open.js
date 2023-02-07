@@ -5,16 +5,19 @@
 
 /**
  * Tests that we can open the migration dialog in an about:preferences
- * SubDialog when calling MigrationUtils.showMigrationWizard within a
+ * HTML5 dialog when calling MigrationUtils.showMigrationWizard within a
  * tabbrowser window execution context.
  */
 add_task(async function test_migration_dialog_open_in_tab_dialog_box() {
-  let migrationDialogPromise = waitForMigrationWizardSubdialogTab();
+  let migrationDialogPromise = waitForMigrationWizardDialogTab();
   MigrationUtils.showMigrationWizard(window, {});
   let prefsBrowser = await migrationDialogPromise;
   Assert.ok(true, "Migration dialog was opened");
+  let dialog = prefsBrowser.contentDocument.querySelector(
+    "#migrationWizardDialog"
+  );
 
-  let dialogClosed = BrowserTestUtils.waitForEvent(window, "dialogclose");
+  let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
   await BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, prefsBrowser);
   await dialogClosed;
   BrowserTestUtils.loadURIString(prefsBrowser, "about:blank");
