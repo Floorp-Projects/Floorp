@@ -359,11 +359,7 @@ export class IEProfileMigrator extends MigratorBase {
   }
 
   getResources() {
-    let resources = [
-      MSMigrationUtils.getBookmarksMigrator(),
-      new History(),
-      MSMigrationUtils.getCookiesMigrator(),
-    ];
+    let resources = [MSMigrationUtils.getBookmarksMigrator(), new History()];
     // Only support the form password migrator for Windows XP to 7.
     if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
       resources.push(new IE7FormPasswords());
