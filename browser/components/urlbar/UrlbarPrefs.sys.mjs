@@ -491,7 +491,6 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
       // extensions using the omnibox API
       {
         group: lazy.UrlbarUtils.RESULT_GROUP.OMNIBOX,
-        availableSpan: lazy.UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
       },
     ],
   };
