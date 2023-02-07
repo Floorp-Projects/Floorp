@@ -24,6 +24,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/fs/IPCRejectReporter.h"
 #include "mozilla/dom/fs/TargetPtrHolder.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -299,16 +300,31 @@ RefPtr<BoolPromise> FileSystemSyncAccessHandle::BeginClose() {
       ->Then(
           mWorkerRef->Private()->ControlEventTarget(), __func__,
           [self = RefPtr(this)](const ShutdownPromise::ResolveOrRejectValue&) {
-            if (self->mActor) {
-              self->mActor->SendClose();
+            if (self->mControlActor) {
+              RefPtr<BoolPromise::Private> promise =
+                  new BoolPromise::Private(__func__);
+
+              self->mControlActor->SendClose(
+                  [promise](void_t&&) { promise->Resolve(true, __func__); },
+                  [promise](const mozilla::ipc::ResponseRejectReason& aReason) {
+                    fs::IPCRejectReporter(aReason);
+
+                    promise->Reject(NS_ERROR_FAILURE, __func__);
+                  });
+
+              return RefPtr<BoolPromise>(promise);
             }
 
-            self->mWorkerRef = nullptr;
+            return BoolPromise::CreateAndResolve(true, __func__);
+          })
+      ->Then(mWorkerRef->Private()->ControlEventTarget(), __func__,
+             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+               self->mWorkerRef = nullptr;
 
-            self->mState = State::Closed;
+               self->mState = State::Closed;
 
-            self->mClosePromiseHolder.ResolveIfExists(true, __func__);
-          });
+               self->mClosePromiseHolder.ResolveIfExists(true, __func__);
+             });
 
   return OnClose();
 }

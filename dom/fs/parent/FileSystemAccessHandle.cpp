@@ -74,7 +74,7 @@ void FileSystemAccessHandle::Unregister() {
   --mRegCount;
 
   if (IsInactive() && IsOpen()) {
-    Close();
+    BeginClose();
   }
 }
 
@@ -93,7 +93,7 @@ void FileSystemAccessHandle::UnregisterActor(
   mActor = nullptr;
 
   if (IsInactive() && IsOpen()) {
-    Close();
+    BeginClose();
   }
 }
 
@@ -112,13 +112,13 @@ void FileSystemAccessHandle::UnregisterControlActor(
   mControlActor = nullptr;
 
   if (IsInactive() && IsOpen()) {
-    Close();
+    BeginClose();
   }
 }
 
 bool FileSystemAccessHandle::IsOpen() const { return !mClosed; }
 
-void FileSystemAccessHandle::Close() {
+RefPtr<BoolPromise> FileSystemAccessHandle::BeginClose() {
   MOZ_ASSERT(IsOpen());
 
   LOG(("Closing AccessHandle"));
@@ -133,16 +133,17 @@ void FileSystemAccessHandle::Close() {
     mDataManager->UnlockExclusive(mEntryId);
   }
 
-  InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
-              [self = RefPtr(this)]() {
-                if (self->mRegistered) {
-                  self->mDataManager->UnregisterAccessHandle(WrapNotNull(self));
-                }
+  return InvokeAsync(
+      mDataManager->MutableBackgroundTargetPtr(), __func__,
+      [self = RefPtr(this)]() {
+        if (self->mRegistered) {
+          self->mDataManager->UnregisterAccessHandle(WrapNotNull(self));
+        }
 
-                self->mDataManager = nullptr;
+        self->mDataManager = nullptr;
 
-                return BoolPromise::CreateAndResolve(true, __func__);
-              });
+        return BoolPromise::CreateAndResolve(true, __func__);
+      });
 }
 
 bool FileSystemAccessHandle::IsInactive() const {

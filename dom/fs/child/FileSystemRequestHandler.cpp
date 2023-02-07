@@ -25,6 +25,7 @@
 #include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/fs/IPCRejectReporter.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 
@@ -268,30 +269,6 @@ mozilla::ipc::ResolveCallback<TResponse> SelectResolveCallback(
       // NOLINTNEXTLINE(modernize-avoid-bind)
       std::bind(static_cast<TOverload>(ResolveCallback), std::placeholders::_1,
                 aPromise, TReturns(), std::forward<Args>(args)...));
-}
-
-// TODO: Find a better way to deal with these errors
-void IPCRejectReporter(mozilla::ipc::ResponseRejectReason aReason) {
-  switch (aReason) {
-    case mozilla::ipc::ResponseRejectReason::ActorDestroyed:
-      // This is ok
-      break;
-    case mozilla::ipc::ResponseRejectReason::HandlerRejected:
-      QM_TRY(OkIf(false), QM_VOID);
-      break;
-    case mozilla::ipc::ResponseRejectReason::ChannelClosed:
-      QM_TRY(OkIf(false), QM_VOID);
-      break;
-    case mozilla::ipc::ResponseRejectReason::ResolverDestroyed:
-      QM_TRY(OkIf(false), QM_VOID);
-      break;
-    case mozilla::ipc::ResponseRejectReason::SendError:
-      QM_TRY(OkIf(false), QM_VOID);
-      break;
-    default:
-      QM_TRY(OkIf(false), QM_VOID);
-      break;
-  }
 }
 
 void RejectCallback(

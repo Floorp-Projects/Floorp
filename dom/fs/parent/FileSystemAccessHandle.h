@@ -72,7 +72,7 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
 
   bool IsOpen() const;
 
-  void Close();
+  RefPtr<BoolPromise> BeginClose();
 
  private:
   FileSystemAccessHandle(RefPtr<fs::data::FileSystemDataManager> aDataManager,
