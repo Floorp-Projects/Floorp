@@ -348,21 +348,6 @@ Element* nsFocusManager::GetFocusedDescendant(
 }
 
 // static
-Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
-  if (aContent->IsXULElement()) {
-    nsCOMPtr<nsIDOMXULMenuListElement> menulist =
-        aContent->AsElement()->AsXULMenuList();
-    if (menulist) {
-      RefPtr<Element> inputField;
-      menulist->GetInputField(getter_AddRefs(inputField));
-      return inputField;
-    }
-  }
-
-  return nullptr;
-}
-
-// static
 InputContextAction::Cause nsFocusManager::GetFocusMoveActionCause(
     uint32_t aFlags) {
   if (aFlags & nsIFocusManager::FLAG_BYTOUCH) {
@@ -2097,12 +2082,6 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
   // also initialized in case we come from a script calling focus() early.
   mEventHandlingNeedsFlush = false;
   doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
-
-  // this is a special case for some XUL elements or input number, where an
-  // anonymous child is actually focusable and not the element itself.
-  if (RefPtr<Element> redirectedFocus = GetRedirectedFocus(aElement)) {
-    return FlushAndCheckIfFocusable(redirectedFocus, aFlags);
-  }
 
   PresShell* presShell = doc->GetPresShell();
   if (!presShell) {
@@ -4432,13 +4411,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
             // it. Also, if the next content node is the root content, then
             // return it. This latter case would happen only if someone made a
             // popup focusable.
-            // Also, when going backwards, check to ensure that the focus
-            // wouldn't be redirected. Otherwise, for example, when an input in
-            // a textbox is focused, the enclosing textbox would be found and
-            // the same inner input would be returned again.
             else if (currentContent == aRootContent ||
-                     (currentContent != startContent &&
-                      (aForward || !GetRedirectedFocus(currentContent)))) {
+                     currentContent != startContent) {
               NS_ADDREF(*aResultContent = currentContent);
               return NS_OK;
             }

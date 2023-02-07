@@ -269,18 +269,6 @@ class nsFocusManager final : public nsIFocusManager,
       const mozilla::dom::FocusOptions& aOptions);
 
   /**
-   * Returns the content node that focus will be redirected to if aContent was
-   * focused. This is used for the special case of certain XUL elements such
-   * as textboxes or input number which redirect focus to an anonymous child.
-   *
-   * aContent must be non-null.
-   *
-   * XXXndeakin this should be removed eventually but I want to do that as
-   * followup work.
-   */
-  static mozilla::dom::Element* GetRedirectedFocus(nsIContent* aContent);
-
-  /**
    * Returns an InputContextAction cause for aFlags.
    */
   static InputContextAction::Cause GetFocusMoveActionCause(uint32_t aFlags);
