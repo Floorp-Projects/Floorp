@@ -2944,6 +2944,28 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    fun invalidScheme() {
+        val invalidUri = "tel:#12345678"
+        mainSession.loadUri(invalidUri)
+        mainSession.waitUntilCalled(object : NavigationDelegate {
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                assertThat("Uri should match", uri, equalTo(invalidUri))
+                assertThat(
+                    "error should match",
+                    error.code,
+                    equalTo(WebRequestError.ERROR_MALFORMED_URI)
+                )
+                assertThat(
+                    "error should match",
+                    error.category,
+                    equalTo(WebRequestError.ERROR_CATEGORY_URI)
+                )
+                return null
+            }
+        })
+    }
+
+    @Test
     fun loadOnBackgroundThread() {
         mainSession.delegateUntilTestEnd(object : NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
