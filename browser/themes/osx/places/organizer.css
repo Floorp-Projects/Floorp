@@ -8,6 +8,8 @@
   appearance: auto;
   -moz-default-appearance: -moz-mac-source-list;
   width: 160px;
+  min-width: 100px;
+  max-width: 400px;
 }
 
 #placesList > treechildren::-moz-tree-cell-text {
