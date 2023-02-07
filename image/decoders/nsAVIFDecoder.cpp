@@ -223,20 +223,20 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     aImage.mColorImage = mColorSampleIter->GetNext();
 
     if (!aImage.mColorImage) {
-      if (mFrameNum == 0) {
-        return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
-      }
-      return AsVariant(nsAVIFDecoder::NonDecoderResult::Complete);
+      return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
     }
 
     aImage.mFrameNum = mFrameNum++;
     int64_t durationMs =
         aImage.mColorImage->mDuration.ToMicroseconds() / USECS_PER_MS;
     aImage.mDuration = FrameTimeout::FromRawMilliseconds(
-        static_cast<int32_t>(std::min(durationMs, INT64_MAX)));
+        static_cast<int32_t>(std::min<int64_t>(durationMs, INT32_MAX)));
 
     if (mAlphaSampleIter) {
       aImage.mAlphaImage = mAlphaSampleIter->GetNext();
+      if (!aImage.mAlphaImage) {
+        return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
+      }
     }
 
     bool hasNext = mColorSampleIter->HasNext();
