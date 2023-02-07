@@ -32,6 +32,46 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowserSettings)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"allowPopupsForUserEvents"_ns,
+                       AllowPopupsForUserEvents)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"cacheEnabled"_ns,
+                       CacheEnabled)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"closeTabsByDoubleClick"_ns,
+                       CloseTabsByDoubleClick)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"contextMenuShowEvent"_ns,
+                       ContextMenuShowEvent)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"ftpProtocolEnabled"_ns,
+                       FtpProtocolEnabled)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"homepageOverride"_ns,
+                       HomepageOverride)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"imageAnimationBehavior"_ns,
+                       ImageAnimationBehavior)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"newTabPageOverride"_ns,
+                       NewTabPageOverride)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"newTabPosition"_ns,
+                       NewTabPosition)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"openBookmarksInNewTabs"_ns,
+                       OpenBookmarksInNewTabs)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings,
+                       u"openSearchResultsInNewTabs"_ns,
+                       OpenSearchResultsInNewTabs)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings,
+                       u"openUrlbarResultsInNewTabs"_ns,
+                       OpenUrlbarResultsInNewTabs)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"webNotificationsDisabled"_ns,
+                       WebNotificationsDisabled)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"overrideDocumentColors"_ns,
+                       OverrideDocumentColors)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings,
+                       u"overrideContentColorScheme"_ns,
+                       OverrideContentColorScheme)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"useDocumentFonts"_ns,
+                       UseDocumentFonts)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"zoomFullPage"_ns,
+                       ZoomFullPage)
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettings, u"zoomSiteSpecific"_ns,
+                       ZoomSiteSpecific)
+
 ExtensionBrowserSettings::ExtensionBrowserSettings(
     nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -51,177 +91,6 @@ JSObject* ExtensionBrowserSettings::WrapObject(
 
 nsIGlobalObject* ExtensionBrowserSettings::GetParentObject() const {
   return mGlobal;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::AllowPopupsForUserEvents() {
-  if (!mAllowPopupsForUserEventsSetting) {
-    mAllowPopupsForUserEventsSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.allowPopupsForUserEvents"_ns);
-  }
-
-  return mAllowPopupsForUserEventsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::CacheEnabled() {
-  if (!mCacheEnabledSetting) {
-    mCacheEnabledSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.cacheEnabled"_ns);
-  }
-
-  return mCacheEnabledSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::CloseTabsByDoubleClick() {
-  if (!mCloseTabsByDoubleClickSetting) {
-    mCloseTabsByDoubleClickSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.closeTabsByDoubleClick"_ns);
-  }
-
-  return mCloseTabsByDoubleClickSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::ContextMenuShowEvent() {
-  if (!mContextMenuShowEventSetting) {
-    mContextMenuShowEventSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.contextMenuShowEvent"_ns);
-  }
-
-  return mContextMenuShowEventSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::FtpProtocolEnabled() {
-  if (!mFtpProtocolEnabledSetting) {
-    mFtpProtocolEnabledSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.ftpProtocolEnabled"_ns);
-  }
-
-  return mFtpProtocolEnabledSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::HomepageOverride() {
-  if (!mHomepageOverrideSetting) {
-    mHomepageOverrideSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.homepageOverride"_ns);
-  }
-
-  return mHomepageOverrideSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::ImageAnimationBehavior() {
-  if (!mImageAnimationBehaviorSetting) {
-    mImageAnimationBehaviorSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.imageAnimationBehavior"_ns);
-  }
-
-  return mImageAnimationBehaviorSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::NewTabPageOverride() {
-  if (!mNewTabPageOverrideSetting) {
-    mNewTabPageOverrideSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.newTabPageOverride"_ns);
-  }
-
-  return mNewTabPageOverrideSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::NewTabPosition() {
-  if (!mNewTabPositionSetting) {
-    mNewTabPositionSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.newTabPosition"_ns);
-  }
-
-  return mNewTabPositionSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::OpenBookmarksInNewTabs() {
-  if (!mOpenBookmarksInNewTabsSetting) {
-    mOpenBookmarksInNewTabsSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.openBookmarksInNewTabs"_ns);
-  }
-
-  return mOpenBookmarksInNewTabsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::OpenSearchResultsInNewTabs() {
-  if (!mOpenSearchResultsInNewTabsSetting) {
-    mOpenSearchResultsInNewTabsSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.openSearchResultsInNewTabs"_ns);
-  }
-
-  return mOpenSearchResultsInNewTabsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::OpenUrlbarResultsInNewTabs() {
-  if (!mOpenUrlbarResultsInNewTabsSetting) {
-    mOpenUrlbarResultsInNewTabsSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.openUrlbarResultsInNewTabs"_ns);
-  }
-
-  return mOpenUrlbarResultsInNewTabsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::WebNotificationsDisabled() {
-  if (!mWebNotificationsDisabledSetting) {
-    mWebNotificationsDisabledSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.webNotificationsDisabled"_ns);
-  }
-
-  return mWebNotificationsDisabledSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::OverrideDocumentColors() {
-  if (!mOverrideDocumentColorsSetting) {
-    mOverrideDocumentColorsSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.overrideDocumentColors"_ns);
-  }
-
-  return mOverrideDocumentColorsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::OverrideContentColorScheme() {
-  if (!mOverrideContentColorSchemeSetting) {
-    mOverrideContentColorSchemeSetting =
-        new ExtensionSetting(mGlobal, mExtensionBrowser,
-                             u"browserSettings.overrideContentColorScheme"_ns);
-  }
-
-  return mOverrideContentColorSchemeSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::UseDocumentFonts() {
-  if (!mUseDocumentFontsSetting) {
-    mUseDocumentFontsSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.useDocumentFonts"_ns);
-  }
-
-  return mUseDocumentFontsSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::ZoomFullPage() {
-  if (!mZoomFullPageSetting) {
-    mZoomFullPageSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.zoomFullPage"_ns);
-  }
-
-  return mZoomFullPageSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettings::ZoomSiteSpecific() {
-  if (!mZoomSiteSpecificSetting) {
-    mZoomSiteSpecificSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.zoomSiteSpecific"_ns);
-  }
-
-  return mZoomSiteSpecificSetting;
 }
 
 ExtensionBrowserSettingsColorManagement*

@@ -26,6 +26,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_WEBEXT_EVENTMGR(ExtensionProxy, u"onRequest"_ns, OnRequest)
 NS_IMPL_WEBEXT_EVENTMGR(ExtensionProxy, u"onError"_ns, OnError)
 
+NS_IMPL_WEBEXT_SETTING_WITH_DATAMEMBER(ExtensionProxy, u"settings"_ns, Settings,
+                                       mSettingsMgr)
+
 ExtensionProxy::ExtensionProxy(nsIGlobalObject* aGlobal,
                                ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -44,14 +47,5 @@ JSObject* ExtensionProxy::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionProxy::GetParentObject() const { return mGlobal; }
-
-ExtensionSetting* ExtensionProxy::Settings() {
-  if (!mSettingsMgr) {
-    mSettingsMgr =
-        new ExtensionSetting(mGlobal, mExtensionBrowser, u"proxy.settings"_ns);
-  }
-
-  return mSettingsMgr;
-}
 
 }  // namespace mozilla::extensions
