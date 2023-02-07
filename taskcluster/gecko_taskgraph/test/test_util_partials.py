@@ -71,7 +71,7 @@ class TestReleaseHistory(unittest.TestCase):
         def patched_get_release_builds(release, branch):
             if branch == "mozilla-central":
                 return nightly_blob(release)
-            elif branch == "mozilla-release":
+            if branch == "mozilla-release":
                 return release_blob
 
         get_sorted_releases.side_effect = patched_get_sorted_releases

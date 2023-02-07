@@ -246,7 +246,7 @@ def _generate_download_config(
                 },
             ],
         }
-    elif build_platform.startswith("win"):
+    if build_platform.startswith("win"):
         download_config = [
             {
                 "artifact": f"{locale_path}target.zip",

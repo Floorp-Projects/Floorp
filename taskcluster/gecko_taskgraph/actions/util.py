@@ -72,7 +72,7 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
         # Ensure the task is within the context of the action
         if task_id and tags and _tags_within_context(tags, context):
             return _action
-        elif context == []:
+        if context == []:
             return _action
 
     available_actions = ", ".join(sorted({a["name"] for a in actions_json["actions"]}))

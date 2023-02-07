@@ -184,10 +184,10 @@ def filter_release_tasks(task, parameters):
         if "linux" not in build_platform:
             # filter out windows/mac/android
             return False
-        elif task.kind not in ["spidermonkey"] and "-qr" in test_platform:
+        if task.kind not in ["spidermonkey"] and "-qr" in test_platform:
             # filter out linux-qr tests, leave spidermonkey
             return False
-        elif "64" not in build_platform:
+        if "64" not in build_platform:
             # filter out linux32 builds
             return False
 
@@ -338,12 +338,11 @@ def target_tasks_try(full_task_graph, parameters, graph_config):
     try_mode = parameters["try_mode"]
     if try_mode == "try_task_config":
         return _try_task_config(full_task_graph, parameters, graph_config)
-    elif try_mode == "try_option_syntax":
+    if try_mode == "try_option_syntax":
         return _try_option_syntax(full_task_graph, parameters, graph_config)
-    else:
-        # With no try mode, we schedule nothing, allowing the user to add tasks
-        # later via treeherder.
-        return []
+    # With no try mode, we schedule nothing, allowing the user to add tasks
+    # later via treeherder.
+    return []
 
 
 @_target_task("try_select_tasks")
@@ -656,8 +655,7 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
 
         if "secondary" in task.kind:
             return is_rc
-        else:
-            return not is_rc
+        return not is_rc
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 

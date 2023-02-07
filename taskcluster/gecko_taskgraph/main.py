@@ -699,10 +699,9 @@ def test_action_callback(options):
         with open(filename) as f:
             if filename.endswith(".yml"):
                 return yaml.load_stream(f)
-            elif filename.endswith(".json"):
+            if filename.endswith(".json"):
                 return json.load(f)
-            else:
-                raise Exception(f"unknown filename {filename}")
+            raise Exception(f"unknown filename {filename}")
 
     try:
         task_id = options["task_id"]

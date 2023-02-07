@@ -70,8 +70,7 @@ def context(params):
     # test tasks on level 3 (level-3 builders are firewalled off)
     if int(params["level"]) < 3:
         return [{"worker-implementation": "docker-worker"}]
-    else:
-        return [{"worker-implementation": "docker-worker", "kind": "test"}]
+    return [{"worker-implementation": "docker-worker", "kind": "test"}]
     # Windows is not supported by one-click loaners yet. See
     # https://wiki.mozilla.org/ReleaseEngineering/How_To/Self_Provision_a_TaskCluster_Windows_Instance
     # for instructions for using them.

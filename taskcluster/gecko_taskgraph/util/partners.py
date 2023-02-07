@@ -199,7 +199,7 @@ def get_repo_params(repo):
     if repo.startswith("https"):
         # eg https://github.com/mozilla-partners/mozilla-EME-free
         return repo.rsplit("/", 2)[-2:]
-    elif repo.startswith("git@"):
+    if repo.startswith("git@"):
         # eg git@github.com:mozilla-partners/mailru.git
         repo = repo.replace(".git", "")
         return repo.split(":")[-1].split("/")
@@ -442,18 +442,17 @@ def fix_partner_config(orig_config):
 def get_ftp_platform(platform):
     if platform.startswith("win32"):
         return "win32"
-    elif platform.startswith("win64-aarch64"):
+    if platform.startswith("win64-aarch64"):
         return "win64-aarch64"
-    elif platform.startswith("win64"):
+    if platform.startswith("win64"):
         return "win64"
-    elif platform.startswith("macosx"):
+    if platform.startswith("macosx"):
         return "mac"
-    elif platform.startswith("linux-"):
+    if platform.startswith("linux-"):
         return "linux-i686"
-    elif platform.startswith("linux64"):
+    if platform.startswith("linux64"):
         return "linux-x86_64"
-    else:
-        raise ValueError(f"Unimplemented platform {platform}")
+    raise ValueError(f"Unimplemented platform {platform}")
 
 
 # Ugh
