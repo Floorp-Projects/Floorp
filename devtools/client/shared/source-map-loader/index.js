@@ -25,7 +25,9 @@ const {
 } = require("resource://devtools/client/shared/source-map-loader/utils/index.js");
 
 class SourceMapLoader extends WorkerDispatcher {
-  #_applySourceMap = this.task("applySourceMap");
+  #_setSourceMapForGeneratedSources = this.task(
+    "setSourceMapForGeneratedSources"
+  );
   #_getOriginalURLs = this.task("getOriginalURLs");
   #_getOriginalSourceText = this.task("getOriginalSourceText");
 
@@ -93,12 +95,15 @@ class SourceMapLoader extends WorkerDispatcher {
   clearSourceMaps = this.task("clearSourceMaps");
   getOriginalStackFrames = this.task("getOriginalStackFrames");
 
-  async applySourceMap(generatedId, ...rest) {
-    const rv = await this.#_applySourceMap(generatedId, ...rest);
+  async setSourceMapForGeneratedSources(generatedIds, sourceMap) {
+    const rv = await this.#_setSourceMapForGeneratedSources(
+      generatedIds,
+      sourceMap
+    );
 
     // Notify and ensure waiting for the SourceMapURLService to process the source map before resolving.
     // Otherwise tests start failing because of pending request made by this component.
-    await this.emitAsync("source-map-applied", generatedId);
+    await this.emitAsync("source-map-created", generatedIds);
 
     return rv;
   }
