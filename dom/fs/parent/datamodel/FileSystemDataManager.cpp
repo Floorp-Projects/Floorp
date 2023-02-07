@@ -429,7 +429,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
-      ->Then(MutableIOTargetPtr(), __func__,
+      ->Then(MutableIOTaskQueuePtr(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
                if (value.IsReject()) {
@@ -494,7 +494,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
 
   mState = State::Closing;
 
-  InvokeAsync(MutableIOTargetPtr(), __func__,
+  InvokeAsync(MutableIOTaskQueuePtr(), __func__,
               [self = RefPtr<FileSystemDataManager>(this)]() {
                 if (self->mDatabaseManager) {
                   self->mDatabaseManager->Close();

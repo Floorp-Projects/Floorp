@@ -465,11 +465,11 @@ void FileSystemManagerParent::RequestAllowToClose() {
 
   mRequestedAllowToClose.Flip();
 
-  InvokeAsync(mDataManager->MutableIOTargetPtr(), __func__,
+  InvokeAsync(mDataManager->MutableIOTaskQueuePtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
                 return self->SendCloseAll();
               })
-      ->Then(mDataManager->MutableIOTargetPtr(), __func__,
+      ->Then(mDataManager->MutableIOTaskQueuePtr(), __func__,
              [self = RefPtr<FileSystemManagerParent>(this)](
                  const CloseAllPromise::ResolveOrRejectValue& aValue) {
                self->Close();
