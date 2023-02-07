@@ -41,8 +41,6 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-#tabbrowser-arrowscrollbox[scrolledtostart=true]::part(scrollbutton-up),
-#tabbrowser-arrowscrollbox[scrolledtoend=true]::part(scrollbutton-down),
 :root:not([customizing]) .toolbarbutton-1[disabled=true],
 /* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
 #nav-bar-overflow-button[disabled=true],
