@@ -161,21 +161,6 @@ socketprocess_networking:
                 - "--setpref=network.process.enabled=true"
                 - "--setpref=network.http.network_access_on_socket_process.enabled=true"
 
-wayland:
-    description: "{description} with Wayland backend enabled"
-    component: "Core::Widget: Gtk"
-    expiration: "2023-03-01"
-    when:
-        $eval: '"linux" in task["test-platform"]'
-    suffix: "wayland"
-    replace:
-        run-on-projects: []
-        tier: 3
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=widget.wayland.test-workarounds.enabled=true"
-
 # -
 # Webrender DComp variants for Win10
 

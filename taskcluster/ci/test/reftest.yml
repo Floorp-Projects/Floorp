@@ -45,16 +45,10 @@ crashtest:
             default: 1
     variants:
         - no-fission
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
         by-variant:
-            wayland:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
-                    linux1804-64(-tsan|-asan)-qr/opt: built-projects
-                    default: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
@@ -164,7 +158,6 @@ reftest:
             default: 8
     variants:
         - no-fission
-        - wayland
         - webrender-dcomp-disabled
         - webrender-dcomp-present
         - webrender-dcomp-overlays
@@ -173,11 +166,6 @@ reftest:
         - webrender-sw
     run-on-projects:
         by-variant:
-            wayland:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
-                    linux1804-64(-asan|-tsan)-qr/opt: built-projects
-                    default: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
