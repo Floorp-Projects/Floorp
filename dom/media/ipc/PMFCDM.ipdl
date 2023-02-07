@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "MFCDMSerializers.h";
+
+include protocol PRemoteDecoderManager;
+
+using mozilla::KeySystemConfig::Requirement from "mozilla/KeySystemConfig.h";
+using mozilla::KeySystemConfig::SessionType from "mozilla/KeySystemConfig.h";
+using mozilla::CryptoScheme from "MediaData.h";
+
+namespace mozilla {
+
+// For GetCapabilities()
+struct MFCDMMediaCapability {
+  nsString contentType;
+  nsString robustness;
+};
+
+struct MFCDMCapabilitiesIPDL {
+  nsString keySystem;
+  nsString[] initDataTypes;
+  MFCDMMediaCapability[] audioCapabilities;
+  MFCDMMediaCapability[] videoCapabilities;
+  SessionType[] sessionTypes;
+  CryptoScheme[] encryptionSchemes;
+  Requirement distinctiveID;
+  Requirement persistentState;
+};
+
+union MFCDMCapabilitiesResult {
+  nsresult;
+  MFCDMCapabilitiesIPDL;
+};
+
+[ManualDealloc]
+async protocol PMFCDM
+{
+  manager PRemoteDecoderManager;
+parent:
+  async GetCapabilities() returns (MFCDMCapabilitiesResult result);
+  async __delete__();
+};
+
+} // namespace mozilla
