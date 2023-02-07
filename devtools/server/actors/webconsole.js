@@ -365,7 +365,6 @@ class WebConsoleActor extends Actor {
     this._lastConsoleInputEvaluation = null;
     this._evalGlobal = null;
     this.dbg = null;
-    this.conn = null;
   }
 
   /**

@@ -63,10 +63,6 @@ class NetworkEventContentWatcher {
     this._networkEvents.clear();
   }
 
-  get conn() {
-    return this.targetActor.conn;
-  }
-
   httpFailedOpeningRequest(subject, topic) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
@@ -144,7 +140,7 @@ class NetworkEventContentWatcher {
     );
 
     const actor = new NetworkEventActor(
-      this.conn,
+      this.targetActor.conn,
       this.targetActor.sessionContext,
       {
         onNetworkEventUpdate,

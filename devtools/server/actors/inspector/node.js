@@ -91,7 +91,7 @@ const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
  */
 class NodeActor extends Actor {
   constructor(walker, node) {
-    super(null, nodeSpec);
+    super(walker.conn, nodeSpec);
     this.walker = walker;
     this.rawNode = node;
     this._eventCollector = new EventCollector(this.walker.targetActor);
@@ -119,14 +119,6 @@ class NodeActor extends Actor {
     return (
       "[NodeActor " + this.actorID + " for " + this.rawNode.toString() + "]"
     );
-  }
-
-  /**
-   * Instead of storing a connection object, the NodeActor gets its connection
-   * from its associated walker.
-   */
-  get conn() {
-    return this.walker.conn;
   }
 
   isDocumentElement() {
@@ -804,21 +796,9 @@ class NodeActor extends Actor {
  */
 class NodeListActor extends Actor {
   constructor(walker, nodeList) {
-    super(null, nodeListSpec);
+    super(walker.conn, nodeListSpec);
     this.walker = walker;
     this.nodeList = nodeList || [];
-  }
-
-  destroy() {
-    super.destroy();
-  }
-
-  /**
-   * Instead of storing a connection object, the NodeActor gets its connection
-   * from its associated walker.
-   */
-  get conn() {
-    return this.walker.conn;
   }
 
   /**

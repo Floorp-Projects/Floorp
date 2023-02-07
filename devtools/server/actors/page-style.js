@@ -79,7 +79,7 @@ class PageStyleActor extends Actor {
    * @constructor
    */
   constructor(inspector) {
-    super(null, pageStyleSpec);
+    super(inspector.conn, pageStyleSpec);
     this.inspector = inspector;
     if (!this.inspector.walker) {
       throw Error(
@@ -126,10 +126,6 @@ class PageStyleActor extends Actor {
     this.styleElements = null;
 
     this._observedRules = [];
-  }
-
-  get conn() {
-    return this.inspector.conn;
   }
 
   get ownerWindow() {

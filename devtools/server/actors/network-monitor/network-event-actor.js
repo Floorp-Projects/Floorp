@@ -40,7 +40,6 @@ class NetworkEventActor extends Actor {
     super(conn, networkEventSpec);
 
     this._sessionContext = sessionContext;
-    this._conn = conn;
     this._onNetworkEventUpdate = onNetworkEventUpdate;
     this._onNetworkEventDestroy = onNetworkEventDestroy;
 
@@ -312,7 +311,7 @@ class NetworkEventActor extends Actor {
     this._prepareHeaders(headers);
 
     if (rawHeaders) {
-      rawHeaders = new LongStringActor(this._conn, rawHeaders);
+      rawHeaders = new LongStringActor(this.conn, rawHeaders);
       // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
       // protocol.js performance issue
       this.manage(rawHeaders);
@@ -357,7 +356,7 @@ class NetworkEventActor extends Actor {
     }
 
     this._request.postData = postData;
-    postData.text = new LongStringActor(this._conn, postData.text);
+    postData.text = new LongStringActor(this.conn, postData.text);
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(postData.text);
@@ -380,7 +379,7 @@ class NetworkEventActor extends Actor {
       return;
     }
 
-    rawHeaders = new LongStringActor(this._conn, rawHeaders);
+    rawHeaders = new LongStringActor(this.conn, rawHeaders);
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(rawHeaders);
@@ -478,7 +477,7 @@ class NetworkEventActor extends Actor {
 
     this._truncated = truncated;
     this._response.content = content;
-    content.text = new LongStringActor(this._conn, content.text);
+    content.text = new LongStringActor(this.conn, content.text);
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(content.text);
@@ -554,7 +553,7 @@ class NetworkEventActor extends Actor {
    */
   _prepareHeaders(headers) {
     for (const header of headers) {
-      header.value = new LongStringActor(this._conn, header.value);
+      header.value = new LongStringActor(this.conn, header.value);
       // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
       // protocol.js performance issue
       this.manage(header.value);
