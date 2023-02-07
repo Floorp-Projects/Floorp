@@ -15673,11 +15673,11 @@ FactoryOp::Run() {
 
   switch (mState) {
     case State::Initial:
-      QM_TRY(MOZ_TO_RESULT(Open()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(Open()), handleError);
       break;
 
     case State::FinishOpen:
-      QM_TRY(MOZ_TO_RESULT(FinishOpen()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(FinishOpen()), handleError);
       break;
 
     case State::DatabaseOpenPending:
@@ -15685,15 +15685,15 @@ FactoryOp::Run() {
       break;
 
     case State::DatabaseWorkOpen:
-      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DoDatabaseWork()), handleError);
       break;
 
     case State::BeginVersionChange:
-      QM_TRY(MOZ_TO_RESULT(BeginVersionChange()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(BeginVersionChange()), handleError);
       break;
 
     case State::WaitingForTransactionsToComplete:
-      QM_TRY(MOZ_TO_RESULT(DispatchToWorkThread()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DispatchToWorkThread()), handleError);
       break;
 
     case State::SendingResults:
