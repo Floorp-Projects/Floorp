@@ -15,47 +15,15 @@
 #include "nsObjectLoadingContent.h"
 #include "nsSubDocumentFrame.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/SVGForeignObjectFrame.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "mozilla/dom/SVGViewElement.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
-
-namespace mozilla {
-
-//----------------------------------------------------------------------
-// Implementation helpers
-
-void SVGOuterSVGFrame::RegisterForeignObject(SVGForeignObjectFrame* aFrame) {
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-
-  if (!mForeignObjectHash) {
-    mForeignObjectHash = MakeUnique<nsTHashSet<SVGForeignObjectFrame*>>();
-  }
-
-  NS_ASSERTION(!mForeignObjectHash->Contains(aFrame),
-               "SVGForeignObjectFrame already registered!");
-
-  mForeignObjectHash->Insert(aFrame);
-
-  NS_ASSERTION(mForeignObjectHash->Contains(aFrame),
-               "Failed to register SVGForeignObjectFrame!");
-}
-
-void SVGOuterSVGFrame::UnregisterForeignObject(SVGForeignObjectFrame* aFrame) {
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash && mForeignObjectHash->Contains(aFrame),
-               "SVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash->Remove(aFrame);
-}
-
-}  // namespace mozilla
 
 //----------------------------------------------------------------------
 // Implementation
@@ -73,8 +41,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGOuterSVGFrame)
 SVGOuterSVGFrame::SVGOuterSVGFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
     : SVGDisplayContainerFrame(aStyle, aPresContext, kClassID),
-      mCallingReflowSVG(false),
       mFullZoom(PresContext()->GetFullZoom()),
+      mCallingReflowSVG(false),
       mIsRootContent(false),
       mIsInObjectOrEmbed(false),
       mIsInIframe(false) {
