@@ -406,34 +406,6 @@ existing_tasks:
     test-android-em-7.0-x86_64/opt-geckoview-xpcshell-e10s-2: Uzwd98TkSsqgSeCune1OYQ
     test-android-em-7.0-x86_64/opt-geckoview-xpcshell-e10s-3: Ba3B5cy8Q3iq5yzxRQdppQ
     test-android-em-7.0-x86_64/opt-geckoview-xpcshell-e10s-4: PzJsKJ4eTGexzIGZOYCgZA
-    test-android-hw-p2-8-0-android-aarch64-qr/debug-geckoview-crashtest-qr-e10s: L3tW-veRQlCtgmwZGMsb-A
-    test-android-hw-p2-8-0-android-aarch64-qr/debug-geckoview-reftest-qr-e10s-1: IwIPV0fHR2yswGnHM_t3QQ
-    test-android-hw-p2-8-0-android-aarch64-qr/debug-geckoview-reftest-qr-e10s-2: CAm8BZVpT46tnybK53cmtg
-    test-android-hw-p2-8-0-android-aarch64-qr/opt-geckoview-crashtest-qr-e10s: PJvaxOeRTceAnEEysaED1A
-    test-android-hw-p2-8-0-android-aarch64-qr/opt-geckoview-reftest-qr-e10s-1: ECQGLen8TlGEaJzItCkjCg
-    test-android-hw-p2-8-0-android-aarch64-qr/opt-geckoview-reftest-qr-e10s-2: RyDXq5KASTqiAUj5CSHmIQ
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-e10s-1: dKLiN7J6TOKF227VBTjsbA
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-e10s-2: O_6FT1f8SiS9KxPfTu02VQ
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-e10s-3: ROp6zwzaSBq6nAXY13LLyA
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-spi-e10s-1: H-SQVdmvSciWHSgg6B-RgQ
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-spi-e10s-2: RHAFAASYRXSspl5LSIpqqw
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-media-spi-e10s-3: D7ych70JQbW0Z_LDXOp2Fw
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-webgl1-core-e10s: SmX2h1uLQS6D9WMFQfsDTg
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-webgl1-ext-e10s-1: eEXu0QEEQ6ak5olkjmWTQQ
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-webgl1-ext-e10s-2: cAwjsJwOQiefVU-EwSAzdA
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-webgl2-core-e10s-1: DpWmkW4rRVqbh3D2RtiMzQ
-    test-android-hw-p2-8-0-android-aarch64/debug-geckoview-mochitest-webgl2-core-e10s-2: FFAmosLQSxuenIAgML9omA
-    test-android-hw-p2-8-0-android-aarch64/opt-geckoview-mochitest-webgl1-core-e10s: dVrqmqqKTHCX-L9NVXjPFA
-    test-android-hw-p2-8-0-android-aarch64/opt-geckoview-mochitest-webgl1-ext-e10s-1: X349mEyUTsKQQnoCmWeTpA
-    test-android-hw-p2-8-0-android-aarch64/opt-geckoview-mochitest-webgl1-ext-e10s-2: VMWuPWcZR_Smugu-07i3IQ
-    test-android-hw-p2-8-0-android-aarch64/opt-geckoview-mochitest-webgl2-core-e10s-1: fDTmiu6FQb2PPu1Pl5Ju6Q
-    test-android-hw-p2-8-0-android-aarch64/opt-geckoview-mochitest-webgl2-core-e10s-2: eqzThJegQIy2QPQpICHHgA
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-e10s-1: FNhXCXeTQDqFMoVdx41vbg
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-e10s-2: LFmOYhSaR-eH7hTSke_4iw
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-e10s-3: KXZqoQ4-TQWAEagLifDbyg
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-spi-e10s-1: TRi5ng_oQkqU2p7P54jmJA
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-spi-e10s-2: dNNqb70wQ-us_rDXatjEYw
-    test-android-hw-p2-8-0-android-aarch64/pgo-geckoview-mochitest-media-spi-e10s-3: FmKKQwY9TTek0P1scy5yJg
     test-linux1804-32-shippable/opt-web-platform-tests-e10s-1: Uw1X0wM8RVy9PPy5Q4eK4Q
     test-linux1804-32-shippable/opt-web-platform-tests-e10s-10: K-0l06jARI2uT9uSJAHxyw
     test-linux1804-32-shippable/opt-web-platform-tests-e10s-2: P-mgi6kLTC-wrHK06Mfcpw
