@@ -46,6 +46,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     DIRS += ["mediadrm"]
     LOCAL_INCLUDES += ["/dom/media/platforms/android"]
 
+if CONFIG["MOZ_MF_CDM"]:
+    DIRS += ["mediafoundation"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
