@@ -836,7 +836,10 @@ class Talos(
         # run talos tests
         run_tests = os.path.join(self.talos_path, "talos", "run_tests.py")
 
-        mozlog_opts = ["--log-tbpl-level=debug"]
+        # Dynamically set the log level based on the talos config for consistency
+        # throughout the test
+        mozlog_opts = [f"--log-tbpl-level={self.config['log_level']}"]
+
         if not self.run_local and "suite" in self.config:
             fname_pattern = "%s_%%s.log" % self.config["suite"]
             mozlog_opts.append(
