@@ -235,10 +235,14 @@ object DownloadUtils {
      * This is primarily useful for connecting the "Save to PDF" feature response to downloads.
      */
     fun makePdfContentDisposition(filename: String): String {
-        return filename
-            .take(MAX_FILE_NAME_LENGTH)
+        val pdfExtension = ".pdf"
+        return if (filename.endsWith(pdfExtension)) {
+            filename.substringBeforeLast('.')
+        } else {
+            filename
+        }.take(MAX_FILE_NAME_LENGTH - pdfExtension.length)
             .run {
-                "attachment; filename=$this.pdf;"
+                "attachment; filename=$this$pdfExtension;"
             }
     }
 

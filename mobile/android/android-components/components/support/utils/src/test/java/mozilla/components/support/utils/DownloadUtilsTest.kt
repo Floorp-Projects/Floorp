@@ -137,6 +137,15 @@ class DownloadUtilsTest {
         assertEquals(null, DownloadUtils.sanitizeMimeType(null))
     }
 
+    @Test
+    fun makePdfContentDisposition() {
+        assertEquals("attachment; filename=foo.pdf;", DownloadUtils.makePdfContentDisposition("foo"))
+        assertEquals("attachment; filename=foo.html.pdf;", DownloadUtils.makePdfContentDisposition("foo.html"))
+        assertEquals("attachment; filename=foo.pdf;", DownloadUtils.makePdfContentDisposition("foo.pdf"))
+        assertEquals("attachment; filename=${"a".repeat(251)}.pdf;", DownloadUtils.makePdfContentDisposition("a".repeat(260)))
+        assertEquals("attachment; filename=${"a".repeat(251)}.pdf;", DownloadUtils.makePdfContentDisposition("a".repeat(260) + ".pdf"))
+    }
+
     companion object {
         private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
 
