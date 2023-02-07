@@ -21,6 +21,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionSetting)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionSetting, u"onChange"_ns, OnChange)
+
 ExtensionSetting::ExtensionSetting(nsIGlobalObject* aGlobal,
                                    ExtensionBrowser* aExtensionBrowser,
                                    const nsAString& aNamespace)
@@ -42,13 +44,5 @@ JSObject* ExtensionSetting::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionSetting::GetParentObject() const { return mGlobal; }
-
-ExtensionEventManager* ExtensionSetting::OnChange() {
-  if (!mOnChangeEventMgr) {
-    mOnChangeEventMgr = CreateEventManager(u"onChange"_ns);
-  }
-
-  return mOnChangeEventMgr;
-}
 
 }  // namespace mozilla::extensions
