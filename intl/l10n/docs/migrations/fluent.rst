@@ -12,9 +12,16 @@
 Fluent to Fluent Migrations
 ===========================
 
-It’s possible to migrate existing Fluent messages using :python:`COPY_PATTERN`
-in a migration recipe. Unlike migrations from legacy content, it’s not possible
-to interpolate the text, only to copy existing content without changes.
+When migrating existing Fluent messages,
+it's possible to copy a source directly with :python:`COPY_PATTERN`,
+or to apply string replacements and other changes
+by extending the :python:`TransformPattern` visitor class.
+
+These transforms work with individual Fluent patterns,
+i.e. the body of a Fluent message or one of its attributes.
+
+Copying Fluent Patterns
+-----------------------
 
 Consider for example a patch modifying an existing message to move the original
 value to a :js:`alt` attribute.
@@ -68,5 +75,79 @@ of the message.
 
 .. warning::
 
-  Using the message identifier in :python:`COPY_PATTERN` will not migrate the
-  message as a whole, with all its attributes, only its value.
+  The second argument of :python:`COPY_PATTERN` and :python:`TransformPattern`
+  identifies a pattern, so using the message identifier will not
+  migrate the message as a whole, with all its attributes, only its value.
+
+Transforming Fluent Patterns
+----------------------------
+
+To apply changes to Fluent messages, you may extend the
+:python:`TransformPattern` class to create your transformation.
+This is a powerful general-purpose tool, of which :python:`COPY_PATTERN` is the
+simplest extension that applies no transformation to the source.
+
+Consider for example a patch copying an existing message to strip out its HTML
+content to use as an ARIA value.
+
+Original message:
+
+
+.. code-block:: fluent
+
+  videocontrols-label =
+      { $position }<span data-l10n-name="duration"> / { $duration }</span>
+
+
+New message:
+
+
+.. code-block:: fluent
+
+  videocontrols-scrubber =
+      .aria-valuetext = { $position } / { $duration }
+
+
+A migration may be applied to create this new message with:
+
+
+.. code-block:: python
+
+    from fluent.migrate.transforms import TransformPattern
+    import fluent.syntax.ast as FTL
+
+    class STRIP_SPAN(TransformPattern):
+        def visit_TextElement(self, node):
+            node.value = re.sub("</?span[^>]*>", "", node.value)
+            return node
+
+    def migrate(ctx):
+        path = "toolkit/toolkit/global/videocontrols.ftl"
+        ctx.add_transforms(
+            path,
+            path,
+            [
+                FTL.Message(
+                    id=FTL.Identifier("videocontrols-scrubber"),
+                    attributes=[
+                        FTL.Attribute(
+                            id=FTL.Identifier("aria-valuetext"),
+                            value=STRIP_SPAN(path, "videocontrols-label"),
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+
+Note that a custom extension such as :python:`STRIP_SPAN` is not supported by
+the :python:`transforms_from` utility, so the list of transforms needs to be
+defined explicitly.
+
+Internally, :python:`TransformPattern` extends the `fluent.syntax`__
+:python:`Transformer`, which defines the :python:`FTL` AST used here.
+As a specific convenience, pattern element visitors such as
+:python:`visit_TextElement` are allowed to return a :python:`FTL.Pattern`
+to replace themselves with more than one node.
+
+__ https://projectfluent.org/python-fluent/fluent.syntax/stable/
