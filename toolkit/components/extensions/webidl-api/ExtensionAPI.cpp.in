@@ -21,6 +21,19 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION({{ webidl_name }})
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+/* TODO add implementation for the event manager getter if any.
+
+// Defines the OnEVENTNAME method implementation and expects a data member computed
+// based on the getter method name (e.g. `mOnEVENTNAMEEventManager`) where the
+// ExtensionEventManager instance is going to be stored.
+NS_IMPL_WEBEXT_EVENTMGR({{webidl_name}}, u"onEVENTNAME"_ns, OnEVENTNAME)
+
+// or to use a specific data member name:
+//
+// NS_IMPL_WEBEXT_EVENTMGR_WITH_DATAMEMBER({{webidl_name}}, u"onEVENTNAME"_ns, OnEventName, mDataMemberName)
+
+*/
+
 {{ webidl_name }}::{{ webidl_name }}(nsIGlobalObject* aGlobal,
                              ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -39,15 +52,5 @@ JSObject* {{ webidl_name }}::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* {{ webidl_name }}::GetParentObject() const { return mGlobal; }
-
-/* TODO add implementation for the event manager getter if any.
-ExtensionEventManager* {{ webidl_name}}::OnEVENTNAME() {
-  if (!mOnEVENTNAMEEventMgr) {
-    mOnEVENTNAMEEventMgr = CreateEventManager(u"onEventName"_ns);
-  }
-
-  return mOnEVENTNAMEEventMgr;
-}
-*/
 
 }  // namespace mozilla::extensions

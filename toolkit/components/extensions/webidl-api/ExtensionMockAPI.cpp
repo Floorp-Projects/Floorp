@@ -23,6 +23,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionMockAPI)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR_WITH_DATAMEMBER(ExtensionMockAPI, u"onTestEvent"_ns,
+                                        OnTestEvent, mOnTestEventMgr)
+
 ExtensionMockAPI::ExtensionMockAPI(nsIGlobalObject* aGlobal,
                                    ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -50,14 +53,6 @@ void ExtensionMockAPI::GetPropertyAsErrorObject(
 
 void ExtensionMockAPI::GetPropertyAsString(DOMString& aRetval) {
   GetWebExtPropertyAsString(u"getPropertyAsString"_ns, aRetval);
-}
-
-ExtensionEventManager* ExtensionMockAPI::OnTestEvent() {
-  if (!mOnTestEventMgr) {
-    mOnTestEventMgr = CreateEventManager(u"onTestEvent"_ns);
-  }
-
-  return mOnTestEventMgr;
 }
 
 }  // namespace extensions

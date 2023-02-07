@@ -39,6 +39,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPort)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionPort, u"onMessage"_ns, OnMessage)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionPort, u"onDisconnect"_ns, OnDisconnect)
+
 // static
 already_AddRefed<ExtensionPort> ExtensionPort::Create(
     nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
@@ -96,22 +99,6 @@ JSObject* ExtensionPort::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionPort::GetParentObject() const { return mGlobal; }
-
-ExtensionEventManager* ExtensionPort::OnMessage() {
-  if (!mOnMessageEventMgr) {
-    mOnMessageEventMgr = CreateEventManager(u"onMessage"_ns);
-  }
-
-  return mOnMessageEventMgr;
-}
-
-ExtensionEventManager* ExtensionPort::OnDisconnect() {
-  if (!mOnDisconnectEventMgr) {
-    mOnDisconnectEventMgr = CreateEventManager(u"onDisconnect"_ns);
-  }
-
-  return mOnDisconnectEventMgr;
-}
 
 void ExtensionPort::GetName(nsAString& aString) {
   aString.Assign(mPortDescriptor->mName);

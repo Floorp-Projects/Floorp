@@ -21,6 +21,18 @@ class Function;
 
 namespace extensions {
 
+#define NS_IMPL_WEBEXT_EVENTMGR_WITH_DATAMEMBER(            \
+    _class, _eventName, _eventGetterName, _eventDataMember) \
+  ExtensionEventManager* _class::_eventGetterName() {       \
+    if (!(_eventDataMember)) {                              \
+      (_eventDataMember) = CreateEventManager(_eventName);  \
+    }                                                       \
+    return (_eventDataMember);                              \
+  }
+#define NS_IMPL_WEBEXT_EVENTMGR(_class, _eventName, _eventGetterName) \
+  NS_IMPL_WEBEXT_EVENTMGR_WITH_DATAMEMBER(                            \
+      _class, _eventName, _eventGetterName, m##_eventGetterName##EventMgr)
+
 class ExtensionAPIAddRemoveListener;
 class ExtensionAPICallFunctionNoReturn;
 class ExtensionAPICallSyncFunction;
