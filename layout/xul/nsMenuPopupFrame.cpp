@@ -179,10 +179,11 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   nsViewManager* viewManager = ourView->GetViewManager();
   viewManager->SetViewFloating(ourView, true);
 
+  const auto& el = PopupElement();
   mPopupType = PopupType::Panel;
-  if (aContent->IsAnyOfXULElements(nsGkAtoms::menupopup, nsGkAtoms::popup)) {
+  if (el.IsMenu()) {
     mPopupType = PopupType::Menu;
-  } else if (aContent->IsXULElement(nsGkAtoms::tooltip)) {
+  } else if (el.IsXULElement(nsGkAtoms::tooltip)) {
     mPopupType = PopupType::Tooltip;
   }
 
@@ -192,14 +193,11 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   // Support incontentshell=false attribute to allow popups to be displayed
   // outside of the content shell. Chrome only.
-  if (aContent->NodePrincipal()->IsSystemPrincipal()) {
-    if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::incontentshell,
-                                           nsGkAtoms::_true, eCaseMatters)) {
+  if (el.NodePrincipal()->IsSystemPrincipal()) {
+    if (el.GetXULBoolAttr(nsGkAtoms::incontentshell)) {
       mInContentShell = true;
-    } else if (aContent->AsElement()->AttrValueIs(
-                   kNameSpaceID_None, nsGkAtoms::incontentshell,
-                   nsGkAtoms::_false, eCaseMatters)) {
+    } else if (el.AttrValueIs(kNameSpaceID_None, nsGkAtoms::incontentshell,
+                              nsGkAtoms::_false, eCaseMatters)) {
       mInContentShell = false;
     }
   }
