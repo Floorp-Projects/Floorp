@@ -62,7 +62,6 @@ mochitest-plain:
         - xorigin
         - no-fission
         - socketprocess_networking
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
         - headless
@@ -83,10 +82,6 @@ mochitest-plain:
             socketprocess_networking:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -159,7 +154,6 @@ mochitest-a11y:
     variants:
         - 1proc
         - socketprocess_networking+1proc
-        - wayland+1proc
         - webrender-sw+1proc
         - a11y-no-cache+1proc
     run-on-projects:
@@ -167,10 +161,6 @@ mochitest-a11y:
             socketprocess_networking+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: ['autoland', 'mozilla-central']
-                    default: []
-            wayland+1proc:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
                     default: []
             webrender-sw+1proc:
                 by-test-platform:
@@ -192,7 +182,6 @@ mochitest-browser-chrome:
     variants:
         - webrender-sw
         - webrender-sw+a11y-checks
-        - webrender-sw+wayland
         - socketprocess_networking
         - msix
     run-on-projects:
@@ -214,7 +203,6 @@ mochitest-browser-chrome:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
-            webrender-sw+wayland: []
             msix:
                 by-test-platform:
                     windows10-64-2004-shippable-qr/opt: built-projects
@@ -351,17 +339,12 @@ mochitest-chrome:
     variants:
         - 1proc
         - socketprocess_networking+1proc
-        - wayland+1proc
         - webrender-sw+1proc
     run-on-projects:
         by-variant:
             socketprocess_networking+1proc:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            wayland+1proc:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
                     default: []
             webrender-sw+1proc:
                 by-test-platform:
@@ -392,7 +375,6 @@ mochitest-devtools-chrome:
     variants:
         - a11y-checks
         - socketprocess_networking
-        - wayland
         - webrender-sw
         - devtools-no-eft+no-fission
     run-on-projects:
@@ -408,11 +390,6 @@ mochitest-devtools-chrome:
             socketprocess_networking:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64-ccov-qr/opt: []
-                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -458,15 +435,10 @@ mochitest-plain-gpu:
     loopback-video: true
     variants:
         - no-fission
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
         by-variant:
-            wayland:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
-                    default: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
@@ -520,15 +492,10 @@ mochitest-chrome-gpu:
     variants:
         - 1proc
         - socketprocess_networking+1proc
-        - wayland+1proc
         - webrender-sw+1proc
     run-on-projects:
         by-variant:
             socketprocess_networking+1proc: []
-            wayland+1proc:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
-                    default: []
             webrender-sw+1proc:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
@@ -567,7 +534,6 @@ mochitest-media:
         - no-fission
         - socketprocess+no-fission
         - socketprocess
-        - wayland
         - webgl-ipc
         - webrender-sw+no-fission
         - webrender-sw
@@ -598,10 +564,6 @@ mochitest-media:
                     macosx.*-64(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows10-(32|64)-2004(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows10-64-2004-asan-qr/opt: ['autoland', 'mozilla-central']
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64-qr/debug: ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -706,7 +668,6 @@ mochitest-webgl1-core:
             default: 1800
     variants:
         - no-fission
-        - wayland
         - webgl-ipc
         - webrender-sw+no-fission
         - webrender-sw
@@ -719,10 +680,6 @@ mochitest-webgl1-core:
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
                     win.*: ["trunk"]
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -768,7 +725,6 @@ mochitest-webgl1-ext:
     variants:
         - no-fission
         - webgl-ipc
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
@@ -780,10 +736,6 @@ mochitest-webgl1-ext:
                     linux.*-64.*: built-projects
                     mac.*: ["trunk"]
                     windows10-64-2004.*: built-projects
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -830,7 +782,6 @@ mochitest-webgl2-core:
     variants:
         - no-fission
         - webgl-ipc
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
@@ -843,10 +794,6 @@ mochitest-webgl2-core:
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
                     win.*: ["trunk"]
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -885,7 +832,6 @@ mochitest-webgl2-ext:
         - webgl-ipc
         - webrender-sw+no-fission
         - webrender-sw
-        - wayland
     run-on-projects:
         by-variant:
             webgl-ipc:
@@ -895,10 +841,6 @@ mochitest-webgl2-ext:
                     linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
                     win.*: ["trunk"]
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64(-shippable|-asan)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -938,7 +880,6 @@ mochitest-webgl2-deqp:
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     variants:
-        - wayland
         - webgl-ipc
         - webrender-sw
     run-on-projects: []  # Don't run this for now.
@@ -962,11 +903,9 @@ mochitest-webgpu:
     loopback-video: true
     variants:
         - no-fission
-        - wayland
         - webrender-sw+no-fission
     run-on-projects:
         by-variant:
-            wayland: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: ["trunk"]
@@ -1004,7 +943,6 @@ mochitest-remote:
     variants:
         - no-fission
         - socketprocess_networking
-        - wayland
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
@@ -1020,10 +958,6 @@ mochitest-remote:
             webrender-sw:
                 by-test-platform:
                     linux.*64-qr/debug: ['all']
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
                     default: []
             no-fission:
                 by-test-platform:
