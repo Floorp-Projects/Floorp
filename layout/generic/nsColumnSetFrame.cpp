@@ -627,7 +627,26 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedBSize);
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
                                  Some(kidCBSize));
-      kidReflowInput.mFlags.mIsTopOfPage = !aConfig.mIsBalancing;
+      kidReflowInput.mFlags.mIsTopOfPage = [&]() {
+        const bool isNestedMulticol =
+            aReflowInput.mParentReflowInput->mFrame->HasAnyStateBits(
+                NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
+        if (isNestedMulticol) {
+          if (aReflowInput.mFlags.mIsTopOfPage) {
+            // If this is the last balancing reflow in a nested multicol, we
+            // want to force fit content to avoid infinite loops.
+            return !aConfig.mIsBalancing || aConfig.mIsLastBalancingReflow;
+          }
+          // If we are a nested multicol and not at the top of page, we
+          // shouldn't force fit content. This is because our
+          // ColumnSetWrapperFrame can be pushed to next page/column and
+          // reflowed again with a potentially larger available block-size.
+          return false;
+        }
+        // We are a top-level multicol. Force fit the content only if we are not
+        // balancing columns.
+        return !aConfig.mIsBalancing;
+      }();
       kidReflowInput.mFlags.mTableIsSplittable = false;
       kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mIsBalancing;
       kidReflowInput.mBreakType = ReflowInput::BreakType::Column;
@@ -1149,6 +1168,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     // balancing. Otherwise we'd have to split, and it's not clear what we'd
     // do with that.
     COLUMN_SET_LOG("%s: Last attempt to call ReflowColumns", __func__);
+    aConfig.mIsLastBalancingReflow = true;
     const bool forceUnboundedLastColumn =
         aReflowInput.mParentReflowInput->AvailableBSize() ==
         NS_UNCONSTRAINEDSIZE;

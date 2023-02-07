@@ -108,6 +108,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // sequentially.
     bool mForceAuto = false;
 
+    // A boolean indicates whether or not we are in the last attempt to reflow
+    // columns. We set it to true at the end of FindBestBalanceBSize().
+    bool mIsLastBalancingReflow = false;
+
     // The last known column block-size that was 'feasible'. A column bSize is
     // feasible if all child content fits within the specified bSize.
     nscoord mKnownFeasibleBSize = NS_UNCONSTRAINEDSIZE;
