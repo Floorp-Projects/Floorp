@@ -197,6 +197,9 @@
 
 #placesList {
   background-color: var(--organizer-pane-background);
+  width: 200px;
+  min-width: 100px;
+  max-width: 400px;
 }
 
 #placesView > splitter {

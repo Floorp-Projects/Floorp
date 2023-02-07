@@ -3525,7 +3525,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 135;
+    const UI_VERSION = 136;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4288,16 +4288,11 @@ BrowserGlue.prototype = {
       }
     }
 
-    function migrateXULAttributeToStyle(id, attr) {
+    function migrateXULAttributeToStyle(url, id, attr) {
       try {
-        let value = Services.xulStore.getValue(BROWSER_DOCURL, id, attr);
+        let value = Services.xulStore.getValue(url, id, attr);
         if (value) {
-          Services.xulStore.setValue(
-            BROWSER_DOCURL,
-            id,
-            "style",
-            `width: ${value}px;`
-          );
+          Services.xulStore.setValue(url, id, "style", `${attr}: ${value}px;`);
         }
       } catch (ex) {
         console.error(`Error migrating ${id}'s ${attr} value: `, ex);
@@ -4310,7 +4305,7 @@ BrowserGlue.prototype = {
 
     // Bug 1793366: migrate sidebar persisted attribute from width to style.
     if (currentUIVersion < 130) {
-      migrateXULAttributeToStyle("sidebar-box", "width");
+      migrateXULAttributeToStyle(BROWSER_DOCURL, "sidebar-box", "width");
     }
 
     // Migration 131 was moved to 133 to allow for an uplift.
@@ -4346,6 +4341,14 @@ BrowserGlue.prototype = {
       } catch (e) {
         console.error("Error migrating tabsInTitlebar setting", e);
       }
+    }
+
+    if (currentUIVersion < 136) {
+      migrateXULAttributeToStyle(
+        "chrome://browser/content/places/places.xhtml",
+        "placesList",
+        "width"
+      );
     }
 
     // Update the migration version.
