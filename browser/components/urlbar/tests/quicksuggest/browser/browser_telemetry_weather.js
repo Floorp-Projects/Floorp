@@ -7,18 +7,17 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
-
-const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
 const suggestion_type = "weather";
 const match_type = "firefox-suggest";
 const index = 0;
 const position = index + 1;
 
+const { TELEMETRY_SCALARS: QS_SCALARS } = UrlbarProviderQuickSuggest;
+const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
 const { WEATHER_SUGGESTION: suggestion } = MerinoTestUtils;
 
 add_setup(async function() {
@@ -41,6 +40,7 @@ add_task(async function() {
   await doTelemetryTest({
     index,
     suggestion,
+    providerName: UrlbarProviderWeather.name,
     showSuggestion: async () => {
       await SimpleTest.promiseFocus(window);
       await UrlbarTestUtils.promisePopupOpen(window, () =>
@@ -63,15 +63,15 @@ add_task(async function() {
     // exposure
     exposure: {
       scalars: {
-        [TELEMETRY_SCALARS.EXPOSURE_WEATHER]: position,
+        [WEATHER_SCALARS.EXPOSURE]: position,
       },
     },
     // impression-only
     impressionOnly: {
       scalars: {
-        [TELEMETRY_SCALARS.EXPOSURE_WEATHER]: position,
-        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-        [TELEMETRY_SCALARS.IMPRESSION_WEATHER]: position,
+        [WEATHER_SCALARS.EXPOSURE]: position,
+        [WEATHER_SCALARS.IMPRESSION]: position,
+        [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
       },
       event: {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -89,11 +89,11 @@ add_task(async function() {
       // click
       "urlbarView-row-inner": {
         scalars: {
-          [TELEMETRY_SCALARS.EXPOSURE_WEATHER]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_WEATHER]: position,
-          [TELEMETRY_SCALARS.CLICK_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_WEATHER]: position,
+          [WEATHER_SCALARS.EXPOSURE]: position,
+          [WEATHER_SCALARS.IMPRESSION]: position,
+          [WEATHER_SCALARS.CLICK]: position,
+          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
+          [QS_SCALARS.CLICK_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -110,11 +110,11 @@ add_task(async function() {
       // block
       "urlbarView-button-block": {
         scalars: {
-          [TELEMETRY_SCALARS.EXPOSURE_WEATHER]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_WEATHER]: position,
-          [TELEMETRY_SCALARS.BLOCK_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.BLOCK_WEATHER]: position,
+          [WEATHER_SCALARS.EXPOSURE]: position,
+          [WEATHER_SCALARS.IMPRESSION]: position,
+          [WEATHER_SCALARS.BLOCK]: position,
+          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
+          [QS_SCALARS.BLOCK_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -131,11 +131,11 @@ add_task(async function() {
       // help
       "urlbarView-button-help": {
         scalars: {
-          [TELEMETRY_SCALARS.EXPOSURE_WEATHER]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_WEATHER]: position,
-          [TELEMETRY_SCALARS.HELP_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.HELP_WEATHER]: position,
+          [WEATHER_SCALARS.EXPOSURE]: position,
+          [WEATHER_SCALARS.IMPRESSION]: position,
+          [WEATHER_SCALARS.HELP]: position,
+          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
+          [QS_SCALARS.HELP_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,

@@ -16,13 +16,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
-
-const MERINO_PROVIDER_WEATHER = "accuweather";
-const WEATHER_PROVIDER_DISPLAY_NAME = "AccuWeather";
 
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
@@ -32,122 +27,21 @@ const TELEMETRY_SCALARS = {
   BLOCK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.block_dynamic_wikipedia`,
   BLOCK_NONSPONSORED: `${TELEMETRY_PREFIX}.block_nonsponsored`,
   BLOCK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_nonsponsored_bestmatch`,
-  BLOCK_WEATHER: `${TELEMETRY_PREFIX}.block_weather`,
   CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
   CLICK_NONSPONSORED: `${TELEMETRY_PREFIX}.click_nonsponsored`,
   CLICK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_nonsponsored_bestmatch`,
   CLICK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_sponsored_bestmatch`,
   CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
-  CLICK_WEATHER: `${TELEMETRY_PREFIX}.click_weather`,
-  EXPOSURE_WEATHER: `${TELEMETRY_PREFIX}.exposure_weather`,
   HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
   HELP_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_nonsponsored_bestmatch`,
   HELP_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_sponsored_bestmatch`,
   HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
-  HELP_WEATHER: `${TELEMETRY_PREFIX}.help_weather`,
   IMPRESSION_SPONSORED: `${TELEMETRY_PREFIX}.impression_sponsored`,
   IMPRESSION_NONSPONSORED: `${TELEMETRY_PREFIX}.impression_nonsponsored`,
   IMPRESSION_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_nonsponsored_bestmatch`,
   IMPRESSION_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_sponsored_bestmatch`,
   IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
-  IMPRESSION_WEATHER: `${TELEMETRY_PREFIX}.impression_weather`,
-};
-
-const WEATHER_DYNAMIC_TYPE = "weather";
-const WEATHER_VIEW_TEMPLATE = {
-  attributes: {
-    selectable: true,
-  },
-  children: [
-    {
-      name: "currentConditions",
-      tag: "span",
-      children: [
-        {
-          name: "currently",
-          tag: "div",
-        },
-        {
-          name: "currentTemperature",
-          tag: "div",
-          children: [
-            {
-              name: "temperature",
-              tag: "span",
-            },
-            {
-              name: "weatherIcon",
-              tag: "img",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: "summary",
-      tag: "span",
-      overflowable: true,
-      children: [
-        {
-          name: "top",
-          tag: "div",
-          children: [
-            {
-              name: "topNoWrap",
-              tag: "span",
-              children: [
-                { name: "title", tag: "span", classList: ["urlbarView-title"] },
-                {
-                  name: "titleSeparator",
-                  tag: "span",
-                  classList: ["urlbarView-title-separator"],
-                },
-              ],
-            },
-            {
-              name: "url",
-              tag: "span",
-              classList: ["urlbarView-url"],
-            },
-          ],
-        },
-        {
-          name: "middle",
-          tag: "div",
-          children: [
-            {
-              name: "middleNoWrap",
-              tag: "span",
-              overflowable: true,
-              children: [
-                {
-                  name: "summaryText",
-                  tag: "span",
-                },
-                {
-                  name: "summaryTextSeparator",
-                  tag: "span",
-                },
-                {
-                  name: "highLow",
-                  tag: "span",
-                },
-              ],
-            },
-            {
-              name: "highLowWrap",
-              tag: "span",
-            },
-          ],
-        },
-        {
-          name: "bottom",
-          tag: "div",
-        },
-      ],
-    },
-  ],
 };
 
 /**
@@ -155,15 +49,6 @@ const WEATHER_VIEW_TEMPLATE = {
  * they have currently typed so they can navigate directly.
  */
 class ProviderQuickSuggest extends UrlbarProvider {
-  constructor(...args) {
-    super(...args);
-    lazy.UrlbarResult.addDynamicResultType(WEATHER_DYNAMIC_TYPE);
-    lazy.UrlbarView.addDynamicViewTemplate(
-      WEATHER_DYNAMIC_TYPE,
-      WEATHER_VIEW_TEMPLATE
-    );
-  }
-
   /**
    * Returns the name of this provider.
    *
@@ -189,14 +74,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return { ...TELEMETRY_SCALARS };
   }
 
-  getPriority(context) {
-    if (!context.searchString) {
-      // Zero-prefix suggestions have the same priority as top sites.
-      return lazy.UrlbarProviderTopSites.PRIORITY;
-    }
-    return super.getPriority(context);
-  }
-
   /**
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
@@ -206,7 +83,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    this._resultFromLastQuery = null;
+    this.#resultFromLastQuery = null;
 
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
@@ -226,10 +103,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return false;
     }
 
-    if (!queryContext.searchString) {
-      return !!lazy.QuickSuggest.weather.suggestion;
-    }
-
     // Trim only the start of the search string because a trailing space can
     // affect the suggestions.
     let trimmedSearchString = queryContext.searchString.trimStart();
@@ -246,97 +119,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * This is called only for dynamic result types, when the urlbar view updates
-   * the view of one of the results of the provider.  It should return an object
-   * describing the view update.
-   *
-   * @param {UrlbarResult} result
-   *   The result whose view will be updated.
-   * @param {Map} idsByName
-   *   A Map from an element's name, as defined by the provider; to its ID in
-   *   the DOM, as defined by the browser.This is useful if parts of the view
-   *   update depend on element IDs, as some ARIA attributes do.
-   * @returns {object} An object describing the view update.
-   */
-  getViewUpdate(result, idsByName) {
-    let uppercaseUnit = result.payload.temperatureUnit.toUpperCase();
-
-    return {
-      currently: {
-        l10n: {
-          id: "firefox-suggest-weather-currently",
-          cacheable: true,
-        },
-      },
-      temperature: {
-        l10n: {
-          id: "firefox-suggest-weather-temperature",
-          args: {
-            value: result.payload.temperature,
-            unit: uppercaseUnit,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      weatherIcon: {
-        attributes: { iconId: result.payload.iconId },
-      },
-      title: {
-        l10n: {
-          id: "firefox-suggest-weather-title",
-          args: { city: result.payload.city },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      url: {
-        textContent: result.payload.url,
-      },
-      summaryText: {
-        l10n: {
-          id: "firefox-suggest-weather-summary-text",
-          args: {
-            currentConditions: result.payload.currentConditions,
-            forecast: result.payload.forecast,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      highLow: {
-        l10n: {
-          id: "firefox-suggest-weather-high-low",
-          args: {
-            high: result.payload.high,
-            low: result.payload.low,
-            unit: uppercaseUnit,
-          },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
-      highLowWrap: {
-        l10n: {
-          id: "firefox-suggest-weather-high-low",
-          args: {
-            high: result.payload.high,
-            low: result.payload.low,
-            unit: uppercaseUnit,
-          },
-        },
-      },
-      bottom: {
-        l10n: {
-          id: "firefox-suggest-weather-sponsored",
-          args: { provider: WEATHER_PROVIDER_DISPLAY_NAME },
-          cacheable: true,
-        },
-      },
-    };
-  }
-
-  /**
    * Starts querying. Extended classes should return a Promise resolved when the
    * provider is done searching AND returning results.
    *
@@ -347,16 +129,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
-
-    if (!queryContext.searchString) {
-      let result = this._makeWeatherResult();
-      if (result) {
-        addCallback(this, result);
-        this._resultFromLastQuery = result;
-      }
-      return;
-    }
-
     let searchString = this._trimmedSearchString;
 
     // There are two sources for quick suggest: remote settings and Merino.
@@ -488,7 +260,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     addCallback(this, result);
 
-    this._resultFromLastQuery = result;
+    this.#resultFromLastQuery = result;
 
     // The user triggered a suggestion. Depending on the experiment the user is
     // enrolled in (if any), we may need to record the Nimbus exposure event.
@@ -532,13 +304,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(queryContext, result) {
-    if (result.payload.merinoProvider == MERINO_PROVIDER_WEATHER) {
-      this.logger.info("Blocking weather result");
-      lazy.UrlbarPrefs.set("suggest.weather", false);
-      this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
-      return true;
-    }
-
     if (
       (!result.isBestMatch &&
         !lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
@@ -552,21 +317,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
     this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
     return true;
-  }
-
-  onResultsShown(queryContext, results) {
-    let weatherResult = results.find(
-      r => r.payload.merinoProvider == MERINO_PROVIDER_WEATHER
-    );
-    if (weatherResult) {
-      // Telemetry indexes are 1-based.
-      let telemetryResultIndex = weatherResult.rowIndex + 1;
-      Services.telemetry.keyedScalarAdd(
-        TELEMETRY_SCALARS.EXPOSURE_WEATHER,
-        telemetryResultIndex,
-        1
-      );
-    }
   }
 
   /**
@@ -587,15 +337,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    let result = this._resultFromLastQuery;
-    this._resultFromLastQuery = null;
+    let result = this.#resultFromLastQuery;
+    this.#resultFromLastQuery = null;
 
     // Reset the Merino session ID when an engagement ends. Per spec, for the
     // user's privacy, we don't keep it around between engagements. It wouldn't
     // hurt to do this on start too, it's just not necessary if we always do it
     // on end.
     if (state != "start") {
-      this._merino?.resetSession();
+      this.#merino?.resetSession();
     }
 
     // Impression and clicked telemetry are both recorded on engagement. We
@@ -673,7 +423,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let telemetryResultIndex = result.rowIndex + 1;
     let isDynamicWikipedia =
       result.payload.sponsoredAdvertiser == "dynamic-wikipedia";
-    let isWeather = result.payload.merinoProvider == MERINO_PROVIDER_WEATHER;
 
     // impression scalars
     Services.telemetry.keyedScalarAdd(
@@ -687,13 +436,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (isDynamicWikipedia) {
       Services.telemetry.keyedScalarAdd(
         TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA,
-        telemetryResultIndex,
-        1
-      );
-    }
-    if (isWeather) {
-      Services.telemetry.keyedScalarAdd(
-        TELEMETRY_SCALARS.IMPRESSION_WEATHER,
         telemetryResultIndex,
         1
       );
@@ -720,9 +462,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA);
         }
-        if (isWeather) {
-          clickScalars.push(TELEMETRY_SCALARS.CLICK_WEATHER);
-        }
         if (result.isBestMatch) {
           clickScalars.push(
             result.payload.isSponsored
@@ -740,9 +479,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA);
         }
-        if (isWeather) {
-          clickScalars.push(TELEMETRY_SCALARS.HELP_WEATHER);
-        }
         if (result.isBestMatch) {
           clickScalars.push(
             result.payload.isSponsored
@@ -759,9 +495,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
         );
         if (isDynamicWikipedia) {
           clickScalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
-        }
-        if (isWeather) {
-          clickScalars.push(TELEMETRY_SCALARS.BLOCK_WEATHER);
         }
         if (result.isBestMatch) {
           clickScalars.push(
@@ -788,8 +521,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let suggestion_type;
     if (isDynamicWikipedia) {
       suggestion_type = "dynamic-wikipedia";
-    } else if (isWeather) {
-      suggestion_type = "weather";
     } else {
       suggestion_type = result.payload.isSponsored
         ? "sponsored"
@@ -822,7 +553,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   _sendEngagementPings({ selType, match_type, result, telemetryResultIndex }) {
     // Custom engagement pings are sent only for the main sponsored and non-
     // sponsored suggestions with an advertiser in their payload, not for other
-    // types of suggestions like navigational suggestions, weather, etc.
+    // types of suggestions like navigational suggestions.
     if (!result.payload.sponsoredAdvertiser) {
       return;
     }
@@ -886,7 +617,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   cancelQuery(queryContext) {
     // Cancel the Merino timeout timer so it doesn't fire and record a timeout.
     // If it's already canceled or has fired, this is a no-op.
-    this._merino?.cancelTimeoutTimer();
+    this.#merino?.cancelTimeoutTimer();
 
     // Don't abort the Merino fetch if one is ongoing. By design we allow
     // fetches to finish so we can record their latency.
@@ -904,8 +635,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   response.
    */
   async _fetchMerinoSuggestions(queryContext, searchString) {
-    if (!this._merino) {
-      this._merino = new lazy.MerinoClient(this.name);
+    if (!this.#merino) {
+      this.#merino = new lazy.MerinoClient(this.name);
     }
 
     let providers;
@@ -919,64 +650,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       providers = [];
     }
 
-    let suggestions = await this._merino.fetch({
+    let suggestions = await this.#merino.fetch({
       providers,
       query: searchString,
     });
 
     return suggestions;
-  }
-
-  /**
-   * Returns a UrlbarResult for the current prefetched weather suggestion if
-   * there is one.
-   *
-   * @returns {UrlbarResult}
-   *   A result or null if there's no weather suggestion.
-   */
-  _makeWeatherResult() {
-    let { suggestion } = lazy.QuickSuggest.weather;
-    if (!suggestion) {
-      return null;
-    }
-
-    let unit = Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      {
-        url: suggestion.url,
-        iconId: suggestion.current_conditions.icon_id,
-        helpUrl: lazy.QuickSuggest.HELP_URL,
-        helpL10n: {
-          id: lazy.UrlbarPrefs.get("resultMenu")
-            ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-            : "firefox-suggest-urlbar-learn-more",
-        },
-        isBlockable: true,
-        blockL10n: {
-          id: lazy.UrlbarPrefs.get("resultMenu")
-            ? "urlbar-result-menu-dismiss-firefox-suggest"
-            : "firefox-suggest-urlbar-block",
-        },
-        requestId: suggestion.request_id,
-        source: suggestion.source,
-        merinoProvider: suggestion.provider,
-        dynamicType: WEATHER_DYNAMIC_TYPE,
-        city: suggestion.city_name,
-        temperatureUnit: unit,
-        temperature: suggestion.current_conditions.temperature[unit],
-        currentConditions: suggestion.current_conditions.summary,
-        forecast: suggestion.forecast.summary,
-        high: suggestion.forecast.high[unit],
-        low: suggestion.forecast.low[unit],
-        isWeather: true,
-        shouldNavigate: true,
-      }
-    );
-
-    result.suggestedIndex = 0;
-    return result;
   }
 
   /**
@@ -1029,11 +708,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return true;
   }
 
+  get _test_merino() {
+    return this.#merino;
+  }
+
   // The result we added during the most recent query.
-  _resultFromLastQuery = null;
+  #resultFromLastQuery = null;
 
   // The Merino client.
-  _merino = null;
+  #merino = null;
 }
 
 export var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();

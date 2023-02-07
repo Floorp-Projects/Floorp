@@ -1229,7 +1229,8 @@ export var UrlbarUtils = {
           return "tabtosearch";
         } else if (result.providerName == "quickactions") {
           return "quickaction";
-        } else if (result.providerName == "UrlbarProviderQuickSuggest") {
+        } else if (result.providerName == "Weather") {
+          // TODO (SNT-441): Return "weather". This value is used in telemetry.
           return "quicksuggest";
         }
         return "dynamic";
@@ -1390,6 +1391,10 @@ export var UrlbarUtils = {
           return result.payload.isSponsored
             ? "suggest_sponsor"
             : "suggest_non_sponsor";
+        }
+        if (result.providerName === "Weather") {
+          // TODO (SNT-441): Return "weather". This value is used in telemetry.
+          return "suggest_non_sponsor";
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";

@@ -9,10 +9,9 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -1902,7 +1901,7 @@ export class UrlbarView {
     }
 
     if (!this.#queryContext?.searchString) {
-      if (row.result.payload.isWeather) {
+      if (row.result.providerName == lazy.UrlbarProviderWeather.name) {
         // Add top pick label for weather suggestion
         return { id: "urlbar-group-best-match" };
       }
@@ -2594,18 +2593,18 @@ export class UrlbarView {
 
     Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_EXPOSURE, 1);
 
-    // Some quick suggest telemetry needs to be recorded when the zero-prefix
+    // Weather suggestion telemetry needs to be recorded when the zero-prefix
     // view is shown. Ideally this logic would be general to all providers.
     // Relying on `visibleResults` here means we assume `onQueryFinished()` has
     // been called by this point and `visibleResults` accurately reflects the
     // visible rows at the end of the zero-prefix query.
-    let quickSuggestResults = this.visibleResults.filter(
-      r => r.providerName == lazy.UrlbarProviderQuickSuggest.name
+    let weatherResults = this.visibleResults.filter(
+      r => r.providerName == lazy.UrlbarProviderWeather.name
     );
-    if (quickSuggestResults.length) {
-      lazy.UrlbarProviderQuickSuggest.onResultsShown(
+    if (weatherResults.length) {
+      lazy.UrlbarProviderWeather.onResultsShown(
         this.#queryContext,
-        quickSuggestResults
+        weatherResults
       );
     }
   }
