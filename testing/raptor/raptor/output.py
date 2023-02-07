@@ -1775,6 +1775,16 @@ class BrowsertimeOutput(PerftestOutput):
                         subtest["alertThreshold"] = float(test["alert_threshold"])
                         subtest["unit"] = test["subtest_unit"]
 
+                        # Add the alert window settings if needed here too in case
+                        # there is no summary value in the test
+                        for schema_name in (
+                            "minBackWindow",
+                            "maxBackWindow",
+                            "foreWindow",
+                        ):
+                            if suite.get(schema_name, None) is not None:
+                                subtest[schema_name] = suite[schema_name]
+
                         # if 'alert_on' is set for this particular measurement, then we want to set
                         # the flag in the perfherder output to turn on alerting for this subtest
                         if self.subtest_alert_on is not None:
