@@ -30,6 +30,8 @@
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStream, mGlobal,
                                       mBackpressureChangePromise, mController,
                                       mReadable, mWritable)
@@ -115,6 +117,8 @@ JSObject* TransformStream::WrapObject(JSContext* aCx,
   return TransformStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace streams_abstract {
+
 // https://streams.spec.whatwg.org/#transform-stream-error-writable-and-unblock-write
 void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
                                                  TransformStream* aStream,
@@ -156,6 +160,8 @@ void TransformStreamError(JSContext* aCx, TransformStream* aStream,
   // Step 2: Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, e).
   TransformStreamErrorWritableAndUnblockWrite(aCx, aStream, aError, aRv);
 }
+
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-perform-transform
 MOZ_CAN_RUN_SCRIPT static already_AddRefed<Promise>
