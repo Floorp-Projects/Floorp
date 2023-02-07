@@ -131,7 +131,7 @@ impl super::Validator {
             }
         }
 
-        let validate_function = |function: &_| -> Result<_, InvalidHandleError> {
+        let validate_function = |function_handle, function: &_| -> Result<_, InvalidHandleError> {
             let &crate::Function {
                 name: _,
                 ref arguments,
@@ -175,6 +175,7 @@ impl super::Validator {
                     local_variables,
                     global_variables,
                     functions,
+                    function_handle,
                 )?;
             }
 
@@ -184,11 +185,11 @@ impl super::Validator {
         };
 
         for entry_point in entry_points.iter() {
-            validate_function(&entry_point.function)?;
+            validate_function(None, &entry_point.function)?;
         }
 
-        for (_function_handle, function) in functions.iter() {
-            validate_function(function)?;
+        for (function_handle, function) in functions.iter() {
+            validate_function(Some(function_handle), function)?;
         }
 
         Ok(())
@@ -229,6 +230,8 @@ impl super::Validator {
         local_variables: &Arena<crate::LocalVariable>,
         global_variables: &Arena<crate::GlobalVariable>,
         functions: &Arena<crate::Function>,
+        // The handle of the current function or `None` if it's an entry point
+        current_function: Option<Handle<crate::Function>>,
     ) -> Result<(), InvalidHandleError> {
         let validate_constant = |handle| Self::validate_constant_handle(handle, constants);
         let validate_type = |handle| Self::validate_type_handle(handle, types);
@@ -373,6 +376,9 @@ impl super::Validator {
             }
             crate::Expression::CallResult(function) => {
                 Self::validate_function_handle(function, functions)?;
+                if let Some(handle) = current_function {
+                    handle.check_dep(function)?;
+                }
             }
             crate::Expression::AtomicResult { .. } => (),
             crate::Expression::ArrayLength(array) => {
@@ -532,8 +538,8 @@ pub enum InvalidHandleError {
 
 #[derive(Clone, Debug, thiserror::Error)]
 #[error(
-    "{subject:?} of kind depends on {depends_on:?} of kind {depends_on_kind}, which has not been \
-    processed yet"
+    "{subject:?} of kind {subject_kind:?} depends on {depends_on:?} of kind {depends_on_kind}, \
+    which has not been processed yet"
 )]
 pub struct FwdDepError {
     // This error is used for many `Handle` types, but there's no point in making this generic, so
@@ -580,7 +586,7 @@ impl<T> Handle<T> {
             Ok(self)
         } else {
             let erase_handle_type = |handle: Handle<_>| {
-                Handle::new(NonZeroU32::new(handle.index().try_into().unwrap()).unwrap())
+                Handle::new(NonZeroU32::new((handle.index() + 1).try_into().unwrap()).unwrap())
             };
             Err(FwdDepError {
                 subject: erase_handle_type(self),

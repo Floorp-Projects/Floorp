@@ -674,6 +674,13 @@ bitflags::bitflags! {
         /// - DX12
         /// - Metal (Intel and AMD GPUs)
         const WRITE_TIMESTAMP_INSIDE_PASSES = 1 << 41;
+        /// Allows shaders to use i16. Not currently supported in naga, only available through `spirv-passthrough`.
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        ///
+        /// This is a native-only feature.
+        const SHADER_INT16 = 1 << 42;
     }
 }
 
@@ -742,8 +749,7 @@ pub struct Limits {
     /// Defaults to 2048. Higher is "better".
     #[cfg_attr(feature = "serde", serde(rename = "maxTextureDimension3D"))]
     pub max_texture_dimension_3d: u32,
-    /// Maximum allowed value for the `size.depth_or_array_layers` of a texture created with
-    /// `TextureDimension::D1` or `TextureDimension::D2`.
+    /// Maximum allowed value for the `size.depth_or_array_layers` of a texture created with `TextureDimension::D2`.
     /// Defaults to 256. Higher is "better".
     pub max_texture_array_layers: u32,
     /// Amount of bind groups that can be attached to a pipeline at the same time. Defaults to 4. Higher is "better".
@@ -3289,8 +3295,19 @@ impl StencilState {
             && (self.read_mask != 0 || self.write_mask != 0)
     }
     /// Returns true if the state doesn't mutate the target values.
-    pub fn is_read_only(&self) -> bool {
-        self.write_mask == 0
+    pub fn is_read_only(&self, cull_mode: Option<Face>) -> bool {
+        // The rules are defined in step 7 of the "Device timeline initialization steps"
+        // subsection of the "Render Pipeline Creation" section of WebGPU
+        // (link to the section: https://gpuweb.github.io/gpuweb/#render-pipeline-creation)
+
+        if self.write_mask == 0 {
+            return true;
+        }
+
+        let front_ro = cull_mode == Some(Face::Front) || self.front.is_read_only();
+        let back_ro = cull_mode == Some(Face::Back) || self.back.is_read_only();
+
+        front_ro && back_ro
     }
     /// Returns true if the stencil state uses the reference value for testing.
     pub fn needs_ref_value(&self) -> bool {
@@ -3380,13 +3397,13 @@ impl DepthStencilState {
     }
 
     /// Returns true if the state doesn't mutate the stencil.
-    pub fn is_stencil_read_only(&self) -> bool {
-        self.stencil.is_read_only()
+    pub fn is_stencil_read_only(&self, cull_mode: Option<Face>) -> bool {
+        self.stencil.is_read_only(cull_mode)
     }
 
     /// Returns true if the state doesn't mutate either depth or stencil of the target.
-    pub fn is_read_only(&self) -> bool {
-        self.is_depth_read_only() && self.is_stencil_read_only()
+    pub fn is_read_only(&self, cull_mode: Option<Face>) -> bool {
+        self.is_depth_read_only() && self.is_stencil_read_only(cull_mode)
     }
 }
 
@@ -3475,6 +3492,13 @@ impl StencilFaceState {
             || self.fail_op == StencilOperation::Replace
             || self.depth_fail_op == StencilOperation::Replace
             || self.pass_op == StencilOperation::Replace
+    }
+
+    /// Returns true if the face state doesn't mutate the target values.
+    pub fn is_read_only(&self) -> bool {
+        self.pass_op == StencilOperation::Keep
+            && self.depth_fail_op == StencilOperation::Keep
+            && self.fail_op == StencilOperation::Keep
     }
 }
 
@@ -4338,8 +4362,9 @@ impl Extent3d {
                 _ => u32::max(1, self.height >> level),
             },
             depth_or_array_layers: match dim {
+                TextureDimension::D1 => 1,
+                TextureDimension::D2 => self.depth_or_array_layers,
                 TextureDimension::D3 => u32::max(1, self.depth_or_array_layers >> level),
-                _ => self.depth_or_array_layers,
             },
         }
     }
@@ -4479,9 +4504,12 @@ pub struct TextureDescriptor<L, V> {
     pub view_formats: V,
 }
 
-impl<L, V: Clone> TextureDescriptor<L, V> {
+impl<L, V> TextureDescriptor<L, V> {
     /// Takes a closure and maps the label of the texture descriptor into another.
-    pub fn map_label<K>(&self, fun: impl FnOnce(&L) -> K) -> TextureDescriptor<K, V> {
+    pub fn map_label<K>(&self, fun: impl FnOnce(&L) -> K) -> TextureDescriptor<K, V>
+    where
+        V: Clone,
+    {
         TextureDescriptor {
             label: fun(&self.label),
             size: self.size,
@@ -4499,7 +4527,10 @@ impl<L, V: Clone> TextureDescriptor<L, V> {
         &self,
         l_fun: impl FnOnce(&L) -> K,
         v_fun: impl FnOnce(V) -> M,
-    ) -> TextureDescriptor<K, M> {
+    ) -> TextureDescriptor<K, M>
+    where
+        V: Clone,
+    {
         TextureDescriptor {
             label: l_fun(&self.label),
             size: self.size,
@@ -5347,13 +5378,13 @@ pub struct ImageSubresourceRange {
     /// Mip level count.
     /// If `Some(count)`, `base_mip_level + count` must be less or equal to underlying texture mip count.
     /// If `None`, considered to include the rest of the mipmap levels, but at least 1 in total.
-    pub mip_level_count: Option<NonZeroU32>,
+    pub mip_level_count: Option<u32>,
     /// Base array layer.
     pub base_array_layer: u32,
     /// Layer count.
     /// If `Some(count)`, `base_array_layer + count` must be less or equal to the underlying array count.
     /// If `None`, considered to include the rest of the array layers, but at least 1 in total.
-    pub array_layer_count: Option<NonZeroU32>,
+    pub array_layer_count: Option<u32>,
 }
 
 impl ImageSubresourceRange {
@@ -5362,7 +5393,6 @@ impl ImageSubresourceRange {
     ///
     /// ```rust
     /// # use wgpu_types as wgpu;
-    /// use std::num::NonZeroU32;
     ///
     /// let range_none = wgpu::ImageSubresourceRange {
     ///     aspect: wgpu::TextureAspect::All,
@@ -5376,9 +5406,9 @@ impl ImageSubresourceRange {
     /// let range_some = wgpu::ImageSubresourceRange {
     ///     aspect: wgpu::TextureAspect::All,
     ///     base_mip_level: 0,
-    ///     mip_level_count: NonZeroU32::new(5),
+    ///     mip_level_count: Some(5),
     ///     base_array_layer: 0,
-    ///     array_layer_count: NonZeroU32::new(10),
+    ///     array_layer_count: Some(10),
     /// };
     /// assert_eq!(range_some.is_full_resource(5, 10), true);
     ///
@@ -5386,7 +5416,7 @@ impl ImageSubresourceRange {
     ///     aspect: wgpu::TextureAspect::All,
     ///     base_mip_level: 0,
     ///     // Only partial resource
-    ///     mip_level_count: NonZeroU32::new(3),
+    ///     mip_level_count: Some(3),
     ///     base_array_layer: 0,
     ///     array_layer_count: None,
     /// };
@@ -5394,8 +5424,8 @@ impl ImageSubresourceRange {
     /// ```
     pub fn is_full_resource(&self, mip_levels: u32, array_layers: u32) -> bool {
         // Mip level count and array layer count need to deal with both the None and Some(count) case.
-        let mip_level_count = self.mip_level_count.map_or(mip_levels, NonZeroU32::get);
-        let array_layer_count = self.array_layer_count.map_or(array_layers, NonZeroU32::get);
+        let mip_level_count = self.mip_level_count.unwrap_or(mip_levels);
+        let array_layer_count = self.array_layer_count.unwrap_or(array_layers);
 
         let aspect_eq = self.aspect == TextureAspect::All;
 
@@ -5413,24 +5443,18 @@ impl ImageSubresourceRange {
     }
 
     /// Returns the mip level range of a subresource range describes for a specific texture.
-    pub fn mip_range<L, V>(&self, texture_desc: &TextureDescriptor<L, V>) -> Range<u32> {
+    pub fn mip_range(&self, mip_level_count: u32) -> Range<u32> {
         self.base_mip_level..match self.mip_level_count {
-            Some(mip_level_count) => self.base_mip_level + mip_level_count.get(),
-            None => texture_desc.mip_level_count,
+            Some(mip_level_count) => self.base_mip_level + mip_level_count,
+            None => mip_level_count,
         }
     }
 
     /// Returns the layer range of a subresource range describes for a specific texture.
-    pub fn layer_range<L, V>(&self, texture_desc: &TextureDescriptor<L, V>) -> Range<u32> {
+    pub fn layer_range(&self, array_layer_count: u32) -> Range<u32> {
         self.base_array_layer..match self.array_layer_count {
-            Some(array_layer_count) => self.base_array_layer + array_layer_count.get(),
-            None => {
-                if texture_desc.dimension == TextureDimension::D3 {
-                    self.base_array_layer + 1
-                } else {
-                    texture_desc.size.depth_or_array_layers
-                }
-            }
+            Some(array_layer_count) => self.base_array_layer + array_layer_count,
+            None => array_layer_count,
         }
     }
 }
