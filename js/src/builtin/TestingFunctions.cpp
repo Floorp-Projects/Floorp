@@ -5399,6 +5399,12 @@ static bool SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool SharedArrayRawBufferCount(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setInt32(LiveMappedBufferCount());
+  return true;
+}
+
 static bool SharedArrayRawBufferRefcount(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -8809,6 +8815,10 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
     JS_FN_HELP("sharedMemoryEnabled", SharedMemoryEnabled, 0, 0,
 "sharedMemoryEnabled()",
 "  Return true if SharedArrayBuffer and Atomics are enabled"),
+
+    JS_FN_HELP("sharedArrayRawBufferCount", SharedArrayRawBufferCount, 0, 0,
+"sharedArrayRawBufferCount()",
+"  Return the number of live SharedArrayRawBuffer objects"),
 
     JS_FN_HELP("sharedArrayRawBufferRefcount", SharedArrayRawBufferRefcount, 0, 0,
 "sharedArrayRawBufferRefcount(sab)",

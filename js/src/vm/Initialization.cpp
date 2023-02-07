@@ -288,7 +288,7 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 
   js::jit::ShutdownJit();
 
-  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !js::WasmReservedBytes());
+  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !js::LiveMappedBufferCount());
 
   js::ShutDownMallocAllocator();
 

@@ -202,7 +202,8 @@ void SharedArrayRawBuffer::dropReference() {
     WasmSharedArrayRawBuffer* wasmBuf = toWasmBuffer();
     wasm::IndexType indexType = wasmBuf->wasmIndexType();
     uint8_t* basePointer = wasmBuf->basePointer();
-    size_t mappedSizeWithHeader = wasmBuf->mappedSize() + gc::SystemPageSize();
+    size_t mappedSizeWithHeader =
+        wasmBuf->wasmMappedSize() + gc::SystemPageSize();
     // Call the destructor to destroy the growLock_ Mutex.
     wasmBuf->~WasmSharedArrayRawBuffer();
     UnmapBufferMemory(indexType, basePointer, mappedSizeWithHeader);
