@@ -361,7 +361,7 @@ function getClosestBackgroundColor(node) {
     const computedStyle = CssLogic.getComputedStyle(current);
     if (computedStyle) {
       const currentStyle = computedStyle.getPropertyValue("background-color");
-      if (colorUtils.isValidCSSColor(currentStyle)) {
+      if (InspectorUtils.isValidCSSColor(currentStyle)) {
         const currentCssColor = new colorUtils.CssColor(currentStyle);
         if (!currentCssColor.isTransparent()) {
           return currentCssColor.rgba;
@@ -467,11 +467,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
     !node.firstChild
   ) {
     return {
-      value: colorUtils.colorToRGBA(
-        getClosestBackgroundColor(node),
-        true,
-        true
-      ),
+      value: getClosestBackgroundColorInRGBA(node),
     };
   }
 
@@ -481,11 +477,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
   // Avoid creating doc walker by returning early.
   if (quads.length === 0 || !quads[0].bounds) {
     return {
-      value: colorUtils.colorToRGBA(
-        getClosestBackgroundColor(node),
-        true,
-        true
-      ),
+      value: getClosestBackgroundColorInRGBA(node),
     };
   }
 
@@ -503,11 +495,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
     firstChild.nodeType !== Node.TEXT_NODE
   ) {
     return {
-      value: colorUtils.colorToRGBA(
-        getClosestBackgroundColor(node),
-        true,
-        true
-      ),
+      value: getClosestBackgroundColorInRGBA(node),
     };
   }
 
@@ -520,11 +508,7 @@ async function getBackgroundColor({ rawNode: node, walker }) {
   // Fall back to calculating contrast against closest bg if there are no text props.
   if (!props) {
     return {
-      value: colorUtils.colorToRGBA(
-        getClosestBackgroundColor(node),
-        true,
-        true
-      ),
+      value: getClosestBackgroundColorInRGBA(node),
     };
   }
 
@@ -539,15 +523,22 @@ async function getBackgroundColor({ rawNode: node, walker }) {
 
   return (
     bgColor || {
-      value: colorUtils.colorToRGBA(
-        getClosestBackgroundColor(node),
-        true,
-        true
-      ),
+      value: getClosestBackgroundColorInRGBA(node),
     }
   );
 }
 
+/**
+ *
+ * @param {DOMNode} node: The node we want the background color of
+ * @returns {Array[r,g,b,a]}
+ */
+function getClosestBackgroundColorInRGBA(node) {
+  const { r, g, b, a } = InspectorUtils.colorToRGBA(
+    getClosestBackgroundColor(node)
+  );
+  return [r, g, b, a];
+}
 /**
  * Indicates if a document is ready (i.e. if it's not loading anymore)
  *
