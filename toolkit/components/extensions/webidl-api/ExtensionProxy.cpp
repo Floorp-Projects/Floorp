@@ -23,6 +23,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionProxy)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionProxy, u"onRequest"_ns, OnRequest)
+NS_IMPL_WEBEXT_EVENTMGR(ExtensionProxy, u"onError"_ns, OnError)
+
 ExtensionProxy::ExtensionProxy(nsIGlobalObject* aGlobal,
                                ExtensionBrowser* aExtensionBrowser)
     : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
@@ -49,22 +52,6 @@ ExtensionSetting* ExtensionProxy::Settings() {
   }
 
   return mSettingsMgr;
-}
-
-ExtensionEventManager* ExtensionProxy::OnRequest() {
-  if (!mOnRequestEventMgr) {
-    mOnRequestEventMgr = CreateEventManager(u"onRequest"_ns);
-  }
-
-  return mOnRequestEventMgr;
-}
-
-ExtensionEventManager* ExtensionProxy::OnError() {
-  if (!mOnRequestEventMgr) {
-    mOnRequestEventMgr = CreateEventManager(u"onError"_ns);
-  }
-
-  return mOnRequestEventMgr;
 }
 
 }  // namespace mozilla::extensions
