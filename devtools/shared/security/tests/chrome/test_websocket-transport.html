@@ -55,10 +55,9 @@ window.onload = function() {
 
     await client.connect();
 
-    // Send a message the server that will echo back
-    const message = "message";
-    const reply = await client.mainRoot.echo({ message });
-    is(reply.message, message, "Echo message matches");
+    // Send a message the server
+    const reply = await client.mainRoot.getRoot();
+    is(reply.from, "root", "Got expected response");
 
     client.off("closed", onUnexpectedClose);
     transport.close();

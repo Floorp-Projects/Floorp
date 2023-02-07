@@ -105,23 +105,6 @@ class RootActor extends Actor {
   constructor(conn, parameters) {
     super(conn, rootSpec);
 
-    /**
-     * This `echo` request can't be easily specified via protocol.js types
-     * as it is a JSON value in the packet itself. Protocol.js only allows
-     * arbitrary json object in one property of the packet.
-     * In order to bypass protocol.js, declare the request method directly
-     * on the prototype/requestTypes, which is populated by Actor's constructor
-     *
-     * Note that this request is only used by tests.
-     */
-    this.requestTypes.echo = function(request) {
-      /*
-       * Request packets are frozen. Copy request, so that
-       * DevToolsServerConnection.onPacket can attach a 'from' property.
-       */
-      return Cu.cloneInto(request, {});
-    };
-
     this._parameters = parameters;
     this._onTabListChanged = this.onTabListChanged.bind(this);
     this._onAddonListChanged = this.onAddonListChanged.bind(this);
