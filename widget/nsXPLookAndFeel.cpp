@@ -5,6 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "mozilla/LookAndFeel.h"
 #include "nscore.h"
 
 #include "nsXPLookAndFeel.h"
@@ -33,6 +34,7 @@
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
@@ -1540,6 +1542,27 @@ bool LookAndFeel::DrawInTitlebar() {
 
 void LookAndFeel::GetThemeInfo(nsACString& aOut) {
   nsLookAndFeel::GetInstance()->GetThemeInfo(aOut);
+}
+
+uint32_t LookAndFeel::GetMenuAccessKey() {
+  return StaticPrefs::ui_key_menuAccessKey();
+}
+
+Modifiers LookAndFeel::GetMenuAccessKeyModifiers() {
+  switch (GetMenuAccessKey()) {
+    case dom::KeyboardEvent_Binding::DOM_VK_SHIFT:
+      return MODIFIER_SHIFT;
+    case dom::KeyboardEvent_Binding::DOM_VK_CONTROL:
+      return MODIFIER_CONTROL;
+    case dom::KeyboardEvent_Binding::DOM_VK_ALT:
+      return MODIFIER_ALT;
+    case dom::KeyboardEvent_Binding::DOM_VK_META:
+      return MODIFIER_META;
+    case dom::KeyboardEvent_Binding::DOM_VK_WIN:
+      return MODIFIER_OS;
+    default:
+      return 0;
+  }
 }
 
 // static

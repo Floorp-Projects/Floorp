@@ -611,7 +611,7 @@ Modifier WidgetInputEvent::GetModifier(const nsAString& aDOMKeyName) {
 Modifier WidgetInputEvent::AccelModifier() {
   static Modifier sAccelModifier = MODIFIER_NONE;
   if (sAccelModifier == MODIFIER_NONE) {
-    switch (Preferences::GetInt("ui.key.accelKey", 0)) {
+    switch (StaticPrefs::ui_key_accelKey()) {
       case dom::KeyboardEvent_Binding::DOM_VK_META:
         sAccelModifier = MODIFIER_META;
         break;

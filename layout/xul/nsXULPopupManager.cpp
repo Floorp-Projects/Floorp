@@ -2601,11 +2601,11 @@ nsresult nsXULPopupManager::KeyDown(KeyboardEvent* aKeyEvent) {
 
   // If the key just pressed is the access key (usually Alt),
   // dismiss and unfocus the menu.
-  int32_t menuAccessKey = nsMenuBarListener::GetMenuAccessKey();
+  uint32_t menuAccessKey = LookAndFeel::GetMenuAccessKey();
   if (menuAccessKey) {
     uint32_t theChar = aKeyEvent->KeyCode();
 
-    if (theChar == (uint32_t)menuAccessKey) {
+    if (theChar == menuAccessKey) {
       bool ctrl = (menuAccessKey != KeyboardEvent_Binding::DOM_VK_CONTROL &&
                    aKeyEvent->CtrlKey());
       bool alt = (menuAccessKey != KeyboardEvent_Binding::DOM_VK_ALT &&

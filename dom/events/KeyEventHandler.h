@@ -93,13 +93,7 @@ class KeyEventHandler final {
   static uint32_t gRefCnt;
 
  protected:
-  void Init() {
-    ++gRefCnt;
-    if (gRefCnt == 1) {
-      // Get the primary accelerator key.
-      InitAccessKeys();
-    }
-  }
+  void Init() { ++gRefCnt; }
 
   already_AddRefed<nsIController> GetController(dom::EventTarget* aTarget);
 
@@ -125,11 +119,8 @@ class KeyEventHandler final {
   Modifiers GetModifiers() const;
   Modifiers GetModifiersMask() const;
 
-  static int32_t KeyToMask(int32_t key);
+  static int32_t KeyToMask(uint32_t aKey);
   static int32_t AccelKeyMask();
-
-  static int32_t kMenuAccessKey;
-  static void InitAccessKeys();
 
   static const int32_t cShift;
   static const int32_t cAlt;

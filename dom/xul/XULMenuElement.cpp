@@ -56,7 +56,7 @@ bool XULButtonElement::HandleKeyPress(KeyboardEvent& keyEvent) {
     return false;
   }
 
-  if (nsMenuBarListener::IsAccessKeyPressed(keyEvent)) {
+  if (keyEvent.IsMenuAccessKeyPressed()) {
     return false;
   }
 
