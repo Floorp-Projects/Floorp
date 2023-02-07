@@ -80,6 +80,11 @@
     ok(InspectorUtils.isValidCSSColor("#" + hex + hex + hex), "#" + hex + hex + hex + " is a valid color");
   }
   ok(!InspectorUtils.isValidCSSColor("#ggg"), "#ggg is not a valid color");
+
+  // named
+  ok(InspectorUtils.isValidCSSColor("red"), "red is a valid color");
+  ok(InspectorUtils.isValidCSSColor("transparent"), "transparent is a valid color");
+  ok(InspectorUtils.isValidCSSColor("currentColor"), "currentColor is a valid color");
   </script>
 </head>
 <body>
