@@ -176,68 +176,6 @@
     },
     {
       "schemaVersion": "1.10.0",
-      "slug": "android-sign-to-sync-at-the-top-of-onboarding-page",
-      "id": "android-sign-to-sync-at-the-top-of-onboarding-page",
-      "arguments": {},
-      "application": "org.mozilla.fenix",
-      "appName": "fenix",
-      "appId": "org.mozilla.fenix",
-      "channel": "nightly",
-      "userFacingName": "Android Sign to Sync at the top of onboarding page",
-      "userFacingDescription": "This experiement moves the sign-in to sync panel to the top of the onboarding page, where it previously was under themes and toolbar positioning.",
-      "isEnrollmentPaused": false,
-      "isRollout": false,
-      "bucketConfig": {
-        "randomizationUnit": "nimbus_id",
-        "namespace": "fenix-onboarding-nightly-1",
-        "start": 0,
-        "count": 10000,
-        "total": 10000
-      },
-      "featureIds": [
-        "onboarding"
-      ],
-      "probeSets": [],
-      "outcomes": [],
-      "branches": [
-        {
-          "slug": "control",
-          "ratio": 1,
-          "feature": {
-            "featureId": "onboarding",
-            "enabled": true,
-            "value": {}
-          }
-        },
-        {
-          "slug": "treatment-a",
-          "ratio": 1,
-          "feature": {
-            "featureId": "onboarding",
-            "enabled": true,
-            "value": {
-              "order": [
-                "sync",
-                "themes",
-                "toolbar-placement",
-                "tcp",
-                "privacy-notice"
-              ]
-            }
-          }
-        }
-      ],
-      "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('111.!') >= 0)))",
-      "startDate": "2023-01-30",
-      "enrollmentEndDate": "2023-02-06",
-      "endDate": null,
-      "proposedDuration": 28,
-      "proposedEnrollment": 7,
-      "referenceBranch": "control",
-      "featureValidationOptOut": false
-    },
-    {
-      "schemaVersion": "1.10.0",
       "slug": "test-android-notifications",
       "id": "test-android-notifications",
       "arguments": {},
