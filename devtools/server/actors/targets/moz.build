@@ -9,10 +9,10 @@ DIRS += [
 ]
 
 DevToolsModules(
+    "base-target-actor.js",
     "content-process.js",
     "index.js",
     "parent-process.js",
-    "target-actor-mixin.js",
     "target-actor-registry.sys.mjs",
     "webextension.js",
     "window-global.js",
