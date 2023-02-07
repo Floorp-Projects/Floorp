@@ -191,7 +191,6 @@ pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
         "transpose" => Mf::Transpose,
         "determinant" => Mf::Determinant,
         // bits
-        "countLeadingZeros" => Mf::CountLeadingZeros,
         "countOneBits" => Mf::CountOneBits,
         "reverseBits" => Mf::ReverseBits,
         "extractBits" => Mf::ExtractBits,

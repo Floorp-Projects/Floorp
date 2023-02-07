@@ -4,12 +4,12 @@ use super::{
         ParameterQualifier,
     },
     context::Context,
-    Error, ErrorKind, Frontend, Result,
+    Error, ErrorKind, Parser, Result,
 };
 use crate::{
     BinaryOperator, Block, Constant, DerivativeAxis, Expression, Handle, ImageClass,
     ImageDimension as Dim, ImageQuery, MathFunction, Module, RelationalFunction, SampleLevel,
-    ScalarKind as Sk, Span, Type, TypeInner, UnaryOperator, VectorSize,
+    ScalarKind as Sk, Span, Type, TypeInner, VectorSize,
 };
 
 impl crate::ScalarKind {
@@ -825,7 +825,7 @@ fn inject_standard_builtins(
                     .push(module.add_builtin(args, MacroCall::MathFunction(fun)))
             }
         }
-        "all" | "any" | "not" => {
+        "all" | "any" => {
             // bits layout
             // bit 0 trough 1 - dims
             for bits in 0..0b11 {
@@ -841,17 +841,17 @@ fn inject_standard_builtins(
                     width: crate::BOOL_WIDTH,
                 }];
 
-                let fun = match name {
-                    "all" => MacroCall::Relational(RelationalFunction::All),
-                    "any" => MacroCall::Relational(RelationalFunction::Any),
-                    "not" => MacroCall::Unary(UnaryOperator::Not),
+                let fun = MacroCall::Relational(match name {
+                    "all" => RelationalFunction::All,
+                    "any" => RelationalFunction::Any,
                     _ => unreachable!(),
-                };
+                });
 
                 declaration.overloads.push(module.add_builtin(args, fun))
             }
         }
-        "lessThan" | "greaterThan" | "lessThanEqual" | "greaterThanEqual" => {
+        "lessThan" | "greaterThan" | "lessThanEqual" | "greaterThanEqual" | "equal"
+        | "notEqual" => {
             for bits in 0..0b1001 {
                 let (size, kind) = match bits {
                     0b0000 => (VectorSize::Bi, Sk::Float),
@@ -873,39 +873,6 @@ fn inject_standard_builtins(
                     "greaterThan" => BinaryOperator::Greater,
                     "lessThanEqual" => BinaryOperator::LessEqual,
                     "greaterThanEqual" => BinaryOperator::GreaterEqual,
-                    _ => unreachable!(),
-                });
-
-                declaration.overloads.push(module.add_builtin(args, fun))
-            }
-        }
-        "equal" | "notEqual" => {
-            for bits in 0..0b1100 {
-                let (size, kind) = match bits {
-                    0b0000 => (VectorSize::Bi, Sk::Float),
-                    0b0001 => (VectorSize::Tri, Sk::Float),
-                    0b0010 => (VectorSize::Quad, Sk::Float),
-                    0b0011 => (VectorSize::Bi, Sk::Sint),
-                    0b0100 => (VectorSize::Tri, Sk::Sint),
-                    0b0101 => (VectorSize::Quad, Sk::Sint),
-                    0b0110 => (VectorSize::Bi, Sk::Uint),
-                    0b0111 => (VectorSize::Tri, Sk::Uint),
-                    0b1000 => (VectorSize::Quad, Sk::Uint),
-                    0b1001 => (VectorSize::Bi, Sk::Bool),
-                    0b1010 => (VectorSize::Tri, Sk::Bool),
-                    _ => (VectorSize::Quad, Sk::Bool),
-                };
-
-                let width = if let Sk::Bool = kind {
-                    crate::BOOL_WIDTH
-                } else {
-                    width
-                };
-
-                let ty = || TypeInner::Vector { size, kind, width };
-                let args = vec![ty(), ty()];
-
-                let fun = MacroCall::Binary(match name {
                     "equal" => BinaryOperator::Equal,
                     "notEqual" => BinaryOperator::NotEqual,
                     _ => unreachable!(),
@@ -1188,31 +1155,6 @@ fn inject_double_builtin(declaration: &mut FunctionDeclaration, module: &mut Mod
                 declaration
                     .overloads
                     .push(module.add_builtin(args, MacroCall::Clamp(size)))
-            }
-        }
-        "lessThan" | "greaterThan" | "lessThanEqual" | "greaterThanEqual" | "equal"
-        | "notEqual" => {
-            for bits in 0..0b11 {
-                let (size, kind) = match bits {
-                    0b00 => (VectorSize::Bi, Sk::Float),
-                    0b01 => (VectorSize::Tri, Sk::Float),
-                    _ => (VectorSize::Quad, Sk::Float),
-                };
-
-                let ty = || TypeInner::Vector { size, kind, width };
-                let args = vec![ty(), ty()];
-
-                let fun = MacroCall::Binary(match name {
-                    "lessThan" => BinaryOperator::Less,
-                    "greaterThan" => BinaryOperator::Greater,
-                    "lessThanEqual" => BinaryOperator::LessEqual,
-                    "greaterThanEqual" => BinaryOperator::GreaterEqual,
-                    "equal" => BinaryOperator::Equal,
-                    "notEqual" => BinaryOperator::NotEqual,
-                    _ => unreachable!(),
-                });
-
-                declaration.overloads.push(module.add_builtin(args, fun))
             }
         }
         // Add common builtins with doubles
@@ -1654,7 +1596,6 @@ pub enum MacroCall {
     BitfieldExtract,
     BitfieldInsert,
     Relational(RelationalFunction),
-    Unary(UnaryOperator),
     Binary(BinaryOperator),
     Mod(Option<VectorSize>),
     Splatted(MathFunction, Option<VectorSize>, usize),
@@ -1676,7 +1617,7 @@ impl MacroCall {
     /// finally returns the final expression with the correct result
     pub fn call(
         &self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         ctx: &mut Context,
         body: &mut Block,
         args: &mut [Handle<Expression>],
@@ -1688,14 +1629,8 @@ impl MacroCall {
                 args[0]
             }
             MacroCall::SamplerShadow => {
-                sampled_to_depth(
-                    &mut frontend.module,
-                    ctx,
-                    args[0],
-                    meta,
-                    &mut frontend.errors,
-                );
-                frontend.invalidate_expression(ctx, args[0], meta)?;
+                sampled_to_depth(&mut parser.module, ctx, args[0], meta, &mut parser.errors);
+                parser.invalidate_expression(ctx, args[0], meta)?;
                 ctx.samplers.insert(args[0], args[1]);
                 args[0]
             }
@@ -1708,7 +1643,7 @@ impl MacroCall {
                 let mut coords = args[1];
 
                 if proj {
-                    let size = match *frontend.resolve_type(ctx, coords, meta)? {
+                    let size = match *parser.resolve_type(ctx, coords, meta)? {
                         TypeInner::Vector { size, .. } => size,
                         _ => unreachable!(),
                     };
@@ -1754,7 +1689,7 @@ impl MacroCall {
 
                 let extra = args.get(2).copied();
                 let comps =
-                    frontend.coordinate_components(ctx, args[0], coords, extra, meta, body)?;
+                    parser.coordinate_components(ctx, args[0], coords, extra, meta, body)?;
 
                 let mut num_args = 2;
 
@@ -1801,10 +1736,10 @@ impl MacroCall {
                     true => {
                         let offset_arg = args[num_args];
                         num_args += 1;
-                        match frontend.solve_constant(ctx, offset_arg, meta) {
+                        match parser.solve_constant(ctx, offset_arg, meta) {
                             Ok(v) => Some(v),
                             Err(e) => {
-                                frontend.errors.push(e);
+                                parser.errors.push(e);
                                 None
                             }
                         }
@@ -1838,7 +1773,7 @@ impl MacroCall {
                 if arrayed {
                     let mut components = Vec::with_capacity(4);
 
-                    let size = match *frontend.resolve_type(ctx, expr, meta)? {
+                    let size = match *parser.resolve_type(ctx, expr, meta)? {
                         TypeInner::Vector { size: ori_size, .. } => {
                             for index in 0..(ori_size as u32) {
                                 components.push(ctx.add_expression(
@@ -1868,7 +1803,7 @@ impl MacroCall {
                         body,
                     ));
 
-                    let ty = frontend.module.types.insert(
+                    let ty = parser.module.types.insert(
                         Type {
                             name: None,
                             inner: TypeInner::Vector {
@@ -1887,7 +1822,7 @@ impl MacroCall {
             }
             MacroCall::ImageLoad { multi } => {
                 let comps =
-                    frontend.coordinate_components(ctx, args[0], args[1], None, meta, body)?;
+                    parser.coordinate_components(ctx, args[0], args[1], None, meta, body)?;
                 let (sample, level) = match (multi, args.get(2)) {
                     (_, None) => (None, None),
                     (true, Some(&arg)) => (Some(arg), None),
@@ -1907,7 +1842,7 @@ impl MacroCall {
             }
             MacroCall::ImageStore => {
                 let comps =
-                    frontend.coordinate_components(ctx, args[0], args[1], None, meta, body)?;
+                    parser.coordinate_components(ctx, args[0], args[1], None, meta, body)?;
                 ctx.emit_restart(body);
                 body.push(
                     crate::Statement::ImageStore {
@@ -2028,11 +1963,6 @@ impl MacroCall {
                 Span::default(),
                 body,
             ),
-            MacroCall::Unary(op) => ctx.add_expression(
-                Expression::Unary { op, expr: args[0] },
-                Span::default(),
-                body,
-            ),
             MacroCall::Binary(op) => ctx.add_expression(
                 Expression::Binary {
                     op,
@@ -2043,7 +1973,7 @@ impl MacroCall {
                 body,
             ),
             MacroCall::Mod(size) => {
-                ctx.implicit_splat(frontend, &mut args[1], meta, size)?;
+                ctx.implicit_splat(parser, &mut args[1], meta, size)?;
 
                 // x - y * floor(x / y)
 
@@ -2087,7 +2017,7 @@ impl MacroCall {
                 )
             }
             MacroCall::Splatted(fun, size, i) => {
-                ctx.implicit_splat(frontend, &mut args[i], meta, size)?;
+                ctx.implicit_splat(parser, &mut args[i], meta, size)?;
 
                 ctx.add_expression(
                     Expression::Math {
@@ -2111,8 +2041,8 @@ impl MacroCall {
                 body,
             ),
             MacroCall::Clamp(size) => {
-                ctx.implicit_splat(frontend, &mut args[1], meta, size)?;
-                ctx.implicit_splat(frontend, &mut args[2], meta, size)?;
+                ctx.implicit_splat(parser, &mut args[1], meta, size)?;
+                ctx.implicit_splat(parser, &mut args[2], meta, size)?;
 
                 ctx.add_expression(
                     Expression::Math {
@@ -2149,8 +2079,8 @@ impl MacroCall {
                 return Ok(None);
             }
             MacroCall::SmoothStep { splatted } => {
-                ctx.implicit_splat(frontend, &mut args[0], meta, splatted)?;
-                ctx.implicit_splat(frontend, &mut args[1], meta, splatted)?;
+                ctx.implicit_splat(parser, &mut args[0], meta, splatted)?;
+                ctx.implicit_splat(parser, &mut args[1], meta, splatted)?;
 
                 ctx.add_expression(
                     Expression::Math {
@@ -2208,7 +2138,7 @@ fn texture_call(
 
 /// Helper struct for texture calls with the separate components from the vector argument
 ///
-/// Obtained by calling [`coordinate_components`](Frontend::coordinate_components)
+/// Obtained by calling [`coordinate_components`](Parser::coordinate_components)
 #[derive(Debug)]
 struct CoordComponents {
     coordinate: Handle<Expression>,
@@ -2217,7 +2147,7 @@ struct CoordComponents {
     used_extra: bool,
 }
 
-impl Frontend {
+impl Parser {
     /// Helper function for texture calls, splits the vector argument into it's components
     fn coordinate_components(
         &mut self,

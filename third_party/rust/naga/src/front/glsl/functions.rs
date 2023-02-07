@@ -4,16 +4,17 @@ use super::{
     context::{Context, ExprPos, StmtContext},
     error::{Error, ErrorKind},
     types::scalar_components,
-    Frontend, Result,
+    Parser, Result,
 };
 use crate::{
     front::glsl::types::type_power, proc::ensure_block_returns, AddressSpace, Arena, Block,
-    Constant, ConstantInner, EntryPoint, Expression, Function, FunctionArgument, FunctionResult,
-    Handle, LocalVariable, ScalarKind, ScalarValue, Span, Statement, StructMember, Type, TypeInner,
+    Constant, ConstantInner, EntryPoint, Expression, FastHashMap, Function, FunctionArgument,
+    FunctionResult, Handle, LocalVariable, ScalarKind, ScalarValue, Span, Statement, StructMember,
+    Type, TypeInner,
 };
 use std::iter;
 
-impl Frontend {
+impl Parser {
     fn add_constant_value(
         &mut self,
         scalar_kind: ScalarKind,
@@ -720,7 +721,8 @@ impl Frontend {
                         self.errors.push(Error {
                             kind: ErrorKind::SemanticError(
                                 format!(
-                                    "'{name}': image needs {overload_access:?} access but only {call_access:?} was provided"
+                                    "'{}': image needs {:?} access but only {:?} was provided",
+                                    name, overload_access, call_access
                                 )
                                 .into(),
                             ),
@@ -827,14 +829,14 @@ impl Frontend {
         if ambiguous {
             self.errors.push(Error {
                 kind: ErrorKind::SemanticError(
-                    format!("Ambiguous best function for '{name}'").into(),
+                    format!("Ambiguous best function for '{}'", name).into(),
                 ),
                 meta,
             })
         }
 
         let overload = maybe_overload.ok_or_else(|| Error {
-            kind: ErrorKind::SemanticError(format!("Unknown function '{name}'").into()),
+            kind: ErrorKind::SemanticError(format!("Unknown function '{}'", name).into()),
             meta,
         })?;
 
@@ -1031,7 +1033,7 @@ impl Frontend {
 
         let void = result.is_none();
 
-        let &mut Frontend {
+        let &mut Parser {
             ref mut lookup_function,
             ref mut module,
             ..
@@ -1063,7 +1065,7 @@ impl Frontend {
             result,
             local_variables: locals,
             expressions,
-            named_expressions: crate::NamedExpressions::default(),
+            named_expressions: FastHashMap::default(),
             body,
         };
 
@@ -1120,7 +1122,7 @@ impl Frontend {
     ) {
         let void = result.is_none();
 
-        let &mut Frontend {
+        let &mut Parser {
             ref mut lookup_function,
             ref mut module,
             ..

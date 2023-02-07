@@ -1,5 +1,3 @@
-#![allow(clippy::needless_borrowed_reference)]
-
 use criterion::*;
 use std::{fs, path::PathBuf, slice};
 
@@ -28,7 +26,7 @@ fn gather_inputs(folder: &str, extension: &str) -> Vec<Box<[u8]>> {
 }
 
 fn parse_glsl(stage: naga::ShaderStage, inputs: &[Box<[u8]>]) {
-    let mut parser = naga::front::glsl::Frontend::default();
+    let mut parser = naga::front::glsl::Parser::default();
     let options = naga::front::glsl::Options {
         stage,
         defines: Default::default(),
@@ -44,12 +42,12 @@ fn frontends(c: &mut Criterion) {
     #[cfg(all(feature = "wgsl-in", feature = "serialize", feature = "deserialize"))]
     group.bench_function("bin", |b| {
         let inputs_wgsl = gather_inputs("tests/in", "wgsl");
-        let mut frontend = naga::front::wgsl::Frontend::new();
+        let mut parser = naga::front::wgsl::Parser::new();
         let inputs_bin = inputs_wgsl
             .iter()
             .map(|input| {
                 let string = std::str::from_utf8(input).unwrap();
-                let module = frontend.parse(string).unwrap();
+                let module = parser.parse(string).unwrap();
                 bincode::serialize(&module).unwrap()
             })
             .collect::<Vec<_>>();
@@ -66,10 +64,10 @@ fn frontends(c: &mut Criterion) {
             .iter()
             .map(|input| std::str::from_utf8(input).unwrap())
             .collect::<Vec<_>>();
-        let mut frontend = naga::front::wgsl::Frontend::new();
+        let mut parser = naga::front::wgsl::Parser::new();
         b.iter(move || {
             for &input in inputs.iter() {
-                frontend.parse(input).unwrap();
+                parser.parse(input).unwrap();
             }
         });
     });
@@ -81,7 +79,7 @@ fn frontends(c: &mut Criterion) {
             for input in inputs.iter() {
                 let spv =
                     unsafe { slice::from_raw_parts(input.as_ptr() as *const u32, input.len() / 4) };
-                let parser = naga::front::spv::Frontend::new(spv.iter().cloned(), &options);
+                let parser = naga::front::spv::Parser::new(spv.iter().cloned(), &options);
                 parser.parse().unwrap();
             }
         });
@@ -101,12 +99,12 @@ fn frontends(c: &mut Criterion) {
 #[cfg(feature = "wgsl-in")]
 fn gather_modules() -> Vec<naga::Module> {
     let inputs = gather_inputs("tests/in", "wgsl");
-    let mut frontend = naga::front::wgsl::Frontend::new();
+    let mut parser = naga::front::wgsl::Parser::new();
     inputs
         .iter()
         .map(|input| {
             let string = std::str::from_utf8(input).unwrap();
-            frontend.parse(string).unwrap()
+            parser.parse(string).unwrap()
         })
         .collect()
 }

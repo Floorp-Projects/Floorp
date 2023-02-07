@@ -514,7 +514,7 @@ enum SignAnchor {
     Operand,
 }
 
-pub struct Frontend<I> {
+pub struct Parser<I> {
     data: I,
     data_offset: usize,
     state: ModuleState,
@@ -565,9 +565,9 @@ pub struct Frontend<I> {
     builtin_usage: FastHashSet<crate::BuiltIn>,
 }
 
-impl<I: Iterator<Item = u32>> Frontend<I> {
+impl<I: Iterator<Item = u32>> Parser<I> {
     pub fn new(data: I, options: &Options) -> Self {
-        Frontend {
+        Parser {
             data,
             data_offset: 0,
             state: ModuleState::Empty,
@@ -1378,7 +1378,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
 
-                    let name = format!("phi_{result_id}");
+                    let name = format!("phi_{}", result_id);
                     let local = ctx.local_arena.append(
                         crate::LocalVariable {
                             name: Some(name),
@@ -5095,7 +5095,7 @@ pub fn parse_u8_slice(data: &[u8], options: &Options) -> Result<crate::Module, E
     let words = data
         .chunks(4)
         .map(|c| u32::from_le_bytes(c.try_into().unwrap()));
-    Frontend::new(words, options).parse()
+    Parser::new(words, options).parse()
 }
 
 #[cfg(test)]

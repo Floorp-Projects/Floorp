@@ -107,7 +107,7 @@ mod writer;
 use std::fmt::Error as FmtError;
 use thiserror::Error;
 
-use crate::{back, proc};
+use crate::proc;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
@@ -280,5 +280,4 @@ pub struct Writer<'a, W> {
     named_expressions: crate::NamedExpressions,
     wrapped: Wrapped,
     temp_access_chain: Vec<storage::SubAccess>,
-    need_bake_expressions: back::NeedBakeExpressions,
 }

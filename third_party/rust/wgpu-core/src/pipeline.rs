@@ -74,7 +74,7 @@ impl fmt::Display for ShaderError<naga::front::wgsl::ParseError> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let label = self.label.as_deref().unwrap_or_default();
         let string = self.inner.emit_to_string(&self.source);
-        write!(f, "\nShader '{label}' parsing {string}")
+        write!(f, "\nShader '{}' parsing {}", label, string)
     }
 }
 impl fmt::Display for ShaderError<naga::WithSpan<naga::valid::ValidationError>> {

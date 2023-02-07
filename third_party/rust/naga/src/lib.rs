@@ -191,8 +191,7 @@ tree.
     clippy::match_like_matches_macro,
     clippy::if_same_then_else,
     clippy::collapsible_if,
-    clippy::derive_partial_eq_without_eq,
-    clippy::needless_borrowed_reference
+    clippy::derive_partial_eq_without_eq
 )]
 #![warn(
     trivial_casts,
@@ -232,11 +231,7 @@ pub type FastHashMap<K, T> = rustc_hash::FxHashMap<K, T>;
 pub type FastHashSet<K> = rustc_hash::FxHashSet<K>;
 
 /// Map of expressions that have associated variable names
-pub(crate) type NamedExpressions = indexmap::IndexMap<
-    Handle<Expression>,
-    String,
-    std::hash::BuildHasherDefault<rustc_hash::FxHasher>,
->;
+pub(crate) type NamedExpressions = FastHashMap<Handle<Expression>, String>;
 
 /// Early fragment tests.
 ///
@@ -1066,7 +1061,6 @@ pub enum MathFunction {
     Transpose,
     Determinant,
     // bits
-    CountLeadingZeros,
     CountOneBits,
     ReverseBits,
     ExtractBits,

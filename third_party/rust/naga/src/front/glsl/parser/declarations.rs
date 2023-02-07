@@ -10,7 +10,7 @@ use crate::{
         token::{Token, TokenValue},
         types::scalar_components,
         variables::{GlobalOrConstant, VarDeclaration},
-        Error, ErrorKind, Frontend, Span,
+        Error, ErrorKind, Parser, Span,
     },
     proc::Alignment,
     AddressSpace, Block, Expression, FunctionResult, Handle, ScalarKind, Statement, StructMember,
@@ -71,19 +71,19 @@ fn element_or_member_type(
 impl<'source> ParsingContext<'source> {
     pub fn parse_external_declaration(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         global_ctx: &mut Context,
         global_body: &mut Block,
     ) -> Result<()> {
         if self
-            .parse_declaration(frontend, global_ctx, global_body, true)?
+            .parse_declaration(parser, global_ctx, global_body, true)?
             .is_none()
         {
-            let token = self.bump(frontend)?;
+            let token = self.bump(parser)?;
             match token.value {
-                TokenValue::Semicolon if frontend.meta.version == 460 => Ok(()),
+                TokenValue::Semicolon if parser.meta.version == 460 => Ok(()),
                 _ => {
-                    let expected = match frontend.meta.version {
+                    let expected = match parser.meta.version {
                         460 => vec![TokenValue::Semicolon.into(), ExpectedToken::Eof],
                         _ => vec![ExpectedToken::Eof],
                     };
@@ -100,7 +100,7 @@ impl<'source> ParsingContext<'source> {
 
     pub fn parse_initializer(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         ty: Handle<Type>,
         ctx: &mut Context,
         body: &mut Block,
@@ -113,21 +113,20 @@ impl<'source> ParsingContext<'source> {
         // initializer_list:
         //     initializer
         //     initializer_list COMMA initializer
-        if let Some(Token { mut meta, .. }) = self.bump_if(frontend, TokenValue::LeftBrace) {
+        if let Some(Token { mut meta, .. }) = self.bump_if(parser, TokenValue::LeftBrace) {
             // initializer_list
             let mut components = Vec::new();
             loop {
                 // The type expected to be parsed inside the initializer list
-                let new_ty =
-                    element_or_member_type(ty, components.len(), &mut frontend.module.types);
+                let new_ty = element_or_member_type(ty, components.len(), &mut parser.module.types);
 
-                components.push(self.parse_initializer(frontend, new_ty, ctx, body)?.0);
+                components.push(self.parse_initializer(parser, new_ty, ctx, body)?.0);
 
-                let token = self.bump(frontend)?;
+                let token = self.bump(parser)?;
                 match token.value {
                     TokenValue::Comma => {
                         if let Some(Token { meta: end_meta, .. }) =
-                            self.bump_if(frontend, TokenValue::RightBrace)
+                            self.bump_if(parser, TokenValue::RightBrace)
                         {
                             meta.subsume(end_meta);
                             break;
@@ -155,13 +154,12 @@ impl<'source> ParsingContext<'source> {
             ))
         } else {
             let mut stmt = ctx.stmt_ctx();
-            let expr = self.parse_assignment(frontend, ctx, &mut stmt, body)?;
-            let (mut init, init_meta) =
-                ctx.lower_expect(stmt, frontend, expr, ExprPos::Rhs, body)?;
+            let expr = self.parse_assignment(parser, ctx, &mut stmt, body)?;
+            let (mut init, init_meta) = ctx.lower_expect(stmt, parser, expr, ExprPos::Rhs, body)?;
 
-            let scalar_components = scalar_components(&frontend.module.types[ty].inner);
+            let scalar_components = scalar_components(&parser.module.types[ty].inner);
             if let Some((kind, width)) = scalar_components {
-                ctx.implicit_conversion(frontend, &mut init, init_meta, kind, width)?;
+                ctx.implicit_conversion(parser, &mut init, init_meta, kind, width)?;
             }
 
             Ok((init, init_meta))
@@ -173,7 +171,7 @@ impl<'source> ParsingContext<'source> {
     // produced Error::InvalidToken if it isn't consumed
     pub fn parse_init_declarator_list(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         mut ty: Handle<Type>,
         ctx: &mut DeclarationContext,
     ) -> Result<()> {
@@ -193,14 +191,14 @@ impl<'source> ParsingContext<'source> {
 
         // Consume any leading comma, e.g. this is valid: `float, a=1;`
         if self
-            .peek(frontend)
+            .peek(parser)
             .map_or(false, |t| t.value == TokenValue::Comma)
         {
-            self.next(frontend);
+            self.next(parser);
         }
 
         loop {
-            let token = self.bump(frontend)?;
+            let token = self.bump(parser)?;
             let name = match token.value {
                 TokenValue::Semicolon => break,
                 TokenValue::Identifier(name) => name,
@@ -223,18 +221,18 @@ impl<'source> ParsingContext<'source> {
             // parse an array specifier if it exists
             // NOTE: unlike other parse methods this one doesn't expect an array specifier and
             // returns Ok(None) rather than an error if there is not one
-            self.parse_array_specifier(frontend, &mut meta, &mut ty)?;
+            self.parse_array_specifier(parser, &mut meta, &mut ty)?;
 
             let init = self
-                .bump_if(frontend, TokenValue::Assign)
+                .bump_if(parser, TokenValue::Assign)
                 .map::<Result<_>, _>(|_| {
                     let (mut expr, init_meta) =
-                        self.parse_initializer(frontend, ty, ctx.ctx, ctx.body)?;
+                        self.parse_initializer(parser, ty, ctx.ctx, ctx.body)?;
 
-                    let scalar_components = scalar_components(&frontend.module.types[ty].inner);
+                    let scalar_components = scalar_components(&parser.module.types[ty].inner);
                     if let Some((kind, width)) = scalar_components {
                         ctx.ctx
-                            .implicit_conversion(frontend, &mut expr, init_meta, kind, width)?;
+                            .implicit_conversion(parser, &mut expr, init_meta, kind, width)?;
                     }
 
                     meta.subsume(init_meta);
@@ -246,7 +244,7 @@ impl<'source> ParsingContext<'source> {
             let is_const = ctx.qualifiers.storage.0 == StorageQualifier::Const;
             let maybe_constant = if ctx.external {
                 if let Some((root, meta)) = init {
-                    match frontend.solve_constant(ctx.ctx, root, meta) {
+                    match parser.solve_constant(ctx.ctx, root, meta) {
                         Ok(res) => Some(res),
                         // If the declaration is external (global scope) and is constant qualified
                         // then the initializer must be a constant expression
@@ -260,14 +258,14 @@ impl<'source> ParsingContext<'source> {
                 None
             };
 
-            let pointer = ctx.add_var(frontend, ty, name, maybe_constant, meta)?;
+            let pointer = ctx.add_var(parser, ty, name, maybe_constant, meta)?;
 
             if let Some((value, _)) = init.filter(|_| maybe_constant.is_none()) {
                 ctx.flush_expressions();
                 ctx.body.push(Statement::Store { pointer, value }, meta);
             }
 
-            let token = self.bump(frontend)?;
+            let token = self.bump(parser)?;
             match token.value {
                 TokenValue::Semicolon => break,
                 TokenValue::Comma => {}
@@ -289,7 +287,7 @@ impl<'source> ParsingContext<'source> {
     /// `external` whether or not we are in a global or local context
     pub fn parse_declaration(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         ctx: &mut Context,
         body: &mut Block,
         external: bool,
@@ -306,36 +304,36 @@ impl<'source> ParsingContext<'source> {
         //    type_qualifier SEMICOLON type_qualifier IDENTIFIER SEMICOLON
         //    type_qualifier IDENTIFIER identifier_list SEMICOLON
 
-        if self.peek_type_qualifier(frontend) || self.peek_type_name(frontend) {
-            let mut qualifiers = self.parse_type_qualifiers(frontend)?;
+        if self.peek_type_qualifier(parser) || self.peek_type_name(parser) {
+            let mut qualifiers = self.parse_type_qualifiers(parser)?;
 
-            if self.peek_type_name(frontend) {
+            if self.peek_type_name(parser) {
                 // This branch handles variables and function prototypes and if
                 // external is true also function definitions
-                let (ty, mut meta) = self.parse_type(frontend)?;
+                let (ty, mut meta) = self.parse_type(parser)?;
 
-                let token = self.bump(frontend)?;
+                let token = self.bump(parser)?;
                 let token_fallthrough = match token.value {
-                    TokenValue::Identifier(name) => match self.expect_peek(frontend)?.value {
+                    TokenValue::Identifier(name) => match self.expect_peek(parser)?.value {
                         TokenValue::LeftParen => {
                             // This branch handles function definition and prototypes
-                            self.bump(frontend)?;
+                            self.bump(parser)?;
 
                             let result = ty.map(|ty| FunctionResult { ty, binding: None });
                             let mut body = Block::new();
 
-                            let mut context = Context::new(frontend, &mut body);
+                            let mut context = Context::new(parser, &mut body);
 
-                            self.parse_function_args(frontend, &mut context, &mut body)?;
+                            self.parse_function_args(parser, &mut context, &mut body)?;
 
-                            let end_meta = self.expect(frontend, TokenValue::RightParen)?.meta;
+                            let end_meta = self.expect(parser, TokenValue::RightParen)?.meta;
                             meta.subsume(end_meta);
 
-                            let token = self.bump(frontend)?;
+                            let token = self.bump(parser)?;
                             return match token.value {
                                 TokenValue::Semicolon => {
                                     // This branch handles function prototypes
-                                    frontend.add_prototype(context, name, result, meta);
+                                    parser.add_prototype(context, name, result, meta);
 
                                     Ok(Some(meta))
                                 }
@@ -347,13 +345,13 @@ impl<'source> ParsingContext<'source> {
                                     // parse the body
                                     self.parse_compound_statement(
                                         token.meta,
-                                        frontend,
+                                        parser,
                                         &mut context,
                                         &mut body,
                                         &mut None,
                                     )?;
 
-                                    frontend.add_function(context, name, result, body, meta);
+                                    parser.add_function(context, name, result, body, meta);
 
                                     Ok(Some(meta))
                                 }
@@ -398,9 +396,9 @@ impl<'source> ParsingContext<'source> {
                     };
 
                     self.backtrack(token_fallthrough)?;
-                    self.parse_init_declarator_list(frontend, ty, &mut ctx)?;
+                    self.parse_init_declarator_list(parser, ty, &mut ctx)?;
                 } else {
-                    frontend.errors.push(Error {
+                    parser.errors.push(Error {
                         kind: ErrorKind::SemanticError("Declaration cannot have void type".into()),
                         meta,
                     })
@@ -412,12 +410,12 @@ impl<'source> ParsingContext<'source> {
                 // ```glsl
                 // layout(early_fragment_tests);
                 // ```
-                let token = self.bump(frontend)?;
+                let token = self.bump(parser)?;
                 match token.value {
                     TokenValue::Identifier(ty_name) => {
-                        if self.bump_if(frontend, TokenValue::LeftBrace).is_some() {
+                        if self.bump_if(parser, TokenValue::LeftBrace).is_some() {
                             self.parse_block_declaration(
-                                frontend,
+                                parser,
                                 ctx,
                                 body,
                                 &mut qualifiers,
@@ -427,10 +425,10 @@ impl<'source> ParsingContext<'source> {
                             .map(Some)
                         } else {
                             if qualifiers.invariant.take().is_some() {
-                                frontend.make_variable_invariant(ctx, body, &ty_name, token.meta);
+                                parser.make_variable_invariant(ctx, body, &ty_name, token.meta);
 
-                                qualifiers.unused_errors(&mut frontend.errors);
-                                self.expect(frontend, TokenValue::Semicolon)?;
+                                qualifiers.unused_errors(&mut parser.errors);
+                                self.expect(parser, TokenValue::Semicolon)?;
                                 return Ok(Some(qualifiers.span));
                             }
 
@@ -445,25 +443,25 @@ impl<'source> ParsingContext<'source> {
                     }
                     TokenValue::Semicolon => {
                         if let Some(value) =
-                            qualifiers.uint_layout_qualifier("local_size_x", &mut frontend.errors)
+                            qualifiers.uint_layout_qualifier("local_size_x", &mut parser.errors)
                         {
-                            frontend.meta.workgroup_size[0] = value;
+                            parser.meta.workgroup_size[0] = value;
                         }
                         if let Some(value) =
-                            qualifiers.uint_layout_qualifier("local_size_y", &mut frontend.errors)
+                            qualifiers.uint_layout_qualifier("local_size_y", &mut parser.errors)
                         {
-                            frontend.meta.workgroup_size[1] = value;
+                            parser.meta.workgroup_size[1] = value;
                         }
                         if let Some(value) =
-                            qualifiers.uint_layout_qualifier("local_size_z", &mut frontend.errors)
+                            qualifiers.uint_layout_qualifier("local_size_z", &mut parser.errors)
                         {
-                            frontend.meta.workgroup_size[2] = value;
+                            parser.meta.workgroup_size[2] = value;
                         }
 
-                        frontend.meta.early_fragment_tests |= qualifiers
-                            .none_layout_qualifier("early_fragment_tests", &mut frontend.errors);
+                        parser.meta.early_fragment_tests |= qualifiers
+                            .none_layout_qualifier("early_fragment_tests", &mut parser.errors);
 
-                        qualifiers.unused_errors(&mut frontend.errors);
+                        qualifiers.unused_errors(&mut parser.errors);
 
                         Ok(Some(qualifiers.span))
                     }
@@ -477,12 +475,12 @@ impl<'source> ParsingContext<'source> {
                 }
             }
         } else {
-            match self.peek(frontend).map(|t| &t.value) {
+            match self.peek(parser).map(|t| &t.value) {
                 Some(&TokenValue::Precision) => {
                     // PRECISION precision_qualifier type_specifier SEMICOLON
-                    self.bump(frontend)?;
+                    self.bump(parser)?;
 
-                    let token = self.bump(frontend)?;
+                    let token = self.bump(parser)?;
                     let _ = match token.value {
                         TokenValue::PrecisionQualifier(p) => p,
                         _ => {
@@ -500,14 +498,14 @@ impl<'source> ParsingContext<'source> {
                         }
                     };
 
-                    let (ty, meta) = self.parse_type_non_void(frontend)?;
+                    let (ty, meta) = self.parse_type_non_void(parser)?;
 
-                    match frontend.module.types[ty].inner {
+                    match parser.module.types[ty].inner {
                         TypeInner::Scalar {
                             kind: ScalarKind::Float | ScalarKind::Sint,
                             ..
                         } => {}
-                        _ => frontend.errors.push(Error {
+                        _ => parser.errors.push(Error {
                             kind: ErrorKind::SemanticError(
                                 "Precision statement can only work on floats and ints".into(),
                             ),
@@ -515,7 +513,7 @@ impl<'source> ParsingContext<'source> {
                         }),
                     }
 
-                    self.expect(frontend, TokenValue::Semicolon)?;
+                    self.expect(parser, TokenValue::Semicolon)?;
 
                     Ok(Some(meta))
                 }
@@ -526,7 +524,7 @@ impl<'source> ParsingContext<'source> {
 
     pub fn parse_block_declaration(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         ctx: &mut Context,
         body: &mut Block,
         qualifiers: &mut TypeQualifiers,
@@ -548,10 +546,10 @@ impl<'source> ParsingContext<'source> {
         };
 
         let mut members = Vec::new();
-        let span = self.parse_struct_declaration_list(frontend, &mut members, layout)?;
-        self.expect(frontend, TokenValue::RightBrace)?;
+        let span = self.parse_struct_declaration_list(parser, &mut members, layout)?;
+        self.expect(parser, TokenValue::RightBrace)?;
 
-        let mut ty = frontend.module.types.insert(
+        let mut ty = parser.module.types.insert(
             Type {
                 name: Some(ty_name),
                 inner: TypeInner::Struct {
@@ -562,13 +560,13 @@ impl<'source> ParsingContext<'source> {
             Default::default(),
         );
 
-        let token = self.bump(frontend)?;
+        let token = self.bump(parser)?;
         let name = match token.value {
             TokenValue::Semicolon => None,
             TokenValue::Identifier(name) => {
-                self.parse_array_specifier(frontend, &mut meta, &mut ty)?;
+                self.parse_array_specifier(parser, &mut meta, &mut ty)?;
 
-                self.expect(frontend, TokenValue::Semicolon)?;
+                self.expect(parser, TokenValue::Semicolon)?;
 
                 Some(name)
             }
@@ -583,7 +581,7 @@ impl<'source> ParsingContext<'source> {
             }
         };
 
-        let global = frontend.add_global_var(
+        let global = parser.add_global_var(
             ctx,
             body,
             VarDeclaration {
@@ -607,9 +605,9 @@ impl<'source> ParsingContext<'source> {
                 entry_arg: None,
                 mutable: true,
             };
-            ctx.add_global(frontend, &k, lookup, body);
+            ctx.add_global(parser, &k, lookup, body);
 
-            frontend.global_variables.push((k, lookup));
+            parser.global_variables.push((k, lookup));
         }
 
         Ok(meta)
@@ -618,7 +616,7 @@ impl<'source> ParsingContext<'source> {
     // TODO: Accept layout arguments
     pub fn parse_struct_declaration_list(
         &mut self,
-        frontend: &mut Frontend,
+        parser: &mut Parser,
         members: &mut Vec<StructMember>,
         layout: StructLayout,
     ) -> Result<u32> {
@@ -628,22 +626,22 @@ impl<'source> ParsingContext<'source> {
         loop {
             // TODO: type_qualifier
 
-            let (mut ty, mut meta) = self.parse_type_non_void(frontend)?;
-            let (name, end_meta) = self.expect_ident(frontend)?;
+            let (mut ty, mut meta) = self.parse_type_non_void(parser)?;
+            let (name, end_meta) = self.expect_ident(parser)?;
 
             meta.subsume(end_meta);
 
-            self.parse_array_specifier(frontend, &mut meta, &mut ty)?;
+            self.parse_array_specifier(parser, &mut meta, &mut ty)?;
 
-            self.expect(frontend, TokenValue::Semicolon)?;
+            self.expect(parser, TokenValue::Semicolon)?;
 
             let info = offset::calculate_offset(
                 ty,
                 meta,
                 layout,
-                &mut frontend.module.types,
-                &frontend.module.constants,
-                &mut frontend.errors,
+                &mut parser.module.types,
+                &parser.module.constants,
+                &mut parser.errors,
             );
 
             let member_alignment = info.align;
@@ -659,7 +657,7 @@ impl<'source> ParsingContext<'source> {
 
             span += info.span;
 
-            if let TokenValue::RightBrace = self.expect_peek(frontend)?.value {
+            if let TokenValue::RightBrace = self.expect_peek(parser)?.value {
                 break;
             }
         }

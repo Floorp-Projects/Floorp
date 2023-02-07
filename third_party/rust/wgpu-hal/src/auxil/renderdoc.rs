@@ -62,7 +62,8 @@ impl RenderDoc {
             Err(e) => {
                 return RenderDoc::NotAvailable {
                     reason: format!(
-                        "Unable to load renderdoc library '{renderdoc_filename}': {e:?}"
+                        "Unable to load renderdoc library '{}': {:?}",
+                        renderdoc_filename, e
                     ),
                 }
             }
@@ -74,7 +75,8 @@ impl RenderDoc {
                 Err(e) => {
                     return RenderDoc::NotAvailable {
                         reason: format!(
-                            "Unable to get RENDERDOC_GetAPI from renderdoc library '{renderdoc_filename}': {e:?}"
+                            "Unable to get RENDERDOC_GetAPI from renderdoc library '{}': {:?}",
+                            renderdoc_filename, e
                         ),
                     }
                 }
@@ -89,7 +91,8 @@ impl RenderDoc {
             },
             return_value => RenderDoc::NotAvailable {
                 reason: format!(
-                    "Unable to get API from renderdoc library '{renderdoc_filename}': {return_value}"
+                    "Unable to get API from renderdoc library '{}': {}",
+                    renderdoc_filename, return_value
                 ),
             },
         }
