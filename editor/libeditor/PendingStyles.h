@@ -251,18 +251,6 @@ class PendingStyles final {
   }
 
   /**
-   * TakePreservedStyle() hands back next property item on the preserving
-   * styles. This should be used only for handling setting new style for
-   * inserted content.
-   */
-  UniquePtr<PendingStyle> TakePreservedStyle() {
-    if (mPreservingStyles.IsEmpty()) {
-      return nullptr;
-    }
-    return mPreservingStyles.PopLastElement();
-  }
-
-  /**
    * TakeAllPreservedStyles() moves all preserved styles and values to
    * aOutStylesAndValues.
    */
