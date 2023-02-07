@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var EXPORTED_SYMBOLS = ["PerfTestHelpers"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -11,7 +9,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-var PerfTestHelpers = {
+export var PerfTestHelpers = {
   /**
    * Maps the entries in the given iterable to the given
    * promise-returning task function, and waits for all returned

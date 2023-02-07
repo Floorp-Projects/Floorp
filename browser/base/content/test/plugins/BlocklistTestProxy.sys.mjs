@@ -1,5 +1,3 @@
-var EXPORTED_SYMBOLS = ["BlocklistTestProxyChild"];
-
 var Cm = Components.manager;
 
 const kBlocklistServiceUUID = "{66354bc9-7ed1-4692-ae1d-8da97d6b205e}";
@@ -60,7 +58,7 @@ var BlocklistProxy = {
   },
 };
 
-class BlocklistTestProxyChild extends JSProcessActorChild {
+export class BlocklistTestProxyChild extends JSProcessActorChild {
   constructor() {
     super();
     BlocklistProxy.init();

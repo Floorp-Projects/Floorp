@@ -5,12 +5,7 @@
  * test helper JSWindowActors used by the browser_startup_content_subframe.js test.
  */
 
-var EXPORTED_SYMBOLS = [
-  "StartupContentSubframeParent",
-  "StartupContentSubframeChild",
-];
-
-class StartupContentSubframeParent extends JSWindowActorParent {
+export class StartupContentSubframeParent extends JSWindowActorParent {
   receiveMessage(msg) {
     // Tell the test about the data we received from the content process.
     Services.obs.notifyObservers(
@@ -20,7 +15,7 @@ class StartupContentSubframeParent extends JSWindowActorParent {
   }
 }
 
-class StartupContentSubframeChild extends JSWindowActorChild {
+export class StartupContentSubframeChild extends JSWindowActorChild {
   async handleEvent(event) {
     // When the remote subframe is loaded, an event will be fired to this actor,
     // which will cause us to send the `LoadedScripts` message to the parent

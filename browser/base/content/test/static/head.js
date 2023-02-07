@@ -17,8 +17,8 @@ const ZipReader = new Components.Constructor(
 
 const IS_ALPHA = /^[a-z]+$/i;
 
-var { PerfTestHelpers } = ChromeUtils.import(
-  "resource://testing-common/PerfTestHelpers.jsm"
+var { PerfTestHelpers } = ChromeUtils.importESModule(
+  "resource://testing-common/PerfTestHelpers.sys.mjs"
 );
 
 /**

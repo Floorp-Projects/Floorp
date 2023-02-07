@@ -5,9 +5,7 @@
  * test helper JSWindowActors used by the browser_fullscreen_api_fission.js test.
  */
 
-var EXPORTED_SYMBOLS = ["FullscreenFrameChild"];
-
-class FullscreenFrameChild extends JSWindowActorChild {
+export class FullscreenFrameChild extends JSWindowActorChild {
   actorCreated() {
     this.fullscreen_events = [];
   }
