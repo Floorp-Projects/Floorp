@@ -487,7 +487,7 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
       for (const name of methodsAndGetters.methods) {
         const func = obj[name];
         if (func) {
-          instanceFunctionAllowlist.push([func.name, func]);
+          instanceFunctionAllowlist.push(func);
         }
       }
     }
@@ -495,13 +495,7 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
       for (const name of methodsAndGetters.getters) {
         const func = Object.getOwnPropertyDescriptor(obj, name)?.get;
         if (func) {
-          // Due to lack of "get " prefix in Xray function names, prepend it
-          // here. (bug 1812540)
-          let nameWithPrefix = func.name;
-          if (!nameWithPrefix.startsWith("get ")) {
-            nameWithPrefix = "get " + nameWithPrefix;
-          }
-          instanceFunctionAllowlist.push([nameWithPrefix, func]);
+          instanceFunctionAllowlist.push(func);
         }
       }
     }
@@ -538,6 +532,8 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
     // Pull in all of the non-ECMAScript native functions that we want to
     // allow as well.
     ...domNatives,
+
+    ...instanceFunctionAllowlist,
   ];
 
   const map = new Map();
@@ -546,13 +542,6 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
       map.set(n.name, []);
     }
     map.get(n.name).push(n);
-  }
-
-  for (const [name, n] of instanceFunctionAllowlist) {
-    if (!map.has(name)) {
-      map.set(name, []);
-    }
-    map.get(name).push(n);
   }
 
   gSideEffectFreeNatives = map;
