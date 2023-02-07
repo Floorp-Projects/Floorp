@@ -558,6 +558,10 @@ class ProxyContextParent extends BaseContext {
     apiManager.emit("proxy-context-load", this);
   }
 
+  get isProxyContextParent() {
+    return true;
+  }
+
   trackRunListenerPromise(runListenerPromise) {
     if (
       // The extension was already shutdown.
