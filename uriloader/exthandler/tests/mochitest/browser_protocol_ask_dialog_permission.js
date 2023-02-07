@@ -7,6 +7,10 @@ var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+
 let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
 );
@@ -47,8 +51,6 @@ const PRINCIPAL3 = Services.scriptSecurityManager.createContentPrincipalFromOrig
 const NULL_PRINCIPAL_SCHEME = Services.scriptSecurityManager
   .createNullPrincipal({})
   .scheme.toLowerCase();
-
-let testExtension;
 
 /**
  * Get the open protocol handler permission key for a given protocol scheme.
@@ -106,106 +108,13 @@ function testAlwaysAsk(scheme, ask) {
 }
 
 /**
- * Open a test URL with the desired scheme.
- * By default the load is triggered by the content principal of the browser.
- * @param {MozBrowser} browser - Browser to load the test URL in.
- * @param {string} scheme - Scheme of the test URL.
- * @param {Object} [opts] - Options for the triggering principal.
- * @param {nsIPrincipal} [opts.triggeringPrincipal] - Principal to trigger the
- * load with. Defaults to the browsers content principal.
- * @param {boolean} [opts.useNullPrincipal] - If true, we will trigger the load
- * with a null principal.
- * @param {boolean} [opts.useExtensionPrincipal] - If true, we will trigger the
- * load with an extension.
- * @param {boolean} [opts.omitTriggeringPrincipal] - If true, we will directly
- * call the protocol handler dialogs without a principal.
+ * Triggers the load via a server redirect.
+ * @param {string} serverRedirect - The redirect type.
  */
-async function triggerOpenProto(
-  browser,
-  scheme,
-  {
-    triggeringPrincipal = browser.contentPrincipal,
-    useNullPrincipal = false,
-    useExtensionPrincipal = false,
-    omitTriggeringPrincipal = false,
-    useJSRedirect = false,
-    serverRedirect = "",
-    linkToRedirect = false,
-    customHandlerInfo,
-  } = {}
-) {
-  let uri = `${scheme}://test`;
+function useServerRedirect(serverRedirect) {
+  return async (browser, scheme) => {
+    let uri = `${scheme}://test`;
 
-  if (useNullPrincipal) {
-    // Create and load iframe with data URI.
-    // This will be a null principal.
-    ContentTask.spawn(browser, { uri }, args => {
-      let frame = content.document.createElement("iframe");
-      frame.src = `data:text/html,<script>location.href="${args.uri}"</script>`;
-      content.document.body.appendChild(frame);
-    });
-    return;
-  }
-
-  if (useExtensionPrincipal) {
-    const EXTENSION_DATA = {
-      manifest: {
-        content_scripts: [
-          {
-            matches: [browser.currentURI.spec],
-            js: ["navigate.js"],
-          },
-        ],
-      },
-      files: {
-        "navigate.js": `window.location.href = "${uri}";`,
-      },
-    };
-
-    testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
-    await testExtension.startup();
-    return;
-  }
-
-  if (omitTriggeringPrincipal) {
-    // Directly call ContentDispatchChooser without a triggering principal
-    let contentDispatchChooser = Cc[
-      "@mozilla.org/content-dispatch-chooser;1"
-    ].createInstance(Ci.nsIContentDispatchChooser);
-
-    let handler =
-      customHandlerInfo || HandlerServiceTestUtils.getHandlerInfo(scheme);
-
-    contentDispatchChooser.handleURI(
-      handler,
-      Services.io.newURI(uri),
-      null,
-      browser.browsingContext
-    );
-    return;
-  }
-
-  if (useJSRedirect) {
-    let innerParams = new URLSearchParams();
-    innerParams.set("uri", uri);
-    let params = new URLSearchParams();
-    params.set(
-      "uri",
-      "https://example.com/" +
-        ROOT_PATH +
-        "script_redirect.html?" +
-        innerParams.toString()
-    );
-    uri =
-      "https://example.org/" +
-      ROOT_PATH +
-      "script_redirect.html?" +
-      params.toString();
-    BrowserTestUtils.loadURI(browser, uri);
-    return;
-  }
-
-  if (serverRedirect) {
     let innerParams = new URLSearchParams();
     innerParams.set("uri", uri);
     innerParams.set("redirectType", serverRedirect);
@@ -223,29 +132,22 @@ async function triggerOpenProto(
       "redirect_helper.sjs?" +
       params.toString();
     BrowserTestUtils.loadURI(browser, uri);
-    return;
-  }
+  };
+}
 
-  if (linkToRedirect) {
-    let params = new URLSearchParams();
-    params.set("uri", uri);
-    uri =
-      "https://example.com/" +
-      ROOT_PATH +
-      "redirect_helper.sjs?" +
-      params.toString();
-    await ContentTask.spawn(browser, { uri }, args => {
-      let textLink = content.document.createElement("a");
-      textLink.href = args.uri;
-      textLink.textContent = "click me";
-      content.document.body.appendChild(textLink);
-      textLink.click();
-    });
-    return;
-  }
+/**
+ * Triggers the load with a specific principal or the browser's current
+ * principal.
+ * @param {nsIPrincipal} [principal] - Principal to use to trigger the load.
+ */
+function useTriggeringPrincipal(principal = undefined) {
+  return async (browser, scheme) => {
+    let uri = `${scheme}://test`;
+    let triggeringPrincipal = principal ?? browser.contentPrincipal;
 
-  info("Loading uri: " + uri);
-  browser.loadURI(uri, { triggeringPrincipal });
+    info("Loading uri: " + uri);
+    browser.loadURI(uri, { triggeringPrincipal });
+  };
 }
 
 /**
@@ -258,8 +160,8 @@ async function triggerOpenProto(
  * dialog. If defined, we expect this dialog to be shown.
  * @param {Object} [options.chooserDialogOptions] - Test options for the chooser
  * dialog. If defined, we expect this dialog to be shown.
- * @param {Object} [options.loadOptions] - Options for triggering the protocol
- * load which causes the dialog to show.
+ * @param {Function} [options.triggerLoad] - An async callback function to
+ * trigger the load. Will be passed the browser and scheme to use.
  * @param {nsIPrincipal} [options.triggeringPrincipal] - Principal to trigger
  * the load with. Defaults to the browsers content principal.
  * @returns {Promise} - A promise which resolves once the test is complete.
@@ -267,7 +169,11 @@ async function triggerOpenProto(
 async function testOpenProto(
   browser,
   scheme,
-  { permDialogOptions, chooserDialogOptions, loadOptions } = {}
+  {
+    permDialogOptions,
+    chooserDialogOptions,
+    triggerLoad = useTriggeringPrincipal(),
+  } = {}
 ) {
   let permDialogOpenPromise;
   let chooserDialogOpenPromise;
@@ -281,7 +187,7 @@ async function testOpenProto(
     info("Should see chooser dialog");
     chooserDialogOpenPromise = waitForProtocolAppChooserDialog(browser, true);
   }
-  await triggerOpenProto(browser, scheme, loadOptions);
+  await triggerLoad(browser, scheme);
   let webHandlerLoadedPromise;
 
   let webHandlerShouldOpen =
@@ -307,6 +213,7 @@ async function testOpenProto(
       actionCheckbox,
       actionConfirm,
       actionChangeApp,
+      checkContents,
     } = permDialogOptions;
 
     if (actionChangeApp) {
@@ -354,6 +261,10 @@ async function testOpenProto(
       );
     }
 
+    if (checkContents) {
+      checkContents(dialogEl);
+    }
+
     if (actionChangeApp) {
       let dialogClosedPromise = waitForProtocolPermissionDialog(browser, false);
       changeAppLink.click();
@@ -383,13 +294,6 @@ async function testOpenProto(
     await webHandlerLoadedPromise;
   } else {
     info("Web handler open canceled");
-  }
-
-  // Clean up test extension if needed.
-  if (testExtension) {
-    await testExtension.unload();
-    // Don't try to unload it again later!
-    testExtension = null;
   }
 }
 
@@ -711,9 +615,9 @@ add_task(async function test_permission_system_principal() {
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     await testOpenProto(browser, scheme, {
       chooserDialogOptions: { hasCheckbox: true, actionConfirm: false },
-      loadOptions: {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      },
+      triggerLoad: useTriggeringPrincipal(
+        Services.scriptSecurityManager.getSystemPrincipal()
+      ),
     });
   });
 });
@@ -795,8 +699,13 @@ add_task(async function test_null_principal() {
 
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        useNullPrincipal: true,
+      triggerLoad: () => {
+        let uri = `${scheme}://test`;
+        ContentTask.spawn(browser, { uri }, args => {
+          let frame = content.document.createElement("iframe");
+          frame.src = `data:text/html,<script>location.href="${args.uri}"</script>`;
+          content.document.body.appendChild(frame);
+        });
       },
       permDialogOptions: {
         hasCheckbox: false,
@@ -821,8 +730,21 @@ add_task(async function test_no_principal() {
 
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        omitTriggeringPrincipal: true,
+      triggerLoad: () => {
+        let uri = `${scheme}://test`;
+
+        let contentDispatchChooser = Cc[
+          "@mozilla.org/content-dispatch-chooser;1"
+        ].createInstance(Ci.nsIContentDispatchChooser);
+
+        let handler = HandlerServiceTestUtils.getHandlerInfo(scheme);
+
+        contentDispatchChooser.handleURI(
+          handler,
+          Services.io.newURI(uri),
+          null,
+          browser.browsingContext
+        );
       },
       permDialogOptions: {
         hasCheckbox: false,
@@ -856,9 +778,6 @@ add_task(async function test_non_standard_protocol() {
 
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        customHandlerInfo: HandlerServiceTestUtils.getHandlerInfo(scheme),
-      },
       permDialogOptions: {
         hasCheckbox: true,
         hasChangeApp: true,
@@ -870,20 +789,434 @@ add_task(async function test_non_standard_protocol() {
 });
 
 /**
- * Tests that we skip the permission dialog for extension callers.
+ * Tests that we show the permission dialog for extension content scripts.
  */
-add_task(async function test_extension_principal() {
+add_task(async function test_extension_content_script_permission() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        useExtensionPrincipal: true,
+      triggerLoad: async () => {
+        let uri = `${scheme}://test`;
+
+        const EXTENSION_DATA = {
+          manifest: {
+            content_scripts: [
+              {
+                matches: [browser.currentURI.spec],
+                js: ["navigate.js"],
+              },
+            ],
+            browser_specific_settings: {
+              gecko: { id: "allowed@mochi.test" },
+            },
+          },
+          files: {
+            "navigate.js": `window.location.href = "${uri}";`,
+          },
+          useAddonManager: "permanent",
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+      },
+      permDialogOptions: {
+        hasCheckbox: true,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionCheckbox: true,
+        actionConfirm: true,
+        checkContents: dialogEl => {
+          let description = dialogEl.querySelector("#description");
+          let { id, args } = description.ownerDocument.l10n.getAttributes(
+            description
+          );
+          is(
+            id,
+            "permission-dialog-description-extension",
+            "Should be using the correct string."
+          );
+          is(
+            args.extension,
+            "Generated extension",
+            "Should have the correct extension name."
+          );
+        },
       },
       chooserDialogOptions: {
         hasCheckbox: true,
         actionConfirm: false, // Cancel dialog
       },
     });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+    let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      { privateBrowsingId: 1 }
+    );
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.ALLOW_ACTION,
+      "Should have permanently allowed the extension"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(
+        extensionPrivatePrincipal,
+        key
+      ),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have changed the private principal permission"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have allowed the page"
+    );
+
+    await testExtension.unload();
+
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should have cleared the extension's normal principal permission"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(
+        extensionPrivatePrincipal,
+        key
+      ),
+      Services.perms.UNKNOWN_ACTION,
+      "Should have cleared the private browsing principal"
+    );
+  });
+});
+
+/**
+ * Tests that we show the permission dialog for extension content scripts.
+ */
+add_task(async function test_extension_private_content_script_permission() {
+  let scheme = TEST_PROTOS[0];
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser: win.gBrowser, url: ORIGIN1 },
+    async browser => {
+      let testExtension;
+
+      await testOpenProto(browser, scheme, {
+        triggerLoad: async () => {
+          let uri = `${scheme}://test`;
+
+          const EXTENSION_DATA = {
+            manifest: {
+              content_scripts: [
+                {
+                  matches: [browser.currentURI.spec],
+                  js: ["navigate.js"],
+                },
+              ],
+              browser_specific_settings: {
+                gecko: { id: "allowed@mochi.test" },
+              },
+            },
+            files: {
+              "navigate.js": `window.location.href = "${uri}";`,
+            },
+            useAddonManager: "permanent",
+          };
+
+          testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+          await testExtension.startup();
+          let perms = {
+            permissions: ["internal:privateBrowsingAllowed"],
+            origins: [],
+          };
+          await ExtensionPermissions.add("allowed@mochi.test", perms);
+          let addon = await AddonManager.getAddonByID("allowed@mochi.test");
+          await addon.reload();
+        },
+        permDialogOptions: {
+          hasCheckbox: true,
+          chooserIsNext: true,
+          hasChangeApp: false,
+          actionCheckbox: true,
+          actionConfirm: true,
+          checkContents: dialogEl => {
+            let description = dialogEl.querySelector("#description");
+            let { id, args } = description.ownerDocument.l10n.getAttributes(
+              description
+            );
+            is(
+              id,
+              "permission-dialog-description-extension",
+              "Should be using the correct string."
+            );
+            is(
+              args.extension,
+              "Generated extension",
+              "Should have the correct extension name."
+            );
+          },
+        },
+        chooserDialogOptions: {
+          hasCheckbox: true,
+          actionConfirm: false, // Cancel dialog
+        },
+      });
+
+      let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        {}
+      );
+      let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        { privateBrowsingId: 1 }
+      );
+
+      let key = getSkipProtoDialogPermissionKey(scheme);
+      is(
+        Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should not have changed the extension's normal principal permission"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(
+          extensionPrivatePrincipal,
+          key
+        ),
+        Services.perms.ALLOW_ACTION,
+        "Should have allowed the private browsing principal"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should not have allowed the page"
+      );
+
+      await testExtension.unload();
+
+      is(
+        Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should have cleared the extension's normal principal permission"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(
+          extensionPrivatePrincipal,
+          key
+        ),
+        Services.perms.UNKNOWN_ACTION,
+        "Should have cleared the private browsing principal"
+      );
+    }
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests that we do not show the permission dialog for extension content scripts
+ * when the page already has permission.
+ */
+add_task(async function test_extension_allowed_content() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    Services.perms.addFromPrincipal(
+      PRINCIPAL1,
+      key,
+      Services.perms.ALLOW_ACTION,
+      Services.perms.EXPIRE_NEVER
+    );
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        let uri = `${scheme}://test`;
+
+        const EXTENSION_DATA = {
+          manifest: {
+            content_scripts: [
+              {
+                matches: [browser.currentURI.spec],
+                js: ["navigate.js"],
+              },
+            ],
+          },
+          files: {
+            "navigate.js": `window.location.href = "${uri}";`,
+          },
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have permanently allowed the extension"
+    );
+
+    await testExtension.unload();
+    Services.perms.removeFromPrincipal(PRINCIPAL1, key);
+  });
+});
+
+/**
+ * Tests that we do not show the permission dialog for extension content scripts
+ * when the extension already has permission.
+ */
+add_task(async function test_extension_allowed_extension() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        const EXTENSION_DATA = {
+          manifest: {
+            permissions: [`${ORIGIN1}/*`],
+          },
+          background() {
+            browser.test.onMessage.addListener(async (msg, uri) => {
+              switch (msg) {
+                case "engage":
+                  browser.tabs.executeScript({
+                    code: `window.location.href = "${uri}";`,
+                  });
+                  break;
+                default:
+                  browser.test.fail(`Unexpected message received: ${msg}`);
+              }
+            });
+          },
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+
+        let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+          {}
+        );
+        Services.perms.addFromPrincipal(
+          extensionPrincipal,
+          key,
+          Services.perms.ALLOW_ACTION,
+          Services.perms.EXPIRE_NEVER
+        );
+
+        testExtension.sendMessage("engage", `${scheme}://test`);
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    await testExtension.unload();
+    Services.perms.removeFromPrincipal(PRINCIPAL1, key);
+  });
+});
+
+/**
+ * Tests that we show the permission dialog for extensions directly opening a
+ * protocol.
+ */
+add_task(async function test_extension_principal() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        const EXTENSION_DATA = {
+          background() {
+            browser.test.onMessage.addListener(async (msg, url) => {
+              switch (msg) {
+                case "engage":
+                  browser.tabs.update({
+                    url,
+                  });
+                  break;
+                default:
+                  browser.test.fail(`Unexpected message received: ${msg}`);
+              }
+            });
+          },
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+        testExtension.sendMessage("engage", `${scheme}://test`);
+      },
+      permDialogOptions: {
+        hasCheckbox: true,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionCheckbox: true,
+        actionConfirm: true,
+        checkContents: dialogEl => {
+          let description = dialogEl.querySelector("#description");
+          let { id, args } = description.ownerDocument.l10n.getAttributes(
+            description
+          );
+          is(
+            id,
+            "permission-dialog-description-extension",
+            "Should be using the correct string."
+          );
+          is(
+            args.extension,
+            "Generated extension",
+            "Should have the correct extension name."
+          );
+        },
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.ALLOW_ACTION,
+      "Should have permanently allowed the extension"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have allowed the page"
+    );
+
+    await testExtension.unload();
   });
 });
 
@@ -894,9 +1227,7 @@ add_task(async function test_redirect_principal() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "location",
-      },
+      triggerLoad: useServerRedirect("location"),
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,
         chooserIsNext: true,
@@ -914,9 +1245,7 @@ add_task(async function test_redirect_principal() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "refresh",
-      },
+      triggerLoad: useServerRedirect("refresh"),
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,
         chooserIsNext: true,
@@ -934,9 +1263,7 @@ add_task(async function test_redirect_principal() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        serverRedirect: "meta-refresh",
-      },
+      triggerLoad: useServerRedirect("meta-refresh"),
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,
         chooserIsNext: true,
@@ -954,8 +1281,25 @@ add_task(async function test_redirect_principal_js() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        useJSRedirect: true,
+      triggerLoad: () => {
+        let uri = `${scheme}://test`;
+
+        let innerParams = new URLSearchParams();
+        innerParams.set("uri", uri);
+        let params = new URLSearchParams();
+        params.set(
+          "uri",
+          "https://example.com/" +
+            ROOT_PATH +
+            "script_redirect.html?" +
+            innerParams.toString()
+        );
+        uri =
+          "https://example.org/" +
+          ROOT_PATH +
+          "script_redirect.html?" +
+          params.toString();
+        BrowserTestUtils.loadURI(browser, uri);
       },
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,
@@ -974,8 +1318,23 @@ add_task(async function test_redirect_principal_links() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await testOpenProto(browser, scheme, {
-      loadOptions: {
-        linkToRedirect: true,
+      triggerLoad: async () => {
+        let uri = `${scheme}://test`;
+
+        let params = new URLSearchParams();
+        params.set("uri", uri);
+        uri =
+          "https://example.com/" +
+          ROOT_PATH +
+          "redirect_helper.sjs?" +
+          params.toString();
+        await ContentTask.spawn(browser, { uri }, args => {
+          let textLink = content.document.createElement("a");
+          textLink.href = args.uri;
+          textLink.textContent = "click me";
+          content.document.body.appendChild(textLink);
+          textLink.click();
+        });
       },
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,

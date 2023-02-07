@@ -5,7 +5,9 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/Base64.h"
+#include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 namespace net {
@@ -88,6 +90,29 @@ TEST(TestBase64Stream, Run)
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
     EXPECT_TRUE(encodedData.EqualsLiteral("SGVsbG8gV29ybGQh"));
+  }
+}
+
+TEST(TestBase64Stream, VaryingCount)
+{
+  nsCString input;
+  input.AssignLiteral("Hello World!");
+
+  std::pair<size_t, nsCString> tests[] = {
+      {0, "SGVsbG8gV29ybGQh"_ns},  {1, "SA=="_ns},
+      {5, "SGVsbG8="_ns},          {11, "SGVsbG8gV29ybGQ="_ns},
+      {12, "SGVsbG8gV29ybGQh"_ns}, {13, "SGVsbG8gV29ybGQh"_ns},
+  };
+
+  for (auto& [count, expected] : tests) {
+    nsCOMPtr<nsIInputStream> is;
+    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(is), input);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    nsAutoCString encodedData;
+    rv = Base64EncodeInputStream(is, encodedData, count);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_EQ(encodedData, expected) << "count: " << count;
   }
 }
 
