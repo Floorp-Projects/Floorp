@@ -7,7 +7,7 @@ add_setup(async function() {
   });
 });
 
-add_task(async function test_remove_history() {
+add_task(async function test_history() {
   const TEST_URL = "https://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
 
@@ -30,14 +30,35 @@ add_task(async function test_remove_history() {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
   Assert.equal(result.url, TEST_URL, "Found the expected result");
 
-  let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
-
   info("Checking that Space activates the menu button");
   await UrlbarTestUtils.openResultMenu(window, {
     resultIndex,
     activationKey: " ",
   });
   gURLBar.view.resultMenu.hidePopup();
+
+  info("Selecting Learn more item from the result menu");
+  let tabOpenPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "awesome-bar-result-menu"
+  );
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L", {
+    resultIndex,
+  });
+  info("Waiting for Learn more link to open in a new tab");
+  await tabOpenPromise;
+  gBrowser.removeCurrentTab();
+
+  info("Restarting query in order to remove history entry via the menu");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "from_urlbar",
+  });
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  Assert.equal(result.url, TEST_URL, "Found the expected result again");
+
+  let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
 
   await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R", {
     resultIndex,
