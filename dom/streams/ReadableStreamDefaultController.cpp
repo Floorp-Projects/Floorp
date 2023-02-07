@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ReadableStreamDefaultController.h"
+
 #include "js/Exception.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -14,7 +16,6 @@
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamController.h"
-#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
@@ -23,6 +24,8 @@
 #include "nsISupports.h"
 
 namespace mozilla::dom {
+
+using namespace streams_abstract;
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal, mAlgorithms,
                          mStream)
@@ -95,6 +98,8 @@ JSObject* ReadableStreamDefaultController::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return ReadableStreamDefaultController_Binding::Wrap(aCx, this, aGivenProto);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
 static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
@@ -169,11 +174,15 @@ Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
   return aController->StrategyHWM() - aController->QueueTotalSize();
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rs-default-controller-desired-size
 Nullable<double> ReadableStreamDefaultController::GetDesiredSize() {
   // Step 1.
   return ReadableStreamDefaultControllerGetDesiredSize(this);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-clear-algorithms
 //
@@ -221,6 +230,8 @@ void ReadableStreamDefaultControllerClose(
   }
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rs-default-controller-close
 void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 1.
@@ -232,6 +243,8 @@ void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 2.
   ReadableStreamDefaultControllerClose(aCx, this, aRv);
 }
+
+namespace streams_abstract {
 
 MOZ_CAN_RUN_SCRIPT static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
@@ -328,6 +341,8 @@ void ReadableStreamDefaultControllerEnqueue(
   ReadableStreamDefaultControllerCallPullIfNeeded(aCx, aController, aRv);
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rs-default-controller-close
 void ReadableStreamDefaultController::Enqueue(JSContext* aCx,
                                               JS::Handle<JS::Value> aChunk,
@@ -347,6 +362,8 @@ void ReadableStreamDefaultController::Error(JSContext* aCx,
                                             ErrorResult& aRv) {
   ReadableStreamDefaultControllerError(aCx, this, aError, aRv);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
 bool ReadableStreamDefaultControllerShouldCallPull(
@@ -558,6 +575,8 @@ void SetupReadableStreamDefaultControllerFromUnderlyingSource(
   SetUpReadableStreamDefaultController(aCx, aStream, controller, algorithms,
                                        aHighWaterMark, aSizeAlgorithm, aRv);
 }
+
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
 already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(

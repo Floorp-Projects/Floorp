@@ -21,10 +21,12 @@ class Promise;
 class ReadableStream;
 class WritableStream;
 
+namespace streams_abstract {
 MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> ReadableStreamPipeTo(
     ReadableStream* aSource, WritableStream* aDest, bool aPreventClose,
     bool aPreventAbort, bool aPreventCancel, AbortSignal* aSignal,
     ErrorResult& aRv);
+}
 
 }  // namespace dom
 }  // namespace mozilla

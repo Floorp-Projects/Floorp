@@ -106,6 +106,8 @@ void ReadableStream::SetReader(ReadableStreamGenericReader* aReader) {
   mReader = aReader;
 }
 
+namespace streams_abstract {
+
 // https://streams.spec.whatwg.org/#readable-stream-has-byob-reader
 bool ReadableStreamHasBYOBReader(ReadableStream* aStream) {
   // Step 1. Let reader be stream.[[reader]].
@@ -135,6 +137,8 @@ bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
   // Step 4. Return false.
   return reader->IsDefault();
 }
+
+}  // namespace streams_abstract
 
 // Streams Spec: 4.2.4: https://streams.spec.whatwg.org/#rs-prototype
 /* static */
@@ -228,6 +232,8 @@ bool ReadableStream::Locked() const {
   // Step 1 + 2.
   return mReader;
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#initialize-readable-stream
 static void InitializeReadableStream(ReadableStream* aStream) {
@@ -405,6 +411,8 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
   return returnResult.unwrap().forget();
 }
 
+}  // namespace streams_abstract
+
 // https://streams.spec.whatwg.org/#rs-cancel
 already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
                                                  JS::Handle<JS::Value> aReason,
@@ -421,6 +429,7 @@ already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
   return ReadableStreamCancel(aCx, thisRefPtr, aReason, aRv);
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#acquire-readable-stream-reader
 already_AddRefed<ReadableStreamDefaultReader>
 AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
@@ -437,6 +446,7 @@ AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv) {
   // Step 3.
   return reader.forget();
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#rs-get-reader
 void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
@@ -466,11 +476,13 @@ void ReadableStream::GetReader(const ReadableStreamGetReaderOptions& aOptions,
   resultReader.SetAsReadableStreamBYOBReader() = byobReader;
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#is-readable-stream-locked
 bool IsReadableStreamLocked(ReadableStream* aStream) {
   // Step 1 + 2.
   return aStream->Locked();
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#rs-pipe-through
 MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> ReadableStream::PipeThrough(
@@ -512,6 +524,8 @@ MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> ReadableStream::PipeThrough(
   // Step 6: Return transform["readable"].
   return do_AddRef(aTransform.mReadable.get());
 };
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#readable-stream-get-num-read-requests
 double ReadableStreamGetNumReadRequests(ReadableStream* aStream) {
@@ -611,6 +625,8 @@ void ReadableStreamAddReadRequest(ReadableStream* aStream,
   // Step 3.
   aStream->GetDefaultReader()->ReadRequests().insertBack(aReadRequest);
 }
+
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
 // Step 14, 15
@@ -953,6 +969,8 @@ already_AddRefed<Promise> ReadableStream::IteratorReturn(
   return Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
 }
 
+namespace streams_abstract {
+
 // https://streams.spec.whatwg.org/#readable-stream-add-read-into-request
 void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
                                       ReadIntoRequest* aReadIntoRequest) {
@@ -993,6 +1011,8 @@ already_AddRefed<ReadableStream> CreateReadableByteStream(
   // Return stream.
   return stream.forget();
 }
+
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#readablestream-set-up
 // (except this instead creates a new ReadableStream rather than accepting an

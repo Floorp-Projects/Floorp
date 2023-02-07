@@ -206,6 +206,8 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   JS::Heap<JS::Value> mStoredError;
 };
 
+namespace streams_abstract {
+
 bool IsReadableStreamLocked(ReadableStream* aStream);
 
 double ReadableStreamGetNumReadRequests(ReadableStream* aStream);
@@ -245,6 +247,8 @@ bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> CreateReadableByteStream(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     UnderlyingSourceAlgorithmsBase* aAlgorithms, ErrorResult& aRv);
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 
