@@ -176,8 +176,6 @@ void MediaDrmCDMProxy::Terminated() {
   // Should find a way to handle the case when remote side MediaDrm crashed.
 }
 
-const nsCString& MediaDrmCDMProxy::GetNodeId() const { return mNodeId; }
-
 void MediaDrmCDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
                                       const nsAString& aSessionId) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -321,10 +319,6 @@ void MediaDrmCDMProxy::ResolvePromiseWithResult(PromiseId aId,
       &MediaDrmCDMProxy::ResolvePromiseWithResult<T>, aId, aResult);
   mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
-
-const nsString& MediaDrmCDMProxy::KeySystem() const { return mKeySystem; }
-
-DataMutex<CDMCaps>& MediaDrmCDMProxy::Capabilites() { return mCapabilites; }
 
 void MediaDrmCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
   MOZ_ASSERT(NS_IsMainThread());
