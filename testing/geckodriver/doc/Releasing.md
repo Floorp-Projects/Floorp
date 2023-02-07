@@ -45,23 +45,31 @@ you can skip them:
 
 For each crate:
 
-1. Bump the version number in `Cargo.toml` based on [semantic versioning rules],
+1. Change into the crates folder.
+2. Bump the version number in `Cargo.toml` based on [semantic versioning rules],
    and also update the version dependency for other in-tree crates using the
    currently modified crate. Note that running `cargo update` (see next step)
-   will fail if you missed updating a crate's dependency.
-2. Update the crate: `cargo update -p <crate name>`
-3. We also publish audit information for the crates based on Mozilla's
+   will fail if you missed updating a crate's dependency. Also use the
+   [cargo-semver-checks] command to validate the version change:
+
+    ```shell
+    % cargo semver-checks check-release
+    ```
+
+3. Update the crate: `cargo update -p <crate name>`
+4. We also publish audit information for the crates based on Mozilla's
    [audit criteria], and that must be updated for each release. To do that run:
 
     ```shell
     % ./mach cargo vet certify <name> <version> --force
     ```
 
-4. Commit the changes for the modified [Cargo.toml] files, [Cargo.lock] and the
+5. Commit the changes for the modified [Cargo.toml] files, [Cargo.lock] and the
    [supply-chain/] folder, which can be found in the repositories root folder.
    Use a commit message like `Bug XYZ - [rust-<name>] Release version <version>`.
 
 [semantic versioning rules]: https://semver.org/
+[cargo-semver-checks]: https://crates.io/crates/cargo-semver-checks
 [audit criteria]: https://mozilla.github.io/cargo-vet/audit-criteria.html
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
 [Cargo.lock]: https://searchfox.org/mozilla-central/source/Cargo.lock

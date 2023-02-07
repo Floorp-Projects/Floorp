@@ -3,6 +3,14 @@
 
 All notable changes to this program are documented in this file.
 
+## 0.32.2  (2023-02-07)
+
+### Fixed
+
+- With the release of geckodriver 0.32.1 the marionette crate was inappropriately
+  bumped to a semver incompatible version and caused `cargo install geckodriver`
+  to fail for older releases.
+
 ## 0.32.1  (2023-02-02, `b7f075124503`)
 
 ### Fixed
