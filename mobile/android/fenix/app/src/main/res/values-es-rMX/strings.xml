@@ -357,6 +357,10 @@
     <string name="preferences_cookie_banner_reduction">Reducción de banner de cookies</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducir banners de cookies</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Desactivado</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Activado</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
     <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox intenta rechazar automáticamente las solicitudes de cookies en los banners de cookies. Si una opción de rechazo no está disponible, Firefox puede aceptar todas las cookies para descartar el banner.</string>
 

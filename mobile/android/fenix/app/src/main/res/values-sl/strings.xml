@@ -291,6 +291,10 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Zapri</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Obvestila vam pomagajo pri delu s programom %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_description">Sinhronizirajte zavihke med napravami, upravljajte prenose, pridobite nasvete za kar najboljši izkoristek %sovih zmožnosti in še več.</string>
@@ -395,6 +399,14 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Skrij pasice</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Prikazovalo se vam bo manj zahtev za shranjevanje piškotkov</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Manj pozivov za sprejetje piškotkov</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Samodejno odgovarjajte na pojavna okna s piškotki za brskanje brez motenj. %1$s bo poskušal zavrniti vse zahteve, če to ne bo mogoče, pa jih bo sprejel.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Samodejno odgovarjajte na pojavna okna s piškotki za brskanje brez motenj. %1$s bo poskušal zavrniti vse zahteve, če bo to mogoče.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Zavrni pojavna okna</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Zmanjšanje števila pasic s piškotki</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->

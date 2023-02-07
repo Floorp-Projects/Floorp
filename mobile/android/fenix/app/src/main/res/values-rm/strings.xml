@@ -63,10 +63,14 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Agiuntar ina scursanida per avrir tabs privats directamain sin la pagina da partenza.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Agiuntar ina scursanida per avrir tabs privats directamain sin la pagina da partenza.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Avra il proxim tab privat cun tutgar be ina giada.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Agiuntar ina scursanida</string>
-    <!-- Text for the negative button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Agiuntar ina scursanida</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Agiuntar al visur da partenza</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Na, grazia</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -78,7 +82,7 @@
     <string name="open_in_app_cfr_negative_button_text">Ignorar</string>
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Sbittar</string>
+    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Sbittar</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -164,6 +168,8 @@
     <string name="browser_menu_stop">Fermar</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Supplements</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Infurmaziuns davart il conto</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nagins supplements qua</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -252,7 +258,7 @@
     <string name="search_settings_menu_item">Parameters da tschertga</string>
 
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tschertgar questa giada:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Tschertgar questa giada:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Questa giada tschertgar cun/en:</string>
@@ -279,6 +285,18 @@
 
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Serrar</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Communicaziuns ta gidan da far dapli cun %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Sincronisescha tes tabs tranter apparats, administrescha las telechargiadas, retschaiva tips per profitar il meglier da la protecziun da datas da %s ed auter pli.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Cuntinuar</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Betg ussa</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -334,14 +352,27 @@
     <string name="preferences_cookie_banner_reduction">Reducziun da bandieras da cookies</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reducir las bandieras da cookies</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Deactivà</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Activà</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary">Firefox emprova da refusar automaticamain dumondas da cookies sin bandieras da cookies. Sche l\'opziun da refusar na stat betg a disposiziun, accepta Firefox eventualmain tut ils cookies per serrar la bandiera.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox emprova da refusar automaticamain dumondas da cookies sin bandieras da cookies. Sche l\'opziun da refusar na stat betg a disposiziun, accepta Firefox eventualmain tut ils cookies per serrar la bandiera.</string>
+
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s emprova da refusar automaticamain dumondas da deponer cookies cura ch\'ina bandiera da cookies sa mussa.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Deactivà per questa website</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Activà per questa website</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Questa website na vegn actualmain betg sustegnida</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Empruvar da connectar automaticamain cun websites cun agid dal protocol da criptadi HTTPS per dapli segirezza.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Activà</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Activà</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Deactivà</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Ulteriuras infurmaziuns</string>
@@ -442,8 +473,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visità dacurt</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Istorgias che dattan da pensar</string>
@@ -960,7 +989,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Excepziuns</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Activà</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Activà</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Deactivà</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1058,8 +1087,6 @@
     <string name="share_copy_link_to_clipboard">Copiar en l\'archiv provisoric</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Copià en l\'archiv provisoric</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">S\'annunziar per sincronisar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">S\'annunziar tar Sync</string>
      <!-- An option from the three dot menu to sync and save data -->
@@ -1717,7 +1744,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">String da tschertga per utilisar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detagls da la maschina da tschertgar persunalisada</string>
 
@@ -1886,6 +1913,10 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Activà la serrada automatica</string>
 
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox propona</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Definescha che colliaziuns da websites, e-mails e messadis vegnan averts automaticamain en Firefox.</string>
 
@@ -1908,8 +1939,6 @@
     <string name="pocket_stories_categories_header">Istorgias tenor tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Scuvrir dapli</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Cun tecnologia da Pocket.</string>
     <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
     <string name="pocket_stories_feature_title_2">Cun agid da %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
@@ -1924,7 +1953,6 @@
     <string name="experiments_snackbar">Activar la telemetria per trametter datas.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Ir als parameters</string>
-    <string name="firefox_suggest_header">Firefox propona</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
