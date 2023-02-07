@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
 namespace mozilla {
 namespace dom {
 
 async protocol PFileSystemAccessHandleControl
 {
  parent:
-  // XXX A top level protocol must have at least one message. The foo message
-  // gets replaced with a real message in D166344.
-  async Foo();
+  async Close()
+      returns(void_t ok);
 };
 
 } // namespace dom

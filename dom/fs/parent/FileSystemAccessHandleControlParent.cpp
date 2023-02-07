@@ -7,6 +7,7 @@
 #include "FileSystemAccessHandleControlParent.h"
 
 #include "mozilla/dom/FileSystemAccessHandle.h"
+#include "mozilla/ipc/IPCCore.h"
 
 namespace mozilla::dom {
 
@@ -18,7 +19,13 @@ FileSystemAccessHandleControlParent::~FileSystemAccessHandleControlParent() {
   MOZ_ASSERT(mActorDestroyed);
 }
 
-mozilla::ipc::IPCResult FileSystemAccessHandleControlParent::RecvFoo() {
+mozilla::ipc::IPCResult FileSystemAccessHandleControlParent::RecvClose(
+    CloseResolver&& aResolver) {
+  mAccessHandle->BeginClose()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [resolver = std::move(aResolver)](
+          const BoolPromise::ResolveOrRejectValue&) { resolver(void_t()); });
+
   return IPC_OK();
 }
 

@@ -19,7 +19,7 @@ FileSystemAccessHandleParent::~FileSystemAccessHandleParent() {
 }
 
 mozilla::ipc::IPCResult FileSystemAccessHandleParent::RecvClose() {
-  mAccessHandle->Close();
+  mAccessHandle->BeginClose();
 
   return IPC_OK();
 }

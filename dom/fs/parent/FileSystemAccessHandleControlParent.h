@@ -23,7 +23,7 @@ class FileSystemAccessHandleControlParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemAccessHandleControlParent,
                                         override)
 
-  mozilla::ipc::IPCResult RecvFoo();
+  mozilla::ipc::IPCResult RecvClose(CloseResolver&& aResolver);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
