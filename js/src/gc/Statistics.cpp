@@ -1649,9 +1649,9 @@ Statistics::ProfileDurations Statistics::getProfileTimes(
   times[ProfileKey::Background] = SumAllPhaseKinds(slice.totalParallelTimes);
 
 #define GET_PROFILE_TIME(name, text, phase)                      \
-  if (phase != PhaseKind::None) {                                \
+  if (phase != PhaseKind::NONE) {                                \
     times[ProfileKey::name] = SumPhase(phase, slice.phaseTimes); \
-  }                                                              \
+  }
   FOR_EACH_GC_PROFILE_TIME(GET_PROFILE_TIME)
 #undef GET_PROFILE_TIME
 
