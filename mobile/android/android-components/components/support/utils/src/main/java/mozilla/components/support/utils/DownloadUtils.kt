@@ -251,7 +251,7 @@ object DownloadUtils {
         }
 
         // If all the other http-related approaches failed, use the plain uri
-        if (filename == null) {
+        if (filename.isNullOrEmpty()) {
             // If there is a query string strip it, same as desktop browsers
             val decodedUrl: String? = Uri.decode(url)?.substringBefore('?')
             if (decodedUrl?.endsWith('/') == false) {
