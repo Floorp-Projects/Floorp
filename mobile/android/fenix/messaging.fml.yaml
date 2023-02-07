@@ -133,6 +133,9 @@ features:
             URGENT:
               priority: 100
               max-display-count: 10
+            NOTIFICATION:
+              priority: 50
+              max-display-count: 1
           messages:
             default-browser:
               text: default_browser_experiment_card_text
@@ -152,14 +155,17 @@ features:
               priority: 100
               max-display-count: 1
           notification-config:
-            polling-interval: 15 # minutes
+            refresh-interval: 120 # minutes (2 hours)
           messages:
-            test-notification:
-              title: "Test title"
-              text: "Test text"
+            default-browser-notification:
+              title: preferences_set_as_default_browser
+              text: default_browser_experiment_card_text
               surface: notification
-              trigger: [ "ALWAYS" ]
-              action: "MAKE_DEFAULT_BROWSER"
+              style: NOTIFICATION
+              action: MAKE_DEFAULT_BROWSER
+              trigger:
+                - I_AM_NOT_DEFAULT_BROWSER
+                - INACTIVE_2_DAYS
 
 objects:
   MessageData:
@@ -215,7 +221,7 @@ objects:
         default: []
   StyleData:
     description: >
-      A group of properities (predominantly visual) to
+      A group of properties (predominantly visual) to
       describe the style of the message.
     fields:
       priority:
@@ -233,12 +239,12 @@ objects:
   NotificationConfig:
     description: Attributes controlling the global configuration of notification messages.
     fields:
-      polling-interval:
+      refresh-interval:
         type: Int
         description: >
           How often, in minutes, the notification message worker will wake up and check for new
           messages.
-        default: 60
+        default: 240 # 4 hours
 
 enums:
   ControlMessageBehavior:

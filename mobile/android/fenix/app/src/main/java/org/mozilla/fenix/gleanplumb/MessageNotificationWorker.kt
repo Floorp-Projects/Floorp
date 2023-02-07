@@ -146,7 +146,7 @@ class MessageNotificationWorker(
         fun setMessageNotificationWorker(context: Context) {
             val featureConfig = FxNimbus.features.messaging.value()
             val notificationConfig = featureConfig.notificationConfig
-            val pollingInterval = notificationConfig.pollingInterval.toLong()
+            val pollingInterval = notificationConfig.refreshInterval.toLong()
 
             val messageWorkRequest = PeriodicWorkRequest.Builder(
                 MessageNotificationWorker::class.java,
