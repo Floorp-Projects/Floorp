@@ -400,7 +400,7 @@ let FormAutofillPrompter = {
     let name = creditCard.record["cc-name"];
     let type = lazy.CreditCard.getType(number);
     let maskedNumber = lazy.CreditCard.getMaskedNumber(number);
-    let description = `${maskedNumber}, ${name}`;
+    let description = `${maskedNumber}` + (name ? `, ${name}` : ``);
 
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
