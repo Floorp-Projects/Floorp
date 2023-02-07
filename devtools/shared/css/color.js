@@ -4,6 +4,22 @@
 
 "use strict";
 
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const { cssColors } = require("resource://devtools/shared/css/color-db.js");
+
+loader.lazyRequireGetter(
+  this,
+  "CSS_ANGLEUNIT",
+  "resource://devtools/shared/css/constants.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getAngleValueInDegrees",
+  "resource://devtools/shared/css/parsing-utils.js",
+  true
+);
+
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
 const SPECIALVALUES = new Set([
@@ -67,6 +83,9 @@ module.exports.colorUtils = {
   rgbToLab,
   setAlpha,
   classifyColor,
+  rgbToColorName,
+  colorToRGBA,
+  isValidCSSColor,
   calculateContrastRatio,
   calculateDeltaE,
   calculateLuminance,
@@ -143,7 +162,7 @@ CssColor.prototype = {
   },
 
   get valid() {
-    return InspectorUtils.isValidCSSColor(this.authored);
+    return isValidCSSColor(this.authored, this.cssColor4);
   },
 
   /**
@@ -160,7 +179,7 @@ CssColor.prototype = {
 
     // If we reach this point then the alpha value must be in the range
     // 0.0 - 1.0 so we need to multiply it by 255.
-    const tuple = InspectorUtils.colorToRGBA(this.authored);
+    const tuple = colorToRGBA(this.authored);
     tuple.a *= 255;
     return tuple;
   },
@@ -193,7 +212,7 @@ CssColor.prototype = {
       return this.hex;
     }
     const { r, g, b } = tuple;
-    return InspectorUtils.rgbToColorName(r, g, b) || this.hex;
+    return rgbToColorName(r, g, b) || this.hex;
   },
 
   get hex() {
@@ -465,7 +484,7 @@ CssColor.prototype = {
    * appropriate.
    */
   getRGBATuple() {
-    const tuple = InspectorUtils.colorToRGBA(this.authored);
+    const tuple = colorToRGBA(this.authored, this.cssColor4);
 
     tuple.a = parseFloat(tuple.a.toFixed(2));
 
@@ -477,7 +496,7 @@ CssColor.prototype = {
    * appropriate.
    */
   _getHSLATuple() {
-    const { r, g, b, a } = InspectorUtils.colorToRGBA(this.authored);
+    const { r, g, b, a } = colorToRGBA(this.authored, this.cssColor4);
 
     const [h, s, l] = rgbToHsl([r, g, b]);
 
@@ -717,6 +736,91 @@ function classifyColor(value) {
   return CssColor.COLORUNIT.name;
 }
 
+// This holds a map from colors back to color names for use by
+// rgbToColorName.
+var cssRGBMap;
+
+/**
+ * Given a color, return its name, if it has one. Otherwise
+ * returns an empty string.
+ *
+ * @param {Number} r, g, b  The color components.
+ * @return {String} the name of the color or an empty string
+ */
+function rgbToColorName(r, g, b) {
+  if (!cssRGBMap) {
+    cssRGBMap = {};
+    for (const name in cssColors) {
+      const key = JSON.stringify(cssColors[name]);
+      if (!(key in cssRGBMap)) {
+        cssRGBMap[key] = name;
+      }
+    }
+  }
+  return cssRGBMap[JSON.stringify([r, g, b, 1])] || "";
+}
+
+// Translated from nsColor.cpp.
+function _hslValue(m1, m2, h) {
+  if (h < 0.0) {
+    h += 1.0;
+  }
+  if (h > 1.0) {
+    h -= 1.0;
+  }
+  if (h < 1.0 / 6.0) {
+    return m1 + (m2 - m1) * h * 6.0;
+  }
+  if (h < 1.0 / 2.0) {
+    return m2;
+  }
+  if (h < 2.0 / 3.0) {
+    return m1 + (m2 - m1) * (2.0 / 3.0 - h) * 6.0;
+  }
+  return m1;
+}
+
+// Translated from nsColor.cpp.  All three values are expected to be
+// in the range 0-1.
+function hslToRGB([h, s, l]) {
+  let m2;
+  if (l <= 0.5) {
+    m2 = l * (s + 1);
+  } else {
+    m2 = l + s - l * s;
+  }
+  const m1 = l * 2 - m2;
+  const r = Math.round(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
+  const g = Math.round(255 * _hslValue(m1, m2, h));
+  const b = Math.round(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
+  return [r, g, b];
+}
+
+/**
+ * A helper function to convert an HWB color to an RGB color
+ *
+ * @param {Array} - An array where the first entry is the hue of the color
+ *                in the range 0 - 360, the second value is the whiteness
+ *                of the color in the range 0 - 100, and the third value is
+ *                the blackness of the color in the range 0 - 100.
+ * @return {Object} An object of the form {r, g, b, a}; or null if the
+ *                  name was not a valid color.
+ */
+function hwbToRGB([hue, white, black]) {
+  if (white + black >= 1) {
+    const gray = Math.round((white / (white + black)) * 255);
+    return [gray, gray, gray];
+  }
+  const rgb = hslToRGB([hue, 1, 0.5]);
+  for (let i = 0; i < 3; i++) {
+    rgb[i] /= 255;
+    rgb[i] *= 1 - white - black;
+    rgb[i] += white;
+    rgb[i] = Math.round(rgb[i] * 255);
+  }
+  return rgb;
+}
+
 /**
  * A helper function to convert a hex string like "F0C" or "F0C8" to a color.
  *
@@ -769,6 +873,601 @@ function hexToRGBA(name, highResolution) {
     a = Math.round(a * 10) / 10;
   }
   return { r, g, b, a };
+}
+
+/**
+ * A helper function to clamp a value.
+ *
+ * @param {Number} value The value to clamp
+ * @param {Number} min The minimum value
+ * @param {Number} max The maximum value
+ * @return {Number} A value between min and max
+ */
+function clamp(value, min, max) {
+  if (value < min) {
+    value = min;
+  }
+  if (value > max) {
+    value = max;
+  }
+  return value;
+}
+
+/**
+ * A helper function to get a token from a lexer, skipping comments
+ * and whitespace.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {CSSToken} The next non-whitespace, non-comment token; or
+ * null at EOF.
+ */
+function getToken(lexer) {
+  if (lexer._hasPushBackToken) {
+    lexer._hasPushBackToken = false;
+    return lexer._currentToken;
+  }
+
+  while (true) {
+    const token = lexer.nextToken();
+    if (
+      !token ||
+      (token.tokenType !== "comment" && token.tokenType !== "whitespace")
+    ) {
+      lexer._currentToken = token;
+      return token;
+    }
+  }
+}
+
+/**
+ * A helper function to put a token back to lexer for the next call of
+ * getToken().
+ *
+ * @param {CSSLexer} lexer The lexer
+ */
+function unGetToken(lexer) {
+  if (lexer._hasPushBackToken) {
+    throw new Error("Double pushback.");
+  }
+  lexer._hasPushBackToken = true;
+}
+
+/**
+ * A helper function that checks if the next token matches symbol.
+ * If so, reads the token and returns true.  If not, pushes the
+ * token back and returns false.
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {String} symbol The symbol.
+ * @return {Boolean} The expect symbol is parsed or not.
+ */
+function expectSymbol(lexer, symbol) {
+  const token = getToken(lexer);
+  if (!token) {
+    return false;
+  }
+
+  if (token.tokenType !== "symbol" || token.text !== symbol) {
+    unGetToken(lexer);
+    return false;
+  }
+
+  return true;
+}
+
+const COLOR_COMPONENT_TYPE = {
+  integer: "integer",
+  number: "number",
+  percentage: "percentage",
+};
+
+/**
+ * Parse a color function
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {String} funcName The name of the color function.
+ * @param {Boolean} useCssColor4ColorFunction
+ *        Use css-color-4 color function or not.
+ * @return {Array} An array of the form [r,g,b,a] for RGB colors,
+ * [h,s,l,a] for HSL colors, or [h,w,b,a] for HWB colors.
+ */
+function parseColorFunction(lexer, funcName, useCssColor4ColorFunction) {
+  switch (funcName) {
+    case "hsl":
+      return useCssColor4ColorFunction
+        ? parseHsl(lexer)
+        : parseOldStyleHsl(lexer, false);
+    case "hsla":
+      return useCssColor4ColorFunction
+        ? parseHsl(lexer)
+        : parseOldStyleHsl(lexer, true);
+    case "hwb":
+      return parseHwb(lexer);
+    case "rgb":
+      return useCssColor4ColorFunction
+        ? parseRgb(lexer)
+        : parseOldStyleRgb(lexer, false);
+    case "rgba":
+      return useCssColor4ColorFunction
+        ? parseRgb(lexer)
+        : parseOldStyleRgb(lexer, true);
+    default:
+      throw new Error("Invalid color function.");
+  }
+}
+
+/**
+ * Parse a <integer> or a <number> or a <percentage> color component. If
+ * |separator| is provided (not an empty string ""), this function will also
+ * attempt to parse that character after parsing the color component. The range
+ * of output component value is [0, 1] if the component type is percentage.
+ * Otherwise, the range is [0, 255].
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {COLOR_COMPONENT_TYPE} type The color component type.
+ * @param {String} separator The separator.
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseColorComponent(lexer, type, separator, colorArray) {
+  const token = getToken(lexer);
+
+  if (!token) {
+    return false;
+  }
+
+  switch (type) {
+    case COLOR_COMPONENT_TYPE.integer:
+      if (token.tokenType !== "number" || !token.isInteger) {
+        return false;
+      }
+      break;
+    case COLOR_COMPONENT_TYPE.number:
+      if (token.tokenType !== "number") {
+        return false;
+      }
+      break;
+    case COLOR_COMPONENT_TYPE.percentage:
+      if (token.tokenType !== "percentage") {
+        return false;
+      }
+      break;
+    default:
+      throw new Error("Invalid color component type.");
+  }
+
+  let colorComponent = 0;
+  if (type === COLOR_COMPONENT_TYPE.percentage) {
+    colorComponent = clamp(token.number, 0, 1);
+  } else {
+    colorComponent = clamp(token.number, 0, 255);
+  }
+
+  if (separator !== "" && !expectSymbol(lexer, separator)) {
+    return false;
+  }
+
+  colorArray.push(colorComponent);
+
+  return true;
+}
+
+/**
+ * Parse an optional [ separator <alpha-value> ] expression, followed by a
+ * close-parenthesis, at the end of a css color function (e.g. rgba() or hsla()).
+ * If this function simply encounters a close-parenthesis (without the
+ * [ separator <alpha-value> ]), it will still succeed. Then put a fully-opaque
+ * alpha value into the colorArray. The range of output alpha value is [0, 1].
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @param {String} separator The separator.
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseColorOpacityAndCloseParen(lexer, separator, colorArray) {
+  // The optional [separator <alpha-value>] was omitted, so set the opacity
+  // to a fully-opaque value '1.0' and return success.
+  if (expectSymbol(lexer, ")")) {
+    colorArray.push(1);
+    return true;
+  }
+
+  if (!expectSymbol(lexer, separator)) {
+    return false;
+  }
+
+  const token = getToken(lexer);
+  if (!token) {
+    return false;
+  }
+
+  // <number> or <percentage>
+  if (token.tokenType !== "number" && token.tokenType !== "percentage") {
+    return false;
+  }
+
+  if (!expectSymbol(lexer, ")")) {
+    return false;
+  }
+
+  colorArray.push(clamp(token.number, 0, 1));
+
+  return true;
+}
+
+/**
+ * Parse a hue value.
+ *   <hue> = <number> | <angle>
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @param {Array} colorArray [out] The parsed color component will push into this array.
+ * @return {Boolean} Return false on error.
+ */
+function parseHue(lexer, colorArray) {
+  const token = getToken(lexer);
+
+  if (!token) {
+    return false;
+  }
+
+  let val = 0;
+  if (token.tokenType === "number") {
+    val = token.number;
+  } else if (token.tokenType === "dimension" && token.text in CSS_ANGLEUNIT) {
+    val = getAngleValueInDegrees(token.number, token.text);
+  } else {
+    return false;
+  }
+
+  val = val / 360.0;
+  colorArray.push(val - Math.floor(val));
+
+  return true;
+}
+
+/**
+ * A helper function to parse the color components of hsl()/hsla() function.
+ * hsl() and hsla() are now aliases.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
+ */
+function parseHsl(lexer) {
+  // comma-less expression:
+  // hsl() = hsl( <hue> <saturation> <lightness> [ / <alpha-value> ]? )
+  // the expression with comma:
+  // hsl() = hsl( <hue>, <saturation>, <lightness>, <alpha-value>? )
+  //
+  // <hue> = <number> | <angle>
+  // <alpha-value> = <number> | <percentage>
+
+  const commaSeparator = ",";
+  const hsl = [];
+  const a = [];
+
+  // Parse hue.
+  if (!parseHue(lexer, hsl)) {
+    return null;
+  }
+
+  // Look for a comma separator after "hue" component to determine if the
+  // expression is comma-less or not.
+  const hasComma = expectSymbol(lexer, commaSeparator);
+
+  // Parse saturation, lightness and opacity.
+  // The saturation and lightness are <percentage>, so reuse the <percentage>
+  // version of parseColorComponent function for them. No need to check the
+  // separator after 'lightness'. It will be checked in opacity value parsing.
+  const separatorBeforeAlpha = hasComma ? commaSeparator : "/";
+  if (
+    parseColorComponent(
+      lexer,
+      COLOR_COMPONENT_TYPE.percentage,
+      hasComma ? commaSeparator : "",
+      hsl
+    ) &&
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, "", hsl) &&
+    parseColorOpacityAndCloseParen(lexer, separatorBeforeAlpha, a)
+  ) {
+    return [...hslToRGB(hsl), ...a];
+  }
+
+  return null;
+}
+
+/**
+ * A helper function to parse the color arguments of old style hsl()/hsla()
+ * function.
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {Boolean} hasAlpha The color function has alpha component or not.
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
+ */
+function parseOldStyleHsl(lexer, hasAlpha) {
+  // hsla() = hsla( <hue>, <saturation>, <lightness>, <alpha-value> )
+  // hsl() = hsl( <hue>, <saturation>, <lightness> )
+  //
+  // <hue> = <number>
+  // <alpha-value> = <number>
+
+  const commaSeparator = ",";
+  const closeParen = ")";
+  const hsl = [];
+  const a = [];
+
+  // Parse hue.
+  const token = getToken(lexer);
+  if (!token || token.tokenType !== "number") {
+    return null;
+  }
+  if (!expectSymbol(lexer, commaSeparator)) {
+    return null;
+  }
+  const val = token.number / 360.0;
+  hsl.push(val - Math.floor(val));
+
+  // Parse saturation, lightness and opacity.
+  // The saturation and lightness are <percentage>, so reuse the <percentage>
+  // version of parseColorComponent function for them. The opacity is <number>
+  if (hasAlpha) {
+    if (
+      parseColorComponent(
+        lexer,
+        COLOR_COMPONENT_TYPE.percentage,
+        commaSeparator,
+        hsl
+      ) &&
+      parseColorComponent(
+        lexer,
+        COLOR_COMPONENT_TYPE.percentage,
+        commaSeparator,
+        hsl
+      ) &&
+      parseColorComponent(lexer, COLOR_COMPONENT_TYPE.number, closeParen, a)
+    ) {
+      return [...hslToRGB(hsl), ...a];
+    }
+  } else if (
+    parseColorComponent(
+      lexer,
+      COLOR_COMPONENT_TYPE.percentage,
+      commaSeparator,
+      hsl
+    ) &&
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, closeParen, hsl)
+  ) {
+    return [...hslToRGB(hsl), 1];
+  }
+
+  return null;
+}
+
+/**
+ * A helper function to parse the color arguments of rgb()/rgba() function.
+ * rgb() and rgba() now are aliases.
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
+ */
+function parseRgb(lexer) {
+  // comma-less expression:
+  //   rgb() = rgb( component{3} [ / <alpha-value> ]? )
+  // the expression with comma:
+  //   rgb() = rgb( component#{3} , <alpha-value>? )
+  //
+  // component = <number> | <percentage>
+  // <alpa-value> = <number> | <percentage>
+
+  const commaSeparator = ",";
+  const rgba = [];
+
+  const token = getToken(lexer);
+  if (token.tokenType !== "percentage" && token.tokenType !== "number") {
+    return null;
+  }
+  unGetToken(lexer);
+  const type =
+    token.tokenType === "percentage"
+      ? COLOR_COMPONENT_TYPE.percentage
+      : COLOR_COMPONENT_TYPE.number;
+
+  // Parse R.
+  if (!parseColorComponent(lexer, type, "", rgba)) {
+    return null;
+  }
+  const hasComma = expectSymbol(lexer, commaSeparator);
+
+  // Parse G, B and A.
+  // No need to check the separator after 'B'. It will be checked in 'A' values
+  // parsing.
+  const separatorBeforeAlpha = hasComma ? commaSeparator : "/";
+  if (
+    parseColorComponent(lexer, type, hasComma ? commaSeparator : "", rgba) &&
+    parseColorComponent(lexer, type, "", rgba) &&
+    parseColorOpacityAndCloseParen(lexer, separatorBeforeAlpha, rgba)
+  ) {
+    if (type === COLOR_COMPONENT_TYPE.percentage) {
+      rgba[0] = Math.round(255 * rgba[0]);
+      rgba[1] = Math.round(255 * rgba[1]);
+      rgba[2] = Math.round(255 * rgba[2]);
+    }
+    return rgba;
+  }
+
+  return null;
+}
+
+/**
+ * A helper function to parse the color arguments of old style rgb()/rgba()
+ * function.
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {Boolean} hasAlpha The color function has alpha component or not.
+ * @return {Array} An array of the form [r,g,b,a]; or null on error.
+ */
+function parseOldStyleRgb(lexer, hasAlpha) {
+  // rgba() = rgba( component#{3} , <alpha-value> )
+  // rgb() = rgb( component#{3} )
+  //
+  // component = <integer> | <percentage>
+  // <alpha-value> = <number>
+
+  const commaSeparator = ",";
+  const closeParen = ")";
+  const rgba = [];
+
+  const token = getToken(lexer);
+  if (
+    token.tokenType !== "percentage" &&
+    (token.tokenType !== "number" || !token.isInteger)
+  ) {
+    return null;
+  }
+  unGetToken(lexer);
+  const type =
+    token.tokenType === "percentage"
+      ? COLOR_COMPONENT_TYPE.percentage
+      : COLOR_COMPONENT_TYPE.integer;
+
+  // Parse R. G, B and A.
+  if (hasAlpha) {
+    if (
+      !parseColorComponent(lexer, type, commaSeparator, rgba) ||
+      !parseColorComponent(lexer, type, commaSeparator, rgba) ||
+      !parseColorComponent(lexer, type, commaSeparator, rgba) ||
+      !parseColorComponent(lexer, COLOR_COMPONENT_TYPE.number, closeParen, rgba)
+    ) {
+      return null;
+    }
+  } else if (
+    !parseColorComponent(lexer, type, commaSeparator, rgba) ||
+    !parseColorComponent(lexer, type, commaSeparator, rgba) ||
+    !parseColorComponent(lexer, type, closeParen, rgba)
+  ) {
+    return null;
+  }
+
+  if (type === COLOR_COMPONENT_TYPE.percentage) {
+    rgba[0] = Math.round(255 * rgba[0]);
+    rgba[1] = Math.round(255 * rgba[1]);
+    rgba[2] = Math.round(255 * rgba[2]);
+  }
+  if (!hasAlpha) {
+    rgba.push(1);
+  }
+
+  return rgba;
+}
+
+/**
+ * A helper function to parse the color components of an hwb() function.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {Array} An array of the form [hue, white, black, alpha];
+ *         or null on error.
+ */
+function parseHwb(lexer) {
+  // comma-less expression:
+  // hwb() = hwb( <hue> <whiteness> <blackness> [ / <alpha-value> ]? )
+  //
+  // <hue> = <number> | <angle>
+  // <whiteness> = <percentage>
+  // <blackness> = <percentage>
+  // <alpha-value> = <number> | <percentage>
+
+  const hwb = [];
+  const a = [];
+
+  // Parse hue.
+  if (!parseHue(lexer, hwb)) {
+    return null;
+  }
+
+  // Parse whiteness, blackness, and opacity.
+  // The whiteness and blackness are <percentage>, so reuse the <percentage>
+  // version of the parseColorComponent function for them.
+  if (
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, "", hwb) &&
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, "", hwb) &&
+    parseColorOpacityAndCloseParen(lexer, "/", a)
+  ) {
+    return [...hwbToRGB(hwb), ...a];
+  }
+
+  return null;
+}
+
+/**
+ * Convert a string representing a color to an object holding the
+ * color's components.  Any valid CSS color form can be passed in.
+ *
+ * @param {String} name
+ *        The color
+ * @param {Boolean} useCssColor4ColorFunction
+ *        Use css-color-4 color function or not.
+ * @param {Boolean} toArray
+ *        Return rgba array if true, otherwise object
+ * @return {Object|Array}
+ *         An object of the form {r, g, b, a} if toArray is false,
+ *         otherwise an array of the form [r, g, b, a]; or null if the
+ *         name was not a valid color
+ */
+function colorToRGBA(name, useCssColor4ColorFunction = false, toArray = false) {
+  name = name.trim().toLowerCase();
+
+  if (name in cssColors) {
+    const result = cssColors[name];
+    return { r: result[0], g: result[1], b: result[2], a: result[3] };
+  } else if (name === "transparent") {
+    return { r: 0, g: 0, b: 0, a: 0 };
+  } else if (name === "currentcolor") {
+    return { r: 0, g: 0, b: 0, a: 1 };
+  }
+
+  const lexer = getCSSLexer(name);
+
+  const func = getToken(lexer);
+  if (!func) {
+    return null;
+  }
+
+  if (func.tokenType === "id" || func.tokenType === "hash") {
+    if (getToken(lexer) !== null) {
+      return null;
+    }
+    return hexToRGBA(func.text);
+  }
+
+  const expectedFunctions = ["rgba", "rgb", "hsla", "hsl", "hwb"];
+  if (
+    !func ||
+    func.tokenType !== "function" ||
+    !expectedFunctions.includes(func.text)
+  ) {
+    return null;
+  }
+
+  const vals = parseColorFunction(lexer, func.text, useCssColor4ColorFunction);
+
+  if (!vals) {
+    return null;
+  }
+  if (getToken(lexer) !== null) {
+    return null;
+  }
+
+  return toArray ? vals : { r: vals[0], g: vals[1], b: vals[2], a: vals[3] };
+}
+
+/**
+ * Check whether a string names a valid CSS color.
+ *
+ * @param {String} name The string to check
+ * @param {Boolean} useCssColor4ColorFunction use css-color-4 color function or not.
+ * @return {Boolean} True if the string is a CSS color name.
+ */
+function isValidCSSColor(name, useCssColor4ColorFunction = false) {
+  return colorToRGBA(name, useCssColor4ColorFunction) !== null;
 }
 
 /**

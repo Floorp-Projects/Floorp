@@ -25,6 +25,17 @@ const CLASSIFY_TESTS = [
   { input: "orange", output: "name" },
 ];
 
+function compareWithInspectorUtils(input, isColor) {
+  const ours = colorUtils.colorToRGBA(input);
+  const platform = InspectorUtils.colorToRGBA(input);
+  deepEqual(ours, platform, "color " + input + " matches InspectorUtils");
+  if (isColor) {
+    ok(ours !== null, "'" + input + "' is a color");
+  } else {
+    ok(ours === null, "'" + input + "' is not a color");
+  }
+}
+
 function run_test() {
   for (const test of CLASSIFY_TESTS) {
     const result = colorUtils.classifyColor(test.input);
@@ -38,19 +49,12 @@ function run_test() {
       "test setAuthoredUnitFromColor(" + test.input + ")"
     );
 
-    ok(
-      InspectorUtils.colorToRGBA(test.input) !== null,
-      "'" + test.input + "' is a color"
-    );
+    // Check that our implementation matches InspectorUtils.
+    compareWithInspectorUtils(test.input, true);
 
-    // check some obvious errors.
-    const invalidColors = ["mumble" + test.input, test.input + "trailingstuff"];
-    for (const invalidColor of invalidColors) {
-      ok(
-        InspectorUtils.colorToRGBA(invalidColor) == null,
-        `'${invalidColor}' is not a color`
-      );
-    }
+    // And check some obvious errors.
+    compareWithInspectorUtils("mumble" + test.input, false);
+    compareWithInspectorUtils(test.input + "trailingstuff", false);
   }
 
   // Regression test for bug 1303826.
