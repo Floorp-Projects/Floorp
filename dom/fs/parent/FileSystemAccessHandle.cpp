@@ -23,9 +23,10 @@ namespace mozilla::dom {
 
 FileSystemAccessHandle::FileSystemAccessHandle(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
-    const fs::EntryId& aEntryId)
+    const fs::EntryId& aEntryId, MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mEntryId(aEntryId),
       mDataManager(std::move(aDataManager)),
+      mIOTaskQueue(std::move(aIOTaskQueue)),
       mActor(nullptr),
       mControlActor(nullptr),
       mRegCount(0),
@@ -44,8 +45,11 @@ RefPtr<FileSystemAccessHandle::CreatePromise> FileSystemAccessHandle::Create(
   MOZ_ASSERT(aDataManager);
   aDataManager->AssertIsOnIOTarget();
 
-  RefPtr<FileSystemAccessHandle> accessHandle =
-      new FileSystemAccessHandle(std::move(aDataManager), aEntryId);
+  RefPtr<TaskQueue> ioTaskQueue = TaskQueue::Create(
+      do_AddRef(aDataManager->MutableIOTargetPtr()), "FileSystemAccessHandle");
+
+  RefPtr<FileSystemAccessHandle> accessHandle = new FileSystemAccessHandle(
+      std::move(aDataManager), aEntryId, WrapMovingNotNull(ioTaskQueue));
 
   return accessHandle->BeginInit()->Then(
       GetCurrentSerialEventTarget(), __func__,
@@ -125,25 +129,37 @@ RefPtr<BoolPromise> FileSystemAccessHandle::BeginClose() {
 
   mClosed = true;
 
-  if (mRemoteQuotaObjectParent) {
-    mRemoteQuotaObjectParent->Close();
-  }
+  return InvokeAsync(mIOTaskQueue.get(), __func__,
+                     [self = RefPtr(this)]() {
+                       if (self->mRemoteQuotaObjectParent) {
+                         self->mRemoteQuotaObjectParent->Close();
+                       }
 
-  if (mLocked) {
-    mDataManager->UnlockExclusive(mEntryId);
-  }
+                       return BoolPromise::CreateAndResolve(true, __func__);
+                     })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+               return self->mIOTaskQueue->BeginShutdown();
+             })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this)](const ShutdownPromise::ResolveOrRejectValue&) {
+            if (self->mLocked) {
+              self->mDataManager->UnlockExclusive(self->mEntryId);
+            }
 
-  return InvokeAsync(
-      mDataManager->MutableBackgroundTargetPtr(), __func__,
-      [self = RefPtr(this)]() {
-        if (self->mRegistered) {
-          self->mDataManager->UnregisterAccessHandle(WrapNotNull(self));
-        }
+            return BoolPromise::CreateAndResolve(true, __func__);
+          })
+      ->Then(mDataManager->MutableBackgroundTargetPtr(), __func__,
+             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+               if (self->mRegistered) {
+                 self->mDataManager->UnregisterAccessHandle(WrapNotNull(self));
+               }
 
-        self->mDataManager = nullptr;
+               self->mDataManager = nullptr;
 
-        return BoolPromise::CreateAndResolve(true, __func__);
-      });
+               return BoolPromise::CreateAndResolve(true, __func__);
+             });
 }
 
 bool FileSystemAccessHandle::IsInactive() const {
@@ -178,27 +194,39 @@ FileSystemAccessHandle::BeginInit() {
     }
   }
 
-  QM_TRY_UNWRAP(
-      nsCOMPtr<nsIRandomAccessStream> stream,
-      CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
-                                   mDataManager->OriginMetadataRef(),
-                                   quota::Client::FILESYSTEM, file, -1, -1,
-                                   nsIFileRandomAccessStream::DEFER_OPEN),
-      CreateAndRejectInitPromise);
-
-  mozilla::ipc::RandomAccessStreamParams streamParams =
-      mozilla::ipc::SerializeRandomAccessStream(
-          WrapMovingNotNullUnchecked(std::move(stream)), this);
-
   return InvokeAsync(
-      mDataManager->MutableBackgroundTargetPtr(), __func__,
-      [self = RefPtr(this), streamParams = std::move(streamParams)]() mutable {
-        self->mDataManager->RegisterAccessHandle(WrapNotNull(self));
+             mDataManager->MutableBackgroundTargetPtr(), __func__,
+             [self = RefPtr(this)]() {
+               self->mDataManager->RegisterAccessHandle(WrapNotNull(self));
 
-        self->mRegistered = true;
+               self->mRegistered = true;
 
-        return InitPromise::CreateAndResolve(std::move(streamParams), __func__);
-      });
+               return BoolPromise::CreateAndResolve(true, __func__);
+             })
+      ->Then(mIOTaskQueue.get(), __func__,
+             [self = RefPtr(this), CreateAndRejectInitPromise,
+              file = std::move(file)](
+                 const BoolPromise::ResolveOrRejectValue& value) {
+               if (value.IsReject()) {
+                 return InitPromise::CreateAndReject(value.RejectValue(),
+                                                     __func__);
+               }
+
+               QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
+                             CreateFileRandomAccessStream(
+                                 quota::PERSISTENCE_TYPE_DEFAULT,
+                                 self->mDataManager->OriginMetadataRef(),
+                                 quota::Client::FILESYSTEM, file, -1, -1,
+                                 nsIFileRandomAccessStream::DEFER_OPEN),
+                             CreateAndRejectInitPromise);
+
+               mozilla::ipc::RandomAccessStreamParams streamParams =
+                   mozilla::ipc::SerializeRandomAccessStream(
+                       WrapMovingNotNullUnchecked(std::move(stream)), self);
+
+               return InitPromise::CreateAndResolve(std::move(streamParams),
+                                                    __func__);
+             });
 }
 
 }  // namespace mozilla::dom
