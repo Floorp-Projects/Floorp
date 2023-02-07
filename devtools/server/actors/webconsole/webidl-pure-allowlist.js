@@ -14,6 +14,9 @@ module.exports = {
     },
   },
   Document: {
+    instance: {
+      getters: ["location"],
+    },
     prototype: {
       getters: [
         "URL",
@@ -118,6 +121,21 @@ module.exports = {
       methods: ["entries", "keys", "values"],
     },
   },
+  Location: {
+    instance: {
+      getters: [
+        "href",
+        "origin",
+        "protocol",
+        "host",
+        "hostname",
+        "port",
+        "pathname",
+        "search",
+        "hash",
+      ],
+    },
+  },
   Node: {
     prototype: {
       getters: [
@@ -183,6 +201,7 @@ module.exports = {
   Window: {
     instance: {
       getters: [
+        "location",
         "window",
         "self",
         "document",
