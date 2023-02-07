@@ -561,7 +561,7 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
   MOZ_ASSERT(NS_SUCCEEDED(rv) == bool(aRequest->mModuleScript));
   SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
 
-  if (aRequest->mModuleScript && !aRequest->mModuleScript->HasParseError()) {
+  if (!aRequest->IsErrored()) {
     StartFetchingModuleDependencies(aRequest);
   }
 

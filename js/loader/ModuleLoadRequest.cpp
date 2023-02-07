@@ -71,6 +71,10 @@ nsIGlobalObject* ModuleLoadRequest::GetGlobalObject() {
   return mLoader->GetGlobalObject();
 }
 
+bool ModuleLoadRequest::IsErrored() const {
+  return !mModuleScript || mModuleScript->HasParseError();
+}
+
 void ModuleLoadRequest::Cancel() {
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
@@ -110,7 +114,7 @@ void ModuleLoadRequest::ModuleLoaded() {
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
   mModuleScript = mLoader->GetFetchedModule(mURI);
-  if (!mModuleScript || mModuleScript->HasParseError()) {
+  if (IsErrored()) {
     ModuleErrored();
     return;
   }
@@ -126,7 +130,7 @@ void ModuleLoadRequest::ModuleErrored() {
   LOG(("ScriptLoadRequest (%p): Module errored", this));
 
   CheckModuleDependenciesLoaded();
-  MOZ_ASSERT(!mModuleScript || mModuleScript->HasParseError());
+  MOZ_ASSERT(IsErrored());
 
   CancelImports();
   SetReady();
