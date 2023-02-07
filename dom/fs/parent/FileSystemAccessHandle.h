@@ -20,6 +20,8 @@ enum class nsresult : uint32_t;
 
 namespace mozilla {
 
+class TaskQueue;
+
 namespace ipc {
 class RandomAccessStreamParams;
 }
@@ -76,7 +78,8 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
 
  private:
   FileSystemAccessHandle(RefPtr<fs::data::FileSystemDataManager> aDataManager,
-                         const fs::EntryId& aEntryId);
+                         const fs::EntryId& aEntryId,
+                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
   ~FileSystemAccessHandle();
 
@@ -89,6 +92,7 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
 
   const fs::EntryId mEntryId;
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
+  const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
   FileSystemAccessHandleParent* mActor;
   FileSystemAccessHandleControlParent* mControlActor;
   nsAutoRefCnt mRegCount;
