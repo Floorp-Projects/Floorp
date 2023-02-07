@@ -1319,10 +1319,12 @@ void nsFocusManager::NotifyFocusStateChange(Element* aElement,
       host->AsElement()->AddStates(ElementState::FOCUS);
     }
   } else {
-    aElement->RemoveStates(ElementState::FOCUS | ElementState::FOCUSRING);
+    constexpr auto kStatesToRemove =
+        ElementState::FOCUS | ElementState::FOCUSRING;
+    aElement->RemoveStates(kStatesToRemove);
     for (nsIContent* host = aElement->GetContainingShadowHost(); host;
          host = host->GetContainingShadowHost()) {
-      host->AsElement()->RemoveStates(ElementState::FOCUS);
+      host->AsElement()->RemoveStates(kStatesToRemove);
     }
   }
 
