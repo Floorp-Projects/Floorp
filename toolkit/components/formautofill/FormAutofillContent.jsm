@@ -853,11 +853,13 @@ var FormAutofillContent = {
     );
 
     let fieldName = FormAutofillContent.activeFieldDetail?.fieldName;
-    lazy.AutofillTelemetry.recordFormInteractionEvent(
-      "popup_shown",
-      this.activeSection,
-      { fieldName }
-    );
+    if (fieldName && this.activeSection) {
+      lazy.AutofillTelemetry.recordFormInteractionEvent(
+        "popup_shown",
+        this.activeSection,
+        { fieldName }
+      );
+    }
   },
 
   _markAsAutofillField(field) {
