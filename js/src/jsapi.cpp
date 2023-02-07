@@ -76,6 +76,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
+#include "vm/FunctionPrefixKind.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/JSAtomState.h"
@@ -3387,6 +3388,28 @@ JS_PUBLIC_API JS::Symbol* JS::GetWellKnownSymbol(JSContext* cx,
 JS_PUBLIC_API JS::PropertyKey JS::GetWellKnownSymbolKey(JSContext* cx,
                                                         JS::SymbolCode which) {
   return PropertyKey::Symbol(cx->wellKnownSymbols().get(which));
+}
+
+static bool AddPrefix(JSContext* cx, JS::Handle<JS::PropertyKey> id,
+                      FunctionPrefixKind prefixKind,
+                      JS::MutableHandle<JS::PropertyKey> out) {
+  JS::Rooted<JSAtom*> atom(cx, js::IdToFunctionName(cx, id, prefixKind));
+  if (!atom) {
+    return false;
+  }
+
+  out.set(JS::PropertyKey::NonIntAtom(atom));
+  return true;
+}
+
+JS_PUBLIC_API bool JS::ToGetterId(JSContext* cx, JS::Handle<JS::PropertyKey> id,
+                                  JS::MutableHandle<JS::PropertyKey> getterId) {
+  return AddPrefix(cx, id, FunctionPrefixKind::Get, getterId);
+}
+
+JS_PUBLIC_API bool JS::ToSetterId(JSContext* cx, JS::Handle<JS::PropertyKey> id,
+                                  JS::MutableHandle<JS::PropertyKey> setterId) {
+  return AddPrefix(cx, id, FunctionPrefixKind::Set, setterId);
 }
 
 #ifdef DEBUG
