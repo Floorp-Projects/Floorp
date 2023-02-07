@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+  <meta charset="utf-8" />
+  <title><!-- Test with dialog & buttons --></title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <link rel="stylesheet" href="chrome://global/skin"/>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script><![CDATA[
+    add_task(async function test_panel_submenu_hover() {
+      let panel = document.getElementById("panel");
+      let menu = document.getElementById("menu");
+      let menupopup = document.getElementById("menupopup");
+
+      let panelShown = new Promise(r => panel.addEventListener("popupshown", r, { once: true }));
+      info("opening panel");
+      panel.openPopupAtScreen(window.screenX, window.screenY);
+      await panelShown;
+      info("panel shown");
+
+      info("hovering menu button");
+      synthesizeMouseAtCenter(menu, { type: "mousemove" });
+      // Wait for at least the submenu delay.
+      await new Promise(r => setTimeout(r, 1000));
+      is(menupopup.state, "closed", "menu shouldn't have opened");
+
+      info("clicking menu button");
+      let menupopupShown = new Promise(r => menupopup.addEventListener("popupshown", r, { once: true }));
+      synthesizeMouseAtCenter(menu, {});
+      await menupopupShown;
+
+      ok(true, "Menupopup was shown on click");
+    });
+  ]]></script>
+</head>
+<body>
+  <xul:panel id="panel">
+    <xul:button type="menu" id="menu" label="Open menu">
+      <xul:menupopup id="menupopup">
+        <xul:menuitem label="foo"/>
+      </xul:menupopup>
+    </xul:button>
+  </xul:panel>
+</body>
+</html>
