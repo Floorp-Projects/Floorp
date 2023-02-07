@@ -62,6 +62,7 @@ class nsAVIFDecoder final : public Decoder {
     AlphaYSizeMismatch,
     AlphaYColorDepthMismatch,
     MetadataImageSizeMismatch,
+    RenderSizeMismatch,
     InvalidCICP,
     NoSamples,
   };
@@ -173,7 +174,7 @@ class OwnedAOMImage {
 
 struct AVIFDecodedData : layers::PlanarYCbCrData {
  public:
-  OrientedIntRect mRenderRect = {};
+  Maybe<OrientedIntSize> mRenderSize = Nothing();
   gfx::CICP::ColourPrimaries mColourPrimaries = gfx::CICP::CP_UNSPECIFIED;
   gfx::CICP::TransferCharacteristics mTransferCharacteristics =
       gfx::CICP::TC_UNSPECIFIED;

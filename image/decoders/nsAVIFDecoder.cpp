@@ -961,8 +961,8 @@ UniquePtr<AVIFDecodedData> Dav1dDecoder::Dav1dPictureToDecodedData(
 
   UniquePtr<AVIFDecodedData> data = MakeUnique<AVIFDecodedData>();
 
-  data->mRenderRect = {0, 0, aPicture->frame_hdr->render_width,
-                       aPicture->frame_hdr->render_height};
+  data->mRenderSize.emplace(aPicture->frame_hdr->render_width,
+                            aPicture->frame_hdr->render_height);
 
   data->mYChannel = static_cast<uint8_t*>(aPicture->data[0]);
   data->mYStride = aPicture->stride[0];
@@ -1071,7 +1071,7 @@ UniquePtr<AVIFDecodedData> AOMDecoder::AOMImageToToDecodedData(
 
   UniquePtr<AVIFDecodedData> data = MakeUnique<AVIFDecodedData>();
 
-  data->mRenderRect = {0, 0, colorImage->r_w, colorImage->r_h};
+  data->mRenderSize.emplace(colorImage->r_w, colorImage->r_h);
 
   data->mYChannel = colorImage->planes[AOM_PLANE_Y];
   data->mYStride = colorImage->stride[AOM_PLANE_Y];
@@ -1563,6 +1563,14 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     RecordFrameTelem(mIsAnimated, parsedInfo, *decodedData);
   }
 
+  if (decodedData->mRenderSize &&
+      decodedData->mRenderSize->ToUnknownSize() != rgbSize) {
+    // This may be supported by allowing all metadata decodes to decode a frame
+    // and get the render size from the bitstream. However it's unlikely to be
+    // used often.
+    return AsVariant(NonDecoderResult::RenderSizeMismatch);
+  }
+
   // Read color profile
   if (mCMSMode != CMSMode::Off) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
@@ -1713,13 +1721,13 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
         decodedData->mAlpha ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
     Maybe<AnimationParams> animParams;
     if (!IsFirstFrameDecode()) {
-      animParams.emplace(decodedData->mRenderRect.ToUnknownRect(),
-                         parsedImage.mDuration, parsedImage.mFrameNum,
-                         BlendMethod::SOURCE, DisposalMethod::CLEAR_ALL);
+      animParams.emplace(FullFrame().ToUnknownRect(), parsedImage.mDuration,
+                         parsedImage.mFrameNum, BlendMethod::SOURCE,
+                         DisposalMethod::CLEAR_ALL);
     }
     pipe = SurfacePipeFactory::CreateSurfacePipe(
-        this, Size(), OutputSize(), decodedData->mRenderRect, format, outFormat,
-        animParams, mTransform, SurfacePipeFlags());
+        this, Size(), OutputSize(), FullFrame(), format, outFormat, animParams,
+        mTransform, SurfacePipeFlags());
   } else {
     pipe = SurfacePipeFactory::CreateReorientSurfacePipe(
         this, Size(), OutputSize(), format, mTransform, GetOrientation());
@@ -1897,6 +1905,9 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
         return;
       case NonDecoderResult::MetadataImageSizeMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::ispe_mismatch);
+        return;
+      case NonDecoderResult::RenderSizeMismatch:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::render_size_mismatch);
         return;
       case NonDecoderResult::InvalidCICP:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::invalid_cicp);
