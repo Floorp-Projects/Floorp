@@ -137,6 +137,8 @@ class WritableStreamDefaultController final : public nsISupports,
   RefPtr<WritableStream> mStream;
 };
 
+namespace streams_abstract {
+
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
@@ -168,6 +170,8 @@ MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerErrorIfNeeded(
 MOZ_CAN_RUN_SCRIPT double WritableStreamDefaultControllerGetChunkSize(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 

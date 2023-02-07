@@ -24,6 +24,8 @@
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(WritableStreamDefaultWriter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WritableStreamDefaultWriter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mStream, mReadyPromise,
@@ -97,6 +99,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriter::Ready() {
   return readyPromise.forget();
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-get-desired-size
 Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
     WritableStreamDefaultWriter* aWriter) {
@@ -121,6 +124,7 @@ Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
   // ! WritableStreamDefaultControllerGetDesiredSize(stream.[[controller]]).
   return stream->Controller()->GetDesiredSize();
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#default-writer-desired-size
 Nullable<double> WritableStreamDefaultWriter::GetDesiredSize(ErrorResult& aRv) {
@@ -204,6 +208,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriter::Close(JSContext* aCx,
   return WritableStreamDefaultWriterClose(aCx, thisRefPtr, aRv);
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-release
 void WritableStreamDefaultWriterRelease(JSContext* aCx,
                                         WritableStreamDefaultWriter* aWriter) {
@@ -242,6 +247,7 @@ void WritableStreamDefaultWriterRelease(JSContext* aCx,
   // Step 8. Set writer.[[stream]] to undefined.
   aWriter->SetStream(nullptr);
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#default-writer-release-lock
 void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx) {
@@ -261,6 +267,7 @@ void WritableStreamDefaultWriter::ReleaseLock(JSContext* aCx) {
   return WritableStreamDefaultWriterRelease(aCx, thisRefPtr);
 }
 
+namespace streams_abstract {
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-write
 already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
     JSContext* aCx, WritableStreamDefaultWriter* aWriter,
@@ -332,6 +339,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
   // Step 13. Return promise.
   return promise.forget();
 }
+}  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#default-writer-write
 already_AddRefed<Promise> WritableStreamDefaultWriter::Write(
@@ -346,6 +354,8 @@ already_AddRefed<Promise> WritableStreamDefaultWriter::Write(
   // Step 2. Return ! WritableStreamDefaultWriterWrite(this, chunk).
   return WritableStreamDefaultWriterWrite(aCx, this, aChunk, aRv);
 }
+
+namespace streams_abstract {
 
 // https://streams.spec.whatwg.org/#set-up-writable-stream-default-writer
 void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
@@ -529,5 +539,7 @@ already_AddRefed<Promise> WritableStreamDefaultWriterCloseWithErrorPropagation(
   // Step 7. Return ! WritableStreamDefaultWriterClose(writer).
   return WritableStreamDefaultWriterClose(aCx, aWriter, aRv);
 }
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
