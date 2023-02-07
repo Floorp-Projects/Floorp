@@ -18,7 +18,7 @@ use nsstring::nsACString;
 
 use std::{
     borrow::Cow,
-    num::{NonZeroU32, NonZeroU8},
+    num::NonZeroU8,
     ptr,
 };
 
@@ -247,9 +247,9 @@ pub struct TextureViewDescriptor<'a> {
     dimension: Option<&'a wgt::TextureViewDimension>,
     aspect: wgt::TextureAspect,
     base_mip_level: u32,
-    mip_level_count: Option<NonZeroU32>,
+    mip_level_count: Option<&'a u32>,
     base_array_layer: u32,
-    array_layer_count: Option<NonZeroU32>,
+    array_layer_count: Option<&'a u32>,
 }
 
 #[repr(C)]
@@ -522,9 +522,9 @@ pub extern "C" fn wgpu_client_create_texture_view(
         range: wgt::ImageSubresourceRange {
             aspect: desc.aspect,
             base_mip_level: desc.base_mip_level,
-            mip_level_count: desc.mip_level_count,
+            mip_level_count: desc.mip_level_count.map(|ptr| *ptr),
             base_array_layer: desc.base_array_layer,
-            array_layer_count: desc.array_layer_count,
+            array_layer_count: desc.array_layer_count.map(|ptr| *ptr),
         },
     };
 
