@@ -2718,7 +2718,10 @@ void Database::Shutdown() {
   MOZ_ALWAYS_SUCCEEDS(mMainConn->ExecuteSimpleSQLAsync(
       "PRAGMA optimize(0x02)"_ns, nullptr, getter_AddRefs(ps)));
 
-  (void)mMainConn->AsyncClose(connectionShutdown);
+  if (NS_FAILED(mMainConn->AsyncClose(connectionShutdown))) {
+    mozilla::Unused << connectionShutdown->Complete(NS_ERROR_UNEXPECTED,
+                                                    nullptr);
+  }
   mMainConn = nullptr;
 }
 
