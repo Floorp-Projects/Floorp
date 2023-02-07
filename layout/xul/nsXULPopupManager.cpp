@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XULButtonElement.h"
-#include "XULMenuParentElement.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FlushType.h"
@@ -14,8 +13,6 @@
 #include "nsISound.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
-#include "nsMenuBarFrame.h"
-#include "nsMenuBarListener.h"
 #include "nsContentUtils.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -50,6 +47,7 @@
 #include "mozilla/dom/PopupPositionedEventBinding.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/XULMenuElement.h"
+#include "mozilla/dom/XULMenuBarElement.h"
 #include "mozilla/dom/XULPopupElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -76,6 +74,17 @@ static_assert(KeyboardEvent_Binding::DOM_VK_HOME ==
                   KeyboardEvent_Binding::DOM_VK_DOWN ==
                       KeyboardEvent_Binding::DOM_VK_END + 5,
               "nsXULPopupManager assumes some keyCode values are consecutive");
+
+#define NS_DIRECTION_IS_INLINE(dir) \
+  (dir == eNavigationDirection_Start || dir == eNavigationDirection_End)
+#define NS_DIRECTION_IS_BLOCK(dir) \
+  (dir == eNavigationDirection_Before || dir == eNavigationDirection_After)
+#define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) \
+  (dir == eNavigationDirection_First || dir == eNavigationDirection_Last)
+
+static_assert(static_cast<uint8_t>(mozilla::StyleDirection::Ltr) == 0 &&
+                  static_cast<uint8_t>(mozilla::StyleDirection::Rtl) == 1,
+              "Left to Right should be 0 and Right to Left should be 1");
 
 const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
     {
@@ -707,7 +716,7 @@ nsMenuChainItem* nsXULPopupManager::GetRollupItem(RollupKind aKind) {
   return nullptr;
 }
 
-void nsXULPopupManager::SetActiveMenuBar(nsMenuBarFrame* aMenuBar,
+void nsXULPopupManager::SetActiveMenuBar(XULMenuBarElement* aMenuBar,
                                          bool aActivate) {
   if (aActivate) {
     mActiveMenuBar = aMenuBar;
@@ -2010,7 +2019,7 @@ void nsXULPopupManager::UpdateKeyboardListeners() {
     }
     isForMenu = item->GetPopupType() == PopupType::Menu;
   } else if (mActiveMenuBar) {
-    newTarget = mActiveMenuBar->GetContent()->GetComposedDoc();
+    newTarget = mActiveMenuBar->GetComposedDoc();
     isForMenu = true;
   }
 
@@ -2209,7 +2218,7 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent& aKeyEvent,
   }
 
   if (mActiveMenuBar) {
-    RefPtr menubar = &mActiveMenuBar->MenubarElement();
+    RefPtr menubar = mActiveMenuBar;
     if (RefPtr result = menubar->FindMenuWithShortcut(aKeyEvent)) {
       result->OpenMenuPopup(true);
       return true;
@@ -2222,7 +2231,7 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent& aKeyEvent,
     if (nsCOMPtr<nsISound> sound = do_GetService("@mozilla.org/sound;1")) {
       sound->Beep();
     }
-    mActiveMenuBar->SetActive(false);
+    menubar->SetActive(false);
 #endif
   }
   return false;
@@ -2264,7 +2273,10 @@ bool nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode) {
   if (item) {
     itemFrame = item->Frame();
   } else if (mActiveMenuBar) {
-    itemFrame = mActiveMenuBar;
+    itemFrame = mActiveMenuBar->GetPrimaryFrame();
+    if (!itemFrame) {
+      return false;
+    }
   } else {
     return false;
   }
@@ -2301,7 +2313,7 @@ bool nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode) {
   if (!mActiveMenuBar) {
     return false;
   }
-  RefPtr menubar = XULMenuParentElement::FromNode(mActiveMenuBar->GetContent());
+  RefPtr menubar = mActiveMenuBar;
   if (NS_DIRECTION_IS_INLINE(theDirection)) {
     RefPtr prevActiveItem = menubar->GetActiveMenuChild();
     const bool open = prevActiveItem && prevActiveItem->IsMenuPopupOpen();
@@ -2460,7 +2472,8 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       if (aTopVisibleMenuItem) {
         HidePopup(aTopVisibleMenuItem->Content(), {HidePopupOption::IsRollup});
       } else if (mActiveMenuBar) {
-        mActiveMenuBar->MenuClosed();
+        RefPtr menubar = mActiveMenuBar;
+        menubar->MenuClosed();
       }
       break;
 
@@ -2476,7 +2489,8 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
         Rollup({});
         break;
       } else if (mActiveMenuBar) {
-        mActiveMenuBar->MenuClosed();
+        RefPtr menubar = mActiveMenuBar;
+        menubar->MenuClosed();
         break;
       }
       // Intentional fall-through to RETURN case
@@ -2490,7 +2504,8 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       if (aTopVisibleMenuItem) {
         aTopVisibleMenuItem->Frame()->HandleEnterKeyPress(*event);
       } else if (mActiveMenuBar) {
-        mActiveMenuBar->HandleEnterKeyPress(*event);
+        RefPtr menubar = mActiveMenuBar;
+        menubar->HandleEnterKeyPress(*event);
       }
       break;
     }
@@ -2541,8 +2556,7 @@ nsresult nsXULPopupManager::UpdateIgnoreKeys(bool aIgnoreKeys) {
   return NS_OK;
 }
 
-nsPopupState nsXULPopupManager::GetPopupState(
-    mozilla::dom::Element* aPopupElement) {
+nsPopupState nsXULPopupManager::GetPopupState(Element* aPopupElement) {
   if (mNativeMenu && mNativeMenu->Element()->Contains(aPopupElement)) {
     if (aPopupElement != mNativeMenu->Element()) {
       // Submenu state is stored in mNativeMenuSubmenuStates.
@@ -2621,7 +2635,8 @@ nsresult nsXULPopupManager::KeyDown(KeyboardEvent* aKeyEvent) {
         if (item && !item->Frame()->IsMenuList()) {
           Rollup({});
         } else if (mActiveMenuBar) {
-          mActiveMenuBar->MenuClosed();
+          RefPtr menubar = mActiveMenuBar;
+          menubar->MenuClosed();
         }
 
         // Clear the item to avoid bugs as it may have been deleted during
