@@ -2,7 +2,7 @@ use super::{
     ast::*,
     context::{Context, ExprPos},
     error::{Error, ErrorKind},
-    Frontend, Result, Span,
+    Parser, Result, Span,
 };
 use crate::{
     AddressSpace, Binding, Block, BuiltIn, Constant, Expression, GlobalVariable, Handle,
@@ -18,7 +18,7 @@ pub struct VarDeclaration<'a, 'key> {
     pub meta: Span,
 }
 
-/// Information about a builtin used in [`add_builtin`](Frontend::add_builtin).
+/// Information about a builtin used in [`add_builtin`](Parser::add_builtin).
 struct BuiltInData {
     /// The type of the builtin.
     inner: TypeInner,
@@ -35,7 +35,7 @@ pub enum GlobalOrConstant {
     Constant(Handle<Constant>),
 }
 
-impl Frontend {
+impl Parser {
     /// Adds a builtin and returns a variable reference to it
     fn add_builtin(
         &mut self,
@@ -317,7 +317,8 @@ impl Frontend {
                                 kind:
                                 ErrorKind::SemanticError(
                                 format!(
-                                    "swizzle cannot have duplicate components in left-hand-side expression for \"{name:?}\""
+                                    "swizzle cannot have duplicate components in left-hand-side expression for \"{:?}\"",
+                                    name
                                 )
                                 .into(),
                             ),
@@ -378,7 +379,7 @@ impl Frontend {
                         _ => {
                             self.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
-                                    format!("Bad swizzle size for \"{name:?}\"").into(),
+                                    format!("Bad swizzle size for \"{:?}\"", name).into(),
                                 ),
                                 meta,
                             });
@@ -412,7 +413,7 @@ impl Frontend {
                 } else {
                     Err(Error {
                         kind: ErrorKind::SemanticError(
-                            format!("Invalid swizzle for vector \"{name}\"").into(),
+                            format!("Invalid swizzle for vector \"{}\"", name).into(),
                         ),
                         meta,
                     })
@@ -420,7 +421,7 @@ impl Frontend {
             }
             _ => Err(Error {
                 kind: ErrorKind::SemanticError(
-                    format!("Can't lookup field on this type \"{name}\"").into(),
+                    format!("Can't lookup field on this type \"{}\"", name).into(),
                 ),
                 meta,
             }),

@@ -1,8 +1,6 @@
-use crate::front::wgsl::parse::ast;
 use crate::{Handle, Span};
 
-use crate::front::wgsl::error::Error;
-use crate::front::wgsl::lower::{ExpressionContext, Lowerer, OutputContext};
+use super::{ast, Error, ExpressionContext, Lowerer, OutputContext};
 use crate::proc::TypeResolution;
 
 enum ConcreteConstructorHandle {
@@ -135,7 +133,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
     ///
     /// [`Construct`]: ast::Expression::Construct
     /// [`Call`]: ast::Expression::Call
-    pub fn construct(
+    pub(super) fn construct(
         &mut self,
         span: Span,
         constructor: &ast::ConstructorType<'source>,
@@ -563,7 +561,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
     /// [`Type`]: crate::Type
     /// [`Constant`]: crate::Constant
     /// [`ctx.module`]: OutputContext::module
-    pub fn const_construct(
+    pub(super) fn const_construct(
         &mut self,
         span: Span,
         constructor: &ast::ConstructorType<'source>,

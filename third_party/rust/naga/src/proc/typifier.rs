@@ -601,7 +601,8 @@ impl<'a> ResolveContext<'a> {
                         (&Ti::Vector { .. }, &Ti::Vector { .. }) => res_left.clone(),
                         (tl, tr) => {
                             return Err(ResolveError::IncompatibleOperands(format!(
-                                "{tl:?} * {tr:?}"
+                                "{:?} * {:?}",
+                                tl, tr
                             )))
                         }
                     }
@@ -621,7 +622,8 @@ impl<'a> ResolveContext<'a> {
                         Ti::Vector { size, .. } => Ti::Vector { size, kind, width },
                         ref other => {
                             return Err(ResolveError::IncompatibleOperands(format!(
-                                "{op:?}({other:?}, _)"
+                                "{:?}({:?}, _)",
+                                op, other
                             )))
                         }
                     };
@@ -658,7 +660,8 @@ impl<'a> ResolveContext<'a> {
                     }),
                     ref other => {
                         return Err(ResolveError::IncompatibleOperands(format!(
-                            "{fun:?}({other:?})"
+                            "{:?}({:?})",
+                            fun, other
                         )))
                     }
                 },
@@ -719,18 +722,18 @@ impl<'a> ResolveContext<'a> {
                         } => TypeResolution::Value(Ti::Scalar { kind, width }),
                         ref other =>
                             return Err(ResolveError::IncompatibleOperands(
-                                format!("{fun:?}({other:?}, _)")
+                                format!("{:?}({:?}, _)", fun, other)
                             )),
                     },
                     Mf::Outer => {
                         let arg1 = arg1.ok_or_else(|| ResolveError::IncompatibleOperands(
-                            format!("{fun:?}(_, None)")
+                            format!("{:?}(_, None)", fun)
                         ))?;
                         match (res_arg.inner_with(types), past(arg1)?.inner_with(types)) {
                             (&Ti::Vector {kind: _, size: columns,width}, &Ti::Vector{ size: rows, .. }) => TypeResolution::Value(Ti::Matrix { columns, rows, width }),
                             (left, right) =>
                                 return Err(ResolveError::IncompatibleOperands(
-                                    format!("{fun:?}({left:?}, {right:?})")
+                                    format!("{:?}({:?}, {:?})", fun, left, right)
                                 )),
                         }
                     },
@@ -740,7 +743,7 @@ impl<'a> ResolveContext<'a> {
                         Ti::Scalar {width,kind} |
                         Ti::Vector {width,kind,size:_} => TypeResolution::Value(Ti::Scalar { kind, width }),
                         ref other => return Err(ResolveError::IncompatibleOperands(
-                                format!("{fun:?}({other:?})")
+                                format!("{:?}({:?})", fun, other)
                             )),
                     },
                     Mf::Normalize |
@@ -766,7 +769,7 @@ impl<'a> ResolveContext<'a> {
                             width,
                         }),
                         ref other => return Err(ResolveError::IncompatibleOperands(
-                            format!("{fun:?}({other:?})")
+                            format!("{:?}({:?})", fun, other)
                         )),
                     },
                     Mf::Inverse => match *res_arg.inner_with(types) {
@@ -780,7 +783,7 @@ impl<'a> ResolveContext<'a> {
                             width,
                         }),
                         ref other => return Err(ResolveError::IncompatibleOperands(
-                            format!("{fun:?}({other:?})")
+                            format!("{:?}({:?})", fun, other)
                         )),
                     },
                     Mf::Determinant => match *res_arg.inner_with(types) {
@@ -789,11 +792,10 @@ impl<'a> ResolveContext<'a> {
                             ..
                         } => TypeResolution::Value(Ti::Scalar { kind: crate::ScalarKind::Float, width }),
                         ref other => return Err(ResolveError::IncompatibleOperands(
-                            format!("{fun:?}({other:?})")
+                            format!("{:?}({:?})", fun, other)
                         )),
                     },
                     // bits
-                    Mf::CountLeadingZeros |
                     Mf::CountOneBits |
                     Mf::ReverseBits |
                     Mf::ExtractBits |
@@ -805,7 +807,7 @@ impl<'a> ResolveContext<'a> {
                         Ti::Vector { size, kind: kind @ (crate::ScalarKind::Sint | crate::ScalarKind::Uint), width } =>
                             TypeResolution::Value(Ti::Vector { size, kind, width }),
                         ref other => return Err(ResolveError::IncompatibleOperands(
-                                format!("{fun:?}({other:?})")
+                                format!("{:?}({:?})", fun, other)
                             )),
                     },
                     // data packing
@@ -851,7 +853,8 @@ impl<'a> ResolveContext<'a> {
                 }),
                 ref other => {
                     return Err(ResolveError::IncompatibleOperands(format!(
-                        "{other:?} as {kind:?}"
+                        "{:?} as {:?}",
+                        other, kind
                     )))
                 }
             },

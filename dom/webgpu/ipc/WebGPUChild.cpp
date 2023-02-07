@@ -423,19 +423,13 @@ RawId WebGPUChild::TextureCreateView(
     desc.dimension = &dimension;
   }
 
-  // Ideally we'd just do something like "aDesc.mMipLevelCount.ptrOr(nullptr)"
-  // but dom::Optional does not seem to have very many nice things.
-  uint32_t mipCount =
-      aDesc.mMipLevelCount.WasPassed() ? aDesc.mMipLevelCount.Value() : 0;
-  uint32_t layerCount =
-      aDesc.mArrayLayerCount.WasPassed() ? aDesc.mArrayLayerCount.Value() : 0;
-
   desc.aspect = ffi::WGPUTextureAspect(aDesc.mAspect);
   desc.base_mip_level = aDesc.mBaseMipLevel;
-  desc.mip_level_count = aDesc.mMipLevelCount.WasPassed() ? &mipCount : nullptr;
+  desc.mip_level_count =
+      aDesc.mMipLevelCount.WasPassed() ? aDesc.mMipLevelCount.Value() : 0;
   desc.base_array_layer = aDesc.mBaseArrayLayer;
   desc.array_layer_count =
-      aDesc.mArrayLayerCount.WasPassed() ? &layerCount : nullptr;
+      aDesc.mArrayLayerCount.WasPassed() ? aDesc.mArrayLayerCount.Value() : 0;
 
   ByteBuf bb;
   RawId id = ffi::wgpu_client_create_texture_view(mClient.get(), aSelfId, &desc,

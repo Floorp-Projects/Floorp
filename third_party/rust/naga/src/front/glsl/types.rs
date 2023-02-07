@@ -1,6 +1,4 @@
-use super::{
-    constants::ConstantSolver, context::Context, Error, ErrorKind, Frontend, Result, Span,
-};
+use super::{constants::ConstantSolver, context::Context, Error, ErrorKind, Parser, Result, Span};
 use crate::{
     proc::ResolveContext, Bytes, Constant, Expression, Handle, ImageClass, ImageDimension,
     ScalarKind, Type, TypeInner, VectorSize,
@@ -226,7 +224,7 @@ pub const fn type_power(kind: ScalarKind, width: Bytes) -> Option<u32> {
     })
 }
 
-impl Frontend {
+impl Parser {
     /// Resolves the types of the expressions until `expr` (inclusive)
     ///
     /// This needs to be done before the [`typifier`] can be queried for
@@ -258,7 +256,7 @@ impl Frontend {
         ctx.typifier
             .grow(expr, &ctx.expressions, &resolve_ctx)
             .map_err(|error| Error {
-                kind: ErrorKind::SemanticError(format!("Can't resolve type: {error:?}").into()),
+                kind: ErrorKind::SemanticError(format!("Can't resolve type: {:?}", error).into()),
                 meta,
             })
     }
@@ -324,7 +322,7 @@ impl Frontend {
         ctx.typifier
             .invalidate(expr, &ctx.expressions, &resolve_ctx)
             .map_err(|error| Error {
-                kind: ErrorKind::SemanticError(format!("Can't resolve type: {error:?}").into()),
+                kind: ErrorKind::SemanticError(format!("Can't resolve type: {:?}", error).into()),
                 meta,
             })
     }

@@ -931,9 +931,9 @@ impl<A: HalApi> Device<A> {
                         range: wgt::ImageSubresourceRange {
                             aspect: wgt::TextureAspect::All,
                             base_mip_level: mip_level,
-                            mip_level_count: Some(1),
+                            mip_level_count: NonZeroU32::new(1),
                             base_array_layer: array_layer,
-                            array_layer_count: Some(1),
+                            array_layer_count: NonZeroU32::new(1),
                         },
                     };
                     clear_views.push(
@@ -992,28 +992,33 @@ impl<A: HalApi> Device<A> {
                 wgt::TextureDimension::D3 => wgt::TextureViewDimension::D3,
             });
 
-        let resolved_mip_level_count = desc.range.mip_level_count.unwrap_or_else(|| {
-            texture
-                .desc
-                .mip_level_count
-                .saturating_sub(desc.range.base_mip_level)
-        });
+        let resolved_mip_level_count = desc
+            .range
+            .mip_level_count
+            .map(NonZeroU32::get)
+            .unwrap_or_else(|| {
+                texture
+                    .desc
+                    .mip_level_count
+                    .saturating_sub(desc.range.base_mip_level)
+            });
 
-        let resolved_array_layer_count =
-            desc.range
-                .array_layer_count
-                .unwrap_or_else(|| match resolved_dimension {
-                    wgt::TextureViewDimension::D1
-                    | wgt::TextureViewDimension::D2
-                    | wgt::TextureViewDimension::D3 => 1,
-                    wgt::TextureViewDimension::Cube => 6,
-                    wgt::TextureViewDimension::D2Array | wgt::TextureViewDimension::CubeArray => {
-                        texture
-                            .desc
-                            .array_layer_count()
-                            .saturating_sub(desc.range.base_array_layer)
-                    }
-                });
+        let resolved_array_layer_count = desc
+            .range
+            .array_layer_count
+            .map(NonZeroU32::get)
+            .unwrap_or_else(|| match resolved_dimension {
+                wgt::TextureViewDimension::D1
+                | wgt::TextureViewDimension::D2
+                | wgt::TextureViewDimension::D3 => 1,
+                wgt::TextureViewDimension::Cube => 6,
+                wgt::TextureViewDimension::D2Array | wgt::TextureViewDimension::CubeArray => {
+                    texture
+                        .desc
+                        .array_layer_count()
+                        .saturating_sub(desc.range.base_array_layer)
+                }
+            });
 
         // validate TextureViewDescriptor
 
@@ -1174,9 +1179,9 @@ impl<A: HalApi> Device<A> {
         let resolved_range = wgt::ImageSubresourceRange {
             aspect: desc.range.aspect,
             base_mip_level: desc.range.base_mip_level,
-            mip_level_count: Some(resolved_mip_level_count),
+            mip_level_count: NonZeroU32::new(resolved_mip_level_count),
             base_array_layer: desc.range.base_array_layer,
-            array_layer_count: Some(resolved_array_layer_count),
+            array_layer_count: NonZeroU32::new(resolved_array_layer_count),
         };
 
         let hal_desc = hal::TextureViewDescriptor {
@@ -1873,11 +1878,8 @@ impl<A: HalApi> Device<A> {
         used_texture_ranges.push(TextureInitTrackerAction {
             id: view.parent_id.value.0,
             range: TextureInitRange {
-                mip_range: view.desc.range.mip_range(texture.desc.mip_level_count),
-                layer_range: view
-                    .desc
-                    .range
-                    .layer_range(texture.desc.array_layer_count()),
+                mip_range: view.desc.range.mip_range(&texture.desc),
+                layer_range: view.desc.range.layer_range(&texture.desc),
             },
             kind: MemoryInitKind::NeedsInitializedMemory,
         });
@@ -3070,7 +3072,7 @@ impl<A: HalApi> Device<A> {
             if !ds.is_depth_read_only() {
                 flags |= pipeline::PipelineFlags::WRITES_DEPTH;
             }
-            if !ds.is_stencil_read_only(desc.primitive.cull_mode) {
+            if !ds.is_stencil_read_only() {
                 flags |= pipeline::PipelineFlags::WRITES_STENCIL;
             }
         }
@@ -3327,9 +3329,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     ) -> Result<wgt::SurfaceCapabilities, instance::GetSurfaceSupportError> {
         profiling::scope!("Surface::get_capabilities");
         self.fetch_adapter_and_surface::<A, _, _>(surface_id, adapter_id, |adapter, surface| {
-            let mut hal_caps = surface.get_capabilities(adapter)?;
-
-            hal_caps.formats.sort_by_key(|f| !f.describe().srgb);
+            let hal_caps = surface.get_capabilities(adapter)?;
 
             Ok(wgt::SurfaceCapabilities {
                 formats: hal_caps.formats,
