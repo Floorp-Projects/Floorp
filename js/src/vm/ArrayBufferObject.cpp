@@ -69,62 +69,94 @@ using mozilla::Some;
 
 using namespace js;
 
-// If there are too many wasm memory buffers (typically 6GB each) live we run up
-// against system resource exhaustion (address space or number of memory map
-// descriptors), see bug 1068684, bug 1073934, bug 1517412, bug 1502733 for
-// details.  The limiting case seems to be Android on ARM64, where the
-// per-process address space is limited to 4TB (39 bits) by the organization of
-// the page tables.  An earlier problem was Windows Vista Home 64-bit, where the
-// per-process address space is limited to 8TB (40 bits).
+// Wasm allows large amounts of memory to be reserved at a time. On 64-bit
+// platforms (with "huge memories") we reserve around 4GB of virtual address
+// space for every wasm memory; on 32-bit platforms we usually do not, but users
+// often initialize memories in the hundreds of megabytes.
 //
-// Thus we track the number of live objects if we are using large mappings, and
-// set a limit of the number of live buffer objects per process. We trigger GC
-// work when we approach the limit and we throw an OOM error if the per-process
-// limit is exceeded. The limit (MaximumLiveMappedBuffers) is specific to
-// architecture, OS, and OS configuration.
+// If too many wasm memories remain live, we run up against system resource
+// exhaustion (address space or number of memory map descriptors) - see bug
+// 1068684, bug 1073934, bug 1517412, bug 1502733 for details. The limiting case
+// seems to be Android on ARM64, where the per-process address space is limited
+// to 4TB (39 bits) by the organization of the page tables. An earlier problem
+// was Windows Vista Home 64-bit, where the per-process address space is limited
+// to 8TB (40 bits). And 32-bit platforms only have 4GB of address space anyway.
 //
-// Since the MaximumLiveMappedBuffers limit is not generally accounted for by
+// Thus we track the amount of memory reserved for wasm, and set a limit per
+// process. We trigger GC work when we approach the limit and we throw an OOM
+// error if the per-process limit is exceeded. The limit (WasmReservedBytesMax)
+// is specific to architecture, OS, and OS configuration.
+//
+// Since the WasmReservedBytesMax limit is not generally accounted for by
 // any existing GC-trigger heuristics, we need an extra heuristic for triggering
-// GCs when the caller is allocating memories rapidly without other garbage.
-// Thus, once the live buffer count crosses the threshold
-// StartTriggeringAtLiveBufferCount, we start triggering GCs every
-// AllocatedBuffersPerTrigger allocations.  Once we reach
-// StartSyncFullGCAtLiveBufferCount live buffers, we perform expensive
+// GCs when the caller is allocating memories rapidly without other garbage
+// (e.g. bug 1773225). Thus, once the reserved memory crosses the threshold
+// WasmReservedBytesStartTriggering, we start triggering GCs every
+// WasmReservedBytesPerTrigger bytes. Once we reach
+// WasmReservedBytesStartSyncFullGC bytes reserved, we perform expensive
 // non-incremental full GCs as a last-ditch effort to avoid unnecessary failure.
-// Once we reach MaximumLiveMappedBuffers, we perform further full GCs before
-// giving up.
+// Once we reach WasmReservedBytesMax, we perform further full GCs before giving
+// up.
+//
+// (History: The original implementation only tracked the number of "huge
+// memories" allocated by WASM, but this was found to be insufficient because
+// 32-bit platforms have similar resource exhaustion issues. We now track
+// reserved bytes directly.)
+//
+// (We also used to reserve significantly more than 4GB for huge memories, but
+// this was reduced in bug 1442544.)
 
-#if defined(JS_CODEGEN_ARM64) && defined(ANDROID)
-// With 6GB mappings, the hard limit is 84 buffers.  75 cuts it close.
-static const int32_t MaximumLiveMappedBuffers = 75;
-#elif defined(MOZ_TSAN) || defined(MOZ_ASAN)
+static const uint64_t GiB = 1024 * 1024 * 1024;
+
 // ASAN and TSAN use a ton of vmem for bookkeeping leaving a lot less for the
 // program so use a lower limit.
-static const int32_t MaximumLiveMappedBuffers = 500;
+#if defined(MOZ_TSAN) || defined(MOZ_ASAN)
+static const uint64_t WasmMemAsanOverhead = 2;
 #else
-static const int32_t MaximumLiveMappedBuffers = 1000;
+static const uint64_t WasmMemAsanOverhead = 1;
 #endif
 
-// StartTriggeringAtLiveBufferCount + AllocatedBuffersPerTrigger must be well
-// below StartSyncFullGCAtLiveBufferCount in order to provide enough time for
-// incremental GC to do its job.
+// WasmReservedStartTriggering + WasmReservedPerTrigger must be well below
+// WasmReservedStartSyncFullGC in order to provide enough time for incremental
+// GC to do its job.
 
 #if defined(JS_CODEGEN_ARM64) && defined(ANDROID)
-static const int32_t StartTriggeringAtLiveBufferCount = 15;
-static const int32_t StartSyncFullGCAtLiveBufferCount =
-    MaximumLiveMappedBuffers - 15;
-static const int32_t AllocatedBuffersPerTrigger = 15;
-#else
-static const int32_t StartTriggeringAtLiveBufferCount = 100;
-static const int32_t StartSyncFullGCAtLiveBufferCount =
-    MaximumLiveMappedBuffers - 100;
-static const int32_t AllocatedBuffersPerTrigger = 100;
+
+static const uint64_t WasmReservedBytesMax =
+    75 * wasm::HugeMappedSize / WasmMemAsanOverhead;
+static const uint64_t WasmReservedBytesStartTriggering =
+    15 * wasm::HugeMappedSize;
+static const uint64_t WasmReservedBytesStartSyncFullGC =
+    WasmReservedBytesMax - 15 * wasm::HugeMappedSize;
+static const uint64_t WasmReservedBytesPerTrigger = 15 * wasm::HugeMappedSize;
+
+#elif defined(JS_64BIT)
+
+static const uint64_t WasmReservedBytesMax =
+    1000 * wasm::HugeMappedSize / WasmMemAsanOverhead;
+static const uint64_t WasmReservedBytesStartTriggering =
+    100 * wasm::HugeMappedSize;
+static const uint64_t WasmReservedBytesStartSyncFullGC =
+    WasmReservedBytesMax - 100 * wasm::HugeMappedSize;
+static const uint64_t WasmReservedBytesPerTrigger = 100 * wasm::HugeMappedSize;
+
+#else  // 32-bit
+
+static const uint64_t WasmReservedBytesMax =
+    (4 * GiB) / 2 / WasmMemAsanOverhead;
+static const uint64_t WasmReservedBytesStartTriggering = (4 * GiB) / 8;
+static const uint64_t WasmReservedBytesStartSyncFullGC =
+    WasmReservedBytesMax - (4 * GiB) / 8;
+static const uint64_t WasmReservedBytesPerTrigger = (4 * GiB) / 8;
+
 #endif
 
-static Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
-static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
+// The total number of bytes reserved for wasm memories.
+static Atomic<uint64_t, mozilla::ReleaseAcquire> wasmReservedBytes(0);
+// The number of bytes of wasm memory reserved since the last GC trigger.
+static Atomic<uint64_t, mozilla::ReleaseAcquire> wasmReservedBytesSinceLast(0);
 
-int32_t js::LiveMappedBufferCount() { return liveBufferCount; }
+uint64_t js::WasmReservedBytes() { return wasmReservedBytes; }
 
 [[nodiscard]] static bool CheckArrayBufferTooLarge(JSContext* cx,
                                                    uint64_t nbytes) {
@@ -144,22 +176,17 @@ void* js::MapBufferMemory(wasm::IndexType t, size_t mappedSize,
   MOZ_ASSERT(initialCommittedSize % gc::SystemPageSize() == 0);
   MOZ_ASSERT(initialCommittedSize <= mappedSize);
 
-  auto decrement = mozilla::MakeScopeExit([&] { liveBufferCount--; });
-  // Testing just IsHugeMemoryEnabled() here will overestimate the number of
-  // live buffers, as asm.js buffers are not huge.  This is OK in practice.
-  if (wasm::IsHugeMemoryEnabled(t)) {
-    liveBufferCount++;
-  } else {
-    decrement.release();
-  }
+  auto failed = mozilla::MakeScopeExit(
+      [&] { wasmReservedBytes -= uint64_t(mappedSize); });
+  wasmReservedBytes += uint64_t(mappedSize);
 
   // Test >= to guard against the case where multiple extant runtimes
   // race to allocate.
-  if (liveBufferCount >= MaximumLiveMappedBuffers) {
+  if (wasmReservedBytes >= WasmReservedBytesMax) {
     if (OnLargeAllocationFailure) {
       OnLargeAllocationFailure();
     }
-    if (liveBufferCount >= MaximumLiveMappedBuffers) {
+    if (wasmReservedBytes >= WasmReservedBytesMax) {
       return nullptr;
     }
   }
@@ -204,7 +231,7 @@ void* js::MapBufferMemory(wasm::IndexType t, size_t mappedSize,
       mappedSize - initialCommittedSize);
 #endif
 
-  decrement.release();
+  failed.release();
   return data;
 }
 
@@ -278,14 +305,9 @@ void js::UnmapBufferMemory(wasm::IndexType t, void* base, size_t mappedSize) {
                                                 mappedSize);
 #endif
 
-  if (wasm::IsHugeMemoryEnabled(t)) {
-    // Decrement the buffer counter at the end -- otherwise, a race condition
-    // could enable the creation of unlimited buffers.
-    //
-    // Also see comment in MapBufferMemory about overestimation due to the
-    // imprecision of the above guard.
-    --liveBufferCount;
-  }
+  // Untrack reserved memory *after* releasing memory -- otherwise, a race
+  // condition could enable the creation of unlimited buffers.
+  wasmReservedBytes -= uint64_t(mappedSize);
 }
 
 /*
@@ -796,19 +818,19 @@ static bool CreateSpecificWasmBuffer(
   maybeSharedObject.set(object);
 
   // See MaximumLiveMappedBuffers comment above.
-  if (liveBufferCount > StartSyncFullGCAtLiveBufferCount) {
+  if (wasmReservedBytes > WasmReservedBytesStartSyncFullGC) {
     JS::PrepareForFullGC(cx);
     JS::NonIncrementalGC(cx, JS::GCOptions::Normal,
                          JS::GCReason::TOO_MUCH_WASM_MEMORY);
-    allocatedSinceLastTrigger = 0;
-  } else if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
-    allocatedSinceLastTrigger++;
-    if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
+    wasmReservedBytesSinceLast = 0;
+  } else if (wasmReservedBytes > WasmReservedBytesStartTriggering) {
+    wasmReservedBytesSinceLast += uint64_t(buffer->mappedSize());
+    if (wasmReservedBytesSinceLast > WasmReservedBytesPerTrigger) {
       (void)cx->runtime()->gc.triggerGC(JS::GCReason::TOO_MUCH_WASM_MEMORY);
-      allocatedSinceLastTrigger = 0;
+      wasmReservedBytesSinceLast = 0;
     }
   } else {
-    allocatedSinceLastTrigger = 0;
+    wasmReservedBytesSinceLast = 0;
   }
 
   // Log the result with details on the memory allocation
