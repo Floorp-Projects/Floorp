@@ -36,6 +36,8 @@ class ChangesActor extends Actor {
   }
 
   destroy() {
+    // Stop trying to emit RDP event on destruction.
+    this._changesHaveBeenRequested = false;
     this.clearChanges();
     this.targetActor.off("will-navigate", this.onWillNavigate);
     TrackChangeEmitter.off("track-change", this.onTrackChange);

@@ -40,7 +40,7 @@ const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
-const { Actor, Pool } = require("resource://devtools/shared/protocol.js");
+const { Pool } = require("resource://devtools/shared/protocol.js");
 const {
   LazyPool,
   createExtraActors,
@@ -49,7 +49,9 @@ const {
   windowGlobalTargetSpec,
 } = require("resource://devtools/shared/specs/targets/window-global.js");
 const Resources = require("resource://devtools/server/actors/resources/index.js");
-const TargetActorMixin = require("resource://devtools/server/actors/targets/target-actor-mixin.js");
+const {
+  BaseTargetActor,
+} = require("resource://devtools/server/actors/targets/base-target-actor.js");
 
 loader.lazyRequireGetter(
   this,
@@ -121,7 +123,7 @@ function getInnerId(window) {
   return window.windowGlobalChild.innerWindowId;
 }
 
-const windowGlobalTargetPrototype = {
+class WindowGlobalTargetActor extends BaseTargetActor {
   /**
    * WindowGlobalTargetActor is the target actor to debug (HTML) documents.
    *
@@ -222,7 +224,7 @@ const windowGlobalTargetPrototype = {
    * This class is subclassed by ParentProcessTargetActor and others.
    * Subclasses are expected to implement a getter for the docShell property.
    *
-   * @param connection DevToolsServerConnection
+   * @param conn DevToolsServerConnection
    *        The conection to the client.
    * @param options Object
    *        Object with following attributes:
@@ -250,29 +252,18 @@ const windowGlobalTargetPrototype = {
    *          The Session Context to help know what is debugged.
    *          See devtools/server/actors/watcher/session-context.js
    */
-  initialize(
-    connection,
+  constructor(
+    conn,
     {
       docShell,
       followWindowGlobalLifeCycle,
       isTopLevelTarget,
       ignoreSubFrames,
       sessionContext,
+      customSpec = windowGlobalTargetSpec,
     }
   ) {
-    Actor.prototype.initialize.call(this, connection);
-
-    if (!docShell) {
-      throw new Error(
-        "A docShell should be provided as constructor argument of WindowGlobalTargetActor"
-      );
-    }
-    this.docShell = docShell;
-
-    // Save references to the original document we attached to
-    this._originalWindow = this.window;
-
-    this.isPrivate = PrivateBrowsingUtils.isContentWindowPrivate(this.window);
+    super(conn, Targets.TYPES.FRAME, customSpec);
 
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
@@ -312,17 +303,45 @@ const windowGlobalTargetPrototype = {
       "console-api-profiler"
     );
 
+    // Start observing navigations as well as sub documents.
+    // (This is probably meant to disappear once EFT is the only supported codepath)
+    this._progressListener = new DebuggerProgressListener(this);
+
     TargetActorRegistry.registerTargetActor(this);
+
+    if (docShell) {
+      this.setDocShell(docShell);
+    }
+  }
+
+  /**
+   * Define the initial docshell.
+   *
+   * This is called from the constructor for WindowGlobalTargetActor,
+   * or from sub class constructors: WebExtensionTargetActor and ParentProcessTargetActor.
+   *
+   * This is to circumvent the fact that sub classes need to call inner method
+   * to compute the initial docshell and we can't call inner methods before calling
+   * the base class constructor...
+   */
+  setDocShell(docShell) {
+    Object.defineProperty(this, "docShell", {
+      value: docShell,
+      configurable: true,
+      writable: true,
+    });
+
+    // Save references to the original document we attached to
+    this._originalWindow = this.window;
+
+    // Update isPrivate as window is based on docShell
+    this.isPrivate = PrivateBrowsingUtils.isContentWindowPrivate(this.window);
 
     // Instantiate the Thread Actor immediately.
     // This is the only one actor instantiated right away by the target actor.
     // All the others are instantiated lazily on first request made the client,
     // via LazyPool API.
     this._createThreadActor();
-
-    // Start observing navigations as well as sub documents.
-    // (This is probably meant to disappear once EFT is the only supported codepath)
-    this._progressListener = new DebuggerProgressListener(this);
 
     // Ensure notifying about the target actor first
     // before notifying about new docshells.
@@ -331,11 +350,17 @@ const windowGlobalTargetPrototype = {
     // (This is also probably meant to disappear once EFT is the only supported codepath)
     this._docShellsObserved = false;
     DevToolsUtils.executeSoon(() => this._watchDocshells());
-  },
+  }
+
+  get docShell() {
+    throw new Error(
+      "A docShell should be provided as constructor argument of WindowGlobalTargetActor, or redefined by the subclass"
+    );
+  }
 
   // Optional console API listener options (e.g. used by the WebExtensionActor to
   // filter console messages by addonID), set to an empty (no options) object by default.
-  consoleAPIListenerOptions: {},
+  consoleAPIListenerOptions = {};
 
   /*
    * Return a Debugger instance or create one if there is none yet
@@ -345,7 +370,7 @@ const windowGlobalTargetPrototype = {
       this._dbg = this.makeDebugger();
     }
     return this._dbg;
-  },
+  }
 
   /**
    * Try to locate the console actor if it exists.
@@ -356,7 +381,7 @@ const windowGlobalTargetPrototype = {
     }
     const form = this.form();
     return this.conn._getOrCreateActor(form.consoleActor);
-  },
+  }
 
   get _memoryActor() {
     if (this.isDestroyed()) {
@@ -364,16 +389,16 @@ const windowGlobalTargetPrototype = {
     }
     const form = this.form();
     return this.conn._getOrCreateActor(form.memoryActor);
-  },
+  }
 
-  _targetScopedActorPool: null,
+  _targetScopedActorPool = null;
 
   /**
    * An object on which listen for DOMWindowCreated and pageshow events.
    */
   get chromeEventHandler() {
     return getDocShellChromeEventHandler(this.docShell);
-  },
+  }
 
   /**
    * Getter for the nsIMessageManager associated to the window global.
@@ -386,7 +411,7 @@ const windowGlobalTargetPrototype = {
       // then,
       return null;
     }
-  },
+  }
 
   /**
    * Getter for the list of all `docShell`s in the window global.
@@ -398,7 +423,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return getChildDocShells(this.docShell);
-  },
+  }
 
   /**
    * Getter for the window global's current DOM window.
@@ -407,30 +432,30 @@ const windowGlobalTargetPrototype = {
     return this.docShell && !this.docShell.isBeingDestroyed()
       ? this.docShell.domWindow
       : null;
-  },
+  }
 
   get outerWindowID() {
     if (this.docShell) {
       return this.docShell.outerWindowID;
     }
     return null;
-  },
+  }
 
   get browsingContext() {
     return this.docShell?.browsingContext;
-  },
+  }
 
   get browsingContextID() {
     return this.browsingContext?.id;
-  },
+  }
 
   get browserId() {
     return this.browsingContext?.browserId;
-  },
+  }
 
   get openerBrowserId() {
     return this.browsingContext?.opener?.browserId;
-  },
+  }
 
   /**
    * Getter for the WebExtensions ContentScript globals related to the
@@ -445,7 +470,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return [];
-  },
+  }
 
   /**
    * Getter for the list of all content DOM windows in the window global.
@@ -455,7 +480,7 @@ const windowGlobalTargetPrototype = {
     return this.docShells.map(docShell => {
       return docShell.domWindow;
     });
-  },
+  }
 
   /**
    * Getter for the original docShell this actor got attached to in the first
@@ -470,7 +495,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return this._originalWindow.docShell;
-  },
+  }
 
   /**
    * Getter for the original window this actor got attached to in the first
@@ -481,7 +506,7 @@ const windowGlobalTargetPrototype = {
    */
   get originalWindow() {
     return this._originalWindow || this.window;
-  },
+  }
 
   /**
    * Getter for the nsIWebProgress for watching this window.
@@ -490,28 +515,28 @@ const windowGlobalTargetPrototype = {
     return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
-  },
+  }
 
   /**
    * Getter for the nsIWebNavigation for the target.
    */
   get webNavigation() {
     return this.docShell.QueryInterface(Ci.nsIWebNavigation);
-  },
+  }
 
   /**
    * Getter for the window global's document.
    */
   get contentDocument() {
     return this.webNavigation.document;
-  },
+  }
 
   /**
    * Getter for the window global's title.
    */
   get title() {
     return this.contentDocument.title;
-  },
+  }
 
   /**
    * Getter for the window global's URL.
@@ -523,14 +548,14 @@ const windowGlobalTargetPrototype = {
     // Abrupt closing of the browser window may leave callbacks without a
     // currentURI.
     return null;
-  },
+  }
 
   get sourcesManager() {
     if (!this._sourcesManager) {
       this._sourcesManager = new SourcesManager(this.threadActor);
     }
     return this._sourcesManager;
-  },
+  }
 
   _createExtraActors() {
     // Always use the same Pool, so existing actor instances
@@ -546,7 +571,7 @@ const windowGlobalTargetPrototype = {
       this._targetScopedActorPool,
       this
     );
-  },
+  }
 
   form() {
     assert(
@@ -637,7 +662,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return response;
-  },
+  }
 
   /**
    * Called when the actor is removed from the connection.
@@ -705,6 +730,14 @@ const windowGlobalTargetPrototype = {
       this._dbg.disable();
       this._dbg = null;
     }
+
+    // Emit a last event before calling Actor.destroy
+    // which will destroy the EventEmitter API
+    this.emit("destroyed", { isTargetSwitching, isModeSwitching });
+
+    // Destroy BaseTargetActor before nullifying docShell as it uses it via the StyleSheetManager.
+    super.destroy();
+
     this.docShell = null;
     this._extraActors = null;
 
@@ -713,14 +746,9 @@ const windowGlobalTargetPrototype = {
       "console-api-profiler"
     );
 
-    // Emit a last event before calling Actor.destroy
-    // which will destroy the EventEmitter API
-    this.emit("destroyed", { isTargetSwitching, isModeSwitching });
-
-    Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
     Resources.unwatchAllResources(this);
-  },
+  }
 
   /**
    * Return true if the given global is associated with this window global and should
@@ -747,7 +775,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return false;
-  },
+  }
 
   _watchDocshells() {
     // If for some unexpected reason, the actor is immediately destroyed,
@@ -766,7 +794,7 @@ const windowGlobalTargetPrototype = {
 
     // And list all already existing ones.
     this._updateChildDocShells();
-  },
+  }
 
   _unwatchDocshells() {
     if (this._progressListener) {
@@ -784,13 +812,13 @@ const windowGlobalTargetPrototype = {
       Services.obs.removeObserver(this, "webnavigation-destroy");
       this._docShellsObserved = false;
     }
-  },
+  }
 
   _unwatchDocShell(docShell) {
     if (this._progressListener) {
       this._progressListener.unwatch(docShell);
     }
-  },
+  }
 
   switchToFrame(request) {
     const windowId = request.windowId;
@@ -814,12 +842,12 @@ const windowGlobalTargetPrototype = {
     DevToolsUtils.executeSoon(() => this._changeTopLevelDocument(win));
 
     return {};
-  },
+  }
 
   listFrames(request) {
     const windows = this._docShellsToWindows(this.docShells);
     return { frames: windows };
-  },
+  }
 
   ensureWorkerDescriptorActorList() {
     if (this._workerDescriptorActorList === null) {
@@ -832,13 +860,13 @@ const windowGlobalTargetPrototype = {
       );
     }
     return this._workerDescriptorActorList;
-  },
+  }
 
   pauseWorkersUntilAttach(shouldPause) {
     this.ensureWorkerDescriptorActorList().workerPauser.setPauseMatching(
       shouldPause
     );
-  },
+  }
 
   listWorkers(request) {
     return this.ensureWorkerDescriptorActorList()
@@ -862,7 +890,7 @@ const windowGlobalTargetPrototype = {
           workers: actors,
         };
       });
-  },
+  }
 
   logInPage(request) {
     const { text, category, flags } = request;
@@ -880,12 +908,12 @@ const windowGlobalTargetPrototype = {
     );
     Services.console.logMessage(scriptError);
     return {};
-  },
+  }
 
   _onWorkerDescriptorActorListChanged() {
     this._workerDescriptorActorList.onListChanged = null;
     this.emit("workerListChanged");
-  },
+  }
 
   _onConsoleApiProfilerEvent(subject, topic, data) {
     // TODO: We will receive console-api-profiler events for any browser running
@@ -902,7 +930,7 @@ const windowGlobalTargetPrototype = {
       category: "console.profile unavailable",
       flags: warningFlag,
     });
-  },
+  }
 
   observe(subject, topic, data) {
     // Ignore any event that comes before/after the actor is attached.
@@ -918,7 +946,7 @@ const windowGlobalTargetPrototype = {
     } else if (topic == "webnavigation-destroy") {
       this._onDocShellDestroy(subject);
     }
-  },
+  }
 
   _onDocShellCreated(docShell) {
     // (chrome-)webnavigation-create is fired very early during docshell
@@ -943,7 +971,7 @@ const windowGlobalTargetPrototype = {
       }
       this._notifyDocShellsUpdate([docShell]);
     });
-  },
+  }
 
   _onDocShellDestroy(docShell) {
     // Stop watching this docshell (the unwatch() method will check if we
@@ -987,7 +1015,7 @@ const windowGlobalTargetPrototype = {
     ) {
       this._changeTopLevelDocument(this._originalWindow);
     }
-  },
+  }
 
   _isRootDocShell(docShell) {
     // Should report as root docshell:
@@ -997,7 +1025,7 @@ const windowGlobalTargetPrototype = {
     //  - MozActivities or window.open frames on B2G, where a new root docshell
     // is spawn in the child process of the app.
     return !docShell.parent;
-  },
+  }
 
   _docShellToWindow(docShell) {
     const webProgress = docShell
@@ -1026,7 +1054,7 @@ const windowGlobalTargetPrototype = {
       url: window.location.href,
       title: window.document.title,
     };
-  },
+  }
 
   // Convert docShell list to windows objects list being sent to the client
   _docShellsToWindows(docshells) {
@@ -1043,7 +1071,7 @@ const windowGlobalTargetPrototype = {
         return true;
       })
       .map(docShell => this._docShellToWindow(docShell));
-  },
+  }
 
   _notifyDocShellsUpdate(docshells) {
     // Only top level target uses frameUpdate in order to update the iframe dropdown.
@@ -1062,11 +1090,11 @@ const windowGlobalTargetPrototype = {
     this.emit("frameUpdate", {
       frames: windows,
     });
-  },
+  }
 
   _updateChildDocShells() {
     this._notifyDocShellsUpdate(this.docShells);
-  },
+  }
 
   _notifyDocShellDestroy(webProgress) {
     // Only top level target uses frameUpdate in order to update the iframe dropdown.
@@ -1085,7 +1113,7 @@ const windowGlobalTargetPrototype = {
         },
       ],
     });
-  },
+  }
 
   /**
    * Creates and manages the thread actor as part of the Browsing Context Target pool.
@@ -1094,7 +1122,7 @@ const windowGlobalTargetPrototype = {
   _createThreadActor() {
     this.threadActor = new ThreadActor(this, this.window);
     this.manage(this.threadActor);
-  },
+  }
 
   /**
    * Exits the current thread actor and removes it from the Browsing Context Target pool.
@@ -1110,7 +1138,7 @@ const windowGlobalTargetPrototype = {
       this._sourcesManager.destroy();
       this._sourcesManager = null;
     }
-  },
+  }
 
   // Protocol Request Handlers
 
@@ -1122,7 +1150,7 @@ const windowGlobalTargetPrototype = {
     });
 
     return {};
-  },
+  }
 
   /**
    * Bring the window global's window to front.
@@ -1132,7 +1160,7 @@ const windowGlobalTargetPrototype = {
       this.window.focus();
     }
     return {};
-  },
+  }
 
   goForward() {
     // Wait a tick so that the response packet can be dispatched before the
@@ -1150,7 +1178,7 @@ const windowGlobalTargetPrototype = {
     );
 
     return {};
-  },
+  }
 
   goBack() {
     // Wait a tick so that the response packet can be dispatched before the
@@ -1168,7 +1196,7 @@ const windowGlobalTargetPrototype = {
     );
 
     return {};
-  },
+  }
 
   /**
    * Reload the page in this window global.
@@ -1197,7 +1225,7 @@ const windowGlobalTargetPrototype = {
       }, "WindowGlobalTargetActor.prototype.reload's delayed body")
     );
     return {};
-  },
+  }
 
   /**
    * Navigate this window global to a new location
@@ -1211,7 +1239,7 @@ const windowGlobalTargetPrototype = {
       }, "WindowGlobalTargetActor.prototype.navigateTo's delayed body:" + request.url)
     );
     return {};
-  },
+  }
 
   /**
    * For browsing-context targets which can't use the watcher configuration
@@ -1221,7 +1249,7 @@ const windowGlobalTargetPrototype = {
   reconfigure(request) {
     const options = request.options || {};
     return this.updateTargetConfiguration(options);
-  },
+  }
 
   /**
    * Apply target-specific options.
@@ -1287,7 +1315,7 @@ const windowGlobalTargetPrototype = {
     if (reload) {
       this.webNavigation.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }
-  },
+  }
 
   get touchSimulator() {
     if (!this._touchSimulator) {
@@ -1295,7 +1323,7 @@ const windowGlobalTargetPrototype = {
     }
 
     return this._touchSimulator;
-  },
+  }
 
   /**
    * Opposite of the updateTargetConfiguration method, that resets document
@@ -1305,7 +1333,7 @@ const windowGlobalTargetPrototype = {
     if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
     }
-  },
+  }
 
   _changeTopLevelDocument(window) {
     // In case of WebExtension, still using one WindowGlobalTarget instance for many document,
@@ -1345,7 +1373,7 @@ const windowGlobalTargetPrototype = {
         this._navigate(window, true);
       });
     });
-  },
+  }
 
   _setWindow(window) {
     // Here is the very important call where we switch the currently targeted
@@ -1356,7 +1384,7 @@ const windowGlobalTargetPrototype = {
     this.emit("frameUpdate", {
       selected: this.outerWindowID,
     });
-  },
+  }
 
   /**
    * Handle location changes, by clearing the previous debuggees and enabling
@@ -1391,7 +1419,7 @@ const windowGlobalTargetPrototype = {
       id: getWindowID(window),
       isFrameSwitching,
     });
-  },
+  }
 
   _windowDestroyed(
     window,
@@ -1417,7 +1445,7 @@ const windowGlobalTargetPrototype = {
       id: id || getWindowID(window),
       isFrozen,
     });
-  },
+  }
 
   /**
    * Start notifying server and client about a new document being loaded in the
@@ -1481,7 +1509,7 @@ const windowGlobalTargetPrototype = {
     if (reset) {
       this._setWindow(this._originalWindow);
     }
-  },
+  }
 
   /**
    * Notify server and client about a new document done loading in the current
@@ -1525,7 +1553,7 @@ const windowGlobalTargetPrototype = {
       state: "stop",
       isFrameSwitching,
     });
-  },
+  }
 
   removeActorByName(name) {
     if (name in this._extraActors) {
@@ -1535,52 +1563,47 @@ const windowGlobalTargetPrototype = {
       }
       delete this._extraActors[name];
     }
-  },
-};
-
-exports.windowGlobalTargetPrototype = windowGlobalTargetPrototype;
-exports.WindowGlobalTargetActor = TargetActorMixin(
-  Targets.TYPES.FRAME,
-  windowGlobalTargetSpec,
-  windowGlobalTargetPrototype
-);
-
-/**
- * The DebuggerProgressListener object is an nsIWebProgressListener which
- * handles onStateChange events for the targeted window global. If the user
- * tries to navigate away from a paused page, the listener makes sure that the
- * debuggee is resumed before the navigation begins.
- *
- * @param WindowGlobalTargetActor targetActor
- *        The window global target actor associated with this listener.
- */
-function DebuggerProgressListener(targetActor) {
-  this._targetActor = targetActor;
-  this._onWindowCreated = this.onWindowCreated.bind(this);
-  this._onWindowHidden = this.onWindowHidden.bind(this);
-
-  // Watch for windows destroyed (global observer that will need filtering)
-  Services.obs.addObserver(this, "inner-window-destroyed");
-
-  // XXX: for now we maintain the list of windows we know about in this instance
-  // so that we can discriminate windows we care about when observing
-  // inner-window-destroyed events. Bug 1016952 would remove the need for this.
-  this._knownWindowIDs = new Map();
-
-  this._watchedDocShells = new WeakSet();
+  }
 }
 
-DebuggerProgressListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
+exports.WindowGlobalTargetActor = WindowGlobalTargetActor;
+
+class DebuggerProgressListener {
+  /**
+   * The DebuggerProgressListener class is an nsIWebProgressListener which
+   * handles onStateChange events for the targeted window global. If the user
+   * tries to navigate away from a paused page, the listener makes sure that the
+   * debuggee is resumed before the navigation begins.
+   *
+   * @param WindowGlobalTargetActor targetActor
+   *        The window global target actor associated with this listener.
+   */
+  constructor(targetActor) {
+    this._targetActor = targetActor;
+    this._onWindowCreated = this.onWindowCreated.bind(this);
+    this._onWindowHidden = this.onWindowHidden.bind(this);
+
+    // Watch for windows destroyed (global observer that will need filtering)
+    Services.obs.addObserver(this, "inner-window-destroyed");
+
+    // XXX: for now we maintain the list of windows we know about in this instance
+    // so that we can discriminate windows we care about when observing
+    // inner-window-destroyed events. Bug 1016952 would remove the need for this.
+    this._knownWindowIDs = new Map();
+
+    this._watchedDocShells = new WeakSet();
+  }
+
+  QueryInterface = ChromeUtils.generateQI([
     "nsIWebProgressListener",
     "nsISupportsWeakReference",
-  ]),
+  ]);
 
   destroy() {
     Services.obs.removeObserver(this, "inner-window-destroyed");
     this._knownWindowIDs.clear();
     this._knownWindowIDs = null;
-  },
+  }
 
   watch(docShell) {
     // Add the docshell to the watched set. We're actually adding the window,
@@ -1631,7 +1654,7 @@ DebuggerProgressListener.prototype = {
     ) {
       docShell.cssErrorReportingEnabled = true;
     }
-  },
+  }
 
   unwatch(docShell) {
     const docShellWindow = docShell.domWindow;
@@ -1671,15 +1694,15 @@ DebuggerProgressListener.prototype = {
     if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = false;
     }
-  },
+  }
 
   _getWindowsInDocShell(docShell) {
     return getChildDocShells(docShell).map(d => {
       return d.domWindow;
     });
-  },
+  }
 
-  onWindowCreated: DevToolsUtils.makeInfallible(function(evt) {
+  onWindowCreated = DevToolsUtils.makeInfallible(function(evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1715,9 +1738,9 @@ DebuggerProgressListener.prototype = {
     const isBFCache = evt.type == "pageshow";
 
     this._targetActor._windowReady(window, { isBFCache });
-  }, "DebuggerProgressListener.prototype.onWindowCreated"),
+  }, "DebuggerProgressListener.prototype.onWindowCreated");
 
-  onWindowHidden: DevToolsUtils.makeInfallible(function(evt) {
+  onWindowHidden = DevToolsUtils.makeInfallible(function(evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1745,9 +1768,9 @@ DebuggerProgressListener.prototype = {
 
     this._targetActor._windowDestroyed(window, { isFrozen: true });
     this._knownWindowIDs.delete(getWindowID(window));
-  }, "DebuggerProgressListener.prototype.onWindowHidden"),
+  }, "DebuggerProgressListener.prototype.onWindowHidden");
 
-  observe: DevToolsUtils.makeInfallible(function(subject, topic) {
+  observe = DevToolsUtils.makeInfallible(function(subject, topic) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1777,9 +1800,9 @@ DebuggerProgressListener.prototype = {
       // Re-register new ones. The docShell is already referencing the new document.
       this.watch(window.docShell);
     }
-  }, "DebuggerProgressListener.prototype.observe"),
+  }, "DebuggerProgressListener.prototype.observe");
 
-  onStateChange: DevToolsUtils.makeInfallible(function(
+  onStateChange = DevToolsUtils.makeInfallible(function(
     progress,
     request,
     flag,
@@ -1854,5 +1877,5 @@ DebuggerProgressListener.prototype = {
       }
     }
   },
-  "DebuggerProgressListener.prototype.onStateChange"),
-};
+  "DebuggerProgressListener.prototype.onStateChange");
+}
