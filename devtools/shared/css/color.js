@@ -67,7 +67,6 @@ module.exports.colorUtils = {
   rgbToLab,
   setAlpha,
   classifyColor,
-  rgbToColorName,
   calculateContrastRatio,
   calculateDeltaE,
   calculateLuminance,
@@ -194,7 +193,7 @@ CssColor.prototype = {
       return this.hex;
     }
     const { r, g, b } = tuple;
-    return rgbToColorName(r, g, b) || this.hex;
+    return InspectorUtils.rgbToColorName(r, g, b) || this.hex;
   },
 
   get hex() {
@@ -716,21 +715,6 @@ function classifyColor(value) {
     return CssColor.COLORUNIT.hex;
   }
   return CssColor.COLORUNIT.name;
-}
-
-/**
- * Given a color, return its name, if it has one. Otherwise
- * returns an empty string.
- *
- * @param {Number} r, g, b  The color components.
- * @return {String} the name of the color or an empty string
- */
-function rgbToColorName(r, g, b) {
-  try {
-    return InspectorUtils.rgbToColorName(r, g, b);
-  } catch (e) {
-    return "";
-  }
 }
 
 /**
