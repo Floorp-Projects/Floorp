@@ -6,6 +6,10 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
+});
+
 const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_WEATHER_MS";
 const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
 
@@ -49,7 +53,7 @@ async function doBasicDisableAndEnableTest(pref) {
 
   // No suggestion should be returned for a search.
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -94,7 +98,7 @@ async function doBasicDisableAndEnableTest(pref) {
 
   // The suggestion should be returned for a search.
   context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -264,7 +268,7 @@ add_task(async function noSuggestion() {
   });
 
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -325,7 +329,7 @@ add_task(async function networkError() {
   });
 
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -377,7 +381,7 @@ add_task(async function httpError() {
   });
 
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -443,7 +447,7 @@ add_task(async function clientTimeout() {
   });
 
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -535,7 +539,7 @@ add_task(async function spacesInSearchString() {
   for (let searchString of [" ", "  ", "   ", " doesn't match anything"]) {
     await check_results({
       context: createContext(searchString, {
-        providers: [UrlbarProviderQuickSuggest.name],
+        providers: [UrlbarProviderWeather.name],
         isPrivate: false,
       }),
       matches: [],
@@ -602,7 +606,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
       info("Checking locale: " + locale);
       await check_results({
         context: createContext("", {
-          providers: [UrlbarProviderQuickSuggest.name],
+          providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
         matches: [makeExpectedResult(expectedUnit)],
@@ -614,7 +618,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
       Services.prefs.setBoolPref("intl.regional_prefs.use_os_locales", true);
       await check_results({
         context: createContext("", {
-          providers: [UrlbarProviderQuickSuggest.name],
+          providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
         matches: [makeExpectedResult(osUnit)],
@@ -634,7 +638,7 @@ add_task(async function nonEmptySearchString() {
 
   // Do a search.
   let context = createContext("this shouldn't match anything", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -658,7 +662,7 @@ add_task(async function block() {
 
   // Do a search so we can get an actual result.
   let context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -667,7 +671,7 @@ add_task(async function block() {
   });
 
   // Block the result.
-  UrlbarProviderQuickSuggest.blockResult(context, context.results[0]);
+  UrlbarProviderWeather.blockResult(context, context.results[0]);
   Assert.ok(
     !UrlbarPrefs.get("suggest.weather"),
     "suggest.weather is false after blocking the result"
@@ -675,7 +679,7 @@ add_task(async function block() {
 
   // Do a second search. Nothing should be returned.
   context = createContext("", {
-    providers: [UrlbarProviderQuickSuggest.name],
+    providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
   await check_results({
@@ -783,7 +787,6 @@ function makeExpectedResult(temperatureUnit = undefined) {
       forecast: WEATHER_SUGGESTION.forecast.summary,
       high: WEATHER_SUGGESTION.forecast.high[temperatureUnit],
       low: WEATHER_SUGGESTION.forecast.low[temperatureUnit],
-      isWeather: true,
       shouldNavigate: true,
     },
   };

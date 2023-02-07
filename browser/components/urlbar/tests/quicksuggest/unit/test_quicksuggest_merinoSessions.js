@@ -6,12 +6,12 @@
 
 "use strict";
 
-// `UrlbarProviderQuickSuggest._merino` is lazily created on the first Merino
+// `UrlbarProviderQuickSuggest.#merino` is lazily created on the first Merino
 // fetch, so it's easiest to create `gClient` lazily too.
 XPCOMUtils.defineLazyGetter(
   this,
   "gClient",
-  () => UrlbarProviderQuickSuggest._merino
+  () => UrlbarProviderQuickSuggest._test_merino
 );
 
 add_task(async function init() {
