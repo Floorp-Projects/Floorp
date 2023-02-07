@@ -14,25 +14,16 @@ interface PointerEvent : MouseEvent
 {
   constructor(DOMString type, optional PointerEventInit eventInitDict = {});
 
-  [NeedsCallerType]
   readonly attribute long pointerId;
 
-  [NeedsCallerType]
   readonly attribute long width;
-  [NeedsCallerType]
   readonly attribute long height;
-  [NeedsCallerType]
   readonly attribute float pressure;
-  [NeedsCallerType]
   readonly attribute float tangentialPressure;
-  [NeedsCallerType]
   readonly attribute long tiltX;
-  [NeedsCallerType]
   readonly attribute long tiltY;
-  [NeedsCallerType]
   readonly attribute long twist;
 
-  [NeedsCallerType]
   readonly attribute DOMString pointerType;
   readonly attribute boolean isPrimary;
   sequence<PointerEvent> getCoalescedEvents();

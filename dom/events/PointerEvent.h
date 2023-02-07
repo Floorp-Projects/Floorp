@@ -38,16 +38,16 @@ class PointerEvent : public MouseEvent {
       EventTarget* aOwner, const nsAString& aType,
       const PointerEventInit& aParam);
 
-  int32_t PointerId(CallerType aCallerType);
-  int32_t Width(CallerType aCallerType);
-  int32_t Height(CallerType aCallerType);
-  float Pressure(CallerType aCallerType);
-  float TangentialPressure(CallerType aCallerType);
-  int32_t TiltX(CallerType aCallerType);
-  int32_t TiltY(CallerType aCallerType);
-  int32_t Twist(CallerType aCallerType);
+  int32_t PointerId();
+  int32_t Width();
+  int32_t Height();
+  float Pressure();
+  float TangentialPressure();
+  int32_t TiltX();
+  int32_t TiltY();
+  int32_t Twist();
   bool IsPrimary();
-  void GetPointerType(nsAString& aPointerType, CallerType aCallerType);
+  void GetPointerType(nsAString& aPointerType);
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
   void GetPredictedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
 
@@ -57,7 +57,7 @@ class PointerEvent : public MouseEvent {
  private:
   // This method returns the boolean to indicate whether spoofing pointer
   // event for fingerprinting resistance.
-  bool ShouldResistFingerprinting(CallerType aCallerType);
+  bool ShouldResistFingerprinting();
 
   nsTArray<RefPtr<PointerEvent>> mCoalescedEvents;
   nsTArray<RefPtr<PointerEvent>> mPredictedEvents;
