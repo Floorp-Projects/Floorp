@@ -119,6 +119,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void CancelImports();
   void CheckModuleDependenciesLoaded();
 
+  void AssertAllImportsReady() const;
+  void AssertAllImportsCancelled() const;
+
  public:
   // Is this a request for a top level module script or an import?
   const bool mIsTopLevel;

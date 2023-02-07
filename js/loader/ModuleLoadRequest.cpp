@@ -76,16 +76,15 @@ bool ModuleLoadRequest::IsErrored() const {
 }
 
 void ModuleLoadRequest::Cancel() {
+  if (IsCanceled()) {
+    AssertAllImportsCancelled();
+    return;
+  }
+
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
   CancelImports();
   mReady.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
-}
-
-void ModuleLoadRequest::CancelImports() {
-  for (size_t i = 0; i < mImports.Length(); i++) {
-    mImports[i]->Cancel();
-  }
 }
 
 void ModuleLoadRequest::SetReady() {
@@ -97,11 +96,7 @@ void ModuleLoadRequest::SetReady() {
   // have become ready, DependenciesLoaded is called on that module
   // request. This is set up in StartFetchingModuleDependencies.
 
-#ifdef DEBUG
-  for (size_t i = 0; i < mImports.Length(); i++) {
-    MOZ_ASSERT(mImports[i]->IsReadyToRun());
-  }
-#endif
+  AssertAllImportsReady();
 
   ScriptLoadRequest::SetReady();
   mReady.ResolveIfExists(true, __func__);
@@ -113,6 +108,13 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
+  if (IsCanceled()) {
+    AssertAllImportsCancelled();
+    return;
+  }
+
+  MOZ_ASSERT(IsFetching());
+
   mModuleScript = mLoader->GetFetchedModule(mURI);
   if (IsErrored()) {
     ModuleErrored();
@@ -122,12 +124,34 @@ void ModuleLoadRequest::ModuleLoaded() {
   mLoader->StartFetchingModuleDependencies(this);
 }
 
+void ModuleLoadRequest::LoadFailed() {
+  // We failed to load the source text or an error occurred unrelated to the
+  // content of the module (e.g. OOM).
+
+  LOG(("ScriptLoadRequest (%p): Module load failed", this));
+
+  if (IsCanceled()) {
+    AssertAllImportsCancelled();
+    return;
+  }
+
+  MOZ_ASSERT(IsFetching());
+  MOZ_ASSERT(!mModuleScript);
+
+  Cancel();
+  LoadFinished();
+}
+
 void ModuleLoadRequest::ModuleErrored() {
+  // Parse error, failure to resolve imported modules or error loading import.
+
+  LOG(("ScriptLoadRequest (%p): Module errored", this));
+
   if (IsCanceled()) {
     return;
   }
 
-  LOG(("ScriptLoadRequest (%p): Module errored", this));
+  MOZ_ASSERT(IsFetching() || IsLoadingImports());
 
   CheckModuleDependenciesLoaded();
   MOZ_ASSERT(IsErrored());
@@ -138,16 +162,17 @@ void ModuleLoadRequest::ModuleErrored() {
 }
 
 void ModuleLoadRequest::DependenciesLoaded() {
-  if (IsCanceled()) {
-    return;
-  }
-
   // The module and all of its dependencies have been successfully fetched and
   // compiled.
 
   LOG(("ScriptLoadRequest (%p): Module dependencies loaded", this));
 
-  MOZ_ASSERT(mModuleScript);
+  if (IsCanceled()) {
+    return;
+  }
+
+  MOZ_ASSERT(IsLoadingImports());
+  MOZ_ASSERT(!IsErrored());
 
   CheckModuleDependenciesLoaded();
   SetReady();
@@ -173,21 +198,10 @@ void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
   LOG(("ScriptLoadRequest (%p):   all ok", this));
 }
 
-void ModuleLoadRequest::LoadFailed() {
-  // We failed to load the source text or an error occurred unrelated to the
-  // content of the module (e.g. OOM).
-
-  LOG(("ScriptLoadRequest (%p): Module load failed", this));
-
-  if (IsCanceled()) {
-    return;
+void ModuleLoadRequest::CancelImports() {
+  for (size_t i = 0; i < mImports.Length(); i++) {
+    mImports[i]->Cancel();
   }
-
-  MOZ_ASSERT(!IsReadyToRun());
-  MOZ_ASSERT(!mModuleScript);
-
-  Cancel();
-  LoadFinished();
 }
 
 void ModuleLoadRequest::LoadFinished() {
@@ -203,6 +217,22 @@ void ModuleLoadRequest::ClearDynamicImport() {
   mDynamicReferencingPrivate = JS::UndefinedValue();
   mDynamicSpecifier = nullptr;
   mDynamicPromise = nullptr;
+}
+
+inline void ModuleLoadRequest::AssertAllImportsReady() const {
+#ifdef DEBUG
+  for (const auto& request : mImports) {
+    MOZ_ASSERT(request->IsReadyToRun());
+  }
+#endif
+}
+
+inline void ModuleLoadRequest::AssertAllImportsCancelled() const {
+#ifdef DEBUG
+  for (const auto& request : mImports) {
+    MOZ_ASSERT(request->IsCanceled());
+  }
+#endif
 }
 
 }  // namespace JS::loader
