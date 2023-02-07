@@ -48,18 +48,6 @@ class nsMenuBarListener final : public nsIDOMEventListener {
    */
   void OnDestroyMenuBarFrame();
 
-  /**
-   * GetMenuAccessKey() returns keyCode value of a modifier key which is
-   * used for accesskey.  Returns 0 if the platform doesn't support access key.
-   */
-  static int32_t GetMenuAccessKey();
-
-  /**
-   * IsAccessKeyPressed() returns true if the modifier state of the event
-   * matches the modifier state of access key.
-   */
-  static bool IsAccessKeyPressed(mozilla::dom::KeyboardEvent&);
-
  protected:
   virtual ~nsMenuBarListener();
 
@@ -72,11 +60,6 @@ class nsMenuBarListener final : public nsIDOMEventListener {
   MOZ_CAN_RUN_SCRIPT nsresult OnWindowDeactivated(mozilla::dom::Event* aEvent);
   MOZ_CAN_RUN_SCRIPT nsresult MouseDown(mozilla::dom::Event* aMouseEvent);
   MOZ_CAN_RUN_SCRIPT nsresult Fullscreen(mozilla::dom::Event* aEvent);
-
-  static void InitAccessKey();
-
-  static mozilla::Modifiers GetModifiersForAccessKey(
-      mozilla::dom::KeyboardEvent& event);
 
   /**
    * Given a key event for an Alt+shortcut combination,
@@ -112,10 +95,6 @@ class nsMenuBarListener final : public nsIDOMEventListener {
   bool mAccessKeyDown;
   // Whether or not the ALT key down is canceled by other action.
   bool mAccessKeyDownCanceled;
-  // See KeyboardEvent for sample values (DOM_VK_* constants).
-  static int32_t mAccessKey;
-  // Modifier mask for the access key.
-  static mozilla::Modifiers mAccessKeyMask;
 };
 
 #endif  // #ifndef nsMenuBarListener_h

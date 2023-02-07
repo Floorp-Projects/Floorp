@@ -14041,6 +14041,26 @@
   value: -1
   mirror: always
 
+# Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none.
+- name: ui.key.accelKey
+  type: uint32_t
+#ifdef XP_MACOSX
+  value: 224
+#else
+  value: 17
+#endif
+  mirror: always
+
+# See above for the key codes to use.
+- name: ui.key.menuAccessKey
+  type: uint32_t
+#ifdef XP_MACOSX
+  value: 0
+#else
+  value: 18
+#endif
+  mirror: always
+
 # Only used if generalAccessKey is -1.
 - name: ui.key.chromeAccess
   type: int32_t
