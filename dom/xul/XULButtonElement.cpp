@@ -120,10 +120,8 @@ bool XULButtonElement::IsMenuPopupOpen() {
 }
 
 bool XULButtonElement::IsOnMenu() const {
-  if (XULMenuParentElement* menu = GetMenuParent()) {
-    return !menu->IsMenuBar();
-  }
-  return false;
+  auto* popup = XULPopupElement::FromNodeOrNull(GetMenuParent());
+  return popup && popup->IsMenu();
 }
 
 bool XULButtonElement::IsOnMenuList() const {
