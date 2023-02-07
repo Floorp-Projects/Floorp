@@ -23,6 +23,7 @@ class TaskQueue;
 namespace dom {
 
 class FileSystemAccessHandleChild;
+class FileSystemAccessHandleControlChild;
 struct FileSystemReadWriteOptions;
 class FileSystemManager;
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
@@ -39,6 +40,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       mozilla::ipc::ManagedEndpoint<PFileSystemAccessHandleChild>&&
           aAccessHandleChildEndpoint,
+      mozilla::ipc::Endpoint<PFileSystemAccessHandleControlChild>&&
+          aAccessHandleControlChildEndpoint,
       const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -47,6 +50,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   void LastRelease();
 
   void ClearActor();
+
+  void ClearControlActor();
 
   bool IsOpen() const;
 
@@ -86,6 +91,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       RefPtr<FileSystemAccessHandleChild> aActor,
+      RefPtr<FileSystemAccessHandleControlChild> aControlActor,
       RefPtr<TaskQueue> aIOTaskQueue,
       const fs::FileSystemEntryMetadata& aMetadata);
 
@@ -103,6 +109,8 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   RefPtr<FileSystemManager> mManager;
 
   RefPtr<FileSystemAccessHandleChild> mActor;
+
+  RefPtr<FileSystemAccessHandleControlChild> mControlActor;
 
   RefPtr<TaskQueue> mIOTaskQueue;
 

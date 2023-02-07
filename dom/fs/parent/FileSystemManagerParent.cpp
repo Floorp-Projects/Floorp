@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandle.h"
+#include "mozilla/dom/FileSystemAccessHandleControlParent.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemLog.h"
@@ -155,8 +156,26 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
             accessHandle->RegisterActor(WrapNotNull(accessHandleParent));
 
+            auto accessHandleControlParent =
+                MakeRefPtr<FileSystemAccessHandleControlParent>(
+                    accessHandle.inspect());
+
+            Endpoint<PFileSystemAccessHandleControlParent>
+                accessHandleControlParentEndpoint;
+            Endpoint<PFileSystemAccessHandleControlChild>
+                accessHandleControlChildEndpoint;
+            MOZ_ALWAYS_SUCCEEDS(PFileSystemAccessHandleControl::CreateEndpoints(
+                &accessHandleControlParentEndpoint,
+                &accessHandleControlChildEndpoint));
+
+            accessHandleControlParentEndpoint.Bind(accessHandleControlParent);
+
+            accessHandle->RegisterControlActor(
+                WrapNotNull(accessHandleControlParent));
+
             resolver(FileSystemAccessHandleProperties(
-                std::move(streamParams), std::move(accessHandleChildEndpoint)));
+                std::move(streamParams), std::move(accessHandleChildEndpoint),
+                std::move(accessHandleControlChildEndpoint)));
           });
 
   return IPC_OK();

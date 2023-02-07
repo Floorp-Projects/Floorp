@@ -24,6 +24,7 @@ FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
     "PFileSystemAccessHandle.ipdl",
+    "PFileSystemAccessHandleControl.ipdl",
     "PFileSystemManager.ipdl",
     "PFileSystemWritableFileStream.ipdl",
 ]

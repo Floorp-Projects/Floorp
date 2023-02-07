@@ -13,6 +13,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/FileSystemAccessHandleChild.h"
+#include "mozilla/dom/FileSystemAccessHandleControlChild.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
@@ -94,11 +95,14 @@ nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
 FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
-    RefPtr<FileSystemAccessHandleChild> aActor, RefPtr<TaskQueue> aIOTaskQueue,
+    RefPtr<FileSystemAccessHandleChild> aActor,
+    RefPtr<FileSystemAccessHandleControlChild> aControlActor,
+    RefPtr<TaskQueue> aIOTaskQueue,
     const fs::FileSystemEntryMetadata& aMetadata)
     : mGlobal(aGlobal),
       mManager(aManager),
       mActor(std::move(aActor)),
+      mControlActor(std::move(aControlActor)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
       mStreamParams(std::move(aStreamParams)),
       mMetadata(aMetadata),
@@ -111,6 +115,8 @@ FileSystemSyncAccessHandle::FileSystemSyncAccessHandle(
   // FileSystemSyncAccessHandle::Create fails, in which case the not yet
   // fully constructed FileSystemSyncAccessHandle is being destroyed.
   mActor->SetAccessHandle(this);
+
+  mControlActor->SetAccessHandle(this);
 }
 
 FileSystemSyncAccessHandle::~FileSystemSyncAccessHandle() {
@@ -125,12 +131,23 @@ FileSystemSyncAccessHandle::Create(
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     mozilla::ipc::ManagedEndpoint<PFileSystemAccessHandleChild>&&
         aAccessHandleChildEndpoint,
+    mozilla::ipc::Endpoint<PFileSystemAccessHandleControlChild>&&
+        aAccessHandleControlChildEndpoint,
     const fs::FileSystemEntryMetadata& aMetadata) {
+  WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
   auto accessHandleChild = MakeRefPtr<FileSystemAccessHandleChild>();
 
   QM_TRY(MOZ_TO_RESULT(
       aManager->ActorStrongRef()->BindPFileSystemAccessHandleEndpoint(
           std::move(aAccessHandleChildEndpoint), accessHandleChild)));
+
+  auto accessHandleControlChild =
+      MakeRefPtr<FileSystemAccessHandleControlChild>();
+
+  aAccessHandleControlChildEndpoint.Bind(accessHandleControlChild,
+                                         workerPrivate->ControlEventTarget());
 
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
@@ -143,16 +160,13 @@ FileSystemSyncAccessHandle::Create(
 
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
       aGlobal, aManager, std::move(aStreamParams), std::move(accessHandleChild),
-      std::move(ioTaskQueue), aMetadata);
+      std::move(accessHandleControlChild), std::move(ioTaskQueue), aMetadata);
 
   auto autoClose = MakeScopeExit([result] {
     MOZ_ASSERT(result->mState == State::Initial);
     result->mState = State::Closed;
     result->mActor->SendClose();
   });
-
-  WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
 
   workerPrivate->AssertIsOnWorkerThread();
 
@@ -210,7 +224,22 @@ void FileSystemSyncAccessHandle::LastRelease() {
 
   if (mActor) {
     PFileSystemAccessHandleChild::Send__delete__(mActor);
+
+    // `PFileSystemAccessHandleChild::Send__delete__` is supposed to call
+    // `FileSystemAccessHandleChild::ActorDestroy` which in turn calls
+    // `FileSystemSyncAccessHandle::ClearActor`, so `mActor` should be be null
+    // at this point.
     MOZ_ASSERT(!mActor);
+  }
+
+  if (mControlActor) {
+    mControlActor->Close();
+
+    // `FileSystemAccessHandleControlChild::Close` is supposed to call
+    // `FileSystemAccessHandleControlChild::ActorDestroy` which in turn calls
+    // `FileSystemSyncAccessHandle::ClearControlActor`, so `mControlActor`
+    // should be be null at this point.
+    MOZ_ASSERT(!mControlActor);
   }
 }
 
@@ -218,6 +247,14 @@ void FileSystemSyncAccessHandle::ClearActor() {
   MOZ_ASSERT(mActor);
 
   mActor = nullptr;
+}
+
+void FileSystemSyncAccessHandle::ClearControlActor() {
+  // `mControlActor` is initialized in the constructor and this method is
+  // supposed to be called only once.
+  MOZ_ASSERT(mControlActor);
+
+  mControlActor = nullptr;
 }
 
 bool FileSystemSyncAccessHandle::IsOpen() const {
