@@ -1363,6 +1363,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.10.0@git:e98bd9264c3a6b04dff15a6b1213c0c80201740a -> 0.10.0@git:1be8024bda3594987b417bead5024b98be9ab521"
 
+[[audits.naga]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.0@git:f0edae8ce9e55eeef489fc53b10dc95fb79561cc -> 0.11.0@git:4b796b157cb2b67b0ab166a2238fe4e9473bfd52"
+
 [[audits.net2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -2696,6 +2701,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0@git:fac4731288117d951d0944d96cf0b00fa006dd6c -> 0.14.0@git:24a904256e225b20b11fb30f914ef53212a2909e"
 
+[[audits.wgpu-core]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.0@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.0@git:41de797c745d317e93b9cf50e7446faff7f65954"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -2734,6 +2744,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0@git:fac4731288117d951d0944d96cf0b00fa006dd6c -> 0.14.0@git:24a904256e225b20b11fb30f914ef53212a2909e"
 
+[[audits.wgpu-hal]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.1@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.1@git:41de797c745d317e93b9cf50e7446faff7f65954"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -2771,6 +2786,11 @@ delta = "0.14.0@git:24a904256e225b20b11fb30f914ef53212a2909e -> 0.15.0@git:48d86
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0@git:fac4731288117d951d0944d96cf0b00fa006dd6c -> 0.14.0@git:24a904256e225b20b11fb30f914ef53212a2909e"
+
+[[audits.wgpu-types]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.0@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.0@git:41de797c745d317e93b9cf50e7446faff7f65954"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
