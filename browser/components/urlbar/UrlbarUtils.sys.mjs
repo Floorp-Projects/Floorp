@@ -35,6 +35,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 export var UrlbarUtils = {
+  // Extensions are allowed to add suggestions if they have registered a keyword
+  // with the omnibox API. This is the maximum number of suggestions an extension
+  // is allowed to add for a given search string using the omnibox API.
+  // This value includes the heuristic result.
+  MAX_OMNIBOX_RESULT_COUNT: 6,
+
   // Results are categorized into groups to help the muxer compose them.  See
   // UrlbarUtils.getResultGroup.  Since result groups are stored in result
   // groups and result groups are stored in prefs, additions and changes to
