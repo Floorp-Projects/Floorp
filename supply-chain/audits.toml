@@ -1228,6 +1228,11 @@ criteria = "safe-to-run"
 version = "0.2.1"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[audits.marionette]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-run"
+delta = "0.2.1 -> 0.3.0"
+
 [[audits.matches]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
