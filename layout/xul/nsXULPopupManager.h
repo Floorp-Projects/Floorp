@@ -12,19 +12,23 @@
 #define nsXULPopupManager_h__
 
 #include "mozilla/Logging.h"
+#include "mozilla/widget/InitData.h"
 #include "nsHashtablesFwd.h"
 #include "nsIContent.h"
 #include "nsIRollupListener.h"
 #include "nsIDOMEventListener.h"
-#include "Units.h"
 #include "nsPoint.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
+#include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"
+#include "nsPresContext.h"
+#include "nsStyleConsts.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/widget/InitData.h"
 #include "mozilla/widget/NativeMenu.h"
+#include "Units.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file.
 #include "mozilla/dom/Element.h"
@@ -50,9 +54,9 @@
  */
 
 class nsContainerFrame;
-class nsITimer;
-class nsIDocShellTreeItem;
 class nsMenuPopupFrame;
+class nsMenuBarFrame;
+class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 class nsRefreshDriver;
 
@@ -63,7 +67,6 @@ class Event;
 class KeyboardEvent;
 class UIEvent;
 class XULButtonElement;
-class XULMenuBarElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -174,6 +177,17 @@ enum class HidePopupOption : uint8_t {
 };
 
 using HidePopupOptions = mozilla::EnumSet<HidePopupOption>;
+
+#define NS_DIRECTION_IS_INLINE(dir) \
+  (dir == eNavigationDirection_Start || dir == eNavigationDirection_End)
+#define NS_DIRECTION_IS_BLOCK(dir) \
+  (dir == eNavigationDirection_Before || dir == eNavigationDirection_After)
+#define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) \
+  (dir == eNavigationDirection_First || dir == eNavigationDirection_Last)
+
+static_assert(static_cast<uint8_t>(mozilla::StyleDirection::Ltr) == 0 &&
+                  static_cast<uint8_t>(mozilla::StyleDirection::Rtl) == 1,
+              "Left to Right should be 0 and Right to Left should be 1");
 
 /**
  * DirectionFromKeyCodeTable: two arrays, the first for left-to-right and the
@@ -423,8 +437,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // when the active menu bar should be defocused. In the latter case, if
   // aMenuBar isn't currently active, yet another menu bar is, that menu bar
   // will remain active.
-  void SetActiveMenuBar(mozilla::dom::XULMenuBarElement* aMenuBar,
-                        bool aActivate);
+  void SetActiveMenuBar(nsMenuBarFrame* aMenuBar, bool aActivate);
 
   struct MayShowMenuResult {
     const bool mIsNative = false;
@@ -852,7 +865,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   nsCOMPtr<nsIWidget> mWidget;
 
   // set to the currently active menu bar, if any
-  mozilla::dom::XULMenuBarElement* mActiveMenuBar;
+  nsMenuBarFrame* mActiveMenuBar;
 
   // linked list of normal menus and panels. mPopups points to the innermost
   // popup, which keeps alive all their parents.

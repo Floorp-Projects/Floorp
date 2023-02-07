@@ -7,6 +7,7 @@
 #include "XULMenuParentElement.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsMenuBarListener.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"

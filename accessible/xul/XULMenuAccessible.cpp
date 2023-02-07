@@ -6,7 +6,6 @@
 #include "XULMenuAccessible.h"
 
 #include "LocalAccessible-inl.h"
-#include "XULMenuBarElement.h"
 #include "XULMenuParentElement.h"
 #include "XULPopupElement.h"
 #include "mozilla/Assertions.h"
@@ -22,6 +21,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIContent.h"
+#include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 
 #include "mozilla/Preferences.h"
@@ -464,8 +464,8 @@ role XULMenubarAccessible::NativeRole() const { return roles::MENUBAR; }
 // XULMenubarAccessible: Widgets
 
 bool XULMenubarAccessible::IsActiveWidget() const {
-  auto* menuBar = dom::XULMenuBarElement::FromNode(GetContent());
-  return menuBar && menuBar->IsActive();
+  nsMenuBarFrame* menuBarFrame = do_QueryFrame(GetFrame());
+  return menuBarFrame && menuBarFrame->IsActive();
 }
 
 bool XULMenubarAccessible::AreItemsOperable() const { return true; }

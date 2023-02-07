@@ -41,7 +41,6 @@ class XULMenuParentElement : public nsXULElement {
   XULButtonElement* FindMenuWithShortcut(KeyboardEvent&) const;
   XULButtonElement* FindMenuWithShortcut(const nsAString& aString,
                                          bool& aDoAction) const;
-  MOZ_CAN_RUN_SCRIPT void HandleEnterKeyPress(WidgetEvent&);
 
   NS_IMPL_FROMNODE_HELPER(XULMenuParentElement,
                           IsAnyOfXULElements(nsGkAtoms::menupopup,

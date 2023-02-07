@@ -19,6 +19,7 @@
 #include "nsIFrameInlines.h"
 #include "nsViewManager.h"
 #include "nsWidgetsCID.h"
+#include "nsMenuBarFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsFrameManager.h"
 #include "mozilla/dom/Document.h"
@@ -2027,8 +2028,10 @@ nsIFrame* nsMenuPopupFrame::GetCurrentMenuItemFrame() const {
 
 void nsMenuPopupFrame::HandleEnterKeyPress(WidgetEvent& aEvent) {
   mIncrementalString.Truncate();
-  RefPtr popup = &PopupElement();
-  popup->HandleEnterKeyPress(aEvent);
+  if (RefPtr menu = GetCurrentMenuItem()) {
+    // Give it to the child.
+    menu->HandleEnterKeyPress(aEvent);
+  }
 }
 
 XULButtonElement* nsMenuPopupFrame::FindMenuWithShortcut(

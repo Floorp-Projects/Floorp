@@ -18,12 +18,12 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/AncestorIterator.h"
-#include "mozilla/dom/XULMenuBarElement.h"
 #include "nsGkAtoms.h"
 #include "nsITimer.h"
 #include "nsLayoutUtils.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
+#include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
@@ -444,8 +444,7 @@ void XULButtonElement::PostHandleEventForMenus(
             // If we're open we never deselect. PopupClosed will do as needed.
             return false;
           }
-          auto* menubar = XULMenuBarElement::FromNode(*parent);
-          if (!menubar) {
+          if (!parent->IsMenuBar()) {
             // Don't de-select when not in the menubar.
             // NOTE(emilio): Behavior from before bug 1811466 is equivalent to
             // returning true here, consider flipping this.
@@ -453,7 +452,9 @@ void XULButtonElement::PostHandleEventForMenus(
           }
           // De-select when exiting a menubar item, if the menubar wasn't
           // activated by keyboard.
-          return !menubar->IsActiveByKeyboard();
+          nsMenuBarFrame* menubar = do_QueryFrame(parent->GetPrimaryFrame());
+          const bool openedByKey = menubar && menubar->IsActiveByKeyboard();
+          return !openedByKey;
         }();
 
         if (shouldDeactivate) {
@@ -755,11 +756,17 @@ auto XULButtonElement::GetMenuType() const -> Maybe<MenuType> {
   }
 }
 
-XULMenuBarElement* XULButtonElement::GetMenuBar() const {
+nsMenuBarFrame* XULButtonElement::GetMenuBar(FlushType aFlushType) {
   if (!IsMenu()) {
     return nullptr;
   }
-  return FirstAncestorOfType<XULMenuBarElement>();
+  nsIFrame* frame = GetPrimaryFrame(aFlushType);
+  for (; frame; frame = frame->GetParent()) {
+    if (nsMenuBarFrame* menubar = do_QueryFrame(frame)) {
+      return menubar;
+    }
+  }
+  return nullptr;
 }
 
 XULMenuParentElement* XULButtonElement::GetMenuParent() const {
@@ -793,8 +800,8 @@ nsMenuPopupFrame* XULButtonElement::GetMenuPopup(FlushType aFlushType) {
   return do_QueryFrame(popup->GetPrimaryFrame(aFlushType));
 }
 
-bool XULButtonElement::OpenedWithKey() const {
-  auto* menubar = GetMenuBar();
+bool XULButtonElement::OpenedWithKey() {
+  nsMenuBarFrame* menubar = GetMenuBar(FlushType::Frames);
   return menubar && menubar->IsActiveByKeyboard();
 }
 

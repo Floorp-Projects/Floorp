@@ -5,20 +5,20 @@
 
 #include "XULMenuParentElement.h"
 #include "XULButtonElement.h"
-#include "XULMenuBarElement.h"
 #include "XULPopupElement.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsDebug.h"
+#include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsUTF8Utils.h"
 #include "nsXULElement.h"
+#include "nsMenuBarListener.h"
 #include "nsXULPopupManager.h"
 
 namespace mozilla::dom {
@@ -127,9 +127,8 @@ void XULMenuParentElement::SetActiveMenuChild(XULButtonElement* aChild,
   }
   mActiveItem = nullptr;
 
-  if (auto* menuBar = XULMenuBarElement::FromNode(*this)) {
-    // KnownLive because `this` is known-live by definition.
-    MOZ_KnownLive(menuBar)->SetActive(!!aChild);
+  if (nsMenuBarFrame* f = do_QueryFrame(GetPrimaryFrame())) {
+    f->SetActive(!!aChild);
   }
 
   if (!aChild) {
@@ -387,12 +386,6 @@ XULButtonElement* XULMenuParentElement::FindMenuWithShortcut(
   }
   // If we haven't, use the item before the current, if any.
   return foundMenuBeforeCurrent;
-}
-
-void XULMenuParentElement::HandleEnterKeyPress(WidgetEvent& aEvent) {
-  if (RefPtr child = GetActiveMenuChild()) {
-    child->HandleEnterKeyPress(aEvent);
-  }
 }
 
 }  // namespace mozilla::dom
