@@ -1084,7 +1084,7 @@ function getAppBaseDir() {
 function getInstallDirRoot() {
   let dir = getAppBaseDir();
   if (AppConstants.platform == "macosx") {
-    // On Mac, we store the Updated.app directory inside the bundle directory.
+    // On macOS, the executable is stored under Contents/MacOS.
     dir = dir.parent.parent;
   }
   return dir;

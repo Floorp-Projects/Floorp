@@ -477,7 +477,10 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     // The install directory is the same as the apply to directory.
     applyToDirPath.Assign(installDirPath);
   } else {
-    // Get the directory where the update is staged or will be staged.
+    // Get the directory where the update is staged or will be staged. This is
+    // `updateDir` for macOS and `appDir` for all other platforms. macOS cannot
+    // stage updates inside the .app bundle (`appDir`) without breaking the code
+    // signature on the bundle, so we use `updateDir` instead.
 #if defined(XP_MACOSX)
     if (!GetFile(updateDir, "Updated.app"_ns, updatedDir)) {
 #else
