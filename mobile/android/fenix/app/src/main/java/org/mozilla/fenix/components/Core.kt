@@ -413,7 +413,11 @@ class Core(
                 appId = BuildConfig.POCKET_CONSUMER_KEY,
             ),
             sponsoredStoriesParams = if (context.settings().useCustomConfigurationForSponsoredStories) {
-                PocketStoriesRequestConfig(context.settings().pocketSponsoredStoriesSiteId)
+                PocketStoriesRequestConfig(
+                    context.settings().pocketSponsoredStoriesSiteId,
+                    context.settings().pocketSponsoredStoriesCountry,
+                    context.settings().pocketSponsoredStoriesCity,
+                )
             } else {
                 PocketStoriesRequestConfig()
             },

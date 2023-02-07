@@ -1473,6 +1473,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Country parameter used to set the spoc content.
+     */
+    var pocketSponsoredStoriesCountry by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_custom_sponsored_stories_country),
+        default = "",
+    )
+
+    /**
+     * City parameter used to set the spoc content.
+     */
+    var pocketSponsoredStoriesCity by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_custom_sponsored_stories_city),
+        default = "",
+    )
+
+    /**
      * Indicates if the Contile functionality should be visible.
      */
     var showContileFeature by booleanPreference(

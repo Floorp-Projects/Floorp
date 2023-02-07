@@ -54,6 +54,10 @@
     <string name="preferences_debug_settings_custom_sponsored_stories_parameters_enabled" translatable="false">Enable custom Pocket sponsored stories parameters (requires restart)</string>
     <!-- Label for custom Pocket sponsored stories site id setting -->
     <string name="preferences_debug_settings_custom_sponsored_stories_parameters_site" translatable="false">Site parameter</string>
+    <!-- Label for custom Pocket sponsored stories country parameter -->
+    <string name="preferences_debug_settings_custom_sponsored_stories_country" translatable="false">Country parameter</string>
+    <!-- Label for custom Pocket sponsored stories city parameter -->
+    <string name="preferences_debug_settings_custom_sponsored_stories_city" translatable="false">City parameter</string>
     <!-- Title of preference for sync debugging (only shown in the when the secret debug menu is enabled) -->
     <string name="preferences_sync_debug">Sync Debug</string>
     <!-- Preference to override the Push server -->

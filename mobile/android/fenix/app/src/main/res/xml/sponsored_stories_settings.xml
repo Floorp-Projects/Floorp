@@ -15,4 +15,18 @@
         android:title="@string/preferences_debug_settings_custom_sponsored_stories_parameters_site"
         app:iconSpaceReserved="false"
         app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:dependency="@string/pref_key_custom_sponsored_stories_parameters_enabled"
+        android:key="@string/pref_key_custom_sponsored_stories_country"
+        android:title="@string/preferences_debug_settings_custom_sponsored_stories_country"
+        android:inputType="text"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="false" />
+    <EditTextPreference
+        android:dependency="@string/pref_key_custom_sponsored_stories_parameters_enabled"
+        android:key="@string/pref_key_custom_sponsored_stories_city"
+        android:title="@string/preferences_debug_settings_custom_sponsored_stories_city"
+        android:inputType="text"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="false" />
 </androidx.preference.PreferenceScreen>

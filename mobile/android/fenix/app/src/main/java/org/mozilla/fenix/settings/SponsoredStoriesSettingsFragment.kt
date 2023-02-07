@@ -34,5 +34,21 @@ class SponsoredStoriesSettingsFragment : PreferenceFragmentCompat() {
                 true
             }
         }
+
+        requirePreference<EditTextPreference>(R.string.pref_key_custom_sponsored_stories_country).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                context.settings().pocketSponsoredStoriesCountry = (newValue as String)
+                true
+            }
+        }
+
+        requirePreference<EditTextPreference>(R.string.pref_key_custom_sponsored_stories_city).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                context.settings().pocketSponsoredStoriesCity = (newValue as String)
+                true
+            }
+        }
     }
 }
