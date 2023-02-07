@@ -145,7 +145,7 @@ OutputParser.prototype = {
     options.supportsColor =
       this.supportsType(name, "color") ||
       this.supportsType(name, "gradient") ||
-      (name.startsWith("--") && colorUtils.isValidCSSColor(value));
+      (name.startsWith("--") && InspectorUtils.isValidCSSColor(value));
 
     // The filter property is special in that we want to show the
     // swatch even if the value is invalid, because this way the user
@@ -419,11 +419,7 @@ OutputParser.prototype = {
               tokenStream,
               options
             );
-            if (
-              value &&
-              colorOK() &&
-              colorUtils.isValidCSSColor(value, this.cssColor4)
-            ) {
+            if (value && colorOK() && InspectorUtils.isValidCSSColor(value)) {
               this._appendColor(value, {
                 ...options,
                 variableContainer: variableNode,
@@ -465,7 +461,7 @@ OutputParser.prototype = {
                 this._appendCubicBezier(functionText, options);
               } else if (
                 colorOK() &&
-                colorUtils.isValidCSSColor(functionText, this.cssColor4)
+                InspectorUtils.isValidCSSColor(functionText)
               ) {
                 this._appendColor(functionText, {
                   ...options,
@@ -494,10 +490,7 @@ OutputParser.prototype = {
             this._appendHighlighterToggle(token.text, options.flexClass);
           } else if (this._isDisplayGrid(text, token, options)) {
             this._appendHighlighterToggle(token.text, options.gridClass);
-          } else if (
-            colorOK() &&
-            colorUtils.isValidCSSColor(token.text, this.cssColor4)
-          ) {
+          } else if (colorOK() && InspectorUtils.isValidCSSColor(token.text)) {
             this._appendColor(token.text, {
               ...options,
               colorFunction: colorFunctions.at(-1)?.functionName,
@@ -519,10 +512,7 @@ OutputParser.prototype = {
         case "id":
         case "hash": {
           const original = text.substring(token.startOffset, token.endOffset);
-          if (
-            colorOK() &&
-            colorUtils.isValidCSSColor(original, this.cssColor4)
-          ) {
+          if (colorOK() && InspectorUtils.isValidCSSColor(original)) {
             if (spaceNeeded) {
               // Insert a space to prevent token pasting when a #xxx
               // color is changed to something like rgb(...).

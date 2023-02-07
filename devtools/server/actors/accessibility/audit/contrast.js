@@ -6,12 +6,6 @@
 
 loader.lazyRequireGetter(
   this,
-  "colorUtils",
-  "resource://devtools/shared/css/color.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "CssLogic",
   "resource://devtools/server/actors/inspector/css-logic.js",
   true
@@ -270,7 +264,7 @@ async function getContrastRatioFor(node, options = {}) {
       };
     }
 
-    let { r, g, b, a } = colorUtils.colorToRGBA(backgroundColor, true);
+    let { r, g, b, a } = InspectorUtils.colorToRGBA(backgroundColor);
     // If the element has opacity in addition to background alpha value, take it
     // into account. TODO: this does not handle opacity set on ancestor
     // elements (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=1544721).
