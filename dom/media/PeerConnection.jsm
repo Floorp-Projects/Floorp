@@ -740,7 +740,7 @@ class RTCPeerConnection {
       }
       urls
         .map(url => nicerNewURI(url))
-        .forEach(({ scheme, spec }) => {
+        .forEach(({ scheme, spec, query }) => {
           if (scheme in { turn: 1, turns: 1 }) {
             if (username == undefined) {
               throw new this._win.DOMException(
@@ -768,6 +768,11 @@ class RTCPeerConnection {
               );
             }
             this._hasTurnServer = true;
+            // If this is not a TURN TCP/TLS server, it is also a STUN server
+            const parameters = query.split("&");
+            if (!parameters.includes("transport=tcp")) {
+              this._hasStunServer = true;
+            }
             stunServers += 1;
           } else if (scheme in { stun: 1, stuns: 1 }) {
             this._hasStunServer = true;
