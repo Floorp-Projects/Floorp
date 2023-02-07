@@ -25,6 +25,8 @@ UNIFIED_SOURCES += [
     "nsBoxLayoutState.cpp",
     "nsImageBoxFrame.cpp",
     "nsLeafBoxFrame.cpp",
+    "nsMenuBarFrame.cpp",
+    "nsMenuBarListener.cpp",
     "nsMenuPopupFrame.cpp",
     "nsRepeatService.cpp",
     "nsScrollbarButtonFrame.cpp",

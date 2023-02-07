@@ -11,6 +11,7 @@
 #include "mozilla/dom/XULPopupElement.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "nsMenuBarListener.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
 

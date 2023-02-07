@@ -14,7 +14,6 @@
 #include "XULButtonElement.h"
 #include "XULFrameElement.h"
 #include "XULMenuElement.h"
-#include "XULMenuBarElement.h"
 #include "XULPopupElement.h"
 #include "XULResizerElement.h"
 #include "XULTextElement.h"
@@ -186,7 +185,7 @@ nsXULElement* nsXULElement::Construct(
 
   if (nodeInfo->Equals(nsGkAtoms::menubar)) {
     auto* nim = nodeInfo->NodeInfoManager();
-    return new (nim) XULMenuBarElement(nodeInfo.forget());
+    return new (nim) XULMenuParentElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::menu) ||
