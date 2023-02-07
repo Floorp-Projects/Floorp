@@ -2,6 +2,10 @@
 "use strict";
 var w = new Worker("test-evaluate-worker.js");
 
+// See the comment in test-evaluate-worker.js
+// eslint-disable-next-line no-unused-vars
+var location_href = globalThis.location.href;
+
 // eslint-disable-next-line no-unused-vars
 function pauseInWorker(value) {
   w.postMessage(value);
