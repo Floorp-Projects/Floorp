@@ -71,6 +71,7 @@ pref(browser.soft_reload.only_force_validate_top_level_document,false) HTTP load
 load 1765871-1.jpg
 
 load 1814561.avif
+load 1814708.avif
 
 load 1814553.avif
 
