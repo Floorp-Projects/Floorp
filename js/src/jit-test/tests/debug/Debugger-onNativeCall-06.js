@@ -7,7 +7,7 @@ var g = newGlobal({ newCompartment: true });
 var dbg = new Debugger();
 var gdbg = dbg.addDebuggee(g);
 
-const rv = [];
+let rv = [];
 dbg.onNativeCall = (callee, reason) => {
   rv.push(callee.name);
 };
@@ -26,8 +26,43 @@ gdbg.executeInGlobal(`
 "abc".match(/a./);
 `);
 assertEqArray(rv, [
-  "map", "push", "push", "push",
-  "map", "padStart", "padStart", "padStart",
-  "map", "dateNow", "dateNow", "dateNow",
+  "map", "get [Symbol.species]", "push", "push", "push",
+  "map", "get [Symbol.species]", "padStart", "padStart", "padStart",
+  "map", "get [Symbol.species]", "dateNow", "dateNow", "dateNow",
   "match", "[Symbol.match]",
+]);
+
+rv = [];
+gdbg.executeInGlobal(`
+// Nested getters called internally inside self-hosted.
+const r = /a./;
+r.foo = 10;
+"abc".match(r);
+
+// Setter inside self-hosted JS.
+// Hook "A.length = n" at the end of Array.prototype.concat.
+var a = [1, 2, 3];
+Object.defineProperty(a, "constructor", {
+  get() {
+    return class {
+      constructor() {
+        let obj = {};
+        Object.defineProperty(obj, "length", { set: Array.prototype.join });
+        return obj;
+      }
+      static get [Symbol.species]() {
+        return this;
+      }
+    }
+  }
+});
+void Array.prototype.concat.call(a, [10, 20, 30]);
+`);
+assertEqArray(rv, [
+  "match", "[Symbol.match]",
+  "get flags",
+  "get hasIndices", "get global", "get ignoreCase", "get multiline",
+  "get dotAll", "get unicode", "get sticky",
+
+  "defineProperty", "call", "concat", "defineProperty", "join",
 ]);
