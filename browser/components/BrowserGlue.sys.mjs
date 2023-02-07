@@ -615,7 +615,7 @@ let JSWINDOWACTORS = {
       "about:welcome",
       "about:welcome?*",
       "about:preferences",
-      "chrome://browser/content/migration/migration-dialog.html",
+      "chrome://browser/content/migration/migration-dialog-window.html",
     ],
   },
 

@@ -6,9 +6,9 @@
 
 /**
  * This file manages a MigrationWizard embedded in a dialog that runs
- * in either a TabDialogBox or a top-level dialog window. It's main
- * responsibility is to listen for dialog-specific events from the
- * embedded MigrationWizard and to respond appropriately to them.
+ * in a top-level dialog window. It's main responsibility is to listen
+ * for dialog-specific events from the embedded MigrationWizard and to
+ * respond appropriately to them.
  *
  * A single object argument is expected to be passed when opening
  * this dialog.
