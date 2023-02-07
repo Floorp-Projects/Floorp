@@ -14,7 +14,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/SVGObserverUtils.h"
-#include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsDisplayList.h"
@@ -66,18 +65,6 @@ void SVGForeignObjectFrame::Init(nsIContent* aContent,
   AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
                NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-  if (!(mState & NS_FRAME_IS_NONDISPLAY)) {
-    SVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
-  }
-}
-
-void SVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                        PostDestroyData& aPostDestroyData) {
-  // Only unregister if we registered in the first place:
-  if (!(mState & NS_FRAME_IS_NONDISPLAY)) {
-    SVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
-  }
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult SVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
