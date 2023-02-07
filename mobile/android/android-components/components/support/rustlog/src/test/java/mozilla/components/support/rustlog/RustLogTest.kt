@@ -6,8 +6,7 @@ package mozilla.components.support.rustlog
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
-import mozilla.appservices.rustlog.LogAdapterCannotEnable
-import mozilla.appservices.rustlog.LogLevelFilter
+import mozilla.appservices.rust_log_forwarder.Level
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
@@ -23,17 +22,6 @@ class RustLogTest {
     @Test
     fun `basic RustLog interactions do not blow up`() {
         RustLog.enable()
-
-        try {
-            RustLog.enable()
-            fail("can't enable RustLog more than once")
-        } catch (e: LogAdapterCannotEnable) {}
-
-        try {
-            RustLog.enable(mock())
-            fail("can't enable RustLog more than once")
-        } catch (e: LogAdapterCannotEnable) {}
-
         RustLog.setMaxLevel(Log.Priority.DEBUG, false)
         RustLog.setMaxLevel(Log.Priority.DEBUG, true)
         RustLog.setMaxLevel(Log.Priority.INFO, false)
@@ -42,24 +30,23 @@ class RustLogTest {
         RustLog.setMaxLevel(Log.Priority.WARN, true)
         RustLog.setMaxLevel(Log.Priority.ERROR, false)
         RustLog.setMaxLevel(Log.Priority.ERROR, true)
-
         RustLog.disable()
-        RustLog.enable(mock())
+        RustLog.enable()
     }
 
     @Test
     fun `log priority to level filter`() {
-        assertEquals(LogLevelFilter.DEBUG, Log.Priority.DEBUG.asLevelFilter(false))
-        assertEquals(LogLevelFilter.TRACE, Log.Priority.DEBUG.asLevelFilter(true))
+        assertEquals(Level.DEBUG, Log.Priority.DEBUG.asLevel(false))
+        assertEquals(Level.TRACE, Log.Priority.DEBUG.asLevel(true))
 
-        assertEquals(LogLevelFilter.INFO, Log.Priority.INFO.asLevelFilter(false))
-        assertEquals(LogLevelFilter.INFO, Log.Priority.INFO.asLevelFilter(true))
+        assertEquals(Level.INFO, Log.Priority.INFO.asLevel(false))
+        assertEquals(Level.INFO, Log.Priority.INFO.asLevel(true))
 
-        assertEquals(LogLevelFilter.WARN, Log.Priority.WARN.asLevelFilter(false))
-        assertEquals(LogLevelFilter.WARN, Log.Priority.WARN.asLevelFilter(true))
+        assertEquals(Level.WARN, Log.Priority.WARN.asLevel(false))
+        assertEquals(Level.WARN, Log.Priority.WARN.asLevel(true))
 
-        assertEquals(LogLevelFilter.ERROR, Log.Priority.ERROR.asLevelFilter(false))
-        assertEquals(LogLevelFilter.ERROR, Log.Priority.ERROR.asLevelFilter(true))
+        assertEquals(Level.ERROR, Log.Priority.ERROR.asLevel(false))
+        assertEquals(Level.ERROR, Log.Priority.ERROR.asLevel(true))
     }
 
     private class TestCrashReporter :

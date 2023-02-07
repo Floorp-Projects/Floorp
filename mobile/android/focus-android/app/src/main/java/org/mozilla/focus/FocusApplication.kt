@@ -139,11 +139,7 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
 
         // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
 
-        // Once application-services has switched to using the new
-        // error reporting system, RustLog shouldn't input a CrashReporter
-        // anymore.
-        // (https://github.com/mozilla/application-services/issues/4981).
-        RustLog.enable(components.crashReporter)
+        RustLog.enable()
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage

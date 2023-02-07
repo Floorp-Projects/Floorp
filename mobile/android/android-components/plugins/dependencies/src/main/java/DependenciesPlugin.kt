@@ -199,7 +199,7 @@ object ComponentsDependencies {
     val mozilla_full_megazord_forUnitTests = "${ApplicationServicesConfig.groupId}:full-megazord-forUnitTests:${ApplicationServicesConfig.version}"
 
     val mozilla_errorsupport = "${ApplicationServicesConfig.groupId}:errorsupport:${ApplicationServicesConfig.version}"
-    val mozilla_rustlog = "${ApplicationServicesConfig.groupId}:rustlog:${ApplicationServicesConfig.version}"
+    val mozilla_rust_log_forwarder = "${ApplicationServicesConfig.groupId}:rust-log-forwarder:${ApplicationServicesConfig.version}"
     val mozilla_sync15 = "${ApplicationServicesConfig.groupId}:sync15:${ApplicationServicesConfig.version}"
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"

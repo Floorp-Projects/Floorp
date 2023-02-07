@@ -30,13 +30,13 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.mozilla_rustlog
+    implementation ComponentsDependencies.mozilla_rust_log_forwarder
 
     implementation ComponentsDependencies.kotlin_coroutines
     // Log.Priority is in the public api.
     api project(':support-base')
 
-    testImplementation ComponentsDependencies.mozilla_rustlog
+    testImplementation ComponentsDependencies.mozilla_rust_log_forwarder
     testImplementation project(':support-test')
 
     testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
