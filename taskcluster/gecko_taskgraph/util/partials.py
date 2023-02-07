@@ -130,7 +130,7 @@ def _retry_on_http_errors(url, verify, params, errors):
             else:
                 raise
     else:
-        raise
+        raise Exception(f"Cannot connect to {url}!")
 
 
 def get_sorted_releases(product, branch):
@@ -173,8 +173,7 @@ def _get_balrog_api_root(branch):
 
     if scope == "balrog:server:dep":
         return "https://stage.balrog.nonprod.cloudops.mozgcp.net/api/v1"
-    else:
-        return "https://aus5.mozilla.org/api/v1"
+    return "https://aus5.mozilla.org/api/v1"
 
 
 def find_localtest(fileUrls):
@@ -192,10 +191,9 @@ def populate_release_history(
         return _populate_release_history(
             product, branch, partial_updates=partial_updates
         )
-    else:
-        return _populate_nightly_history(
-            product, branch, maxbuilds=maxbuilds, maxsearch=maxsearch
-        )
+    return _populate_nightly_history(
+        product, branch, maxbuilds=maxbuilds, maxsearch=maxsearch
+    )
 
 
 def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):

@@ -545,10 +545,10 @@ def read_artifact(filename):
     path = os.path.join(ARTIFACTS_DIR, filename)
     if filename.endswith(".yml"):
         return load_yaml(path, filename)
-    elif filename.endswith(".json"):
+    if filename.endswith(".json"):
         with open(path) as f:
             return json.load(f)
-    elif filename.endswith(".json.gz"):
+    if filename.endswith(".json.gz"):
         import gzip
 
         with gzip.open(path, "rb") as f:

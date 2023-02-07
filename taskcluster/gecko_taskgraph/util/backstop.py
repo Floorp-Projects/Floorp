@@ -42,7 +42,7 @@ def is_backstop(
 
     if project in TRY_PROJECTS:
         return False
-    elif project not in integration_projects:
+    if project not in integration_projects:
         return True
 
     # On every Nth push, want to run all tasks.

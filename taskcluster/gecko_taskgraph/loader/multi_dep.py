@@ -93,7 +93,7 @@ def skip_only_or_not(config, task):
         combined_platform = f"{platform}/{build_type}"
         if only_platforms and combined_platform not in only_platforms:
             return True
-        elif not_platforms and combined_platform in not_platforms:
+        if not_platforms and combined_platform in not_platforms:
             return True
     if only_attributes:
         if not set(only_attributes) & set(task_attrs):

@@ -144,6 +144,8 @@ def register_callback_action(
     if not callable(context):
         context_value = context
 
+        # Because of the same name as param it must be redefined
+        # pylint: disable=E0102
         def context(params):
             return context_value  # noqa
 

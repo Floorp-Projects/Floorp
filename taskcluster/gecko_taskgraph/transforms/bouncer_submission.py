@@ -332,5 +332,4 @@ def craft_ssl_only(bouncer_product, project):
 def split_build_data(version):
     if version and "build" in version:
         return version.split("build")
-    else:
-        return version, InvalidSubstitution("k")
+    return version, InvalidSubstitution("k")

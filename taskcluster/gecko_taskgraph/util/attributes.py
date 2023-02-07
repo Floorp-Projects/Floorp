@@ -138,5 +138,4 @@ def is_try(params):
 def task_name(task):
     if task.label.startswith(task.kind + "-"):
         return task.label[len(task.kind) + 1 :]
-    else:
-        raise AttributeError(f"Task {task.label} does not have a name.")
+    raise AttributeError(f"Task {task.label} does not have a name.")

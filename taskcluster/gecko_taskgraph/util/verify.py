@@ -275,10 +275,9 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, paramet
         def printable_signoff(signoffs):
             if len(signoffs) == 1:
                 return "required signoff {}".format(*signoffs)
-            elif signoffs:
+            if signoffs:
                 return "required signoffs {}".format(", ".join(signoffs))
-            else:
-                return "no required signoffs"
+            return "no required signoffs"
 
         for task in taskgraph.tasks.values():
             required_signoffs = all_required_signoffs[task.label]
