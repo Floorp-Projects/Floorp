@@ -523,7 +523,7 @@ static const Import& FindImportFunction(const ImportVector& imports,
 }
 
 bool Module::instantiateFunctions(JSContext* cx,
-                                  const JSFunctionVector& funcImports) const {
+                                  const JSObjectVector& funcImports) const {
 #ifdef DEBUG
   for (auto t : code().tiers()) {
     MOZ_ASSERT(funcImports.length() == metadata(t).funcImports.length());
@@ -888,7 +888,7 @@ bool Module::instantiateGlobals(JSContext* cx,
 
 static bool GetFunctionExport(JSContext* cx,
                               Handle<WasmInstanceObject*> instanceObj,
-                              const JSFunctionVector& funcImports,
+                              const JSObjectVector& funcImports,
                               uint32_t funcIndex, MutableHandleFunction func) {
   if (funcIndex < funcImports.length() &&
       funcImports[funcIndex]->is<JSFunction>()) {
@@ -904,7 +904,7 @@ static bool GetFunctionExport(JSContext* cx,
 
 static bool GetGlobalExport(JSContext* cx,
                             Handle<WasmInstanceObject*> instanceObj,
-                            const JSFunctionVector& funcImports,
+                            const JSObjectVector& funcImports,
                             const GlobalDesc& global, uint32_t globalIndex,
                             const ValVector& globalImportValues,
                             const WasmGlobalObjectVector& globalObjs,
@@ -942,7 +942,7 @@ static bool GetGlobalExport(JSContext* cx,
 
 static bool CreateExportObject(
     JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
-    const JSFunctionVector& funcImports, const WasmTableObjectVector& tableObjs,
+    const JSObjectVector& funcImports, const WasmTableObjectVector& tableObjs,
     Handle<WasmMemoryObject*> memoryObj, const WasmTagObjectVector& tagObjs,
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, const ExportVector& exports) {

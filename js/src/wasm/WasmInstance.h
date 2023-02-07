@@ -214,7 +214,7 @@ class alignas(16) Instance {
                           UniqueDebugState maybeDebug);
   static void destroy(Instance* instance);
 
-  bool init(JSContext* cx, const JSFunctionVector& funcImports,
+  bool init(JSContext* cx, const JSObjectVector& funcImports,
             const ValVector& globalImportValues,
             const WasmGlobalObjectVector& globalObjs,
             const WasmTagObjectVector& tagObjs,
