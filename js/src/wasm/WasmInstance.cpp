@@ -1582,7 +1582,7 @@ void Instance::destroy(Instance* instance) {
   js_free(instance->allocatedBase_);
 }
 
-bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
+bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
                     const ValVector& globalImportValues,
                     const WasmGlobalObjectVector& globalObjs,
                     const WasmTagObjectVector& tagObjs,

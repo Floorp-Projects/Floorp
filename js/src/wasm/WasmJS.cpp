@@ -1869,7 +1869,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
     Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
-    const JSFunctionVector& funcImports, const GlobalDescVector& globals,
+    const JSObjectVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs,
     const WasmTagObjectVector& tagObjs, HandleObject proto,
