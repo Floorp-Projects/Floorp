@@ -128,7 +128,8 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
       RefPtr<FileSystemSyncAccessHandle> result,
       FileSystemSyncAccessHandle::Create(
           aGlobal, aManager, std::move(properties.streamParams()),
-          std::move(properties.accessHandleChildEndpoint()), aMetadata),
+          std::move(properties.accessHandleChildEndpoint()),
+          std::move(properties.accessHandleControlChildEndpoint()), aMetadata),
       nullptr);
 
   return result;

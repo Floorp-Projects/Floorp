@@ -26,6 +26,7 @@ class RandomAccessStreamParams;
 
 namespace dom {
 
+class FileSystemAccessHandleControlParent;
 class FileSystemAccessHandleParent;
 
 namespace fs {
@@ -63,6 +64,12 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
 
   void UnregisterActor(NotNull<FileSystemAccessHandleParent*> aActor);
 
+  void RegisterControlActor(
+      NotNull<FileSystemAccessHandleControlParent*> aControlActor);
+
+  void UnregisterControlActor(
+      NotNull<FileSystemAccessHandleControlParent*> aControlActor);
+
   bool IsOpen() const;
 
   void Close();
@@ -83,6 +90,7 @@ class FileSystemAccessHandle : public FileSystemStreamCallbacks {
   const fs::EntryId mEntryId;
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
   FileSystemAccessHandleParent* mActor;
+  FileSystemAccessHandleControlParent* mControlActor;
   nsAutoRefCnt mRegCount;
   bool mLocked;
   bool mRegistered;

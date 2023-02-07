@@ -27,6 +27,7 @@ FileSystemAccessHandle::FileSystemAccessHandle(
     : mEntryId(aEntryId),
       mDataManager(std::move(aDataManager)),
       mActor(nullptr),
+      mControlActor(nullptr),
       mRegCount(0),
       mLocked(false),
       mRegistered(false),
@@ -96,6 +97,25 @@ void FileSystemAccessHandle::UnregisterActor(
   }
 }
 
+void FileSystemAccessHandle::RegisterControlActor(
+    NotNull<FileSystemAccessHandleControlParent*> aControlActor) {
+  MOZ_ASSERT(!mControlActor);
+
+  mControlActor = aControlActor;
+}
+
+void FileSystemAccessHandle::UnregisterControlActor(
+    NotNull<FileSystemAccessHandleControlParent*> aControlActor) {
+  MOZ_ASSERT(mControlActor);
+  MOZ_ASSERT(mControlActor == aControlActor);
+
+  mControlActor = nullptr;
+
+  if (IsInactive() && IsOpen()) {
+    Close();
+  }
+}
+
 bool FileSystemAccessHandle::IsOpen() const { return !mClosed; }
 
 void FileSystemAccessHandle::Close() {
@@ -126,7 +146,7 @@ void FileSystemAccessHandle::Close() {
 }
 
 bool FileSystemAccessHandle::IsInactive() const {
-  return !mRegCount && !mActor;
+  return !mRegCount && !mActor && !mControlActor;
 }
 
 RefPtr<FileSystemAccessHandle::InitPromise>

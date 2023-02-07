@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PFileSystemAccessHandle;
+include protocol PFileSystemAccessHandleControl;
 include protocol PFileSystemWritableFileStream;
 
 include IPCBlob;
@@ -132,6 +133,7 @@ struct FileSystemAccessHandleProperties
 {
   RandomAccessStreamParams streamParams;
   ManagedEndpoint<PFileSystemAccessHandleChild> accessHandleChildEndpoint;
+  Endpoint<PFileSystemAccessHandleControlChild> accessHandleControlChildEndpoint;
 };
 
 union FileSystemGetAccessHandleResponse
