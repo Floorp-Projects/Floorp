@@ -11,7 +11,6 @@
 
 const {
   SourceMapConsumer,
-  SourceMapGenerator,
 } = require("resource://devtools/client/shared/vendor/source-map/source-map.js");
 
 // Initialize the source-map library right away so that all other code can use it.
@@ -484,13 +483,15 @@ async function getFileGeneratedRange(originalSourceId) {
   };
 }
 
-function applySourceMap(generatedId, url, code, mappings) {
-  const generator = new SourceMapGenerator({ file: url });
-  mappings.forEach(mapping => generator.addMapping(mapping));
-  generator.setSourceContent(url, code);
-
-  const map = new SourceMapConsumer(generator.toJSON());
-  setSourceMap(generatedId, Promise.resolve(map));
+/**
+ * Apply a sourceMap to a given source id
+ *
+ * @param {string} generatedId
+ * @param {Object} map: An actual sourcemap (as generated with SourceMapGenerator#toJSON)
+ */
+function applySourceMap(generatedId, map) {
+  const sourceMapConsumer = new SourceMapConsumer(map);
+  setSourceMap(generatedId, Promise.resolve(sourceMapConsumer));
 }
 
 function clearSourceMaps() {

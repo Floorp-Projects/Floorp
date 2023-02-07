@@ -55,16 +55,16 @@ export async function prettyPrintSource(
   }
 
   const url = getPrettyOriginalSourceURL(generatedSource);
-  const { code, mappings } = await prettyPrintWorker.prettyPrint({
+  const { code, sourceMap } = await prettyPrintWorker.prettyPrint({
     text: contentValue.value,
     url,
   });
-  await sourceMapLoader.applySourceMap(generatedSource.id, url, code, mappings);
+  await sourceMapLoader.applySourceMap(generatedSource.id, sourceMap);
 
   // The source map URL service used by other devtools listens to changes to
-  // sources based on their actor IDs, so apply the mapping there too.
+  // sources based on their actor IDs, so apply the sourceMap there too.
   for (const { actor } of actors) {
-    await sourceMapLoader.applySourceMap(actor, url, code, mappings);
+    await sourceMapLoader.applySourceMap(actor, sourceMap);
   }
   return {
     text: code,

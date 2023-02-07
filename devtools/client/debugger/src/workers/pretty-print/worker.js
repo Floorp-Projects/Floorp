@@ -6,35 +6,36 @@ import { workerHandler } from "devtools/client/shared/worker-utils";
 import { prettyFast } from "./pretty-fast";
 
 function prettyPrint({ url, indent, sourceText }) {
-  const prettified = prettyFast(sourceText, {
+  const { code, map: sourceMapGenerator } = prettyFast(sourceText, {
     url,
     indent: " ".repeat(indent),
   });
 
-  return {
-    code: prettified.code,
-    mappings: invertMappings(prettified.map._mappings),
-  };
-}
+  // We need to swap original and generated locations, as the prettified text should
+  // be seen by the sourcemap service as the "original" one.
+  const mappingLength = sourceMapGenerator._mappings._array.length;
+  for (let i = 0; i < mappingLength; i++) {
+    const mapping = sourceMapGenerator._mappings._array[i];
+    const {
+      originalLine,
+      originalColumn,
+      generatedLine,
+      generatedColumn,
+    } = mapping;
+    mapping.originalLine = generatedLine;
+    mapping.originalColumn = generatedColumn;
+    mapping.generatedLine = originalLine;
+    mapping.generatedColumn = originalColumn;
+  }
+  // Since we modified the location, the mappings might not be in the expected order,
+  // which may cause issues when generating the sourceMap.
+  // Flip the `_sorted` flag so the mappings will be sorted when the sourceMap is built.
+  sourceMapGenerator._mappings._sorted = false;
 
-function invertMappings(mappings) {
-  return mappings._array.map(m => {
-    const mapping = {
-      generated: {
-        line: m.originalLine,
-        column: m.originalColumn,
-      },
-    };
-    if (m.source) {
-      mapping.source = m.source;
-      mapping.original = {
-        line: m.generatedLine,
-        column: m.generatedColumn,
-      };
-      mapping.name = m.name;
-    }
-    return mapping;
-  });
+  return {
+    code,
+    sourceMap: sourceMapGenerator.toJSON(),
+  };
 }
 
 self.onmessage = workerHandler({ prettyPrint });
