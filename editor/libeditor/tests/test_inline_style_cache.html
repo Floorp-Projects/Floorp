@@ -33,7 +33,7 @@ SimpleTest.waitForFocus(function() {
   document.execCommand("strikethrough");
   sendString("test");
 
-  is(editor.innerHTML, "before<strike><i><b>test</b></i></strike>after",
+  is(editor.innerHTML, "before<b><i><strike>test</strike></i></b>after",
      "#01-01 At typing something after setting some styles, should cause inserting some nodes to apply the style");
 
   // #01-02 Typing something after removing some characters after setting some styles should work as without removing some character.
@@ -52,7 +52,7 @@ SimpleTest.waitForFocus(function() {
   );
   is(
     editor.innerHTML,
-    "before<strike><i><b>test</b></i></strike>fter",
+    "before<b><i><strike>test</strike></i></b>fter",
     "#01-02-1 At typing something after Delete after setting style, the style should not be preserved, but it's okay to do it for backward compatibility"
   );
 
@@ -64,7 +64,7 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("KEY_Backspace");
   sendString("test");
 
-  is(editor.innerHTML, "befor<strike><i><b>test</b></i></strike>after",
+  is(editor.innerHTML, "befor<b><i><strike>test</strike></i></b>after",
      "#01-02-2 At typing something after Backspace after setting style, should cause inserting some nodes to apply the style");
 
   // #03-01 Replacing in <b style="font-weight: normal;"> shouldn't cause new <b>.

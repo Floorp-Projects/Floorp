@@ -319,8 +319,8 @@ function doTest(editor, selection, win) {
   synthesizeKey("KEY_Backspace");
   synthesizeKey("X");
   synthesizeKey("Y");
-  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>XYdef</b></p>",
-     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b>`);
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY<b>def</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert before next <b>`);
 
   editor.innerHTML = "<p><a href=\"about:blank\">abc</a><br></p><p>def</p>";
   selection.collapse(editor.querySelector("p + p").firstChild, 0);
@@ -335,8 +335,8 @@ function doTest(editor, selection, win) {
   synthesizeKey("KEY_Backspace");
   synthesizeKey("X");
   synthesizeKey("Y");
-  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>XYdef</b></p>",
-     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b> (invisible <br>)`);
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>XY<b>def</b></p>",
+     `${kDescription}: Typing X and Y at end of the <a> element after joining paragraphs with Backspace should insert before next <b> (invisible <br>)`);
 
   if (kCanTestHomeEndKeys) {
     editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p>";

@@ -1685,7 +1685,10 @@ EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::
   MOZ_ASSERT(aStartPoint.IsSetAndValid());
 
   EditorRawDOMPoint startPoint = aStartPoint;
-  if (!startPoint.IsStartOfContainer()) {
+  // FIXME: This should handle ignore invisible white-spaces before the position
+  // if it's in a text node or invisible white-spaces.
+  if (!startPoint.IsStartOfContainer() ||
+      startPoint.GetContainer()->GetPreviousSibling()) {
     return startPoint;
   }
 
@@ -1727,7 +1730,10 @@ EditorRawDOMPoint HTMLEditor::AutoInlineStyleSetter::
   MOZ_ASSERT(aEndPoint.IsSetAndValid());
 
   EditorRawDOMPoint endPoint = aEndPoint;
-  if (!endPoint.IsEndOfContainer()) {
+  // FIXME: This should ignore invisible white-spaces after the position if it's
+  // in a text node, invisible <br> or following invisible text nodes.
+  if (!endPoint.IsEndOfContainer() ||
+      endPoint.GetContainer()->GetNextSibling()) {
     return endPoint;
   }
 

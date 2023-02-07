@@ -377,22 +377,12 @@ void PendingStyles::PreserveStyle(nsStaticAtom& aHTMLProperty,
   // outer inline elements of them are computed without these styles.  E.g.,
   // background-color may be applied bottom-half of the text.  Therefore, we
   // need to apply the font styles first.
-  uint32_t fontStyleCount = 0;
-  for (const UniquePtr<PendingStyle>& style : Reversed(mPreservingStyles)) {
-    if (style->GetTag() != nsGkAtoms::font ||
-        style->GetAttribute() == nsGkAtoms::bgcolor) {
-      break;
-    }
-    MOZ_ASSERT(style->GetAttribute() == nsGkAtoms::color ||
-               style->GetAttribute() == nsGkAtoms::face ||
-               style->GetAttribute() == nsGkAtoms::size);
-    fontStyleCount++;
-  }
   UniquePtr<PendingStyle> style = MakeUnique<PendingStyle>(
       &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue);
-  if (fontStyleCount) {
-    mPreservingStyles.InsertElementAt(
-        mPreservingStyles.Length() - fontStyleCount, std::move(style));
+  if (&aHTMLProperty == nsGkAtoms::font && aAttribute != nsGkAtoms::bgcolor) {
+    MOZ_ASSERT(aAttribute == nsGkAtoms::color ||
+               aAttribute == nsGkAtoms::face || aAttribute == nsGkAtoms::size);
+    mPreservingStyles.InsertElementAt(0, std::move(style));
   } else {
     mPreservingStyles.AppendElement(std::move(style));
   }
@@ -433,8 +423,7 @@ void PendingStyles::TakeAllPreservedStyles(
     nsTArray<EditorInlineStyleAndValue>& aOutStylesAndValues) {
   aOutStylesAndValues.SetCapacity(aOutStylesAndValues.Length() +
                                   mPreservingStyles.Length());
-  for (UniquePtr<PendingStyle> preservedStyle = TakePreservedStyle();
-       preservedStyle; preservedStyle = TakePreservedStyle()) {
+  for (const UniquePtr<PendingStyle>& preservedStyle : mPreservingStyles) {
     aOutStylesAndValues.AppendElement(
         preservedStyle->GetAttribute()
             ? EditorInlineStyleAndValue(
@@ -442,6 +431,7 @@ void PendingStyles::TakeAllPreservedStyles(
                   preservedStyle->AttributeValueOrCSSValueRef())
             : EditorInlineStyleAndValue(*preservedStyle->GetTag()));
   }
+  mPreservingStyles.Clear();
 }
 
 /**

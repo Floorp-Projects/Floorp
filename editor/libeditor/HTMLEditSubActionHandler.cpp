@@ -9272,7 +9272,7 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
   }
 
   for (PendingStyleCache& styleCacheBeforeEdit :
-       *TopLevelEditSubActionDataRef().mCachedPendingStyles) {
+       Reversed(*TopLevelEditSubActionDataRef().mCachedPendingStyles)) {
     bool isFirst = false, isAny = false, isAll = false;
     nsAutoString currentValue;
     const EditorInlineStyle inlineStyle = styleCacheBeforeEdit.ToInlineStyle();

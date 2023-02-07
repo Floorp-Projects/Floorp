@@ -7,6 +7,10 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
+%{C++
+#include "mozilla/Debug.h"
+%}
+
 interface nsISelectionController;
 interface nsIDocumentStateListener;
 interface nsIEditActionListener;
@@ -40,6 +44,46 @@ interface nsIEditor  : nsISupports
   const short ePreviousWord = 4;
   const short eToBeginningOfLine = 5;
   const short eToEndOfLine = 6;
+
+%{C++
+  static bool EDirectionIsValid(EDirection aDirectionAndAmount) {
+    return aDirectionAndAmount == nsIEditor::eNone ||
+           aDirectionAndAmount == nsIEditor::eNext ||
+           aDirectionAndAmount == nsIEditor::ePrevious ||
+           aDirectionAndAmount == nsIEditor::eNextWord ||
+           aDirectionAndAmount == nsIEditor::ePreviousWord ||
+           aDirectionAndAmount == nsIEditor::eToBeginningOfLine ||
+           aDirectionAndAmount == nsIEditor::eToEndOfLine;
+  }
+  static bool EDirectionIsValidExceptNone(EDirection aDirectionAndAmount) {
+    return aDirectionAndAmount != nsIEditor::eNone &&
+           EDirectionIsValid(aDirectionAndAmount);
+  }
+
+  /**
+   * Return true if nsIEditor::EDirection value means the direction of pressing
+   * `Backspace` key.
+   */
+  [[nodiscard]] static bool DirectionIsBackspace(
+    EDirection aDirectionAndAmount) {
+    MOZ_ASSERT(EDirectionIsValid(aDirectionAndAmount));
+    return aDirectionAndAmount == nsIEditor::ePrevious ||
+           aDirectionAndAmount == nsIEditor::ePreviousWord ||
+           aDirectionAndAmount == nsIEditor::eToBeginningOfLine;
+  }
+
+  /**
+   * Return true if nsIEditor::EDirection value means the direction of pressing
+   * `Delete` key (forwardDelete).
+   */
+  [[nodiscard]] static bool DirectionIsDelete(
+    EDirection aDirectionAndAmount) {
+    MOZ_ASSERT(EDirectionIsValid(aDirectionAndAmount));
+    return aDirectionAndAmount == nsIEditor::eNext ||
+           aDirectionAndAmount == nsIEditor::eNextWord ||
+           aDirectionAndAmount == nsIEditor::eToEndOfLine;
+  }
+%}
 
   const short eStrip = 0;
   const short eNoStrip = 1;

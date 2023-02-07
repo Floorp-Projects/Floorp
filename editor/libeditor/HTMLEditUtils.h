@@ -1944,16 +1944,7 @@ class HTMLEditUtils final {
   template <typename EditorDOMPointType>
   static EditorDOMPointType GetGoodCaretPointFor(
       nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) {
-    MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
-               aDirectionAndAmount == nsIEditor::eNextWord ||
-               aDirectionAndAmount == nsIEditor::ePrevious ||
-               aDirectionAndAmount == nsIEditor::ePreviousWord ||
-               aDirectionAndAmount == nsIEditor::eToBeginningOfLine ||
-               aDirectionAndAmount == nsIEditor::eToEndOfLine);
-
-    const bool goingForward = (aDirectionAndAmount == nsIEditor::eNext ||
-                               aDirectionAndAmount == nsIEditor::eNextWord ||
-                               aDirectionAndAmount == nsIEditor::eToEndOfLine);
+    MOZ_ASSERT(nsIEditor::EDirectionIsValidExceptNone(aDirectionAndAmount));
 
     // XXX Why don't we check whether the candidate position is enable or not?
     //     When the result is not editable point, caret will be enclosed in
@@ -1962,12 +1953,14 @@ class HTMLEditUtils final {
     // If we can put caret in aContent, return start or end in it.
     if (aContent.IsText() || HTMLEditUtils::IsContainerNode(aContent) ||
         NS_WARN_IF(!aContent.GetParentNode())) {
-      return EditorDOMPointType(&aContent,
-                                goingForward ? 0 : aContent.Length());
+      return EditorDOMPointType(
+          &aContent, nsIEditor::DirectionIsDelete(aDirectionAndAmount)
+                         ? 0
+                         : aContent.Length());
     }
 
     // If we are going forward, put caret at aContent itself.
-    if (goingForward) {
+    if (nsIEditor::DirectionIsDelete(aDirectionAndAmount)) {
       return EditorDOMPointType(&aContent);
     }
 

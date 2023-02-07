@@ -546,8 +546,8 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       switch (mMode) {
         case Mode::JoinCurrentBlock: {
           Result<EditActionResult, nsresult> result =
-              HandleDeleteAtCurrentBlockBoundary(aHTMLEditor, aCaretPoint,
-                                                 aEditingHost);
+              HandleDeleteAtCurrentBlockBoundary(
+                  aHTMLEditor, aDirectionAndAmount, aCaretPoint, aEditingHost);
           NS_WARNING_ASSERTION(result.isOk(),
                                "AutoBlockElementsJoiner::"
                                "HandleDeleteAtCurrentBlockBoundary() failed");
@@ -656,9 +656,9 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
           return Err(NS_ERROR_UNEXPECTED);
         case Mode::JoinBlocksInSameParent: {
           Result<EditActionResult, nsresult> result =
-              JoinBlockElementsInSameParent(aHTMLEditor, aDirectionAndAmount,
-                                            aStripWrappers, aRangesToDelete,
-                                            aEditingHost);
+              JoinBlockElementsInSameParent(
+                  aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+                  aRangesToDelete, aSelectionWasCollapsed, aEditingHost);
           NS_WARNING_ASSERTION(result.isOk(),
                                "AutoBlockElementsJoiner::"
                                "JoinBlockElementsInSameParent() failed");
@@ -748,9 +748,9 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
 
    private:
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
-    HandleDeleteAtCurrentBlockBoundary(HTMLEditor& aHTMLEditor,
-                                       const EditorDOMPoint& aCaretPoint,
-                                       const Element& aEditingHost);
+    HandleDeleteAtCurrentBlockBoundary(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aCaretPoint, const Element& aEditingHost);
     nsresult ComputeRangesToDeleteAtCurrentBlockBoundary(
         const HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint,
         AutoRangeArray& aRangesToDelete, const Element& aEditingHost) const;
@@ -772,11 +772,12 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         const EditorDOMPoint& aCaretPoint, AutoRangeArray& aRangesToDelete,
         const Element& aEditingHost) const;
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
-    JoinBlockElementsInSameParent(HTMLEditor& aHTMLEditor,
-                                  nsIEditor::EDirection aDirectionAndAmount,
-                                  nsIEditor::EStripWrappers aStripWrappers,
-                                  AutoRangeArray& aRangesToDelete,
-                                  const Element& aEditingHost);
+    JoinBlockElementsInSameParent(
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed,
+        const Element& aEditingHost);
     nsresult ComputeRangesToJoinBlockElementsInSameParent(
         const HTMLEditor& aHTMLEditor,
         nsIEditor::EDirection aDirectionAndAmount,
@@ -2627,10 +2628,20 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (NS_SUCCEEDED(rv) &&
-        HTMLEditor::GetLinkElement(pointToPutCaret.GetContainer())) {
-      aHTMLEditor.mPendingStylesToApplyToNewContent
-          ->ClearLinkAndItsSpecifiedStyle();
+    if (NS_SUCCEEDED(rv)) {
+      // If we prefer to use style in the previous line, we should forget
+      // previous styles since the caret position has all styles which we want
+      // to use with new content.
+      if (nsIEditor::DirectionIsBackspace(aDirectionAndAmount)) {
+        aHTMLEditor.TopLevelEditSubActionDataRef()
+            .mCachedPendingStyles->Clear();
+      }
+      // And we don't want to keep extending a link at ex-end of the previous
+      // paragraph.
+      if (HTMLEditor::GetLinkElement(pointToPutCaret.GetContainer())) {
+        aHTMLEditor.mPendingStylesToApplyToNewContent
+            ->ClearLinkAndItsSpecifiedStyle();
+      }
     } else {
       NS_WARNING("EditorBase::CollapseSelectionTo() failed, but ignored");
     }
@@ -2850,6 +2861,15 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           NS_WARNING("EditorBase::CollapseSelectionTo() failed, but ignored");
           return result;
         }
+        // If we prefer to use style in the previous line, we should forget
+        // previous styles since the caret position has all styles which we want
+        // to use with new content.
+        if (nsIEditor::DirectionIsBackspace(aDirectionAndAmount)) {
+          aHTMLEditor.TopLevelEditSubActionDataRef()
+              .mCachedPendingStyles->Clear();
+        }
+        // And we don't want to keep extending a link at ex-end of the previous
+        // paragraph.
         if (HTMLEditor::GetLinkElement(
                 joiner.PointRefToPutCaret().GetContainer())) {
           aHTMLEditor.mPendingStylesToApplyToNewContent
@@ -3056,8 +3076,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
 Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoBlockElementsJoiner::HandleDeleteAtCurrentBlockBoundary(
-        HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint,
-        const Element& aEditingHost) {
+        HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+        const EditorDOMPoint& aCaretPoint, const Element& aEditingHost) {
   MOZ_ASSERT(mLeftContent);
   MOZ_ASSERT(mRightContent);
 
@@ -3129,6 +3149,15 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         NS_WARNING("EditorBase::CollapseSelectionTo() failed, but ignored");
         return result;
       }
+      // If we prefer to use style in the previous line, we should forget
+      // previous styles since the caret position has all styles which we want
+      // to use with new content.
+      if (nsIEditor::DirectionIsBackspace(aDirectionAndAmount)) {
+        aHTMLEditor.TopLevelEditSubActionDataRef()
+            .mCachedPendingStyles->Clear();
+      }
+      // And we don't want to keep extending a link at ex-end of the previous
+      // paragraph.
       if (HTMLEditor::GetLinkElement(
               joiner.PointRefToPutCaret().GetContainer())) {
         aHTMLEditor.mPendingStylesToApplyToNewContent
@@ -3593,7 +3622,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoBlockElementsJoiner::JoinBlockElementsInSameParent(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
-        AutoRangeArray& aRangesToDelete, const Element& aEditingHost) {
+        AutoRangeArray& aRangesToDelete,
+        SelectionWasCollapsed aSelectionWasCollapsed,
+        const Element& aEditingHost) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
   MOZ_ASSERT(mMode == Mode::JoinBlocksInSameParent);
@@ -3608,6 +3639,10 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
   MOZ_ASSERT(mLeftContent->GetParentNode() == mRightContent->GetParentNode());
+
+  const bool backspaceInRightBlock =
+      aSelectionWasCollapsed == SelectionWasCollapsed::Yes &&
+      nsIEditor::DirectionIsBackspace(aDirectionAndAmount);
 
   nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
       aDirectionAndAmount, aStripWrappers, aRangesToDelete);
@@ -3658,6 +3693,15 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return Err(rv);
       }
+      // If we prefer to use style in the previous line, we should forget
+      // previous styles since the caret position has all styles which we want
+      // to use with new content.
+      if (backspaceInRightBlock) {
+        aHTMLEditor.TopLevelEditSubActionDataRef()
+            .mCachedPendingStyles->Clear();
+      }
+      // And we don't want to keep extending a link at ex-end of the previous
+      // paragraph.
       if (HTMLEditor::GetLinkElement(maybePreviousText.TextPtr())) {
         aHTMLEditor.mPendingStylesToApplyToNewContent
             ->ClearLinkAndItsSpecifiedStyle();
@@ -3897,6 +3941,10 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
 
+  const bool backspaceInRightBlock =
+      aSelectionWasCollapsed == SelectionWasCollapsed::Yes &&
+      nsIEditor::DirectionIsBackspace(aDirectionAndAmount);
+
   // Otherwise, delete every nodes in all ranges, then, clean up something.
   EditActionResult result = EditActionResult::IgnoredResult();
   EditorDOMPoint pointToPutCaret;
@@ -4006,6 +4054,14 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       NS_WARNING("EditorBase::CollapseSelectionTo() failed");
       return Err(rv);
     }
+    // If we prefer to use style in the previous line, we should forget
+    // previous styles since the caret position has all styles which we want
+    // to use with new content.
+    if (backspaceInRightBlock) {
+      aHTMLEditor.TopLevelEditSubActionDataRef().mCachedPendingStyles->Clear();
+    }
+    // And we don't want to keep extending a link at ex-end of the previous
+    // paragraph.
     if (HTMLEditor::GetLinkElement(pointToPutCaret.GetContainer())) {
       aHTMLEditor.mPendingStylesToApplyToNewContent
           ->ClearLinkAndItsSpecifiedStyle();
