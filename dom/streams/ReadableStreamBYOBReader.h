@@ -66,6 +66,8 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   LinkedList<RefPtr<ReadIntoRequest>> mReadIntoRequests;
 };
 
+namespace streams_abstract {
+
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
     ReadableStream* aStream, ErrorResult& aRv);
 
@@ -81,6 +83,8 @@ void ReadableStreamBYOBReaderErrorReadIntoRequests(
 void ReadableStreamBYOBReaderRelease(JSContext* aCx,
                                      ReadableStreamBYOBReader* aReader,
                                      ErrorResult& aRv);
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 

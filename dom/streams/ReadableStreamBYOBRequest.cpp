@@ -20,6 +20,8 @@
 
 namespace mozilla::dom {
 
+using namespace streams_abstract;
+
 ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal) {
   mozilla::HoldJSObjects(this);
