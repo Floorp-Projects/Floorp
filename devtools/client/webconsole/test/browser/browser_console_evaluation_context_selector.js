@@ -107,7 +107,7 @@ add_task(async function() {
   );
 
   // set input text so we can watch for instant evaluation result update
-  setInputValue(hud, "globalThis.location.href");
+  setInputValue(hud, "globalThis.location_href");
   await waitForEagerEvaluationResult(hud, `"${documentWithWorkerUrl}"`);
 
   info("Select the worker target");
