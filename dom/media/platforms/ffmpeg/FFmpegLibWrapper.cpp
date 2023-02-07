@@ -16,8 +16,8 @@
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
 
-#define AV_LOG_DEBUG 48
 #define AV_LOG_INFO 32
+#define AV_LOG_WARNING 24
 
 namespace mozilla {
 
@@ -245,7 +245,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
     avcodec_register_all();
   }
   if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
-    av_log_set_level(AV_LOG_DEBUG);
+    av_log_set_level(AV_LOG_WARNING);
   } else if (MOZ_LOG_TEST(sPDMLog, LogLevel::Info)) {
     av_log_set_level(AV_LOG_INFO);
   } else {
