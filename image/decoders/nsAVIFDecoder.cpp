@@ -240,7 +240,13 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     }
 
     bool hasNext = mColorSampleIter->HasNext();
-    MOZ_ASSERT_IF(mAlphaSampleIter, hasNext == mAlphaSampleIter->HasNext());
+    if (mAlphaSampleIter && (hasNext != mAlphaSampleIter->HasNext())) {
+      MOZ_LOG(
+          sAVIFLog, LogLevel::Warning,
+          ("[this=%p] The %s sequence ends before frame %d, aborting decode.",
+           this, hasNext ? "alpha" : "color", mFrameNum));
+      return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
+    }
     if (!hasNext) {
       return AsVariant(nsAVIFDecoder::NonDecoderResult::Complete);
     }
