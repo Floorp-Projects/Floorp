@@ -13,5 +13,5 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
-    "PerfTestHelpers.jsm",
+    "PerfTestHelpers.sys.mjs",
 ]

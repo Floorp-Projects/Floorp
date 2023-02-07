@@ -21,7 +21,7 @@
 "use strict";
 
 const actorModuleURI =
-  getRootDirectory(gTestPath) + "StartupContentSubframe.jsm";
+  getRootDirectory(gTestPath) + "StartupContentSubframe.sys.mjs";
 const subframeURI =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
@@ -109,10 +109,10 @@ add_task(async function() {
   // script loading information is available.
   ChromeUtils.registerWindowActor("StartupContentSubframe", {
     parent: {
-      moduleURI: actorModuleURI,
+      esModuleURI: actorModuleURI,
     },
     child: {
-      moduleURI: actorModuleURI,
+      esModuleURI: actorModuleURI,
       events: {
         load: { mozSystemGroup: true, capture: true },
       },
