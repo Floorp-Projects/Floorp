@@ -77,7 +77,36 @@ for filepath in file_list["webidls"]:
         parser.parse(f.read(), filepath)
 results = parser.finish()
 
-pure_output = {}
+# TODO: Bug 1616013 - Move more of these to be part of the pure list.
+pure_output = {
+    "Document": {
+        "prototype": {
+            "methods": [
+                "getSelection",
+                "hasStorageAccess",
+            ],
+        }
+    },
+    "Range": {
+        "prototype": {
+            "methods": [
+                "isPointInRange",
+                "comparePoint",
+                "intersectsNode",
+                # These two functions aren't pure because they do trigger
+                # layout when they are called, but in the context of eager
+                # evaluation, that should be a totally fine thing to do.
+                "getClientRects",
+                "getBoundingClientRect",
+            ],
+        }
+    },
+    "Selection": {
+        "prototype": {
+            "methods": ["getRangeAt", "containsNode"],
+        }
+    },
+}
 deprecated_output = {}
 for result in results:
     if isinstance(result, WebIDL.IDLInterface):
@@ -86,19 +115,32 @@ for result in results:
         for member in result.members:
             name = member.identifier.name
 
-            # We only care about methods because eager evaluation assumes that
-            # all getter functions are side-effect-free.
-            if member.isMethod() and member.affects == "Nothing":
+            if (member.isMethod() or member.isAttr()) and member.affects == "Nothing":
                 if (
                     PURE_INTERFACE_ALLOWLIST and not iface in PURE_INTERFACE_ALLOWLIST
                 ) or name.startswith("_"):
                     continue
-                if not iface in pure_output:
-                    pure_output[iface] = []
+
+                if iface not in pure_output:
+                    pure_output[iface] = {}
+
                 if member.isStatic():
-                    pure_output[iface].append([name])
+                    owner_type = "static"
                 else:
-                    pure_output[iface].append(["prototype", name])
+                    owner_type = "prototype"
+
+                if owner_type not in pure_output[iface]:
+                    pure_output[iface][owner_type] = {}
+
+                if member.isMethod():
+                    prop_type = "methods"
+                else:
+                    prop_type = "getters"
+
+                if prop_type not in pure_output[iface][owner_type]:
+                    pure_output[iface][owner_type][prop_type] = []
+
+                pure_output[iface][owner_type][prop_type].append(name)
             if (
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
                 and (member.isMethod() or member.isAttr())
