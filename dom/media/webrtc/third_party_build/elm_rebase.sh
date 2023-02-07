@@ -74,7 +74,9 @@ rerun the command:
   MOZ_CURRENT_CENTRAL={central-sha} bash $0
 
 You may also need to provide the bottom commit of the fast-forward
-stack, which would look like:
+stack.  The bottom commit means the commit following central.  This
+could be the sha of the .arcconfig commit if it is the bottom commit.
+That command looks like:
   MOZ_BOTTOM_FF={base-sha} MOZ_CURRENT_CENTRAL={central-sha} bash $0
 "
 if [ "x" == "x$MOZ_CURRENT_CENTRAL" ]; then
@@ -201,9 +203,10 @@ done
 rm $STATE_DIR/rebase_resume_state
 
 REMAINING_STEPS=$"
-./mach bootstrap --application=browser --no-system-changes
-./mach build
-hg push -r tip --force
-hg push -B $MOZ_BOOKMARK
+The rebase process is complete.  The following steps must be completed manually:
+  ./mach bootstrap --application=browser --no-system-changes
+  ./mach build
+  hg push -r tip --force
+  hg push -B $MOZ_BOOKMARK
 "
 echo "$REMAINING_STEPS"
