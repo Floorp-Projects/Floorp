@@ -608,5 +608,5 @@ browsertime-regression-tests:
             by-test-platform:
                 windows10-64.*shippable.*-qr.*: []
                 default: []
-    tier: 3
+    tier: 2
     treeherder-symbol: Btime(regressor)
