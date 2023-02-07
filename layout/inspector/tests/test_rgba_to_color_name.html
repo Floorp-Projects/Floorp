@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test InspectorUtils::RgbToColorName</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  testColor({r:255, g:0, b:0, a:1}, "red");
+  testColor({r:0, g:0, b:255, a:1}, "blue");
+  testColor({r:0, g:0, b:255, a:0}, "blue");
+  testColor(InspectorUtils.colorToRGBA("tomato"), "tomato");
+
+  // No matching named color should return an empty string
+  testColor({r:1, g:1, b:1, a:1}, "");
+
+  function testColor({r, g, b, a}, expectedColor) {
+    const colorName = InspectorUtils.rgbToColorName(r, g, b, a);
+    is(colorName, expectedColor, `Got expected result for ${r} ${b} ${b} / ${a}`);
+  }
+  </script>
+</head>
+<body>
+<h1>Test InspectorUtils::RgbToColorName</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
