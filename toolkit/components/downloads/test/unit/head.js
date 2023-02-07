@@ -943,12 +943,15 @@ function checkEqualReferrerInfos(aActualInfo, aExpectedInfo) {
  * Waits for the download annotations to be set for the given page, required
  * because the addDownload method will add these to the database asynchronously.
  */
-function waitForAnnotation(sourceUriSpec, annotationName) {
+function waitForAnnotation(sourceUriSpec, annotationName, optionalValue) {
   return TestUtils.waitForCondition(async () => {
     let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {
       includeAnnotations: true,
     });
-    return pageInfo && pageInfo.annotations.has(annotationName);
+    if (optionalValue) {
+      return pageInfo?.annotations.get(annotationName) == optionalValue;
+    }
+    return pageInfo?.annotations.has(annotationName);
   }, `Should have found annotation ${annotationName} for ${sourceUriSpec}`);
 }
 
