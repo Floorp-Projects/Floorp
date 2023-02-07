@@ -2211,17 +2211,16 @@ bool Element::ShouldBlur(nsIContent* aContent) {
     return false;
   }
 
-  if (contentToBlur == aContent) return true;
+  if (contentToBlur == aContent) {
+    return true;
+  }
 
   ShadowRoot* root = aContent->GetShadowRoot();
   if (root && root->DelegatesFocus() &&
       contentToBlur->IsShadowIncludingInclusiveDescendantOf(root)) {
     return true;
   }
-  // if focus on this element would get redirected, then check the redirected
-  // content as well when blurring.
-  return (contentToBlur &&
-          nsFocusManager::GetRedirectedFocus(aContent) == contentToBlur);
+  return false;
 }
 
 bool Element::IsNodeOfType(uint32_t aFlags) const { return false; }

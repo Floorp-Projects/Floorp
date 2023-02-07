@@ -16,7 +16,4 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   readonly attribute AString label;
 
   attribute AString image;
-
-  // For editable menu lists only.
-  readonly attribute Element inputField;
 };
