@@ -21,9 +21,11 @@ EXTRA_PATHS = (
     "testing/mozbase/manifestparser",
     "testing/mozbase/mozfile",
     "testing/mozbase/mozprocess",
+    "testing/mozbase/moznetwork/moznetwork",
     "third_party/python/jsmin",
     "third_party/python/which",
     "docs/_addons",
+    "taskcluster/gecko_taskgraph/test",
 )
 
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
