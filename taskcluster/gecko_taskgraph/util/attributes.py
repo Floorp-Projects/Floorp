@@ -51,6 +51,7 @@ RUN_ON_PROJECT_ALIASES = {
     ),
     "release": lambda project: (project in RELEASE_PROJECTS or project == "toolchains"),
     "trunk": lambda project: (project in TRUNK_PROJECTS or project == "toolchains"),
+    "trunk-only": lambda project: project in TRUNK_PROJECTS,
     "autoland": lambda project: project in ("autoland", "toolchains"),
     "autoland-only": lambda project: project == "autoland",
     "mozilla-central": lambda project: project in ("mozilla-central", "toolchains"),

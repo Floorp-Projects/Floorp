@@ -115,17 +115,17 @@ browsertime-tp6m:
                 by-variant:
                     geckoview-no-fission:
                         by-test-platform:
-                            android-hw-(g5|a51).*shippable-qr.*: [trunk]
+                            android-hw-(g5|a51).*shippable-qr.*: [trunk-only]
                             default: []
                     default:
                         by-subtest:
                             wikipedia:
                                 by-test-platform:
-                                    android-hw-(g5|a51).*shippable-qr.*: [trunk]
+                                    android-hw-(g5|a51).*shippable-qr.*: [trunk-only]
                                     default: []
                             google-search-restaurants:
                                 by-test-platform:
-                                    android-hw-(g5|a51).*shippable-qr.*: [trunk]
+                                    android-hw-(g5|a51).*shippable-qr.*: [trunk-only]
                                     default: []
                             default:
                                 by-test-platform:
@@ -150,9 +150,15 @@ browsertime-tp6m-essential:
     run-on-projects:
         by-app:
             geckoview:
-                by-test-platform:
-                    android-hw-(g5|a51).*shippable.*: [trunk]
-                    default: []
+                by-subtest:
+                    allrecipes:
+                        by-test-platform:
+                            android-hw-(g5|a51).*shippable.*: [trunk]
+                            default: []
+                    default:
+                        by-test-platform:
+                            android-hw-(g5|a51).*shippable.*: [trunk-only]
+                            default: []
             default: []
     tier:
         by-app:
@@ -334,7 +340,7 @@ browsertime-speedometer3-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-a51.*shippable-qr.*: [trunk]
+                    android-hw-a51.*shippable-qr.*: [trunk-only]
                     default: []
             default: []
     treeherder-symbol: Btime(sp3)
@@ -353,7 +359,7 @@ browsertime-unity-webgl-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-a51-.*aarch64-shippable-qr.*: [trunk]
+                    android-hw-a51-.*aarch64-shippable-qr.*: [trunk-only]
                     default: []
             default:
                 by-test-platform:
