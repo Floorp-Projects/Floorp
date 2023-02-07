@@ -2628,6 +2628,9 @@ export class UrlbarView {
       commands.set(RESULT_MENU_COMMANDS.BLOCK, {
         l10n: { id: "urlbar-result-menu-remove-from-history" },
       });
+      commands.set(RESULT_MENU_COMMANDS.LEARN_MORE, {
+        l10n: { id: "urlbar-result-menu-learn-more" },
+      });
     }
     if (result.payload.isBlockable) {
       commands.set(RESULT_MENU_COMMANDS.BLOCK, {
@@ -2933,7 +2936,12 @@ export class UrlbarView {
           this.controller.handleDeleteEntry(null, result);
           break;
         case RESULT_MENU_COMMANDS.LEARN_MORE:
-          this.window.openTrustedLinkIn(result.payload.helpUrl, "tab");
+          this.window.openTrustedLinkIn(
+            result.payload.helpUrl ||
+              Services.urlFormatter.formatURLPref("app.support.baseURL") +
+                "awesome-bar-result-menu",
+            "tab"
+          );
           break;
       }
     }
