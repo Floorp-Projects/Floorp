@@ -19,7 +19,7 @@ XPIDL_MODULE = "migration"
 EXTRA_JS_MODULES += [
     "ChromeMigrationUtils.jsm",
     "ChromeProfileMigrator.jsm",
-    "FirefoxProfileMigrator.jsm",
+    "FloorpProfileMigrator.jsm",
     "MigrationUtils.jsm",
     "ProfileMigrator.jsm",
 ]

@@ -82,6 +82,7 @@
   <link rel="localization" href="preview/firefoxSuggest.ftl"/>
   <link rel="localization" href="browser/toolbarContextMenu.ftl"/>
   <link rel="localization" href="browser/screenshots.ftl"/>
+  <link rel="localization" href="browser/floorp.ftl"/>
 #ifdef NIGHTLY_BUILD
   <link rel="localization" href="preview/firefoxView.ftl"/>
 #endif
@@ -92,6 +93,7 @@
 # support MacOS specific features *must* go into the global-scripts.inc file so
 # that they can be shared with macWindow.inc.xhtml.
 #include global-scripts.inc
+#include ../../../floorp/browser/base/content/floorp-scripts.inc
 
 <script>
   /* eslint-env mozilla/browser-window */
@@ -137,6 +139,8 @@
 #include main-popupset.inc.xhtml
 
 #include appmenu-viewcache.inc.xhtml
+
+#include ../../../floorp/browser/base/content/BSM-context.inc.xhtml
 
   <html:dialog id="window-modal-dialog" style="visibility: hidden; height: 0; width: 0"/>
   <html:template id="window-modal-dialog-template">

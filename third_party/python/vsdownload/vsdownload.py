@@ -31,6 +31,8 @@ import sys
 import tempfile
 import zipfile
 
+socket.setdefaulttimeout(15)
+
 def getArgsParser():
     parser = argparse.ArgumentParser(description = "Download and install Visual Studio")
     parser.add_argument("--manifest", metavar="manifest", help="A predownloaded manifest file")

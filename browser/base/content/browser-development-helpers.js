@@ -27,6 +27,7 @@ var DevelopmentHelpers = {
   },
 
   addRestartShortcut() {
+    /*
     let command = document.createXULElement("command");
     command.setAttribute("id", "cmd_quickRestart");
     command.addEventListener("command", this.quickRestart, true);
@@ -45,5 +46,7 @@ var DevelopmentHelpers = {
     menuitem.setAttribute("label", "Restart (Developer)");
     menuitem.addEventListener("command", this.quickRestart, true);
     document.getElementById("menu_FilePopup").appendChild(menuitem);
+
+    */
   },
 };

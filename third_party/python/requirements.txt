@@ -106,8 +106,8 @@ iso8601==0.1.14; python_version <= "3.6" \
 jinja2==2.11.3; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" \
     --hash=sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419 \
     --hash=sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6
-jsmin==2.1.0 \
-    --hash=sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56
+jsmin==3.0.0 \
+    --hash=sha256:88fc1bd6033a47c5911dbcada7d279c7a8b7ad0841909590f6a742c20c4d2e08
 json-e==2.7.0 \
     --hash=sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a
 jsonschema==3.2.0 \

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html class="group-tab">
+<meta charset="UTF-8">
+<link rel="favicon" href="">
+<title></title>
+<link rel="stylesheet" href="/resources/ui-color.css">
+<style type="text/css"><!--
+  :root > * {
+    transition: opacity 0.25s ease-out;
+  }
+  :root:not(.initialized) > * {
+    opacity: 0;
+  }
+
+  :root {
+    background: var(--bg-color);
+    color: var(--text-color);
+    font: message-box;
+    line-height: 1.2;
+    --column-width: 20em;
+    --favicon-size: 16px;
+  }
+
+  main {
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    padding: 1em 0 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+  }
+
+  h1 {
+    display: flex;
+    flex-direction: row;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  h1::before {
+    background: var(--text-color);
+    content: "";
+    display: inline-block;
+    height: 1.25em;
+    margin-right: 0.25em;
+    mask: url("./icons/folder.svg") no-repeat center / 100%;
+    width: 1.25em;
+  }
+
+  h1 > * {
+    flex-grow: 1;
+  }
+
+  #title-field {
+    display: none;
+  }
+
+  header p {
+    margin: 0.5em 0 1em;
+  }
+
+  header {
+    border-bottom: 1px solid;
+    margin: 0 1em 1em;
+  }
+
+  #tabs {
+    display: flex;
+    flex-grow: 1;
+    overflow-x: auto;
+    padding: 0 1em 0 0;
+  }
+
+  #tabs li img,
+  #tabs li.use-default-favicon .default-favicon,
+  #tabs li.favicon-loading .default-favicon {
+    height: var(--favicon-size);
+    max-width: var(--favicon-size);
+    max-height: var(--favicon-size);
+    min-width: var(--favicon-size);
+    width: var(--favicon-size);
+  }
+
+  #tabs li.use-default-favicon img,
+  #tabs li.favicon-loading img {
+    display: none;
+  }
+
+  #tabs li.use-default-favicon .default-favicon,
+  #tabs li.favicon-loading .default-favicon {
+    background: var(--text-color);
+    display: none;
+    display: inline-block;
+    mask: url("./icons/defaultFavicon.svg") no-repeat center / 100%;
+  }
+
+  #tabs li.use-default-favicon.group-tab .default-favicon {
+    mask-image: url("./icons/folder.svg");
+  }
+
+  #tabs li {
+    display: block;
+    list-style: none;
+    margin: 0 0 0 0.15em;
+    padding: 0;
+    white-space: pre;
+  }
+
+  #tabs a {
+    align-items: start;
+    color: inherit;
+    display: flex;
+    flex-direction: row;
+    text-decoration: none;
+    padding: 0.25em 0;
+  }
+
+  #tabs a:hover {
+    text-decoration: underline;
+  }
+
+  #tabs .contextual-identity-marker {
+    background-color: transparent;
+    content: ' ';
+    display: inline-bock;
+    height: var(--favicon-size);
+    margin-right: 0.25em;
+    width: calc(var(--favicon-size) / 5);
+  }
+
+  #tabs a span.label {
+    display: inline-block;
+    vertical-alignt: calc(var(--favicon-size) - 1em);
+    margin: 0;
+    padding: 0 0 0 0.25em;
+    white-space: pre-wrap;
+  }
+
+  #tabs ul {
+    margin: 0 0 0 20px;
+    padding: 0;
+  }
+
+
+  :root {
+    --throbber-size: 1em;
+  }
+
+  @keyframes throbber {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  :root:not(.updating) .throbber {
+    display: none !important;
+  }
+
+  :root.updating .throbber {
+    display: inline-block;
+    font-size: var(--throbber-size);
+    height: var(--throbber-size);
+    max-height: var(--throbber-size);
+    max-width: var(--throbber-size);
+    overflow: hidden;
+    padding: 0;
+    pointer-events: none;
+    position: relative;
+    width: var(--throbber-size);
+
+    position: absolute;
+    top: calc(50% - var(--throbber-size));
+    left: calc(50% - var(--throbber-size));
+    transform: scale(2, 2);
+  }
+
+  :root.updating .throbber::before {
+    animation: throbber 1.05s steps(30) infinite; /* The FPS is reduced from 60 to 30 at https://bugzilla.mozilla.org/show_bug.cgi?id=1511095 */
+    background: Highlight;
+    box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.35);
+    content: "";
+    fill: Highlight;
+    height: var(--throbber-size);
+    position: absolute;
+    width: calc(var(--throbber-size) * 60);
+    mask: url("/sidebar/styles/throbber.svg") no-repeat left center / 100%;
+  }
+
+
+  #optionHint {
+    background: #0c0c0dCC;
+    border-radius: 0.5em;
+    box-shadow: 0.2em 0.2em 0.5em rgba(0, 0, 0, 0.35);
+    color: #efefef;
+    display: none;
+    line-height: 1;
+    margin: 1em 0 0 1em;
+    opacity: 0.75;
+    padding: 0.5em;
+    position: fixed;
+    right: 0.5em;
+    top: 0.5em;
+    transition: opacity 150ms ease-out;
+    z-idnex: 1000;
+  }
+  #optionHint:hover {
+    opacity: 1;
+  }
+
+  #optionHint a {
+    color: white;
+  }
+
+  #dismissOptionHint {
+    background: white;
+    border: none;
+    display: inline-block;
+    height: 1em;
+    mask: url("/sidebar/styles/icons/close-16.svg") no-repeat center / 100%;
+    vertical-align: text-bottom;
+    width: 1em;
+  }
+--></style>
+<style id="browser-theme-definition" type="text/css"></style>
+<style id="user-style-rules" type="text/css"></style>
+<!--
+  Don't load scripts statically, to prevent the tab is closed by Firefox.
+  See also: https://github.com/piroor/treestyletab/issues/1670#issuecomment-350964087
+<script defer type="application/javascript" src="/common/l10n.js"></script>
+<script defer type="application/javascript" src="./group-tab.js"></script>
+-->
+<main>
+<header>
+<h1><span id="title"></span><input id="title-field" type="text"></h1>
+<p><label><input id="temporary" type="checkbox">__MSG_groupTab_temporary_label__</label>
+   <label><input id="temporaryAggressive" type="checkbox">__MSG_groupTab_temporaryAggressive_label__</label></p>
+<p id="optionHint"><a href="#">__MSG_groupTab_options_label__</a>
+                   <button id="dismissOptionHint" title="__MSG_groupTab_options_dismiss__"></button></p>
+</header>
+<div id="tabs"></div>
+<span class="throbber"></span>
+</main>
+</html>

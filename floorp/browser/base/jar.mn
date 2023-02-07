@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+%  content browser %content/browser/ contentaccessible=yes
+
+  content/browser/browser-UI-custom.js          (content/browser-UI-custom.js)
+  content/browser/browser-manager-sidebar.js    (content/browser-manager-sidebar.js)
+  content/browser/browser-design.js             (content/browser-design.js)
+  content/browser/browser-startup.js            (content/browser-startup.js)
+  content/browser/browser-statusbar.js          (content/browser-statusbar.js)
+  content/browser/browser-tabbar.js             (content/browser-tabbar.js)
+  content/browser/browser-userChrome.js         (content/browser-userChrome.js)
+  content/browser/browser-preferences.js        (content/browser-preferences.js)
+  content/browser/browser-command.js            (content/browser-command.js)
+  content/browser/browser-undo-closed-tab.js    (content/browser-undo-closed-tab.js)
+  content/browser/browser-floorp.css            (content/browser-floorp.css)
+  content/browser/browser-pinned-tabs-title.js  (content/browser-pinned-tabs-title.js)
+  content/browser/browser-rest-mode.js          (content/browser-rest-mode.js)

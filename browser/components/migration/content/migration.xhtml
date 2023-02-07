@@ -18,6 +18,7 @@
   <html:link rel="localization" href="branding/brand.ftl"/>
   <html:link rel="localization" href="toolkit/global/wizard.ftl"/>
   <html:link rel="localization" href="browser/migration.ftl"/>
+  <html:link rel="localization" href="browser/floorp.ftl"/>
 </linkset>
 
 <script src="chrome://global/content/customElements.js"/>
@@ -31,7 +32,7 @@
 
     <radiogroup id="importSourceGroup" align="start">
 # NB: if you add items to this list, please also assign them a unique migrator ID in MigrationUtils.jsm
-      <radio id="firefox"   data-l10n-id="import-from-firefox"/>
+      <radio id="floorp"   data-l10n-id="import-from-floorp"/>
 #ifdef XP_WIN
       <radio id="chromium-edge"      data-l10n-id="import-from-edge"/>
       <radio id="edge" data-l10n-id="import-from-edge-legacy" />
@@ -42,6 +43,7 @@
       <radio id="chrome-beta"  data-l10n-id="import-from-chrome-beta"/>
       <radio id="chromium"  data-l10n-id="import-from-chromium"/>
       <radio id="canary"    data-l10n-id="import-from-canary" />
+      <radio id="vivaldi"     data-l10n-id="import-from-vivaldi"/>
       <radio id="chromium-360se"     data-l10n-id="import-from-360se"/>
 #elifdef XP_MACOSX
       <radio id="safari"    data-l10n-id="import-from-safari"/>
@@ -51,12 +53,14 @@
       <radio id="chromium-edge-beta"      data-l10n-id="import-from-edge-beta"/>
       <radio id="chromium"  data-l10n-id="import-from-chromium"/>
       <radio id="canary"    data-l10n-id="import-from-canary"/>
+      <radio id="vivaldi"     data-l10n-id="import-from-vivaldi"/>
 #elifdef XP_UNIX
       <radio id="brave"     data-l10n-id="import-from-brave"/>
       <radio id="chrome"    data-l10n-id="import-from-chrome"/>
       <radio id="chrome-beta"  data-l10n-id="import-from-chrome-beta"/>
       <radio id="chrome-dev"  data-l10n-id="import-from-chrome-dev"/>
       <radio id="chromium"  data-l10n-id="import-from-chromium"/>
+      <radio id="vivaldi"     data-l10n-id="import-from-vivaldi"/>
 #endif
       <radio id="nothing" data-l10n-id="import-from-nothing" hidden="true"/>
     </radiogroup>

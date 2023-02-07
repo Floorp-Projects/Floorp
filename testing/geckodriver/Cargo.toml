@@ -20,7 +20,7 @@ marionette = { path = "./marionette", version="0.2.0" }
 mozdevice = { path = "../mozbase/rust/mozdevice", version="0.5.0" }
 mozprofile = { path = "../mozbase/rust/mozprofile", version="0.8.0" }
 mozrunner = { path = "../mozbase/rust/mozrunner", version="0.14.0" }
-mozversion = { path = "../mozbase/rust/mozversion", version="0.4.3" }
+mozversion = { path = "../mozbase/rust/mozversion", version="0.5.0-alpha" }
 regex = { version="1.0", default-features = false, features = ["perf", "std"] }
 serde = "1.0"
 serde_derive = "1.0"

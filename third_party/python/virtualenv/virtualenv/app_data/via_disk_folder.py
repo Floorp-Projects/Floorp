@@ -14,7 +14,7 @@ virtualenv-app-data
 │       │           └── <install class> -> CopyPipInstall / SymlinkPipInstall
 │       │               └── <wheel name> -> pip-20.1.1-py2.py3-none-any
 │       └── embed
-│           └── 1
+│           └── 3 -> json format versioning
 │               └── *.json -> for every distribution contains data about newer embed versions and releases
 └─── unzip <in zip app we cannot refer to some internal files, so first extract them>
      └── <virtualenv version>
@@ -101,7 +101,7 @@ class AppDataDiskFolder(AppData):
                             filename.unlink()
 
     def embed_update_log(self, distribution, for_py_version):
-        return EmbedDistributionUpdateStoreDisk(self.lock / "wheel" / for_py_version / "embed" / "1", distribution)
+        return EmbedDistributionUpdateStoreDisk(self.lock / "wheel" / for_py_version / "embed" / "3", distribution)
 
     @property
     def house(self):

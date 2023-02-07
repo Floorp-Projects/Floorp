@@ -1,0 +1,366 @@
+{
+  "extensionName": { "message": "Tree Style Tab" },
+  "extensionDescription": { "message": "Показує вкладки вертикальним деревовидним списком." },
+
+  "sidebarTitle": { "message": "Tree Style Tab" },
+  "sidebarToggleDescription": { "message": "Перемикання на бічну панель \"Tree Style Tab\"." },
+
+  "command_indent":                { "message": "Додати поточну вкладку до дерева" },
+  "command_outdent":               { "message": "Від'єднати поточну вкладку від дерева" },
+  "command_tabMoveUp":             { "message": "Перемістити поточну вкладку вгору" },
+  "command_treeMoveUp":            { "message": "Перемістити поточне дерево вгору" },
+  "command_tabMoveDown":           { "message": "Перемістити поточну вкладку вниз" },
+  "command_treeMoveDown":          { "message": "Перемістити поточне дерево вниз" },
+  "command_focusPrevious":         { "message": "Перейти на попередню вкладку (розгорнути дерево)" },
+  "command_focusPreviousSilently": { "message": "Перейти на попередню вкладку (не розгортати дерево)" },
+  "command_focusNext":             { "message": "Перейти до наступної вкладки (розгорнути дерево)" },
+  "command_focusNextSilently":     { "message": "Перейти до наступної вкладки (не розгортати дерево)" },
+  "command_tabbarUp":              { "message": "Гортати вкладки вгору порядково" },
+  "command_tabbarPageUp":          { "message": "Гортати вкладки вгору посторінково" },
+  "command_tabbarHome":            { "message": "Гортати вкладки вгору" },
+  "command_tabbarDown":            { "message": "Гортати вкладки вниз порядково" },
+  "command_tabbarPageDown":        { "message": "Гортати вкладки вниз посторінково" },
+  "command_tabbarEnd":             { "message": "Гортати вкладки донизу" },
+
+  "tab_closebox_tab_tooltip": { "message": "Закрити вкладку" },
+  "tab_closebox_tree_tooltip": { "message": "Закрити дерево" },
+  "tab_soundButton_muted_tooltip": { "message": "Ввімк.звук" },
+  "tab_soundButton_playing_tooltip": { "message": "Вимк.звук" },
+  "tab_twisty_expanded_tooltip": { "message": "Згорнути дерево" },
+  "tab_twisty_collapsed_tooltip": { "message": "Розгорнути дерево" },
+  "tab_tree_tooltip": { "message": "$TREE$\n  ...і $COUNT$ більше вкладок(ки)",
+    "placeholders": {
+      "tree": { "content": "$1", "example": "* Tree\n  * Style\n    * Tab" },
+      "count": { "content": "$2", "example": "3" }
+    }},
+  "tabbar_newTabButton_tooltip": { "message": "Відкрити нову вкладку" },
+
+  "tabbar_newTabAction_tooltip":           { "message": "Відкрити нову вкладку як…" },
+  "tabbar_newTabAction_independent_label": { "message": "Окрему вкладку" },
+  "tabbar_newTabAction_independent_command": { "message": "Окрему вкладку" },
+  "tabbar_newTabAction_child_label":       { "message": "Дочірню вкладку" },
+  "tabbar_newTabAction_child_command":       { "message": "Дочірню вкладку" },
+  "tabbar_newTabAction_sibling_label":     { "message": "Однорівневу вкладку" },
+  "tabbar_newTabAction_sibling_command":     { "message": "Однорівневу вкладку" },
+  "tabbar_newTabAction_nextSibling_label": { "message": "Наступну однорівневу вкладку" },
+  "tabbar_newTabAction_nextSibling_command": { "message": "Наступну однорівневу вкладку" },
+
+  "tabbar_newTabWithContexualIdentity_tooltip": { "message": "Нова вкладка контейнера" },
+  "tabbar_newTabWithContexualIdentity_default": { "message": "За замовч." },
+
+  "groupTab_label": { "message": "$TITLE$ і більше",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_label_default": { "message": "Група" },
+  "groupTab_temporary_label": { "message": "Закрити цю вкладку, коли не залишиться дочірніх вкл." },
+  "groupTab_fromPinnedTab_label": { "message": "Вкладки з $TITLE$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+
+  "bookmarkFolder_label_default": { "message": "$TITLE$ і більше (%YEAR%.%MONTH%.%DATE%)",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Title" },
+      "year":  { "content": "$2", "example": "2018" },
+      "month": { "content": "$3", "example": "06" },
+      "date":  { "content": "$4", "example": "21" }
+    }},
+
+  "bookmark_notification_notPermitted_title": { "message": "Помилка дозволу" },
+  "bookmark_notification_notPermitted_message": { "message": "Не вдалося отримати дозвіл на створення закладок. Please click here to grant extra permissions." },
+
+  "dropLinksOnTabBehavior_message": { "message": "Як це відкрити?" },
+  "dropLinksOnTabBehavior_save":    { "message": "Обирати цей варіант і надалі" },
+  "dropLinksOnTabBehavior_load":    { "message": "Завантажити у цій вкладці" },
+  "dropLinksOnTabBehavior_newtab":  { "message": "Відкрити нову дочірню вкладку" },
+
+  "warnOnCloseTabs_message":   { "message": "Ви намагаєтеся закрити $NUMBER$ вкладки(ок). Впевнені, що бажаєте продовжити?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_warnAgain": { "message": "Попереджати коли я закриваю декілька вкладок" },
+  "warnOnCloseTabs_close":     { "message": "Закрити вкладки" },
+  "warnOnCloseTabs_cancel":    { "message": "Скасувати" },
+
+  "message_startup_description_1": { "message": "Tree Style Tab відроджується на основі технологій WebExtensions для Firefox 57 і більш пізніх версій. Його вертикальна панель вкладок доступна в якості однієї із (списку) бічних панелей. Якщо ви ще не бачите її, натисніть " },
+  "message_startup_description_key": { "message": " кнопку \"F1\" " },
+  "message_startup_description_2": { "message": " або натисніть " },
+  "message_startup_description_3": { "message": " кнопку на панелі інструментів щоб активувати бічну панель." },
+  "message_startup_migrateSessions_before": { "message": "Деревовидна структура вкладок Firefox 56 або старіше не переноситься автоматично. " },
+  "message_startup_migrateSessions_link_label": { "message": "Дивіться інструкцію щодо перенесення даних дерева вручну" },
+  "message_startup_migrateSessions_after": { "message": "." },
+  "migrateSessions_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/How-to-convert-session-information-from-old-TST-0.19.x-to-new-TST-2.x" },
+
+  "message_startup_requestPermissions_description": { "message": "⚠Є деякі функції, що потребують додаткових дозволів. Якщо ви хочете активувати їх, отримайте дозволи вручну." },
+  "message_startup_requestPermissions_bookmarks": { "message": "\"Додати дерево до закладок\" у контекстному меню на вкладках (потрібен доступ до закладок)." },
+  "message_startup_requestPermissions_allUrls":   { "message": "Не розгортати згорнуте дерево і пропускати згорнуті нащадки, перемикаючи фокус вкладок з допомогою гарячих клавіш." },
+
+  "message_startup_userChromeCss_notify": { "message": "Як приховати верхню панель вкладок і заголовок бічної панелі?" },
+  "message_startup_userChromeCss_description_1": { "message": "Через обмеження WebExtensions, TST не може контролювати верхню панель вкладок і заголовок бічної панелі. Якщо вам потрібно налаштувати їх, див. " },
+  "message_startup_userChromeCss_description_link_label": { "message": "приклади налаштування з допомогою userChrome.css" },
+  "message_startup_userChromeCss_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss" },
+  "message_startup_userChromeCss_description_2": { "message": ". Але " },
+  "message_startup_userChromeCss_description_note": { "message": "зважайте, що це дуже низькорівневі налаштування, тому вони можуть викликати проблеми на майбутніх версіях Firefox. Будь ласка, пробуйте це на свій страх і ризик, тільки коли ви знаєте, що робите, і якщо ви впевнені, що зможете вирішити проблеми самостійно." },
+  "message_startup_userChromeCss_description_3": { "message": "." },
+
+
+  "context_reloadTree_label": { "message": "Перезавантажити це дерево" },
+  "context_reloadTree_command": { "message": "Перезавантажити це дерево" },
+  "context_reloadDescendants_label": { "message": "Перезавантажити дочірні" },
+  "context_reloadDescendants_command": { "message": "Перезавантажити дочірні" },
+  "context_closeTree_label": { "message": "Закрити це дерево" },
+  "context_closeTree_command": { "message": "Закрити це дерево" },
+  "context_closeDescendants_label": { "message": "Закрити дочірні" },
+  "context_closeDescendants_command": { "message": "Закрити дочірні" },
+  "context_closeOthers_label": { "message": "Закрити інші вкладки, крім цього дерева" },
+  "context_closeOthers_command": { "message": "Закрити інші вкладки, крім цього дерева" },
+  "context_collapseAll_label": { "message": "Згорнути всі" },
+  "context_collapseAll_command": { "message": "Згорнути всі" },
+  "context_expandAll_label": { "message": "Розгорнути всі" },
+  "context_expandAll_command": { "message": "Розгорнути всі" },
+  "context_bookmarkTree_label": { "message": "Додати це дерево до закладок…" },
+  "context_bookmarkTree_command": { "message": "Додати це дерево до закладок…" },
+
+
+  "config_appearance_caption": { "message": "Вигляд" },
+
+  "config_sidebarPosition_caption": { "message": "Розташування вмісту бокової панелі:" },
+  "config_sidebarPosition_left": { "message": "Ліворуч" },
+  "config_sidebarPosition_right": { "message": "Праворуч" },
+  "config_sidebarPosition_description": { "message": "*Ця конфігурація не змінює положення бічної панелі. Вам потрібно натиснути перемикач в заголовку бічної панелі і  натиснути \"Перемістити бічну панель вправо\"." },
+
+  "config_scrollbarMode_caption": { "message": "Смуга прокрутки:" },
+  "config_scrollbarMode_default": { "message": "За замовч." },
+  "config_scrollbarMode_narrow":  { "message": "Вузька" },
+  "config_scrollbarMode_overlay": { "message": "Оверлей (накладання)" },
+  "config_scrollbarMode_hide":    { "message": "Сховати" },
+  "config_scrollbarMode_descriptionForMac": { "message": "*Лише \"Оверлей\" буде ефективним на останніх версіях macOS." },
+
+  "config_style_caption": { "message": "Тема" },
+  "config_style_photon": { "message": "Проста" },
+  "config_style_sidebar": { "message": "Бічна панель" },
+  "config_style_highcontrast": { "message": "Висококонтр." },
+  "config_style_none": { "message": "Без стилю" },
+  "config_style_none_info": { "message": " (*Будь ласка, прикрасьте все самостійно через \"Додаткові правила стилю  бічної панелі\")" },
+
+  "config_colorScheme_caption": { "message": "Колірна схема:" },
+  "config_colorScheme_photon": { "message": "Фотон" },
+  "config_colorScheme_systemColor": { "message": "Системні кольори" },
+
+  "config_maxTreeLevel_before": { "message": "Відступ вкладок до" },
+  "config_maxTreeLevel_after": { "message": "рівня(ів) (*Від'ємне значення означає \"нескінченно\")" },
+
+  "config_faviconizePinnedTabs_label": { "message": "Показувати закріплені вкладки тільки зі значком" },
+  "config_animation_label": { "message": "Ввімкнути ефекти анімації" },
+  "config_showCollapsedDescendantsByTooltip_label": { "message": "Показувати згорнуті дочірні елементи у підказці на вкладці" },
+
+
+  "config_context_caption": { "message": "Контекстне меню" },
+  "config_emulateDefaultContextMenu_label": { "message": "Імітація контекстного меню вкладок на бічній панелі" },
+  "config_extraItems_tabs_caption": { "message": "Додаткові пункти контекстного меню" },
+
+
+  "config_newTab_caption_TRANSLATION_NEED_UPDATED": { "message": "Поведінка нової вкладки" },
+
+  "config_newTabButton_caption__": { "message": "кнопка \"Нова вкладка\" " },
+  "config_longPressOnNewTabButton_before":               { "message": "Тривале затискання кнопки \"Нова вкладка\", щоб " },
+  "config_longPressOnNewTabButton_newTabAction":         { "message": "вказати, де відкриється нова вкладка" },
+  "config_longPressOnNewTabButton_contextualIdentities": { "message": "оберіть контейнер" },
+  "config_longPressOnNewTabButton_none":                 { "message": "(нічого)" },
+  "config_longPressOnNewTabButton_after":                { "message": "\u200b" },
+  "config_showNewTabActionSelector_label":               { "message": "Показувати кнопку вибору на кнопці \"Нова вкладка\", щоб вказати, де відкривається нова вкладка" },
+  "config_showContextualIdentitiesSelector_label":       { "message": "Показувати кнопку вибору контейнера на кнопці \"Нова вкладка\" " },
+
+  "__OLD__config_newTabAction_caption": { "message": "Поведінка маніпуляцій з новою вкладкою (інші кнопки панелі інструментів, гарячі клавіші та інше)" },
+  "config_autoAttachOnNewTabCommand_before": { "message": "Відкрити нову порожню вкладку як" },
+  "config_autoAttachOnNewTabCommand_independent": { "message": "окрему вкладку" },
+  "config_autoAttachOnNewTabCommand_child": { "message": "дочірню поточній" },
+  "config_autoAttachOnNewTabCommand_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnNewTabCommand_nextSibling": { "message": "наступний однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnNewTabCommand_after": { "message": "\u200b" },
+  "__OLD__config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before": { "message": "Визначити знову відкриту вкладку, відкриту з допомогою дії \"Нова вкладка\", коли вона відкривається з URL-ом: " },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonMiddleClick_before": { "message": "Кліком коліщатка миші відкрити нову порожню вкладку як " },
+  "config_autoAttachOnNewTabButtonMiddleClick_independent": { "message": "окрему вкладку" },
+  "config_autoAttachOnNewTabButtonMiddleClick_child": { "message": "дочірню поточній" },
+  "config_autoAttachOnNewTabButtonMiddleClick_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSibling": { "message": "наступний однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnNewTabButtonMiddleClick_after": { "message": "\u200b" },
+
+  "__OLD__config_autoAttachOnDuplicated_before": { "message": "Кліком коліщатка миші на кнопку \"Перезавантажити\", копіювати вкладку як" },
+  "config_autoAttachOnDuplicated_independent": { "message": "окрему вкладку" },
+  "config_autoAttachOnDuplicated_child": { "message": "дочірню поточній" },
+  "config_autoAttachOnDuplicated_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnDuplicated_nextSibling": { "message": "наступний однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnDuplicated_after": { "message": "\u200b" },
+
+  "__OLD__config_fromExternal_caption": { "message": "Коли нова вкладка із сайтом, аналогічним поточній вкладці, відкривається з адресного рядка (чи інше)" },
+  "config_autoAttachOnOpenedFromExternal_before": { "message": "Відкрити як" },
+  "config_autoAttachOnOpenedFromExternal_independent": { "message": "окрему вкладку" },
+  "config_autoAttachOnOpenedFromExternal_child": { "message": "дочірню поточній" },
+  "config_autoAttachOnOpenedFromExternal_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnOpenedFromExternal_nextSibling": { "message": "наступний однорівневий елемент потоautoAttachOnOpenedFromExternalчної вкладки" },
+  "config_autoAttachOnOpenedFromExternal_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToTabsFromExternal_label": { "message": "Успадковувати контейнер поточної вкладки" },
+
+  "__OLD__config_sameSiteOrphan_caption": { "message": "Коли нова вкладка із сайтом, аналогічним поточній вкладці, відкривається з адресного рядка (чи інше)" },
+  "config_autoAttachSameSiteOrphan_before": { "message": "Відкрити як" },
+  "config_autoAttachSameSiteOrphan_independent": { "message": "окрему вкладку" },
+  "config_autoAttachSameSiteOrphan_child": { "message": "дочірню поточній" },
+  "config_autoAttachSameSiteOrphan_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachSameSiteOrphan_nextSibling": { "message": "наступний однорівневий елемент поточної вкладки" },
+  "config_autoAttachSameSiteOrphan_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToSameSiteOrphan_label": { "message": "Успадковувати контейнер поточної вкладки" },
+
+  "config_autoAttachOnAnyOtherTrigger_before": { "message": "Відкрити як" },
+  "config_autoAttachOnAnyOtherTrigger_independent": { "message": "окрему вкладку" },
+  "config_autoAttachOnAnyOtherTrigger_child": { "message": "дочірню поточній" },
+  "config_autoAttachOnAnyOtherTrigger_sibling": { "message": "однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnAnyOtherTrigger_nextSibling": { "message": "наступний однорівневий елемент поточної вкладки" },
+  "config_autoAttachOnAnyOtherTrigger_after": { "message": "\u200b" },
+
+  "config_insertNewChildAt_caption": { "message": "Місце появи нових дочірніх вкладок" },
+  "config_insertNewChildAt_noControl": { "message": "Без контролю (вирішує Firefox чи інші додатки для вкладок)" },
+  "config_insertNewChildAt_top": { "message": "Додати у верхню частину дерева, як перший дочірній елемент" },
+  "config_insertNewChildAt_end": { "message": "Додати в кінець дерева" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Місце появи нових вкладок із закріплених вкладок" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "Без контролю (вирішує Firefox чи інші додатки для вкладок)" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "Додати у верхню частину дерева, як перший дочірній елемент" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "Додати в кінець дерева" },
+
+  "config_autoGroupNewTabs_before": { "message": "Автоматично групувати вкладки відкриті протягом" },
+  "config_autoGroupNewTabs_after": { "message": "мс" },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "Але не об'єднувати нові вкладки, відкриті протягом" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "мс коли нове вікно відкрито у складі відкритих вкладок як \"домашня сторінка\"." },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "Автоматично групувати вкладки відкриті із однієї закріпленої вкладки" },
+
+  "config_inheritContextualIdentityToNewChildTab_label": { "message": "Успадковувати контейнер батьківської вкладки новою порожньою вкладкою" },
+  "config_inheritContextualIdentityToNewChildTab_description": { "message": "\u200b" },
+
+
+  "config_treeBehavior_caption": { "message": "Поведінка дерева" },
+
+  "config_successorTabControlLevel_caption": { "message": "Коли поточна вкладка закривається як остання дочірня" },
+  "config_successorTabControlLevel_inTree": { "message": "Повернутись до попередньої вкладки дерева" },
+  "config_successorTabControlLevel_simulateDefault": { "message": "Завжди повертатися на наступну вкладку (за замовч. Firefox)" },
+  "config_successorTabControlLevel_legacyDescription": { "message": "*Поведінка Firefox's за замовч. для \"browser.tabs.selectOwnerOnClose\"=\"true\" спрацює раніше цієї конфігурації." },
+
+  "config_parentTabBehaviorForChanges_caption": { "message": "Коли батьківська вкладка переміщається чи закривається кимось ззовні бічної панелі дерева" },
+  "config_parentTabBehaviorForChanges_always": { "message": "Завжди діяти як з батьківською (перемістити чи закрити всі дочірні вкладки також), незалежно від того відобр. бічна панель дерева чи ні." },
+  "config_parentTabBehaviorForChanges_alwaysButOnlyWhenVisible": { "message": "Завжди діяти як з батьківською, коли бічна панель дерева відобр. / Діяти як з окремою вкладкою, коли бічна панель дерева невидима." },
+  "config_parentTabBehaviorForChanges_onlyInSidebar": { "message": "Діяти як з батьківською, коли дія викон. у межах бокової панелі дерева. / Діяти як з окремою вкладкою, коли дія викон. ззовні бокової панелі дерева" },
+
+  "config_autoCollapseExpandSubtreeOnAttach_label": { "message": "Коли з'явиться нове дерево, згорнути інші автоматично" },
+  "config_autoCollapseExpandSubtreeOnSelect_label": { "message": "Коли вкладка отримує фокус, розгорнути її дерево та автоматично згорнути інші " },
+  "config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label": { "message": "За винятком переміщення фокусу, викликаного закриттям поточної вкладки" },
+
+  "config_treeDoubleClickBehavior_caption":             { "message": "Двічі клацніть вкладку" },
+  "config_treeDoubleClickBehavior_toggleCollapsed":     { "message": "Згорнути/розгорнути дерево" },
+  "config_treeDoubleClickBehavior_none":                { "message": "Нічого" },
+  "config_parentTabOperationBehavior_caption": { "message": "Коли батьківська вкладка закривається з розгорнутим деревом" },
+  "config_parentTabOperationBehavior_entireTree": { "message": "Також закрити дочірні вкладки" },
+  "config_parentTabOperationBehavior_replaceWithGroupTab": { "message": "Замінити закриту батьківську вкладку порожньою і зберегти дерево" },
+  "config_parentTabOperationBehavior_promoteFirst": { "message": "Назначити першу дочірню вкладку новою батьківською" },
+  "config_parentTabOperationBehavior_promoteAll": { "message": "Назначити всі дочірні вкладки на рівень закритої батьківської вкладки" },
+  "config_promoteFirstChildForClosedRoot_label": { "message": "Назначити першу дочірню вкладку як нову батьківську, якщо у закритої батьківськ.вкл. немає батьківськ.вкл" },
+  "config_parentTabOperationBehavior_detach": { "message": "Звільнити дочірні вкладки з дерева" },
+
+  "config_dropLinksOnTabBehavior_caption": { "message": "При перетягуванні посилання чи URL-у на вкладку" },
+  "config_dropLinksOnTabBehavior_ask":     { "message": "Завжди запитувати що робити" },
+  "config_dropLinksOnTabBehavior_load":    { "message": "Завантажити у вкладку" },
+  "config_dropLinksOnTabBehavior_newtab":  { "message": "Відкрити нову дочірню вкладку" },
+
+  "config_warnOnCloseTabs_label": { "message": "Попереджати коли я закриваю декілька вкладок" },
+
+
+  "config_shortcuts_caption": { "message": "Гарячі клавіші" },
+
+
+  "config_advanced_caption": { "message": "Розширені налашт." },
+
+  "config_userStyleRules_label": { "message": "Додаткові правила стилю бічної панелі" },
+  "config_userStyleRules_description_before": { "message": "Для ознайомлення із додатковими можливостями " },
+  "config_userStyleRules_description_link_label": { "message": "читай про код-сніпети на TST-" },
+  "config_userStyleRules_description_after": { "message": "вікі." },
+  "config_userStyleRules_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-version-2x" },
+
+  "config_importedConfigsFromLegacy_label": { "message": "Перенесення старої конфігурації" },
+  "config_legacyConfigsNextMigrationVersion_before": { "message": "Перенесення конфігурацій з рівня конфігурації" },
+  "config_legacyConfigsNextMigrationVersion_after": { "message": "при наступному запуску" },
+  "config_legacyConfigsNextMigrationVersion_currentLevel_before": { "message": "(Доступний рівень конфігурації " },
+  "config_legacyConfigsNextMigrationVersion_currentLevel_after": { "message": " або менше)" },
+  "config_importedConfigsFromLegacy_placeholder": { "message": "Вставити перенесені дані старої конфігурації сюди" },
+  "migration_configs_notification_title": { "message": "Tree Style Tab: Конфігурації успішно перенесено" },
+  "migration_configs_notification_message": { "message": "Застосовано конфігурації старої версії." },
+  "migration_configsFailed_notification_title": { "message": "Tree Style Tab: Не вдалося перенести конфігурації" },
+  "migration_configsFailed_notification_message": { "message": "Процес перенесення перервано через непередбачені проблеми." },
+
+  "config_importedTreeStructureFromLegacy_label": { "message": "Перенесення старого дерева" },
+  "config_migrateSessionStore_before":     { "message": "Дивіться " },
+  "config_migrateSessionStore_link_label": { "message": "інструкцію про ручне перенесення інформації дерева" },
+  "config_migrateSessionStore_after":      { "message": "." },
+  "config_migrateLegacyTreeStructure_label": { "message": "Перенесення дерева вкладок при наступному запуску" },
+  "config_importedTreeStructureFromLegacy_placeholder": { "message": "Вставити перенесені дані старого дерева сюди" },
+  "migration_tree_notification_title": { "message": "Tree Style Tab: Дерево вкладок успішно перенесено" },
+  "migration_tree_notification_message_withSession": { "message": "$COUNT$ вікно(он) повністю відновлено, з інформацією попереднього сеансу.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "2" }
+    }},
+  "migration_tree_notification_message_withoutSession": { "message": "$COUNT$ вікно(он) - відновлено тільки їх деревоподібні структури. Вкладки цих вікон не містять жодної інформації з попереднього сеансу.",
+    "placeholders": {
+      "count": { "content": "$1", "example": "2" }
+    }},
+  "migration_treeFailed_notification_title": { "message": "Tree Style Tab: Не вдалося перенести дерево вкладок" },
+  "migration_treeFailed_notification_message": { "message": "Процес міграції переривається через непередбачені проблеми." },
+
+
+  "config_debug_caption": { "message": "Розробка" },
+
+  "config_debug_label": { "message": "Режим налагодження" },
+  "config_log_caption":               { "message": "Детальне лоґування" },
+  "config_logOnUpdated_label":        { "message": "Друк лоґів з tabs.onUpdated" },
+  "config_logOnMouseEvent_label":     { "message": "Друк лоґів з mouse events" },
+  "config_logOnScroll_label":         { "message": "Друк лоґів з auto scrolling" },
+  "config_logOnCollapseExpand_label": { "message": "Друк лоґів з collapse/expand" },
+  "config_logOnCache_label":          { "message": "Друк лоґів з cached tree" },
+  "config_logOnFakeContextMenu_label": { "message": "Друк лоґів з fake context menu" },
+  "config_simulateSVGContextFill_label": { "message": "Активувати обхідний шлях для баґу 1388193 і баґу 1421329 для симуляції SVG іконок (*Це може збільшити навантаження процесора. Для деактивації цієї опції необхідно активувати \"svg.context-properties.content.enabled\" у \"about:config\", поки ці помилки не будуть виправлені.)" },
+  "config_useCachedTree_label": { "message": "Оптимізація відновлення дерева з допомогою кешу" },
+  "config_useCachedTree_description": { "message": "*Будь ласка, спробуйте зняти прапорець і повторно встановити, щоб оновити кеш, якщо поведінка дерева стане нестабільною." },
+  "config_acceleratedTabCreation_label": { "message": "Прискорення операцій із повторно відкритими вкладками (*ПРИМІТКА: Можливо ви побачите нестабільну роботу вкладок.)" },
+  "config_acceleratedTabDuplication_label": { "message": "Прискорення операцій дублювання вкладок (*ПРИМІТКА: Можливо ви побачите нестабільну роботу вкладок.)" },
+  "config_maximumAcceptableDelayForTabDuplication_before": { "message": "Скасувати дублювання вкладок, коли це триває " },
+  "config_maximumAcceptableDelayForTabDuplication_after": { "message": "мілісекунд або більше." },
+  "config_sidebarScrollbarPosition_caption": { "message": "Положення смуги прокрутки:" },
+  "config_sidebarScrollbarPosition_auto": { "message": "Автоматично" },
+  "config_sidebarScrollbarPosition_left": { "message": "Ліворуч" },
+  "config_sidebarScrollbarPosition_right": { "message": "Праворуч" },
+
+  "config_requestPermissions_bookmarks": { "message": "Дозволити читання та створення закладок" },
+  "config_requestPermissions_allUrls_ctrlTabTracking":   { "message": "Не розгортати згорнуте дерево і пропускати згорнуті дочірні вкл., перемикаючи фокус вкладок з допомогою гарячих клавіш. (*Необхідно дозволити виконання скриптів на веб-сторінках.)" },
+
+  "config_requestPermissions_fallbackToToolbarButton_title": { "message": "Натисніть \"Tree Style Tab\" кнопку панелі інструментів" },
+  "config_requestPermissions_fallbackToToolbarButton_message": { "message": "Через баґ Firefox, Ви не зможете запитати дозвіл на цій сторінці. Будь ласка, натисніть \"Tree Style Tab\" кнопку панелі інструментів щоб отримати дозвіл." },
+
+  "config_all_caption": { "message": "Всі Конфігурації" },
+
+
+  "tabContextMenu_reload_label":      { "message": "Оновити вкладку" },
+  "tabContextMenu_mute_label":        { "message": "Вимкнути звук" },
+  "tabContextMenu_unmute_label":      { "message": "Ввімкнути звук" },
+
+  "tabContextMenu_pin_label":         { "message": "Закріпити вкладку" },
+  "tabContextMenu_unpin_label":       { "message": "Відкріпити вкладку" },
+  "tabContextMenu_duplicate_label":   { "message": "Дублювати вкладку" },
+  "tabContextMenu_tearOff_label":     { "message": "Перенести у нове вікно" },
+
+  "tabContextMenu_closeAfter_label":  { "message": "Закрити вкладки що праворуч" },
+  "tabContextMenu_closeOther_label":  { "message": "Закрити інші вкладки" },
+
+  "tabContextMenu_undoClose_label":   { "message": "Відновити закриту вкладку" },
+  "tabContextMenu_close_label":       { "message": "Закрити вкладку" }
+}

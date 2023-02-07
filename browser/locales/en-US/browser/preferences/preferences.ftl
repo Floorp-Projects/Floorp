@@ -636,7 +636,7 @@ home-restore-defaults =
 # "Firefox" should be treated as a brand and kept in English,
 # while "Home" and "(Default)" can be localized.
 home-mode-choice-default =
-    .label = Firefox Home (Default)
+    .label = Floorp Home (Default)
 
 home-mode-choice-custom =
     .label = Custom URLs…
@@ -663,10 +663,10 @@ choose-bookmark =
     .label = Use Bookmark…
     .accesskey = B
 
-## Home Section - Firefox Home Content Customization
+## Home Section - Floorp Home Content Customization
 
-home-prefs-content-header = Firefox Home Content
-home-prefs-content-description = Choose what content you want on your Firefox Home screen.
+home-prefs-content-header = Floorp Home Content
+home-prefs-content-description = Choose what content you want on your Floorp Home screen.
 
 home-prefs-search-header =
     .label = Web Search

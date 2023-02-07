@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<popupset>
+  <menupopup id="webpanel-context" onpopupshowing="BSMcontextmenu(event);">
+    <menuitem  id="muteMenu" class="needLoadedWebpanel" data-l10n-id="sidebar2-mute-and-unmute" label="Mute/Unmute this webpanel" accesskey="M" oncommand="muteSidebar();"/>
+    <menuitem  id="unloadWebpanelMenu" class="needLoadedWebpanel" data-l10n-id="sidebar2-unload-panel" label="Unload this webpanel" accesskey="U" oncommand="UnloadWebpanel();"/>
+    <menuseparator id="context-webpanel-separator"/>
+    <menuitem  id="changeUAWebpanelMenu" data-l10n-id="sidebar2-change-ua-panel" label="Switch User agent to Mobile/Desktop Version at this Webpanel" accesskey="R" oncommand="changeWebpanelUA();"/>
+    <menuitem  id="deleteWebpanelMenu" data-l10n-id="sidebar2-delete-panel" accesskey="D" oncommand="deleteWebpanel();"/>
+  </menupopup>
+
+  <menupopup id="all-panel-context" onpopupshowing="BSMcontextmenu(event);">
+    <menuitem  id="deleteWebpanelMenu" data-l10n-id="sidebar2-delete-panel" accesskey="D" oncommand="deleteWebpanel();"/>
+  </menupopup>
+
+  <menupopup id="width-size-context">
+    <menuitem  id="setWidthMenu" data-l10n-id="sidebar2-keep-width-for-global" label="Set width for All Panel" accesskey="S" oncommand="keepSidebar2boxWidthForGlobal();"/>
+  </menupopup>
+</popupset>

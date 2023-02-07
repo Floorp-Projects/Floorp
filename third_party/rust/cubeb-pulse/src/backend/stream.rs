@@ -355,6 +355,15 @@ impl<'ctx> PulseStream<'ctx> {
                         if got < 0 || got as usize != read_frames {
                             let _ = s.cancel_write();
                             stm.shutdown = true;
+                            if got < 0 {
+                                unsafe {
+                                    stm.state_callback.unwrap()(
+                                        stm as *mut _ as *mut _,
+                                        stm.user_ptr,
+                                        ffi::CUBEB_STATE_ERROR,
+                                    );
+                                }
+                            }
                             break;
                         }
                     }
@@ -1069,6 +1078,13 @@ impl<'ctx> PulseStream<'ctx> {
                         if got < 0 {
                             let _ = stm.cancel_write();
                             self.shutdown = true;
+                            unsafe {
+                                self.state_callback.unwrap()(
+                                    self as *const _ as *mut _,
+                                    self.user_ptr,
+                                    ffi::CUBEB_STATE_ERROR,
+                                );
+                            }
                             return;
                         }
 

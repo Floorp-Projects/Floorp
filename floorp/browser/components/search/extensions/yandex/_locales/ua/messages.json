@@ -1,0 +1,23 @@
+{
+  "extensionName": {
+    "message": "Яндекс"
+  },
+  "extensionDescription": {
+    "message": "Воспользуйтесь Яндексом для поиска в Интернете."
+  },
+  "searchUrl": {
+    "message": "https://yandex.ua/yandsearch"
+  },
+  "searchForm": {
+    "message": "https://www.yandex.ua/"
+  },
+  "suggestUrl": {
+    "message": "https://suggest.yandex.ua/suggest-ff.cgi?part={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "text={searchTerms}"
+  },
+  "extensionIcon": {
+    "message": "yandex-ru.ico"
+  }
+}

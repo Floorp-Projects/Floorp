@@ -1746,7 +1746,7 @@ class ExtensionData {
 
       // Privileged extensions may request access to "about:"-URLs, such as
       // about:reader.
-      let match = /^([a-z*]+):\/\/([^/]*)\/|^about:/.exec(permission);
+      let match = /^([a-z\-*]+):\/\/([^/]*)\/|^about:/.exec(permission);
       if (!match) {
         throw new Error(`Unparseable host permission ${permission}`);
       }
@@ -2953,6 +2953,16 @@ class Extension extends ExtensionData {
         });
         this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
       }
+
+      // Automatic allow Private browsing permission if uBlock origin or Gesturefy is install
+
+      if(this.id=="uBlock0@raymondhill.net" || this.id=="{506e023c-7f2b-40a3-8066-bc5deb40aebe}"){
+         ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+     }      
 
       // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and
       // upgrade/downgrade startups.

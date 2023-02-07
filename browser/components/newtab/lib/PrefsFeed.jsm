@@ -14,6 +14,12 @@ const { Prefs } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
@@ -38,6 +44,9 @@ this.PrefsFeed = class PrefsFeed {
           data: { name, value },
         })
       );
+      if(name == "floorp.background.type" && value == 3){
+        this.getImage()
+      }
     }
   }
 
@@ -100,13 +109,11 @@ this.PrefsFeed = class PrefsFeed {
     NimbusFeatures.pocketNewtab.onUpdate(this.onPocketExperimentUpdated);
 
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
-
     // Get the initial value of each activity stream pref
     const values = {};
     for (const name of this._prefMap.keys()) {
       values[name] = this._prefs.get(name);
     }
-
     // These are not prefs, but are needed to determine stuff in content that can only be
     // computed in main process
     values.isPrivateBrowsingEnabled = PrivateBrowsingUtils.enabled;
@@ -182,6 +189,7 @@ this.PrefsFeed = class PrefsFeed {
       "discoverystream.sponsored-collections.enabled",
       false
     );
+    this._setIntPref(values, "floorp.background.type", 0);
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
@@ -205,6 +213,45 @@ this.PrefsFeed = class PrefsFeed {
         },
       })
     );
+      Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder",this.getImage.bind(this))
+      Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions",this.getImage.bind(this))
+      Services.obs.addObserver(this.getImage.bind(this), "floorp-newtab-background-update");
+    this.getImage()
+  }
+
+  async getImage(){
+    if(Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 3){
+    let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 )
+    let folderExists = await IOUtils.exists(tPath)
+    if(folderExists){
+      let imagesPath = await IOUtils.getChildren(tPath)
+      let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","").split(",").join("|")})+$`)
+      let imagesDataPath = []
+      if(imagesPath != 0){
+        let reader = new FileReader();
+        for(let elem of imagesPath){
+          if(!str.test(elem)) continue
+          let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
+          let fileBlob = await (await fetch(filePath)).blob()
+          let icon_data_url = await new Promise(resolve => {
+            reader.addEventListener("load", function () {
+              resolve(this.result);
+            })
+            reader.readAsDataURL(fileBlob);
+          });
+          imagesDataPath.push(icon_data_url)
+        }
+        
+      }
+      this.store.dispatch(
+        ac.BroadcastToContent({
+          type: at.PREF_CHANGED,
+          data: { name:"backgroundPaths", value:imagesDataPath  },
+        })
+      );
+      
+    }
+  }
   }
 
   uninit() {

@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<g fill="context-fill" fill-opacity="context-fill-opacity" fill-rule="evenodd">
+	<path d="M16,1H4C2.346,1,1,2.346,1,4v12c0,1.654,1.346,3,3,3h12c1.654,0,3-1.346,3-3V4C19,2.346,17.654,1,16,1z
+		 M8,12c-0.5,0-1-0.5-1-1V8h10v4H8z M3,4c0-0.551,0.449-1,1-1h12c0.552,0,1,0.449,1,1v3H4C3.5,7,3,6.5,3,6V4z M16,17h-4
+		c-0.5,0-1-0.5-1-1v-3h6v3C17,16.552,16.552,17,16,17z"/>
+	<circle cx="5" cy="5" r="1"/>
+	<circle cx="9" cy="10" r="1"/>
+	<circle cx="13" cy="15" r="1"/>
+</g>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "위키백과 (ko)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, the free encyclopedia"
+  },
+  "searchUrl": {
+    "message": "https://ko.wikipedia.org/wiki/특수기능:찾기"
+  },
+  "searchForm": {
+    "message": "https://ko.wikipedia.org/wiki/특수기능:찾기?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ko.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

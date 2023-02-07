@@ -46,13 +46,13 @@ add_task(async function setup() {
 add_task(async function test_1() {
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     xpi1.path
   );
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID2,
     xpi2.path
   );
@@ -75,13 +75,13 @@ add_task(async function test_1() {
 add_task(async function test_2() {
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     null
   );
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID2,
     null
   );
@@ -97,13 +97,13 @@ add_task(async function test_2() {
 add_task(async function test_3() {
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     xpi2.path
   );
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID2,
     xpi1.path
   );
@@ -122,13 +122,13 @@ add_task(async function test_4() {
 
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     null
   );
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID2,
     null
   );
@@ -137,7 +137,7 @@ add_task(async function test_4() {
 
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     xpi1.path
   );
@@ -146,13 +146,13 @@ add_task(async function test_4() {
 
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID1,
     null
   );
   registry.setValue(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    "SOFTWARE\\Ablaze\\XPCShell\\Extensions",
     ID2,
     xpi1.path
   );

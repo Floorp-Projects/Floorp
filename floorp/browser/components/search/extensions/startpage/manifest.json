@@ -1,0 +1,29 @@
+{
+    "name": "Startpage",
+    "description": "Startpage Search Engine",
+    "manifest_version": 2,
+    "version": "1.1",
+    "applications": {
+      "gecko": {
+        "id": "startpage@search.mozilla.org"
+      }
+    },
+    "hidden": true,
+    "icons": {
+      "16": "favicon.ico"
+    },
+    "web_accessible_resources": [
+      "favicon.ico"
+    ],
+    "chrome_settings_overrides": {
+      "search_provider": {
+        "keyword": "@st",
+        "name": "Startpage",
+        "search_url": "https://www.startpage.com/sp/search",
+        "search_form": "https://www.startpage.com/",
+        "search_url_post_params": "query={searchTerms}&segment=startpage.meta",
+        "suggest_url": "https://www.startpage.com/suggestions",
+        "suggest_url_get_params": "q={searchTerms}&format=opensearch"
+      }
+    }
+  }
