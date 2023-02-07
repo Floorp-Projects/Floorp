@@ -29,6 +29,8 @@ class RemoteQuotaObjectParent : public PRemoteQuotaObjectParent {
  private:
   virtual ~RemoteQuotaObjectParent();
 
+  nsresult CheckFileAfterClose();
+
   RefPtr<CanonicalQuotaObject> mCanonicalQuotaObject;
 
   nsCOMPtr<RemoteQuotaObjectParentTracker> mTracker;
