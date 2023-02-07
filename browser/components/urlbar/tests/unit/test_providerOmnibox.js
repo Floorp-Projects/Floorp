@@ -718,6 +718,8 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
           { content: "h", description: "eigth suggestion" },
           { content: "i", description: "ninth suggestion" },
           { content: "j", description: "tenth suggestion" },
+          { content: "k", description: "eleventh suggestion" },
+          { content: "l", description: "twelfth suggestion" },
         ]);
         // The API doesn't have a way to notify when addition is complete.
         do_timeout(1000, () => {
@@ -770,6 +772,26 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
         keyword,
         content: `${keyword} e`,
         description: "fifth suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} f`,
+        description: "sixth suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} g`,
+        description: "seventh suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} h`,
+        description: "eigth suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} i`,
+        description: "ninth suggestion",
       }),
     ],
   });
