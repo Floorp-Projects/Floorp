@@ -32,9 +32,7 @@
 #ifndef ZYDIS_METAINFO_H
 #define ZYDIS_METAINFO_H
 
-#include "zydis/ZydisExportConfig.h"
-#include "zydis/Zycore/Defines.h"
-#include "zydis/Zycore/Types.h"
+#include "zydis/Zydis/Defines.h"
 
 #ifdef __cplusplus
 extern "C" {
