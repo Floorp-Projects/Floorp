@@ -1793,11 +1793,12 @@ impl Device {
         let is_adreno_4xx = renderer_name.starts_with("Adreno (TM) 4");
         let requires_alpha_target_full_clear = is_adreno_4xx;
 
-        // Testing on Intel and nVidia GPUs showed large performance wins applying a scissor rect
-        // when clearing render targets. Assume this is the best default. On Mali, however, it is
-        // much more efficient to clear the entire render target (due to allowing it to skip reading
-        // the previous contents in to tile memory). This may be true for other GPUs too.
-        let prefers_clear_scissor = !renderer_name.starts_with("Mali");
+        // Testing on Intel and nVidia GPUs, as well as software webrender, showed large performance
+        // wins applying a scissor rect when clearing render targets. Assume this is the best
+        // default. On mobile GPUs, however, it can be much more efficient to clear the entire
+        // render target. For now, enable the scissor everywhere except Android hardware
+        // webrender. We can tweak this further if needs be.
+        let prefers_clear_scissor = !cfg!(target_os = "android") || is_software_webrender;
 
         let mut supports_render_target_invalidate = true;
 
