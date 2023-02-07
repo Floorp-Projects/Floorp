@@ -116,7 +116,6 @@ export class ChromeProfileMigrator extends MigratorBase {
         let possibleResourcePromises = [
           GetBookmarksResource(profileFolder, this.constructor.key),
           GetHistoryResource(profileFolder),
-          GetCookiesResource(profileFolder),
         ];
         if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
           possibleResourcePromises.push(
@@ -504,109 +503,6 @@ async function GetHistoryResource(aProfileFolder) {
           aCallback(false);
         }
       );
-    },
-  };
-}
-
-async function GetCookiesResource(aProfileFolder) {
-  let cookiesPath = PathUtils.join(aProfileFolder, "Cookies");
-  if (!(await IOUtils.exists(cookiesPath))) {
-    return null;
-  }
-
-  return {
-    type: MigrationUtils.resourceTypes.COOKIES,
-
-    async migrate(aCallback) {
-      // Get columns names and set is_sceure, is_httponly fields accordingly.
-      let columns = await MigrationUtils.getRowsFromDBWithoutLocks(
-        cookiesPath,
-        "Chrome cookies",
-        `PRAGMA table_info(cookies)`
-      ).catch(ex => {
-        console.error(ex);
-        aCallback(false);
-      });
-      // If the promise was rejected we will have already called aCallback,
-      // so we can just return here.
-      if (!columns) {
-        return;
-      }
-      columns = columns.map(c => c.getResultByName("name"));
-      let isHttponly = columns.includes("is_httponly")
-        ? "is_httponly"
-        : "httponly";
-      let isSecure = columns.includes("is_secure") ? "is_secure" : "secure";
-
-      let source_scheme = columns.includes("source_scheme")
-        ? "source_scheme"
-        : `"${Ci.nsICookie.SCHEME_UNSET}" as source_scheme`;
-
-      // We don't support decrypting cookies yet so only import plaintext ones.
-      let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
-        cookiesPath,
-        "Chrome cookies",
-        `SELECT host_key, name, value, path, expires_utc, ${isSecure}, ${isHttponly}, encrypted_value, ${source_scheme}
-        FROM cookies
-        WHERE length(encrypted_value) = 0`
-      ).catch(ex => {
-        console.error(ex);
-        aCallback(false);
-      });
-
-      // If the promise was rejected we will have already called aCallback,
-      // so we can just return here.
-      if (!rows) {
-        return;
-      }
-
-      let fallbackExpiryDate = 0;
-      for (let row of rows) {
-        let host_key = row.getResultByName("host_key");
-        if (host_key.match(/^\./)) {
-          // 1st character of host_key may be ".", so we have to remove it
-          host_key = host_key.substr(1);
-        }
-
-        let schemeType = Ci.nsICookie.SCHEME_UNSET;
-        switch (row.getResultByName("source_scheme")) {
-          case 1:
-            schemeType = Ci.nsICookie.SCHEME_HTTP;
-            break;
-          case 2:
-            schemeType = Ci.nsICookie.SCHEME_HTTPS;
-            break;
-        }
-
-        try {
-          let expiresUtc =
-            lazy.ChromeMigrationUtils.chromeTimeToDate(
-              row.getResultByName("expires_utc"),
-              fallbackExpiryDate
-            ) / 1000;
-          // No point adding cookies that don't have a valid expiry.
-          if (!expiresUtc) {
-            continue;
-          }
-
-          Services.cookies.add(
-            host_key,
-            row.getResultByName("path"),
-            row.getResultByName("name"),
-            row.getResultByName("value"),
-            row.getResultByName(isSecure),
-            row.getResultByName(isHttponly),
-            false,
-            parseInt(expiresUtc),
-            {},
-            Ci.nsICookie.SAMESITE_NONE,
-            schemeType
-          );
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      aCallback(true);
     },
   };
 }

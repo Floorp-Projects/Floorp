@@ -10,6 +10,9 @@ import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
+const EDGE_COOKIE_PATH_OPTIONS = ["", "#!001\\", "#!002\\"];
+const EDGE_COOKIES_SUFFIX = "MicrosoftEdge\\Cookies";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ESEDBReader: "resource:///modules/ESEDBReader.sys.mjs",
@@ -464,6 +467,23 @@ EdgeBookmarksMigrator.prototype = {
   },
 };
 
+function getCookiesPaths() {
+  let folders = [];
+  let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
+  if (edgeDir) {
+    edgeDir.append("AC");
+    for (let path of EDGE_COOKIE_PATH_OPTIONS) {
+      let folder = edgeDir.clone();
+      let fullPath = path + EDGE_COOKIES_SUFFIX;
+      folder.appendRelativePath(fullPath);
+      if (folder.exists() && folder.isReadable() && folder.isDirectory()) {
+        folders.push(fullPath);
+      }
+    }
+  }
+  return folders;
+}
+
 /**
  * Edge (EdgeHTML) profile migrator
  */
@@ -487,7 +507,6 @@ export class EdgeProfileMigrator extends MigratorBase {
   getResources() {
     let resources = [
       new EdgeBookmarksMigrator(),
-      MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
       new EdgeTypedURLMigrator(),
       new EdgeTypedURLDBMigrator(),
       new EdgeReadingListMigrator(),
@@ -511,11 +530,7 @@ export class EdgeProfileMigrator extends MigratorBase {
       "edb.log"
     );
     let dbPath = lazy.gEdgeDatabase.path;
-    let cookieMigrator = MSMigrationUtils.getCookiesMigrator(
-      MSMigrationUtils.MIGRATION_TYPE_EDGE
-    );
-    let cookiePaths = cookieMigrator._cookiesFolders.map(f => f.path);
-    let datePromises = [logFilePath, dbPath, ...cookiePaths].map(path => {
+    let datePromises = [logFilePath, dbPath, ...getCookiesPaths()].map(path => {
       return IOUtils.stat(path)
         .then(info => info.lastModified)
         .catch(() => 0);
