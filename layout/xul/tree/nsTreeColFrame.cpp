@@ -114,9 +114,8 @@ class nsDisplayXULTreeColSplitterTarget final : public nsDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULTreeColSplitterTarget)
 
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*>* aOutFrames) override;
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
   NS_DISPLAY_DECL_NAME("XULTreeColSplitterTarget",
                        TYPE_XUL_TREE_COL_SPLITTER_TARGET)
 };
@@ -154,16 +153,9 @@ void nsDisplayXULTreeColSplitterTarget::HitTest(
 
 void nsTreeColFrame::BuildDisplayListForChildren(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  if (!aBuilder->IsForEventDelivery()) {
-    nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);
-    return;
+  nsBoxFrame::BuildDisplayListForChildren(aBuilder, aLists);
+  if (aBuilder->IsForEventDelivery()) {
+    aLists.Content()->AppendNewToTop<nsDisplayXULTreeColSplitterTarget>(
+        aBuilder, this);
   }
-
-  nsDisplayListCollection set(aBuilder);
-  nsBoxFrame::BuildDisplayListForChildren(aBuilder, set);
-
-  WrapListsInRedirector(aBuilder, set, aLists);
-
-  aLists.Content()->AppendNewToTop<nsDisplayXULTreeColSplitterTarget>(aBuilder,
-                                                                      this);
 }
