@@ -209,8 +209,8 @@ class ScriptLoadRequest
   };
 
   bool IsFetching() const { return mState == State::Fetching; }
-
   bool IsCompiling() const { return mState == State::Compiling; }
+  bool IsLoadingImports() const { return mState == State::LoadingImports; }
 
   bool IsReadyToRun() const {
     return mState == State::Ready || mState == State::Canceled;
