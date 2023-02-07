@@ -7780,12 +7780,6 @@ existing_tasks:
     test-android-em-4.3-arm7-api-16/opt-xpcshell-6: GsOZXKxtRjK85yNh12Nk4A
     test-android-em-4.3-arm7-api-16/opt-xpcshell-7: SQJ8DI0EQoqHmPU-Drl83A
     test-android-em-4.3-arm7-api-16/opt-xpcshell-8: cMsEdnX4R1eKkU9laXzeNQ
-    test-android-hw-p2-8-0-arm7-api-16/debug-mochitest-media-1: ONCH4bdORgG-dFCGnWVqQA
-    test-android-hw-p2-8-0-arm7-api-16/debug-mochitest-media-2: APKEG_2vTJCsKoW7npjHxQ
-    test-android-hw-p2-8-0-arm7-api-16/debug-mochitest-media-3: JSlBjdC-RNOvO5SyVGqYPg
-    test-android-hw-p2-8-0-arm7-api-16/opt-mochitest-media-1: D256-p43Rjy6F2YgO4jIAw
-    test-android-hw-p2-8-0-arm7-api-16/opt-mochitest-media-2: Du6Q0SKBS5u6Ee06lwJ9UA
-    test-android-hw-p2-8-0-arm7-api-16/opt-mochitest-media-3: bUaiIAchRYS6Qyt-vXocCA
     test-linux32-devedition/opt-cppunit: MCkyRWeRTrGIBt2X8TghHQ
     test-linux32-devedition/opt-crashtest-e10s: HHJAJsUQSVOICH3YLwNhDQ
     test-linux32-devedition/opt-firefox-ui-functional-local-e10s: fLR7IfykT9qbqZew4WxpqQ
