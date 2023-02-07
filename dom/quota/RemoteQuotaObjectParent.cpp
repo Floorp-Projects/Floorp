@@ -8,6 +8,7 @@
 
 #include "CanonicalQuotaObject.h"
 #include "mozilla/dom/quota/RemoteQuotaObjectParentTracker.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::dom::quota {
@@ -31,15 +32,28 @@ mozilla::ipc::IPCResult RemoteQuotaObjectParent::RecvMaybeUpdateSize(
 }
 
 void RemoteQuotaObjectParent::ActorDestroy(ActorDestroyReason aWhy) {
-  // XXX Check that the child properly used `MaybeUpdateSize` before each
-  // write, so the file size on disk matches mCanonicalQuotaObject::mSize.
-  // If the size doesn't match, do necessary adjustments.
+  QM_WARNONLY_TRY(MOZ_TO_RESULT(CheckFileAfterClose()));
 
   mCanonicalQuotaObject = nullptr;
 
   if (mTracker) {
     mTracker->UnregisterRemoteQuotaObjectParent(WrapNotNullUnchecked(this));
   }
+}
+
+nsresult RemoteQuotaObjectParent::CheckFileAfterClose() {
+  MOZ_ASSERT(mCanonicalQuotaObject);
+
+  QM_TRY_INSPECT(const auto& file,
+                 QM_NewLocalFile(mCanonicalQuotaObject->Path()));
+
+  QM_TRY_UNWRAP(auto size, MOZ_TO_RESULT_INVOKE_MEMBER(file, GetFileSize));
+
+  DebugOnly<bool> res =
+      mCanonicalQuotaObject->MaybeUpdateSize(size, /* aTruncate */ true);
+  MOZ_ASSERT(res);
+
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom::quota
