@@ -198,7 +198,7 @@ function getSnapshot(acc, a11yService, targetActor) {
  */
 class AccessibleActor extends Actor {
   constructor(walker, rawAccessible) {
-    super(null, accessibleSpec);
+    super(walker.conn, accessibleSpec);
     this.walker = walker;
     this.rawAccessible = rawAccessible;
 
@@ -220,14 +220,6 @@ class AccessibleActor extends Actor {
       },
       configurable: true,
     });
-  }
-
-  /**
-   * Instead of storing a connection object, the NodeActor gets its connection
-   * from its associated walker.
-   */
-  get conn() {
-    return this.walker.conn;
   }
 
   destroy() {

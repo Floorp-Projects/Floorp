@@ -62,10 +62,6 @@ function defaults(typeName, observationTopics) {
   return {
     typeName,
 
-    get conn() {
-      return this.storageActor.conn;
-    },
-
     /**
      * Returns a list of currently known hosts for the target window. This list
      * contains unique hosts from the window + all inner windows. If

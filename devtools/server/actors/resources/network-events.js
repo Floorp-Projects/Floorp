@@ -78,10 +78,6 @@ class NetworkEventWatcher {
     this.pool.destroy();
   }
 
-  get conn() {
-    return this.watcherActor.conn;
-  }
-
   /**
    * Instruct to keep reference to previous document requests or not.
    * If persist is disabled, we will clear all informations about previous document

@@ -53,7 +53,6 @@ loader.lazyRequireGetter(
 class TabDescriptorActor extends Actor {
   constructor(connection, browser) {
     super(connection, tabDescriptorSpec);
-    this._conn = connection;
     this._browser = browser;
   }
 
@@ -135,7 +134,7 @@ class TabDescriptorActor extends Actor {
   }
 
   async getTarget() {
-    if (!this._conn) {
+    if (!this.conn) {
       return {
         error: "tabDestroyed",
         message: "Tab destroyed while performing a TabDescriptorActor update",
@@ -168,7 +167,7 @@ class TabDescriptorActor extends Actor {
         }
 
         const connectForm = await connectToFrame(
-          this._conn,
+          this.conn,
           this._browser,
           onDestroy
         );

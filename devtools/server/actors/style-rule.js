@@ -82,7 +82,7 @@ const SUPPORTED_RULE_TYPES = [
  */
 class StyleRuleActor extends Actor {
   constructor(pageStyle, item) {
-    super(null, styleRuleSpec);
+    super(pageStyle.conn, styleRuleSpec);
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
     this._parentSheet = null;
@@ -116,10 +116,6 @@ class StyleRuleActor extends Actor {
         },
       };
     }
-  }
-
-  get conn() {
-    return this.pageStyle.conn;
   }
 
   destroy() {

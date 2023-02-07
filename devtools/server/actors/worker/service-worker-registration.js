@@ -43,7 +43,6 @@ class ServiceWorkerRegistrationActor extends Actor {
    */
   constructor(conn, registration) {
     super(conn, serviceWorkerRegistrationSpec);
-    this._conn = conn;
     this._registration = registration;
     this._pushSubscriptionActor = null;
 
@@ -221,7 +220,7 @@ class ServiceWorkerRegistrationActor extends Actor {
             return;
           }
           pushSubscriptionActor = new PushSubscriptionActor(
-            this._conn,
+            this.conn,
             subscription
           );
           this._pushSubscriptionActor = pushSubscriptionActor;
@@ -247,15 +246,15 @@ class ServiceWorkerRegistrationActor extends Actor {
     } = this._registration;
 
     this._evaluatingWorker = new ServiceWorkerActor(
-      this._conn,
+      this.conn,
       evaluatingWorker
     );
     this._installingWorker = new ServiceWorkerActor(
-      this._conn,
+      this.conn,
       installingWorker
     );
-    this._waitingWorker = new ServiceWorkerActor(this._conn, waitingWorker);
-    this._activeWorker = new ServiceWorkerActor(this._conn, activeWorker);
+    this._waitingWorker = new ServiceWorkerActor(this.conn, waitingWorker);
+    this._activeWorker = new ServiceWorkerActor(this.conn, activeWorker);
 
     // Add the ServiceWorker actors as children of this ServiceWorkerRegistration actor,
     // assigning them valid actorIDs.
