@@ -1940,11 +1940,13 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       return NS_OK;
     }
 
+#ifndef NIGHTLY_BUILD
     if (mHasDriverVersionMismatch) {
       aFailureId = "FEATURE_FAILURE_MISMATCHED_VERSION";
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION;
       return NS_OK;
     }
+#endif
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(
