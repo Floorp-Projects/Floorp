@@ -65,7 +65,7 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
                 [aResolver](const auto& aRv) { aResolver(ToNSResult(aRv)); });
 
             InvokeAsync(
-                dataManager->MutableIOTargetPtr(), __func__,
+                dataManager->MutableIOTaskQueuePtr(), __func__,
                 [dataManager =
                      RefPtr<fs::data::FileSystemDataManager>(dataManager),
                  rootId, parentEndpoint = std::move(parentEndpoint)]() mutable {

@@ -83,7 +83,9 @@ class FileSystemDataManager
     return mBackgroundTarget.get();
   }
 
-  nsISerialEventTarget* MutableIOTargetPtr() const {
+  nsIEventTarget* MutableIOTargetPtr() const { return mIOTarget.get(); }
+
+  nsISerialEventTarget* MutableIOTaskQueuePtr() const {
     return mIOTaskQueue.get();
   }
 
