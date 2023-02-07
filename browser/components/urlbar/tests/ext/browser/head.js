@@ -117,7 +117,8 @@ function add_settings_tasks(prefName, type, background) {
       secondValue = true;
       break;
     default:
-      Assert.fail(
+      Assert.ok(
+        false,
         `"type" parameter must be one of "string", "number", or "boolean"`
       );
   }
