@@ -23,6 +23,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowserSettingsColorManagement)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettingsColorManagement, u"mode"_ns,
+                       Mode);
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettingsColorManagement,
+                       u"useNativeSRGB"_ns, UseNativeSRGB);
+NS_IMPL_WEBEXT_SETTING(ExtensionBrowserSettingsColorManagement,
+                       u"useWebRenderCompositor"_ns, UseWebRenderCompositor);
+
 ExtensionBrowserSettingsColorManagement::
     ExtensionBrowserSettingsColorManagement(nsIGlobalObject* aGlobal,
                                             ExtensionBrowser* aExtensionBrowser)
@@ -46,36 +53,6 @@ JSObject* ExtensionBrowserSettingsColorManagement::WrapObject(
 nsIGlobalObject* ExtensionBrowserSettingsColorManagement::GetParentObject()
     const {
   return mGlobal;
-}
-
-ExtensionSetting* ExtensionBrowserSettingsColorManagement::Mode() {
-  if (!mModeSetting) {
-    mModeSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser, u"browserSettings.colorManagement.mode"_ns);
-  }
-
-  return mModeSetting;
-}
-
-ExtensionSetting* ExtensionBrowserSettingsColorManagement::UseNativeSRGB() {
-  if (!mUseNativeSRGBSetting) {
-    mUseNativeSRGBSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser,
-        u"browserSettings.colorManagement.useNativeSRGB"_ns);
-  }
-
-  return mUseNativeSRGBSetting;
-}
-
-ExtensionSetting*
-ExtensionBrowserSettingsColorManagement::UseWebRenderCompositor() {
-  if (!mUseWebRenderCompositorSetting) {
-    mUseWebRenderCompositorSetting = new ExtensionSetting(
-        mGlobal, mExtensionBrowser,
-        u"browserSettings.colorManagement.useWebRenderCompositor"_ns);
-  }
-
-  return mUseWebRenderCompositorSetting;
 }
 
 }  // namespace mozilla::extensions

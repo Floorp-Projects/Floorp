@@ -14,6 +14,7 @@
 #include "ExtensionBrowser.h"
 #include "ExtensionEventManager.h"
 #include "ExtensionPort.h"
+#include "ExtensionSetting.h"
 
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/Promise.h"
@@ -301,6 +302,17 @@ already_AddRefed<ExtensionEventManager> ExtensionAPIBase::CreateEventManager(
       GetGlobalObject(), GetExtensionBrowser(), GetAPINamespace(), aEventName,
       GetAPIObjectType(), GetAPIObjectId());
   return eventMgr.forget();
+}
+
+already_AddRefed<ExtensionSetting> ExtensionAPIBase::CreateSetting(
+    const nsAString& aSettingName) {
+  nsAutoString settingAPIPath;
+  settingAPIPath.Append(GetAPINamespace());
+  settingAPIPath.AppendLiteral(".");
+  settingAPIPath.Append(aSettingName);
+  RefPtr<ExtensionSetting> settingAPI = new ExtensionSetting(
+      GetGlobalObject(), GetExtensionBrowser(), settingAPIPath);
+  return settingAPI.forget();
 }
 
 RefPtr<ExtensionAPICallFunctionNoReturn> ExtensionAPIBase::CallFunctionNoReturn(
