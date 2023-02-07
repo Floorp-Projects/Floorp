@@ -79,6 +79,8 @@ class WritableStreamDefaultWriter final : public nsISupports,
   RefPtr<Promise> mClosedPromise;
 };
 
+namespace streams_abstract {
+
 void SetUpWritableStreamDefaultWriter(WritableStreamDefaultWriter* aWriter,
                                       WritableStream* aStream,
                                       ErrorResult& aRv);
@@ -102,6 +104,8 @@ MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
 MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise>
 WritableStreamDefaultWriterCloseWithErrorPropagation(
     JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv);
+
+}  // namespace streams_abstract
 
 }  // namespace mozilla::dom
 
