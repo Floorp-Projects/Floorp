@@ -33,7 +33,13 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION(MenuBarListener, mTopWindowEventTarget)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MenuBarListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MenuBarListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopWindowEventTarget)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MenuBarListener)
+  tmp->Detach();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MenuBarListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
@@ -84,22 +90,26 @@ MenuBarListener::~MenuBarListener() {
 }
 
 void MenuBarListener::Detach() {
-  mEventTarget->RemoveSystemEventListener(u"keypress"_ns, this, false);
-  mEventTarget->RemoveSystemEventListener(u"keydown"_ns, this, false);
-  mEventTarget->RemoveSystemEventListener(u"keyup"_ns, this, false);
-  mEventTarget->RemoveSystemEventListener(u"mozaccesskeynotfound"_ns, this,
-                                          false);
-  mEventTarget->RemoveEventListener(u"keydown"_ns, this, true);
+  if (mEventTarget) {
+    mEventTarget->RemoveSystemEventListener(u"keypress"_ns, this, false);
+    mEventTarget->RemoveSystemEventListener(u"keydown"_ns, this, false);
+    mEventTarget->RemoveSystemEventListener(u"keyup"_ns, this, false);
+    mEventTarget->RemoveSystemEventListener(u"mozaccesskeynotfound"_ns, this,
+                                            false);
+    mEventTarget->RemoveEventListener(u"keydown"_ns, this, true);
 
-  mEventTarget->RemoveEventListener(u"mousedown"_ns, this, true);
-  mEventTarget->RemoveEventListener(u"mousedown"_ns, this, false);
-  mEventTarget->RemoveEventListener(u"blur"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mousedown"_ns, this, true);
+    mEventTarget->RemoveEventListener(u"mousedown"_ns, this, false);
+    mEventTarget->RemoveEventListener(u"blur"_ns, this, true);
 
-  mEventTarget->RemoveEventListener(u"MozDOMFullscreen:Entered"_ns, this,
-                                    false);
+    mEventTarget->RemoveEventListener(u"MozDOMFullscreen:Entered"_ns, this,
+                                      false);
+  }
 
-  mTopWindowEventTarget->RemoveSystemEventListener(u"deactivate"_ns, this,
-                                                   true);
+  if (mTopWindowEventTarget) {
+    mTopWindowEventTarget->RemoveSystemEventListener(u"deactivate"_ns, this,
+                                                     true);
+  }
 
   mMenuBar = nullptr;
   mEventTarget = nullptr;
