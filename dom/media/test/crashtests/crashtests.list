@@ -159,3 +159,4 @@ load 1765842.html
 load adts.aac # Bug 1770073
 load 1787281.html
 load 1798778.html
+skip-if(Android&&isDebugBuild) load noindex.mp4
