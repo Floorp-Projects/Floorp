@@ -14,8 +14,18 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(XULMenuBarElement, XULMenuParentElement,
-                                   mListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(XULMenuBarElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULMenuBarElement,
+                                                XULMenuParentElement)
+  if (tmp->mListener) {
+    tmp->mListener->Detach();
+    tmp->mListener = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULMenuBarElement,
+                                                  XULMenuParentElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(XULMenuBarElement,
                                                XULMenuParentElement)
 
