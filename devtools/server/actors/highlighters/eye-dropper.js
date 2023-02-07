@@ -14,6 +14,7 @@ const {
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   rgbToHsl,
+  rgbToColorName,
 } = require("resource://devtools/shared/css/color.js").colorUtils;
 const {
   getCurrentZoom,
@@ -587,7 +588,7 @@ function toColorString(rgb, format) {
       const [h, s, l] = rgbToHsl(rgb);
       return "hsl(" + h + ", " + s + "%, " + l + "%)";
     case "name":
-      const str = InspectorUtils.rgbToColorName(r, g, b) || hexString(rgb);
+      const str = rgbToColorName(r, g, b) || hexString(rgb);
       return str;
     default:
       return hexString(rgb);

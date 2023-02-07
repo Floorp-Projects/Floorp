@@ -75,7 +75,7 @@ function getContrastRatioScore(ratio, isLargeText) {
  */
 function getTextProperties(computedStyle) {
   const { color, fontSize, fontWeight } = computedStyle;
-  let { r, g, b, a } = InspectorUtils.colorToRGBA(color);
+  let { r, g, b, a } = colorUtils.colorToRGBA(color, true);
 
   // If the element has opacity in addition to background alpha value, take it
   // into account. TODO: this does not handle opacity set on ancestor elements

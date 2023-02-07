@@ -30,7 +30,14 @@ function createTestCanvas(doc) {
 function testColorUtils(canvas) {
   const data = getFixtureColorData();
 
-  for (const { authored, name, hex, hsl, rgb } of data) {
+  for (const {
+    authored,
+    name,
+    hex,
+    hsl,
+    rgb,
+    disableColorMatch = false,
+  } of data) {
     const color = new colorUtils.CssColor(authored);
 
     // Check all values.
@@ -41,7 +48,9 @@ function testColorUtils(canvas) {
     is(color.rgb, rgb, "color.rgb === rgb");
 
     testToString(color, name, hex, hsl, rgb);
-    testColorMatch(name, hex, hsl, rgb, color.rgba, canvas);
+    if (!disableColorMatch) {
+      testColorMatch(name, hex, hsl, rgb, color.rgba, canvas);
+    }
   }
 
   testSetAlpha();
