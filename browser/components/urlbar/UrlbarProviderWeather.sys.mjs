@@ -167,8 +167,11 @@ class ProviderWeather extends UrlbarProvider {
   }
 
   getPriority(context) {
-    // Zero-prefix suggestions have the same priority as top sites.
-    return lazy.UrlbarProviderTopSites.PRIORITY;
+    if (!context.searchString) {
+      // Zero-prefix suggestions have the same priority as top sites.
+      return lazy.UrlbarProviderTopSites.PRIORITY;
+    }
+    return super.getPriority(context);
   }
 
   /**
@@ -192,12 +195,22 @@ class ProviderWeather extends UrlbarProvider {
       return false;
     }
 
-    return (
-      !queryContext.searchString &&
-      !queryContext.isPrivate &&
-      !queryContext.searchMode &&
-      lazy.QuickSuggest.weather.suggestion
-    );
+    if (
+      queryContext.isPrivate ||
+      queryContext.searchMode ||
+      !lazy.QuickSuggest.weather.suggestion
+    ) {
+      return false;
+    }
+
+    if (lazy.UrlbarPrefs.get("weather.zeroPrefix")) {
+      return !queryContext.searchString;
+    }
+
+    // Trim only the start of the search string because a trailing space can
+    // affect the suggestions.
+    let trimmedSearchString = queryContext.searchString.trimStart();
+    return lazy.QuickSuggest.weather.keywords.has(trimmedSearchString);
   }
 
   /**
@@ -249,7 +262,7 @@ class ProviderWeather extends UrlbarProvider {
       }
     );
 
-    result.suggestedIndex = 0;
+    result.suggestedIndex = queryContext.searchString ? 1 : 0;
 
     addCallback(this, result);
     this.#resultFromLastQuery = result;

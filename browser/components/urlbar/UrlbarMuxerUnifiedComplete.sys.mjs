@@ -22,6 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
+  UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
@@ -639,9 +640,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   // error or increase the complexity threshold.
   // eslint-disable-next-line complexity
   _canAddResult(result, state) {
-    // QuickSuggest results are shown unless they are best matches
-    // that duplicate heuristic results.
+    // QuickSuggest results are shown unless a weather result is also present
+    // or they are best matches that duplicate the heuristic.
     if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
+      if (state.weatherResult) {
+        return false;
+      }
+
       let heuristicUrl = state.context.heuristicResult?.payload.url;
       if (
         heuristicUrl &&
@@ -1063,6 +1068,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
       state.quickSuggestResult = result;
+    }
+
+    if (result.providerName == lazy.UrlbarProviderWeather.name) {
+      state.weatherResult = result;
     }
 
     state.hasUnitConversionResult =

@@ -250,6 +250,20 @@ class _QuickSuggestTestUtils {
   }
 
   /**
+   * Clears the current remote settings results and adds a new set of results.
+   * This can be used to add remote settings results after
+   * `ensureQuickSuggestInit()` has been called.
+   *
+   * @param {Array} results
+   *   Array of remote settings result objects.
+   */
+  async setRemoteSettingsResults(results) {
+    let { remoteSettings } = lazy.QuickSuggest;
+    remoteSettings._test_resultsByKeyword.clear();
+    await remoteSettings._test_addResults(results);
+  }
+
+  /**
    * Sets the quick suggest configuration. You should call this again with
    * `DEFAULT_CONFIG` before your test finishes. See also `withConfig()`.
    *

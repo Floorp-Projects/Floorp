@@ -410,6 +410,11 @@ pref("browser.urlbar.suggest.calculator",           false);
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
 
+// If true, weather suggestions will be shown on "zero prefix", which means when
+// the user focuses the urlbar without typing anything. If false, the user must
+// type weather-related keywords to show weather suggestions.
+pref("browser.urlbar.weather.zeroPrefix", true);
+
 // If `browser.urlbar.weather.featureGate` is true, this controls whether
 // weather suggestions are turned on.
 pref("browser.urlbar.suggest.weather", true);

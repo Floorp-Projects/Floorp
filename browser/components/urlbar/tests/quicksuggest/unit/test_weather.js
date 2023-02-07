@@ -601,7 +601,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
   );
 
   // Check locales.
-  for (let [locale, expectedUnit] of Object.entries(unitsByLocale)) {
+  for (let [locale, temperatureUnit] of Object.entries(unitsByLocale)) {
     await QuickSuggestTestUtils.withLocales([locale], async () => {
       info("Checking locale: " + locale);
       await check_results({
@@ -609,7 +609,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
           providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
-        matches: [makeExpectedResult(expectedUnit)],
+        matches: [makeExpectedResult({ temperatureUnit })],
       });
 
       info(
@@ -621,7 +621,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
           providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
-        matches: [makeExpectedResult(osUnit)],
+        matches: [makeExpectedResult({ temperatureUnit: osUnit })],
       });
       Services.prefs.clearUserPref("intl.regional_prefs.use_os_locales");
     });
@@ -698,6 +698,195 @@ add_task(async function block() {
   });
 });
 
+// When `weather.zeroPrefix` is false, weather suggestions should be triggered
+// by keywords.
+add_task(async function keywords() {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  await QuickSuggestTestUtils.withConfig({
+    config: {
+      weather_keywords: ["wea", "weather"],
+    },
+    callback: async () => {
+      // Map from search string -> whether the result should be triggered when
+      // `weather.zeroPrefix` is false
+      let tests = {
+        wea: true,
+        " wea": true,
+        "     wea": true,
+        weather: true,
+        " weather": true,
+        "     weather": true,
+
+        "": false,
+        " ": false,
+        "     ": false,
+        w: false,
+        we: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        "weather ": false,
+        " weather ": false,
+      };
+
+      for (let [searchString, expected] of Object.entries(tests)) {
+        // First do a search with `weather.zeroPrefix` set to true. Only the
+        // empty string should trigger the result even if the search string
+        // matches a keyword in the config.
+        info(
+          "Doing first search with weather.zeroPrefix = true: " +
+            JSON.stringify(searchString)
+        );
+        UrlbarPrefs.set("weather.zeroPrefix", true);
+        await check_results({
+          context: createContext(searchString, {
+            providers: [UrlbarProviderWeather.name],
+            isPrivate: false,
+          }),
+          matches: !searchString ? [makeExpectedResult()] : [],
+        });
+
+        // Do a second search with `weather.zeroPrefix` set to false and check
+        // the test case.
+        info(
+          "Doing second search with weather.zeroPrefix = false: " +
+            JSON.stringify(searchString)
+        );
+        UrlbarPrefs.set("weather.zeroPrefix", false);
+        await check_results({
+          context: createContext(searchString, {
+            providers: [UrlbarProviderWeather.name],
+            isPrivate: false,
+          }),
+          matches: expected ? [makeExpectedResult({ suggestedIndex: 1 })] : [],
+        });
+      }
+    },
+  });
+
+  UrlbarPrefs.clear("weather.zeroPrefix");
+});
+
+// When a sponsored quick suggest result matches the same keyword as the weather
+// result, the weather result should be shown and the quick suggest result
+// should not be shown.
+add_task(async function matchingQuickSuggest_sponsored() {
+  await doMatchingQuickSuggestTest("suggest.quicksuggest.sponsored", true);
+});
+
+// When a non-sponsored quick suggest result matches the same keyword as the
+// weather result, the weather result should be shown and the quick suggest
+// result should not be shown.
+add_task(async function matchingQuickSuggest_nonsponsored() {
+  await doMatchingQuickSuggestTest("suggest.quicksuggest.nonsponsored", false);
+});
+
+async function doMatchingQuickSuggestTest(pref, isSponsored) {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  let keyword = "test";
+  let iab_category = isSponsored ? "22 - Shopping" : "5 - Education";
+
+  // Add a remote settings result to quick suggest.
+  UrlbarPrefs.set(pref, true);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      id: 1,
+      url: "http://example.com/",
+      title: "Suggestion",
+      keywords: [keyword],
+      click_url: "http://example.com/click",
+      impression_url: "http://example.com/impression",
+      advertiser: "TestAdvertiser",
+      iab_category,
+    },
+  ]);
+
+  await QuickSuggestTestUtils.withConfig({
+    config: {
+      weather_keywords: [keyword],
+    },
+    callback: async () => {
+      // First do a search with `weather.zeroPrefix` set to true to verify the
+      // quick suggest result matches the keyword.
+      info("Doing first search with weather.zeroPrefix = true");
+      UrlbarPrefs.set("weather.zeroPrefix", true);
+      await check_results({
+        context: createContext(keyword, {
+          providers: [
+            UrlbarProviderQuickSuggest.name,
+            UrlbarProviderWeather.name,
+          ],
+          isPrivate: false,
+        }),
+        matches: [
+          {
+            type: UrlbarUtils.RESULT_TYPE.URL,
+            source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+            heuristic: false,
+            payload: {
+              qsSuggestion: keyword,
+              title: "Suggestion",
+              url: "http://example.com/",
+              displayUrl: "http://example.com",
+              originalUrl: "http://example.com/",
+              icon: null,
+              sponsoredImpressionUrl: "http://example.com/impression",
+              sponsoredClickUrl: "http://example.com/click",
+              sponsoredBlockId: 1,
+              sponsoredAdvertiser: "TestAdvertiser",
+              sponsoredIabCategory: iab_category,
+              isSponsored,
+              helpUrl: QuickSuggest.HELP_URL,
+              helpL10n: {
+                id: UrlbarPrefs.get("resultMenu")
+                  ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+                  : "firefox-suggest-urlbar-learn-more",
+              },
+              isBlockable: false,
+              blockL10n: {
+                id: UrlbarPrefs.get("resultMenu")
+                  ? "urlbar-result-menu-dismiss-firefox-suggest"
+                  : "firefox-suggest-urlbar-block",
+              },
+              source: "remote-settings",
+            },
+          },
+        ],
+      });
+
+      // Do a second search with `weather.zeroPrefix` set to false to verify
+      // only the weather result is shown.
+      info("Doing second search with weather.zeroPrefix = false");
+      UrlbarPrefs.set("weather.zeroPrefix", false);
+      await check_results({
+        context: createContext(keyword, {
+          providers: [
+            UrlbarProviderQuickSuggest.name,
+            UrlbarProviderWeather.name,
+          ],
+          isPrivate: false,
+        }),
+        matches: [makeExpectedResult({ suggestedIndex: 1 })],
+      });
+    },
+  });
+
+  UrlbarPrefs.clear("weather.zeroPrefix");
+  UrlbarPrefs.clear(pref);
+}
+
 function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
   info("Asserting feature is enabled");
   if (message) {
@@ -750,13 +939,17 @@ function assertDisabled({ message, pendingFetchCount }) {
   );
 }
 
-function makeExpectedResult(temperatureUnit = undefined) {
+function makeExpectedResult({
+  suggestedIndex = 0,
+  temperatureUnit = undefined,
+} = {}) {
   if (!temperatureUnit) {
     temperatureUnit =
       Services.locale.regionalPrefsLocales[0] == "en-US" ? "f" : "c";
   }
 
   return {
+    suggestedIndex,
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
