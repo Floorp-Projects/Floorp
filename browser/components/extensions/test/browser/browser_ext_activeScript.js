@@ -107,8 +107,10 @@ async function makeExtension({
       });
 
       let action = browser.action || browser.browserAction;
-
-      action.onClicked.addListener(executeCountScript);
+      // For some test cases, we don't define a browser action in the manifest.
+      if (action) {
+        action.onClicked.addListener(executeCountScript);
+      }
     },
 
     files: {
