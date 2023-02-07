@@ -160,7 +160,7 @@ class WasmSharedArrayRawBuffer : public SharedArrayRawBuffer {
   wasm::Pages wasmClampedMaxPages() const { return clampedMaxPages_; }
   wasm::Pages wasmSourceMaxPages() const { return sourceMaxPages_; }
 
-  size_t mappedSize() const { return mappedSize_; }
+  size_t wasmMappedSize() const { return mappedSize_; }
 
   void tryGrowMaxPagesInPlace(wasm::Pages deltaMaxPages);
 
@@ -296,7 +296,9 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return rawWasmBufferObject()->wasmSourceMaxPages();
   }
 
-  size_t wasmMappedSize() const { return rawWasmBufferObject()->mappedSize(); }
+  size_t wasmMappedSize() const {
+    return rawWasmBufferObject()->wasmMappedSize();
+  }
 
  private:
   [[nodiscard]] bool acceptRawBuffer(SharedArrayRawBuffer* buffer,
