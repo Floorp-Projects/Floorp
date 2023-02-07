@@ -41,7 +41,7 @@ class SourceMapURLService {
     // subscribers to that service can be updated as
     // well.
     this._sourceMapLoader.on(
-      "source-map-applied",
+      "source-map-created",
       this.newSourceMapCreated.bind(this)
     );
   }
@@ -189,23 +189,25 @@ class SourceMapURLService {
    * Tell the URL service than some external entity has registered a sourcemap
    * in the worker for one of the source files.
    *
-   * @param {string} id The actor ID of the source that had the map registered.
+   * @param {Array<string>} ids The actor ids of the sources that had the map registered.
    */
-  async newSourceMapCreated(id) {
+  async newSourceMapCreated(ids) {
     await this._ensureAllSourcesPopulated();
 
-    const map = this._mapsById.get(id);
-    if (!map) {
-      // State could have been cleared.
-      return;
-    }
+    for (const id of ids) {
+      const map = this._mapsById.get(id);
+      if (!map) {
+        // State could have been cleared.
+        continue;
+      }
 
-    map.loaded = Promise.resolve();
-    for (const query of map.queries.values()) {
-      query.action = null;
-      query.result = null;
-      if (this._prefValue) {
-        this._dispatchQuery(query);
+      map.loaded = Promise.resolve();
+      for (const query of map.queries.values()) {
+        query.action = null;
+        query.result = null;
+        if (this._prefValue) {
+          this._dispatchQuery(query);
+        }
       }
     }
   }
