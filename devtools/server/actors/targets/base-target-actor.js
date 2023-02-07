@@ -12,12 +12,6 @@ loader.lazyRequireGetter(
   "resource://devtools/server/actors/targets/session-data-processors/index.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "StyleSheetsManager",
-  "resource://devtools/server/actors/utils/stylesheets-manager.js",
-  true
-);
 
 class BaseTargetActor extends Actor {
   constructor(conn, targetType, spec) {
@@ -28,14 +22,6 @@ class BaseTargetActor extends Actor {
      * @return {string}
      */
     this.targetType = targetType;
-  }
-
-  destroy() {
-    if (this._styleSheetsManager) {
-      this._styleSheetsManager.destroy();
-      this._styleSheetsManager = null;
-    }
-    super.destroy();
   }
 
   /**
@@ -106,13 +92,6 @@ class BaseTargetActor extends Actor {
     resources.forEach(
       resource => (resource.browsingContextID = browsingContextID)
     );
-  }
-
-  getStyleSheetsManager() {
-    if (!this._styleSheetsManager) {
-      this._styleSheetsManager = new StyleSheetsManager(this);
-    }
-    return this._styleSheetsManager;
   }
 }
 exports.BaseTargetActor = BaseTargetActor;

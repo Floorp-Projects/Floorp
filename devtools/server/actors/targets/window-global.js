@@ -65,6 +65,12 @@ loader.lazyRequireGetter(
   "resource://devtools/server/actors/worker/worker-descriptor-actor-list.js",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "StyleSheetsManager",
+  "resource://devtools/server/actors/utils/stylesheets-manager.js",
+  true
+);
 const lazy = {};
 ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
@@ -557,6 +563,13 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     return this._sourcesManager;
   }
 
+  getStyleSheetsManager() {
+    if (!this._styleSheetsManager) {
+      this._styleSheetsManager = new StyleSheetsManager(this);
+    }
+    return this._styleSheetsManager;
+  }
+
   _createExtraActors() {
     // Always use the same Pool, so existing actor instances
     // (created in createExtraActors) are not lost.
@@ -709,6 +722,11 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
     this._destroyThreadActor();
 
+    if (this._styleSheetsManager) {
+      this._styleSheetsManager.destroy();
+      this._styleSheetsManager = null;
+    }
+
     // Shut down actors that belong to this target's pool.
     if (this._targetScopedActorPool) {
       this._targetScopedActorPool.destroy();
@@ -735,7 +753,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     // which will destroy the EventEmitter API
     this.emit("destroyed", { isTargetSwitching, isModeSwitching });
 
-    // Destroy BaseTargetActor before nullifying docShell as it uses it via the StyleSheetManager.
+    // Destroy BaseTargetActor before nullifying docShell in case any child actor queries the window/docShell.
     super.destroy();
 
     this.docShell = null;
