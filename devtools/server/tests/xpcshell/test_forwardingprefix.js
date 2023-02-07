@@ -68,55 +68,57 @@ function createMainConnection() {
  *
  * To avoid deep stacks, we call completed from the next tick.
  */
-function tryActors(reachables, completed) {
-  let count = 0;
-
-  let outerActor;
-  for (outerActor of [
+async function tryActors(reachables, completed) {
+  for (const actor of [
     "root",
     "prefix1/root",
     "prefix1/actor",
     "prefix2/root",
     "prefix2/actor",
   ]) {
-    /*
-     * Let each callback capture its own iteration's value; outerActor is
-     * local to the whole loop, not to a single iteration.
-     */
-    const actor = outerActor;
-
-    count++;
-
-    let promise;
-    // phone home
-    if (actor == "root") {
-      promise = gClient.mainRoot.echo({ value: "tango" });
-    } else {
-      promise = gClient.request({ to: actor, type: "echo", value: "tango" });
+    let response;
+    try {
+      if (actor.endsWith("root")) {
+        // Root actor doesn't expose any echo method,
+        // so fallback on getRoot which returns `{ from: "root" }`.
+        // For the top level root actor, we have to use its front.
+        if (actor == "root") {
+          response = await gClient.mainRoot.getRoot();
+        } else {
+          response = await gClient.request({ to: actor, type: "getRoot" });
+        }
+      } else {
+        response = await gClient.request({
+          to: actor,
+          type: "echo",
+          value: "tango",
+        });
+      }
+    } catch (e) {
+      response = e;
     }
-    const callback = response => {
-      if (reachables.has(actor)) {
+    if (reachables.has(actor)) {
+      if (actor.endsWith("root")) {
+        // RootActor's getRoot response is almost empty on xpcshell
+        Assert.deepEqual({ from: actor }, response);
+      } else {
         Assert.deepEqual(
           { from: actor, to: actor, type: "echo", value: "tango" },
           response
         );
-      } else {
-        Assert.deepEqual(
-          {
-            from: actor,
-            error: "noSuchActor",
-            message: "No such actor for ID: " + actor,
-          },
-          response
-        );
       }
-
-      if (--count == 0) {
-        executeSoon(completed, "tryActors callback " + completed.name);
-      }
-    };
-    promise.then(callback, callback);
+    } else {
+      Assert.deepEqual(
+        {
+          from: actor,
+          error: "noSuchActor",
+          message: "No such actor for ID: " + actor,
+        },
+        response
+      );
+    }
   }
+  executeSoon(completed, "tryActors callback " + completed.name);
 }
 
 /*

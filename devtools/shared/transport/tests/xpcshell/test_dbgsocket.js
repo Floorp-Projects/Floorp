@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+/* global structuredClone */
+
 var gPort;
 var gExtraListener;
 
@@ -14,6 +16,26 @@ function run_test() {
   add_test(test_pipe_conn);
 
   run_next_test();
+}
+
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
+class EchoTestActor extends Actor {
+  constructor(conn) {
+    super(conn);
+
+    this.typeName = "EchoTestActor";
+    this.requestTypes = {
+      echo: EchoTestActor.prototype.onEcho,
+    };
+  }
+
+  onEcho(request) {
+    /*
+     * Request packets are frozen. Copy request, so that
+     * DevToolsServerConnection.onPacket can attach a 'from' property.
+     */
+    return structuredClone(request);
+  }
 }
 
 async function test_socket_conn() {
@@ -40,12 +62,23 @@ async function test_socket_conn() {
   Assert.ok(!DevToolsServer.hasConnection());
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
-  const unicodeString = "(╯°□°）╯︵ ┻━┻";
+  // We can't use EventEmitter.once as this is the second argument we care about...
+  const onConnectionChange = new Promise(res => {
+    DevToolsServer.once("connectionchange", (type, conn) => res(conn));
+  });
+
   const transport = await DevToolsClient.socketConnect({
     host: "127.0.0.1",
     port: gPort,
   });
   Assert.ok(DevToolsServer.hasConnection());
+  info("Wait for server connection");
+  const conn = await onConnectionChange;
+
+  // Register a custom actor to do echo requests
+  const actor = new EchoTestActor(conn);
+  actor.actorID = "echo-actor";
+  conn.addActor(actor);
 
   // Assert that connection settings are available on transport object
   const settings = transport.connectionSettings;
@@ -53,6 +86,7 @@ async function test_socket_conn() {
   Assert.equal(settings.port, gPort);
 
   const onDebuggerConnectionClosed = DevToolsServer.once("connectionchange");
+  const unicodeString = "(╯°□°）╯︵ ┻━┻";
   await new Promise(resolve => {
     transport.hooks = {
       onPacket(packet) {
@@ -63,7 +97,7 @@ async function test_socket_conn() {
         // Verify that things work correctly when bigger than the output
         // transport buffers and when transporting unicode...
         transport.send({
-          to: "root",
+          to: "echo-actor",
           type: "echo",
           reallylong: really_long(),
           unicode: unicodeString,

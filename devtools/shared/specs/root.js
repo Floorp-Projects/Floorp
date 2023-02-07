@@ -103,9 +103,6 @@ const rootSpecPrototype = {
       request: {},
       response: RetVal("json"),
     },
-
-    // Note that RootFront also implements 'echo' requests
-    // that can't be described via protocol.js specs.
   },
 
   events: {
