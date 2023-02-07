@@ -2266,9 +2266,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // 2. Callee, part 2 -- now that the register is free, set up the callee.
   Register callee = ABINonArgReturnReg0;  // Live until call
 
-  // 2.1. Get JSFunction callee.
+  // 2.1. Get the callee. This must be a JSFunction if we're using this JIT
+  // exit.
   masm.loadWasmGlobalPtr(
-      fi.instanceOffset() + offsetof(FuncImportInstanceData, fun), callee);
+      fi.instanceOffset() + offsetof(FuncImportInstanceData, callable), callee);
 
   // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), calleeArgOffset));

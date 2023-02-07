@@ -30,7 +30,7 @@
 
 namespace js {
 
-using JSFunctionVector = GCVector<JSFunction*, 0, SystemAllocPolicy>;
+using JSFunctionVector = GCVector<JSObject*, 0, SystemAllocPolicy>;
 
 class WasmMemoryObject;
 class WasmModuleObject;

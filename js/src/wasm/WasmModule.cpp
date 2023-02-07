@@ -537,7 +537,11 @@ bool Module::instantiateFunctions(JSContext* cx,
   Tier tier = code().stableTier();
 
   for (size_t i = 0; i < metadata(tier).funcImports.length(); i++) {
-    JSFunction* f = funcImports[i];
+    if (!funcImports[i]->is<JSFunction>()) {
+      continue;
+    }
+
+    JSFunction* f = &funcImports[i]->as<JSFunction>();
     if (!IsWasmExportedFunction(f)) {
       continue;
     }
@@ -887,9 +891,12 @@ static bool GetFunctionExport(JSContext* cx,
                               const JSFunctionVector& funcImports,
                               uint32_t funcIndex, MutableHandleFunction func) {
   if (funcIndex < funcImports.length() &&
-      IsWasmExportedFunction(funcImports[funcIndex])) {
-    func.set(funcImports[funcIndex]);
-    return true;
+      funcImports[funcIndex]->is<JSFunction>()) {
+    JSFunction* f = &funcImports[funcIndex]->as<JSFunction>();
+    if (IsWasmExportedFunction(f)) {
+      func.set(f);
+      return true;
+    }
   }
 
   return instanceObj->getExportedFunction(cx, instanceObj, funcIndex, func);
