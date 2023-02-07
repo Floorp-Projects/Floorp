@@ -8,7 +8,6 @@
 // ui.prefersReducedMotion is enabled.
 
 const TEST_URL = "data:text/html;charset=utf-8,<h1>test1<h1><h2>test2<h2>";
-const { colorUtils } = require("resource://devtools/shared/css/color.js");
 
 add_task(async function() {
   info("Disable ui.prefersReducedMotion");
@@ -43,7 +42,7 @@ add_task(async function() {
     "If prefersReducedMotion is disabled, stroke style is none"
   );
   ok(
-    colorUtils.isValidCSSColor(fill),
+    InspectorUtils.isValidCSSColor(fill),
     "If prefersReducedMotion is disabled, fill style is a valid color"
   );
   await inspector.highlighters.hideHighlighterType(HIGHLIGHTER_TYPE);
@@ -56,7 +55,7 @@ add_task(async function() {
   stroke = await getElementComputedStyle("box-model-content", "stroke");
   fill = await getElementComputedStyle("box-model-content", "fill");
   ok(
-    colorUtils.isValidCSSColor(stroke),
+    InspectorUtils.isValidCSSColor(stroke),
     "If prefersReducedMotion is enabled, stroke style is a valid color"
   );
   is(fill, "none", "If prefersReducedMotion is enabled, fill style is none");
