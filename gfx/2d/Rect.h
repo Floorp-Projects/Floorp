@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 
 #include <cmath>
+#include <cstdint>
 
 namespace mozilla {
 
