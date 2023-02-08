@@ -36,9 +36,6 @@
 
 using namespace mozilla;
 
-#define MISC_STR_PTR(_cont) \
-  reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
-
 /* static */
 MiscContainer* nsAttrValue::AllocMiscContainer() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -68,30 +65,13 @@ void nsAttrValue::DeallocMiscContainer(MiscContainer* aCont) {
 }
 
 bool MiscContainer::GetString(nsAString& aString) const {
-  void* ptr = MISC_STR_PTR(this);
-
-  if (!ptr) {
-    return false;
-  }
-
-  if (static_cast<nsAttrValue::ValueBaseType>(mStringBits &
-                                              NS_ATTRVALUE_BASETYPE_MASK) ==
-      nsAttrValue::eStringBase) {
-    nsStringBuffer* buffer = static_cast<nsStringBuffer*>(ptr);
-    if (!buffer) {
-      return false;
-    }
-
+  if (nsStringBuffer* buffer = GetStoredStringBuffer()) {
     buffer->ToString(buffer->StorageSize() / sizeof(char16_t) - 1, aString);
-    return true;
   }
 
-  nsAtom* atom = static_cast<nsAtom*>(ptr);
-  if (!atom) {
-    return false;
+  if (nsAtom* atom = GetStoredAtom()) {
+    atom->ToString(aString);
   }
-
-  atom->ToString(aString);
   return true;
 }
 
@@ -326,10 +306,8 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
     }
   }
 
-  void* otherPtr = MISC_STR_PTR(otherCont);
-  if (otherPtr) {
-    if (static_cast<ValueBaseType>(otherCont->mStringBits &
-                                   NS_ATTRVALUE_BASETYPE_MASK) == eStringBase) {
+  if (void* otherPtr = otherCont->GetStringOrAtomPtr()) {
+    if (otherCont->StoresStringBuffer()) {
       static_cast<nsStringBuffer*>(otherPtr)->AddRef();
     } else {
       static_cast<nsAtom*>(otherPtr)->AddRef();
@@ -990,8 +968,7 @@ bool nsAttrValue::Equals(const nsAString& aValue,
 
 bool nsAttrValue::Equals(const nsAtom* aValue,
                          nsCaseTreatment aCaseSensitive) const {
-  if (BaseType() == eAtomBase) {
-    auto* atom = static_cast<nsAtom*>(GetPtr());
+  if (auto* atom = GetStoredAtom()) {
     if (atom == aValue) {
       return true;
     }
@@ -1332,6 +1309,26 @@ void nsAttrValue::SetDoubleValueAndType(double aValue, ValueType aType,
   cont->mDoubleValue = aValue;
   cont->mType = aType;
   SetMiscAtomOrString(aStringValue);
+}
+
+nsAtom* nsAttrValue::GetStoredAtom() const {
+  if (BaseType() == eAtomBase) {
+    return static_cast<nsAtom*>(GetPtr());
+  }
+  if (BaseType() == eOtherBase) {
+    return GetMiscContainer()->GetStoredAtom();
+  }
+  return nullptr;
+}
+
+nsStringBuffer* nsAttrValue::GetStoredStringBuffer() const {
+  if (BaseType() == eStringBase) {
+    return static_cast<nsStringBuffer*>(GetPtr());
+  }
+  if (BaseType() == eOtherBase) {
+    return GetMiscContainer()->GetStoredStringBuffer();
+  }
+  return nullptr;
 }
 
 int16_t nsAttrValue::GetEnumTableIndex(const EnumTable* aTable) {
@@ -1826,10 +1823,8 @@ void nsAttrValue::SetMiscAtomOrString(const nsAString* aValue) {
 
 void nsAttrValue::ResetMiscAtomOrString() {
   MiscContainer* cont = GetMiscContainer();
-  void* ptr = MISC_STR_PTR(cont);
-  if (ptr) {
-    if (static_cast<ValueBaseType>(cont->mStringBits &
-                                   NS_ATTRVALUE_BASETYPE_MASK) == eStringBase) {
+  if (void* ptr = cont->GetStringOrAtomPtr()) {
+    if (cont->StoresStringBuffer()) {
       static_cast<nsStringBuffer*>(ptr)->Release();
     } else {
       static_cast<nsAtom*>(ptr)->Release();
@@ -1975,14 +1970,10 @@ size_t nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
       }
       n += aMallocSizeOf(container);
 
-      void* otherPtr = MISC_STR_PTR(container);
       // We only count the size of the object pointed by otherPtr if it's a
       // string. When it's an atom, it's counted separatly.
-      if (otherPtr && static_cast<ValueBaseType>(container->mStringBits &
-                                                 NS_ATTRVALUE_BASETYPE_MASK) ==
-                          eStringBase) {
-        nsStringBuffer* str = static_cast<nsStringBuffer*>(otherPtr);
-        n += str ? str->SizeOfIncludingThisIfUnshared(aMallocSizeOf) : 0;
+      if (nsStringBuffer* buf = container->GetStoredStringBuffer()) {
+        n += buf->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
       }
 
       if (Type() == eCSSDeclaration && container->mValue.mCSSDeclaration) {
