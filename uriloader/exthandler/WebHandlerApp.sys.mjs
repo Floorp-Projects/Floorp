@@ -8,6 +8,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 export function nsWebHandlerApp() {}
 
 nsWebHandlerApp.prototype = {
@@ -107,7 +109,12 @@ nsWebHandlerApp.prototype = {
       return;
     }
 
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    // The window type depends on the app.
+    const windowType =
+      AppConstants.MOZ_APP_NAME == "thunderbird"
+        ? "mail:3pane"
+        : "navigator:browser";
+    let win = Services.wm.getMostRecentWindow(windowType);
 
     // If this is an extension handler, check private browsing access.
     if (!privateAllowed && lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
