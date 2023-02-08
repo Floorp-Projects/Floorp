@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Master include file, including everything else.
+ * Master include file. Includes everything else.
  */
 
 #ifndef ZYDIS_H
@@ -35,13 +35,25 @@
 #include "zydis/Zycore/Defines.h"
 #include "zydis/Zycore/Types.h"
 
-#ifndef ZYDIS_DISABLE_DECODER
+#if !defined(ZYDIS_DISABLE_DECODER)
 #   include "zydis/Zydis/Decoder.h"
 #   include "zydis/Zydis/DecoderTypes.h"
 #endif
 
-#ifndef ZYDIS_DISABLE_FORMATTER
+#if !defined(ZYDIS_DISABLE_ENCODER)
+#   include "zydis/Zydis/Encoder.h"
+#endif
+
+#if !defined(ZYDIS_DISABLE_FORMATTER)
 #   include "zydis/Zydis/Formatter.h"
+#endif
+
+#if !defined(ZYDIS_DISABLE_SEGMENT)
+#   include "zydis/Zydis/Segment.h"
+#endif
+
+#if !defined(ZYDIS_DISABLE_DECODER) && !defined(ZYDIS_DISABLE_FORMATTER)
+#   include "zydis/Zydis/Disassembler.h"
 #endif
 
 #include "zydis/Zydis/MetaInfo.h"
@@ -55,6 +67,14 @@
 extern "C" {
 #endif
 
+/**
+ * @addtogroup version Version
+ *
+ * Functions for checking the library version and build options.
+ *
+ * @{
+ */
+
 /* ============================================================================================== */
 /* Macros                                                                                         */
 /* ============================================================================================== */
@@ -66,7 +86,7 @@ extern "C" {
 /**
  * A macro that defines the zydis version.
  */
-#define ZYDIS_VERSION (ZyanU64)0x0003000200010000
+#define ZYDIS_VERSION (ZyanU64)0x0004000000000000
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Helper macros                                                                                  */
@@ -112,9 +132,11 @@ extern "C" {
 typedef enum ZydisFeature_
 {
     ZYDIS_FEATURE_DECODER,
+    ZYDIS_FEATURE_ENCODER,
     ZYDIS_FEATURE_FORMATTER,
     ZYDIS_FEATURE_AVX512,
     ZYDIS_FEATURE_KNC,
+    ZYDIS_FEATURE_SEGMENT,
 
     /**
      * Maximum value of this enum.
@@ -129,12 +151,6 @@ typedef enum ZydisFeature_
 /* ============================================================================================== */
 /* Exported functions                                                                             */
 /* ============================================================================================== */
-
-/**
- * @addtogroup version Version
- * Functions for checking the library version and build options.
- * @{
- */
 
 /**
  * Returns the zydis version.
@@ -156,11 +172,11 @@ ZYDIS_EXPORT ZyanU64 ZydisGetVersion(void);
  */
 ZYDIS_EXPORT ZyanStatus ZydisIsFeatureEnabled(ZydisFeature feature);
 
+/* ============================================================================================== */
+
 /**
  * @}
  */
-
-/* ============================================================================================== */
 
 #ifdef __cplusplus
 }
