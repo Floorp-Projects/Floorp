@@ -960,8 +960,7 @@ bool nsAttrValue::Equals(const nsAString& aValue,
                          nsCaseTreatment aCaseSensitive) const {
   switch (BaseType()) {
     case eStringBase: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
         nsDependentString dep(static_cast<char16_t*>(str->Data()),
                               str->StorageSize() / sizeof(char16_t) - 1);
         return aCaseSensitive == eCaseMatters
@@ -970,12 +969,14 @@ bool nsAttrValue::Equals(const nsAString& aValue,
       }
       return aValue.IsEmpty();
     }
-    case eAtomBase:
+    case eAtomBase: {
+      auto* atom = static_cast<nsAtom*>(GetPtr());
       if (aCaseSensitive == eCaseMatters) {
-        return static_cast<nsAtom*>(GetPtr())->Equals(aValue);
+        return atom->Equals(aValue);
       }
-      return nsContentUtils::EqualsIgnoreASCIICase(
-          nsDependentAtomString(static_cast<nsAtom*>(GetPtr())), aValue);
+      return nsContentUtils::EqualsIgnoreASCIICase(nsDependentAtomString(atom),
+                                                   aValue);
+    }
     default:
       break;
   }
@@ -989,33 +990,19 @@ bool nsAttrValue::Equals(const nsAString& aValue,
 
 bool nsAttrValue::Equals(const nsAtom* aValue,
                          nsCaseTreatment aCaseSensitive) const {
-  if (aCaseSensitive != eCaseMatters) {
-    // Need a better way to handle this!
-    nsAutoString value;
-    aValue->ToString(value);
-    return Equals(value, aCaseSensitive);
-  }
-
-  switch (BaseType()) {
-    case eStringBase: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
-        nsDependentString dep(static_cast<char16_t*>(str->Data()),
-                              str->StorageSize() / sizeof(char16_t) - 1);
-        return aValue->Equals(dep);
-      }
-      return aValue == nsGkAtoms::_empty;
+  if (BaseType() == eAtomBase) {
+    auto* atom = static_cast<nsAtom*>(GetPtr());
+    if (atom == aValue) {
+      return true;
     }
-    case eAtomBase: {
-      return static_cast<nsAtom*>(GetPtr()) == aValue;
+    if (aCaseSensitive == eCaseMatters) {
+      return false;
     }
-    default:
-      break;
+    if (atom->IsAsciiLowercase() && aValue->IsAsciiLowercase()) {
+      return false;
+    }
   }
-
-  nsAutoString val;
-  ToString(val);
-  return aValue->Equals(val);
+  return Equals(nsDependentAtomString(aValue), aCaseSensitive);
 }
 
 struct HasPrefixFn {
