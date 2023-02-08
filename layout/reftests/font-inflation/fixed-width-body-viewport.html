@@ -15,6 +15,10 @@ into 50px-75px, so 12px gets mapped to 54px.
       overflow: hidden;
     }
   </style>
+  <script>
+    if (location.search)
+      document.documentElement.setAttribute("reftest-zoom", location.search.substr(1))
+  </script>
 </head>
   <body>
     PERSONS attempting to find a motive in this narrative will be prosecuted;

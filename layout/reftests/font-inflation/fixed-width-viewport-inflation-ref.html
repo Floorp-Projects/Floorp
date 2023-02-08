@@ -9,6 +9,10 @@ This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
     <style>
       div { width: 450px; font-size: 34px; line-height: 1.0; }
     </style>
+    <script>
+      if (location.search)
+        document.documentElement.setAttribute("reftest-zoom", location.search.substr(1))
+    </script>
   </head>
   <body>
     <div id="outer">
