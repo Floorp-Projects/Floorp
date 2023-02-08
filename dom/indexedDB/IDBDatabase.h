@@ -78,7 +78,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   // Weak refs, IDBMutableFile strongly owns this IDBDatabase object.
   nsTArray<NotNull<IDBMutableFile*>> mLiveMutableFiles;
 
-  const bool mFileHandleDisabled;
   bool mClosed;
   bool mInvalidated;
   bool mQuotaExceeded;
@@ -159,12 +158,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   void NoteActiveTransaction();
 
   void NoteInactiveTransaction();
-
-  // XXX This doesn't really belong here... It's only needed for IDBMutableFile
-  //     serialization and should be removed or fixed someday.
-  nsresult GetQuotaInfo(nsACString& aOrigin, PersistenceType* aPersistenceType);
-
-  bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
   void NoteLiveMutableFile(IDBMutableFile& aMutableFile);
 
