@@ -1042,7 +1042,7 @@ Tester.prototype = {
       if (currentTest.timedOut) {
         currentTest.addResult(
           new testResult({
-            name: `Uncaught exception received from previously timed out ${desc}`,
+            name: `Uncaught exception received from previously timed out ${desc} ${task.name}`,
             pass: false,
             ex,
             stack: typeof ex == "object" && "stack" in ex ? ex.stack : null,
@@ -1054,7 +1054,7 @@ Tester.prototype = {
       }
       currentTest.addResult(
         new testResult({
-          name: `Uncaught exception in ${desc}`,
+          name: `Uncaught exception in ${desc} ${task.name}`,
           pass: currentScope.SimpleTest.isExpectingUncaughtException(),
           ex,
           stack: typeof ex == "object" && "stack" in ex ? ex.stack : null,
@@ -1404,7 +1404,12 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
       // we have an exception - print filename and linenumber information
       this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
-    this.msg += String(ex);
+
+    if (ex instanceof Error) {
+      this.msg += String(ex);
+    } else {
+      this.msg += JSON.stringify(ex);
+    }
   }
 
   if (stack) {
