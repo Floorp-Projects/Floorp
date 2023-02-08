@@ -40,7 +40,7 @@ task-defaults:
         symbol: B
         platform: focus-android-all/opt
         tier: 1
-    worker-type: b-android
+    worker-type: b-android-large
     worker:
         docker-image: {in-tree: base}
         max-run-time: 7200
