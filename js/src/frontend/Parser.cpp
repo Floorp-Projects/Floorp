@@ -3195,8 +3195,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
         syntaxParser->clearAbortedSyntaxParse();
         usedNames_.rewind(token);
         this->compilationState_.rewind(statePosition);
-        MOZ_ASSERT_IF(!syntaxParser->cx_->isHelperThreadContext(),
-                      !syntaxParser->cx_->isExceptionPending());
+        MOZ_ASSERT(!fc_->hadErrors());
         break;
       }
       return false;
