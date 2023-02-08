@@ -10,7 +10,8 @@ const { ASRouter } = ChromeUtils.import(
 const calloutId = "root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
-const PDF_TEST_URL = "https://example.com/some.pdf";
+const PDF_TEST_URL =
+  "https://example.com/browser/browser/components/newtab/test/browser/file_pdf.PDF";
 
 const waitForCalloutScreen = async (doc, screenId) => {
   await BrowserTestUtils.waitForCondition(() => {
@@ -129,6 +130,10 @@ const testMessage = {
 };
 
 const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
+
+add_setup(async function() {
+  requestLongerTimeout(2);
+});
 
 add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   const sandbox = sinon.createSandbox();

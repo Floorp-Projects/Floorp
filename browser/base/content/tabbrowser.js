@@ -1089,7 +1089,7 @@
       // for callout messages on every change of tab location.
       if (
         !this._featureCallout &&
-        newBrowser.currentURI.spec.endsWith(".pdf")
+        newBrowser.contentPrincipal.originNoSuffix === "resource://pdf.js"
       ) {
         this._instantiateFeatureCalloutTour(newBrowser, newTab.linkedPanel);
         window.gBrowser.featureCallout.showFeatureCallout();
@@ -6754,7 +6754,7 @@
             gBrowser.featureCallout &&
             (gBrowser.featureCalloutPanelId !==
               gBrowser.selectedTab.linkedPanel ||
-              !aLocation.spec.endsWith(".pdf"))
+              gBrowser.contentPrincipal.originNoSuffix !== "resource://pdf.js")
           ) {
             gBrowser.featureCallout.endTour(true);
             gBrowser.featureCallout = null;
@@ -6763,7 +6763,10 @@
           // For now, only check for Feature Callout messages
           // when viewing PDFs. Later, we can expand this to check
           // for callout messages on every change of tab location.
-          if (!gBrowser.featureCallout && aLocation.spec.endsWith(".pdf")) {
+          if (
+            !gBrowser.featureCallout &&
+            gBrowser.contentPrincipal.originNoSuffix === "resource://pdf.js"
+          ) {
             gBrowser.instantiateFeatureCalloutTour(
               gBrowser.selectedBrowser,
               gBrowser.selectedTab.linkedPanel
