@@ -429,7 +429,6 @@ class CollectionTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun navigateBackInCollectionFlowTest() {
         val webPage = getGenericAsset(mockWebServer, 1)
 
@@ -463,7 +462,6 @@ class CollectionTest {
 
     @SmokeTest
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun undoDeleteCollectionTest() {
         val webPage = getGenericAsset(mockWebServer, 1)
 
