@@ -210,7 +210,7 @@ colorways-cfr-header-today = Independent Voices colorways expire today
 # Alternate headline for localization: "See fewer cookie requests"
 cfr-cookiebanner-header = Cookie banners begone!
 cfr-cookiebanner-body = Allow { -brand-short-name } to automatically reject all cookie banner requests when possible.
-cfr-cookiebanner-accept-button = Dismiss Banners
+cfr-cookiebanner-accept-button-v2 = Reject Requests
   .accesskey = D
 cfr-cookiebanner-reject-button = Not Now
   .accesskey = N
