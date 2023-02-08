@@ -446,7 +446,7 @@ nsresult MenuBarListener::Fullscreen(Event* aEvent) {
 MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
 MenuBarListener::HandleEvent(Event* aEvent) {
   // If the menu bar is collapsed, don't do anything.
-  if (!mMenuBar->GetPrimaryFrame() ||
+  if (!mMenuBar || !mMenuBar->GetPrimaryFrame() ||
       !mMenuBar->GetPrimaryFrame()->StyleVisibility()->IsVisible()) {
     return NS_OK;
   }
