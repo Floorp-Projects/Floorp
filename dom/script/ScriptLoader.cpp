@@ -1160,6 +1160,12 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     //   to fire an event named error at el, and return.
     if (!mModuleLoader->IsImportMapAllowed()) {
       NS_WARNING("ScriptLoader: import maps allowed is false.");
+      const char* msg = mModuleLoader->HasImportMapRegistered()
+                            ? "ImportMapNotAllowedMultiple"
+                            : "ImportMapNotAllowedAfterModuleLoad";
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      "Script Loader"_ns, mDocument,
+                                      nsContentUtils::eDOM_PROPERTIES, msg);
       NS_DispatchToCurrentThread(
           NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
                             &nsIScriptElement::FireErrorEvent));
