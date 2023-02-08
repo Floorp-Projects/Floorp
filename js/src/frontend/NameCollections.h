@@ -23,8 +23,6 @@
 #include "js/Utility.h"      // js_new, js_delete
 #include "js/Vector.h"       // Vector
 
-struct JSContext;
-
 namespace js {
 
 namespace detail {

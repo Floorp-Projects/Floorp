@@ -21,8 +21,6 @@
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/TokenStream.h"
 
-struct JS_PUBLIC_API JSContext;
-
 namespace js {
 
 namespace frontend {

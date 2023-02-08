@@ -213,7 +213,6 @@
 #include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
 
-struct JS_PUBLIC_API JSContext;
 struct KeywordInfo;
 
 namespace js {

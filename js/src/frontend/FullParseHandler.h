@@ -22,8 +22,6 @@
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 
-struct JS_PUBLIC_API JSContext;
-
 namespace js {
 namespace frontend {
 

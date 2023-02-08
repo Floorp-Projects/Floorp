@@ -21,7 +21,6 @@
 #include "js/Vector.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
-#include "vm/JSContext.h"
 #include "vm/JSScript.h"  // js::FillImmutableFlagsFromCompileOptionsForTopLevel, js::FillImmutableFlagsFromCompileOptionsForFunction
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 

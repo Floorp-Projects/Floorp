@@ -10,7 +10,6 @@
 #include "frontend/ParseContext.h"
 
 #include "frontend/Parser.h"
-#include "vm/JSContext.h"
 
 namespace js {
 namespace frontend {
