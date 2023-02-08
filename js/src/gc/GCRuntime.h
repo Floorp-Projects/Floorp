@@ -666,6 +666,9 @@ class GCRuntime {
                                   AutoLockGC& lock);
   void resetParameter(JSGCParamKey key, AutoLockGC& lock);
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
+  bool setThreadParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
+  void resetThreadParameter(JSGCParamKey key, AutoLockGC& lock);
+  void updateThreadDataStructures(AutoLockGC& lock);
 
   JS::GCOptions gcOptions() const { return maybeGcOptions.ref().ref(); }
 
