@@ -1,8 +1,0 @@
-<script>
-  const db1 = window.indexedDB.open('bug1577202_1_hello', {})
-  db1.onupgradeneeded = function (event) {
-    file = event.target.result.createMutableFile('F')
-    event.target.result.close()
-  }
-  window.indexedDB.open('', {})
-</script>

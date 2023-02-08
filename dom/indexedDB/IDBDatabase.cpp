@@ -632,49 +632,6 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
   return AsRefPtr(std::move(transaction));
 }
 
-RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
-    JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
-    ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  if (aName.IsEmpty()) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  if (QuotaManager::IsShuttingDown()) {
-    IDB_REPORT_INTERNAL_ERR();
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    return nullptr;
-  }
-
-  if (mClosed || mFileHandleDisabled) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
-    return nullptr;
-  }
-
-  nsString type;
-  if (aType.WasPassed()) {
-    type = aType.Value();
-  }
-
-  CreateFileParams params(nsString(aName), type);
-
-  auto request = IDBRequest::Create(aCx, this, nullptr).unwrap();
-
-  BackgroundDatabaseRequestChild* actor =
-      new BackgroundDatabaseRequestChild(this, request);
-
-  IDB_LOG_MARK_CHILD_REQUEST(
-      "database(%s).createMutableFile(%s)",
-      "IDBDatabase.createMutableFile(%.0s%.0s)", request->LoggingSerialNumber(),
-      IDB_LOG_STRINGIFY(this), NS_ConvertUTF16toUTF8(aName).get());
-
-  mBackgroundActor->SendPBackgroundIDBDatabaseRequestConstructor(actor, params);
-
-  return request;
-}
-
 void IDBDatabase::RegisterTransaction(IDBTransaction& aTransaction) {
   AssertIsOnOwningThread();
   aTransaction.AssertIsOnOwningThread();

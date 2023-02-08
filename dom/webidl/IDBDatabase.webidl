@@ -33,10 +33,3 @@ interface IDBDatabase : EventTarget {
                 attribute EventHandler       onerror;
                 attribute EventHandler       onversionchange;
 };
-
-partial interface IDBDatabase {
-    [Exposed=Window, Throws,
-     Deprecated="IDBDatabaseCreateMutableFile",
-     Pref="dom.fileHandle.enabled"]
-    IDBRequest createMutableFile (DOMString name, optional DOMString type);
-};
