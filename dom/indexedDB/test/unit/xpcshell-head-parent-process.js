@@ -472,17 +472,6 @@ function verifyBlob(blob1, blob2) {
   };
 }
 
-function verifyMutableFile(mutableFile1, file2) {
-  is(
-    IDBMutableFile.isInstance(mutableFile1),
-    true,
-    "Instance of IDBMutableFile"
-  );
-  is(mutableFile1.name, file2.name, "Correct name");
-  is(mutableFile1.type, file2.type, "Correct type");
-  continueToNextStep();
-}
-
 function verifyView(view1, view2) {
   is(view1.byteLength, view2.byteLength, "Correct byteLength");
   verifyBuffers(view1, view2);
