@@ -6,7 +6,3 @@
 var { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
  );
-
-const ucScript = document.createElement('script');
-ucScript.src = "chrome://userchromejs/content/chromecss.uc.js"; 
-document.head.appendChild(ucScript); 

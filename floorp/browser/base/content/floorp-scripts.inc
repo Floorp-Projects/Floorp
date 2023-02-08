@@ -23,5 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-pinned-tabs-title.js", this);
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-chromeCSS.js", this);
 }, { once: true });
 </script>
