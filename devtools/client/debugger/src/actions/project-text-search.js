@@ -14,7 +14,6 @@ import {
   getSourceList,
   getSettledSourceTextContent,
 } from "../selectors";
-import { isThirdParty } from "../utils/source";
 import { createLocation } from "../utils/location";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
@@ -73,21 +72,43 @@ export function stopOngoingSearch(cx) {
 export function searchSources(cx, query) {
   let cancelled = false;
 
+  function isThirdParty(source) {
+    return (
+      source?.url &&
+      (source.url.includes("node_modules") ||
+        source.url.includes("bower_components"))
+    );
+  }
   const search = async ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch(cx));
     await dispatch(addOngoingSearch(cx, search));
     await dispatch(clearSearchResults(cx));
     await dispatch(addSearchQuery(cx, query));
     dispatch(updateSearchStatus(cx, statusType.fetching));
-    let validSources = getSourceList(getState()).filter(
-      source => !hasPrettySource(getState(), source.id) && !isThirdParty(source)
+    const validSources = getSourceList(getState()).filter(
+      source => !hasPrettySource(getState(), source.id)
     );
+
     // Sort original entries first so that search results are more useful.
-    // See bug 1642778.
-    validSources = [
-      ...validSources.filter(x => x.isOriginal),
-      ...validSources.filter(x => !x.isOriginal),
-    ];
+    // Deprioritize third-party scripts, so their results show last.
+    validSources.sort((a, b) => {
+      if (a.isOriginal && !isThirdParty(a)) {
+        return -1;
+      }
+
+      if (b.isOriginal && !isThirdParty(b)) {
+        return 1;
+      }
+
+      if (!isThirdParty(a) && isThirdParty(b)) {
+        return -1;
+      }
+      if (isThirdParty(a) && !isThirdParty(b)) {
+        return 1;
+      }
+      return 0;
+    });
+
     for (const source of validSources) {
       if (cancelled) {
         return;

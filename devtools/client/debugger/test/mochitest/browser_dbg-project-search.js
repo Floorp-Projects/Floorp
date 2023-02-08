@@ -76,14 +76,14 @@ add_task(async function testExpandSearchResultsToShowMatches() {
   await openProjectSearch(dbg);
   await doProjectSearch(dbg, "we");
 
-  is(getExpandedResultsCount(dbg), 18);
+  is(getExpandedResultsCount(dbg), 159);
 
   const collapsedNodes = findAllElements(dbg, "projectSearchCollapsed");
   is(collapsedNodes.length, 1);
 
   collapsedNodes[0].click();
 
-  is(getExpandedResultsCount(dbg), 226);
+  is(getExpandedResultsCount(dbg), 367);
 });
 
 async function selectResultMatch(dbg) {

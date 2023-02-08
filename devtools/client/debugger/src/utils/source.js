@@ -145,15 +145,6 @@ export function isPrettyURL(url) {
   return url ? url.endsWith(":formatted") : false;
 }
 
-export function isThirdParty(source) {
-  const { url } = source;
-  if (!source || !url) {
-    return false;
-  }
-
-  return url.includes("node_modules") || url.includes("bower_components");
-}
-
 /**
  * @memberof utils/source
  * @static
