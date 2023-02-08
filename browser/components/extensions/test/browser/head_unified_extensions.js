@@ -130,7 +130,7 @@ const createExtensions = (
  * the available screen size (unless the window is already maximized).
  */
 const ensureMaximizedWindow = async win => {
-  info("ensuring maximized window...");
+  let resizeDone = Promise.resolve();
 
   // Make sure we wait for window position to have settled
   // to avoid unexpected failures.
@@ -153,14 +153,12 @@ const ensureMaximizedWindow = async win => {
   const heightDiff = Math.max(win.screen.availHeight - win.outerHeight, 0);
 
   if (widthDiff || heightDiff) {
-    info(
-      `resizing window... widthDiff=${widthDiff} - heightDiff=${heightDiff}`
-    );
+    resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
     win.windowUtils.ensureDirtyRootFrame();
     win.resizeBy(widthDiff, heightDiff);
-  } else {
-    info(`not resizing window!`);
   }
+
+  await resizeDone;
 
   // Make sure we wait for window size to have settled.
   let lastOuterWidth = win.outerWidth;
