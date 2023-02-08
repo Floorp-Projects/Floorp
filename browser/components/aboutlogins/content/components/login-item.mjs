@@ -81,9 +81,6 @@ export default class LoginItem extends HTMLElement {
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
-    this._breachAlertLearnMoreLink = this._breachAlert.querySelector(
-      ".alert-learn-more-link"
-    );
     this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
     this._vulnerableAlertLink = this._vulnerableAlert.querySelector(
       ".alert-link"
@@ -94,7 +91,6 @@ export default class LoginItem extends HTMLElement {
 
     this.render();
 
-    this._breachAlertLearnMoreLink.addEventListener("click", this);
     this._cancelButton.addEventListener("click", this);
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
@@ -151,7 +147,6 @@ export default class LoginItem extends HTMLElement {
       !this._breachesMap || !this._breachesMap.has(this._login.guid);
     if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
-      this._breachAlertLearnMoreLink.href = breachDetails.breachAlertURL;
       this._breachAlertLink.href = this._login.origin;
       document.l10n.setAttributes(
         this._breachAlertLink,
@@ -491,12 +486,7 @@ export default class LoginItem extends HTMLElement {
           this._handleOriginClick();
         }
         if (classList.contains("alert-learn-more-link")) {
-          if (event.currentTarget.closest(".breach-alert")) {
-            this._recordTelemetryEvent({
-              object: "existing_login",
-              method: "learn_more_breach",
-            });
-          } else if (event.currentTarget.closest(".vulnerable-alert")) {
+          if (event.currentTarget.closest(".vulnerable-alert")) {
             this._recordTelemetryEvent({
               object: "existing_login",
               method: "learn_more_vuln",
