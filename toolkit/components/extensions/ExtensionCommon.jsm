@@ -41,6 +41,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIStyleSheetService"
 );
 
+const ScriptError = Components.Constructor(
+  "@mozilla.org/scripterror;1",
+  "nsIScriptError",
+  "initWithWindowID"
+);
+
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
@@ -70,12 +76,16 @@ function runSafeSyncWithoutClone(f, ...args) {
   try {
     return f(...args);
   } catch (e) {
+    // This method is called with `this` unbound and it doesn't have
+    // access to a BaseContext instance and so we can't check if `e`
+    // is an instance of the extension context's Error constructor
+    // (like we do in BaseContext applySafeWithoutClone method).
     dump(
-      `Extension error: ${e} ${e.fileName} ${
-        e.lineNumber
-      }\n[[Exception stack\n${filterStack(e)}Current stack\n${filterStack(
-        Error()
-      )}]]\n`
+      `Extension error: ${e} ${e?.fileName} ${
+        e?.lineNumber
+      }\n[[Exception stack\n${
+        e?.stack ? filterStack(e) : undefined
+      }Current stack\n${filterStack(Error())}]]\n`
     );
     Cu.reportError(e);
   }
@@ -461,6 +471,10 @@ class BaseContext {
     this.cloneScopePromise = null;
   }
 
+  get isProxyContextParent() {
+    return false;
+  }
+
   get Error() {
     // Return the copy stored in the context instance (when the context is an instance of
     // ContentScriptContextChild or the global from extension page window otherwise).
@@ -626,13 +640,91 @@ class BaseContext {
       try {
         return Reflect.apply(callback, null, args);
       } catch (e) {
+        // An extension listener may as well be throwing an object that isn't
+        // an instance of Error, in that case we have to use fallbacks for the
+        // error message, fileName, lineNumber and columnNumber properties.
+        const isError = e instanceof this.Error;
+        let message;
+        let fileName;
+        let lineNumber;
+        let columnNumber;
+
+        if (isError) {
+          message = `${e.name}: ${e.message}`;
+          lineNumber = e.lineNumber;
+          columnNumber = e.columnNumber;
+          fileName = e.fileName;
+        } else {
+          message = `uncaught exception: ${e}`;
+
+          try {
+            // TODO(Bug 1810582): the following fallback logic may go away once
+            // we introduced a better way to capture and log the exception in
+            // the right window and in all cases (included when the extension
+            // code is raising undefined or an object that isn't an instance of
+            // the Error constructor).
+            //
+            // Fallbacks for the error location:
+            // - the callback location if it is registered directly from the
+            //   extension code (and not wrapped by the child/ext-APINAMe.js
+            //   implementation, like e.g. browser.storage, browser.devtools.network
+            //   are doing and browser.menus).
+            // - if the location of the extension callback is not directly
+            //   available (e.g. browser.storage onChanged events, and similarly
+            //   for browser.devtools.network and browser.menus events):
+            //   - the extension page url if the context is an extension page
+            //   - the extension base url if the context is a content script
+            const cbLoc = Cu.getFunctionSourceLocation(callback);
+            fileName = cbLoc.filename;
+            lineNumber = cbLoc.lineNumber ?? lineNumber;
+
+            const extBaseUrl = this.extension.baseURI.resolve("/");
+            if (fileName.startsWith(extBaseUrl)) {
+              fileName = cbLoc.filename;
+              lineNumber = cbLoc.lineNumber ?? lineNumber;
+            } else {
+              fileName = this.contentWindow?.location?.href;
+              if (!fileName || !fileName.startsWith(extBaseUrl)) {
+                fileName = extBaseUrl;
+              }
+            }
+          } catch {
+            // Ignore errors on retrieving the callback source location.
+          }
+        }
+
         dump(
-          `Extension error: ${e} ${e.fileName} ${
-            e.lineNumber
-          }\n[[Exception stack\n${filterStack(e)}Current stack\n${filterStack(
-            Error()
-          )}]]\n`
+          `Extension error: ${message} ${fileName} ${lineNumber}\n[[Exception stack\n${
+            isError ? filterStack(e) : undefined
+          }Current stack\n${filterStack(Error())}]]\n`
         );
+
+        // If the error is coming from an extension context associated
+        // to a window (e.g. an extension page or extension content script).
+        //
+        // TODO(Bug 1810574): for the background service worker we will need to do
+        // something similar, but not tied to the innerWindowID because there
+        // wouldn't be one set for extension contexts related to the
+        // background service worker.
+        //
+        // TODO(Bug 1810582): change the error associated to the innerWindowID to also
+        // include a full stack from the original error.
+        if (!this.isProxyContextParent && this.contentWindow) {
+          Services.console.logMessage(
+            new ScriptError(
+              message,
+              fileName,
+              null,
+              lineNumber,
+              columnNumber,
+              Ci.nsIScriptError.errorFlag,
+              "content javascript",
+              this.innerWindowID
+            )
+          );
+        }
+        // Also report the original error object (because it also includes
+        // the full error stack).
         Cu.reportError(e);
       }
     }
