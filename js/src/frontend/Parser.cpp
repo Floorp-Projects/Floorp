@@ -347,14 +347,14 @@ bool ParserBase::setSourceMapInfo() {
   }
 
   if (anyChars.hasDisplayURL()) {
-    if (!ss->setDisplayURL(cx_, fc_, anyChars.displayURL())) {
+    if (!ss->setDisplayURL(fc_, anyChars.displayURL())) {
       return false;
     }
   }
 
   if (anyChars.hasSourceMapURL()) {
     MOZ_ASSERT(!ss->hasSourceMapURL());
-    if (!ss->setSourceMapURL(cx_, fc_, anyChars.sourceMapURL())) {
+    if (!ss->setSourceMapURL(fc_, anyChars.sourceMapURL())) {
       return false;
     }
   }
@@ -372,7 +372,7 @@ bool ParserBase::setSourceMapInfo() {
       }
     }
 
-    if (!ss->setSourceMapURL(cx_, fc_, options().sourceMapURL())) {
+    if (!ss->setSourceMapURL(fc_, options().sourceMapURL())) {
       return false;
     }
   }

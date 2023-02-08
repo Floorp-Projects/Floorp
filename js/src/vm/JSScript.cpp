@@ -1888,13 +1888,13 @@ bool ScriptSource::initFromOptions(JSContext* cx, FrontendContext* fc,
       return false;
     }
   } else if (options.filename()) {
-    if (!setFilename(cx, fc, options.filename())) {
+    if (!setFilename(fc, options.filename())) {
       return false;
     }
   }
 
   if (options.introducerFilename()) {
-    if (!setIntroducerFilename(cx, fc, options.introducerFilename())) {
+    if (!setIntroducerFilename(fc, options.introducerFilename())) {
       return false;
     }
   }
@@ -1926,8 +1926,7 @@ SharedImmutableTwoByteString ScriptSource::getOrCreateStringZ(
   return GetOrCreateStringZ<SharedImmutableTwoByteString>(fc, std::move(str));
 }
 
-bool ScriptSource::setFilename(JSContext* cx, FrontendContext* fc,
-                               const char* filename) {
+bool ScriptSource::setFilename(FrontendContext* fc, const char* filename) {
   UniqueChars owned = DuplicateString(fc, filename);
   if (!owned) {
     return false;
@@ -1941,7 +1940,7 @@ bool ScriptSource::setFilename(FrontendContext* fc, UniqueChars&& filename) {
   return bool(filename_);
 }
 
-bool ScriptSource::setIntroducerFilename(JSContext* cx, FrontendContext* fc,
+bool ScriptSource::setIntroducerFilename(FrontendContext* fc,
                                          const char* filename) {
   UniqueChars owned = DuplicateString(fc, filename);
   if (!owned) {
@@ -1957,16 +1956,15 @@ bool ScriptSource::setIntroducerFilename(FrontendContext* fc,
   return bool(introducerFilename_);
 }
 
-bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
-                                 const char16_t* url) {
+bool ScriptSource::setDisplayURL(FrontendContext* fc, const char16_t* url) {
   UniqueTwoByteChars owned = DuplicateString(fc, url);
   if (!owned) {
     return false;
   }
-  return setDisplayURL(cx, fc, std::move(owned));
+  return setDisplayURL(fc, std::move(owned));
 }
 
-bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
+bool ScriptSource::setDisplayURL(FrontendContext* fc,
                                  UniqueTwoByteChars&& url) {
   if (hasDisplayURL()) {
     // FIXME: filename() should be UTF-8 (bug 987069).
@@ -1988,8 +1986,7 @@ bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
   return bool(displayURL_);
 }
 
-bool ScriptSource::setSourceMapURL(JSContext* cx, FrontendContext* fc,
-                                   const char16_t* url) {
+bool ScriptSource::setSourceMapURL(FrontendContext* fc, const char16_t* url) {
   UniqueTwoByteChars owned = DuplicateString(fc, url);
   if (!owned) {
     return false;

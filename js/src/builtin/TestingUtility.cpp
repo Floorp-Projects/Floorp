@@ -183,7 +183,7 @@ bool js::SetSourceOptions(JSContext* cx, FrontendContext* fc,
     if (!chars) {
       return false;
     }
-    if (!source->setDisplayURL(cx, fc, std::move(chars))) {
+    if (!source->setDisplayURL(fc, std::move(chars))) {
       return false;
     }
   }
