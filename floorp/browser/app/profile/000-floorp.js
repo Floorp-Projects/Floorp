@@ -85,7 +85,7 @@ pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
 pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
 
 // url:URL width:幅 userAgent:userAgent usercontext:コンテナタブ
-pref("floorp.browser.sidebar2.data", "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}");
+pref("floorp.browser.sidebar2.data", '{"data":{"1":{"url":"floorp//bmt","width":600},"2":{"url":"floorp//bookmarks","width":415},"3":{"url":"floorp//history","width":415},"4":{"url":"floorp//downloads","width":415},"5":{"url":"floorp//tst","width":415},"w1":{"url":"https://freasearch.org"},"w2":{"url":"https://translate.google.com"},"w3":{"url":"https://misskey.io"}},"index":["1","2","3","4","5","w1","w2","w3"]}');
 
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 

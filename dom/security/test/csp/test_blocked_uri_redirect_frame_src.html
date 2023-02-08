@@ -19,8 +19,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const BLOCKED_URI =
-  "http://example.com/tests/dom/security/test/csp/file_blocked_uri_redirect_frame_src_server.sjs?doredirect";
+const BLOCKED_URI = "http://example.com";
 
 var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
 var script = SpecialPowers.loadChromeScript(chromeScriptUrl);

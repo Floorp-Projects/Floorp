@@ -534,6 +534,10 @@ css-menu =
     .label = CSS
     .accesskey = C
 
+css-menubar =
+    .label = CSS
+    .accesskey = C
+
 rebuild-css =
     .label = Rebuild browser CSS files
     .accesskey = R
