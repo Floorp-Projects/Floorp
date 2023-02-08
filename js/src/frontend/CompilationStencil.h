@@ -1459,7 +1459,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   // Allocate space for `length` gcthings, and return the address of the
   // first element to `cursor` to initialize on the caller.
-  bool allocateGCThingsUninitialized(JSContext* cx, FrontendContext* fc,
+  bool allocateGCThingsUninitialized(FrontendContext* fc,
                                      ScriptIndex scriptIndex, size_t length,
                                      TaggedScriptThingIndex** cursor);
 

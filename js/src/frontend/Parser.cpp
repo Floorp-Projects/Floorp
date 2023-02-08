@@ -2206,7 +2206,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   TaggedScriptThingIndex* cursor = nullptr;
   if (!this->compilationState_.allocateGCThingsUninitialized(
-          cx_, fc_, funbox->index(), ngcthings.value(), &cursor)) {
+          fc_, funbox->index(), ngcthings.value(), &cursor)) {
     return false;
   }
 
