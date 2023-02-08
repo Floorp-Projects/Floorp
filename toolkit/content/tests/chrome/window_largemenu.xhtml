@@ -148,9 +148,7 @@ function popupShown()
     expectedScrollPos = 40;
   }
   else if (gTestIndex == 3) {
-    // TODO(bug 1815608): This never worked on Wayland, but regressed with flexbox emulation.
-    todo_is(scrollbox.scrollTop, 40, "menu scroll position after reopening large menu should not reset");
-    expectedScrollPos = 0;
+    expectedScrollPos = 40;
   }
   else if (gTestIndex == 4) {
     // note that if the height is odd, the y-offset will have been rounded
@@ -162,7 +160,7 @@ function popupShown()
     ok(!gOverflowed && gUnderflowed, gTests[gTestIndex] + " overflow");
   }
 
-  is(scrollbox.scrollTop, expectedScrollPos, "menu scroll position " + gTests[gTestIndex])
+  is(scrollbox.scrollTop, expectedScrollPos, "menu scroll position")
 
   return hidePopup();
 }
