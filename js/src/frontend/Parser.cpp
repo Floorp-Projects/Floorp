@@ -189,6 +189,13 @@ bool ParserBase::checkOptions() {
 
 ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
+JSAtom* ParserBase::liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
+  JSContext* cx = fc_->maybeCurrentJSContext();
+  MOZ_ASSERT(cx);
+  return parserAtoms().toJSAtom(cx, fc_, index,
+                                compilationState_.input.atomCache);
+}
+
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
