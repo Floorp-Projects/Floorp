@@ -2,32 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // _AboutLogins is only exported for testing
-var EXPORTED_SYMBOLS = ["AboutLoginsParent", "_AboutLogins"];
+import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginExport: "resource://gre/modules/LoginExport.jsm",
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
@@ -92,7 +81,7 @@ const augmentVanillaLoginObject = login => {
   });
 };
 
-class AboutLoginsParent extends JSWindowActorParent {
+export class AboutLoginsParent extends JSWindowActorParent {
   async receiveMessage(message) {
     if (!this.browsingContext.embedderElement) {
       return;
@@ -878,7 +867,7 @@ class AboutLoginsInternal {
 }
 
 let AboutLogins = new AboutLoginsInternal();
-var _AboutLogins = AboutLogins;
+export var _AboutLogins = AboutLogins;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
