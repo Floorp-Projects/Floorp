@@ -28,8 +28,8 @@ buildscript {
     }
 
     dependencies {
-        classpath Dependencies.tools_androidgradle
-        classpath Dependencies.tools_kotlingradle
+        classpath ComponentsDependencies.tools_androidgradle
+        classpath ComponentsDependencies.tools_kotlingradle
     }
 }
 
@@ -264,7 +264,7 @@ subprojects {
             }
 
             dependencies {
-                jnaForTest Dependencies.thirdparty_jna
+                jnaForTest ComponentsDependencies.thirdparty_jna
                 testImplementation files(configurations.jnaForTest.copyRecursive().files)
             }
 

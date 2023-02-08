@@ -28,14 +28,14 @@ android {
 }
 
 dependencies {
-    implementation(Dependencies.mozilla_httpconfig) {
+    implementation (ComponentsDependencies.mozilla_httpconfig) {
         // Override the version of concept-fetch that A-S depends on,
         // since we want to replace it with our own.
         exclude group: 'org.mozilla.components', module: 'concept-fetch'
     }
     api project(':concept-fetch')
 
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_stdlib
 }
 
 apply from: '../../../android-lint.gradle'

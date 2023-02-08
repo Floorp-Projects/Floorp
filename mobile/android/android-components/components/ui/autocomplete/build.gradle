@@ -24,18 +24,18 @@ android {
 }
 
 dependencies {
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_stdlib
 
-    implementation Dependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_appcompat
 
     implementation project(":support-base")
     implementation project(":support-utils")
 
     testImplementation project(":support-test")
 
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

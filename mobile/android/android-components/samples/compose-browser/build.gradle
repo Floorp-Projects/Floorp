@@ -68,16 +68,16 @@ dependencies {
 
     implementation project(':ui-icons')
 
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_stdlib
 
-    implementation Dependencies.androidx_activity_compose
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_core_ktx
-    implementation Dependencies.androidx_compose_ui
-    implementation Dependencies.androidx_compose_ui_tooling
-    implementation Dependencies.androidx_compose_foundation
-    implementation Dependencies.androidx_compose_material
-    implementation Dependencies.androidx_compose_navigation
+    implementation ComponentsDependencies.androidx_activity_compose
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_compose_navigation
 }
 
 preBuild.dependsOn updateBorderifyExtensionVersion

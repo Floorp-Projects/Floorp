@@ -42,30 +42,30 @@ dependencies {
     implementation project(':support-base')
     implementation project(':feature-prompts')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation Dependencies.androidx_paging
-    implementation Dependencies.androidx_lifecycle_livedata
+    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
 
-    implementation Dependencies.androidx_room_runtime
-    kapt Dependencies.androidx_room_compiler
+    implementation ComponentsDependencies.androidx_room_runtime
+    kapt ComponentsDependencies.androidx_room_compiler
 
     testImplementation project(':support-test')
 
-    testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.testing_junit
-    testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.kotlin_coroutines
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.kotlin_coroutines
 
     androidTestImplementation project(':support-android-test')
 
-    androidTestImplementation Dependencies.androidx_room_testing
-    androidTestImplementation Dependencies.androidx_arch_core_testing
-    androidTestImplementation Dependencies.androidx_test_core
-    androidTestImplementation Dependencies.androidx_test_runner
-    androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_room_testing
+    androidTestImplementation ComponentsDependencies.androidx_arch_core_testing
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
 }
 
 apply from: '../../../android-lint.gradle'

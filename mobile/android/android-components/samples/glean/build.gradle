@@ -57,22 +57,22 @@ dependencies {
     implementation project(':support-rustlog')
     implementation project(':lib-fetch-httpurlconnection')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_browser
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_browser
 
     implementation project(':samples-glean-library')
 
-    androidTestImplementation Dependencies.androidx_test_core
-    androidTestImplementation Dependencies.androidx_test_runner
-    androidTestImplementation Dependencies.androidx_test_rules
-    androidTestImplementation Dependencies.androidx_test_junit
-    androidTestImplementation Dependencies.androidx_test_uiautomator
-    androidTestImplementation Dependencies.androidx_espresso_core
-    androidTestImplementation Dependencies.androidx_work_testing
-    androidTestImplementation Dependencies.testing_mockwebserver
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core
+    androidTestImplementation ComponentsDependencies.androidx_work_testing
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
 }
 
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"

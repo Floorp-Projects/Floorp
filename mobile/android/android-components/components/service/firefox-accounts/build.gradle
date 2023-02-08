@@ -33,8 +33,8 @@ dependencies {
     api project(':concept-storage')
 
     // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api Dependencies.mozilla_fxa
-    implementation Dependencies.mozilla_sync_manager
+    api ComponentsDependencies.mozilla_fxa
+    implementation ComponentsDependencies.mozilla_sync_manager
 
     // Observable is part of public API of the FxaAccountManager.
     api project(':support-base')
@@ -44,23 +44,23 @@ dependencies {
     implementation project(':lib-dataprotect')
     implementation project(':lib-state')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation Dependencies.androidx_work_runtime
-    implementation Dependencies.androidx_lifecycle_process
+    implementation ComponentsDependencies.androidx_work_runtime
+    implementation ComponentsDependencies.androidx_lifecycle_process
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
-    testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.androidx_work_testing
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_coroutines
 
-    testImplementation Dependencies.mozilla_full_megazord_forUnitTests
-    testImplementation Dependencies.kotlin_reflect
+    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.kotlin_reflect
 }
 
 apply from: '../../../android-lint.gradle'

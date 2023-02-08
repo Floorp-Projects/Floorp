@@ -26,16 +26,16 @@ dependencies {
     implementation project(':feature-tabs')
     implementation project(':browser-state')
 
-    implementation Dependencies.androidx_core_ktx
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
     testImplementation project(':browser-engine-gecko')
-    testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_coroutines
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../android-lint.gradle'

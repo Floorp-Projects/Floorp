@@ -31,24 +31,24 @@ android {
 }
 
 dependencies {
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.kotlin_reflect
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_reflect
 
-    implementation Dependencies.androidx_test_junit
-    implementation Dependencies.testing_mockito
-    implementation Dependencies.testing_coroutines
-    implementation Dependencies.androidx_fragment
-    implementation (Dependencies.testing_robolectric) {
+    implementation ComponentsDependencies.androidx_test_junit
+    implementation ComponentsDependencies.testing_mockito
+    implementation ComponentsDependencies.testing_coroutines
+    implementation ComponentsDependencies.androidx_fragment
+    implementation  (ComponentsDependencies.testing_robolectric) {
         exclude group: 'org.apache.maven'
     }
     implementation project(':support-base')
-    testImplementation Dependencies.testing_maven_ant_tasks
+    testImplementation ComponentsDependencies.testing_maven_ant_tasks
 
-    implementation Dependencies.androidx_test_core
+    implementation ComponentsDependencies.androidx_test_core
 
-    testImplementation Dependencies.androidx_core
-    testImplementation Dependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.androidx_core
+    testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation project(':support-ktx')
 }
 

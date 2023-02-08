@@ -49,9 +49,9 @@ dependencies {
 
     implementation project(':support-utils')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_recyclerview
 }

@@ -9,23 +9,23 @@ targetCompatibility = JavaVersion.VERSION_11
 sourceCompatibility = JavaVersion.VERSION_11
 
 dependencies {
-  compileOnly Dependencies.tools_lintapi
-  compileOnly Dependencies.tools_lintchecks
+  compileOnly ComponentsDependencies.tools_lintapi
+  compileOnly ComponentsDependencies.tools_lintchecks
 
   // Force the usage of /our/ Kotlin version and not what we get transitively from the lint
-  // dependencies. Otherwise we end up with a warning that there are multiple versions on the
+  // ComponentsDependencies. Otherwise we end up with a warning that there are multiple versions on the
   // classpath.
-  compileOnly Dependencies.kotlin_stdlib
+  compileOnly ComponentsDependencies.kotlin_stdlib
   compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
-  compileOnly Dependencies.kotlin_reflect
-  testImplementation Dependencies.kotlin_stdlib
+  compileOnly ComponentsDependencies.kotlin_reflect
+  testImplementation ComponentsDependencies.kotlin_stdlib
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
-  testImplementation Dependencies.kotlin_reflect
+  testImplementation ComponentsDependencies.kotlin_reflect
 
-  testImplementation Dependencies.tools_lint
-  testImplementation Dependencies.tools_linttests
-  testImplementation Dependencies.testing_junit
-  testImplementation Dependencies.testing_mockito
+  testImplementation ComponentsDependencies.tools_lint
+  testImplementation ComponentsDependencies.tools_linttests
+  testImplementation ComponentsDependencies.testing_junit
+  testImplementation ComponentsDependencies.testing_mockito
 }
 
 jar {

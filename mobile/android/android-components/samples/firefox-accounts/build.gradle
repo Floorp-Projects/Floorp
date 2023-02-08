@@ -42,11 +42,11 @@ dependencies {
     implementation project(':support-rusthttp')
     implementation project(':lib-fetch-httpurlconnection')
 
-    implementation Dependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_constraintlayout
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_browser
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_browser
 }

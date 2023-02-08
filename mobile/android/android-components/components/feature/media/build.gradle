@@ -40,20 +40,20 @@ dependencies {
     implementation project(':support-base')
     implementation project(':support-utils')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.androidx_media
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_media
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 
-    testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.kotlin_reflect
-    testImplementation Dependencies.testing_junit
-    testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.kotlin_reflect
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
 }
 
 apply from: '../../../android-lint.gradle'

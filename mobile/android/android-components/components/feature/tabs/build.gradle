@@ -43,21 +43,21 @@ dependencies {
     implementation project(':ui-tabcounter')
     implementation project(':support-ktx')
 
-    implementation Dependencies.androidx_fragment
-    implementation Dependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_recyclerview
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_coroutines
 
     // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
     testImplementation project(':concept-engine')
 
     testImplementation project(':support-test')
 
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_coroutines
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
     testImplementation project(":support-test-libstate")
 }
 

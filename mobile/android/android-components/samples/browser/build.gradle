@@ -135,36 +135,36 @@ dependencies {
 
     geckoImplementation project(':browser-engine-gecko')
 
-    implementation Dependencies.google_material
+    implementation ComponentsDependencies.google_material
 
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_stdlib
 
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_compose_ui_tooling
-    implementation Dependencies.androidx_compose_foundation
-    implementation Dependencies.androidx_compose_material
-    implementation Dependencies.androidx_core_ktx
-    implementation Dependencies.androidx_constraintlayout
-    implementation Dependencies.androidx_swiperefreshlayout
-    implementation Dependencies.androidx_localbroadcastmanager
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_swiperefreshlayout
+    implementation ComponentsDependencies.androidx_localbroadcastmanager
 
-    debugImplementation Dependencies.leakcanary
+    debugImplementation ComponentsDependencies.leakcanary
 
-    testImplementation Dependencies.androidx_test_core
-    testImplementation Dependencies.androidx_test_junit
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
-    testImplementation Dependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_coroutines
 
     androidTestImplementation project(':support-android-test')
-    androidTestImplementation Dependencies.androidx_test_core
-    androidTestImplementation Dependencies.androidx_test_runner
-    androidTestImplementation Dependencies.androidx_test_rules
-    androidTestImplementation Dependencies.androidx_test_junit
-    androidTestImplementation Dependencies.androidx_test_uiautomator
-    androidTestImplementation Dependencies.androidx_espresso_core
-    androidTestImplementation Dependencies.testing_leakcanary
-    androidTestImplementation Dependencies.testing_mockwebserver
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core
+    androidTestImplementation ComponentsDependencies.testing_leakcanary
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
 }
 
 preBuild.dependsOn updateBorderifyExtensionVersion

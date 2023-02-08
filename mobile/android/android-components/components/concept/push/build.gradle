@@ -26,13 +26,13 @@ android {
 }
 
 dependencies {
-    implementation Dependencies.kotlin_stdlib
+    implementation ComponentsDependencies.kotlin_stdlib
 
     implementation project(':support-base')
 
     testImplementation project(':support-test')
-    testImplementation Dependencies.testing_junit
-    testImplementation Dependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../android-lint.gradle'
