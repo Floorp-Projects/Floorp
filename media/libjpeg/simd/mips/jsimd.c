@@ -2,9 +2,9 @@
  * jsimd_mips.c
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009-2011, 2014, 2016, 2018, 2020, D. R. Commander.
+ * Copyright (C) 2009-2011, 2014, 2016, 2018, 2020, 2022, D. R. Commander.
  * Copyright (C) 2013-2014, MIPS Technologies, Inc., California.
- * Copyright (C) 2015-2016, 2018, Matthieu Darbois.
+ * Copyright (C) 2015-2016, 2018, 2022, Matthieu Darbois.
  *
  * Based on the x86 SIMD extension for IJG JPEG library,
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -25,7 +25,7 @@
 
 #include <ctype.h>
 
-static unsigned int simd_support = ~0;
+static THREAD_LOCAL unsigned int simd_support = ~0;
 
 #if !(defined(__mips_dsp) && (__mips_dsp_rev >= 2)) && defined(__linux__)
 
@@ -55,8 +55,6 @@ parse_proc_cpuinfo(const char *search_string)
 
 /*
  * Check what SIMD accelerations are supported.
- *
- * FIXME: This code is racy under a multi-threaded environment.
  */
 LOCAL(void)
 init_simd(void)
@@ -1126,7 +1124,7 @@ jsimd_can_encode_mcu_AC_first_prepare(void)
 GLOBAL(void)
 jsimd_encode_mcu_AC_first_prepare(const JCOEF *block,
                                   const int *jpeg_natural_order_start, int Sl,
-                                  int Al, JCOEF *values, size_t *zerobits)
+                                  int Al, UJCOEF *values, size_t *zerobits)
 {
 }
 
@@ -1139,7 +1137,7 @@ jsimd_can_encode_mcu_AC_refine_prepare(void)
 GLOBAL(int)
 jsimd_encode_mcu_AC_refine_prepare(const JCOEF *block,
                                    const int *jpeg_natural_order_start, int Sl,
-                                   int Al, JCOEF *absvalues, size_t *bits)
+                                   int Al, UJCOEF *absvalues, size_t *bits)
 {
   return 0;
 }

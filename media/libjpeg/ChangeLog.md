@@ -1,7 +1,83 @@
+2.1.5.1
+=======
+
+### Significant changes relative to 2.1.5:
+
+1. The SIMD dispatchers in libjpeg-turbo 2.1.4 and prior stored the list of
+supported SIMD instruction sets in a global variable, which caused an innocuous
+race condition whereby the variable could have been initialized multiple times
+if `jpeg_start_*compress()` was called simultaneously in multiple threads.
+libjpeg-turbo 2.1.5 included an undocumented attempt to fix this race condition
+by making the SIMD support variable thread-local.  However, that caused another
+issue whereby, if `jpeg_start_*compress()` was called in one thread and
+`jpeg_read_*()` or `jpeg_write_*()` was called in a second thread, the SIMD
+support variable was never initialized in the second thread.  On x86 systems,
+this led the second thread to incorrectly assume that AVX2 instructions were
+always available, and when it attempted to use those instructions on older x86
+CPUs that do not support them, an illegal instruction error occurred.  The SIMD
+dispatchers now ensure that the SIMD support variable is initialized before
+dispatching based on its value.
+
+
+2.1.5
+=====
+
+### Significant changes relative to 2.1.4:
+
+1. Fixed issues in the build system whereby, when using the Ninja Multi-Config
+CMake generator, a static build of libjpeg-turbo (a build in which
+`ENABLE_SHARED` is `0`) could not be installed, a Windows installer could not
+be built, and the Java regression tests failed.
+
+2. Fixed a regression introduced by 2.0 beta1[15] that caused a buffer overrun
+in the progressive Huffman encoder when attempting to transform a
+specially-crafted malformed 12-bit-per-component JPEG image into a progressive
+12-bit-per-component JPEG image using a 12-bit-per-component build of
+libjpeg-turbo (`-DWITH_12BIT=1`.)  Given that the buffer overrun was fully
+contained within the progressive Huffman encoder structure and did not cause a
+segfault or other user-visible errant behavior, given that the lossless
+transformer (unlike the decompressor) is not generally exposed to arbitrary
+data exploits, and given that 12-bit-per-component builds of libjpeg-turbo are
+uncommon, this issue did not likely pose a security risk.
+
+3. Fixed an issue whereby, when using a 12-bit-per-component build of
+libjpeg-turbo (`-DWITH_12BIT=1`), passing samples with values greater than 4095
+or less than 0 to `jpeg_write_scanlines()` caused a buffer overrun or underrun
+in the RGB-to-YCbCr color converter.
+
+4. Fixed a floating point exception that occurred when attempting to use the
+jpegtran `-drop` and `-trim` options to losslessly transform a
+specially-crafted malformed JPEG image.
+
+5. Fixed an issue in `tjBufSizeYUV2()` whereby it returned a bogus result,
+rather than throwing an error, if the `align` parameter was not a power of 2.
+Fixed a similar issue in `tjCompressFromYUV()` whereby it generated a corrupt
+JPEG image in certain cases, rather than throwing an error, if the `align`
+parameter was not a power of 2.
+
+6. Fixed an issue whereby `tjDecompressToYUV2()`, which is a wrapper for
+`tjDecompressToYUVPlanes()`, used the desired YUV image dimensions rather than
+the actual scaled image dimensions when computing the plane pointers and
+strides to pass to `tjDecompressToYUVPlanes()`.  This caused a buffer overrun
+and subsequent segfault if the desired image dimensions exceeded the scaled
+image dimensions.
+
+7. Fixed an issue whereby, when decompressing a 12-bit-per-component JPEG image
+(`-DWITH_12BIT=1`) using an alpha-enabled output color space such as
+`JCS_EXT_RGBA`, the alpha channel was set to 255 rather than 4095.
+
+8. Fixed an issue whereby the Java version of TJBench did not accept a range of
+quality values.
+
+9. Fixed an issue whereby, when `-progressive` was passed to TJBench, the JPEG
+input image was not transformed into a progressive JPEG image prior to
+decompression.
+
+
 2.1.4
 =====
 
-### Significant changes relative to 2.1.3
+### Significant changes relative to 2.1.3:
 
 1. Fixed a regression introduced in 2.1.3 that caused build failures with
 Visual Studio 2010.
@@ -36,7 +112,7 @@ virtual array access") under certain circumstances.
 2.1.3
 =====
 
-### Significant changes relative to 2.1.2
+### Significant changes relative to 2.1.2:
 
 1. Fixed a regression introduced by 2.0 beta1[7] whereby cjpeg compressed PGM
 input files into full-color JPEG images unless the `-grayscale` option was
@@ -60,7 +136,7 @@ be reproduced using the libjpeg API, not using djpeg.
 2.1.2
 =====
 
-### Significant changes relative to 2.1.1
+### Significant changes relative to 2.1.1:
 
 1. Fixed a regression introduced by 2.1 beta1[13] that caused the remaining
 GAS implementations of AArch64 (Arm 64-bit) Neon SIMD functions (which are used
@@ -92,7 +168,7 @@ image contains incomplete or corrupt image data.
 2.1.1
 =====
 
-### Significant changes relative to 2.1.0
+### Significant changes relative to 2.1.0:
 
 1. Fixed a regression introduced in 2.1.0 that caused build failures with
 non-GCC-compatible compilers for Un*x/Arm platforms.
@@ -121,7 +197,7 @@ transform a specially-crafted malformed JPEG image.
 2.1.0
 =====
 
-### Significant changes relative to 2.1 beta1
+### Significant changes relative to 2.1 beta1:
 
 1. Fixed a regression introduced by 2.1 beta1[6(b)] whereby attempting to
 decompress certain progressive JPEG images with one or more component planes of
@@ -156,10 +232,10 @@ progressive JPEG format described in the report
 ["Two Issues with the JPEG Standard"](https://libjpeg-turbo.org/pmwiki/uploads/About/TwoIssueswiththeJPEGStandard.pdf).
 
 7. The PPM reader now throws an error, rather than segfaulting (due to a buffer
-overrun) or generating incorrect pixels, if an application attempts to use the
-`tjLoadImage()` function to load a 16-bit binary PPM file (a binary PPM file
-with a maximum value greater than 255) into a grayscale image buffer or to load
-a 16-bit binary PGM file into an RGB image buffer.
+overrun, CVE-2021-46822) or generating incorrect pixels, if an application
+attempts to use the `tjLoadImage()` function to load a 16-bit binary PPM file
+(a binary PPM file with a maximum value greater than 255) into a grayscale
+image buffer or to load a 16-bit binary PGM file into an RGB image buffer.
 
 8. Fixed an issue in the PPM reader that caused incorrect pixels to be
 generated when using the `tjLoadImage()` function to load a 16-bit binary PPM
@@ -325,11 +401,11 @@ methods in the TurboJPEG Java API.
 
 2. Fixed or worked around multiple issues with `jpeg_skip_scanlines()`:
 
-     - Fixed segfaults or "Corrupt JPEG data: premature end of data segment"
-errors in `jpeg_skip_scanlines()` that occurred when decompressing 4:2:2 or
-4:2:0 JPEG images using merged (non-fancy) upsampling/color conversion (that
-is, when setting `cinfo.do_fancy_upsampling` to `FALSE`.)  2.0.0[6] was a
-similar fix, but it did not cover all cases.
+     - Fixed segfaults (CVE-2020-35538) or "Corrupt JPEG data: premature end of
+data segment" errors in `jpeg_skip_scanlines()` that occurred when
+decompressing 4:2:2 or 4:2:0 JPEG images using merged (non-fancy)
+upsampling/color conversion (that is, when setting `cinfo.do_fancy_upsampling`
+to `FALSE`.)  2.0.0[6] was a similar fix, but it did not cover all cases.
      - `jpeg_skip_scanlines()` now throws an error if two-pass color
 quantization is enabled.  Two-pass color quantization never worked properly
 with `jpeg_skip_scanlines()`, and the issues could not readily be fixed.

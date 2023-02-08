@@ -48,6 +48,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ hg addremove
 
+== February 8, 2023 (libjpeg-turbo v2.1.5.1 8ecba3647edb6dd940463fedf38ca33a8e2a73d1 2023-02-08) ==
+
+* Updated to v2.1.5.1 release.
+
 == November 10, 2022 (libjpeg-turbo v2.1.4 8162eddf041e0be26f5c671bb6528723c55fed9d 2022-08-12) ==
 
 * Updated to v2.1.4 release.

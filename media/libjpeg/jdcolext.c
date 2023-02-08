@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2009, 2011, 2015, D. R. Commander.
+ * Copyright (C) 2009, 2011, 2015, 2023, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -62,10 +62,10 @@ ycc_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
                               ((int)RIGHT_SHIFT(Cbgtab[cb] + Crgtab[cr],
                                                 SCALEBITS))];
       outptr[RGB_BLUE] =  range_limit[y + Cbbtab[cb]];
-      /* Set unused byte to 0xFF so it can be interpreted as an opaque */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
       /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = 0xFF;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }
@@ -94,10 +94,10 @@ gray_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
     outptr = *output_buf++;
     for (col = 0; col < num_cols; col++) {
       outptr[RGB_RED] = outptr[RGB_GREEN] = outptr[RGB_BLUE] = inptr[col];
-      /* Set unused byte to 0xFF so it can be interpreted as an opaque */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
       /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = 0xFF;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }
@@ -130,10 +130,10 @@ rgb_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
       outptr[RGB_RED] = inptr0[col];
       outptr[RGB_GREEN] = inptr1[col];
       outptr[RGB_BLUE] = inptr2[col];
-      /* Set unused byte to 0xFF so it can be interpreted as an opaque */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
       /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = 0xFF;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }
