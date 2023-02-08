@@ -827,6 +827,12 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassRecordOfUnions2(JSContext*,
                            const Record<nsString, OwningObjectOrLong>&);
 
+  void PassUnionWithSequenceOfUnions(
+      const StringOrOnlyForUseInInnerUnionOrCanvasPatternSequence& arg);
+  void PassUnionWithRecordOfUnions(
+      const LongSequenceOrStringOnlyForUseInInnerUnionOrLongSequenceRecord&
+          arg);
+
   void ReceiveUnion(OwningCanvasPatternOrCanvasGradient&);
   void ReceiveUnion2(JSContext*, OwningObjectOrLong&);
   void ReceiveUnionContainingNull(OwningCanvasPatternOrNullOrCanvasGradient&);
