@@ -56,10 +56,19 @@ add_task(async function testIgnoreMinifiedSourceForPrettySource() {
   await openProjectSearch(dbg);
   fileResults = await doProjectSearch(dbg, "stuff");
 
-  is(fileResults.length, 1, "Only one result was found");
+  is(
+    fileResults.length,
+    2,
+    "Two results were found form both the pretty and minified sources"
+  );
   ok(
     fileResults[0].innerText.includes("pretty.js:formatted\n(1 match)"),
-    "The search result was found in the prettyified (pretty.js:formatted) source"
+    "The first search result was found in the prettyified (pretty.js:formatted) source"
+  );
+
+  ok(
+    fileResults[1].innerText.includes("pretty.js\n(1 match)"),
+    "The second search result was found in the minified (pretty.js) source"
   );
 });
 
