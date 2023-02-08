@@ -20,7 +20,7 @@ android {
         }
     }
 
-    lintOptions {
+    lint {
         warningsAsErrors true
         abortOnError true
     }

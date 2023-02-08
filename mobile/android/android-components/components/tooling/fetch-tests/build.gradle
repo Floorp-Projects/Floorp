@@ -22,7 +22,7 @@ android {
         }
     }
 
-    lintOptions {
+    lint {
         lintConfig file("lint.xml")
     }
 }

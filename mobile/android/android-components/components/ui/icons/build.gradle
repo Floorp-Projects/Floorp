@@ -12,7 +12,7 @@ android {
         targetSdkVersion config.targetSdkVersion
     }
 
-    lintOptions {
+    lint {
         // All icons are unused in this module.
         disable 'UnusedResources'
     }

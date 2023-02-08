@@ -1,5 +1,5 @@
 android {
-    lintOptions {
+    lint {
         warningsAsErrors true
         abortOnError (project.name != "support-test")
 

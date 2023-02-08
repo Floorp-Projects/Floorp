@@ -43,7 +43,7 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
 
-    lintOptions {
+    lint {
         lintConfig file("lint.xml")
     }
 
