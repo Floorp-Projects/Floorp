@@ -107,13 +107,7 @@ add_task(async function test_update_frecencies() {
   });
 
   info("Calculate frecencies for all local URLs");
-  await PlacesUtils.withConnectionWrapper(
-    "Update all frecencies",
-    async function(db) {
-      await db.execute(`UPDATE moz_places SET
-        frecency = CALCULATE_FRECENCY(id)`);
-    }
-  );
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Make remote changes");
   await storeRecords(buf, [
@@ -184,9 +178,8 @@ add_task(async function test_update_frecencies() {
   ]);
 
   info("Apply new items and recalculate 3 frecencies");
-  await buf.apply({
-    maxFrecenciesToRecalculate: 3,
-  });
+  await buf.apply();
+  await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 3 });
 
   {
     let frecencies = await promiseAllURLFrecencies();
@@ -237,6 +230,7 @@ add_task(async function test_update_frecencies() {
 
   info("Apply new item and recalculate remaining frecencies");
   await buf.apply();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   {
     let frecencies = await promiseAllURLFrecencies();

@@ -79,8 +79,6 @@ const DB_TITLE_LENGTH_MAX = 4096;
 // migration code to `migrateMirrorSchema`.
 const MIRROR_SCHEMA_VERSION = 8;
 
-const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
-
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(lazy, "yieldState", () => lazy.Async.yieldState());
 
@@ -539,13 +537,6 @@ export class SyncedBookmarksMirror {
    *         The current local time, in seconds.
    * @param  {Number} [options.remoteTimeSeconds]
    *         The current server time, in seconds.
-   * @param  {Number} [options.maxFrecenciesToRecalculate]
-   *         The maximum number of bookmark URL frecencies to recalculate after
-   *         this merge. Frecency calculation blocks other Places writes, so we
-   *         limit the number of URLs we process at once. We'll process either
-   *         the next set of URLs after the next merge, or all remaining URLs
-   *         when Places automatically fixes invalid frecencies on idle;
-   *         whichever comes first.
    * @param  {Boolean} [options.notifyInStableOrder]
    *         If `true`, fire observer notifications for items in the same folder
    *         in a stable order. This is disabled by default, to avoid the cost
@@ -563,7 +554,6 @@ export class SyncedBookmarksMirror {
   async apply({
     localTimeSeconds,
     remoteTimeSeconds,
-    maxFrecenciesToRecalculate,
     notifyInStableOrder,
     signal = null,
   } = {}) {
@@ -583,7 +573,6 @@ export class SyncedBookmarksMirror {
         finalizeOrInterruptSignal,
         localTimeSeconds,
         remoteTimeSeconds,
-        maxFrecenciesToRecalculate,
         notifyInStableOrder
       );
     } finally {
@@ -597,7 +586,6 @@ export class SyncedBookmarksMirror {
     signal,
     localTimeSeconds,
     remoteTimeSeconds,
-    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE,
     notifyInStableOrder = false
   ) {
     let wasMerged = await withTiming("Merging bookmarks in Rust", () =>
@@ -606,7 +594,6 @@ export class SyncedBookmarksMirror {
 
     if (!wasMerged) {
       lazy.MirrorLog.debug("No changes detected in both mirror and Places");
-      await updateFrecencies(this.db, maxFrecenciesToRecalculate);
       return {};
     }
 
@@ -614,7 +601,6 @@ export class SyncedBookmarksMirror {
     // inflate records for outgoing items.
 
     let observersToNotify = new BookmarkObserverRecorder(this.db, {
-      maxFrecenciesToRecalculate,
       signal,
       notifyInStableOrder,
     });
@@ -2070,9 +2056,8 @@ async function withTiming(name, func, recordTiming) {
  * the merge.
  */
 class BookmarkObserverRecorder {
-  constructor(db, { maxFrecenciesToRecalculate, notifyInStableOrder, signal }) {
+  constructor(db, { notifyInStableOrder, signal }) {
     this.db = db;
-    this.maxFrecenciesToRecalculate = maxFrecenciesToRecalculate;
     this.notifyInStableOrder = notifyInStableOrder;
     this.signal = signal;
     this.placesEvents = [];
@@ -2095,7 +2080,6 @@ class BookmarkObserverRecorder {
         "Interrupted before recalculating frecencies for new URLs"
       );
     }
-    await updateFrecencies(this.db, this.maxFrecenciesToRecalculate);
   }
 
   orderBy(level, parent, position) {
@@ -2445,22 +2429,6 @@ class BookmarkChangeRecord {
     this.cleartext = cleartext;
     this.synced = false;
   }
-}
-
-async function updateFrecencies(db, limit) {
-  lazy.MirrorLog.trace("Recalculating frecencies for new URLs");
-  await db.execute(
-    `
-    UPDATE moz_places SET
-      frecency = CALCULATE_FRECENCY(id)
-    WHERE id IN (
-      SELECT id FROM moz_places
-      WHERE recalc_frecency = 1
-      ORDER BY frecency DESC
-      LIMIT :limit
-    )`,
-    { limit }
-  );
 }
 
 function bagToNamedCounts(bag, names) {
