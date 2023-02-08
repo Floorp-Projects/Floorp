@@ -63,7 +63,7 @@
 
       const closeIcon = document.createElement("button");
       closeIcon.classList.add("close", "ghost-button");
-      document.l10n.setAttributes(closeIcon, "close-button-label");
+      document.l10n.setAttributes(closeIcon, "notification-close-button");
       container.append(closeIcon);
 
       Object.defineProperty(this, "template", {
