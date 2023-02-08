@@ -491,7 +491,7 @@ void RemoteAccessibleBase<Derived>::ApplyCrossDocOffset(nsRect& aBounds) const {
 
 template <class Derived>
 bool RemoteAccessibleBase<Derived>::ApplyTransform(
-    nsRect& aCumulativeBounds, const nsRect& aParentRelativeBounds) const {
+    nsRect& aCumulativeBounds) const {
   // First, attempt to retrieve the transform from the cache.
   Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
       mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
@@ -499,13 +499,6 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(
   if (!maybeTransform) {
     return false;
   }
-
-  // The transform matrix we cache is meant to operate on rects
-  // within the coordinate space of the frame to which the
-  // transform is applied (self-relative rects). We cache bounds
-  // relative to some ancestor. Remove the relative offset before
-  // transforming. The transform matrix will add it back in.
-  aCumulativeBounds.MoveBy(-aParentRelativeBounds.TopLeft());
 
   auto mtxInPixels = gfx::Matrix4x4Typed<CSSPixel, CSSPixel>::FromUnknownMatrix(
       *(*maybeTransform));
@@ -572,6 +565,10 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
   if (maybeBounds) {
     nsRect bounds = *maybeBounds;
+    // maybeBounds is parent-relative. However, the transform matrix we cache
+    // (if any) is meant to operate on self-relative rects. Therefore, make
+    // bounds self-relative until after we transform.
+    bounds.MoveTo(0, 0);
     const DocAccessibleParent* topDoc = IsDoc() ? AsDoc() : nullptr;
 
     if (aOffset.isSome()) {
@@ -581,9 +578,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
       bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
     }
 
-    ApplyCrossDocOffset(bounds);
+    Unused << ApplyTransform(bounds);
+    // Now apply the parent-relative offset.
+    bounds.MoveBy(maybeBounds->TopLeft());
 
-    Unused << ApplyTransform(bounds, *maybeBounds);
+    ApplyCrossDocOffset(bounds);
 
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
@@ -635,11 +634,14 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           encounteredFixedContainer = false;
         }
         if (!encounteredFixedContainer) {
+          // The transform matrix we cache (if any) is meant to operate on
+          // self-relative rects. Therefore, we must apply the transform before
+          // we make bounds parent-relative.
+          Unused << remoteAcc->ApplyTransform(bounds);
           // Regardless of whether this is a doc, we should offset `bounds`
           // by the bounds retrieved here. This is how we build screen
           // coordinates from relative coordinates.
           bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
-          Unused << remoteAcc->ApplyTransform(bounds, remoteBounds);
         }
 
         if (remoteAcc->IsFixedPos()) {
