@@ -8,7 +8,6 @@ import {
   getFileURL,
   getDisplayPath,
   getSourceLineCount,
-  isThirdParty,
   isJavaScript,
   isDescendantOfRoot,
   removeThreadActorId,

@@ -105,3 +105,35 @@ add_task(async function testFilesPrioritization() {
     "The node_modules (third-party) file is the last result in the list"
   );
 });
+
+add_task(async function testBlackBoxedSources() {
+  const dbg = await initDebugger("doc-pretty.html", "pretty.js");
+  await selectSource(dbg, "pretty.js");
+
+  info("Blackbox pretty.js");
+  await toggleBlackbox(dbg);
+
+  await openProjectSearch(dbg);
+  let fileResults = await doProjectSearch(dbg, "stuff");
+
+  is(fileResults.length, 0, "No results were found as pretty.js is blackboxed");
+
+  await closeProjectSearch(dbg);
+
+  info("Unblackbox pretty.js");
+  await toggleBlackbox(dbg);
+
+  await openProjectSearch(dbg);
+  fileResults = await doProjectSearch(dbg, "stuff");
+
+  is(
+    fileResults.length,
+    1,
+    "One result was found as pretty.js is no longer blackboxed"
+  );
+});
+
+async function toggleBlackbox(dbg) {
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "BLACKBOX");
+}
