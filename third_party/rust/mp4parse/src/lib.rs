@@ -2422,7 +2422,7 @@ fn skip_box_content<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
         header
             .size
             .checked_sub(header.offset)
-            .expect("header offset > size")
+            .ok_or(Error::Unsupported("Skipping past unknown sized box"))?
     };
     assert_eq!(to_skip, src.bytes_left());
     skip(src, to_skip)
