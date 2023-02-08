@@ -7828,7 +7828,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       // ...
       // Step 3. Let privateStateDesc be the string-concatenation of name
       // and " accessor storage".
-      StringBuffer privateStateDesc(cx_, ec_);
+      StringBuffer privateStateDesc(fc_);
       if (!privateStateDesc.append(this->parserAtoms(), propAtom)) {
         return false;
       }
@@ -7839,7 +7839,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       // [[Description]] value is privateStateDesc.
       TokenPos propNamePos(propNameOffset, pos().end);
       auto privateStateName =
-          privateStateDesc.finishParserAtom(this->parserAtoms(), ec_);
+          privateStateDesc.finishParserAtom(this->parserAtoms(), fc_);
       if (!noteDeclaredPrivateName(
               propName, privateStateName, propType,
               isStatic ? FieldPlacement::Static : FieldPlacement::Instance,
