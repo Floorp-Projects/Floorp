@@ -290,9 +290,12 @@ class DMABufSurfaceYUV : public DMABufSurface {
   static already_AddRefed<DMABufSurfaceYUV> CreateYUVSurface(
       int aWidth, int aHeight, void** aPixelData = nullptr,
       int* aLineSizes = nullptr);
-
   static already_AddRefed<DMABufSurfaceYUV> CreateYUVSurface(
       const VADRMPRIMESurfaceDescriptor& aDesc, int aWidth, int aHeight);
+  static already_AddRefed<DMABufSurfaceYUV> CopyYUVSurface(
+      const VADRMPRIMESurfaceDescriptor& aVaDesc, int aWidth, int aHeight);
+  static void ReleaseVADRMPRIMESurfaceDescriptor(
+      VADRMPRIMESurfaceDescriptor& aDesc);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
@@ -324,7 +327,6 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool UpdateYUVData(void** aPixelData, int* aLineSizes);
   bool UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc, int aWidth,
                      int aHeight, bool aCopy);
-
   bool VerifyTextureCreation();
 
  private:

@@ -1311,6 +1311,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
         NS_ERROR_DOM_MEDIA_DECODE_ERR,
         RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
   }
+  auto releaseSurfaceDescriptor = MakeScopeExit(
+      [&] { DMABufSurfaceYUV::ReleaseVADRMPRIMESurfaceDescriptor(vaDesc); });
 
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (!mVideoFramePool) {
