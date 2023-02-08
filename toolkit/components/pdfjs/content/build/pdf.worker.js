@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.4.37';
+    const workerVersion = '3.4.62';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -5364,12 +5364,10 @@ class WidgetAnnotation extends Annotation {
       let newTransform = null;
       if (encrypt) {
         newTransform = encrypt.createCipherTransform(newRef.num, newRef.gen);
-        appearance = newTransform.encryptString(appearance);
       }
       const resources = this._getSaveFieldResources(xref);
       const appearanceStream = new _stream.StringStream(appearance);
       const appearanceDict = appearanceStream.dict = new _primitives.Dict(xref);
-      appearanceDict.set("Length", appearance.length);
       appearanceDict.set("Subtype", _primitives.Name.get("Form"));
       appearanceDict.set("Resources", resources);
       appearanceDict.set("BBox", [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]]);
@@ -6427,9 +6425,10 @@ class FreeTextAnnotation extends MarkupAnnotation {
     this.data.annotationType = _util.AnnotationType.FREETEXT;
     this.setDefaultAppearance(params);
     if (!this.appearance && this._isOffscreenCanvasSupported) {
+      const strokeAlpha = params.dict.get("CA");
       const fakeUnicodeFont = new _default_appearance.FakeUnicodeFont(xref, "sans-serif");
       const fontData = this.data.defaultAppearanceData;
-      this.appearance = fakeUnicodeFont.createAppearance(this._contents.str, this.rectangle, this.rotation, fontData.fontSize || 10, fontData.fontColor);
+      this.appearance = fakeUnicodeFont.createAppearance(this._contents.str, this.rectangle, this.rotation, fontData.fontSize || 10, fontData.fontColor, strokeAlpha);
       this._streams.push(this.appearance, _default_appearance.FakeUnicodeFont.toUnicodeStream);
     } else if (!this._isOffscreenCanvasSupported) {
       (0, _util.warn)("FreeTextAnnotation: OffscreenCanvas is not supported, annotation may not render correctly.");
@@ -6554,7 +6553,6 @@ class FreeTextAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
     appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
     appearanceStreamDict.set("BBox", [0, 0, w, h]);
-    appearanceStreamDict.set("Length", appearance.length);
     appearanceStreamDict.set("Resources", resources);
     if (rotation) {
       const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
@@ -7272,7 +7270,7 @@ endcmap CMapName currentdict /CMap defineresource pop end end`;
     }
     return this.resources;
   }
-  createAppearance(text, rect, rotation, fontSize, bgColor) {
+  createAppearance(text, rect, rotation, fontSize, bgColor, strokeAlpha) {
     const ctx = this._createContext();
     const lines = [];
     let maxWidth = -Infinity;
@@ -7313,6 +7311,20 @@ endcmap CMapName currentdict /CMap defineresource pop end end`;
     const fscale = Math.min(hscale, vscale);
     const newFontSize = fontSize * fscale;
     const buffer = ["q", `0 0 ${(0, _core_utils.numberToString)(w)} ${(0, _core_utils.numberToString)(h)} re W n`, `BT`, `1 0 0 1 0 ${(0, _core_utils.numberToString)(h + lineDescent)} Tm 0 Tc ${getPdfColor(bgColor, true)}`, `/${this.fontName.name} ${(0, _core_utils.numberToString)(newFontSize)} Tf`];
+    const {
+      resources
+    } = this;
+    strokeAlpha = typeof strokeAlpha === "number" && strokeAlpha >= 0 && strokeAlpha <= 1 ? strokeAlpha : 1;
+    if (strokeAlpha !== 1) {
+      buffer.push("/R0 gs");
+      const extGState = new _primitives.Dict(this.xref);
+      const r0 = new _primitives.Dict(this.xref);
+      r0.set("ca", strokeAlpha);
+      r0.set("CA", strokeAlpha);
+      r0.set("Type", _primitives.Name.get("ExtGState"));
+      extGState.set("R0", r0);
+      resources.set("ExtGState", extGState);
+    }
     const vShift = (0, _core_utils.numberToString)(lineHeight);
     for (const line of lines) {
       buffer.push(`0 -${vShift} Td <${(0, _core_utils.stringToUTF16HexString)(line)}> Tj`);
@@ -7324,7 +7336,7 @@ endcmap CMapName currentdict /CMap defineresource pop end end`;
     appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
     appearanceStreamDict.set("BBox", [0, 0, w, h]);
     appearanceStreamDict.set("Length", appearance.length);
-    appearanceStreamDict.set("Resources", this.resources);
+    appearanceStreamDict.set("Resources", resources);
     if (rotation) {
       const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
       appearanceStreamDict.set("Matrix", matrix);
@@ -35824,13 +35836,13 @@ function writeDict(dict, buffer, transform) {
   buffer.push(">>");
 }
 function writeStream(stream, buffer, transform) {
-  writeDict(stream.dict, buffer, transform);
-  buffer.push(" stream\n");
   let string = stream.getString();
   if (transform !== null) {
     string = transform.encryptString(string);
   }
-  buffer.push(string, "\nendstream");
+  stream.dict.set("Length", string.length);
+  writeDict(stream.dict, buffer, transform);
+  buffer.push(" stream\n", string, "\nendstream");
 }
 function writeArray(array, buffer, transform) {
   buffer.push("[");
@@ -52418,8 +52430,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.4.37';
-const pdfjsBuild = 'e69866492';
+const pdfjsVersion = '3.4.62';
+const pdfjsBuild = '9cea76483';
 })();
 
 /******/ 	return __webpack_exports__;
