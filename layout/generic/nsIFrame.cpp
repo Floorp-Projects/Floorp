@@ -6972,8 +6972,7 @@ bool nsIFrame::HasSelectionInSubtree() {
 
     const auto* commonAncestorNode =
         range->GetRegisteredClosestCommonInclusiveAncestor();
-    if (commonAncestorNode &&
-        commonAncestorNode->IsInclusiveDescendantOf(GetContent())) {
+    if (commonAncestorNode->IsInclusiveDescendantOf(GetContent())) {
       return true;
     }
   }
