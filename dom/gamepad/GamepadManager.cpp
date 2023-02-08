@@ -440,8 +440,7 @@ void GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
 }
 
 void GamepadManager::Update(const GamepadChangeEvent& aEvent) {
-  if (!mEnabled || mShuttingDown ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!mEnabled || mShuttingDown) {
     return;
   }
 
@@ -473,7 +472,8 @@ void GamepadManager::Update(const GamepadChangeEvent& aEvent) {
   for (uint32_t i = 0; i < listeners.Length(); i++) {
     // Only send events to non-background windows
     if (!listeners[i]->IsCurrentInnerWindow() ||
-        listeners[i]->GetOuterWindow()->IsBackground()) {
+        listeners[i]->GetOuterWindow()->IsBackground() ||
+        listeners[i]->ShouldResistFingerprinting()) {
       continue;
     }
 
