@@ -78,6 +78,7 @@ button {
 .month-year-nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
+  margin: 0.1rem;
   -moz-context-properties: fill, fill-opacity;
   fill: FieldText;
   fill-opacity: .5;
@@ -119,8 +120,10 @@ button.month-year {
   border: var(--border);
   color: inherit;
   border-radius: 0.3rem;
-  padding-block: 0.2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.3rem;
   padding-inline: 1.2rem 2.6rem;
+  outline-offset: 0.1rem;
 }
 
 button.month-year:hover {
@@ -217,6 +220,7 @@ button.month-year.active::after {
   position: relative;
   justify-content: center;
   width: var(--date-picker-item-width);
+  margin-inline: 0.1rem;
 }
 
 .days-view > tr > td:focus-visible {
