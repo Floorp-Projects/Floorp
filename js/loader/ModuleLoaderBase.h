@@ -288,6 +288,8 @@ class ModuleLoaderBase : public nsISupports {
   // https://html.spec.whatwg.org/multipage/webappapis.html#register-an-import-map
   void RegisterImportMap(mozilla::UniquePtr<ImportMap> aImportMap);
 
+  bool HasImportMapRegistered() const { return bool(mImportMap); }
+
   // Getter for mImportMapsAllowed.
   bool IsImportMapAllowed() const { return mImportMapsAllowed; }
   // https://html.spec.whatwg.org/multipage/webappapis.html#disallow-further-import-maps
