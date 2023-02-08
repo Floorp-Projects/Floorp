@@ -391,7 +391,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * Schedules mPositions to be recomputed and the covered region to be
    * updated.
    */
-  void NotifyGlyphMetricsChange();
+  void NotifyGlyphMetricsChange(bool aUpdateTextCorrespondence);
 
   /**
    * Recomputes mPositions by calling DoGlyphPositioning if this information
