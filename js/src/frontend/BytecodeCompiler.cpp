@@ -647,7 +647,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
   MOZ_ASSERT(compilationState_.canLazilyParse ==
              CanLazilyParse(compilationState_.input.options));
   if (compilationState_.canLazilyParse) {
-    syntaxParser.emplace(cx, fc_, stackLimit, options, sourceBuffer_.units(),
+    syntaxParser.emplace(fc_, stackLimit, options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
                          /* syntaxParser = */ nullptr);
@@ -656,7 +656,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
     }
   }
 
-  parser.emplace(cx, fc_, stackLimit, options, sourceBuffer_.units(),
+  parser.emplace(fc_, stackLimit, options, sourceBuffer_.units(),
                  sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
@@ -1195,7 +1195,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   }
 
   Parser<FullParseHandler, Unit> parser(
-      cx, fc, stackLimit, input.options, units, length,
+      fc, stackLimit, input.options, units, length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
