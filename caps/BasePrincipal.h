@@ -343,6 +343,23 @@ class BasePrincipal : public nsJSPrincipals {
   };
 
  private:
+  static const char* JSONEnumKeyStrings[4];
+
+  static void SetJSONValue(Json::Value& aObject, const char* aKey,
+                           const nsCString& aValue);
+
+ protected:
+  template <auto EnumValue>
+  static inline constexpr const char* JSONEnumKeyString() {
+    static_assert(EnumValue < ArrayLength(JSONEnumKeyStrings));
+    return JSONEnumKeyStrings[EnumValue];
+  }
+  template <auto EnumValue>
+  static void SetJSONValue(Json::Value& aObject, const nsCString& aValue) {
+    SetJSONValue(aObject, JSONEnumKeyString<EnumValue>(), aValue);
+  }
+
+ private:
   static already_AddRefed<BasePrincipal> CreateContentPrincipal(
       nsIURI* aURI, const OriginAttributes& aAttrs,
       const nsACString& aOriginNoSuffix, nsIURI* aInitialDomain);
