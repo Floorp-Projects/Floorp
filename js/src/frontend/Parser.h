@@ -242,12 +242,11 @@ class MOZ_STACK_CLASS ParserSharedBase {
  public:
   enum class Kind { Parser };
 
-  ParserSharedBase(JSContext* cx, FrontendContext* fc,
-                   CompilationState& compilationState, Kind kind);
+  ParserSharedBase(FrontendContext* fc, CompilationState& compilationState,
+                   Kind kind);
   ~ParserSharedBase();
 
  public:
-  JSContext* const cx_;
   FrontendContext* fc_;
 
   LifoAlloc& alloc_;
@@ -324,8 +323,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, FrontendContext* fc,
-             JS::NativeStackLimit stackLimit,
+  ParserBase(FrontendContext* fc, JS::NativeStackLimit stackLimit,
              const JS::ReadOnlyCompileOptions& options, bool foldConstants,
              CompilationState& compilationState);
   ~ParserBase();
@@ -474,20 +472,18 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, FrontendContext* fc,
-                   JS::NativeStackLimit stackLimit,
+  PerHandlerParser(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, FrontendContext* fc,
-                   JS::NativeStackLimit stackLimit,
+  PerHandlerParser(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
-      : PerHandlerParser(cx, fc, stackLimit, options, foldConstants,
+      : PerHandlerParser(fc, stackLimit, options, foldConstants,
                          compilationState, static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
@@ -766,7 +762,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
  public:
   using Base::anyChars;
-  using Base::cx_;
   using Base::fc_;
   using Base::handler_;
   using Base::noteUsedName;
@@ -931,8 +926,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, FrontendContext* fc,
-                JS::NativeStackLimit stackLimit,
+  GeneralParser(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                 const JS::ReadOnlyCompileOptions& options, const Unit* units,
                 size_t length, bool foldConstants,
                 CompilationState& compilationState, SyntaxParser* syntaxParser);
@@ -1551,7 +1545,6 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
  public:
   using Base::anyChars;
   using Base::clearAbortedSyntaxParse;
-  using Base::cx_;
   using Base::hadAbortedSyntaxParse;
   using Base::innerFunctionForFunctionBox;
   using Base::tokenStream;
@@ -1722,7 +1715,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::checkOptionsCalled_;
 #endif
   using Base::checkForUndefinedPrivateFields;
-  using Base::cx_;
   using Base::fc_;
   using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;

@@ -139,11 +139,10 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
   return true;
 }
 
-ParserSharedBase::ParserSharedBase(JSContext* cx, FrontendContext* fc,
+ParserSharedBase::ParserSharedBase(FrontendContext* fc,
                                    CompilationState& compilationState,
                                    Kind kind)
-    : cx_(cx),
-      fc_(fc),
+    : fc_(fc),
       alloc_(compilationState.parserAllocScope.alloc()),
       compilationState_(compilationState),
       pc_(nullptr),
@@ -161,12 +160,10 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 }
 #endif
 
-ParserBase::ParserBase(JSContext* cx, FrontendContext* fc,
-                       JS::NativeStackLimit stackLimit,
+ParserBase::ParserBase(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
-    : ParserSharedBase(cx, fc, compilationState,
-                       ParserSharedBase::Kind::Parser),
+    : ParserSharedBase(fc, compilationState, ParserSharedBase::Kind::Parser),
       anyChars(fc, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
@@ -198,10 +195,10 @@ JSAtom* ParserBase::liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
-    : ParserBase(cx, fc, stackLimit, options, foldConstants, compilationState),
+    : ParserBase(fc, stackLimit, options, foldConstants, compilationState),
       handler_(fc, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
@@ -210,11 +207,11 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
     bool foldConstants, CompilationState& compilationState,
     SyntaxParser* syntaxParser)
-    : Base(cx, fc, stackLimit, options, foldConstants, compilationState,
+    : Base(fc, stackLimit, options, foldConstants, compilationState,
            syntaxParser),
       tokenStream(fc, &compilationState.parserAtoms, options, units, length) {}
 

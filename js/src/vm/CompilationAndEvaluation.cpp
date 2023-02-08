@@ -187,8 +187,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   }
 
   Parser<FullParseHandler, char16_t> parser(
-      cx, &fc, cx->stackLimitForCurrentPrincipal(), options, chars.get(),
-      length,
+      &fc, cx->stackLimitForCurrentPrincipal(), options, chars.get(), length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
