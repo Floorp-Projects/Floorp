@@ -173,47 +173,53 @@ class Configuration(DescriptorProvider):
         # types that have the same name.
         self.unionsPerFilename = defaultdict(list)
 
-        for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
+        def addUnion(t):
+            filenamesForUnion = self.filenamesPerUnion[t.name]
+            if t.filename() not in filenamesForUnion:
+                # We have a to be a bit careful: some of our built-in
+                # typedefs are for unions, and those unions end up with
+                # "<unknown>" as the filename.  If that happens, we don't
+                # want to try associating this union with one particular
+                # filename, since there isn't one to associate it with,
+                # really.
+                if t.filename() == "<unknown>":
+                    uniqueFilenameForUnion = None
+                elif len(filenamesForUnion) == 0:
+                    # This is the first file that we found a union with this
+                    # name in, record the union as part of the file.
+                    uniqueFilenameForUnion = t.filename()
+                else:
+                    # We already found a file that contains a union with
+                    # this name.
+                    if len(filenamesForUnion) == 1:
+                        # This is the first time we found a union with this
+                        # name in another file.
+                        for f in filenamesForUnion:
+                            # Filter out unions with this name from the
+                            # unions for the file where we previously found
+                            # them.
+                            unionsForFilename = [
+                                u for u in self.unionsPerFilename[f] if u.name != t.name
+                            ]
+                            if len(unionsForFilename) == 0:
+                                del self.unionsPerFilename[f]
+                            else:
+                                self.unionsPerFilename[f] = unionsForFilename
+                    # Unions with this name appear in multiple files, record
+                    # the filename as None, so that we can detect that.
+                    uniqueFilenameForUnion = None
+                self.unionsPerFilename[uniqueFilenameForUnion].append(t)
+                filenamesForUnion.add(t.filename())
+
+        def addUnions(t):
             t = findInnermostType(t)
             if t.isUnion():
-                filenamesForUnion = self.filenamesPerUnion[t.name]
-                if t.filename() not in filenamesForUnion:
-                    # We have a to be a bit careful: some of our built-in
-                    # typedefs are for unions, and those unions end up with
-                    # "<unknown>" as the filename.  If that happens, we don't
-                    # want to try associating this union with one particular
-                    # filename, since there isn't one to associate it with,
-                    # really.
-                    if t.filename() == "<unknown>":
-                        uniqueFilenameForUnion = None
-                    elif len(filenamesForUnion) == 0:
-                        # This is the first file that we found a union with this
-                        # name in, record the union as part of the file.
-                        uniqueFilenameForUnion = t.filename()
-                    else:
-                        # We already found a file that contains a union with
-                        # this name.
-                        if len(filenamesForUnion) == 1:
-                            # This is the first time we found a union with this
-                            # name in another file.
-                            for f in filenamesForUnion:
-                                # Filter out unions with this name from the
-                                # unions for the file where we previously found
-                                # them.
-                                unionsForFilename = [
-                                    u
-                                    for u in self.unionsPerFilename[f]
-                                    if u.name != t.name
-                                ]
-                                if len(unionsForFilename) == 0:
-                                    del self.unionsPerFilename[f]
-                                else:
-                                    self.unionsPerFilename[f] = unionsForFilename
-                        # Unions with this name appear in multiple files, record
-                        # the filename as None, so that we can detect that.
-                        uniqueFilenameForUnion = None
-                    self.unionsPerFilename[uniqueFilenameForUnion].append(t)
-                    filenamesForUnion.add(t.filename())
+                addUnion(t)
+                for m in t.flatMemberTypes:
+                    addUnions(m)
+
+        for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
+            addUnions(t)
 
         for d in getDictionariesConvertedToJS(
             self.descriptors, self.dictionaries, self.callbacks

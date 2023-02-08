@@ -152,6 +152,11 @@ TestInterface includes InterfaceMixin;
 interface OnlyForUseInConstructor {
 };
 
+// This enum is only for use in inner unions below
+enum OnlyForUseInInnerUnion {
+  "1",
+};
+
 [LegacyFactoryFunction=Test,
  LegacyFactoryFunction=Test(DOMString str),
  LegacyFactoryFunction=Test2(DictForConstructor dict, any any1, object obj1,
@@ -771,6 +776,13 @@ interface TestInterface {
   undefined passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
   undefined passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
   undefined passRecordOfUnions(record<DOMString, (CanvasPattern or CanvasGradient)> arg);
+
+  // Each inner union in the following APIs should have a unique set
+  // of union member types, not used in any other API.
+  undefined passUnionWithSequenceOfUnions((DOMString or sequence<(OnlyForUseInInnerUnion or CanvasPattern)>) arg);
+  //undefined passUnionWithFrozenArrayOfUnions((DOMString or FrozenArray<(OnlyForUseInInnerUnion or CanvasGradient)>) arg);
+  undefined passUnionWithRecordOfUnions((sequence<long> or record<DOMString, (OnlyForUseInInnerUnion or sequence<long>)>) arg);
+
   // XXXbz no move constructor on some unions
   // undefined passRecordOfUnions2(record<DOMString, (object or long)> arg);
 
