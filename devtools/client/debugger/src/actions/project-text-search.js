@@ -12,6 +12,7 @@ import {
   getFirstSourceActorForGeneratedSource,
   getSourceList,
   getSettledSourceTextContent,
+  isSourceBlackBoxed,
 } from "../selectors";
 import { createLocation } from "../utils/location";
 import { loadSourceText } from "./sources/loadSourceText";
@@ -71,23 +72,26 @@ export function stopOngoingSearch(cx) {
 export function searchSources(cx, query) {
   let cancelled = false;
 
-  function isThirdParty(source) {
-    return (
-      source?.url &&
-      (source.url.includes("node_modules") ||
-        source.url.includes("bower_components"))
-    );
-  }
   const search = async ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch(cx));
     await dispatch(addOngoingSearch(cx, search));
     await dispatch(clearSearchResults(cx));
     await dispatch(addSearchQuery(cx, query));
     dispatch(updateSearchStatus(cx, statusType.fetching));
-    let validSources = getSourceList(getState());
+    const validSources = getSourceList(getState()).filter(
+      source => !isSourceBlackBoxed(getState(), source)
+    );
     // Sort original entries first so that search results are more useful.
     // Deprioritize third-party scripts, so their results show last.
     validSources.sort((a, b) => {
+      function isThirdParty(source) {
+        return (
+          source?.url &&
+          (source.url.includes("node_modules") ||
+            source.url.includes("bower_components"))
+        );
+      }
+
       if (a.isOriginal && !isThirdParty(a)) {
         return -1;
       }
