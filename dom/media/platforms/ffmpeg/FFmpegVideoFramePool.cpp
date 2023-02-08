@@ -21,7 +21,7 @@ extern mozilla::LazyLogModule gDmabufLog;
 
 // Start copying surfaces when free ffmpeg surface count is below 1/4 of all
 // available surfaces.
-#define SURFACE_COPY_TRESHOLD (1.0f / 4.0f);
+#define SURFACE_COPY_THRESHOLD (1.0f / 4.0f)
 
 namespace mozilla {
 
@@ -140,7 +140,9 @@ bool VideoFramePool<LIBAV_VER>::ShouldCopySurface() {
       "%f",
       (int)mDMABufSurfaces.Length(), surfacesUsed - surfacesUsedFFmpeg,
       surfacesUsedFFmpeg, mFFMPEGPoolSize, freeRatio);
-  return freeRatio < SURFACE_COPY_TRESHOLD;
+
+  MOZ_DIAGNOSTIC_ASSERT(mTextureCopyWorks.isSome());
+  return mTextureCopyWorks.value() && freeRatio < SURFACE_COPY_THRESHOLD;
 }
 
 RefPtr<VideoFrameSurface<LIBAV_VER>>
@@ -155,6 +157,15 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   }
 
   MutexAutoLock lock(mSurfaceLock);
+  if (MOZ_UNLIKELY(mTextureCopyWorks.isNothing())) {
+    RefPtr<DMABufSurfaceYUV> surface =
+        DMABufSurfaceYUV::CopyYUVSurface(aVaDesc, aWidth, aHeight);
+    mTextureCopyWorks = Some(surface != nullptr);
+    if (!mTextureCopyWorks.value()) {
+      DMABUF_LOG("  DMABuf texture copy is broken");
+    }
+  }
+
   RefPtr<DMABufSurfaceYUV> surface;
   RefPtr<VideoFrameSurface<LIBAV_VER>> videoSurface =
       GetFreeVideoFrameSurface();
