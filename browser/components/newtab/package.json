@@ -102,7 +102,7 @@
     "lint": "npm-run-all lint:*",
     "lint:codespell": "(cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)",
     "lint:eslint": "(cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)",
-    "lint:l10n": "(cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings browser/locales/en-US/browser/newtab)",
+    "lint:l10n": "(cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings soft browser/locales/en-US/browser/newtab)",
     "lint:license": "(cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)",
     "lint:sasslint": "sass-lint -v -q",
     "test": "npm run testmc",
