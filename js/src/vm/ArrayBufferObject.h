@@ -56,8 +56,8 @@ bool ExtendBufferMapping(void* dataStart, size_t mappedSize,
 // the mapping, and `mappedSize` the size of that mapping.
 void UnmapBufferMemory(wasm::IndexType t, void* dataStart, size_t mappedSize);
 
-// Return the number of currently live mapped buffers.
-int32_t LiveMappedBufferCount();
+// Return the number of bytes currently reserved for WebAssembly memory
+uint64_t WasmReservedBytes();
 
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
