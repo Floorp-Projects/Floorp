@@ -26,13 +26,6 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     // Ffmpeg expects the DecoderConfigDescriptor blob.
     mExtraData->AppendElements(
         *aacCodecSpecificData.mDecoderConfigDescriptorBinaryBlob);
-    mRemainingEncoderDelay = mEncoderDelay =
-        aacCodecSpecificData.mEncoderDelayFrames;
-    mEncoderPaddingOrTotalFrames = aacCodecSpecificData.mMediaFrameCount;
-    FFMPEG_LOG("FFmpegAudioDecoder (aac), found encoder delay (%" PRIu32
-               ") and total frame count (%" PRIu64
-               ") in codec-specific side data",
-               mEncoderDelay, TotalFrames());
     return;
   }
 
@@ -45,13 +38,11 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     if (aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>()) {
       const Mp3CodecSpecificData& mp3CodecSpecificData =
           aConfig.mCodecSpecificConfig.as<Mp3CodecSpecificData>();
-      mEncoderDelay = mRemainingEncoderDelay =
-          mp3CodecSpecificData.mEncoderDelayFrames;
-      mEncoderPaddingOrTotalFrames = mp3CodecSpecificData.mEncoderPaddingFrames;
-      FFMPEG_LOG("FFmpegAudioDecoder (mp3), found encoder delay (%" PRIu32
-                 ")"
-                 "and padding values (%" PRIu64 ") in codec-specific side-data",
-                 mEncoderDelay, Padding());
+      mEncoderDelay = mp3CodecSpecificData.mEncoderDelayFrames;
+      mEncoderPadding = mp3CodecSpecificData.mEncoderPaddingFrames;
+      FFMPEG_LOG("FFmpegAudioDecoder, found encoder delay (%" PRIu32
+                 ") and padding values (%" PRIu32 ") in extra data",
+                 mEncoderDelay, mEncoderPadding);
       return;
     }
   }
@@ -238,16 +229,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
   return audio;
 }
 
-using ChannelLayout = AudioConfig::ChannelLayout;
-
-uint64_t FFmpegAudioDecoder<LIBAV_VER>::Padding() const {
-  MOZ_ASSERT(mCodecID == AV_CODEC_ID_MP3);
-  return mEncoderPaddingOrTotalFrames;
-}
-uint64_t FFmpegAudioDecoder<LIBAV_VER>::TotalFrames() const {
-  MOZ_ASSERT(mCodecID == AV_CODEC_ID_AAC);
-  return mEncoderPaddingOrTotalFrames;
-}
+typedef AudioConfig::ChannelLayout ChannelLayout;
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                     uint8_t* aData, int aSize,
@@ -266,7 +248,6 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   }
 
   if (!PrepareFrame()) {
-    FFMPEG_LOG("FFmpegAudioDecoder: OOM in PrepareFrame");
     return MediaResult(
         NS_ERROR_OUT_OF_MEMORY,
         RESULT_DETAIL("FFmpeg audio decoder failed to allocate frame"));
@@ -338,69 +319,36 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       AlignedAudioBuffer audio =
           CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples);
       if (!audio) {
-        FFMPEG_LOG("FFmpegAudioDecoder: OOM");
         return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       }
 
       DebugOnly<bool> trimmed = false;
       if (mEncoderDelay) {
         trimmed = true;
-        int toPop = std::min(mFrame->nb_samples,
-                             static_cast<int>(mRemainingEncoderDelay));
+        uint32_t toPop = std::min((uint32_t)mFrame->nb_samples, mEncoderDelay);
         audio.PopFront(toPop * numChannels);
         mFrame->nb_samples -= toPop;
-        mRemainingEncoderDelay -= toPop;
-        FFMPEG_LOG("FFmpegAudioDecoder, dropped %" PRIu32
-                   " audio frames, corresponding to the encoder delay "
-                   "(remaining: %" PRIu32 ")",
-                   toPop, mRemainingEncoderDelay);
+        mEncoderDelay -= toPop;
       }
 
-      mDecodedFrames += mFrame->nb_samples;
-
-      if (mCodecID == AV_CODEC_ID_MP3 && aSample->mEOS && Padding()) {
+      if (aSample->mEOS && mEncoderPadding) {
         trimmed = true;
         uint32_t toTrim =
-            std::min(static_cast<uint64_t>(mFrame->nb_samples), Padding());
+            std::min((uint32_t)mFrame->nb_samples, mEncoderPadding);
+        mEncoderPadding -= toTrim;
         audio.PopBack(toTrim * numChannels);
-        MOZ_ASSERT(audio.Length() / numChannels <= INT32_MAX);
-        mFrame->nb_samples = static_cast<int>(audio.Length() / numChannels);
-        FFMPEG_LOG("FFmpegAudioDecoder (mp3), dropped %" PRIu32
-                   " audio frames, corresponding to the padding.",
-                   toTrim);
-      }
-
-      if (mCodecID == AV_CODEC_ID_AAC && TotalFrames() &&
-          mDecodedFrames > TotalFrames()) {
-        trimmed = true;
-        uint32_t paddingFrames =
-            std::min(mDecodedFrames - TotalFrames(),
-                     static_cast<uint64_t>(mFrame->nb_samples));
-        audio.PopBack(paddingFrames * numChannels);
-        MOZ_ASSERT(audio.Length() / numChannels <= INT32_MAX);
-        mFrame->nb_samples = static_cast<int>(audio.Length() / numChannels);
-        FFMPEG_LOG("FFmpegAudioDecoder (aac), dropped %" PRIu32
-                   " audio frames, corresponding to the padding.",
-                   paddingFrames);
-        // When this decoder is past the "real" end time of the media, reset the
-        // number of decoded frames. If more frames come, it's because this
-        // decoder is being used for looping, in which case encoder delay and
-        // padding need to be trimmed again.
-        mDecodedFrames = 0;
-        mRemainingEncoderDelay = mEncoderDelay;
+        mFrame->nb_samples = audio.Length() / numChannels;
       }
 
       media::TimeUnit duration =
           FramesToTimeUnit(mFrame->nb_samples, samplingRate);
       if (!duration.IsValid()) {
-        FFMPEG_LOG("FFmpegAudioDecoder: invalid duration");
         return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                            RESULT_DETAIL("Invalid sample duration"));
       }
 
       media::TimeUnit newpts = pts + duration;
       if (!newpts.IsValid()) {
-        FFMPEG_LOG("FFmpegAudioDecoder: invalid PTS.");
         return MediaResult(
             NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
             RESULT_DETAIL("Invalid count of accumulated audio samples"));
