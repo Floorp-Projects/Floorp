@@ -42,6 +42,7 @@ import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -128,9 +129,8 @@ abstract class AbstractBrowserTabViewHolder(
     }
 
     private fun updateTitle(tab: TabSessionState) {
-        val title = tab.content.title.ifEmpty {
-            tab.content.url
-        }
+        // We can use the max URI length for titles as well.
+        val title = tab.toDisplayTitle().take(MAX_URI_LENGTH)
         titleView.text = title
     }
 
