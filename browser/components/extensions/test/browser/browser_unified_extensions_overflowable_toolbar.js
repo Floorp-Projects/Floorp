@@ -318,20 +318,10 @@ async function withWindowOverflowed(
 async function verifyExtensionWidget(win, widget) {
   Assert.ok(widget, "expected widget");
 
-  let actionButton = widget.querySelector(
-    ".unified-extensions-item-action-button"
-  );
+  let actionButton = widget.firstElementChild;
   Assert.ok(
     actionButton.classList.contains("unified-extensions-item-action-button"),
     "expected action class on the button"
-  );
-  ok(
-    actionButton.classList.contains("subviewbutton"),
-    "expected the .subviewbutton CSS class on the action button in the panel"
-  );
-  ok(
-    !actionButton.classList.contains("toolbarbutton-1"),
-    "expected no .toolbarbutton-1 CSS class on the action button in the panel"
   );
 
   let menuButton = widget.lastElementChild;
@@ -414,9 +404,10 @@ async function verifyExtensionWidget(win, widget) {
  * panel.
  */
 add_task(async function test_overflowable_toolbar() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let movedNode;
 
-  await withWindowOverflowed(window, {
+  await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       // Ensure that there are 5 items in the Unified Extensions overflow
       // list, and the default widgets should all be in the default overflow
@@ -441,13 +432,13 @@ add_task(async function test_overflowable_toolbar() {
           extensionIDs.includes(child.dataset.extensionid),
           `Unified Extensions overflow list should have ${child.dataset.extensionid}`
         );
-        await verifyExtensionWidget(window, child, true);
+        await verifyExtensionWidget(win, child, true);
       }
 
       let extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
         extensionIDs.at(-1)
       );
-      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(window)
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
         .node;
       Assert.equal(movedNode.getAttribute("cui-areatype"), "toolbar");
 
@@ -472,10 +463,14 @@ add_task(async function test_overflowable_toolbar() {
       CustomizableUI.addWidgetToArea(movedNode.id, CustomizableUI.AREA_NAVBAR);
     },
   });
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_context_menu() {
-  await withWindowOverflowed(window, {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       Assert.ok(
         unifiedExtensionList.children.length,
@@ -483,7 +478,7 @@ add_task(async function test_context_menu() {
       );
 
       // Open the extension panel.
-      await openExtensionsPanel();
+      await openExtensionsPanel(win);
 
       // Let's verify the context menus for the following extensions:
       //
@@ -495,7 +490,8 @@ add_task(async function test_context_menu() {
       const firstExtensionWidget = unifiedExtensionList.children[0];
       Assert.ok(firstExtensionWidget, "expected extension widget");
       let contextMenu = await openUnifiedExtensionsContextMenu(
-        firstExtensionWidget.dataset.extensionid
+        firstExtensionWidget.dataset.extensionid,
+        win
       );
       Assert.ok(contextMenu, "expected a context menu");
       let visibleItems = getVisibleMenuItems(contextMenu);
@@ -522,13 +518,14 @@ add_task(async function test_context_menu() {
         "expected separator after last menu item created by the extension"
       );
 
-      await closeChromeContextMenu(contextMenu.id, null);
+      await closeChromeContextMenu(contextMenu.id, null, win);
 
       info("extension with browser action and a menu with submenu");
       const secondExtensionWidget = unifiedExtensionList.children[1];
       Assert.ok(secondExtensionWidget, "expected extension widget");
       contextMenu = await openUnifiedExtensionsContextMenu(
-        secondExtensionWidget.dataset.extensionid
+        secondExtensionWidget.dataset.extensionid,
+        win
       );
       visibleItems = getVisibleMenuItems(contextMenu);
       is(visibleItems.length, 7, "expected 7 menu items");
@@ -542,7 +539,7 @@ add_task(async function test_context_menu() {
       // The number of items in the (main) context menu should remain the same.
       visibleItems = getVisibleMenuItems(contextMenu);
       is(visibleItems.length, 7, "expected 7 menu items");
-      await closeChromeContextMenu(contextMenu.id, null);
+      await closeChromeContextMenu(contextMenu.id, null, win);
 
       info("extension with no browser action and no menu");
       // There is no context menu created by this extension, so there should
@@ -551,22 +548,27 @@ add_task(async function test_context_menu() {
       const thirdExtensionWidget = unifiedExtensionList.children[2];
       Assert.ok(thirdExtensionWidget, "expected extension widget");
       contextMenu = await openUnifiedExtensionsContextMenu(
-        thirdExtensionWidget.dataset.extensionid
+        thirdExtensionWidget.dataset.extensionid,
+        win
       );
       Assert.ok(contextMenu, "expected a context menu");
       visibleItems = getVisibleMenuItems(contextMenu);
       is(visibleItems.length, 5, "expected 5 menu items");
 
-      await closeChromeContextMenu(contextMenu.id, null);
+      await closeChromeContextMenu(contextMenu.id, null, win);
 
       // We can close the unified extensions panel now.
-      await closeExtensionsPanel();
+      await closeExtensionsPanel(win);
     },
   });
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_message_deck() {
-  await withWindowOverflowed(window, {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       Assert.ok(
         unifiedExtensionList.children.length,
@@ -582,14 +584,15 @@ add_task(async function test_message_deck() {
 
       // Navigate to a page where `activeTab` is useful.
       await BrowserTestUtils.withNewTab(
-        { gBrowser, url: "https://example.com/" },
+        { gBrowser: win.gBrowser, url: "https://example.com/" },
         async () => {
           // Open the extension panel.
-          await openExtensionsPanel();
+          await openExtensionsPanel(win);
 
           info("verify message when focusing the action button");
           const item = getUnifiedExtensionsItem(
-            firstExtensionWidget.dataset.extensionid
+            firstExtensionWidget.dataset.extensionid,
+            win
           );
           Assert.ok(item, "expected an item for the extension");
 
@@ -609,7 +612,7 @@ add_task(async function test_message_deck() {
           Assert.ok(messageDeck, "expected message deck");
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
             "expected selected message in the deck to be the default message"
           );
 
@@ -617,7 +620,7 @@ add_task(async function test_message_deck() {
             ".unified-extensions-item-message-default"
           );
           Assert.deepEqual(
-            document.l10n.getAttributes(defaultMessage),
+            win.document.l10n.getAttributes(defaultMessage),
             { id: "origin-controls-state-when-clicked", args: null },
             "expected correct l10n attributes for the default message"
           );
@@ -630,7 +633,7 @@ add_task(async function test_message_deck() {
             ".unified-extensions-item-message-hover"
           );
           Assert.deepEqual(
-            document.l10n.getAttributes(hoverMessage),
+            win.document.l10n.getAttributes(hoverMessage),
             { id: "origin-controls-state-hover-run-visit-only", args: null },
             "expected correct l10n attributes for the hover message"
           );
@@ -643,7 +646,7 @@ add_task(async function test_message_deck() {
             ".unified-extensions-item-message-hover-menu-button"
           );
           Assert.deepEqual(
-            document.l10n.getAttributes(hoverMenuButtonMessage),
+            win.document.l10n.getAttributes(hoverMenuButtonMessage),
             { id: "unified-extensions-item-message-manage", args: null },
             "expected correct l10n attributes for the message when hovering the menu button"
           );
@@ -654,42 +657,42 @@ add_task(async function test_message_deck() {
 
           // 1. Focus the action button of the first extension in the panel.
           let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-          EventUtils.synthesizeKey("VK_TAB", {});
+          EventUtils.synthesizeKey("VK_TAB", {}, win);
           await focused;
           is(
             actionButton,
-            document.activeElement,
+            win.document.activeElement,
             "expected action button of the first extension item to be focused"
           );
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
             "expected selected message in the deck to be the hover message"
           );
 
           // 2. Focus the menu button, causing the action button to lose focus.
           focused = BrowserTestUtils.waitForEvent(menuButton, "focus");
-          EventUtils.synthesizeKey("VK_TAB", {});
+          EventUtils.synthesizeKey("VK_TAB", {}, win);
           await focused;
           is(
             menuButton,
-            document.activeElement,
+            win.document.activeElement,
             "expected menu button of the first extension item to be focused"
           );
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
             "expected selected message in the deck to be the message when focusing the menu button"
           );
 
-          await closeExtensionsPanel();
+          await closeExtensionsPanel(win);
 
           info("verify message when hovering the action button");
-          await openExtensionsPanel();
+          await openExtensionsPanel(win);
 
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
             "expected selected message in the deck to be the default message"
           );
 
@@ -698,32 +701,40 @@ add_task(async function test_message_deck() {
             actionButton,
             "mouseover"
           );
-          EventUtils.synthesizeMouseAtCenter(actionButton, {
-            type: "mouseover",
-          });
+          EventUtils.synthesizeMouseAtCenter(
+            actionButton,
+            { type: "mouseover" },
+            win
+          );
           await hovered;
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
             "expected selected message in the deck to be the hover message"
           );
 
           // 2. Hover the menu button, causing the action button to no longer
           // be hovered.
           hovered = BrowserTestUtils.waitForEvent(menuButton, "mouseover");
-          EventUtils.synthesizeMouseAtCenter(menuButton, { type: "mouseover" });
+          EventUtils.synthesizeMouseAtCenter(
+            menuButton,
+            { type: "mouseover" },
+            win
+          );
           await hovered;
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
             "expected selected message in the deck to be the message when hovering the menu button"
           );
 
-          await closeExtensionsPanel();
+          await closeExtensionsPanel(win);
         }
       );
     },
   });
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
@@ -732,11 +743,11 @@ add_task(async function test_message_deck() {
  * button is put into the addons panel overflow list.
  */
 add_task(async function test_pinning_to_toolbar_when_overflowed() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let movedNode;
   let extensionWidgetID;
-  let actionButton;
 
-  await withWindowOverflowed(window, {
+  await withWindowOverflowed(win, {
     beforeOverflowed: async extensionIDs => {
       // Before we overflow the toolbar, let's move the last item to the addons
       // panel.
@@ -744,45 +755,15 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         extensionIDs.at(-1)
       );
 
-      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(window)
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
         .node;
-
-      actionButton = movedNode.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the navbar"
-      );
-      ok(
-        !actionButton.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the navbar"
-      );
 
       CustomizableUI.addWidgetToArea(
         extensionWidgetID,
         CustomizableUI.AREA_ADDONS
       );
-
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected .subviewbutton CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
-      );
     },
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected .subviewbutton CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
-      );
-
       // Now that the window is overflowed, let's move the widget in the addons
       // panel back to the navbar. This should cause the widget to overflow back
       // into the addons panel.
@@ -798,17 +779,10 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         unifiedExtensionList,
         "Should have overflowed the extension button to the right list."
       );
-
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the panel"
-      );
     },
   });
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
@@ -818,10 +792,11 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
  * extension into the dedicated addons area of the panel, and that the item
  * then does not underflow.
  */
-add_task(async function test_unpin_overflowed_widget() {
+add_task(async function test_() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   let extensionID;
 
-  await withWindowOverflowed(window, {
+  await withWindowOverflowed(win, {
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       const firstExtensionWidget = unifiedExtensionList.children[0];
       Assert.ok(firstExtensionWidget, "expected an extension widget");
@@ -829,7 +804,7 @@ add_task(async function test_unpin_overflowed_widget() {
 
       let movedNode = CustomizableUI.getWidget(
         firstExtensionWidget.id
-      ).forWindow(window).node;
+      ).forWindow(win).node;
       Assert.equal(
         movedNode.getAttribute("cui-areatype"),
         "toolbar",
@@ -839,23 +814,15 @@ add_task(async function test_unpin_overflowed_widget() {
         movedNode.hasAttribute("overflowedItem"),
         "expected extension widget to be overflowed"
       );
-      let actionButton = movedNode.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected the .subviewbutton CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
-      );
 
       // Open the panel, then the context menu of the extension widget, verify
       // the 'Pin to Toolbar' menu item, then click on this menu item to
       // uncheck it (i.e. unpin the extension).
-      await openExtensionsPanel();
-      const contextMenu = await openUnifiedExtensionsContextMenu(extensionID);
+      await openExtensionsPanel(win);
+      const contextMenu = await openUnifiedExtensionsContextMenu(
+        extensionID,
+        win
+      );
       Assert.ok(contextMenu, "expected a context menu");
 
       const pinToToolbar = contextMenu.querySelector(
@@ -875,7 +842,7 @@ add_task(async function test_unpin_overflowed_widget() {
       // Uncheck "Pin to Toolbar" menu item. Clicking a menu item in the
       // context menu closes the unified extensions panel automatically.
       const hidden = BrowserTestUtils.waitForEvent(
-        gUnifiedExtensions.panel,
+        win.gUnifiedExtensions.panel,
         "popuphidden",
         true
       );
@@ -899,162 +866,15 @@ add_task(async function test_unpin_overflowed_widget() {
       );
     },
     afterUnderflowed: async () => {
-      await openExtensionsPanel();
+      await openExtensionsPanel(win);
 
-      const item = getUnifiedExtensionsItem(extensionID);
+      const item = getUnifiedExtensionsItem(extensionID, win);
       Assert.ok(
         item,
         "expected extension widget to be listed in the unified extensions panel"
       );
-      let actionButton = item.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected the .subviewbutton CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
-      );
 
-      await closeExtensionsPanel();
-    },
-  });
-});
-
-add_task(async function test_overflow_with_a_second_window() {
-  // Open a second window that will stay maximized. We want to be sure that
-  // overflowing a widget in one window isn't going to affect the other window
-  // since we have an instance (of a CUI widget) per window.
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await ensureMaximizedWindow(win);
-
-  let extensionWidgetID;
-  let aNode;
-  let aNodeInSecondWindow;
-
-  await withWindowOverflowed(window, {
-    beforeOverflowed: async extensionIDs => {
-      extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
-        extensionIDs.at(-1)
-      );
-
-      // This is the DOM node for the current window that is overflowed.
-      aNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(window)
-        .node;
-      Assert.ok(
-        !aNode.hasAttribute("overflowedItem"),
-        "expected extension widget to NOT be overflowed"
-      );
-
-      let actionButton = aNode.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button"
-      );
-      ok(
-        !actionButton.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button"
-      );
-
-      // This is the DOM node of the same CUI widget but in the maximized
-      // window opened before.
-      aNodeInSecondWindow = CustomizableUI.getWidget(
-        extensionWidgetID
-      ).forWindow(win).node;
-
-      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the second window"
-      );
-      ok(
-        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the second window"
-      );
-    },
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
-      // The DOM node should have been overflowed.
-      Assert.ok(
-        aNode.hasAttribute("overflowedItem"),
-        "expected extension widget to be overflowed"
-      );
-      Assert.equal(
-        aNode.getAttribute("widget-id"),
-        extensionWidgetID,
-        "expected the CUI widget ID to be set on the DOM node"
-      );
-
-      // When the node is overflowed, we swap the CSS class on the action
-      // button since the node is now placed in the extensions panel.
-      let actionButton = aNode.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("subviewbutton"),
-        "expected the .subviewbutton CSS class on the action button"
-      );
-      ok(
-        !actionButton.classList.contains("toolbarbutton-1"),
-        "expected no .toolbarbutton-1 CSS class on the action button"
-      );
-
-      // The DOM node in the other window should not have been overflowed.
-      Assert.ok(
-        !aNodeInSecondWindow.hasAttribute("overflowedItem"),
-        "expected extension widget to NOT be overflowed in the other window"
-      );
-      Assert.equal(
-        aNodeInSecondWindow.getAttribute("widget-id"),
-        extensionWidgetID,
-        "expected the CUI widget ID to be set on the DOM node"
-      );
-
-      // We expect no CSS class changes for the node in the other window.
-      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the second window"
-      );
-      ok(
-        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the second window"
-      );
-    },
-    afterUnderflowed: async () => {
-      // After underflow, we expect the CSS class on the action button of the
-      // DOM node of the current window to be updated.
-      let actionButton = aNode.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButton.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the panel"
-      );
-      ok(
-        !actionButton.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the panel"
-      );
-
-      // The DOM node of the other window should not be changed.
-      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      ok(
-        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
-        "expected .toolbarbutton-1 CSS class on the action button in the second window"
-      );
-      ok(
-        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
-        "expected no .subviewbutton CSS class on the action button in the second window"
-      );
+      await closeExtensionsPanel(win);
     },
   });
 
