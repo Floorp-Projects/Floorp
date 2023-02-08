@@ -188,10 +188,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(versionchange)
 
-  [[nodiscard]] RefPtr<IDBRequest> CreateMutableFile(
-      JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
-      ErrorResult& aRv);
-
   void ClearBackgroundActor() {
     AssertIsOnOwningThread();
 
