@@ -114,3 +114,19 @@ addAccessibleTask(
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
+
+// Test translated, position: absolute Accessible in a container.
+addAccessibleTask(
+  `
+<div id="container">
+  <div id="transform" style="position: absolute; transform: translate(100px, 100px);">
+    <p id="p">test</p>
+  </div>
+</div>
+  `,
+  async function(browser, docAcc) {
+    await testBoundsWithContent(docAcc, "transform", browser);
+    await testBoundsWithContent(docAcc, "p", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
