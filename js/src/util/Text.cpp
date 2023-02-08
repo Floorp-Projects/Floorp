@@ -14,8 +14,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "frontend/FrontendContext.h"  // frontend::FrontendContext
 #include "gc/GC.h"
 #include "js/GCAPI.h"
+#include "js/Utility.h"  // JS::FreePolicy
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
@@ -47,33 +49,56 @@ template const Latin1Char* js_strchr_limit(const Latin1Char* s, char16_t c,
 template const char16_t* js_strchr_limit(const char16_t* s, char16_t c,
                                          const char16_t* limit);
 
-UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
-                                       const char* s) {
-  return DuplicateStringToArena(destArenaId, cx, s, strlen(s));
-}
-
-UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
-                                       const char* s, size_t n) {
-  auto ret = cx->make_pod_arena_array<char>(destArenaId, n + 1);
+template <typename AllocT, typename CharT>
+static UniquePtr<CharT[], JS::FreePolicy> DuplicateStringToArenaImpl(
+    arena_id_t destArenaId, AllocT* alloc, const CharT* s, size_t n) {
+  auto ret = alloc->template make_pod_arena_array<CharT>(destArenaId, n + 1);
   if (!ret) {
     return nullptr;
   }
   PodCopy(ret.get(), s, n);
   ret[n] = '\0';
   return ret;
+}
+
+UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
+                                       const char* s, size_t n) {
+  return DuplicateStringToArenaImpl(destArenaId, cx, s, n);
+}
+
+static UniqueChars DuplicateStringToArena(arena_id_t destArenaId,
+                                          FrontendContext* fc, const char* s,
+                                          size_t n) {
+  return DuplicateStringToArenaImpl(destArenaId, fc->getAllocator(), s, n);
+}
+
+UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
+                                       const char* s) {
+  return DuplicateStringToArena(destArenaId, cx, s, strlen(s));
+}
+
+static UniqueChars DuplicateStringToArena(arena_id_t destArenaId,
+                                          FrontendContext* fc, const char* s) {
+  return DuplicateStringToArena(destArenaId, fc, s, strlen(s));
 }
 
 UniqueLatin1Chars js::DuplicateStringToArena(arena_id_t destArenaId,
                                              JSContext* cx,
                                              const JS::Latin1Char* s,
                                              size_t n) {
-  auto ret = cx->make_pod_arena_array<Latin1Char>(destArenaId, n + 1);
-  if (!ret) {
-    return nullptr;
-  }
-  PodCopy(ret.get(), s, n);
-  ret[n] = '\0';
-  return ret;
+  return DuplicateStringToArenaImpl(destArenaId, cx, s, n);
+}
+
+UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
+                                              JSContext* cx, const char16_t* s,
+                                              size_t n) {
+  return DuplicateStringToArenaImpl(destArenaId, cx, s, n);
+}
+
+static UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 FrontendContext* fc,
+                                                 const char16_t* s, size_t n) {
+  return DuplicateStringToArenaImpl(destArenaId, fc->getAllocator(), s, n);
 }
 
 UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
@@ -82,16 +107,10 @@ UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
   return DuplicateStringToArena(destArenaId, cx, s, js_strlen(s));
 }
 
-UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
-                                              JSContext* cx, const char16_t* s,
-                                              size_t n) {
-  auto ret = cx->make_pod_arena_array<char16_t>(destArenaId, n + 1);
-  if (!ret) {
-    return nullptr;
-  }
-  PodCopy(ret.get(), s, n);
-  ret[n] = '\0';
-  return ret;
+static UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 FrontendContext* fc,
+                                                 const char16_t* s) {
+  return DuplicateStringToArena(destArenaId, fc, s, js_strlen(s));
 }
 
 UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, const char* s) {
@@ -146,6 +165,10 @@ UniqueChars js::DuplicateString(JSContext* cx, const char* s) {
   return DuplicateStringToArena(js::MallocArena, cx, s);
 }
 
+UniqueChars js::DuplicateString(FrontendContext* fc, const char* s) {
+  return ::DuplicateStringToArena(js::MallocArena, fc, s);
+}
+
 UniqueLatin1Chars js::DuplicateString(JSContext* cx, const JS::Latin1Char* s,
                                       size_t n) {
   return DuplicateStringToArena(js::MallocArena, cx, s, n);
@@ -153,6 +176,10 @@ UniqueLatin1Chars js::DuplicateString(JSContext* cx, const JS::Latin1Char* s,
 
 UniqueTwoByteChars js::DuplicateString(JSContext* cx, const char16_t* s) {
   return DuplicateStringToArena(js::MallocArena, cx, s);
+}
+
+UniqueTwoByteChars js::DuplicateString(FrontendContext* fc, const char16_t* s) {
+  return ::DuplicateStringToArena(js::MallocArena, fc, s);
 }
 
 UniqueTwoByteChars js::DuplicateString(JSContext* cx, const char16_t* s,

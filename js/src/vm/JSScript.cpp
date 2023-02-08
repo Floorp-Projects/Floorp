@@ -1928,7 +1928,7 @@ SharedImmutableTwoByteString ScriptSource::getOrCreateStringZ(
 
 bool ScriptSource::setFilename(JSContext* cx, FrontendContext* fc,
                                const char* filename) {
-  UniqueChars owned = DuplicateString(cx, filename);
+  UniqueChars owned = DuplicateString(fc, filename);
   if (!owned) {
     return false;
   }
@@ -1943,7 +1943,7 @@ bool ScriptSource::setFilename(FrontendContext* fc, UniqueChars&& filename) {
 
 bool ScriptSource::setIntroducerFilename(JSContext* cx, FrontendContext* fc,
                                          const char* filename) {
-  UniqueChars owned = DuplicateString(cx, filename);
+  UniqueChars owned = DuplicateString(fc, filename);
   if (!owned) {
     return false;
   }
@@ -1959,7 +1959,7 @@ bool ScriptSource::setIntroducerFilename(FrontendContext* fc,
 
 bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
                                  const char16_t* url) {
-  UniqueTwoByteChars owned = DuplicateString(cx, url);
+  UniqueTwoByteChars owned = DuplicateString(fc, url);
   if (!owned) {
     return false;
   }
@@ -1988,7 +1988,7 @@ bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
 
 bool ScriptSource::setSourceMapURL(JSContext* cx, FrontendContext* fc,
                                    const char16_t* url) {
-  UniqueTwoByteChars owned = DuplicateString(cx, url);
+  UniqueTwoByteChars owned = DuplicateString(fc, url);
   if (!owned) {
     return false;
   }
