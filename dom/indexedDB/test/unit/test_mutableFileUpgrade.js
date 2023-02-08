@@ -88,8 +88,12 @@ function* testSteps() {
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  verifyMutableFile(event.target.result, getFile("mutablefile0", "", ""));
-  yield undefined;
+  try {
+    event.target.result;
+    ok(false, "IDBMutableFile must not be read");
+  } catch (err) {
+    is(err.name, "InvalidStateError", "Wrong error type");
+  }
 
   request = db
     .transaction([objectStoreName])
@@ -98,13 +102,12 @@ function* testSteps() {
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  result = event.target.result;
-
-  verifyMutableFile(result[0], getFile("mutablefile1", "", ""));
-  yield undefined;
-
-  verifyMutableFile(result[1], getFile("mutablefile2", "", ""));
-  yield undefined;
+  try {
+    event.target.result;
+    ok(false, "IDBMutableFile must not be read");
+  } catch (err) {
+    is(err.name, "InvalidStateError", "Wrong error type");
+  }
 
   request = db
     .transaction([objectStoreName])
@@ -113,13 +116,12 @@ function* testSteps() {
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  result = event.target.result;
-
-  verifyBlob(result[0], getBlob("blob3"));
-  yield undefined;
-
-  verifyMutableFile(result[1], getFile("mutablefile3", "", ""));
-  yield undefined;
+  try {
+    event.target.result;
+    ok(false, "IDBMutableFile must not be read");
+  } catch (err) {
+    is(err.name, "InvalidStateError", "Wrong error type");
+  }
 
   finishTest();
   yield undefined;

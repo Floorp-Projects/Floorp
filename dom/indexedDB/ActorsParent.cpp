@@ -2228,7 +2228,6 @@ class Database final
   int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
-  const bool mFileHandleDisabled;
   const bool mChromeWriteAccessAllowed;
   const bool mInPrivateBrowsing;
   FlippedOnce<false> mClosed;
@@ -2247,9 +2246,8 @@ class Database final
            const quota::OriginMetadata& aOriginMetadata, uint32_t aTelemetryId,
            SafeRefPtr<FullDatabaseMetadata> aMetadata,
            SafeRefPtr<DatabaseFileManager> aFileManager,
-           RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
-           bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing,
-           const Maybe<const CipherKey>& aMaybeKey);
+           RefPtr<DirectoryLock> aDirectoryLock, bool aChromeWriteAccessAllowed,
+           bool aInPrivateBrowsing, const Maybe<const CipherKey>& aMaybeKey);
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -2326,8 +2324,6 @@ class Database final
   bool RegisterTransaction(TransactionBase& aTransaction);
 
   void UnregisterTransaction(TransactionBase& aTransaction);
-
-  bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
   bool RegisterMutableFile(MutableFile* aMutableFile);
 
@@ -3177,7 +3173,6 @@ class FactoryOp
   bool mEnforcingQuota;
   const bool mDeleting;
   bool mChromeWriteAccessAllowed;
-  bool mFileHandleDisabled;
   FlippedOnce<false> mInPrivateBrowsing;
 
  public:
@@ -5696,36 +5691,13 @@ SerializeStructuredCloneFiles(const SafeRefPtr<Database>& aDatabase,
             return SerializedStructuredCloneFile{ipcBlob, file.Type()};
           }
 
-          case StructuredCloneFileBase::eMutableFile: {
-            if (aDatabase->IsFileHandleDisabled()) {
-              return SerializedStructuredCloneFile{
-                  null_t(), StructuredCloneFileBase::eMutableFile};
-            }
-
-            const RefPtr<MutableFile> actor = MutableFile::Create(
-                nativeFile, aDatabase.clonePtr(), file.FileInfoPtr());
-            QM_TRY(OkIf(actor), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
-                   IDB_REPORT_INTERNAL_ERR_LAMBDA);
-
-            // Transfer ownership to IPDL.
-            actor->SetActorAlive();
-
-            if (!aDatabase->SendPBackgroundMutableFileConstructor(actor, u""_ns,
-                                                                  u""_ns)) {
-              // This can only fail if the child has crashed.
-              IDB_REPORT_INTERNAL_ERR();
-              return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-            }
-
-            return SerializedStructuredCloneFile{
-                actor.get(), StructuredCloneFileBase::eMutableFile};
-          }
-
+          case StructuredCloneFileBase::eMutableFile:
           case StructuredCloneFileBase::eWasmBytecode:
           case StructuredCloneFileBase::eWasmCompiled: {
             // Set file() to null, support for storing WebAssembly.Modules has
             // been removed in bug 1469395. Support for de-serialization of
-            // WebAssembly.Modules modules has been removed in bug 1561876. Full
+            // WebAssembly.Modules modules has been removed in bug 1561876.
+            // Support for MutableFile has been removed in bug 1500343. Full
             // removal is tracked in bug 1487479.
 
             return SerializedStructuredCloneFile{null_t(), file.Type()};
@@ -9510,8 +9482,7 @@ Database::Database(SafeRefPtr<Factory> aFactory,
                    SafeRefPtr<FullDatabaseMetadata> aMetadata,
                    SafeRefPtr<DatabaseFileManager> aFileManager,
                    RefPtr<DirectoryLock> aDirectoryLock,
-                   bool aFileHandleDisabled, bool aChromeWriteAccessAllowed,
-                   bool aInPrivateBrowsing,
+                   bool aChromeWriteAccessAllowed, bool aInPrivateBrowsing,
                    const Maybe<const CipherKey>& aMaybeKey)
     : mFactory(std::move(aFactory)),
       mMetadata(std::move(aMetadata)),
@@ -9527,7 +9498,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mPendingCreateFileOpCount(0),
       mTelemetryId(aTelemetryId),
       mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
-      mFileHandleDisabled(aFileHandleDisabled),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
       mInPrivateBrowsing(aInPrivateBrowsing),
       mBackgroundThread(GetCurrentSerialEventTarget())
@@ -9911,17 +9881,7 @@ bool Database::VerifyRequestParams(const DatabaseRequestParams& aParams) const {
 
   switch (aParams.type()) {
     case DatabaseRequestParams::TCreateFileParams: {
-      if (NS_AUUF_OR_WARN_IF(mFileHandleDisabled)) {
-        return false;
-      }
-
-      const CreateFileParams& params = aParams.get_CreateFileParams();
-
-      if (NS_AUUF_OR_WARN_IF(params.name().IsEmpty())) {
-        return false;
-      }
-
-      break;
+      return false;
     }
 
     default:
@@ -10771,23 +10731,7 @@ bool TransactionBase::VerifyRequestParams(
           return false;
         }
 
-        if (NS_AUUF_OR_WARN_IF(mDatabase->IsFileHandleDisabled())) {
-          return false;
-        }
-
-        auto mutableFile =
-            static_cast<MutableFile*>(file.get_PBackgroundMutableFileParent());
-
-        if (NS_AUUF_OR_WARN_IF(!mutableFile)) {
-          return false;
-        }
-
-        const Database& database = mutableFile->GetDatabase();
-        if (NS_AUUF_OR_WARN_IF(database.Id() != mDatabase->Id())) {
-          return false;
-        }
-
-        break;
+        return false;
       }
 
       case StructuredCloneFileBase::eStructuredClone:
@@ -15086,8 +15030,7 @@ FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
       mWaitingForPermissionRetry(false),
       mEnforcingQuota(true),
       mDeleting(aDeleting),
-      mChromeWriteAccessAllowed(false),
-      mFileHandleDisabled(false) {
+      mChromeWriteAccessAllowed(false) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mFactory);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
@@ -15436,8 +15379,6 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
       }
     }
   }
-
-  mFileHandleDisabled = !StaticPrefs::dom_fileHandle_enabled();
 
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
@@ -16605,7 +16546,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
       mCommonParams.principalInfo(),
       mContentHandle ? Some(mContentHandle->ChildID()) : Nothing(),
       mOriginMetadata, mTelemetryId, mMetadata.clonePtr(),
-      mFileManager.clonePtr(), std::move(mDirectoryLock), mFileHandleDisabled,
+      mFileManager.clonePtr(), std::move(mDirectoryLock),
       mChromeWriteAccessAllowed, mInPrivateBrowsing, maybeKey);
 
   if (info) {
