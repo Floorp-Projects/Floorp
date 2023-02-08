@@ -102,7 +102,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/mp4parse-rust"]
 git = "https://github.com/mozilla/mp4parse-rust"
-rev = "40763b69d75e14abaa25c6438271eb552dc2b9e9"
+rev = "2b572e83608a3d0867b935e076f45d9fe248069d"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/neqo"]

@@ -66,6 +66,8 @@ static IMAGE_AVIF_IROT_MISSING_ESSENTIAL: &str = "tests/irot-missing-essential.a
 static IMAGE_AVIF_LSEL_MISSING_ESSENTIAL: &str = "tests/corrupt/lsel-missing-essential.avif";
 static IMAGE_AVIF_CLAP_MISSING_ESSENTIAL: &str = "tests/clap-missing-essential.avif";
 static IMAGE_AVIF_UNKNOWN_MDAT_SIZE: &str = "tests/unknown_mdat.avif";
+static IMAGE_AVIF_UNKNOWN_MDAT_SIZE_IN_OVERSIZED_META: &str =
+    "tests/unknown_mdat_in_oversized_meta.avif";
 static AVIF_TEST_DIRS: &[&str] = &["tests", "av1-avif/testFiles", "link-u-avif-sample-images"];
 
 // These files are
@@ -124,6 +126,7 @@ static AVIF_UNSUPPORTED_IMAGES: &[&str] = &[
 /// and https://github.com/AOMediaCodec/av1-avif/issues/178
 // TODO: make this into a map of expected errors?
 static AV1_AVIF_CORRUPT_IMAGES: &[&str] = &[
+    IMAGE_AVIF_UNKNOWN_MDAT_SIZE_IN_OVERSIZED_META,
     "av1-avif/testFiles/Link-U/kimono.crop.avif",
     "av1-avif/testFiles/Link-U/kimono.mirror-horizontal.avif",
     "av1-avif/testFiles/Link-U/kimono.mirror-vertical.avif",
@@ -923,6 +926,16 @@ fn public_avif_unknown_mdat() {
             0x12, 0x00, 0x0A, 0x07, 0x38, 0x00, 0x06, 0x90, 0x20, 0x20, 0x69, 0x32, 0x0C, 0x16,
             0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x79, 0x4C, 0xD2, 0x02
         ]
+    );
+}
+
+#[test]
+fn public_avif_unknown_mdat_in_oversized_meta() {
+    let input =
+        &mut File::open(IMAGE_AVIF_UNKNOWN_MDAT_SIZE_IN_OVERSIZED_META).expect("Unknown file");
+    assert_eq!(
+        Status::from(mp4::read_avif(input, ParseStrictness::Normal)),
+        Status::Unsupported
     );
 }
 
