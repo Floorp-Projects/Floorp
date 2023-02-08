@@ -1885,7 +1885,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   MOZ_ASSERT(checkOptionsCalled_);
 
   this->compilationState_.moduleMetadata =
-      cx_->template new_<StencilModuleMetadata>();
+      fc_->getAllocator()->template new_<StencilModuleMetadata>();
   if (!this->compilationState_.moduleMetadata) {
     return null();
   }
