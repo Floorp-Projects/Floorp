@@ -303,10 +303,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   bool inParametersOfAsyncFunction_ : 1;
 
  public:
-  JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
-    return parserAtoms().toJSAtom(cx_, fc_, index,
-                                  compilationState_.input.atomCache);
-  }
+  JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index);
 
   bool awaitIsKeyword() const {
     return awaitHandling_ == AwaitIsKeyword ||
