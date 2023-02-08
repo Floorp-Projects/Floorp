@@ -2293,6 +2293,13 @@
   value: false
   mirror: always
 
+# HTML specification says the level should be 5
+# https://html.spec.whatwg.org/#timer-initialisation-steps
+- name: dom.clamp.timeout.nesting.level
+  type: uint32_t
+  value: 5
+  mirror: once
+
 # Disable custom highlight API; implementation pending.
 - name: dom.customHighlightAPI.enabled
   type: RelaxedAtomicBool
