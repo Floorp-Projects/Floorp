@@ -7,13 +7,7 @@
  * RemoteSettings.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginBreaches"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -23,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
 
-const LoginBreaches = {
+export const LoginBreaches = {
   REMOTE_SETTINGS_COLLECTION: "fxmonitor-breaches",
 
   async update(breaches = null) {

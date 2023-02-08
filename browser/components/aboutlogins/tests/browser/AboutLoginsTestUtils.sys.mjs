@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AboutLoginsTestUtils"];
-
 /**
  * An utility class to help out with the about:logins and about:loginsimportreport DOM interaction for the tests.
  *
  */
-class AboutLoginsTestUtils {
+export class AboutLoginsTestUtils {
   /**
    * An utility method to fetch the data from the CSV import success dialog.
    *

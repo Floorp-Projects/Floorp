@@ -15,11 +15,9 @@ const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
   Ci.nsIObserver
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginBreaches",
-  "resource:///modules/LoginBreaches.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
+});
 
 const TEST_BREACHES = [
   {
