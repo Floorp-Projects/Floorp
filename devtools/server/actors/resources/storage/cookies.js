@@ -12,9 +12,6 @@ const {
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
-const {
-  DevToolsServer,
-} = require("resource://devtools/server/devtools-server.js");
 
 // "Lax", "Strict" and "None" are special values of the SameSite property
 // that should not be translated.
@@ -50,19 +47,13 @@ class CookiesStorageActor extends BaseStorageActor {
   constructor(storageActor) {
     super(storageActor, "cookies");
 
-    this.populateStoresForHosts();
-    this.addCookieObservers();
+    Services.obs.addObserver(this, "cookie-changed");
+    Services.obs.addObserver(this, "private-cookie-changed");
   }
 
   destroy() {
-    // We need to remove the cookie listeners early in E10S mode so we need to
-    // use a conditional here to ensure that we only attempt to remove them in
-    // single process mode.
-    if (!DevToolsServer.isInChildProcess) {
-      this.removeCookieObservers();
-    }
-
-    this._pendingResponse = null;
+    Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "private-cookie-changed");
 
     super.destroy();
   }
@@ -535,43 +526,29 @@ class CookiesStorageActor extends BaseStorageActor {
     this._removeCookies(host, { domain, originAttributes });
   }
 
-  addCookieObservers() {
-    Services.obs.addObserver(this, "cookie-changed");
-    Services.obs.addObserver(this, "private-cookie-changed");
-    return null;
-  }
-
-  removeCookieObservers() {
-    Services.obs.removeObserver(this, "cookie-changed");
-    Services.obs.removeObserver(this, "private-cookie-changed");
-    return null;
-  }
-
   observe(subject, topic, data) {
-    if (!subject) {
+    if (
+      !subject ||
+      (topic != "cookie-changed" && topic != "private-cookie-changed")
+    ) {
       return;
     }
 
-    switch (topic) {
-      case "cookie-changed":
-      case "private-cookie-changed":
-        if (data === "batch-deleted") {
-          const cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
-          const cookies = [];
+    if (data === "batch-deleted") {
+      const cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
+      const cookies = [];
 
-          for (let i = 0; i < cookiesNoInterface.length; i++) {
-            const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
-            cookies.push(cookie);
-          }
-          this.onCookieChanged(cookies, topic, data);
+      for (let i = 0; i < cookiesNoInterface.length; i++) {
+        const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
+        cookies.push(cookie);
+      }
+      this.onCookieChanged(cookies, topic, data);
 
-          return;
-        }
-
-        const cookie = subject.QueryInterface(Ci.nsICookie);
-        this.onCookieChanged(cookie, topic, data);
-        break;
+      return;
     }
+
+    const cookie = subject.QueryInterface(Ci.nsICookie);
+    this.onCookieChanged(cookie, topic, data);
   }
 }
 exports.CookiesStorageActor = CookiesStorageActor;
