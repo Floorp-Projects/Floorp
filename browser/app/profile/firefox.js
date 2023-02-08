@@ -2779,6 +2779,9 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"\",\"complete\":false}");
 // Enables the cookie banner desktop UI.
 pref("cookiebanners.ui.desktop.enabled", false);
 
+// Controls which variant of the cookie banner CFR the user is presented with.
+pref("cookiebanners.ui.desktop.cfrVariant", 0);
+
 // Parameters for the swipe-to-navigation icon.
 //
 // `navigation-icon-{start|end}-position` is the start or the end position of

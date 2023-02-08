@@ -916,6 +916,12 @@ const BASE_MESSAGES = () => [
     },
     targeting: "!inMr2022Holdback && doesAppNeedPrivatePin",
   },
+  /**
+   * The three messages below are part of an experiment for cookie banner handling.
+   * Due to the need to set a few prefs in order to enable the feature,
+   * The message variant is also being handled via a pref. At the end of the experiment
+   * period this will be consolidated into a single message.
+   */
   {
     id: "CFR_COOKIEBANNER",
     groups: ["cfr"],
@@ -936,7 +942,7 @@ const BASE_MESSAGES = () => [
       buttons: {
         primary: {
           label: {
-            string_id: "cfr-cookiebanner-accept-button",
+            string_id: "cfr-cookiebanner-accept-button-v2",
           },
           action: {
             type: "MULTI_ACTION",
@@ -996,7 +1002,171 @@ const BASE_MESSAGES = () => [
     trigger: {
       id: "cookieBannerDetected",
     },
-    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true`,
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 0`,
+  },
+  {
+    id: "CFR_COOKIEBANNER_VARIANT_A",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_COOKIEBANNER",
+      anchor_id: "tracking-protection-icon-container",
+      layout: "icon_and_message",
+      icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      persistent_doorhanger: true,
+      heading_text: {
+        string_id: "cfr-cookiebanner-header-variant-1",
+      },
+      text: {
+        string_id: "cfr-cookiebanner-body-variant-1",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-cookiebanner-accept-button-variant-1",
+          },
+          action: {
+            type: "MULTI_ACTION",
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode",
+                      value: 1,
+                    },
+                  },
+                },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode.privateBrowsing",
+                      value: 1,
+                    },
+                  },
+                },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.detectOnly",
+                      value: false,
+                    },
+                  },
+                },
+                {
+                  type: "RELOAD_BROWSER",
+                },
+              ],
+            },
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-cookiebanner-reject-button-variant-1",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      custom: [{ period: 86400000 * 2, cap: 1 }],
+      lifetime: 2,
+    },
+    trigger: {
+      id: "cookieBannerDetected",
+    },
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 1`,
+  },
+  {
+    id: "CFR_COOKIEBANNER_VARIANT_B",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_COOKIEBANNER",
+      anchor_id: "tracking-protection-icon-container",
+      layout: "icon_and_message",
+      icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      persistent_doorhanger: true,
+      heading_text: {
+        string_id: "cfr-cookiebanner-header-variant-2",
+      },
+      text: {
+        string_id: "cfr-cookiebanner-body-variant-2",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-cookiebanner-accept-button-variant-2",
+          },
+          action: {
+            type: "MULTI_ACTION",
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode",
+                      value: 1,
+                    },
+                  },
+                },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.mode.privateBrowsing",
+                      value: 1,
+                    },
+                  },
+                },
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "cookiebanners.service.detectOnly",
+                      value: false,
+                    },
+                  },
+                },
+                {
+                  type: "RELOAD_BROWSER",
+                },
+              ],
+            },
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-cookiebanner-reject-button-variant-2",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      custom: [{ period: 86400000 * 7, cap: 1 }],
+      lifetime: 2,
+    },
+    trigger: {
+      id: "cookieBannerDetected",
+    },
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 2`,
   },
 ];
 
