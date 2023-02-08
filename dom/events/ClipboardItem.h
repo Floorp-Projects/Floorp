@@ -29,20 +29,17 @@ class ClipboardItem final : public nsWrapperCache {
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ItemEntry)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ItemEntry)
 
-    ItemEntry(const nsAString& aType, const nsACString& aFormat);
-    ItemEntry(const nsAString& aType, const nsACString& aFormat,
-              OwningStringOrBlob&& aData)
-        : ItemEntry(aType, aFormat) {
+    explicit ItemEntry(const nsAString& aType) : mType(aType) {}
+    ItemEntry(const nsAString& aType, OwningStringOrBlob&& aData)
+        : ItemEntry(aType) {
       mData = std::move(aData);
     }
-    ItemEntry(const nsAString& aType, const nsACString& aFormat,
-              const OwningStringOrBlob& aData)
-        : ItemEntry(aType, aFormat) {
+    ItemEntry(const nsAString& aType, const OwningStringOrBlob& aData)
+        : ItemEntry(aType) {
       mData = aData;
     }
 
     const nsString& Type() const { return mType; }
-    const nsCString& Format() const { return mFormat; }
     const OwningStringOrBlob& Data() const { return mData; }
 
     void SetData(already_AddRefed<Blob>&& aBlob);
@@ -60,7 +57,6 @@ class ClipboardItem final : public nsWrapperCache {
     void RejectPendingGetTypePromises(nsresult rv);
 
     nsString mType;
-    nsCString mFormat;
     OwningStringOrBlob mData;
     MozPromiseRequestHolder<GenericPromise> mLoadingPromise;
     nsTArray<RefPtr<Promise>> mPendingGetTypeRequests;

@@ -123,7 +123,7 @@ void Clipboard::ReadRequest::Answer() {
 
                   RefPtr<ClipboardItem::ItemEntry> entry =
                       MakeRefPtr<ClipboardItem::ItemEntry>(
-                          NS_ConvertUTF8toUTF16(format), format);
+                          NS_ConvertUTF8toUTF16(format));
                   entry->LoadData(*global, *trans);
                   entries.AppendElement(std::move(entry));
                 }
@@ -678,8 +678,7 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
 
   nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
   items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), nsLiteralCString(kTextMime),
-      std::move(data)));
+      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), std::move(data)));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
