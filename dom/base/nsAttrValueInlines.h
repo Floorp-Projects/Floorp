@@ -87,7 +87,33 @@ struct MiscContainer final {
   }
 
  public:
+  bool StoresAtom() const {
+    return static_cast<nsAttrValue::ValueBaseType>(
+               mStringBits & NS_ATTRVALUE_BASETYPE_MASK) ==
+           nsAttrValue::eAtomBase;
+  }
+  bool StoresStringBuffer() const {
+    return static_cast<nsAttrValue::ValueBaseType>(
+               mStringBits & NS_ATTRVALUE_BASETYPE_MASK) ==
+           nsAttrValue::eStringBase;
+  }
+
   bool GetString(nsAString& aString) const;
+
+  void* GetStringOrAtomPtr() const {
+    return reinterpret_cast<void*>(mStringBits &
+                                   NS_ATTRVALUE_POINTERVALUE_MASK);
+  }
+
+  nsAtom* GetStoredAtom() const {
+    return StoresAtom() ? static_cast<nsAtom*>(GetStringOrAtomPtr()) : nullptr;
+  }
+
+  nsStringBuffer* GetStoredStringBuffer() const {
+    return StoresStringBuffer()
+               ? static_cast<nsStringBuffer*>(GetStringOrAtomPtr())
+               : nullptr;
+  }
 
   void SetStringBitsMainThread(uintptr_t aBits) {
     // mStringBits is atomic, but the callers of this function are
