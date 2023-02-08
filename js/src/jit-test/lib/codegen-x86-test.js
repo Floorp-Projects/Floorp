@@ -15,9 +15,11 @@ var ABSADDR = `${HEX}{2} ${HEX}{2} ${HEX}{2} ${HEX}{2}`;
 // End of prologue.  The mov to eax is debug code, inserted by the register
 // allocator to clobber eax before a move group.  But it is only present if
 // there is a move group there.
+//
+// -0x21524111 is 0xDEADBEEF.
 var x86_prefix = `
 8b ec            mov %esp, %ebp(
-b8 ef be ad de   mov \\$0xDEADBEEF, %eax)?
+b8 ef be ad de   mov \\$-0x21524111, %eax)?
 `
 
 // `.bp` because zydis chooses 'rbp' even on 32-bit systems
@@ -50,16 +52,33 @@ function codegenTestX86_adhoc(module_text, export_name, expected, options = {}) 
 
     let ins = wasmEvalText(module_text);
     let output = wasmDis(ins.exports[export_name], {tier:"ion", asString:true});
+
+    const expected_initial = expected;
     if (!options.no_prefix)
         expected = x86_prefix + '\n' + expected;
     if (!options.no_suffix)
         expected = expected + '\n' + x86_suffix;
     expected = fixlines(expected);
-    if (options.log) {
-        print(module_text);
-        print(output);
-        print(expected);
+
+    const output_matches_expected = output.match(new RegExp(expected)) != null;
+    if (!output_matches_expected) {
+        print("---- codegen-x86-test.js: TEST FAILED ----");
     }
-    assertEq(output.match(new RegExp(expected)) != null, true);
+    if (options.log && output_matches_expected) {
+        print("---- codegen-x86-test.js: TEST PASSED ----");
+    }
+    if (options.log || !output_matches_expected) {
+        print("---- module text");
+        print(module_text);
+        print("---- actual");
+        print(output);
+        print("---- expected (initial)");
+        print(expected_initial);
+        print("---- expected (as used)");
+        print(expected);
+        print("----");
+    }
+
+    assertEq(output_matches_expected, true);
 }
 
