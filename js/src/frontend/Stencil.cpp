@@ -4692,7 +4692,7 @@ void CompilationAtomCache::releaseBuffer(AtomCacheVector& atoms) {
 }
 
 bool CompilationState::allocateGCThingsUninitialized(
-    JSContext* cx, FrontendContext* fc, ScriptIndex scriptIndex, size_t length,
+    FrontendContext* fc, ScriptIndex scriptIndex, size_t length,
     TaggedScriptThingIndex** cursor) {
   MOZ_ASSERT(gcThingData.length() <= UINT32_MAX);
 

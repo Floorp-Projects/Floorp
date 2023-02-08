@@ -390,7 +390,7 @@ bool ConvertGCThings(JSContext* cx, FrontendContext* fc,
   }
 
   TaggedScriptThingIndex* cursor = nullptr;
-  if (!compilationState.allocateGCThingsUninitialized(cx, fc, scriptIndex,
+  if (!compilationState.allocateGCThingsUninitialized(fc, scriptIndex,
                                                       ngcthings, &cursor)) {
     return false;
   }
