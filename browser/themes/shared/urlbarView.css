@@ -20,7 +20,11 @@
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
 
-  --urlbarView-button-background-opacity: 60%;
+  --urlbarView-result-button-background-opacity: 60%;
+  --urlbarView-result-button-selected-color: var(--toolbar-field-focus-color);
+  --urlbarView-result-button-selected-background-color: color-mix(in srgb, var(--toolbar-field-focus-background-color) var(--urlbarView-result-button-background-opacity), transparent);
+  --urlbarView-result-button-hover-color: var(--toolbar-field-focus-background-color);
+  --urlbarView-result-button-hover-background-color: color-mix(in srgb, var(--toolbar-field-focus-color) var(--urlbarView-result-button-background-opacity), transparent);
 }
 
 :root:-moz-lwtheme {
@@ -46,7 +50,7 @@
 
 @media (prefers-contrast) {
   :root {
-    --urlbarView-button-background-opacity: 100%;
+    --urlbarView-result-button-background-opacity: 100%;
   }
 }
 
@@ -311,17 +315,18 @@
 
 .urlbarView-button[selected] {
   outline: var(--focus-outline);
-  outline-color: currentColor;
+  outline-color: var(--autocomplete-popup-highlight-color);
   outline-offset: 1px;
 }
 
 .urlbarView-row:is(:hover, [selected]) > .urlbarView-button-menu:empty:not(:hover, [open]) {
-  background-color: color-mix(in srgb, var(--toolbar-field-focus-background-color) var(--urlbarView-button-background-opacity), transparent);
+  color: var(--urlbarView-result-button-selected-color);
+  background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
 .urlbarView-button:is(:hover, [open]) {
-  fill: var(--toolbar-field-focus-background-color);
-  background-color: color-mix(in srgb, currentColor var(--urlbarView-button-background-opacity), transparent);
+  color: var(--urlbarView-result-button-hover-color);
+  background-color: var(--urlbarView-result-button-hover-background-color);
 }
 
 .urlbarView-button + .urlbarView-button {
@@ -640,11 +645,9 @@
   margin-block: -3px;
 }
 
-/* On hover and selected the chiclet background would fade into the row style,
-   thus we invert the background, using the panel color, instead. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-  background-color: var(--toolbar-field-focus-background-color);
-  color: var(--toolbar-field-focus-color);
+  color: var(--urlbarView-result-button-selected-color);
+  background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
 .urlbarView-row[type=remotetab]:not([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator::before,
