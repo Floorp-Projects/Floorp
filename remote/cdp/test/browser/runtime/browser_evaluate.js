@@ -362,6 +362,27 @@ add_task(async function returnByValueInvalidTypes({ client }) {
   }
 });
 
+add_task(async function returnByValueCyclicValue({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const expressions = ["const b = { a: 1}; b.b = b; b", "window"];
+
+  for (const expression of expressions) {
+    let errorThrown;
+    try {
+      await Runtime.evaluate({
+        expression,
+        returnByValue: true,
+      });
+    } catch (e) {
+      errorThrown = e.message;
+    }
+    ok(errorThrown.includes("Object reference chain is too long"));
+  }
+});
+
 add_task(async function returnByValue({ client }) {
   const { Runtime } = client;
 
