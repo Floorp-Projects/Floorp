@@ -136,15 +136,13 @@ class ParentProcessStorage {
     this.actor = new this.ActorConstructor(storageActor);
 
     // Some storage types require to prelist their stores
-    if (typeof this.actor.preListStores === "function") {
-      try {
-        await this.actor.preListStores();
-      } catch (e) {
-        // It can happen that the actor gets destroyed while preListStores is being
-        // executed.
-        if (this.actor) {
-          throw e;
-        }
+    try {
+      await this.actor.populateStoresForHosts();
+    } catch (e) {
+      // It can happen that the actor gets destroyed while populateStoresForHosts is being
+      // executed.
+      if (this.actor) {
+        throw e;
       }
     }
 

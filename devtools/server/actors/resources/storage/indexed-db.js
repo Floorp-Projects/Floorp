@@ -197,6 +197,32 @@ class IndexedDBStorageActor extends BaseStorageActor {
     super.destroy();
   }
 
+  // We need to override this method because of custom, async getHosts method
+  async populateStoresForHosts() {
+    for (const host of await this.getHosts()) {
+      await this.populateStoresForHost(host);
+    }
+  }
+
+  async populateStoresForHost(host) {
+    const storeMap = new Map();
+
+    const win = this.storageActor.getWindowFromHost(host);
+    const principal = this.getPrincipal(win);
+
+    const { names } = await this.getDBNamesForHost(host, principal);
+
+    for (const { name, storage } of names) {
+      let metadata = await this.getDBMetaData(host, principal, name, storage);
+
+      metadata = this.patchMetadataMapsAndProtos(metadata);
+
+      storeMap.set(`${name} (${storage})`, metadata);
+    }
+
+    this.hostVsStores.set(host, storeMap);
+  }
+
   /**
    * Returns a list of currently known hosts for the target window. This list
    * contains unique hosts from the window, all inner windows and all permanent
@@ -251,13 +277,6 @@ class IndexedDBStorageActor extends BaseStorageActor {
     const principal = win.document.effectiveStoragePrincipal;
     this.removeDBRecord(host, principal, db, store, id);
   }
-
-  /**
-   * This method is overriden and left blank as for indexedDB, this operation
-   * cannot be performed synchronously. Thus, the preListStores method exists to
-   * do the same task asynchronously.
-   */
-  populateStoresForHosts() {}
 
   getNamesForHost(host) {
     const storesForHost = this.hostVsStores.get(host);
@@ -330,38 +349,6 @@ class IndexedDBStorageActor extends BaseStorageActor {
       }
     }
     return 0;
-  }
-
-  /**
-   * Purpose of this method is same as populateStoresForHosts but this is async.
-   * This exact same operation cannot be performed in populateStoresForHosts
-   * method, as that method is called in initialize method of the actor, which
-   * cannot be asynchronous.
-   */
-  async preListStores() {
-    this.hostVsStores = new Map();
-    for (const host of await this.getHosts()) {
-      await this.populateStoresForHost(host);
-    }
-  }
-
-  async populateStoresForHost(host) {
-    const storeMap = new Map();
-
-    const win = this.storageActor.getWindowFromHost(host);
-    const principal = this.getPrincipal(win);
-
-    const { names } = await this.getDBNamesForHost(host, principal);
-
-    for (const { name, storage } of names) {
-      let metadata = await this.getDBMetaData(host, principal, name, storage);
-
-      metadata = this.patchMetadataMapsAndProtos(metadata);
-
-      storeMap.set(`${name} (${storage})`, metadata);
-    }
-
-    this.hostVsStores.set(host, storeMap);
   }
 
   /**

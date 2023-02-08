@@ -13,6 +13,19 @@ class CacheStorageActor extends BaseStorageActor {
     super(storageActor, "Cache");
   }
 
+  async populateStoresForHost(host) {
+    const storeMap = new Map();
+    const caches = await this.getCachesForHost(host);
+    try {
+      for (const name of await caches.keys()) {
+        storeMap.set(name, await caches.open(name));
+      }
+    } catch (ex) {
+      console.warn(`Failed to enumerate CacheStorage for host ${host}: ${ex}`);
+    }
+    this.hostVsStores.set(host, storeMap);
+  }
+
   async getCachesForHost(host) {
     const win = this.storageActor.getWindowFromHost(host);
     if (!win) {
@@ -35,12 +48,6 @@ class CacheStorageActor extends BaseStorageActor {
 
     const cache = new CacheStorage("content", principal);
     return cache;
-  }
-
-  async preListStores() {
-    for (const host of this.hosts) {
-      await this.populateStoresForHost(host);
-    }
   }
 
   form() {
@@ -72,7 +79,7 @@ class CacheStorageActor extends BaseStorageActor {
       // Try to detect if a new cache has been added and notify the client
       // asynchronously, via a RDP event.
       const previousCaches = [...this.hostVsStores.get(host).keys()];
-      await this.preListStores();
+      await this.populateStoresForHosts();
       const updatedCaches = [...this.hostVsStores.get(host).keys()];
       const newCaches = updatedCaches.filter(
         cacheName => !previousCaches.includes(cacheName)
@@ -116,28 +123,6 @@ class CacheStorageActor extends BaseStorageActor {
       { name: "url", editable: false },
       { name: "status", editable: false },
     ];
-  }
-
-  async populateStoresForHost(host) {
-    const storeMap = new Map();
-    const caches = await this.getCachesForHost(host);
-    try {
-      for (const name of await caches.keys()) {
-        storeMap.set(name, await caches.open(name));
-      }
-    } catch (ex) {
-      console.warn(`Failed to enumerate CacheStorage for host ${host}: ${ex}`);
-    }
-    this.hostVsStores.set(host, storeMap);
-  }
-
-  /**
-   * This method is overriden and left blank as for Cache Storage, this
-   * operation cannot be performed synchronously. Thus, the preListStores
-   * method exists to do the same task asynchronously.
-   */
-  populateStoresForHosts() {
-    this.hostVsStores = new Map();
   }
 
   /**
