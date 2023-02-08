@@ -14,6 +14,10 @@ const TYPED_ARRAY_CLASSES = [
   "Float64Array",
 ];
 
+// Bug 1786299: Puppeteer expects specific error messages.
+const ERROR_CYCLIC_REFERENCE = "Object reference chain is too long";
+const ERROR_CANNOT_RETURN_BY_VALUE = "Object couldn't be returned by value";
+
 function uuid() {
   return Services.uuid
     .generateUUID()
@@ -522,9 +526,27 @@ export class ExecutionContext {
       { e: debuggerObj }
     );
     if (result.throw) {
-      throw new Error("Object is not serializable");
+      const exception = this._toRawObject(result.throw);
+      if (exception.message === "cyclic object value") {
+        throw new Error(ERROR_CYCLIC_REFERENCE);
+      }
+
+      throw new Error(ERROR_CANNOT_RETURN_BY_VALUE);
     }
 
     return JSON.parse(result.return);
+  }
+
+  _toRawObject(maybeDebuggerObject) {
+    if (maybeDebuggerObject instanceof Debugger.Object) {
+      // Retrieve the referent for the provided Debugger.object.
+      // See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/debugger.object/index.html
+      const rawObject = maybeDebuggerObject.unsafeDereference();
+      return Cu.waiveXrays(rawObject);
+    }
+
+    // If maybeDebuggerObject was not a Debugger.Object, it is a primitive value
+    // which can be used as is.
+    return maybeDebuggerObject;
   }
 }
