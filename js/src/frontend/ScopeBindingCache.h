@@ -20,8 +20,6 @@
 #include "vm/Scope.h"       // AbstractBaseScopeData
 #include "vm/StringType.h"  // JSAtom
 
-struct JS_PUBLIC_API JSContext;
-
 namespace js {
 namespace frontend {
 
