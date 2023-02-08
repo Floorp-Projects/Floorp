@@ -14,8 +14,15 @@ const { Services } = ChromeUtils.import(
 const { ExtensionCommon } = ChromeUtils.import(
     "resource://gre/modules/ExtensionCommon.jsm"
 );
+const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+);
+const platform = AppConstants.platform;
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+);
 
-function getBrowsers() {
+function getBrowsersOnWindows() {
     let browsers = [];
     let ROOT_KEYS = [
         Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
@@ -127,9 +134,9 @@ function getBrowsers() {
     });
 }
 
-function getDefaultBrowser(protocol, browsers = null) {
+function getDefaultBrowserOnWindows(protocol, browsers = null) {
     if (browsers === null) {
-        browsers = getBrowsers();
+        browsers = getBrowsersOnWindows();
     }
     let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
         Ci.nsIWindowsRegKey
@@ -144,12 +151,42 @@ function getDefaultBrowser(protocol, browsers = null) {
     return browser;
 }
 
+function getBrowsersOnLinux() {
+    let checkDirs = [];
+
+    let xdgDataHome = env.get("XDG_DATA_HOME");
+    if (xdgDataHome === "") {
+        xdgDataHome = "~/.local/share/";
+    }
+    checkDirs.push(xdgDataHome);
+    let xdgDataDirs = env.get("XDG_DATA_DIRS").split(":");
+    if (xdgDataDirs[0] === "") {
+        xdgDataDirs = [
+            "/usr/local/share/",
+            "/usr/share/",
+        ];
+    }
+    checkDirs.push(...xdgDataDirs);
+
+    for (let checkDir of checkDirs) {
+        let applications_dir_path = PathUtils.join(checkDir, "applications");
+        console.log(applications_dir_path);
+    }
+}
+
 function OpenLinkInExternal(url) {
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
-    let browsers = getBrowsers();
-    let browser = getDefaultBrowser(protocol, browsers);
+    let browsers;
+    let browser;
+    if (platform === "linux") {
+        browsers = getBrowsersOnLinux();
+        browser = getDefaultBrowserOnLinux(browsers);
+    } else if (platform === "win") {
+        browsers = getBrowsersOnWindows();
+        browser = getDefaultBrowserOnWindows(protocol, browsers);
+    }
     let browserPath = browser["path"];
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(FileUtils.File(browserPath));
