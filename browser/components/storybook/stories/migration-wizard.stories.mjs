@@ -102,7 +102,7 @@ MainSelectorVariant1.args = {
   state: {
     page: MigrationWizardConstants.PAGES.SELECTION,
     migrators: FAKE_BROWSER_LIST,
-    withImportAll: false,
+    showImportAll: false,
   },
 };
 
@@ -112,7 +112,7 @@ MainSelectorVariant2.args = {
   state: {
     page: MigrationWizardConstants.PAGES.SELECTION,
     migrators: FAKE_BROWSER_LIST,
-    withImportAll: true,
+    showImportAll: true,
   },
 };
 

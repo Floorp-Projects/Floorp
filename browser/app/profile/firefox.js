@@ -2166,6 +2166,7 @@ pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.vivaldi.enabled", true);
 
 pref("browser.migrate.content-modal.enabled", false);
+pref("browser.migrate.content-modal.import-all.enabled", false);
 
 pref("extensions.pocket.api", "api.getpocket.com");
 pref("extensions.pocket.enabled", true);
