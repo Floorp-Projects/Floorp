@@ -50,6 +50,7 @@ add_task(async function test_frecency_decay() {
     url,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promiseOne;
 
   let histogram = TelemetryTestUtils.getAndClearHistogram(
@@ -59,13 +60,10 @@ add_task(async function test_frecency_decay() {
   Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);
   let promiseRanking = promiseRankingChanged();
 
-  let svc = Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
-    Ci.nsIObserver
-  );
-  svc.observe(null, "idle-daily", "");
+  PlacesFrecencyRecalculator.observe(null, "idle-daily", "");
   Assert.equal(PlacesUtils.history.isFrecencyDecaying, true);
   info("Wait for completion.");
-  await svc.wrappedJSObject.pendingFrecencyDecayPromise;
+  await PlacesFrecencyRecalculator.pendingFrecencyDecayPromise;
 
   await promiseRanking;
   Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);

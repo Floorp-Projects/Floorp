@@ -31,6 +31,8 @@ add_task(async function test_javascript_match() {
     { uri: uri1, title: "Title with javascript:" },
   ]);
 
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
   info("Match non-javascript: with plain search");
   let context = createContext("a", { isPrivate: false });
   await check_results({

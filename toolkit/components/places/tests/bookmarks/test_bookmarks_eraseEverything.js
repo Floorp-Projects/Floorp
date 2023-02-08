@@ -9,7 +9,7 @@ add_task(async function test_eraseEverything() {
     uri: NetUtil.newURI("http://mozilla.org/"),
   });
   let frecencyForExample = frecencyForUrl("http://example.com/");
-  let frecencyForMozilla = frecencyForUrl("http://example.com/");
+  let frecencyForMozilla = frecencyForUrl("http://mozilla.org/");
   Assert.ok(frecencyForExample > 0);
   Assert.ok(frecencyForMozilla > 0);
   let unfiledFolder = await PlacesUtils.bookmarks.insert({
@@ -66,21 +66,13 @@ add_task(async function test_eraseEverything() {
   });
   checkBookmarkObject(toolbarBookmarkInFolder);
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForMozilla);
 
-  const promise = PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
-
   await PlacesUtils.bookmarks.eraseEverything();
 
-  // Ensure we get an pages-rank-changed event.
-  await promise;
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Assert.equal(frecencyForUrl("http://example.com/"), frecencyForExample);
   Assert.equal(frecencyForUrl("http://example.com/"), frecencyForMozilla);
 });

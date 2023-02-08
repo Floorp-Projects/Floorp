@@ -386,7 +386,7 @@ add_task(async function create_bookmark_frecency() {
   });
   checkBookmarkObject(bm);
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Assert.greater(frecencyForUrl(bm.url), 0, "Check frecency has been updated");
 });
 

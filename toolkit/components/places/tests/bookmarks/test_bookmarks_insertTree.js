@@ -389,7 +389,7 @@ add_task(async function create_hierarchy() {
     ],
     guid: PlacesUtils.bookmarks.unfiledGuid,
   });
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   let parentFolder = null,
     subFolder = null;
@@ -465,7 +465,7 @@ add_task(async function insert_many_non_nested() {
     ],
     guid: PlacesUtils.bookmarks.unfiledGuid,
   });
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   let startIndex = -1;
   for (let bm of bms) {

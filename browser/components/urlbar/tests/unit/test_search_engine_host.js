@@ -27,7 +27,7 @@ add_task(async function test_searchEngine_autoFill() {
     uri,
     title: "Example bookmark",
   });
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   ok(
     frecencyForUrl(uri) > 10000,
     "Added URI should have expected high frecency"

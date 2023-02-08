@@ -114,14 +114,14 @@ add_task(async function remove_bookmark() {
     title: "a bookmark",
   });
   checkBookmarkObject(bm1);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise;
 
   // This second one checks the frecency is changed when we remove the bookmark.
   promise = promiseRankingChanged();
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise;
 });
 
@@ -136,7 +136,7 @@ add_task(async function remove_multiple_bookmarks_simple() {
     title: "a bookmark",
   });
   checkBookmarkObject(bm1);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   const promise2 = promiseRankingChanged();
   let bm2 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -145,7 +145,7 @@ add_task(async function remove_multiple_bookmarks_simple() {
     title: "a bookmark",
   });
   checkBookmarkObject(bm2);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await Promise.all([promise1, promise2]);
 
   // We should get a pages-rank-changed event with the removal of
@@ -153,7 +153,7 @@ add_task(async function remove_multiple_bookmarks_simple() {
   const promise3 = promiseRankingChanged();
 
   await PlacesUtils.bookmarks.remove([bm1, bm2]);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise3;
 });
 
@@ -315,7 +315,7 @@ add_task(async function test_contents_removed() {
   await PlacesUtils.bookmarks.remove(folder1);
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(folder1.guid), null);
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(bm1.guid), null);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise;
 
   let expectedNotifications = [
@@ -361,7 +361,7 @@ add_task(async function test_nested_contents_removed() {
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(folder1.guid), null);
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(folder2.guid), null);
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(bm1.guid), null);
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise;
 });
 

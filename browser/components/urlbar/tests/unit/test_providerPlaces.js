@@ -42,6 +42,7 @@ add_task(async function test_places() {
     { uri: "https://tab.mozilla.org/", title: "Test tab" },
   ]);
   UrlbarProviderOpenTabs.registerOpenTab("https://tab.mozilla.org/", 0, false);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await controller.startQuery(context);
 
@@ -119,6 +120,7 @@ add_task(async function test_bookmarkBehaviorDisabled_tagged() {
     ["mozilla", "org", "ham", "moz", "bacon"]
   );
   await PlacesTestUtils.addVisits("https://bookmark.mozilla.org/");
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await controller.startQuery(context);
 
@@ -169,6 +171,7 @@ add_task(async function test_bookmarkBehaviorDisabled_untagged() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
   await PlacesTestUtils.addVisits("https://bookmark.mozilla.org/");
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await controller.startQuery(context);
 
@@ -216,6 +219,7 @@ add_task(async function test_diacritics() {
     title: "Test bookmark with accents in path",
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await controller.startQuery(context);
 

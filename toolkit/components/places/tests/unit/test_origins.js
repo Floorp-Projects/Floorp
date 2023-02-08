@@ -880,15 +880,18 @@ add_task(async function addRemoveBookmarks() {
       })
     );
   }
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([
     ["http://", "example.com", ["http://example.com/"]],
     ["http://", "www.example.com", ["http://www.example.com/"]],
   ]);
   await PlacesUtils.bookmarks.remove(bookmarks[0]);
   await PlacesUtils.history.clear();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([["http://", "www.example.com", ["http://www.example.com/"]]]);
   await PlacesUtils.bookmarks.remove(bookmarks[1]);
   await PlacesUtils.history.clear();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([]);
   await cleanUp();
 });
@@ -905,6 +908,7 @@ add_task(async function changeBookmarks() {
       })
     );
   }
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([
     ["http://", "example.com", ["http://example.com/"]],
     ["http://", "www.example.com", ["http://www.example.com/"]],
@@ -914,6 +918,7 @@ add_task(async function changeBookmarks() {
     guid: bookmarks[0].guid,
   });
   await PlacesUtils.history.clear();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([["http://", "www.example.com", ["http://www.example.com/"]]]);
   await cleanUp();
 });
@@ -973,7 +978,7 @@ add_task(async function moreOriginFrecencyStats() {
     title: "A bookmark",
     url: NetUtil.newURI("http://example.com/1"),
   });
-
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([
     [
       "http://",
@@ -997,6 +1002,7 @@ add_task(async function moreOriginFrecencyStats() {
   // contributing to the frecency stats.
   await PlacesUtils.bookmarks.remove(bookmark);
   await PlacesUtils.history.remove("http://example.com/1");
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await checkDB([["http://", "example.com", ["http://example.com/0"]]]);
 
   // Remove URL 0.

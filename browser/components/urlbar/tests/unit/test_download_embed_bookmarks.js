@@ -47,6 +47,7 @@ add_task(async function test_download_embed_bookmarks() {
     uri: uri3,
     title: "framed-bookmark",
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Searching for bookmarked download uri matches");
   let context = createContext("download-bookmark", { isPrivate: false });

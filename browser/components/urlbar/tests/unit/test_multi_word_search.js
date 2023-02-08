@@ -39,6 +39,8 @@ add_task(async function test_match_beginning() {
     title: "b(a)r b<a>z",
   });
 
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
   info("Match 2 terms all in url");
   let context = createContext("c d", { isPrivate: false });
   await check_results({

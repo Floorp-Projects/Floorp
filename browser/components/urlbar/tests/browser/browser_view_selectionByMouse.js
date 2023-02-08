@@ -301,6 +301,7 @@ add_task(async function withDnsFirstForSingleWordsPref() {
     url: "https://example.org/",
     title: "example",
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "ex",

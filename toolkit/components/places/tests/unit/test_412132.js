@@ -27,7 +27,7 @@ add_task(async function changeuri_unvisited_bookmark() {
     url: TEST_URL1,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   Assert.notEqual(
     frecencyForUrl(TEST_URL1),
@@ -40,7 +40,7 @@ add_task(async function changeuri_unvisited_bookmark() {
     url: TEST_URL2,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   Assert.equal(
     frecencyForUrl(TEST_URL1),
@@ -63,7 +63,7 @@ add_task(async function changeuri_visited_bookmark() {
     url: TEST_URL1,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   Assert.notEqual(
     frecencyForUrl(TEST_URL1),
@@ -73,14 +73,14 @@ add_task(async function changeuri_visited_bookmark() {
 
   await PlacesTestUtils.addVisits(TEST_URL1);
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await PlacesUtils.bookmarks.update({
     guid: bookmark.guid,
     url: TEST_URL2,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   Assert.notEqual(
     frecencyForUrl(TEST_URL1),
@@ -110,7 +110,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
     url: TEST_URL1,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   Assert.notEqual(
     frecencyForUrl(TEST_URL1),
@@ -123,7 +123,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
     url: TEST_URL2,
   });
 
-  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("URI still bookmarked => frecency should != 0");
   Assert.notEqual(frecencyForUrl(TEST_URL2), 0);

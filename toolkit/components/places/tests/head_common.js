@@ -69,6 +69,12 @@ XPCOMUtils.defineLazyGetter(this, "SMALLSVG_DATA_URI", function() {
   );
 });
 
+XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+  return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  ).wrappedJSObject;
+});
+
 var gTestDir = do_get_cwd();
 
 // Initialize profile.

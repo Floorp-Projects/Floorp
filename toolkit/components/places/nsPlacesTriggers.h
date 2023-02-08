@@ -10,50 +10,47 @@
 #  define __nsPlacesTriggers_h__
 
 /**
- * Exclude these visit types:
+ * These visit types are excluded from visit_count:
  *  0 - invalid
  *  4 - EMBED
  *  7 - DOWNLOAD
  *  8 - FRAMED_LINK
  *  9 - RELOAD
  **/
-#  define EXCLUDED_VISIT_TYPES "0, 4, 7, 8, 9"
+#  define VISIT_COUNT_INC(field) \
+    "(SELECT CASE WHEN " field " IN (0, 4, 7, 8, 9) THEN 0 ELSE 1 END) "
 
 /**
  * This triggers update visit_count and last_visit_date based on historyvisits
  * table changes.
  */
-#  define CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER                           \
-    nsLiteralCString(                                                        \
-        "CREATE TEMP TRIGGER moz_historyvisits_afterinsert_v2_trigger "      \
-        "AFTER INSERT ON moz_historyvisits FOR EACH ROW "                    \
-        "BEGIN "                                                             \
-        "SELECT invalidate_days_of_history();"                               \
-        "SELECT store_last_inserted_id('moz_historyvisits', NEW.id); "       \
-        "UPDATE moz_places SET "                                             \
-        "visit_count = visit_count + (SELECT NEW.visit_type NOT IN "         \
-        "(" EXCLUDED_VISIT_TYPES                                             \
-        ")), "                                                               \
-        "recalc_frecency = (frecency <> 0), "                                \
-        "last_visit_date = MAX(IFNULL(last_visit_date, 0), NEW.visit_date) " \
-        "WHERE id = NEW.place_id;"                                           \
+#  define CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER \
+    nsLiteralCString(                                                         \
+        "CREATE TEMP TRIGGER moz_historyvisits_afterinsert_v2_trigger "       \
+        "AFTER INSERT ON moz_historyvisits FOR EACH ROW "                     \
+        "BEGIN "                                                              \
+        "SELECT invalidate_days_of_history();"                                \
+        "SELECT store_last_inserted_id('moz_historyvisits', NEW.id); "        \
+        "UPDATE moz_places SET "                                              \
+        "visit_count = visit_count + " VISIT_COUNT_INC("NEW.visit_type") ", " \
+        "recalc_frecency = (frecency <> 0), "                                 \
+        "last_visit_date = MAX(IFNULL(last_visit_date, 0), NEW.visit_date) "  \
+        "WHERE id = NEW.place_id;"                                            \
         "END")
 
-#  define CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER                      \
-    nsLiteralCString(                                                   \
-        "CREATE TEMP TRIGGER moz_historyvisits_afterdelete_v2_trigger " \
-        "AFTER DELETE ON moz_historyvisits FOR EACH ROW "               \
-        "BEGIN "                                                        \
-        "SELECT invalidate_days_of_history();"                          \
-        "UPDATE moz_places SET "                                        \
-        "visit_count = visit_count - (SELECT OLD.visit_type NOT IN "    \
-        "(" EXCLUDED_VISIT_TYPES                                        \
-        ")), "                                                          \
-        "recalc_frecency = (frecency <> 0), "                           \
-        "last_visit_date = (SELECT visit_date FROM moz_historyvisits "  \
-        "WHERE place_id = OLD.place_id "                                \
-        "ORDER BY visit_date DESC LIMIT 1) "                            \
-        "WHERE id = OLD.place_id;"                                      \
+#  define CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER \
+    nsLiteralCString(                                                         \
+        "CREATE TEMP TRIGGER moz_historyvisits_afterdelete_v2_trigger "       \
+        "AFTER DELETE ON moz_historyvisits FOR EACH ROW "                     \
+        "BEGIN "                                                              \
+        "SELECT invalidate_days_of_history();"                                \
+        "UPDATE moz_places SET "                                              \
+        "visit_count = visit_count - " VISIT_COUNT_INC("OLD.visit_type") ", " \
+        "recalc_frecency = (frecency <> 0), "                                 \
+        "last_visit_date = (SELECT visit_date FROM moz_historyvisits "        \
+        "WHERE place_id = OLD.place_id "                                      \
+        "ORDER BY visit_date DESC LIMIT 1) "                                  \
+        "WHERE id = OLD.place_id;"                                            \
         "END")
 
 // This macro is a helper for the next several triggers.  It updates the origin
@@ -269,6 +266,14 @@
         "AND userContextId = NEW.userContextId;"                           \
         "END")
 
+/**
+ * Any bookmark operation should recalculate frecency, apart from place:
+ * queries.
+ */
+#  define NOT_A_QUERY                                   \
+    " url_hash NOT BETWEEN hash('place', 'prefix_lo') " \
+    "                  AND hash('place', 'prefix_hi') "
+
 #  define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERDELETE_TRIGGER                    \
     nsLiteralCString(                                                          \
         "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterdelete_trigger " \
@@ -276,10 +281,20 @@
         "BEGIN "                                                               \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = (frecency <> 0) "                               \
+        "    recalc_frecency = " NOT_A_QUERY                                   \
         "WHERE id = OLD.fk;"                                                   \
         "END")
 
+/**
+ * Currently expiration skips anything with frecency = -1, since that is the
+ * default value for new page insertions. Unfortunately adding and immediately
+ * removing a bookmark will generate a page with frecency = -1 that would never
+ * be expired until visited.
+ * As a temporary workaround we set frecency to 1 on bookmark addition if it was
+ * set to -1. This is not elegant, but it will be fixed by Bug 1475582 once
+ * removing bookmarks will immediately take care of removing orphan pages.
+ * Note setting frecency resets recalc_frecency, so do it first.
+ */
 #  define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERINSERT_TRIGGER                    \
     nsLiteralCString(                                                          \
         "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterinsert_trigger " \
@@ -288,8 +303,11 @@
         "SELECT store_last_inserted_id('moz_bookmarks', NEW.id); "             \
         "SELECT note_sync_change() WHERE NEW.syncChangeCounter > 0; "          \
         "UPDATE moz_places "                                                   \
+        "SET frecency = 1 WHERE frecency = -1 AND " NOT_A_QUERY                \
+        ";"                                                                    \
+        "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count + 1, "                              \
-        "    recalc_frecency = (frecency <> 0) "                               \
+        "    recalc_frecency = " NOT_A_QUERY                                   \
         "WHERE id = NEW.fk;"                                                   \
         "END")
 
@@ -302,11 +320,11 @@
         "WHERE NEW.syncChangeCounter <> OLD.syncChangeCounter; "               \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count + 1, "                              \
-        "    recalc_frecency = (frecency <> 0) "                               \
+        "    recalc_frecency = " NOT_A_QUERY                                   \
         "WHERE OLD.fk <> NEW.fk AND id = NEW.fk;"                              \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = (frecency <> 0) "                               \
+        "    recalc_frecency = " NOT_A_QUERY                                   \
         "WHERE OLD.fk <> NEW.fk AND id = OLD.fk;"                              \
         "END")
 
