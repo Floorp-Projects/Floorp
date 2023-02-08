@@ -1677,8 +1677,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   background-color: rgba(28, 27, 34, 0.45);
 }
 
-.dialogOverlay[hideContent="true"][topmost="true"],
-#window-modal-dialog::backdrop {
+.dialogOverlay[hideContent="true"][topmost="true"] {
   background-color: var(--tabpanel-background-color);
 }
 
