@@ -9952,11 +9952,15 @@ bool nsContentUtils::QueryTriggeringPrincipal(
   }
 
   nsCString binary;
-  nsCOMPtr<nsIPrincipal> serializedPrin =
-      BasePrincipal::FromJSON(NS_ConvertUTF16toUTF8(loadingStr));
-  if (serializedPrin) {
-    result = true;
-    serializedPrin.forget(aTriggeringPrincipal);
+  nsresult rv = Base64Decode(NS_ConvertUTF16toUTF8(loadingStr), binary);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrincipal> serializedPrin = BasePrincipal::FromJSON(binary);
+    if (serializedPrin) {
+      result = true;
+      serializedPrin.forget(aTriggeringPrincipal);
+    }
+  } else {
+    MOZ_ASSERT(false, "Unable to deserialize base64 principal");
   }
 
   if (!result) {

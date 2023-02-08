@@ -623,7 +623,7 @@ nsresult ContentPrincipal::PopulateJSONObject(Json::Value& aObject) {
   //        Key          ----------------------
   //                                |
   //                              Value
-  SetJSONValue<eURI>(aObject, principalURI);
+  aObject[std::to_string(eURI)] = principalURI.get();
 
   if (GetHasExplicitDomain()) {
     nsAutoCString domainStr;
@@ -632,13 +632,13 @@ nsresult ContentPrincipal::PopulateJSONObject(Json::Value& aObject) {
       rv = mDomain->GetSpec(domainStr);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    SetJSONValue<eDomain>(aObject, domainStr);
+    aObject[std::to_string(eDomain)] = domainStr.get();
   }
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
   if (suffix.Length() > 0) {
-    SetJSONValue<eSuffix>(aObject, suffix);
+    aObject[std::to_string(eSuffix)] = suffix.get();
   }
 
   return NS_OK;
