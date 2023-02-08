@@ -145,9 +145,6 @@ const nsIID kDEBUGWorkerEventTargetIID = {
 
 #endif
 
-// The number of nested timeouts before we start clamping. HTML says 5.
-const uint32_t kClampTimeoutNestingLevel = 5u;
-
 template <class T>
 class UniquePtrComparator {
   using A = UniquePtr<T>;
@@ -1032,17 +1029,19 @@ struct WorkerPrivate::TimeoutInfo {
   }
 
   void AccumulateNestingLevel(const uint32_t& aBaseLevel) {
-    if (aBaseLevel < kClampTimeoutNestingLevel) {
+    if (aBaseLevel < StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup()) {
       mNestingLevel = aBaseLevel + 1;
       return;
     }
-    mNestingLevel = kClampTimeoutNestingLevel;
+    mNestingLevel = StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup();
   }
 
   void CalculateTargetTime() {
     auto target = mInterval;
     // Don't clamp timeout for chrome workers
-    if (mNestingLevel >= kClampTimeoutNestingLevel && !mOnChromeWorker) {
+    if (mNestingLevel >=
+            StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup() &&
+        !mOnChromeWorker) {
       target = TimeDuration::Max(
           mInterval,
           TimeDuration::FromMilliseconds(StaticPrefs::dom_min_timeout_value()));

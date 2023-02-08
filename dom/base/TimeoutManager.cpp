@@ -303,14 +303,12 @@ bool TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const {
   return !mFiringIdStack.Contains(aFiringId);
 }
 
-// The number of nested timeouts before we start clamping. HTML says 5.
-#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5u
-
 TimeDuration TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
   TimeDuration result = aTimeout->mInterval;
 
-  if (aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+  if (aTimeout->mNestingLevel >=
+      StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup()) {
     uint32_t minTimeoutValue = StaticPrefs::dom_min_timeout_value();
     result = TimeDuration::Max(result,
                                TimeDuration::FromMilliseconds(minTimeoutValue));
@@ -496,9 +494,10 @@ nsresult TimeoutManager::SetTimeout(TimeoutHandler* aHandler, int32_t interval,
   // XXX: Does eIdleCallbackTimeout need clamping?
   if (aReason == Timeout::Reason::eTimeoutOrInterval ||
       aReason == Timeout::Reason::eIdleCallbackTimeout) {
-    timeout->mNestingLevel = sNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL
-                                 ? sNestingLevel + 1
-                                 : sNestingLevel;
+    timeout->mNestingLevel =
+        sNestingLevel < StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup()
+            ? sNestingLevel + 1
+            : sNestingLevel;
   }
 
   // Now clamp the actual interval we will use for the timer based on
@@ -991,7 +990,8 @@ bool TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
 
   // Automatically increase the nesting level when a setInterval()
   // is rescheduled just as if it was using a chained setTimeout().
-  if (aTimeout->mNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+  if (aTimeout->mNestingLevel <
+      StaticPrefs::dom_clamp_timeout_nesting_level_AtStartup()) {
     aTimeout->mNestingLevel += 1;
   }
 
