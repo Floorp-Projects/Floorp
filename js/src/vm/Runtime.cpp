@@ -115,11 +115,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       scriptEnvironmentPreparer(nullptr),
       ctypesActivityCallback(nullptr),
       windowProxyClass_(nullptr),
-      scriptDataLock(mutexid::SharedImmutableScriptData),
-#ifdef DEBUG
-      activeThreadHasScriptDataAccess(false),
-#endif
-      numParseTasks(0),
       numRealms(0),
       numDebuggeeRealms_(0),
       numDebuggeeRealmsObservingCoverage_(0),
@@ -144,6 +139,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       staticStrings(nullptr),
       commonNames(nullptr),
       wellKnownSymbols(nullptr),
+      scriptDataTableHolder_(SharedScriptDataTableHolder::NeedsLock::No),
       liveSABs(0),
       beforeWaitCallback(nullptr),
       afterWaitCallback(nullptr),
@@ -267,12 +263,7 @@ void JSRuntime::destroyRuntime() {
 
   AutoNoteSingleThreadedRegion anstr;
 
-#ifdef DEBUG
-  {
-    AutoLockScriptData lock(this);
-    MOZ_ASSERT(scriptDataTable(lock).empty());
-  }
-#endif
+  MOZ_ASSERT(scriptDataTableHolder().getWithoutLock().empty());
 
 #if !JS_HAS_INTL_API
   FinishRuntimeNumberState(this);
@@ -359,11 +350,23 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 #endif
 
   {
-    AutoLockScriptData lock(this);
-    rtSizes->scriptData +=
-        scriptDataTable(lock).shallowSizeOfExcludingThis(mallocSizeOf);
-    for (SharedImmutableScriptDataTable::Range r = scriptDataTable(lock).all();
-         !r.empty(); r.popFront()) {
+    auto& table = scriptDataTableHolder().getWithoutLock();
+
+    rtSizes->scriptData += table.shallowSizeOfExcludingThis(mallocSizeOf);
+    for (SharedImmutableScriptDataTable::Range r = table.all(); !r.empty();
+         r.popFront()) {
+      rtSizes->scriptData += r.front()->sizeOfIncludingThis(mallocSizeOf);
+    }
+  }
+
+  if (isMainRuntime()) {
+    AutoLockGlobalScriptData lock;
+
+    auto& table = js::globalSharedScriptDataTableHolder.get(lock);
+
+    rtSizes->scriptData += table.shallowSizeOfExcludingThis(mallocSizeOf);
+    for (SharedImmutableScriptDataTable::Range r = table.all(); !r.empty();
+         r.popFront()) {
       rtSizes->scriptData += r.front()->sizeOfIncludingThis(mallocSizeOf);
     }
   }
@@ -531,6 +534,11 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
   sharedIntlData.ref().trace(trc);
 }
 #endif
+
+SharedScriptDataTableHolder& JSRuntime::scriptDataTableHolder() {
+  MOZ_ASSERT(CurrentThreadIsMainThread());
+  return scriptDataTableHolder_;
+}
 
 GlobalObject* JSRuntime::getIncumbentGlobal(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);

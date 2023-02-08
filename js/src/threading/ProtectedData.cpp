@@ -91,9 +91,6 @@ void CheckGlobalLock<Lock, Helper>::check() const {
           ->runtimeFromAnyThread()
           ->gc.assertCurrentThreadHasLockedGC();
       break;
-    case GlobalLock::ScriptDataLock:
-      TlsContext.get()->runtime()->assertCurrentThreadHasScriptDataAccess();
-      break;
     case GlobalLock::HelperThreadLock:
       gHelperThreadLock.assertOwnedByCurrentThread();
       break;
@@ -101,8 +98,6 @@ void CheckGlobalLock<Lock, Helper>::check() const {
 }
 
 template class CheckGlobalLock<GlobalLock::GCLock, AllowedHelperThread::None>;
-template class CheckGlobalLock<GlobalLock::ScriptDataLock,
-                               AllowedHelperThread::None>;
 template class CheckGlobalLock<GlobalLock::HelperThreadLock,
                                AllowedHelperThread::None>;
 

@@ -411,6 +411,7 @@ UNIFIED_SOURCES += [
     "vm/ShapeZone.cpp",
     "vm/SharedArrayObject.cpp",
     "vm/SharedImmutableStringsCache.cpp",
+    "vm/SharedScriptDataTableHolder.cpp",
     "vm/SourceHook.cpp",
     "vm/Stack.cpp",
     "vm/StaticStrings.cpp",

@@ -51,7 +51,7 @@
 #include "vm/GeckoProfiler.h"
 #include "vm/JSScript.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseRuntimeState
-#include "vm/SharedStencil.h"  // js::SharedImmutableScriptDataTable
+#include "vm/SharedScriptDataTableHolder.h"   // js::SharedScriptDataTableHolder
 #include "vm/Stack.h"
 #include "wasm/WasmTypeDecls.h"
 
@@ -594,44 +594,7 @@ struct JSRuntime {
     return debuggerList_.ref();
   }
 
- private:
-  /*
-   * Lock used to protect the script data table, which can be used by
-   * off-thread parsing.
-   *
-   * Locking this only occurs if there is actually a thread other than the
-   * main thread which could access this.
-   */
-  js::Mutex scriptDataLock MOZ_UNANNOTATED;
-#ifdef DEBUG
-  bool activeThreadHasScriptDataAccess;
-#endif
-
-  // Number of off-thread ParseTasks that are using this runtime. This is only
-  // updated on main-thread. If this is non-zero we must use `scriptDataLock` to
-  // protect access to the bytecode table;
-  mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> numParseTasks;
-
-  friend class js::AutoLockScriptData;
-
  public:
-  bool hasParseTasks() const { return numParseTasks > 0; }
-
-  void addParseTaskRef() { numParseTasks++; }
-  void decParseTaskRef() { numParseTasks--; }
-
-#ifdef DEBUG
-  void assertCurrentThreadHasScriptDataAccess() const {
-    if (!hasParseTasks()) {
-      MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this) &&
-                 activeThreadHasScriptDataAccess);
-      return;
-    }
-
-    scriptDataLock.assertOwnedByCurrentThread();
-  }
-#endif
-
   JS::HeapState heapState() const { return gc.heapState(); }
 
   // How many realms there are across all zones. This number includes
@@ -872,17 +835,13 @@ struct JSRuntime {
   void traceSharedIntlData(JSTracer* trc);
 #endif
 
-  // Table of bytecode and other data that may be shared across scripts
-  // within the runtime. This may be modified by threads using
-  // AutoLockScriptData.
  private:
-  js::ScriptDataLockData<js::SharedImmutableScriptDataTable> scriptDataTable_;
+  js::SharedScriptDataTableHolder scriptDataTableHolder_;
 
  public:
-  js::SharedImmutableScriptDataTable& scriptDataTable(
-      const js::AutoLockScriptData& lock) {
-    return scriptDataTable_.ref();
-  }
+  // Returns the runtime's local script data table holder.
+  // Available only on the main thread.
+  js::SharedScriptDataTableHolder& scriptDataTableHolder();
 
  private:
   static mozilla::Atomic<size_t> liveRuntimesCount;

@@ -18,6 +18,7 @@
 #include "js/Vector.h"          // Vector
 #include "vm/ErrorReporting.h"  // CompileError
 #include "vm/MallocProvider.h"  // MallocProvider
+#include "vm/SharedScriptDataTableHolder.h"  // js::SharedScriptDataTableHolder, js::globalSharedScriptDataTableHolder
 
 struct JSContext;
 
@@ -67,6 +68,8 @@ class FrontendContext {
   frontend::NameCollectionPool* nameCollectionPool_;
   bool ownNameCollectionPool_;
 
+  js::SharedScriptDataTableHolder* scriptDataTableHolder_;
+
  protected:
   // (optional) Current JSContext to support main-thread-specific
   // handling for error reporting, GC, and memory allocation.
@@ -78,7 +81,8 @@ class FrontendContext {
   FrontendContext()
       : alloc_(this),
         nameCollectionPool_(nullptr),
-        ownNameCollectionPool_(false) {}
+        ownNameCollectionPool_(false),
+        scriptDataTableHolder_(&js::globalSharedScriptDataTableHolder) {}
   ~FrontendContext();
 
   bool allocateOwnedPool();
@@ -90,8 +94,19 @@ class FrontendContext {
     return *nameCollectionPool_;
   }
 
+  js::SharedScriptDataTableHolder* scriptDataTableHolder() {
+    MOZ_ASSERT(scriptDataTableHolder_);
+    return scriptDataTableHolder_;
+  }
+
   FrontendAllocator* getAllocator() { return &alloc_; }
 
+  // Use the given JSContext's for:
+  //   * js::frontend::NameCollectionPool for reusing allocation
+  //   * js::SharedScriptDataTableHolder for de-duplicating bytecode
+  //     within given runtime
+  //
+  // And also this JSContext can be retrieved by maybeCurrentJSContext below.
   void setCurrentJSContext(JSContext* cx);
 
   // Returns JSContext if any.
