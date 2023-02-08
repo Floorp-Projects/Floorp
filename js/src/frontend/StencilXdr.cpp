@@ -1215,7 +1215,6 @@ template <XDRMode mode>
 XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
                                  const JS::DecodeOptions* maybeOptions,
                                  RefPtr<ScriptSource>& source) {
-  JSContext* cx = xdr->cx();
   FrontendContext* fc = xdr->fc();
 
   if (mode == XDR_DECODE) {
@@ -1271,7 +1270,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
     }
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      if (!source->setDisplayURL(cx, fc,
+      if (!source->setDisplayURL(fc,
                                  std::move(chars.ref<UniqueTwoByteChars>()))) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
@@ -1308,7 +1307,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
     source->introductionType_ = maybeOptions->introductionType;
     source->setIntroductionOffset(maybeOptions->introductionOffset);
     if (maybeOptions->introducerFilename) {
-      if (!source->setIntroducerFilename(cx, fc,
+      if (!source->setIntroducerFilename(fc,
                                          maybeOptions->introducerFilename)) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
