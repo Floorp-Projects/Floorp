@@ -68,7 +68,7 @@
       let content = document.getElementById("content");
       let promise = new Promise(resolve => {
         content.addEventListener("MigrationWizard:Init", resolve, { once: true });
-      })
+      });
       content.appendChild(wiz);
       await promise;
       ok(true, "Saw MigrationWizard:Init event.");
@@ -85,6 +85,7 @@
       gWiz.setState({
         page: MigrationWizardConstants.PAGES.SELECTION,
         migrators: MIGRATOR_PROFILE_INSTANCES,
+        showImportAll: false,
       });
 
       let selector = gShadowRoot.querySelector("#browser-profile-selector");
@@ -110,6 +111,70 @@
             ok(isHidden(node), `Selection for ${resourceType} should be hidden.`);
           }
         }
+      }
+
+      let selectAll = gShadowRoot.querySelector("#select-all");
+      let summary = gShadowRoot.querySelector("summary");
+      let details = gShadowRoot.querySelector("details");
+      ok(isHidden(selectAll), "Selection for select-all should be hidden.");
+      ok(isHidden(summary), "Summary should be hidden.");
+      ok(!isHidden(details), "Details should be shown.");
+    });
+
+    /**
+     * Tests variant 2 of the migration wizard
+     */
+    add_task(async function test_selection_variant_2() {
+      gWiz.setState({
+        page: MigrationWizardConstants.PAGES.SELECTION,
+        migrators: MIGRATOR_PROFILE_INSTANCES,
+        showImportAll: true,
+      });
+
+      let selector = gShadowRoot.querySelector("#browser-profile-selector");
+      is(selector.childElementCount, 2, "Should have two child elements");
+      is(selector.children[0].value, "some-browser-0");
+      is(selector.children[1].value, "some-browser-1");
+
+      let resourceTypeList = gShadowRoot.querySelector("#resource-type-list");
+
+      // Test that the resource type checkboxes are shown or hidden depending on
+      // which resourceTypes are included with the MigratorProfileInstance.
+      for (let migratorInstance of MIGRATOR_PROFILE_INSTANCES) {
+        selector.value = migratorInstance.key;
+        // Apparently we have to dispatch our own "change" events for <select>
+        // dropdowns.
+        selector.dispatchEvent(new CustomEvent("change", { "bubbles" : true }));
+
+        for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+          let node = resourceTypeList.querySelector(`label[data-resource-type="${resourceType}"]`);
+          if (migratorInstance.resourceTypes.includes(resourceType)) {
+            ok(!isHidden(node), `Selection for ${resourceType} should be shown.`);
+          } else {
+            ok(isHidden(node), `Selection for ${resourceType} should be hidden.`);
+          }
+        }
+      }
+
+      let selectAll = gShadowRoot.querySelector("#select-all");
+      let summary = gShadowRoot.querySelector("summary");
+      let details = gShadowRoot.querySelector("details");
+      ok(!isHidden(selectAll), "Selection for select-all should be shown.");
+      ok(!isHidden(summary), "Summary should be shown.");
+      ok(!isHidden(details), "Details should be shown.");
+
+      let selectAllCheckbox = gShadowRoot.querySelector(".select-all-checkbox");
+      selectAllCheckbox.checked = true;
+      selectAllCheckbox.dispatchEvent(new CustomEvent("change"));
+      let checkboxes = gShadowRoot.querySelectorAll(
+        'label[data-resource-type] > input[type="checkbox"]'
+      );
+      for (let checkbox of checkboxes) {
+        is(
+          checkbox.checked,
+          selectAllCheckbox.checked,
+          "Testing if checking select-all selects unchecked resources"
+        );
       }
     });
 

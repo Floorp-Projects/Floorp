@@ -31,20 +31,31 @@ export class MigrationWizard extends HTMLElement {
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
             <select id="browser-profile-selector">
             </select>
-            <fieldset id="resource-type-list">
-              <label id="bookmarks" data-resource-type="BOOKMARKS"/>
-                <input type="checkbox"/><span data-l10n-id="migration-bookmarks-option-label"></span>
-              </label>
-              <label id="logins-and-passwords" data-resource-type="PASSWORDS">
-                <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
-              </label>
-              <label id="history" data-resource-type="HISTORY">
-                <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
-              </label>
-              <label id="form-autofill" data-resource-type="FORMDATA">
-                <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
-              </label>
-            </fieldset>
+            <details class="resource-selection-details" open="true">
+              <summary>
+                <div data-l10n-id="migration-all-available-data-label"></div>
+                <div data-l10n-id="migration-available-data-label"></div>
+                <span class="dropdown-icon" role="img"></span>
+              </summary>
+              <fieldset id="resource-type-list">
+                <label id="select-all">
+                  <input type="checkbox" class="select-all-checkbox"/><span data-l10n-id="migration-select-all-option-label"></span>
+                </label>
+                <label id="bookmarks" data-resource-type="BOOKMARKS"/>
+                  <input type="checkbox"/><span data-l10n-id="migration-bookmarks-option-label"></span>
+                </label>
+                <label id="logins-and-passwords" data-resource-type="PASSWORDS">
+                  <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
+                </label>
+                <label id="history" data-resource-type="HISTORY">
+                  <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
+                </label>
+                <label id="form-autofill" data-resource-type="FORMDATA">
+                  <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
+                </label>
+              </fieldset>
+            </details>
+
             <moz-button-group class="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="import" class="primary" data-l10n-id="migration-import-button-label"></button>
@@ -135,6 +146,10 @@ export class MigrationWizard extends HTMLElement {
 
     this.#browserProfileSelector.addEventListener("change", this);
     this.#resourceTypeList = shadow.querySelector("#resource-type-list");
+
+    let selectAllCheckbox = shadow.querySelector("#select-all").control;
+    selectAllCheckbox.addEventListener("change", this);
+
     this.#shadowRoot = shadow;
   }
 
@@ -204,6 +219,11 @@ export class MigrationWizard extends HTMLElement {
    */
   #onShowingSelection(state) {
     this.#browserProfileSelector.textContent = "";
+
+    let selectionPage = this.#shadowRoot.querySelector(
+      "div[name='page-selection']"
+    );
+    selectionPage.toggleAttribute("show-import-all", state.showImportAll);
 
     for (let migrator of state.migrators) {
       let opt = document.createElement("option");
@@ -374,6 +394,13 @@ export class MigrationWizard extends HTMLElement {
       case "change": {
         if (event.target == this.#browserProfileSelector) {
           this.#onBrowserProfileSelectionChanged();
+        } else if (event.target.classList.contains("select-all-checkbox")) {
+          let checkboxes = this.#shadowRoot.querySelectorAll(
+            'label[data-resource-type] > input[type="checkbox"]'
+          );
+          for (let checkbox of checkboxes) {
+            checkbox.checked = event.target.checked;
+          }
         }
         break;
       }

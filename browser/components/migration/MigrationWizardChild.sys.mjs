@@ -3,6 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SHOW_IMPORT_ALL_PREF",
+  "browser.migrate.content-modal.import-all.enabled",
+  false
+);
 
 /**
  * This class is responsible for updating the state of a <migration-wizard>
@@ -28,7 +37,9 @@ export class MigrationWizardChild extends JSWindowActorChild {
         this.setComponentState({
           migrators,
           page: MigrationWizardConstants.PAGES.SELECTION,
+          showImportAll: lazy.SHOW_IMPORT_ALL_PREF,
         });
+
         this.#wizardEl.dispatchEvent(
           new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
             bubbles: true,

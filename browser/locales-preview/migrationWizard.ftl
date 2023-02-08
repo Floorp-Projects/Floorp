@@ -42,6 +42,9 @@ migration-wizard-migrator-display-name-opera-gx = Opera GX
 migration-wizard-migrator-display-name-safari = Safari
 migration-wizard-migrator-display-name-vivaldi = Vivaldi
 
+migration-all-available-data-label = All available data
+migration-available-data-label = Bookmark, password, history, and autofill data.
+migration-select-all-option-label = Select all
 migration-bookmarks-option-label = Bookmarks
 migration-logins-and-passwords-option-label = Saved logins and passwords
 migration-history-option-label = Browsing history
