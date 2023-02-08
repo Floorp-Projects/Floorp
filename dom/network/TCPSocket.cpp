@@ -10,6 +10,7 @@
 #include "TCPSocketParent.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TCPSocketBinding.h"
@@ -455,6 +456,33 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
 }
 
 void TCPSocket::ActivateTLS() {
+  nsresult rv;
+  nsCOMPtr<nsIEventTarget> socketThread =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  bool alreadyOnSTST = false;
+  if (NS_FAILED(socketThread->IsOnCurrentThread(&alreadyOnSTST))) {
+    return;
+  }
+
+  if (alreadyOnSTST) {
+    ActivateTLSHelper();
+    return;
+  }
+
+  auto CallActivateTLS = [sock = RefPtr{this}]() mutable {
+    sock->ActivateTLSHelper();
+  };
+  mozilla::SyncRunnable::DispatchToThread(
+      socketThread,
+      NS_NewRunnableFunction("TCPSocket::UpgradeToSecure->ActivateTLSHelper",
+                             CallActivateTLS));
+}
+
+void TCPSocket::ActivateTLSHelper() {
   nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
   mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
   if (tlsSocketControl) {
