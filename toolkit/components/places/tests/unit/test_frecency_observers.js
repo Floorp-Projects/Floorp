@@ -50,20 +50,44 @@ add_task(async function test_invalidateFrecencies() {
   });
   let promise = onRankingChanged();
   await PlacesUtils.history.removeByFilter({ host: url.host });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   await promise;
 });
 
-// History.jsm clear()
+// History.jsm clear() should not cause a frecency recalculation since pages
+// are removed.
 add_task(async function test_clear() {
-  await Promise.all([onRankingChanged(), PlacesUtils.history.clear()]);
+  let received = [];
+  let listener = events =>
+    (received = received.concat(events.map(e => e.type)));
+  PlacesObservers.addListener(
+    ["history-cleared", "pages-rank-changed"],
+    listener
+  );
+  await PlacesUtils.history.clear();
+  PlacesObservers.removeListener(
+    ["history-cleared", "pages-rank-changed"],
+    listener
+  );
+  Assert.deepEqual(received, ["history-cleared"]);
 });
 
-add_task(async function test_nsNavHistory_decayFrecency() {
+add_task(async function test_nsNavHistory_idleDaily() {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "https://test-site1.org",
+    title: "test",
+  });
   PlacesFrecencyRecalculator.observe(null, "idle-daily", "");
   await Promise.all([onRankingChanged()]);
 });
 
-add_task(async function test_nsNavHistory_decayFrecency() {
+add_task(async function test_nsNavHistory_recalculate() {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "https://test-site1.org",
+    title: "test",
+  });
   await Promise.all([
     onRankingChanged(),
     PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies(),

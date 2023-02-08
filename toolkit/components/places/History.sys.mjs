@@ -833,40 +833,6 @@ function convertForUpdatePlaces(pageInfo) {
   return info;
 }
 
-/**
- * Invalidate and recompute the frecency of a list of pages,
- * informing frecency observers.
- *
- * @param {OpenConnection} db an Sqlite connection
- * @param {Array} idList The `moz_places` identifiers to invalidate.
- * @returns {Promise} resolved when done
- */
-var invalidateFrecencies = async function(db, idList) {
-  if (!idList.length) {
-    return;
-  }
-  for (let chunk of lazy.PlacesUtils.chunkArray(idList, db.variableLimit)) {
-    await db.execute(
-      `UPDATE moz_places
-       SET frecency = CALCULATE_FRECENCY(id)
-       WHERE id in (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
-      chunk
-    );
-    await db.execute(
-      `UPDATE moz_places
-       SET hidden = 0
-       WHERE id in (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})
-       AND frecency <> 0`,
-      chunk
-    );
-  }
-
-  PlacesObservers.notifyListeners([new PlacesRanking()]);
-
-  // Trigger frecency updates for all affected origins.
-  await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
-};
-
 // Inner implementation of History.clear().
 var clear = async function(db) {
   await db.executeTransaction(async function() {
@@ -895,10 +861,7 @@ var clear = async function(db) {
     await db.execute("DELETE FROM moz_historyvisits");
   });
 
-  PlacesObservers.notifyListeners([
-    new PlacesHistoryCleared(),
-    new PlacesRanking(),
-  ]);
+  PlacesObservers.notifyListeners([new PlacesHistoryCleared()]);
 
   // Trigger frecency updates for all affected origins.
   await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
@@ -926,11 +889,6 @@ var clear = async function(db) {
  * @return (Promise)
  */
 var cleanupPages = async function(db, pages) {
-  await invalidateFrecencies(
-    db,
-    pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id)
-  );
-
   let pagesToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits);
   if (!pagesToRemove.length) {
     return;

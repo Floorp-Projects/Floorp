@@ -189,7 +189,9 @@ export class PlacesFrecencyRecalculator {
       await db.executeCached(`DELETE FROM moz_updateoriginsupdate_temp`);
     });
 
-    PlacesObservers.notifyListeners([new PlacesRanking()]);
+    if (affected.length) {
+      PlacesObservers.notifyListeners([new PlacesRanking()]);
+    }
 
     if (affected.length == chunkSize) {
       // There's more entries to recalculate, rearm the task.

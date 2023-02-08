@@ -18,7 +18,7 @@
  *  9 - RELOAD
  **/
 #  define VISIT_COUNT_INC(field) \
-    "(SELECT CASE WHEN " field " IN (0, 4, 7, 8, 9) THEN 0 ELSE 1 END) "
+    "(CASE WHEN " field " IN (0, 4, 7, 8, 9) THEN 0 ELSE 1 END) "
 
 /**
  * This triggers update visit_count and last_visit_date based on historyvisits
@@ -270,9 +270,9 @@
  * Any bookmark operation should recalculate frecency, apart from place:
  * queries.
  */
-#  define NOT_A_QUERY                                   \
-    " url_hash NOT BETWEEN hash('place', 'prefix_lo') " \
-    "                  AND hash('place', 'prefix_hi') "
+#  define IS_PLACE_QUERY                            \
+    " url_hash BETWEEN hash('place', 'prefix_lo') " \
+    "              AND hash('place', 'prefix_hi') "
 
 #  define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERDELETE_TRIGGER                    \
     nsLiteralCString(                                                          \
@@ -281,7 +281,7 @@
         "BEGIN "                                                               \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = " NOT_A_QUERY                                   \
+        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
         "WHERE id = OLD.fk;"                                                   \
         "END")
 
@@ -303,11 +303,13 @@
         "SELECT store_last_inserted_id('moz_bookmarks', NEW.id); "             \
         "SELECT note_sync_change() WHERE NEW.syncChangeCounter > 0; "          \
         "UPDATE moz_places "                                                   \
-        "SET frecency = 1 WHERE frecency = -1 AND " NOT_A_QUERY                \
+        "SET frecency = 1 WHERE frecency = -1 AND NOT " IS_PLACE_QUERY         \
         ";"                                                                    \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count + 1, "                              \
-        "    recalc_frecency = " NOT_A_QUERY                                   \
+        "    hidden = " IS_PLACE_QUERY                                         \
+        ","                                                                    \
+        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
         "WHERE id = NEW.fk;"                                                   \
         "END")
 
@@ -320,11 +322,13 @@
         "WHERE NEW.syncChangeCounter <> OLD.syncChangeCounter; "               \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count + 1, "                              \
-        "    recalc_frecency = " NOT_A_QUERY                                   \
+        "    hidden = " IS_PLACE_QUERY                                         \
+        ","                                                                    \
+        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
         "WHERE OLD.fk <> NEW.fk AND id = NEW.fk;"                              \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count - 1, "                              \
-        "    recalc_frecency = " NOT_A_QUERY                                   \
+        "    recalc_frecency = NOT " IS_PLACE_QUERY                            \
         "WHERE OLD.fk <> NEW.fk AND id = OLD.fk;"                              \
         "END")
 
