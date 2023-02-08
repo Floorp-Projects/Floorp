@@ -258,8 +258,10 @@ function authHandlerInvalidWebPassword(metadata, response) {
       break;
     default:
       // We should not get called past step 4
-      dump("ERROR: NTLM Auth failed connection should not be reused");
-      Assert.fail();
+      Assert.ok(
+        false,
+        "ERROR: NTLM Auth failed connection should not be reused"
+      );
   }
   requestsMade++;
 }
