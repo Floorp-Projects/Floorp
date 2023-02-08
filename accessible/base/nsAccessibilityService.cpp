@@ -107,7 +107,18 @@ using namespace mozilla::dom;
  * Return true if the element must be accessible.
  */
 static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
-  if (aContent->GetPrimaryFrame()->IsFocusable()) return true;
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  MOZ_ASSERT(frame);
+  if (frame->IsFocusable()) {
+    return true;
+  }
+
+  // If the frame has been transformed, and the content has any children, we
+  // should create an Accessible so that we can account for the transform when
+  // calculating the Accessible's bounds using the parent process cache.
+  if (frame->IsTransformed() && aContent->HasChildren()) {
+    return true;
+  }
 
   if (aContent->IsElement()) {
     uint32_t attrCount = aContent->AsElement()->GetAttrCount();
@@ -422,21 +433,28 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
 
 void nsAccessibilityService::NotifyOfComputedStyleChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  if (!IPCAccessibilityActive() ||
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (!document) {
     return;
   }
 
-  DocAccessible* document = GetDocAccessible(aPresShell);
-  if (document) {
-    // DocAccessible::GetAccessible() won't return the document if a root
-    // element like body is passed.
-    LocalAccessible* accessible = aContent == document->GetContent()
-                                      ? document
-                                      : document->GetAccessible(aContent);
-    if (accessible) {
-      accessible->MaybeQueueCacheUpdateForStyleChanges();
+  // DocAccessible::GetAccessible() won't return the document if a root
+  // element like body is passed.
+  LocalAccessible* accessible = aContent == document->GetContent()
+                                    ? document
+                                    : document->GetAccessible(aContent);
+  if (!accessible && aContent && aContent->HasChildren()) {
+    // If the content has children and its frame has a transform, create an
+    // Accessible so that we can account for the transform when calculating
+    // the Accessible's bounds using the parent process cache.
+    const nsIFrame* frame = aContent->GetPrimaryFrame();
+    const ComputedStyle* newStyle = frame ? frame->Style() : nullptr;
+    if (newStyle && newStyle->StyleDisplay()->HasTransform(frame)) {
+      document->ContentInserted(aContent, aContent->GetNextSibling());
     }
+  } else if (accessible && IPCAccessibilityActive() &&
+             StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    accessible->MaybeQueueCacheUpdateForStyleChanges();
   }
 }
 

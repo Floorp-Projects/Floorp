@@ -4,6 +4,8 @@
 
 "use strict";
 
+loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
+
 // test basic translation
 addAccessibleTask(
   `<p id="translate">hello world</p>`,
@@ -111,6 +113,68 @@ addAccessibleTask(
     }
     await testBoundsWithContent(docAcc, "willChangeTopP2", browser);
     await testBoundsWithContent(docAcc, "willChangeInnerP2", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
+
+// Verify that a transform forces creation of an accessible.
+addAccessibleTask(
+  `
+<div id="container">
+  <div style="transform:translate(100px,100px);">
+    <p>test</p>
+  </div>
+</div>
+
+<div id="div-presentational" role="presentation" style="transform:translate(100px,100px);">
+  <p>test</p>
+</div>
+  `,
+  async function(browser, docAcc) {
+    const tree = { SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
+
+    const divWithTransform = findAccessibleChildByID(docAcc, "div-transform");
+    testAccessibleTree(divWithTransform, tree);
+    await testBoundsWithContent(docAcc, "container", browser);
+
+    // An accessible should still be created, even if the role is "presentation."
+    const divPresentational = findAccessibleChildByID(
+      docAcc,
+      "div-presentational"
+    );
+    testAccessibleTree(divPresentational, tree);
+    await testBoundsWithContent(docAcc, "div-presentational", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);
+
+// Verify that adding a transform on the fly forces creation of an accessible.
+addAccessibleTask(
+  `
+<div id="div-to-transform" role="none" style="position: absolute; width: 300px; height: 300px;">
+  <p>test</p>
+</div>
+  `,
+  async function(browser, docAcc) {
+    let divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
+    ok(!divToTransform, "There should not be a section accessible.");
+
+    // Translate the div.
+    await invokeContentTask(browser, [], () => {
+      let div = content.document.getElementById("div-to-transform");
+      div.style.transform = "translate(100%, 100%)";
+    });
+    await waitForContentPaint(browser);
+
+    // Verify that the SECTION accessible appeared after we gave it a transform.
+    divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
+    const tree = {
+      SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }],
+    };
+    testAccessibleTree(divToTransform, tree);
+
+    // Verify that the bounds of the div are correctly modified.
+    await testBoundsWithContent(docAcc, "div-to-transform", browser);
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
