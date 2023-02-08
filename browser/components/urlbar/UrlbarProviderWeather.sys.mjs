@@ -198,7 +198,9 @@ class ProviderWeather extends UrlbarProvider {
     if (
       queryContext.isPrivate ||
       queryContext.searchMode ||
-      !lazy.QuickSuggest.weather.suggestion
+      // `QuickSuggest.weather` will be undefined if `QuickSuggest` hasn't been
+      // initialized.
+      !lazy.QuickSuggest.weather?.suggestion
     ) {
       return false;
     }
