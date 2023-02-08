@@ -2825,13 +2825,13 @@ nsresult SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
     if (!(mState & NS_FRAME_FIRST_REFLOW) && mCanvasTM &&
         mCanvasTM->IsSingular()) {
       // We won't have calculated the glyph positions correctly.
-      NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange(false);
     }
     mCanvasTM = nullptr;
   } else if (IsGlyphPositioningAttribute(aAttribute) ||
              aAttribute == nsGkAtoms::textLength ||
              aAttribute == nsGkAtoms::lengthAdjust) {
-    NotifyGlyphMetricsChange();
+    NotifyGlyphMetricsChange(false);
   }
 
   return NS_OK;
@@ -2899,21 +2899,21 @@ NS_IMPL_ISUPPORTS(SVGTextFrame::MutationObserver, nsIMutationObserver)
 
 void SVGTextFrame::MutationObserver::ContentAppended(
     nsIContent* aFirstNewContent) {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(true);
 }
 
 void SVGTextFrame::MutationObserver::ContentInserted(nsIContent* aChild) {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(true);
 }
 
 void SVGTextFrame::MutationObserver::ContentRemoved(
     nsIContent* aChild, nsIContent* aPreviousSibling) {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(true);
 }
 
 void SVGTextFrame::MutationObserver::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo&) {
-  mFrame->NotifyGlyphMetricsChange();
+  mFrame->NotifyGlyphMetricsChange(true);
 }
 
 void SVGTextFrame::MutationObserver::AttributeChanged(
@@ -2939,7 +2939,7 @@ void SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
     if (aNameSpaceID == kNameSpaceID_None &&
         (aAttribute == nsGkAtoms::startOffset ||
          aAttribute == nsGkAtoms::path || aAttribute == nsGkAtoms::side_)) {
-      NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange(false);
     } else if ((aNameSpaceID == kNameSpaceID_XLink ||
                 aNameSpaceID == kNameSpaceID_None) &&
                aAttribute == nsGkAtoms::href) {
@@ -2947,13 +2947,13 @@ void SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
       if (childElementFrame) {
         SVGObserverUtils::RemoveTextPathObserver(childElementFrame);
-        NotifyGlyphMetricsChange();
+        NotifyGlyphMetricsChange(false);
       }
     }
   } else {
     if (aNameSpaceID == kNameSpaceID_None &&
         IsGlyphPositioningAttribute(aAttribute)) {
-      NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange(false);
     }
   }
 }
@@ -3056,7 +3056,7 @@ void SVGTextFrame::NotifySVGChanged(uint32_t aFlags) {
     // we have been reflowed once, otherwise the glyph positioning will be
     // wrong.  (We need to wait until bidi reordering has been done.)
     if (!(mState & NS_FRAME_FIRST_REFLOW)) {
-      NotifyGlyphMetricsChange();
+      NotifyGlyphMetricsChange(false);
     }
   }
 }
@@ -5019,12 +5019,11 @@ void SVGTextFrame::ScheduleReflowSVG() {
   }
 }
 
-void SVGTextFrame::NotifyGlyphMetricsChange() {
-  // TODO: perf - adding NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY is overly
-  // aggressive here.  Ideally we would only set that bit when our descendant
-  // frame tree changes (i.e. after frame construction).
-  AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
-               NS_STATE_SVG_POSITIONING_DIRTY);
+void SVGTextFrame::NotifyGlyphMetricsChange(bool aUpdateTextCorrespondence) {
+  if (aUpdateTextCorrespondence) {
+    AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY);
+  }
+  AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
   nsLayoutUtils::PostRestyleEvent(mContent->AsElement(), RestyleHint{0},
                                   nsChangeHint_InvalidateRenderingObservers);
   ScheduleReflowSVG();
