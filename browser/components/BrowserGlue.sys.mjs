@@ -321,10 +321,10 @@ let JSWINDOWACTORS = {
 
   AboutPrivateBrowsing: {
     parent: {
-      moduleURI: "resource:///actors/AboutPrivateBrowsingParent.jsm",
+      esModuleURI: "resource:///actors/AboutPrivateBrowsingParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutPrivateBrowsingChild.jsm",
+      esModuleURI: "resource:///actors/AboutPrivateBrowsingChild.sys.mjs",
 
       events: {
         DOMDocElementInserted: { capture: true },
