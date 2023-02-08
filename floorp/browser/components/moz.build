@@ -12,6 +12,7 @@ DIRS += [
 ]
 
 EXTRA_JS_MODULES += [
+    "DesktopFileParser.jsm",
     "FloorpStartup.jsm",
     "GlobalsLoader.jsm",
     "OpenLinkInExternal.jsm",
