@@ -27,6 +27,25 @@ add_task(async function testWindowCreate() {
         // params is null when testing create without createData
         params = params[0] || {};
 
+        // Prevent frequent intermittent failures on macos where the newly created window
+        // may have not always got into the fullscreen state before browser.window.create
+        // resolves the windows details.
+        if (
+          os === "mac" &&
+          params.state === "fullscreen" &&
+          window.state !== params.state
+        ) {
+          browser.test.log(
+            "Wait for window.state for the newly create window to be set to fullscreen"
+          );
+          while (window.state !== params.state) {
+            window = await browser.windows.get(window.id, { populate: true });
+          }
+          browser.test.log(
+            "Newly created browser window got into fullscreen state"
+          );
+        }
+
         for (let key of Object.keys(params)) {
           if (key == "state" && os == "mac" && params.state == "normal") {
             // OS-X doesn't have a hard distinction between "normal" and
