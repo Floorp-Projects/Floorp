@@ -3473,8 +3473,11 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
     } else {
       language = mCanvasElement->OwnerDoc()->GetLanguageForStyle();
     }
+  } else {
+    // Pass the OS default language, to behave similarly to HTML or canvas-
+    // element content with no language tag.
+    language = nsLanguageAtomService::GetService()->GetLocaleLanguage();
   }
-  // TODO: For workers, should we be passing a language? Where from?
 
   // TODO: Cache fontGroups in the Worker (use an nsFontCache?)
   gfxFontGroup* fontGroup =
