@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/shared/platform/CacheEntry.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+  NetworkUtils:
+    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -518,27 +520,18 @@ export class NetworkResponseListener {
 
     this.#receivedData = "";
 
-    let id;
-    let reason;
-
-    try {
-      const properties = this.#request.QueryInterface(Ci.nsIPropertyBag);
-      reason = this.#request.loadInfo.requestBlockingReason;
-      id = properties.getProperty("cancelledByExtension");
-
-      // WebExtensionPolicy is not available for workers
-      if (typeof WebExtensionPolicy !== "undefined") {
-        id = WebExtensionPolicy.getByID(id).name;
-      }
-    } catch (err) {
-      // "cancelledByExtension" doesn't have to be available.
-    }
+    // Check any errors or blocking scenarios which happen late in the cycle
+    // e.g If a host is not found (NS_ERROR_UNKNOWN_HOST) or CORS blocking.
+    const {
+      blockingExtension,
+      blockedReason,
+    } = lazy.NetworkUtils.getBlockedReason(this.#httpActivity.channel);
 
     this.#httpActivity.owner.addResponseContent(response, {
       discardResponseBody: this.#httpActivity.discardResponseBody,
       truncated: this.#truncated,
-      blockedReason: reason,
-      blockingExtension: id,
+      blockedReason,
+      blockingExtension,
     });
   }
 

@@ -279,8 +279,7 @@ export class NetworkObserver {
         return;
       }
 
-      const blockedCode = channel.loadInfo.requestBlockingReason;
-      this.#httpResponseExaminer(subject, topic, blockedCode);
+      this.#httpResponseExaminer(subject, topic);
     }
   );
 
@@ -301,52 +300,31 @@ export class NetworkObserver {
 
       logPlatformEvent(topic, channel);
 
-      let id;
-      let reason;
-
-      try {
-        const request = subject.QueryInterface(Ci.nsIHttpChannel);
-        const properties = request.QueryInterface(Ci.nsIPropertyBag);
-        reason = request.loadInfo.requestBlockingReason;
-        id = properties.getProperty("cancelledByExtension");
-
-        // WebExtensionPolicy is not available for workers
-        if (typeof WebExtensionPolicy !== "undefined") {
-          id = WebExtensionPolicy.getByID(id).name;
-        }
-      } catch (err) {
-        // "cancelledByExtension" doesn't have to be available.
-      }
-
       const httpActivity = this.#createOrGetActivityObject(channel);
       const serverTimings = this.#extractServerTimings(channel);
+
       if (httpActivity.owner) {
         // Try extracting server timings. Note that they will be sent to the client
         // in the `_onTransactionClose` method together with network event timings.
         httpActivity.owner.addServerTimings(serverTimings);
-      } else {
+
         // If the owner isn't set we need to create the network event and send
         // it to the client. This happens in case where:
         // - the request has been blocked (e.g. CORS) and "http-on-stop-request" is the first notification.
         // - the NetworkObserver is start *after* the request started and we only receive the http-stop notification,
         //   but that doesn't mean the request is blocked, so check for its status.
-        const { status } = channel;
-        if (status == 0) {
-          // Do not pass any blocked reason, as this request is just fine.
-          // Bug 1489217 - Prevent watching for this request response content,
-          // as this request is already running, this is too late to watch for it.
-          this.#createNetworkEvent(subject, { inProgressRequest: true });
-        } else {
-          if (reason == 0) {
-            // If we get there, we have a non-zero status, but no clear blocking reason
-            // This is most likely a request that failed for some reason, so try to pass this reason
-            reason = ChromeUtils.getXPCOMErrorName(status);
-          }
-          this.#createNetworkEvent(subject, {
-            blockedReason: reason,
-            blockingExtension: id,
-          });
-        }
+      } else if (Components.isSuccessCode(channel.status)) {
+        // Do not pass any blocked reason, as this request is just fine.
+        // Bug 1489217 - Prevent watching for this request response content,
+        // as this request is already running, this is too late to watch for it.
+        this.#createNetworkEvent(subject, { inProgressRequest: true });
+      } else {
+        // Handles any early blockings e.g by Web Extensions or by CORS
+        const {
+          blockingExtension,
+          blockedReason,
+        } = lazy.NetworkUtils.getBlockedReason(channel);
+        this.#createNetworkEvent(subject, { blockedReason, blockingExtension });
       }
     }
   );
@@ -361,7 +339,7 @@ export class NetworkObserver {
    * @returns void
    */
   #httpResponseExaminer = DevToolsInfaillibleUtils.makeInfallible(
-    (subject, topic, blockedReason) => {
+    (subject, topic) => {
       // The httpResponseExaminer is used to retrieve the uncached response
       // headers.
       if (
@@ -388,7 +366,7 @@ export class NetworkObserver {
         topic,
         subject,
         blockedOrFailed
-          ? "blockedOrFailed:" + blockedReason
+          ? "blockedOrFailed:" + channel.loadInfo.requestBlockingReason
           : channel.responseStatus
       );
 
@@ -488,6 +466,7 @@ export class NetworkObserver {
           serverTimings
         );
       } else if (topic === "http-on-failed-opening-request") {
+        const { blockedReason } = lazy.NetworkUtils.getBlockedReason(channel);
         this.#createNetworkEvent(channel, { blockedReason });
       }
 
