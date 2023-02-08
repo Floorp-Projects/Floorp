@@ -383,6 +383,27 @@ add_task(async function returnByValueCyclicValue({ client }) {
   }
 });
 
+add_task(async function returnByValueNotPossible({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const expressions = ["Symbol(42)", "[Symbol(42)]", "{a: Symbol(42)}"];
+
+  for (const expression of expressions) {
+    let errorThrown;
+    try {
+      await Runtime.evaluate({
+        expression,
+        returnByValue: true,
+      });
+    } catch (e) {
+      errorThrown = e.message;
+    }
+    ok(errorThrown.includes("Object couldn't be returned by value"));
+  }
+});
+
 add_task(async function returnByValue({ client }) {
   const { Runtime } = client;
 
