@@ -201,10 +201,9 @@ class nsTString : public nsTSubstring<T> {
    */
   void AssertValidDependentString() {
     MOZ_ASSERT(this->mData, "nsTDependentString must wrap a non-NULL buffer");
-    MOZ_DIAGNOSTIC_ASSERT(this->mData[substring_type::mLength] == 0,
-                          "nsTDependentString must wrap only null-terminated "
-                          "strings.  You are probably looking for "
-                          "nsTDependentSubstring.");
+    MOZ_ASSERT(this->mData[substring_type::mLength] == 0,
+               "nsTDependentString must wrap only null-terminated strings. "
+               "You are probably looking for nsTDependentSubstring.");
   }
 
  protected:
