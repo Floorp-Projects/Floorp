@@ -29,6 +29,8 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getPageUrl(useAdPage = false) {
   let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
   return `https://example.com/browser/browser/components/search/test/browser/${page}`;
@@ -62,6 +64,12 @@ async function waitForIdle() {
   }
 }
 
+function resetTelemetry() {
+  searchCounts.clear();
+  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
+}
+
 SearchTestUtils.init(this);
 UrlbarTestUtils.init(this);
 
@@ -74,7 +82,10 @@ add_setup(async function() {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.search.serpEventTelemetry.enabled", true],
+    ],
   });
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -134,6 +145,15 @@ add_task(async function test_search() {
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+  ]);
 });
 
 add_task(async function test_reload() {
@@ -154,6 +174,21 @@ add_task(async function test_reload() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "reload",
+    },
+  ]);
+
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
@@ -172,13 +207,27 @@ add_task(async function test_reload() {
       "browser.search.adclicks.reload": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "reload",
+    },
+  ]);
 });
 
 let searchUrl;
 
 add_task(async function test_fresh_search() {
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   // Load a page via the address bar.
   await loadSearchPage();
@@ -194,6 +243,15 @@ add_task(async function test_fresh_search() {
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+  ]);
 });
 
 add_task(async function test_click_ad() {
@@ -213,6 +271,15 @@ add_task(async function test_click_ad() {
       "browser.search.adclicks.urlbar": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+  ]);
 });
 
 add_task(async function test_go_back() {
@@ -234,6 +301,21 @@ add_task(async function test_go_back() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "tabhistory",
+    },
+  ]);
+
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
@@ -253,12 +335,26 @@ add_task(async function test_go_back() {
       "browser.search.adclicks.tabhistory": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "tabhistory",
+    },
+  ]);
 });
 
 // Conduct a search from the Urlbar with showSearchTerms enabled.
 add_task(async function test_fresh_search_with_urlbar_persisted() {
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
@@ -276,6 +372,15 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+  ]);
+
   // Do another search from the context of the default SERP.
   await loadSearchPage();
   await assertSearchSourcesTelemetry(
@@ -290,6 +395,21 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       "browser.search.withads.urlbar_persisted": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar_persisted",
+    },
+  ]);
 
   // Click on an ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -310,6 +430,21 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       "browser.search.adclicks.urlbar_persisted": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar",
+    },
+    {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      source: "urlbar_persisted",
+    },
+  ]);
 
   await SpecialPowers.popPrefEnv();
 });
