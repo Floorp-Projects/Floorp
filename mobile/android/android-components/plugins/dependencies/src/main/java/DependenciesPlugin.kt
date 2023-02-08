@@ -26,11 +26,11 @@ object Versions {
     const val mockwebserver = "3.10.0"
     const val okhttp = "3.13.1"
 
-    const val android_gradle_plugin = "7.3.0"
+    const val android_gradle_plugin = "7.4.1"
 
     // This has to be synced to the gradlew plugin version. See
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
-    const val lint = "30.3.0"
+    const val lint = "30.4.1"
     const val detekt = "1.19.0"
 
     const val sentry_legacy = "1.7.30"

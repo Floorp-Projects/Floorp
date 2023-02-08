@@ -37,7 +37,7 @@ object FocusVersions {
     }
 
     object Gradle {
-        const val android_plugin = "7.3.0"
+        const val android_plugin = "7.4.1"
         const val kotlin_plugin = Kotlin.compiler
     }
 
