@@ -1014,7 +1014,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       style: content.background && isCenterPosition ? {
         background: content.background
       } : {}
-    }, content.dismiss_button ? this.renderDismissButton() : null, content.logo ? this.renderLogo(content.logo) : null, isRtamo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, content.logo ? this.renderLogo(content.logo) : null, isRtamo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "rtamo-icon"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
       className: `${isTheme ? "rtamo-theme-icon" : "brand-logo"}`,
@@ -1047,7 +1047,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content: content,
       addonName: this.props.addonName,
       handleAction: this.props.handleAction
-    })), this.props.totalNumberOfScreens > 1 && !hideStepsIndicator ? this.renderStepsIndicator() : null)));
+    })), this.props.totalNumberOfScreens > 1 && !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
   }
 
 }

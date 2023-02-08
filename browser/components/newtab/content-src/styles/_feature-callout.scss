@@ -31,8 +31,6 @@ $background-dark: rgb(28, 27, 34);
     }
 
     &[pos='callout'] {
-      // Max value for z-index
-      z-index: $max-z-index - 1;
       height: fit-content;
       min-height: unset;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -123,17 +121,18 @@ $background-dark: rgb(28, 27, 34);
               border-color: LinkText;
             }
           }
+        }
 
-          .dismiss-button {
-            font-size: 1em;
-            position: absolute;
-            margin-block: 15px 0;
-            margin-inline: 0 15px;
-            z-index: 1;
-            background-color: $background;
-            @media (prefers-color-scheme: dark) {
-              background-color: $background-dark;
-            }
+        .dismiss-button {
+          font-size: 1em;
+          top: 0;
+          margin-block: 15px 0;
+          margin-inline: 0 15px;
+          z-index: $max-z-index;
+          background-color: $background;
+
+          @media (prefers-color-scheme: dark) {
+            background-color: $background-dark;
           }
         }
       }
@@ -167,7 +166,7 @@ $background-dark: rgb(28, 27, 34);
       }
 
       .action-buttons .primary,
-      .main-content .dismiss-button {
+      .dismiss-button {
         border-radius: 4px;
         border: 0;
         cursor: pointer;

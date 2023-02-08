@@ -17,7 +17,6 @@
   transform: none;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] {
-  z-index: 2147483646;
   height: fit-content;
   min-height: unset;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -89,16 +88,16 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator.current, .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps.progress-bar .indicator.complete {
   border-color: LinkText;
 }
-.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .dismiss-button {
   font-size: 1em;
-  position: absolute;
+  top: 0;
   margin-block: 15px 0;
   margin-inline: 0 15px;
-  z-index: 1;
+  z-index: 2147483647;
   background-color: #FFF;
 }
 @media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
+  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .dismiss-button {
     background-color: #1c1b22;
   }
 }
@@ -127,49 +126,49 @@
   float: inline-end;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
   border-radius: 4px;
   border: 0;
   cursor: pointer;
   color: ButtonText;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
   background-color: #e8e3e4;
 }
 @media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
     background-color: #2b2a33;
   }
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
     background-color: #363434;
   }
 }
 @media (prefers-contrast) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
     border: 1px solid ButtonText;
     background-color: #FFF;
   }
 }
 @media (prefers-contrast) and (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
     background-color: #1c1b22;
   }
 }
 @media (prefers-contrast) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
     background-color: ButtonText;
     color: #FFF;
   }
 }
 @media (prefers-contrast) and (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .main-content .dismiss-button:hover {
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
     color: #1c1b22;
   }
 }
@@ -340,6 +339,7 @@ html {
   justify-content: center;
   width: 504px;
   flex-shrink: 0;
+  position: relative;
 }
 .onboardingContainer .main-content {
   background-color: var(--in-content-page-background);
@@ -520,6 +520,7 @@ html {
   height: 550px;
 }
 .onboardingContainer .screen[pos=split] .secondary-cta.top {
+  position: fixed;
   padding-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split] .secondary-cta.top button {
@@ -836,6 +837,9 @@ html {
   .onboardingContainer .screen[pos=split] .section-main .additional-cta.cta-link {
     align-self: center;
   }
+  .onboardingContainer .screen[pos=split] .section-main .dismiss-button {
+    top: -100px;
+  }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
     margin: 0 auto auto;
   }
@@ -844,20 +848,13 @@ html {
   }
 }
 @media only screen and (max-height: 650px) and (min-width: 800px) and (max-width: 990px) {
-  .onboardingContainer .screen[pos=split] .section-main {
-    position: relative;
-  }
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
-    padding: 0;
-    top: 20px;
-    inset-inline-end: 20px;
+    display: none;
   }
 }
 @media only screen and (max-height: 650px) and (max-width: 590px) {
-  .onboardingContainer .screen[pos=split] .section-main {
-    position: relative;
-  }
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
+    position: absolute;
     padding: 0;
     top: 0;
     inset-inline-end: 0;
@@ -1187,10 +1184,14 @@ html {
   margin-inline: 5px 0;
 }
 .onboardingContainer .dismiss-button {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: auto;
+  right: 0;
   box-sizing: border-box;
   padding: 0;
-  margin-block: 30px -45px;
-  margin-inline: 0 30px;
+  margin: 16px;
   display: block;
   float: inline-end;
   background: url("chrome://global/skin/icons/close.svg") no-repeat center/16px;
@@ -1201,6 +1202,10 @@ html {
   min-width: 32px;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+.onboardingContainer .dismiss-button:dir(rtl) {
+  left: 0;
+  right: auto;
 }
 @keyframes fadein {
   from {

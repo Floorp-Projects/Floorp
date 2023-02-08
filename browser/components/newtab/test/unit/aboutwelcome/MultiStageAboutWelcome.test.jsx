@@ -433,6 +433,17 @@ describe("MultiStageAboutWelcome module", () => {
 
         assert.calledWith(SCREEN_PROPS.setActiveTheme, "test");
       });
+      it("should handle dismiss", () => {
+        SCREEN_PROPS.content.dismiss_button = {
+          action: { dismiss: true },
+        };
+        const finishStub = sandbox.stub(global, "AWFinish");
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".dismiss-button").simulate("click");
+
+        assert.calledOnce(finishStub);
+      });
       it("should handle SHOW_FIREFOX_ACCOUNTS", () => {
         TEST_ACTION.type = "SHOW_FIREFOX_ACCOUNTS";
         const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
