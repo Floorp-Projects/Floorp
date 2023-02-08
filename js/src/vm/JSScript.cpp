@@ -1970,10 +1970,12 @@ bool ScriptSource::setDisplayURL(JSContext* cx, FrontendContext* fc,
                                  UniqueTwoByteChars&& url) {
   if (hasDisplayURL()) {
     // FIXME: filename() should be UTF-8 (bug 987069).
-    if (!cx->isHelperThreadContext() &&
-        !WarnNumberLatin1(cx, JSMSG_ALREADY_HAS_PRAGMA, filename(),
-                          "//# sourceURL")) {
-      return false;
+    JSContext* maybeCx = fc->maybeCurrentJSContext();
+    if (maybeCx && !maybeCx->isHelperThreadContext()) {
+      if (!!WarnNumberLatin1(maybeCx, JSMSG_ALREADY_HAS_PRAGMA, filename(),
+                             "//# sourceURL")) {
+        return false;
+      }
     }
   }
 
