@@ -798,14 +798,10 @@ featureCallout:
   hasExposure: false
   isEarlyStartup: false
   variables:
-    pdfjs:
-      description: A string that determines the initial value of browser.pdfjs.feature-tour screen property when the tour is initialized and the status of the tour is not complete. This pref should resemble a JSON object, similar to the JSON object in the fallback pref.
+    pdfjsInitialPref:
+      description: A JSON String representing the intitial state of the pref that holds the progress of the PDF.js feature tour.
       type: string
-      fallbackPref: "browser.pdfjs.feature-tour"
-    firefox-view:
-      description: A string that determines the initial value of browser.firefox-view.feature-tour screen property when the tour is initialized and the status of the tour is not complete. This pref should resemble a JSON object, similar to the JSON object in the fallback pref.
-      type: string
-      fallbackPref: "browser.firefox-view.feature-tour"
+      setPref: "browser.pdfjs.feature-tour"
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
   owner: haftandilian@mozilla.com
