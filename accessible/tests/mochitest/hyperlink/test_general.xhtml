@@ -53,7 +53,7 @@
                // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                "Mozilla Foundation", "http://www.mozilla.org/", 2, 3, true,
                false, true);
-      testStates(labelWithValueAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(labelWithValueAcc, STATE_LINKED, 0);
 
       var normalLabelAcc = getAccessible("normalLabel");
       testRole(normalLabelAcc, ROLE_LABEL);

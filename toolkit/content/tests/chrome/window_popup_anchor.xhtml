@@ -13,14 +13,14 @@ function runTests()
 window.arguments[0].SimpleTest.waitForFocus(runTests, window);
 </script>
 
-<spacer height="13"/>
+<spacer style="height: 13px"/>
 <button id="outerbutton" label="Button One" style="margin-left: 6px; -moz-appearance: none;"/>
 <hbox>
-  <spacer width="20"/>
+  <spacer style="width: 20px"/>
   <deck>
     <vbox>
-      <iframe id="frame" style="margin-left: 60px; margin-top: 10px; border-left: 17px solid red; padding-left: 0 !important; padding-top: 3px;"
-              width="250" height="80" src="frame_popup_anchor.xhtml"/>
+      <iframe id="frame" style="margin-left: 60px; margin-top: 10px; border-left: 17px solid red; padding-left: 0 !important; padding-top: 3px; width: 250px; height: 80px"
+              src="frame_popup_anchor.xhtml"/>
     </vbox>
   </deck>
 </hbox>
