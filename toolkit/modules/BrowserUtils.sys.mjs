@@ -109,8 +109,7 @@ export var BrowserUtils = {
       !location.startsWith(
         "chrome://mozapps/content/extensions/aboutaddons.html"
       ) &&
-      !location.startsWith("about:preferences") &&
-      !location.startsWith("about:logins")
+      !location.startsWith("about:preferences")
     );
   },
 
