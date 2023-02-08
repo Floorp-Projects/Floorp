@@ -87,6 +87,49 @@ add_task(async function test_monthyear_escape_date() {
   // Test a year spinner
   await testKeyOnSpinners("KEY_Escape", pickerDoc, 2);
 
+  info(
+    `Testing "KEY_Escape" behavior without any interaction with spinners
+    (bug 1815184)`
+  );
+
+  Assert.ok(
+    helper.getElement(BTN_MONTH_YEAR).matches(":focus"),
+    "The month-year toggle button is focused"
+  );
+
+  // Open the month-year selection panel with spinners:
+  EventUtils.synthesizeKey(" ", {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "true",
+    "Month-year button is expanded when the spinners are shown"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is visible"
+  );
+
+  // Close the month-year selection panel without interacting with its spinners:
+  EventUtils.synthesizeKey("KEY_Escape", {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "false",
+    "Month-year button is collapsed when the spinners are hidden"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is not visible"
+  );
+  Assert.ok(
+    helper
+      .getElement(DAYS_VIEW)
+      .querySelector('[tabindex="0"]')
+      .matches(":focus"),
+    "A focusable day within a calendar grid is focused"
+  );
+
   await helper.tearDown();
 });
 
@@ -98,10 +141,10 @@ add_task(async function test_monthyear_escape_datetime() {
     "Ensure the month-year panel of a datetime-local input can be closed with Esc."
   );
 
-  const inputValue = "2022-12-12";
+  const inputValue = "2022-12-12T01:01";
 
   await helper.openPicker(
-    `data:text/html, <input type="date" value=${inputValue}>`
+    `data:text/html, <input type="datetime-local" value=${inputValue}>`
   );
   let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
     .contentDocument;
@@ -114,6 +157,49 @@ add_task(async function test_monthyear_escape_datetime() {
 
   // Test a year spinner
   await testKeyOnSpinners("KEY_Escape", pickerDoc, 2);
+
+  info(
+    `Testing "KEY_Escape" behavior without any interaction with spinners
+    (bug 1815184)`
+  );
+
+  Assert.ok(
+    helper.getElement(BTN_MONTH_YEAR).matches(":focus"),
+    "The month-year toggle button is focused"
+  );
+
+  // Open the month-year selection panel with spinners:
+  EventUtils.synthesizeKey(" ", {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "true",
+    "Month-year button is expanded when the spinners are shown"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is visible"
+  );
+
+  // Close the month-year selection panel without interacting with its spinners:
+  EventUtils.synthesizeKey("KEY_Escape", {});
+
+  Assert.equal(
+    helper.getElement(BTN_MONTH_YEAR).getAttribute("aria-expanded"),
+    "false",
+    "Month-year button is collapsed when the spinners are hidden"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_hidden(helper.getElement(MONTH_YEAR_VIEW)),
+    "Month-year selection panel is not visible"
+  );
+  Assert.ok(
+    helper
+      .getElement(DAYS_VIEW)
+      .querySelector('[tabindex="0"]')
+      .matches(":focus"),
+    "A focusable day within a calendar grid is focused"
+  );
 
   await helper.tearDown();
 });
