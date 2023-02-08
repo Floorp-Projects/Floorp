@@ -239,11 +239,10 @@
   text-align: center;
 }
 
-.urlbarView-row[dynamicType=weather]:hover > .urlbarView-row-inner > .urlbarView-dynamic-weather-currentConditions,
-.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-currentConditions {
+.urlbarView-row[dynamicType=weather]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-dynamic-weather-currentConditions {
   /* Same colors as the switch-to-tab action chiclet */
-  color: var(--toolbar-field-focus-color);
-  background-color: var(--toolbar-field-focus-background-color);
+  color: var(--urlbarView-result-button-selected-color);
+  background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
 .urlbarView-dynamic-weather-currently {
@@ -463,10 +462,10 @@
   opacity: 0.6;
 }
 
-.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-top > .urlbarView-url {
+.urlbarView-row[dynamicType=weather][selected] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-top > .urlbarView-url {
   color: inherit;
 }
 
-.urlbarView-row[dynamicType=weather] > .urlbarView-row-inner[selected] > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-bottom {
+.urlbarView-row[dynamicType=weather][selected] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-bottom {
   opacity: 1;
 }
