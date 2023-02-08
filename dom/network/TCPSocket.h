@@ -166,7 +166,9 @@ class TCPSocket final : public DOMEventTargetHelper,
   nsresult EnsureCopying();
   // Re-calculate buffered amount.
   void CalculateBufferedAmount();
-  // Enable TLS on this socket.
+  // Helper function, should be called by ActivateTLS(), only.
+  void ActivateTLSHelper();
+  // Enable TLS on this socket, dispatch to STSThread if necessary.
   void ActivateTLS();
   // Dispatch an error event if necessary, then dispatch a "close" event.
   nsresult MaybeReportErrorAndCloseIfOpen(nsresult status);
