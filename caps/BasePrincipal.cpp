@@ -398,12 +398,9 @@ nsresult BasePrincipal::ToJSON(nsACString& aJSON) {
 }
 
 nsresult BasePrincipal::ToJSON(Json::Value& aObject) {
-  Json::Value innerJSONObject = Json::objectValue;
-  nsresult rv = PopulateJSONObject(innerJSONObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   std::string key = std::to_string(Kind());
-  aObject[key] = innerJSONObject;
+  nsresult rv = PopulateJSONObject((aObject[key] = Json::objectValue));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
