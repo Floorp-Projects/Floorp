@@ -6,6 +6,7 @@
 
 #include "base/process_util.h"
 #include "mozilla/StaticPrefs_toolkit.h"
+#include "mozilla/StaticPrefs_datareporting.h"
 #include "nsIFile.h"
 
 #ifdef XP_WIN
@@ -80,7 +81,8 @@ NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
     sleep.AppendInt(testingSleepMs);
     argv.AppendElement(sleep);
   }
-  if (!aMetricsId.IsEmpty()) {
+  if (!aMetricsId.IsEmpty() &&
+      StaticPrefs::datareporting_healthreport_uploadEnabled()) {
     argv.AppendElement("--metrics-id");
     argv.AppendElement(aMetricsId);
   }
