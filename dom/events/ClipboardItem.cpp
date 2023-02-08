@@ -20,10 +20,6 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mData,
                          mPendingGetTypeRequests)
 
-ClipboardItem::ItemEntry::ItemEntry(const nsAString& aType,
-                                    const nsACString& aFormat)
-    : mType(aType), mFormat(aFormat) {}
-
 void ClipboardItem::ItemEntry::SetData(already_AddRefed<Blob>&& aBlob) {
   // XXX maybe we could consider adding a method to check whether the union
   // object is uninitialized or initialized.
@@ -61,8 +57,9 @@ void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
             self->mLoadingPromise.Complete();
 
             nsCOMPtr<nsISupports> data;
-            nsresult rv = trans->GetTransferData(self->Format().get(),
-                                                 getter_AddRefs(data));
+            nsresult rv = trans->GetTransferData(
+                NS_ConvertUTF16toUTF8(self->Type()).get(),
+                getter_AddRefs(data));
             if (NS_WARN_IF(NS_FAILED(rv))) {
               self->RejectPendingGetTypePromises(rv);
               return;
@@ -182,9 +179,7 @@ already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
 
   nsTArray<RefPtr<ItemEntry>> items;
   for (const auto& entry : aItems.Entries()) {
-    nsAutoCString format = NS_ConvertUTF16toUTF8(entry.mKey);
-    items.AppendElement(
-        MakeRefPtr<ItemEntry>(entry.mKey, format, entry.mValue));
+    items.AppendElement(MakeRefPtr<ItemEntry>(entry.mKey, entry.mValue));
   }
 
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
