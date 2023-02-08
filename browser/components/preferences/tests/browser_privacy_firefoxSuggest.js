@@ -18,9 +18,9 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
 });
 
 const CONTAINER_ID = "firefoxSuggestContainer";
-const NONSPONSORED_CHECKBOX_ID = "firefoxSuggestNonsponsoredToggle";
-const SPONSORED_CHECKBOX_ID = "firefoxSuggestSponsoredToggle";
-const DATA_COLLECTION_CHECKBOX_ID = "firefoxSuggestDataCollectionToggle";
+const NONSPONSORED_TOGGLE_ID = "firefoxSuggestNonsponsoredToggle";
+const SPONSORED_TOGGLE_ID = "firefoxSuggestSponsoredToggle";
+const DATA_COLLECTION_TOGGLE_ID = "firefoxSuggestDataCollectionToggle";
 const INFO_BOX_ID = "firefoxSuggestInfoBox";
 const INFO_TEXT_ID = "firefoxSuggestInfoText";
 const LEARN_MORE_CLASS = "firefoxSuggestLearnMore";
@@ -208,10 +208,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: true,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: true,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-all");
   await SpecialPowers.popPrefEnv();
@@ -226,10 +226,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: true,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: false,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: true,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: false,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-nonsponsored-sponsored");
   await SpecialPowers.popPrefEnv();
@@ -244,10 +244,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: true,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: true,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-nonsponsored-data");
   await SpecialPowers.popPrefEnv();
@@ -262,10 +262,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: true,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: false,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: true,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: false,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-nonsponsored");
   await SpecialPowers.popPrefEnv();
@@ -280,10 +280,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-sponsored-data");
   await SpecialPowers.popPrefEnv();
@@ -298,10 +298,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: false,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: false,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-sponsored");
   await SpecialPowers.popPrefEnv();
@@ -316,10 +316,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-data");
   await SpecialPowers.popPrefEnv();
@@ -334,10 +334,10 @@ add_task(async function togglesAndInfoBox() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: false,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: false,
   });
   await assertInfoBox(null);
   await SpecialPowers.popPrefEnv();
@@ -353,6 +353,18 @@ add_task(async function clickToggles() {
   let addressBarSection = doc.getElementById("locationBarGroup");
   addressBarSection.scrollIntoView();
 
+  async function clickToggle(id) {
+    let toggle = doc.getElementById(id);
+    let changed = BrowserTestUtils.waitForEvent(toggle, "toggle");
+    let button = toggle.buttonEl;
+    await EventUtils.synthesizeMouseAtCenter(
+      button,
+      {},
+      gBrowser.selectedBrowser.contentWindow
+    );
+    await changed;
+  }
+
   // Set initial state.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -361,38 +373,30 @@ add_task(async function clickToggles() {
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: true,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: true,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-all");
 
   // non-sponsored toggle
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#" + NONSPONSORED_CHECKBOX_ID,
-    {},
-    gBrowser.selectedBrowser
-  );
+  await clickToggle(NONSPONSORED_TOGGLE_ID);
   Assert.ok(
     !Services.prefs.getBoolPref(
       "browser.urlbar.suggest.quicksuggest.nonsponsored"
     ),
     "suggest.quicksuggest.nonsponsored is false after clicking non-sponsored toggle"
   );
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: true,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: true,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-sponsored-data");
 
   // sponsored toggle
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#" + SPONSORED_CHECKBOX_ID,
-    {},
-    gBrowser.selectedBrowser
-  );
+  await clickToggle(SPONSORED_TOGGLE_ID);
   Assert.ok(
     !Services.prefs.getBoolPref(
       "browser.urlbar.suggest.quicksuggest.nonsponsored"
@@ -405,19 +409,15 @@ add_task(async function clickToggles() {
     ),
     "suggest.quicksuggest.sponsored is false after clicking sponsored toggle"
   );
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: true,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: true,
   });
   await assertInfoBox("addressbar-firefox-suggest-info-data");
 
   // data collection toggle
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#" + DATA_COLLECTION_CHECKBOX_ID,
-    {},
-    gBrowser.selectedBrowser
-  );
+  await clickToggle(DATA_COLLECTION_TOGGLE_ID);
   Assert.ok(
     !Services.prefs.getBoolPref(
       "browser.urlbar.suggest.quicksuggest.nonsponsored"
@@ -436,10 +436,10 @@ add_task(async function clickToggles() {
     ),
     "quicksuggest.dataCollection.enabled is false after clicking data collection toggle"
   );
-  assertCheckboxes({
-    [NONSPONSORED_CHECKBOX_ID]: false,
-    [SPONSORED_CHECKBOX_ID]: false,
-    [DATA_COLLECTION_CHECKBOX_ID]: false,
+  assertPrefUIState({
+    [NONSPONSORED_TOGGLE_ID]: false,
+    [SPONSORED_TOGGLE_ID]: false,
+    [DATA_COLLECTION_TOGGLE_ID]: false,
   });
   await assertInfoBox(null);
 
@@ -674,7 +674,7 @@ add_task(async function bestMatchToggle() {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.suggest.bestmatch", isEnabled]],
     });
-    assertCheckboxes({ [BEST_MATCH_CHECKBOX_ID]: isEnabled });
+    assertPrefUIState({ [BEST_MATCH_CHECKBOX_ID]: isEnabled }, "checked");
     await SpecialPowers.popPrefEnv();
   }
 
@@ -735,23 +735,23 @@ add_task(async function clickBestMatchLearnMore() {
 });
 
 /**
- * Verifies the state of the checkboxes (which are styled as toggle switches).
+ * Verifies the state of pref related toggles and checkboxes.
  *
- * @param {object} checkedByElementID
- *   Maps checkbox element IDs to booleans. Each boolean is the expected checked
- *   state of the corresponding ID.
+ * @param {object} stateByElementID
+ *   Maps toggle/checkbox element IDs to booleans. Each boolean
+ *   is the expected state of the corresponding ID.
+ * @param {object} attr
+ *   Attribute to check against the expected state. The "pressed"
+ *   attribute is verified by default, since this is mostly used
+ *   for toggle buttons.
  */
-function assertCheckboxes(checkedByElementID) {
+function assertPrefUIState(stateByElementID, attr = "pressed") {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(CONTAINER_ID);
   Assert.ok(BrowserTestUtils.is_visible(container), "The container is visible");
-  for (let [id, checked] of Object.entries(checkedByElementID)) {
-    let checkbox = doc.getElementById(id);
-    Assert.equal(
-      checkbox.checked,
-      checked,
-      "Checkbox checked state for ID: " + id
-    );
+  for (let [id, state] of Object.entries(stateByElementID)) {
+    let element = doc.getElementById(id);
+    Assert.equal(element[attr], state, "Expected state for ID: " + id);
   }
 }
 

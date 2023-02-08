@@ -265,6 +265,7 @@ const Preferences = (window.Preferences = (function() {
 
     handleEvent(event) {
       switch (event.type) {
+        case "toggle":
         case "change":
           return this.onChange(event);
         case "command":
@@ -323,6 +324,7 @@ const Preferences = (window.Preferences = (function() {
   };
 
   Services.prefs.addObserver("", Preferences);
+  window.addEventListener("toggle", Preferences);
   window.addEventListener("change", Preferences);
   window.addEventListener("command", Preferences);
   window.addEventListener("dialogaccept", Preferences);
@@ -408,7 +410,7 @@ const Preferences = (window.Preferences = (function() {
       function setValue(element, attribute, value) {
         if (attribute in element) {
           element[attribute] = value;
-        } else if (attribute === "checked") {
+        } else if (attribute === "checked" || attribute === "pressed") {
           // The "checked" attribute can't simply be set to the specified value;
           // it has to be set if the value is true and removed if the value
           // is false in order to be interpreted correctly by the element.
@@ -428,6 +430,8 @@ const Preferences = (window.Preferences = (function() {
         (aElement.localName == "input" && aElement.type == "checkbox")
       ) {
         setValue(aElement, "checked", val);
+      } else if (aElement.localName == "moz-toggle") {
+        setValue(aElement, "pressed", val);
       } else {
         setValue(aElement, "value", val);
       }
@@ -463,6 +467,8 @@ const Preferences = (window.Preferences = (function() {
         (aElement.localName == "input" && aElement.type == "checkbox")
       ) {
         value = getValue(aElement, "checked");
+      } else if (aElement.localName == "moz-toggle") {
+        value = getValue(aElement, "pressed");
       } else {
         value = getValue(aElement, "value");
       }
@@ -483,6 +489,7 @@ const Preferences = (window.Preferences = (function() {
         case "radiogroup":
         case "textarea":
         case "menulist":
+        case "moz-toggle":
           return true;
       }
       return false;

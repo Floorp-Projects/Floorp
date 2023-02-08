@@ -694,68 +694,31 @@
     />
   </hbox>
   <vbox id="firefoxSuggestContainer" hidden="true">
-    <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
-         participating in session restore. autocomplete="off" is ignored on the
-         inputs themselves. -->
-    <html:form id="firefoxSuggestForm" autocomplete="off" hidden="true"/>
     <vbox class="firefoxSuggestOptionBox">
-      <hbox align="center">
-        <label id="firefoxSuggestNonsponsoredLabel"
-               flex="1"
-               data-l10n-id="addressbar-firefox-suggest-nonsponsored"/>
-        <html:input id="firefoxSuggestNonsponsoredToggle"
-                    type="checkbox"
-                    class="toggle-button firefoxSuggestToggle"
-                    preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
-                    form="firefoxSuggestForm"
-                    aria-labelledby="firefoxSuggestNonsponsoredLabel"
-                    aria-describedby="firefoxSuggestNonsponsoredDescription"/>
-      </hbox>
-      <description id="firefoxSuggestNonsponsoredDescription"
-                   class="tip-caption firefoxSuggestOptionDescription"
-                   data-l10n-id="addressbar-firefox-suggest-nonsponsored-description"/>
+      <html:moz-toggle id="firefoxSuggestNonsponsoredToggle"
+                       preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
+                       data-l10n-id="addressbar-firefox-suggest-nonsponsored"
+                       data-l10n-attrs="label, description" />
     </vbox>
     <vbox class="firefoxSuggestOptionBox">
-      <hbox align="center">
-        <label id="firefoxSuggestSponsoredLabel"
-               flex="1"
-               data-l10n-id="addressbar-firefox-suggest-sponsored"/>
-        <html:input id="firefoxSuggestSponsoredToggle"
-                    type="checkbox"
-                    class="toggle-button firefoxSuggestToggle"
-                    preference="browser.urlbar.suggest.quicksuggest.sponsored"
-                    form="firefoxSuggestForm"
-                    aria-labelledby="firefoxSuggestSponsoredLabel"
-                    aria-describedby="firefoxSuggestSponsoredDescription"/>
-      </hbox>
-      <description id="firefoxSuggestSponsoredDescription"
-                   class="tip-caption firefoxSuggestOptionDescription"
-                   data-l10n-id="addressbar-firefox-suggest-sponsored-description"/>
+      <html:moz-toggle id="firefoxSuggestSponsoredToggle"
+                       preference="browser.urlbar.suggest.quicksuggest.sponsored"
+                       data-l10n-id="addressbar-firefox-suggest-sponsored"
+                       data-l10n-attrs="label, description" />
     </vbox>
     <vbox class="firefoxSuggestOptionBox">
-      <hbox align="center">
-        <label id="firefoxSuggestDataCollectionLabel"
-               flex="1"
-               data-l10n-id="addressbar-firefox-suggest-data-collection"/>
-        <html:input id="firefoxSuggestDataCollectionToggle"
-                    type="checkbox"
-                    class="toggle-button firefoxSuggestToggle"
-                    preference="browser.urlbar.quicksuggest.dataCollection.enabled"
-                    form="firefoxSuggestForm"
-                    aria-labelledby="firefoxSuggestDataCollectionLabel"
-                    aria-describedby="firefoxSuggestDataCollectionDescription"/>
-      </hbox>
-      <description class="tip-caption firefoxSuggestOptionDescription">
-        <html:span id="firefoxSuggestDataCollectionDescription"
-                   class="tail-with-learn-more"
-                   data-l10n-id="addressbar-firefox-suggest-data-collection-description"/>
-        <html:a is="moz-support-link"
+      <html:moz-toggle id="firefoxSuggestDataCollectionToggle"
+                       preference="browser.urlbar.quicksuggest.dataCollection.enabled"
+                       data-l10n-id="addressbar-firefox-suggest-data-collection"
+                       data-l10n-attrs="label, description">
+        <html:a slot="support-link"
+                is="moz-support-link"
                 id="firefoxSuggestDataCollectionLearnMore"
                 class="learnMore firefoxSuggestLearnMore"
                 data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"
                 support-page="firefox-suggest"
         />
-      </description>
+      </html:moz-toggle>
     </vbox>
     <hbox id="firefoxSuggestInfoBox" class="info-box-container" align="start"
           hidden="true">
