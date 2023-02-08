@@ -32,8 +32,8 @@
       is(type == "chrome" || type == "content", true, "Unexpected type");
       b.setAttribute("type", type);
       b.setAttribute("id", id);
-      b.setAttribute("width", width);
-      b.setAttribute("height", height);
+      b.style.width = width + "px";
+      b.style.height = height + "px";
       $(parent).appendChild(b);
     }
     addBrowser("box1", "f1", 300, 200);
