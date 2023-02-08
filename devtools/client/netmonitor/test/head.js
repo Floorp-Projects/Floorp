@@ -214,16 +214,21 @@ registerCleanupFunction(() => {
   Services.cookies.removeAll();
 });
 
-async function toggleCache(toolbox, disabled) {
-  const options = { cacheDisabled: disabled };
-
+async function disableCacheAndReload(toolbox, waitForLoad) {
   // Disable the cache for any toolbox that it is opened from this point on.
-  Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
+  Services.prefs.setBoolPref("devtools.cache.disabled", true);
 
-  await toolbox.commands.targetConfigurationCommand.updateConfiguration(
-    options
-  );
-  await toolbox.commands.targetCommand.reloadTopLevelTarget();
+  await toolbox.commands.targetConfigurationCommand.updateConfiguration({
+    cacheDisabled: true,
+  });
+
+  // If the page which is reloaded is not found, this will likely cause
+  // reloadTopLevelTarget to not return so let not wait for it.
+  if (waitForLoad) {
+    await toolbox.commands.targetCommand.reloadTopLevelTarget();
+  } else {
+    toolbox.commands.targetCommand.reloadTopLevelTarget();
+  }
 }
 
 /**
@@ -310,7 +315,12 @@ async function waitForAllNetworkUpdateEvents() {
 
 function initNetMonitor(
   url,
-  { requestCount, expectedEventTimings, enableCache = false }
+  {
+    requestCount,
+    expectedEventTimings,
+    waitForLoad = true,
+    enableCache = false,
+  }
 ) {
   info("Initializing a network monitor pane.");
 
@@ -330,7 +340,7 @@ function initNetMonitor(
       ],
     });
 
-    const tab = await addTab(url);
+    const tab = await addTab(url, { waitForLoad });
     info("Net tab added successfully: " + url);
 
     const toolbox = await gDevTools.showToolboxForTab(tab, {
@@ -345,12 +355,18 @@ function initNetMonitor(
     if (!enableCache) {
       info("Disabling cache and reloading page.");
 
-      const requestsDone = waitForNetworkEvents(monitor, requestCount, {
-        expectedEventTimings,
-      });
-      const markersDone = waitForTimelineMarkers(monitor);
-      await toggleCache(toolbox, true);
-      await Promise.all([requestsDone, markersDone]);
+      const allComplete = [];
+      allComplete.push(
+        waitForNetworkEvents(monitor, requestCount, {
+          expectedEventTimings,
+        })
+      );
+
+      if (waitForLoad) {
+        allComplete.push(waitForTimelineMarkers(monitor));
+      }
+      await disableCacheAndReload(toolbox, waitForLoad);
+      await Promise.all(allComplete);
       await clearNetworkEvents(monitor);
     }
 
