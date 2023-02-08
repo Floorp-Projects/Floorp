@@ -13,16 +13,20 @@
   opacity: 0.4
 }
 
-button,
-label {
+.toggle-button,
+.label-wrapper {
   grid-row: 1;
 }
 
-p {
-  grid-row: 2;
-  font-size: .85em;
-  line-height: 1.25;
+.description-wrapper {
   color: var(--in-content-deemphasized-text);
+}
+
+.description-wrapper,
+.description-wrapper ::slotted([slot="support-link"]) {
+  grid-row: 2;
+  font-size: 0.867rem;
+  line-height: 1.25;
   margin: 0;
   grid-column: 1 / -1;
 }

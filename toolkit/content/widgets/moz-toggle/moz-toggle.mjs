@@ -15,6 +15,7 @@ import { MozLitElement } from "../lit-utils.mjs";
  * @property {string} description - The description text.
  * @property {string} ariaLabel
  *  The aria-label text for cases where there is no visible label.
+ * @slot support-link - Used to append a moz-support-link to the description.
  * @fires toggle
  *  Custom event indicating that the toggle's pressed state has changed.
  */
@@ -69,9 +70,12 @@ export default class MozToggle extends MozLitElement {
   labelTemplate() {
     if (this.label) {
       return html`
-        <label id="moz-toggle-label" part="label" for="moz-toggle-button">
-          ${this.label}
-        </label>
+        <span class="label-wrapper">
+          <label id="moz-toggle-label" part="label" for="moz-toggle-button">
+            ${this.label}
+          </label>
+          ${!this.description ? this.supportLinkTemplate() : ""}
+        </span>
       `;
     }
     return "";
@@ -80,19 +84,29 @@ export default class MozToggle extends MozLitElement {
   descriptionTemplate() {
     if (this.description) {
       return html`
-        <p id="moz-toggle-description" part="description">
-          ${this.description}
+        <p
+          id="moz-toggle-description"
+          class="description-wrapper"
+          part="description"
+        >
+          ${this.description} ${this.supportLinkTemplate()}
         </p>
       `;
     }
     return "";
   }
 
+  supportLinkTemplate() {
+    return html`
+      <slot name="support-link"></slot>
+    `;
+  }
+
   render() {
     const { pressed, disabled, description, ariaLabel, handleClick } = this;
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
-      ${this.labelTemplate()} ${this.descriptionTemplate()}
+      ${this.labelTemplate()}
       <button
         id="moz-toggle-button"
         part="button"
@@ -106,6 +120,7 @@ export default class MozToggle extends MozLitElement {
         )}
         @click=${handleClick}
       ></button>
+      ${this.descriptionTemplate()}
     `;
   }
 }
