@@ -1957,7 +1957,9 @@ export var PlacesUtils = {
     // The IGNORE conflict can trigger on `guid`.
     await db.executeCached(
       `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
-      VALUES (:url, hash(:url), :rev_host, 0, :frecency,
+      VALUES (:url, hash(:url), :rev_host,
+              (CASE WHEN :url BETWEEN 'place:' AND 'place:' || X'FFFF' THEN 1 ELSE 0 END),
+              :frecency,
               IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
                       GENERATE_GUID()))
       `,
@@ -1986,7 +1988,9 @@ export var PlacesUtils = {
   async maybeInsertManyPlaces(db, urls) {
     await db.executeCached(
       `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) VALUES
-     (:url, hash(:url), :rev_host, 0, :frecency,
+     (:url, hash(:url), :rev_host,
+     (CASE WHEN :url BETWEEN 'place:' AND 'place:' || X'FFFF' THEN 1 ELSE 0 END),
+     :frecency,
      IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :maybeguid))`,
       urls.map(url => ({
         url: url.href,

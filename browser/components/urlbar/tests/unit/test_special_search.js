@@ -66,6 +66,8 @@ add_task(async function test_special_searches() {
   await PlacesTestUtils.addBookmarkWithDetails({ uri: uri6, title: "foo.bar" });
   await PlacesTestUtils.addBookmarkWithDetails({ uri: uri5, title: "title" });
 
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
   // Order of frecency when not restricting, descending:
   // uri11
   // uri1
@@ -378,6 +380,7 @@ add_task(async function test_special_searches() {
     uri: "http://bookmark.conflict.com/",
     title: `conflict ${UrlbarTokenizer.RESTRICT.HISTORY}`,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   context = createContext(
     `conflict ${UrlbarTokenizer.RESTRICT.HISTORY} ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
     { isPrivate: false }
@@ -408,6 +411,7 @@ add_task(async function test_special_searches() {
     uri: "http://nontag.conflict.com/",
     title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   context = createContext(
     `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG}`,
     { isPrivate: false }

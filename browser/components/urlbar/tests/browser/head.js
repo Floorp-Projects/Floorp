@@ -26,6 +26,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+  return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  ).wrappedJSObject;
 });
 
 let sandbox;
@@ -34,8 +41,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
   this
 );
-
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 registerCleanupFunction(async () => {
   // Ensure the Urlbar popup is always closed at the end of a test, to save having

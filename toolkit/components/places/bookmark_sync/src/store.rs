@@ -537,7 +537,8 @@ fn update_local_items_in_places<'t>(
         let mut statement = db.prepare(format!(
             "INSERT OR IGNORE INTO moz_places(url, url_hash, rev_host, hidden,
                                               frecency, guid)
-             SELECT u.url, u.hash, u.revHost, 0,
+             SELECT u.url, u.hash, u.revHost,
+                    (CASE WHEN u.url BETWEEN 'place:' AND 'place:' || X'FFFF' THEN 1 ELSE 0 END),
                     (CASE v.kind WHEN {} THEN 0 ELSE -1 END),
                     IFNULL((SELECT h.guid FROM moz_places h
                             WHERE h.url_hash = u.hash AND

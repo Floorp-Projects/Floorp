@@ -848,6 +848,7 @@ add_autofill_task(async function bookmarkBelowThreshold() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Make sure the bookmarked origin and place frecencies are below the
   // threshold so that the origin/URL otherwise would not be autofilled.
@@ -897,6 +898,7 @@ add_autofill_task(async function bookmarkAboveThreshold() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // The frecencies of the place and origin should be >= the threshold.  In
   // fact they should be the same as the threshold since the place is the only
@@ -935,6 +937,7 @@ add_autofill_task(async function zeroThreshold() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: pageUrl,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await PlacesUtils.history.clear();
   await PlacesUtils.withConnectionWrapper("zeroThreshold", async db => {
@@ -1106,6 +1109,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_0() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Make the bookmark fall below the autofill frecency threshold so we ensure
   // the bookmark is always autofilled in this case, even if it doesn't meet
@@ -1159,6 +1163,8 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_1() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://non-matching-" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
   let context = createContext(search, { isPrivate: false });
   let matches = [
     makeBookmarkResult(context, {
@@ -1210,6 +1216,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_0() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Make the bookmark fall below the autofill frecency threshold so we ensure
   // the bookmark is always autofilled in this case, even if it doesn't meet
@@ -1233,6 +1240,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_0() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let context = createContext("http://" + search, { isPrivate: false });
   await check_results({
     context,
@@ -1266,6 +1274,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_1() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "ftp://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1305,6 +1314,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_2() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://non-matching-" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1344,6 +1354,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_3() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "ftp://non-matching-" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1609,6 +1620,7 @@ add_autofill_task(async function suggestBookmarkFalse_unvisitedBookmark() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -1670,6 +1682,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
       context,
@@ -1720,6 +1733,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -1757,6 +1771,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -1794,6 +1809,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -1831,6 +1847,7 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmark_above() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
   let context = createContext(search, { isPrivate: false });
   await check_results({
@@ -1866,6 +1883,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -1902,6 +1920,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -1945,6 +1964,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -1988,6 +2008,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     let context = createContext("http://" + search, { isPrivate: false });
     let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
@@ -2067,6 +2088,7 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmarkBelow() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
   context = createContext(search, { isPrivate: false });
   await check_results({
@@ -2143,6 +2165,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2223,6 +2246,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2303,6 +2327,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2383,6 +2408,7 @@ add_autofill_task(
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
     context = createContext("http://" + search, { isPrivate: false });
     await check_results({

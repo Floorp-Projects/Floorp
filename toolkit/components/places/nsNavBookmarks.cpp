@@ -401,13 +401,6 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
                           aNewBookmarkId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If not a tag, recalculate frecency for this entry, since it changed.
-  int64_t tagsRootId = mDB->GetTagsFolderId();
-  if (grandParentId != tagsRootId) {
-    rv = history->UpdateFrecency(placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -418,6 +411,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
   Sequence<OwningNonNull<PlacesEvent>> notifications;
   nsAutoCString utf8spec;
   aURI->GetSpec(utf8spec);
+  int64_t tagsRootId = mDB->GetTagsFolderId();
 
   RefPtr<PlacesBookmarkAddition> bookmark = new PlacesBookmarkAddition();
   bookmark->mItemType = TYPE_BOOKMARK;
@@ -430,7 +424,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
   bookmark->mGuid.Assign(guid);
   bookmark->mParentGuid.Assign(folderGuid);
   bookmark->mSource = aSource;
-  bookmark->mIsTagging = grandParentId == mDB->GetTagsFolderId();
+  bookmark->mIsTagging = grandParentId == tagsRootId;
   bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
   MOZ_RELEASE_ASSERT(success);
 
@@ -538,13 +532,6 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
 
   nsCOMPtr<nsIURI> uri;
   if (bookmark.type == TYPE_BOOKMARK) {
-    // If not a tag, recalculate frecency for this entry, since it changed.
-    if (bookmark.grandParentId != tagsRootId) {
-      nsNavHistory* history = nsNavHistory::GetHistoryService();
-      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      rv = history->UpdateFrecency(bookmark.placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
     // A broken url should not interrupt the removal process.
     (void)NS_NewURI(getter_AddRefs(uri), bookmark.url);
     // We cannot assert since some automated tests are checking this path.
@@ -866,13 +853,6 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
 
     nsCOMPtr<nsIURI> uri;
     if (child.type == TYPE_BOOKMARK) {
-      // If not a tag, recalculate frecency for this entry, since it changed.
-      if (child.grandParentId != tagsRootId) {
-        nsNavHistory* history = nsNavHistory::GetHistoryService();
-        NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-        rv = history->UpdateFrecency(child.placeId);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
       // A broken url should not interrupt the removal process.
       (void)NS_NewURI(getter_AddRefs(uri), child.url);
       // We cannot assert since some automated tests are checking this path.

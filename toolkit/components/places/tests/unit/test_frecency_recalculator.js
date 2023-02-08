@@ -3,10 +3,6 @@
 
 // Test PlacesFrecencyRecalculator scheduling.
 
-var svc = Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
-  Ci.nsIObserver
-).wrappedJSObject;
-
 async function getOriginFrecency(origin) {
   let db = await PlacesUtils.promiseDBConnection();
   return (
@@ -60,10 +56,16 @@ async function addVisitsAndSetRecalc(urls) {
 
 add_task(async function test() {
   info("On startup a recalculation is always pending.");
-  Assert.ok(svc.isRecalculationPending, "Recalculation should be pending");
+  Assert.ok(
+    PlacesFrecencyRecalculator.isRecalculationPending,
+    "Recalculation should be pending"
+  );
   // If everything gets recalculated, then it should not be pending anymore.
-  await svc.recalculateAnyOutdatedFrecencies();
-  Assert.ok(!svc.isRecalculationPending, "Recalculation should not be pending");
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  Assert.ok(
+    !PlacesFrecencyRecalculator.isRecalculationPending,
+    "Recalculation should not be pending"
+  );
 
   // If after a recalculation there's outdated entries left, a new recalculation
   // should be pending.
@@ -74,10 +76,16 @@ add_task(async function test() {
   await resetOriginFrecency(url1.host);
   await resetOriginFrecency(url2.host);
 
-  await svc.recalculateSomeFrecencies({ chunkSize: 1 });
-  Assert.ok(svc.isRecalculationPending, "Recalculation should be pending");
-  await svc.recalculateSomeFrecencies({ chunkSize: 2 });
-  Assert.ok(!svc.isRecalculationPending, "Recalculation should not be pending");
+  await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 1 });
+  Assert.ok(
+    PlacesFrecencyRecalculator.isRecalculationPending,
+    "Recalculation should be pending"
+  );
+  await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 2 });
+  Assert.ok(
+    !PlacesFrecencyRecalculator.isRecalculationPending,
+    "Recalculation should not be pending"
+  );
 
   Assert.greater(await getOriginFrecency(url1.host), 0);
   Assert.greater(await getOriginFrecency(url2.host), 0);
@@ -97,17 +105,26 @@ add_task(async function test() {
     PlacesUtils.history.shouldStartFrecencyRecalculation,
     "Should have set shouldStartFrecencyRecalculation"
   );
-  svc.maybeStartFrecencyRecalculation();
-  Assert.ok(svc.isRecalculationPending, "Recalculation should be pending");
+  PlacesFrecencyRecalculator.maybeStartFrecencyRecalculation();
+  Assert.ok(
+    PlacesFrecencyRecalculator.isRecalculationPending,
+    "Recalculation should be pending"
+  );
 });
 
 add_task(async function test_idle_notifications() {
   const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-  let spyStart = sinon.spy(svc, "startRecalculationCheckInterval");
-  let spyStop = sinon.spy(svc, "stopRecalculationCheckInterval");
-  svc.observe(null, "idle", "");
+  let spyStart = sinon.spy(
+    PlacesFrecencyRecalculator,
+    "startRecalculationCheckInterval"
+  );
+  let spyStop = sinon.spy(
+    PlacesFrecencyRecalculator,
+    "stopRecalculationCheckInterval"
+  );
+  PlacesFrecencyRecalculator.observe(null, "idle", "");
   Assert.ok(!spyStart.calledOnce, "Start callback has not been invoked");
   Assert.ok(spyStop.calledOnce, "Stop callback has been invoked");
-  svc.observe(null, "active", "");
+  PlacesFrecencyRecalculator.observe(null, "active", "");
   Assert.ok(spyStop.calledOnce, "Start callback has been invoked");
 });

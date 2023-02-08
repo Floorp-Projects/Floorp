@@ -251,6 +251,7 @@ add_task(async function mixed_results() {
     url: "http://example.com/2",
     title: "what time is",
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Tail suggestions should not be shown.
   const query = "what time is";
