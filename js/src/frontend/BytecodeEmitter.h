@@ -208,7 +208,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Context shared between parsing and bytecode generation.
   SharedContext* const sc = nullptr;
 
-  JSContext* const cx = nullptr;
   FrontendContext* const fc = nullptr;
 
   JS::NativeStackLimit stackLimit;

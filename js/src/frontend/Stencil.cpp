@@ -2970,8 +2970,7 @@ bool SharedDataContainer::convertFromSingleToMap(FrontendContext* fc) {
   return true;
 }
 
-bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
-                                      ScriptIndex index,
+bool SharedDataContainer::addAndShare(FrontendContext* fc, ScriptIndex index,
                                       js::SharedImmutableScriptData* data) {
   MOZ_ASSERT(!isBorrow());
 
