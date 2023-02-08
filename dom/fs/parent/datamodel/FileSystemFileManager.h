@@ -129,11 +129,21 @@ class FileSystemFileManager {
 
   /**
    * @brief Remove the disk-backed file object for a specified entry id.
+   * Note: The returned value is 0 in release builds.
    *
    * @param aEntryId  Specified id of a file system entry
-   * @return Result<int64_t, QMResult> Error or file size
+   * @return Result<Usage, QMResult> Error or file size
    */
-  Result<int64_t, QMResult> RemoveFile(const EntryId& aEntryId);
+  Result<Usage, QMResult> RemoveFile(const EntryId& aEntryId);
+
+  /**
+   * @brief This method can be used to try to delete a group of files from the
+   * disk. In debug builds, the sum of the usages is provided ad return value,
+   * in release builds the sum is not calculated.
+   * The method attempts to remove all the files requested.
+   */
+  Result<DebugOnly<Usage>, QMResult> RemoveFiles(
+      const nsTArray<EntryId>& aEntryIds, nsTArray<EntryId>& aRemoveFails);
 
  private:
   explicit FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory);

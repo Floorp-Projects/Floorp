@@ -35,6 +35,14 @@ namespace data {
 class FileSystemDatabaseManager {
  public:
   /**
+   * @brief Updates stored usage data for all tracked files.
+   *
+   * @return nsresult error code
+   */
+  static nsresult RescanUsages(const ResultConnection& aConnection,
+                               const Origin& aOrigin);
+
+  /**
    * @brief Obtains the current total usage for origin and connection.
    *
    * @return Result<quota::UsageInfo, QMResult> On success,
@@ -140,6 +148,16 @@ class FileSystemDatabaseManager {
    * @brief Close database connection.
    */
   virtual void Close() = 0;
+
+  /**
+   * @brief Start tracking file's usage.
+   */
+  virtual nsresult BeginUsageTracking(const EntryId& aEntryId) = 0;
+
+  /**
+   * @brief Stop tracking file's usage.
+   */
+  virtual nsresult EndUsageTracking(const EntryId& aEntryId) = 0;
 
   virtual ~FileSystemDatabaseManager() = default;
 };

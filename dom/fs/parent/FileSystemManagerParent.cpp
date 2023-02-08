@@ -186,10 +186,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  if (!mDataManager->LockShared(aRequest.entryId())) {
-    aResolver(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    return IPC_OK();
-  }
+  QM_TRY(MOZ_TO_RESULT(mDataManager->LockShared(aRequest.entryId())), IPC_OK(),
+         ([aResolver](const nsresult& aRv) { aResolver(aRv); }));
 
   auto autoUnlock =
       MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {

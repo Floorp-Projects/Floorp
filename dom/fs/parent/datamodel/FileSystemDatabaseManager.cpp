@@ -19,6 +19,29 @@
 namespace mozilla::dom::fs::data {
 
 /* static */
+nsresult FileSystemDatabaseManager::RescanUsages(
+    const ResultConnection& aConnection, const Origin& aOrigin) {
+  DatabaseVersion version = 0;
+  QM_TRY(MOZ_TO_RESULT(aConnection->GetSchemaVersion(&version)));
+
+  switch (version) {
+    case 0: {
+      return NS_OK;
+    }
+
+    case 1: {
+      return FileSystemDatabaseManagerVersion001::RescanTrackedUsages(
+          aConnection, aOrigin);
+    }
+
+    default:
+      break;
+  }
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* static */
 Result<quota::UsageInfo, QMResult> FileSystemDatabaseManager::GetUsage(
     const ResultConnection& aConnection, const Origin& aOrigin) {
   QM_TRY_INSPECT(const auto& databaseFile, GetDatabaseFile(aOrigin));

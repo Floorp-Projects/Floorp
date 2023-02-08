@@ -348,15 +348,21 @@ bool FileSystemDataManager::IsLocked(const EntryId& aEntryId) const {
   return mExclusiveLocks.Contains(aEntryId);
 }
 
-bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
+nsresult FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
   if (IsLocked(aEntryId)) {
-    return false;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
+
+  // If the file has been removed, we should get a file not found error.
+  // Otherwise, if usage tracking cannot be started because file size is not
+  // known and attempts to read it are failing, lock is denied to freeze the
+  // quota usage until the (external) blocker is gone or the file is removed.
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->BeginUsageTracking(aEntryId)));
 
   LOG_VERBOSE(("ExclusiveLock"));
   mExclusiveLocks.Insert(aEntryId);
 
-  return true;
+  return NS_OK;
 }
 
 void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
@@ -365,10 +371,13 @@ void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
   LOG_VERBOSE(("ExclusiveUnlock"));
   mExclusiveLocks.Remove(aEntryId);
 
-  QM_WARNONLY_TRY(MOZ_TO_RESULT(mDatabaseManager->UpdateUsage(aEntryId)));
+  // On error, usage tracking remains on to prevent writes until usage is
+  // updated successfully.
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->UpdateUsage(aEntryId)), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->EndUsageTracking(aEntryId)), QM_VOID);
 }
 
-bool FileSystemDataManager::LockShared(const EntryId& aEntryId) {
+nsresult FileSystemDataManager::LockShared(const EntryId& aEntryId) {
   return LockExclusive(aEntryId);
 }
 
