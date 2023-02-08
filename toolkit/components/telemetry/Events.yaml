@@ -124,12 +124,12 @@ aboutprivatebrowsing:
     record_in_processes: ["content"]
     description: >
       This is recorded when a user clicks a link on the private browsing newtab.
-    bug_numbers: [1709344, 1754635]
+    bug_numbers: [1709344, 1754635, 1781973, 1811146]
     notification_emails:
       - "dmosedale@mozilla.com"
       - "barret@mozilla.com"
       - "omc@mozilla.com"
-    expiry_version: "112"
+    expiry_version: "118"
     products:
       - "firefox"
 
