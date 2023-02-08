@@ -50,33 +50,16 @@ function codegenTestX86_adhoc(module_text, export_name, expected, options = {}) 
 
     let ins = wasmEvalText(module_text);
     let output = wasmDis(ins.exports[export_name], {tier:"ion", asString:true});
-
-    const expected_initial = expected;
     if (!options.no_prefix)
         expected = x86_prefix + '\n' + expected;
     if (!options.no_suffix)
         expected = expected + '\n' + x86_suffix;
     expected = fixlines(expected);
-
-    const output_matches_expected = output.match(new RegExp(expected)) != null;
-    if (!output_matches_expected) {
-        print("---- codegen-x86-test.js: TEST FAILED ----");
-    }
-    if (options.log && output_matches_expected) {
-        print("---- codegen-x86-test.js: TEST PASSED ----");
-    }
-    if (options.log || !output_matches_expected) {
-        print("---- module text");
+    if (options.log) {
         print(module_text);
-        print("---- actual");
         print(output);
-        print("---- expected (initial)");
-        print(expected_initial);
-        print("---- expected (as used)");
         print(expected);
-        print("----");
     }
-
-    assertEq(output_matches_expected, true);
+    assertEq(output.match(new RegExp(expected)) != null, true);
 }
 

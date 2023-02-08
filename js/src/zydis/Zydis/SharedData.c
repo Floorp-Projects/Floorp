@@ -108,15 +108,17 @@ void ZydisGetInstructionDefinition(ZydisInstructionEncoding encoding, ZyanU16 id
 /* ---------------------------------------------------------------------------------------------- */
 
 #ifndef ZYDIS_MINIMAL_MODE
-const ZydisOperandDefinition* ZydisGetOperandDefinitions(
-    const ZydisInstructionDefinition* definition)
+ZyanU8 ZydisGetOperandDefinitions(const ZydisInstructionDefinition* definition,
+    const ZydisOperandDefinition** operand)
 {
     if (definition->operand_count == 0)
     {
-        return ZYAN_NULL;
+        *operand = ZYAN_NULL;
+        return 0;
     }
     ZYAN_ASSERT(definition->operand_reference != 0xFFFF);
-    return &OPERAND_DEFINITIONS[definition->operand_reference];
+    *operand = &OPERAND_DEFINITIONS[definition->operand_reference];
+    return definition->operand_count;
 }
 #endif
 
@@ -160,7 +162,7 @@ void ZydisGetElementInfo(ZydisInternalElementType element, ZydisElementType* typ
         { ZYDIS_ELEMENT_TYPE_CC       ,   5 }
     };
 
-    ZYAN_ASSERT((ZyanUSize)element < ZYAN_ARRAY_LENGTH(lookup));
+    ZYAN_ASSERT(element < ZYAN_ARRAY_LENGTH(lookup));
 
     *type = lookup[element].type;
     *size = lookup[element].size;
@@ -173,7 +175,7 @@ void ZydisGetElementInfo(ZydisInternalElementType element, ZydisElementType* typ
 
 #ifndef ZYDIS_MINIMAL_MODE
 ZyanBool ZydisGetAccessedFlags(const ZydisInstructionDefinition* definition,
-    const ZydisDefinitionAccessedFlags** flags)
+    const ZydisAccessedFlags** flags)
 {
     ZYAN_ASSERT(definition->flags_reference < ZYAN_ARRAY_LENGTH(ACCESSED_FLAGS));
     *flags = &ACCESSED_FLAGS[definition->flags_reference];
