@@ -34,6 +34,7 @@ dictionary RTCStats {
 dictionary RTCRtpStreamStats : RTCStats {
   required unsigned long ssrc;
   required DOMString kind;
+  DOMString mediaType;
   DOMString transportId;
   DOMString codecId;
 };
