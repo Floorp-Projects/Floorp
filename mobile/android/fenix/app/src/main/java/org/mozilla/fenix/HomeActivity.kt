@@ -994,14 +994,17 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         } else {
             if (newTab) {
-                components.useCases.searchUseCases.newTabSearch
-                    .invoke(
-                        searchTermOrURL,
-                        SessionState.Source.Internal.UserEntered,
-                        true,
-                        mode.isPrivate,
-                        searchEngine = engine,
-                    )
+                val searchUseCase = if (mode.isPrivate) {
+                    components.useCases.searchUseCases.newPrivateTabSearch
+                } else {
+                    components.useCases.searchUseCases.newTabSearch
+                }
+                searchUseCase.invoke(
+                    searchTermOrURL,
+                    SessionState.Source.Internal.UserEntered,
+                    true,
+                    searchEngine = engine,
+                )
             } else {
                 components.useCases.searchUseCases.defaultSearch.invoke(searchTermOrURL, engine)
             }
