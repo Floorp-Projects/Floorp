@@ -6107,6 +6107,10 @@ pocket:
     description: |
       User tapped a Pocket sponsored story to be opened.
     extra_keys:
+      spoc_id:
+        type: string
+        description: |
+          Id of the shown sponsored story.
       times_shown:
         type: string
         description: |
@@ -6118,7 +6122,9 @@ pocket:
           Uses the [row x column] matrix notation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25401
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1815160
     data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28796#issuecomment-1422818844
       - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
       - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
@@ -6157,6 +6163,10 @@ pocket:
       A particular Pocket sponsored story was visible more than 50%
       on the homescreen.
     extra_keys:
+      spoc_id:
+        type: string
+        description: |
+          Id of the shown sponsored story.
       times_shown:
         type: string
         description: |
@@ -6168,7 +6178,9 @@ pocket:
           Uses the [row x column] matrix notation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25401
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1815160
     data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/28796#issuecomment-1422818844
       - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
       - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:

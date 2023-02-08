@@ -85,6 +85,7 @@ internal class DefaultPocketStoriesController(
             is PocketSponsoredStory -> {
                 Pocket.homeRecsSpocShown.record(
                     Pocket.HomeRecsSpocShownExtra(
+                        spocId = storyShown.id.toString(),
                         position = "${storyPosition.first}x${storyPosition.second}",
                         timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString(),
                     ),
@@ -162,6 +163,7 @@ internal class DefaultPocketStoriesController(
             is PocketSponsoredStory -> {
                 Pocket.homeRecsSpocClicked.record(
                     Pocket.HomeRecsSpocClickedExtra(
+                        spocId = storyClicked.id.toString(),
                         position = "${storyPosition.first}x${storyPosition.second}",
                         timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString(),
                     ),

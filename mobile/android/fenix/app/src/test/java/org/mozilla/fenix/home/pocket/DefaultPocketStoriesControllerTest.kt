@@ -177,6 +177,7 @@ class DefaultPocketStoriesControllerTest {
         val storyShown: PocketSponsoredStory = mockk {
             every { shim.click } returns "testClickShim"
             every { shim.impression } returns "testImpressionShim"
+            every { id } returns 123
         }
         var wasPingSent = false
         mockkStatic("mozilla.components.service.pocket.ext.PocketStoryKt") {
@@ -195,6 +196,7 @@ class DefaultPocketStoriesControllerTest {
             assertNotNull(Pocket.homeRecsSpocShown.testGetValue())
             assertEquals(1, Pocket.homeRecsSpocShown.testGetValue()!!.size)
             val data = Pocket.homeRecsSpocShown.testGetValue()!!.single().extra
+            assertEquals("123", data?.entries?.first { it.key == "spoc_id" }?.value)
             assertEquals("1x2", data?.entries?.first { it.key == "position" }?.value)
             assertEquals("4", data?.entries?.first { it.key == "times_shown" }?.value)
             assertTrue(wasPingSent)
@@ -279,6 +281,7 @@ class DefaultPocketStoriesControllerTest {
             assertNotNull(Pocket.homeRecsSpocClicked.testGetValue())
             assertEquals(1, Pocket.homeRecsSpocClicked.testGetValue()!!.size)
             val data = Pocket.homeRecsSpocClicked.testGetValue()!!.single().extra
+            assertEquals("7", data?.entries?.first { it.key == "spoc_id" }?.value)
             assertEquals("2x3", data?.entries?.first { it.key == "position" }?.value)
             assertEquals("3", data?.entries?.first { it.key == "times_shown" }?.value)
             assertTrue(wasPingSent)
