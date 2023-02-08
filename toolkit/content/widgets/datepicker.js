@@ -276,12 +276,14 @@ function DatePicker(context) {
             case "Enter":
             case " ":
             case "Escape": {
-              if (
-                this.state.isMonthPickerVisible &&
-                this.context.monthYearView.contains(event.target)
-              ) {
-                // While the spinner on the month-year picker panel is focused,
-                // keep the spinner's selection and close the month picker dialog
+              // If the target is a toggle or a spinner on the month-year panel
+              const isOnMonthPicker = this.context.monthYearView.parentNode.contains(
+                event.target
+              );
+
+              if (this.state.isMonthPickerVisible && isOnMonthPicker) {
+                // While a control on the month-year picker panel is focused,
+                // keep the spinner's selection and close the month-year dialog
                 event.stopPropagation();
                 event.preventDefault();
                 this.state.toggleMonthPicker();
