@@ -347,12 +347,7 @@ export var PlacesDBUtils = {
                 url = OLD.url;
 
           /* Recalculate frecency for the destination. */
-          UPDATE moz_places SET
-            frecency = calculate_frecency(id)
-          WHERE id = OLD.id;
-
-          /* Trigger frecency updates for affected origins. */
-          DELETE FROM moz_updateoriginsupdate_temp;
+          UPDATE moz_places SET recalc_frecency = 1 WHERE id = OLD.id;
         END`,
       },
       {
