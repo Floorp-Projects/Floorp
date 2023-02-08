@@ -47,6 +47,13 @@
 
 namespace mozilla {
 
+const char* BasePrincipal::JSONEnumKeyStrings[4] = {
+    "0",
+    "1",
+    "2",
+    "3",
+};
+
 BasePrincipal::BasePrincipal(PrincipalKind aKind,
                              const nsACString& aOriginNoSuffix,
                              const OriginAttributes& aOriginAttributes)
@@ -398,8 +405,10 @@ nsresult BasePrincipal::ToJSON(nsACString& aJSON) {
 }
 
 nsresult BasePrincipal::ToJSON(Json::Value& aObject) {
-  std::string key = std::to_string(Kind());
-  nsresult rv = PopulateJSONObject((aObject[key] = Json::objectValue));
+  static_assert(eKindMax < ArrayLength(JSONEnumKeyStrings));
+  nsresult rv = PopulateJSONObject(
+      (aObject[Json::StaticString(JSONEnumKeyStrings[Kind()])] =
+           Json::objectValue));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1586,6 +1595,13 @@ BasePrincipal::Deserializer::Write(nsIObjectOutputStream* aStream) {
   // Read is used still for legacy principals
   MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
   return NS_OK;
+}
+
+/* static */
+void BasePrincipal::SetJSONValue(Json::Value& aObject, const char* aKey,
+                                 const nsCString& aValue) {
+  aObject[Json::StaticString(aKey)] =
+      Json::Value(aValue.BeginReading(), aValue.EndReading());
 }
 
 }  // namespace mozilla
