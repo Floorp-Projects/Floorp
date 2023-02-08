@@ -50,6 +50,11 @@ const TESTS = [
     expectedAdKey: "example:tagged",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+    },
   },
   {
     title: "Tagged follow-on",
@@ -58,6 +63,11 @@ const TESTS = [
     expectedAdKey: "example:tagged-follow-on",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "true",
+      partner_code: "tb",
+    },
   },
   {
     title: "Organic search matched code",
@@ -66,6 +76,11 @@ const TESTS = [
     expectedAdKey: "example:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "false",
+      partner_code: "foo",
+    },
   },
   {
     title: "Organic search non-matched code",
@@ -74,6 +89,11 @@ const TESTS = [
     expectedAdKey: "example:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "false",
+      partner_code: "other",
+    },
   },
   {
     title: "Organic search non-matched code 2",
@@ -82,6 +102,11 @@ const TESTS = [
     expectedAdKey: "example:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "false",
+      partner_code: "other",
+    },
   },
   {
     title: "Organic search expected organic matched code",
@@ -90,6 +115,11 @@ const TESTS = [
     expectedAdKey: "example:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "false",
+      partner_code: "",
+    },
   },
   {
     title: "Organic search no codes",
@@ -98,6 +128,11 @@ const TESTS = [
     expectedAdKey: "example:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "false",
+      partner_code: "",
+    },
   },
   {
     title: "Different engines using the same adUrl",
@@ -106,6 +141,11 @@ const TESTS = [
     expectedAdKey: "example2:organic",
     adUrls: ["https://www.example.com/ad2"],
     nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example2",
+      tagged: "false",
+      partner_code: "",
+    },
   },
 ];
 
@@ -161,6 +201,11 @@ do_get_profile();
 
 add_task(async function setup() {
   Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "serpEventTelemetry.enabled",
+    true
+  );
+  Services.fog.initializeFOG();
   await SearchSERPTelemetry.init();
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   sinon.stub(BrowserSearchTelemetry, "shouldRecordSearchCount").returns(true);
@@ -195,8 +240,36 @@ add_task(async function test_parsing_search_urls() {
       }
     }
 
+    let recordedEvents = Glean.serp.impression.testGetValue();
+
+    Assert.equal(
+      recordedEvents.length,
+      1,
+      "should only see one impression event"
+    );
+
+    let recordedEvent = recordedEvents[0].extra;
+    Assert.equal(
+      recordedEvent.partner_code,
+      test.impression.partner_code,
+      "should see the correct partner code"
+    );
+    Assert.equal(
+      recordedEvent.tagged,
+      test.impression.tagged,
+      "should see the correct tagged value"
+    );
+    Assert.equal(
+      recordedEvent.provider,
+      test.impression.provider,
+      "should see the correct provider"
+    );
+
     if (test.tearDown) {
       test.tearDown();
     }
+
+    // We need to clear Glean events so they don't accumulate for each iteration.
+    Services.fog.testResetFOG();
   }
 });
