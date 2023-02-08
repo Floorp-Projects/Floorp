@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
   // thread priorities.
   return true;
+#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
+  // Only realtime audio uses realtime scheduling in Firefox.
+  return true;
 #else
   const int policy = SCHED_FIFO;
   const int min_prio = sched_get_priority_min(policy);
