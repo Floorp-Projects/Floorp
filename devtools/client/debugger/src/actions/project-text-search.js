@@ -10,7 +10,6 @@
 import { isFulfilled } from "../utils/async-value";
 import {
   getFirstSourceActorForGeneratedSource,
-  hasPrettySource,
   getSourceList,
   getSettledSourceTextContent,
 } from "../selectors";
@@ -85,10 +84,7 @@ export function searchSources(cx, query) {
     await dispatch(clearSearchResults(cx));
     await dispatch(addSearchQuery(cx, query));
     dispatch(updateSearchStatus(cx, statusType.fetching));
-    const validSources = getSourceList(getState()).filter(
-      source => !hasPrettySource(getState(), source.id)
-    );
-
+    let validSources = getSourceList(getState());
     // Sort original entries first so that search results are more useful.
     // Deprioritize third-party scripts, so their results show last.
     validSources.sort((a, b) => {
