@@ -11513,9 +11513,8 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // Verify that the Regexp will syntax parse when the time comes to
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
-    if (!irregexp::CheckPatternSyntax(cx_->tempLifoAlloc(), this->stackLimit_,
-                                      anyChars, range, flags, Some(line),
-                                      Some(column))) {
+    if (!irregexp::CheckPatternSyntax(this->alloc_, this->stackLimit_, anyChars,
+                                      range, flags, Some(line), Some(column))) {
       return nullptr;
     }
   }
@@ -11555,9 +11554,8 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   tokenStream.computeLineAndColumn(offset, &line, &column);
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
-  if (!irregexp::CheckPatternSyntax(cx_->tempLifoAlloc(), this->stackLimit_,
-                                    anyChars, source, flags, Some(line),
-                                    Some(column))) {
+  if (!irregexp::CheckPatternSyntax(this->alloc_, this->stackLimit_, anyChars,
+                                    source, flags, Some(line), Some(column))) {
     return null();
   }
 
