@@ -85,7 +85,7 @@
     <string name="open_in_app_cfr_negative_button_text">Zaćisnyć</string>
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Zaćisnyć</string>
+    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Zaćisnyć</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -293,6 +293,9 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title">Zdźělenki wam pomhaja, wjace z %s činić</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Synchronizujće swoje rajtarki mjez gratami, rjadujće sćehnjenja, dóstańće pokiwy, zo byšće móhł škit priwatnosće %s najlěpje zwužitkować, a wjace.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Dale</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -358,6 +361,10 @@
     <string name="reduce_cookie_banner_option_off">Wupinjeny</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Zapinjeny</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox awtomatisce pospytuje, plackowe naprašowanja na plackowych chorhojach wotpokazać. Jeli nastajenje wotpokazanja k dispoziciji njeje, móže Firefox wšě placki akceptować, zo by chorhoj zaćisnył.</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s awtomatisce pospytuje, plackowe naprašowanja na plackowych chorhojach wotpokazać.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Za tute sydło znjemóžnjeny</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -368,12 +375,18 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Redukowanje plackowych chorhojow za %1$s zmóžnić?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Redukowanje plackowych chorhojow za %1$s znjemóžnić?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s placki sydła zhaša a budźe stronu aktualizować. Zhašenje wšěch plackow móže was přizjewić abo nakupowanske wozyčki wuprózdnić.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s móže spytać, plackowe naprašowanja awtomatisce wotpokazać. Jeli nastajenje wotpokazanja k dispoziciji njeje, móže %2$s wšě placki akceptować, zo by chorhoj zaćisnył.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s móže plackowe naprašowanja awtomatisce wotpokazać.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s pospytuje wšě plackowe naprašowanja na podpěranych sydłach awtomatisce wotpokazać.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title">Preč z plackowymi chorhojemi!</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Wotpokazajće plackowe naprašowanje awtomatisce, hdyž móžno. Akceptujće hewak wšě placki, zo byšće plackowe chorhoje zaćisnył.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Plackowe naprašowanje awtomatisce wotpokazać, jeli móžno.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -387,12 +400,18 @@
     <string name="reduce_cookie_banner_dialog_snackbar_text">Budźeće mjenje plackowych naprašowanjow widźeć</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Mjenje plackowych wuskakowacych woknow widźeć</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Wotmołwće awtomatisce na plackowe wuskakowace wokna za přehladowanje bjez wotwjedźenja. %1$s wšě naprašowanja wotpokaza, jeli móžno, abo akceptujće wšě, jeli nic.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Wotmołwće awtomatisce na plackowe wuskakowace wokna za přehladowanje bjez wotwjedźenja. %1$s wšě naprašowanja wotpokaza, jeli móžno.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Wuskakowace wokna zaćisnyć</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Redukowanje plackowych chorhojow</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s dowolić, próstwu sydła wo přizwolenje plackoweho wobsaha wotpokazać, jeli móžno, abo přistup přez plack akceptować, jeli móžno njeje?</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">%1$s dowolić, naprašowanje sydła za plackowym přizwolenjom, jeli trjeba?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Dowolić</string>
 
@@ -699,6 +718,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">Slědowacu ličbu rajtarkow wočinić? %d</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Hdyž to wočinjeće, wjele rajtarkow %s spomaluje, mjeztym zo so strony začitaja. Chceće woprawdźe pokročować?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Wočinjene rajtarki</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1320,12 +1342,16 @@
     <string name="onboarding_message">Wobhladowak za ludźi, nic za dobytk.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Čińće tam dale, hdźež sće přestał</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Synchronizujće rajtarki a hesła přez graty za bjezposrědnju wuměnu wobrazowki.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Přizjewić</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Škit priwatnosće po standardźe</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Z dospołnym plackowym škitom, zo byšće tomu zadźěwał, zo přesćěhowaki placki wužiwaja, zo bychu was přez sydła přesćěhowali.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard</string>
     <!-- text for standard blocking option button description -->
