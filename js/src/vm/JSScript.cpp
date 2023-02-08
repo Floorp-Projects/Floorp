@@ -2167,8 +2167,7 @@ void JSScript::relazify(JSRuntime* rt) {
 // entry already exists and replaces the passed RefPtr with the existing entry.
 /* static */
 bool SharedImmutableScriptData::shareScriptData(
-    JSContext* cx, FrontendContext* fc,
-    RefPtr<SharedImmutableScriptData>& sisd) {
+    FrontendContext* fc, RefPtr<SharedImmutableScriptData>& sisd) {
   MOZ_ASSERT(sisd);
   MOZ_ASSERT(sisd->refCount() == 1);
 
@@ -2178,15 +2177,16 @@ bool SharedImmutableScriptData::shareScriptData(
   // counted, it also will be freed after releasing the lock if necessary.
   SharedImmutableScriptData::Hasher::Lookup lookup(data);
 
-  AutoLockScriptData lock(cx->runtime());
+  Maybe<AutoLockGlobalScriptData> lock;
+  js::SharedImmutableScriptDataTable& table =
+      fc->scriptDataTableHolder()->getMaybeLocked(lock);
 
-  SharedImmutableScriptDataTable::AddPtr p =
-      cx->scriptDataTable(lock).lookupForAdd(lookup);
+  SharedImmutableScriptDataTable::AddPtr p = table.lookupForAdd(lookup);
   if (p) {
     MOZ_ASSERT(data != *p);
     sisd = *p;
   } else {
-    if (!cx->scriptDataTable(lock).add(p, data)) {
+    if (!table.add(p, data)) {
       ReportOutOfMemory(fc);
       return false;
     }
@@ -2201,12 +2201,9 @@ bool SharedImmutableScriptData::shareScriptData(
   return true;
 }
 
-void js::SweepScriptData(JSRuntime* rt) {
+static void SweepScriptDataTable(SharedImmutableScriptDataTable& table) {
   // Entries are removed from the table when their reference count is one,
   // i.e. when the only reference to them is from the table entry.
-
-  AutoLockScriptData lock(rt);
-  SharedImmutableScriptDataTable& table = rt->scriptDataTable(lock);
 
   for (SharedImmutableScriptDataTable::Enum e(table); !e.empty();
        e.popFront()) {
@@ -2216,6 +2213,13 @@ void js::SweepScriptData(JSRuntime* rt) {
       e.removeFront();
     }
   }
+}
+
+void js::SweepScriptData(JSRuntime* rt) {
+  SweepScriptDataTable(rt->scriptDataTableHolder().getWithoutLock());
+
+  AutoLockGlobalScriptData lock;
+  SweepScriptDataTable(js::globalSharedScriptDataTableHolder.get(lock));
 }
 
 inline size_t PrivateScriptData::allocationSize() const { return endOffset(); }

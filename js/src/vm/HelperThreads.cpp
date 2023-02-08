@@ -557,10 +557,6 @@ void ParseTask::moveGCOutputInto(JS::InstantiationStorage& storage) {
   storage.gcOutput_ = gcOutput_.release();
 }
 
-void ParseTask::activate(JSRuntime* rt) { rt->addParseTaskRef(); }
-
-void ParseTask::deactivate(JSRuntime* rt) { rt->decParseTaskRef(); }
-
 ParseTask::~ParseTask() {
   // The LinkedListElement destructor will remove us from any list we are part
   // of without synchronization, so ensure that doesn't happen.
@@ -1041,9 +1037,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
 
 DelazifyTask::DelazifyTask(JSRuntime* runtime,
                            const JS::ContextOptions& options)
-    : runtime(runtime), contextOptions(options), merger() {
-  runtime->addParseTaskRef();
-}
+    : runtime(runtime), contextOptions(options), merger() {}
 
 DelazifyTask::~DelazifyTask() {
   // The LinkedListElement destructor will remove us from any list we are part
@@ -1441,8 +1435,6 @@ bool GlobalHelperThreadState::submitTask(
   if (!parseWorklist(locked).append(std::move(task))) {
     return false;
   }
-
-  parseWorklist(locked).back()->activate(rt);
 
   dispatch(DispatchReason::NewTask, locked);
   return true;
@@ -2424,7 +2416,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt,
   for (size_t i = 0; i < worklist.length(); i++) {
     if (task == worklist[i]) {
       MOZ_ASSERT(task->runtimeMatches(rt));
-      task->deactivate(rt);
       HelperThreadState().remove(worklist, &i);
       return;
     }
@@ -2462,7 +2453,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt,
 void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
                                                ParseTask* parseTask) {
   MOZ_ASSERT(!parseTask->isInList());
-  parseTask->deactivate(rt);
   js_delete(parseTask);
 }
 

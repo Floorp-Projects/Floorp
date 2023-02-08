@@ -2978,7 +2978,7 @@ bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
   if (isSingle()) {
     MOZ_ASSERT(index == CompilationStencil::TopLevelIndex);
     RefPtr<SharedImmutableScriptData> ref(data);
-    if (!SharedImmutableScriptData::shareScriptData(cx, fc, ref)) {
+    if (!SharedImmutableScriptData::shareScriptData(fc, ref)) {
       return false;
     }
     setSingle(ref.forget());
@@ -2989,7 +2989,7 @@ bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
     auto& vec = *asVector();
     // Resized by SharedDataContainer::prepareStorageFor.
     vec[index] = data;
-    return SharedImmutableScriptData::shareScriptData(cx, fc, vec[index]);
+    return SharedImmutableScriptData::shareScriptData(fc, vec[index]);
   }
 
   MOZ_ASSERT(isMap());
@@ -2998,7 +2998,7 @@ bool SharedDataContainer::addAndShare(JSContext* cx, FrontendContext* fc,
   map.putNewInfallible(index, data);
   auto p = map.lookup(index);
   MOZ_ASSERT(p);
-  return SharedImmutableScriptData::shareScriptData(cx, fc, p->value());
+  return SharedImmutableScriptData::shareScriptData(fc, p->value());
 }
 
 bool SharedDataContainer::addExtraWithoutShare(

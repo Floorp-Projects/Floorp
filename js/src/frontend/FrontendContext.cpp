@@ -125,6 +125,7 @@ void FrontendContext::setCurrentJSContext(JSContext* cx) {
 
   maybeCx_ = cx;
   nameCollectionPool_ = &cx->frontendCollectionPool();
+  scriptDataTableHolder_ = &cx->runtime()->scriptDataTableHolder();
 }
 
 void FrontendContext::convertToRuntimeError(
