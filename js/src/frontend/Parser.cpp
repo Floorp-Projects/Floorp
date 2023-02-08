@@ -283,7 +283,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, fc_, extent, compilationState_, inheritedDirectives, generatorKind,
+      fc_, extent, compilationState_, inheritedDirectives, generatorKind,
       asyncKind, isInitialStencil, explicitName, flags, index);
   if (!funbox) {
     ReportOutOfMemory(fc_);
@@ -318,7 +318,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, fc_, cachedScriptExtra.extent, compilationState_,
+      fc_, cachedScriptExtra.extent, compilationState_,
       Directives(/* strict = */ false), cachedScriptExtra.generatorKind(),
       cachedScriptExtra.asyncKind(), compilationState_.isInitialStencil(),
       cachedScriptData.functionAtom, cachedScriptData.functionFlags, index);
@@ -390,7 +390,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       /* len = */ 0, options().lineno, options().column);
   Directives directives(options().forceStrictMode());
-  GlobalSharedContext globalsc(cx_, this->fc_, ScopeKind::Global, options(),
+  GlobalSharedContext globalsc(this->fc_, ScopeKind::Global, options(),
                                directives, extent);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {

@@ -15,8 +15,6 @@
 #include "frontend/SharedContext.h"  // js::frontend::SharedContext
 #include "vm/Scope.h"                // js::ModuleScope
 
-struct JS_PUBLIC_API JSContext;
-
 namespace JS {
 class JS_PUBLIC_API ReadOnlyCompileOptions;
 }
@@ -33,7 +31,7 @@ class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
   ModuleScope::ParserData* bindings;
   ModuleBuilder& builder;
 
-  ModuleSharedContext(JSContext* cx, FrontendContext* fc,
+  ModuleSharedContext(FrontendContext* fc,
                       const JS::ReadOnlyCompileOptions& options,
                       ModuleBuilder& builder, SourceExtent extent);
 };

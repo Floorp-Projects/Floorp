@@ -308,7 +308,7 @@ template <typename Unit>
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno, input.options.column);
 
-  GlobalSharedContext globalsc(cx, fc, scopeKind, input.options,
+  GlobalSharedContext globalsc(fc, scopeKind, input.options,
                                compiler.compilationState().directives, extent);
 
   if (!compiler.compile(cx, &globalsc)) {
@@ -543,7 +543,7 @@ static JSScript* CompileEvalScriptImpl(
     uint32_t len = srcBuf.length();
     SourceExtent extent =
         SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-    EvalSharedContext evalsc(cx, &fc, compiler.compilationState(), extent);
+    EvalSharedContext evalsc(&fc, compiler.compilationState(), extent);
     if (!compiler.compile(cx, &evalsc)) {
       return nullptr;
     }
@@ -780,7 +780,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, FrontendContext* fc) {
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  ModuleSharedContext modulesc(cx, fc, options, builder, extent);
+  ModuleSharedContext modulesc(fc, options, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {

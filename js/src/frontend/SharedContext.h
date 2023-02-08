@@ -27,8 +27,6 @@
 #include "vm/SharedStencil.h"
 #include "vm/StencilEnums.h"
 
-struct JS_PUBLIC_API JSContext;
-
 namespace JS {
 class JS_PUBLIC_API ReadOnlyCompileOptions;
 struct WasmModule;
@@ -141,7 +139,6 @@ class SuspendableContext;
  */
 class SharedContext {
  public:
-  JSContext* const cx_;
   FrontendContext* const fc_;
 
  protected:
@@ -202,7 +199,7 @@ class SharedContext {
   }
 
  public:
-  SharedContext(JSContext* cx, FrontendContext* fc, Kind kind,
+  SharedContext(FrontendContext* fc, Kind kind,
                 const JS::ReadOnlyCompileOptions& options,
                 Directives directives, SourceExtent extent);
 
@@ -284,7 +281,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
  public:
   GlobalScope::ParserData* bindings;
 
-  GlobalSharedContext(JSContext* cx, FrontendContext* fc, ScopeKind scopeKind,
+  GlobalSharedContext(FrontendContext* fc, ScopeKind scopeKind,
                       const JS::ReadOnlyCompileOptions& options,
                       Directives directives, SourceExtent extent);
 
@@ -300,8 +297,8 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   EvalScope::ParserData* bindings;
 
-  EvalSharedContext(JSContext* cx, FrontendContext* fc,
-                    CompilationState& compilationState, SourceExtent extent);
+  EvalSharedContext(FrontendContext* fc, CompilationState& compilationState,
+                    SourceExtent extent);
 };
 
 inline EvalSharedContext* SharedContext::asEvalContext() {
@@ -313,7 +310,7 @@ enum class HasHeritage { No, Yes };
 
 class SuspendableContext : public SharedContext {
  public:
-  SuspendableContext(JSContext* cx, FrontendContext* fc, Kind kind,
+  SuspendableContext(FrontendContext* fc, Kind kind,
                      const JS::ReadOnlyCompileOptions& options,
                      Directives directives, SourceExtent extent,
                      bool isGenerator, bool isAsync);
@@ -427,7 +424,7 @@ class FunctionBox : public SuspendableContext {
 
   // End of fields.
 
-  FunctionBox(JSContext* cx, FrontendContext* fc, SourceExtent extent,
+  FunctionBox(FrontendContext* fc, SourceExtent extent,
               CompilationState& compilationState, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               bool isInitialCompilation, TaggedParserAtomIndex atom,
