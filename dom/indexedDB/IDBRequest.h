@@ -254,15 +254,12 @@ class IDBOpenDBRequest final : public IDBRequest {
 
   RefPtr<StrongWorkerRef> mWorkerRef;
 
-  const bool mFileHandleDisabled;
   bool mIncreasedActiveDatabaseCount;
 
  public:
   [[nodiscard]] static RefPtr<IDBOpenDBRequest> Create(
       JSContext* aCx, SafeRefPtr<IDBFactory> aFactory,
       nsIGlobalObject* aGlobal);
-
-  bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
   void SetTransaction(SafeRefPtr<IDBTransaction> aTransaction);
 
@@ -282,8 +279,7 @@ class IDBOpenDBRequest final : public IDBRequest {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  IDBOpenDBRequest(SafeRefPtr<IDBFactory> aFactory, nsIGlobalObject* aGlobal,
-                   bool aFileHandleDisabled);
+  IDBOpenDBRequest(SafeRefPtr<IDBFactory> aFactory, nsIGlobalObject* aGlobal);
 
   ~IDBOpenDBRequest();
 

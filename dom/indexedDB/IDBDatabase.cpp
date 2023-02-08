@@ -156,7 +156,6 @@ IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest,
       mFactory(std::move(aFactory)),
       mSpec(std::move(aSpec)),
       mBackgroundActor(aActor),
-      mFileHandleDisabled(aRequest->IsFileHandleDisabled()),
       mClosed(false),
       mInvalidated(false),
       mQuotaExceeded(false),
@@ -805,43 +804,6 @@ void IDBDatabase::NoteInactiveTransaction() {
 
   MOZ_ALWAYS_SUCCEEDS(
       EventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
-}
-
-nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
-                                   PersistenceType* aPersistenceType) {
-  using mozilla::dom::quota::QuotaManager;
-
-  MOZ_ASSERT(NS_IsMainThread(), "This can't work off the main thread!");
-
-  if (aPersistenceType) {
-    *aPersistenceType = mSpec->metadata().persistenceType();
-    MOZ_ASSERT(*aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  }
-
-  PrincipalInfo* principalInfo = mFactory->GetPrincipalInfo();
-  MOZ_ASSERT(principalInfo);
-
-  switch (principalInfo->type()) {
-    case PrincipalInfo::TNullPrincipalInfo:
-      MOZ_CRASH("Is this needed?!");
-
-    case PrincipalInfo::TSystemPrincipalInfo:
-      aOrigin = QuotaManager::GetOriginForChrome();
-      return NS_OK;
-
-    case PrincipalInfo::TContentPrincipalInfo: {
-      QM_TRY_UNWRAP(auto principal, PrincipalInfoToPrincipal(*principalInfo));
-
-      QM_TRY_UNWRAP(aOrigin, QuotaManager::GetOriginFromPrincipal(principal));
-
-      return NS_OK;
-    }
-
-    default:
-      MOZ_CRASH("Unknown PrincipalInfo type!");
-  }
-
-  MOZ_CRASH("Should never get here!");
 }
 
 void IDBDatabase::ExpireFileActors(bool aExpireAll) {
