@@ -509,9 +509,6 @@ class nsAttrValue {
   inline ValueBaseType BaseType() const;
   inline bool IsSVGType(ValueType aType) const;
 
-  nsAtom* GetStoredAtom() const;
-  nsStringBuffer* GetStoredStringBuffer() const;
-
   /**
    * Get the index of an EnumTable in the sEnumTableArray.
    * If the EnumTable is not in the sEnumTableArray, it is added.
