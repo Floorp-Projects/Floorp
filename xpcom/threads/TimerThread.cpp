@@ -737,6 +737,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
         "AddTimer", geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId(mProfilerThreadId),
                       MarkerStack::MaybeCapture(
+                          name.Equals("nonfunction:JS") ||
                           StringHead(name, prefix.Length()) == prefix)),
         TimerMarker{}, name, aTimer->mDelay.ToMilliseconds(),
         MarkerThreadId::CurrentThread());
@@ -775,6 +776,7 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
         "RemoveTimer", OTHER,
         MarkerOptions(MarkerThreadId(mProfilerThreadId),
                       MarkerStack::MaybeCapture(
+                          name.Equals("nonfunction:JS") ||
                           StringHead(name, prefix.Length()) == prefix)),
         name);
   }
