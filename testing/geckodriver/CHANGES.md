@@ -3,7 +3,7 @@
 
 All notable changes to this program are documented in this file.
 
-## 0.32.2  (2023-02-07)
+## 0.32.2  (2023-02-08, `602aa16c20d4`)
 
 ### Fixed
 
