@@ -500,10 +500,9 @@ codegenTestMultiplatform_adhoc(
     {x64:   `48 8b cf  mov %rdi, %rcx
              48 8b c1  mov %rcx, %rax
              48 03 c1  add %rcx, %rax`,
-     x86:   // -0x21524111 is 0xDEADBEEF
-            `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
+     x86:   `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
              8b 4d 10        movl 0x10\\(%rbp\\), %ecx
-             bf ef be ad de  mov \\$-0x21524111, %edi
+             bf ef be ad de  mov \\$0xDEADBEEF, %edi
              8b 55 14        movl 0x14\\(%rbp\\), %edx
              8b 45 10        movl 0x10\\(%rbp\\), %eax
              03 c1           add %ecx, %eax
@@ -610,10 +609,9 @@ codegenTestMultiplatform_adhoc(
     {x64:   `48 8b cf        mov %rdi, %rcx
              48 8b c1        mov %rcx, %rax
              48 2b c1        sub %rcx, %rax`,
-     x86:   // -0x21524111 is 0xDEADBEEF
-            `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
+     x86:   `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
              8b 4d 10        movl 0x10\\(%rbp\\), %ecx
-             bf ef be ad de  mov  \\$-0x21524111, %edi
+             bf ef be ad de  mov  \\$0xDEADBEEF, %edi
              8b 55 14        movl 0x14\\(%rbp\\), %edx
              8b 45 10        movl 0x10\\(%rbp\\), %eax
              2b c1           sub %ecx, %eax
