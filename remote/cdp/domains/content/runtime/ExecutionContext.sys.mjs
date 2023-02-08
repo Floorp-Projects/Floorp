@@ -522,7 +522,16 @@ export class ExecutionContext {
    */
   _serialize(debuggerObj) {
     const result = this._debuggee.executeInGlobalWithBindings(
-      "JSON.stringify(e)",
+      `
+      JSON.stringify(e, (key, value) => {
+        if (typeof value === "symbol") {
+          // CDP cannot return Symbols
+          throw new Error();
+        }
+
+        return value;
+      });
+    `,
       { e: debuggerObj }
     );
     if (result.throw) {
