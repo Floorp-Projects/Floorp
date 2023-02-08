@@ -50,9 +50,7 @@ class ContentProcessStorage {
     this.actor = new this.ActorConstructor(storageActor);
 
     // Some storage types require to prelist their stores
-    if (typeof this.actor.preListStores === "function") {
-      await this.actor.preListStores();
-    }
+    await this.actor.populateStoresForHosts();
 
     // We have to manage the actor manually, because ResourceCommand doesn't
     // use the protocol.js specification.

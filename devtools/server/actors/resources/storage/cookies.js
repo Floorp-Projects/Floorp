@@ -58,6 +58,50 @@ class CookiesStorageActor extends BaseStorageActor {
     super.destroy();
   }
 
+  populateStoresForHost(host) {
+    this.hostVsStores.set(host, new Map());
+
+    const originAttributes = this.getOriginAttributesFromHost(host);
+    const cookies = this.getCookiesFromHost(host, originAttributes);
+
+    for (const cookie of cookies) {
+      if (this.isCookieAtHost(cookie, host)) {
+        const uniqueKey =
+          `${cookie.name}${SEPARATOR_GUID}${cookie.host}` +
+          `${SEPARATOR_GUID}${cookie.path}`;
+
+        this.hostVsStores.get(host).set(uniqueKey, cookie);
+      }
+    }
+  }
+
+  getOriginAttributesFromHost(host) {
+    const win = this.storageActor.getWindowFromHost(host);
+    let originAttributes;
+    if (win) {
+      originAttributes =
+        win.document.effectiveStoragePrincipal.originAttributes;
+    } else {
+      // If we can't find the window by host, fallback to the top window
+      // origin attributes.
+      originAttributes = this.storageActor.document?.effectiveStoragePrincipal
+        .originAttributes;
+    }
+
+    return originAttributes;
+  }
+
+  getCookiesFromHost(host, originAttributes) {
+    // Local files have no host.
+    if (host.startsWith("file:///")) {
+      host = "";
+    }
+
+    host = trimHttpHttpsPort(host);
+
+    return Services.cookies.getCookiesFromHost(host, originAttributes);
+  }
+
   /**
    * Given a cookie object, figure out all the matching hosts from the page that
    * the cookie belong to.
@@ -138,39 +182,6 @@ class CookiesStorageActor extends BaseStorageActor {
     }
     // cookie.SAMESITE_NONE
     return COOKIE_SAMESITE.NONE;
-  }
-
-  populateStoresForHost(host) {
-    this.hostVsStores.set(host, new Map());
-
-    const originAttributes = this.getOriginAttributesFromHost(host);
-    const cookies = this.getCookiesFromHost(host, originAttributes);
-
-    for (const cookie of cookies) {
-      if (this.isCookieAtHost(cookie, host)) {
-        const uniqueKey =
-          `${cookie.name}${SEPARATOR_GUID}${cookie.host}` +
-          `${SEPARATOR_GUID}${cookie.path}`;
-
-        this.hostVsStores.get(host).set(uniqueKey, cookie);
-      }
-    }
-  }
-
-  getOriginAttributesFromHost(host) {
-    const win = this.storageActor.getWindowFromHost(host);
-    let originAttributes;
-    if (win) {
-      originAttributes =
-        win.document.effectiveStoragePrincipal.originAttributes;
-    } else {
-      // If we can't find the window by host, fallback to the top window
-      // origin attributes.
-      originAttributes = this.storageActor.document?.effectiveStoragePrincipal
-        .originAttributes;
-    }
-
-    return originAttributes;
   }
 
   /**
@@ -306,17 +317,6 @@ class CookiesStorageActor extends BaseStorageActor {
   async removeAllSessionCookies(host, domain) {
     const originAttributes = this.getOriginAttributesFromHost(host);
     this._removeCookies(host, { domain, originAttributes, session: true });
-  }
-
-  getCookiesFromHost(host, originAttributes) {
-    // Local files have no host.
-    if (host.startsWith("file:///")) {
-      host = "";
-    }
-
-    host = trimHttpHttpsPort(host);
-
-    return Services.cookies.getCookiesFromHost(host, originAttributes);
   }
 
   addCookie(guid, principal) {

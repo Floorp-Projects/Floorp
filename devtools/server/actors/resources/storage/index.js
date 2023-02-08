@@ -57,7 +57,12 @@ class BaseStorageActor extends Actor {
 
     this.storageActor = storageActor;
 
-    this.populateStoresForHosts();
+    // Map keyed by host name whose values are nested Maps.
+    // Nested maps are keyed by store names and values are store values.
+    // Store values are specific to each sub class.
+    // Map(host name => stores <Map(name => values )>)
+    // Map(string => stores <Map(string => any )>)
+    this.hostVsStores = new Map();
 
     this.onWindowReady = this.onWindowReady.bind(this);
     this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
@@ -144,6 +149,15 @@ class BaseStorageActor extends Actor {
       default:
         // http: or unknown protocol.
         return `${location.protocol}//${location.host}`;
+    }
+  }
+
+  /**
+   * Populates a map of known hosts vs a map of stores vs value.
+   */
+  async populateStoresForHosts() {
+    for (const host of this.hosts) {
+      await this.populateStoresForHost(host);
     }
   }
 
@@ -244,16 +258,6 @@ class BaseStorageActor extends Actor {
       supportsRemoveAllSessionCookies:
         typeof this.removeAllSessionCookies === "function",
     };
-  }
-
-  /**
-   * Populates a map of known hosts vs a map of stores vs value.
-   */
-  populateStoresForHosts() {
-    this.hostVsStores = new Map();
-    for (const host of this.hosts) {
-      this.populateStoresForHost(host);
-    }
   }
 
   /**

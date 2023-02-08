@@ -178,7 +178,7 @@ exports.shutdown = shutdown;
 
 /**
  * Mocks the missing 'storage/permanent' directory needed by the "indexedDB"
- * storage actor's 'preListStores' method (called when 'listStores' is called). This
+ * storage actor's 'populateStoresForHosts' method. This
  * directory exists in a full browser i.e. mochitest.
  */
 function createMissingIndexedDBDirs() {

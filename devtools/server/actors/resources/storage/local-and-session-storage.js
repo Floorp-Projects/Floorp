@@ -63,16 +63,7 @@ class LocalOrSessionStorageActor extends BaseStorageActor {
     return storageArray;
   }
 
-  populateStoresForHost(host, window) {
-    try {
-      this.hostVsStores.set(host, window[this.typeName]);
-    } catch (ex) {
-      console.warn(
-        `Failed to enumerate ${this.typeName} for host ${host}: ${ex}`
-      );
-    }
-  }
-
+  // We need to override this method as populateStoresForHost expect the window object
   populateStoresForHosts() {
     this.hostVsStores = new Map();
     for (const window of this.windows) {
@@ -80,6 +71,16 @@ class LocalOrSessionStorageActor extends BaseStorageActor {
       if (host) {
         this.populateStoresForHost(host, window);
       }
+    }
+  }
+
+  populateStoresForHost(host, window) {
+    try {
+      this.hostVsStores.set(host, window[this.typeName]);
+    } catch (ex) {
+      console.warn(
+        `Failed to enumerate ${this.typeName} for host ${host}: ${ex}`
+      );
     }
   }
 

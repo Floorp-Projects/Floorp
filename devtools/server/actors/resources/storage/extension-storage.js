@@ -48,13 +48,6 @@ class ExtensionStorageActor extends BaseStorageActor {
     // area to access the correct database.
     this.dbConnectionForHost = new Map();
 
-    // Bug 1542038, 1542039: Each storage area will need its own
-    // this.hostVsStores or this actor will need to deviate from how
-    // this.hostVsStores is defined in the framework to associate each
-    // storage item with a storage area. Any methods that use it will also
-    // need to be updated (e.g. getNamesForHost).
-    this.hostVsStores = new Map();
-
     this.onExtensionStartup = this.onExtensionStartup.bind(this);
 
     this.onStorageChange = this.onStorageChange.bind(this);
@@ -75,55 +68,10 @@ class ExtensionStorageActor extends BaseStorageActor {
   }
 
   /**
-   * This fires when the extension changes storage data while the storage
-   * inspector is open. Ensures this.hostVsStores stays up-to-date and
-   * passes the changes on to update the client.
+   * We need to override this method as we ignore BaseStorageActor's hosts
+   * and only care about the extension host.
    */
-  onStorageChange(changes) {
-    const host = this.extensionHostURL;
-    const storeMap = this.hostVsStores.get(host);
-
-    function isStructuredCloneHolder(value) {
-      return (
-        value &&
-        typeof value === "object" &&
-        Cu.getClassName(value, true) === "StructuredCloneHolder"
-      );
-    }
-
-    for (const key in changes) {
-      const storageChange = changes[key];
-      let { newValue, oldValue } = storageChange;
-      if (isStructuredCloneHolder(newValue)) {
-        newValue = newValue.deserialize(this);
-      }
-      if (isStructuredCloneHolder(oldValue)) {
-        oldValue = oldValue.deserialize(this);
-      }
-
-      let action;
-      if (typeof newValue === "undefined") {
-        action = "deleted";
-        storeMap.delete(key);
-      } else if (typeof oldValue === "undefined") {
-        action = "added";
-        storeMap.set(key, newValue);
-      } else {
-        action = "changed";
-        storeMap.set(key, newValue);
-      }
-
-      this.storageActor.update(action, this.typeName, { [host]: [key] });
-    }
-  }
-
-  /**
-   * Purpose of this method is same as populateStoresForHosts but this is async.
-   * This exact same operation cannot be performed in populateStoresForHosts
-   * method, as that method is called in initialize method of the actor, which
-   * cannot be asynchronous.
-   */
-  async preListStores() {
+  async populateStoresForHosts() {
     // Ensure the actor's target is an extension and it is enabled
     if (!this.addonId || !this.getExtensionPolicy()) {
       return;
@@ -173,13 +121,6 @@ class ExtensionStorageActor extends BaseStorageActor {
   }
 
   /**
-   * This method is overriden and left blank as for extensionStorage, this operation
-   * cannot be performed synchronously. Thus, the preListStores method exists to
-   * do the same task asynchronously.
-   */
-  populateStoresForHosts() {}
-
-  /**
    * This method asynchronously reads the storage data for the target extension
    * and caches this data into this.hostVsStores.
    * @param {String} host - the hostname for the extension
@@ -222,6 +163,48 @@ class ExtensionStorageActor extends BaseStorageActor {
       const storageData = {};
       storageData[host] = this.getNamesForHost(host);
       this.storageActor.update("added", this.typeName, storageData);
+    }
+  }
+  /**
+   * This fires when the extension changes storage data while the storage
+   * inspector is open. Ensures this.hostVsStores stays up-to-date and
+   * passes the changes on to update the client.
+   */
+  onStorageChange(changes) {
+    const host = this.extensionHostURL;
+    const storeMap = this.hostVsStores.get(host);
+
+    function isStructuredCloneHolder(value) {
+      return (
+        value &&
+        typeof value === "object" &&
+        Cu.getClassName(value, true) === "StructuredCloneHolder"
+      );
+    }
+
+    for (const key in changes) {
+      const storageChange = changes[key];
+      let { newValue, oldValue } = storageChange;
+      if (isStructuredCloneHolder(newValue)) {
+        newValue = newValue.deserialize(this);
+      }
+      if (isStructuredCloneHolder(oldValue)) {
+        oldValue = oldValue.deserialize(this);
+      }
+
+      let action;
+      if (typeof newValue === "undefined") {
+        action = "deleted";
+        storeMap.delete(key);
+      } else if (typeof oldValue === "undefined") {
+        action = "added";
+        storeMap.set(key, newValue);
+      } else {
+        action = "changed";
+        storeMap.set(key, newValue);
+      }
+
+      this.storageActor.update(action, this.typeName, { [host]: [key] });
     }
   }
 
