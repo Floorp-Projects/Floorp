@@ -241,6 +241,8 @@ async function withWindowOverflowed(
     info("Running beforeOverflowed task");
     await beforeOverflowed(extensionIDs);
   } finally {
+    const originalWindowWidth = win.outerWidth;
+
     // The beforeOverflowed task may have moved some items out from the navbar,
     // so only listen for overflows for items still in there.
     const browserActionIDs = extensionIDs.map(id =>
@@ -290,7 +292,8 @@ async function withWindowOverflowed(
       info("Running whenOverflowed task");
       await whenOverflowed(defaultList, unifiedExtensionList, extensionIDs);
     } finally {
-      await ensureMaximizedWindow(win);
+      win.resizeTo(originalWindowWidth, win.outerHeight);
+      await BrowserTestUtils.waitForEvent(win, "resize");
 
       // Notably, we don't wait for the nav-bar to not have the "overflowing"
       // attribute. This is because we might be running in an environment
