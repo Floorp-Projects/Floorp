@@ -89,18 +89,21 @@ addressbar-best-match-learn-more = Learn more
 
 # First Firefox Suggest toggle button main label and description. This toggle
 # controls non-sponsored suggestions related to the user's search string.
-addressbar-firefox-suggest-nonsponsored = Suggestions from the web
-addressbar-firefox-suggest-nonsponsored-description = Get suggestions from { -brand-product-name } related to your search.
+addressbar-firefox-suggest-nonsponsored =
+  .label = Suggestions from the web
+  .description = Get suggestions from { -brand-product-name } related to your search.
 
 # Second Firefox Suggest toggle button main label and description. This toggle
 # controls sponsored suggestions related to the user's search string.
-addressbar-firefox-suggest-sponsored = Suggestions from sponsors
-addressbar-firefox-suggest-sponsored-description = Support the development of { -brand-short-name } with occasional sponsored suggestions.
+addressbar-firefox-suggest-sponsored =
+  .label = Suggestions from sponsors
+  .description = Support the development of { -brand-short-name } with occasional sponsored suggestions.
 
 # Third Firefox Suggest toggle button main label and description. This toggle
 # controls data collection related to the user's search string.
-addressbar-firefox-suggest-data-collection = Improve the { -firefox-suggest-brand-name } experience
-addressbar-firefox-suggest-data-collection-description = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
+addressbar-firefox-suggest-data-collection =
+  .label = Improve the { -firefox-suggest-brand-name } experience
+  .description = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
 
 # The "Learn more" link shown in the Firefox Suggest preferences UI.
 addressbar-locbar-firefox-suggest-learn-more = Learn more
