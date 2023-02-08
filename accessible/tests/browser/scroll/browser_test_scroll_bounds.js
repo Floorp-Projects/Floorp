@@ -314,3 +314,156 @@ addAccessibleTask(
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test scroll offset on sticky-pos acc
+ */
+addAccessibleTask(
+  `
+  <div id="d" style="margin-top: 100px; margin-left: 75px; position:sticky; top:0px;">
+    <button id="top">top</button>
+  </div>
+  `,
+  async function(browser, docAcc) {
+    const containerBounds = await testBoundsWithContent(docAcc, "d", browser);
+    const e = waitForEvent(EVENT_REORDER, docAcc);
+    await invokeContentTask(browser, [], () => {
+      for (let i = 0; i < 1000; ++i) {
+        const div = content.document.createElement("div");
+        div.innerHTML = "<button>${i}</button>";
+        content.document.body.append(div);
+      }
+    });
+    await e;
+    for (let id of ["d", "top"]) {
+      info(`Verifying bounds for acc with ID ${id}`);
+      const origBounds = await testBoundsWithContent(docAcc, id, browser);
+
+      info("Scrolling partially");
+      await invokeContentTask(browser, [], () => {
+        // scroll some of the window
+        content.window.scrollTo(0, 50);
+      });
+
+      await waitForContentPaint(browser);
+
+      let newBounds = await testBoundsWithContent(docAcc, id, browser);
+      is(
+        origBounds[0],
+        newBounds[0],
+        `x coord of sticky element is unaffected by scrolling`
+      );
+      ok(
+        origBounds[1] > newBounds[1] && newBounds[1] >= 0,
+        "sticky element scrolled, but not off the page"
+      );
+      is(
+        origBounds[2],
+        newBounds[2],
+        `width of sticky element is unaffected by scrolling`
+      );
+      is(
+        origBounds[3],
+        newBounds[3],
+        `height of sticky element is unaffected by scrolling`
+      );
+
+      info("Scrolling to bottom");
+      await invokeContentTask(browser, [], () => {
+        // scroll to the bottom of the page
+        content.window.scrollTo(0, content.document.body.scrollHeight);
+      });
+
+      await waitForContentPaint(browser);
+
+      newBounds = await testBoundsWithContent(docAcc, id, browser);
+      is(
+        origBounds[0],
+        newBounds[0],
+        `x coord of sticky element is unaffected by scrolling`
+      );
+      // Subtract margin from container screen coords to get chrome height
+      // which is where our y pos should be
+      is(
+        newBounds[1],
+        containerBounds[1] - 100,
+        "Sticky element is top of screen"
+      );
+      is(
+        origBounds[2],
+        newBounds[2],
+        `width of sticky element is unaffected by scrolling`
+      );
+      is(
+        origBounds[3],
+        newBounds[3],
+        `height of sticky element is unaffected by scrolling`
+      );
+
+      info("Removing position style on container");
+      await invokeContentTask(browser, [], () => {
+        // remove position styling
+        content.document.getElementById("d").style =
+          "margin-top: 100px; margin-left: 75px;";
+      });
+
+      await waitForContentPaint(browser);
+
+      newBounds = await testBoundsWithContent(docAcc, id, browser);
+
+      is(
+        origBounds[0],
+        newBounds[0],
+        `x coord of non-sticky element remains accurate.`
+      );
+      ok(newBounds[1] < 0, "y coordinate shows item scrolled off page");
+
+      // Removing the position styling on this acc causes it to be bound by
+      // its parent's bounding box, which alters its width as a block element.
+      // We don't particularly care about width in this test, so skip it.
+      is(
+        origBounds[3],
+        newBounds[3],
+        `height of non-sticky element remains accurate.`
+      );
+
+      info("Adding position style on container");
+      await invokeContentTask(browser, [], () => {
+        // re-add position styling
+        content.document.getElementById("d").style =
+          "margin-top: 100px; margin-left: 75px; position:sticky; top:0px;";
+      });
+
+      await waitForContentPaint(browser);
+
+      newBounds = await testBoundsWithContent(docAcc, id, browser);
+      is(
+        origBounds[0],
+        newBounds[0],
+        `x coord of sticky element is unaffected by scrolling`
+      );
+      is(
+        newBounds[1],
+        containerBounds[1] - 100,
+        "Sticky element is top of screen"
+      );
+      is(
+        origBounds[2],
+        newBounds[2],
+        `width of sticky element is unaffected by scrolling`
+      );
+      is(
+        origBounds[3],
+        newBounds[3],
+        `height of sticky element is unaffected by scrolling`
+      );
+
+      info("Scrolling back up to test next ID");
+      await invokeContentTask(browser, [], () => {
+        // scroll some of the window
+        content.window.scrollTo(0, 0);
+      });
+    }
+  },
+  { chrome: false, iframe: false, remoteIframe: false }
+);
