@@ -383,8 +383,7 @@ TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
   PerformOnBackgroundThread(std::move(backgroundTask));
 }
 
-TEST_F(TestFileSystemQuotaClient,
-       DISABLED_TrackedFilesOnInitOriginShouldCauseRescan) {
+TEST_F(TestFileSystemQuotaClient, TrackedFilesOnInitOriginShouldCauseRescan) {
   auto backgroundTask = []() {
     mozilla::Atomic<bool> isCanceled{false};
     EntryId* testFileId = new EntryId();
@@ -450,7 +449,7 @@ TEST_F(TestFileSystemQuotaClient,
                       rdm->MutableDatabaseManagerPtr());
 
     // This should force a rescan
-    ASSERT_TRUE(rdm->LockExclusive(*testFileId));
+    ASSERT_NSEQ(NS_OK, rdm->LockExclusive(*testFileId));
     PerformOnIOThread(std::move(writingToFile), std::move(quotaClient),
                       rdm->MutableDatabaseManagerPtr());
   };

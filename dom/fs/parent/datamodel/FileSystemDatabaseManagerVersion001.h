@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION001_H_
 
 #include "FileSystemDatabaseManager.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "nsString.h"
 
 namespace mozilla::dom::fs::data {
@@ -39,12 +40,13 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   FileSystemDatabaseManagerVersion001(
       FileSystemDataManager* aDataManager, FileSystemConnection&& aConnection,
       UniquePtr<FileSystemFileManager>&& aFileManager,
-      const EntryId& aRootEntry)
-      : mDataManager(aDataManager),
-        mConnection(aConnection),
-        mFileManager(std::move(aFileManager)),
-        mRootEntry(aRootEntry) {}
+      const EntryId& aRootEntry);
 
+  /* Static to allow use by quota client without instantiation */
+  static nsresult RescanTrackedUsages(const FileSystemConnection& aConnection,
+                                      const Origin& aOrigin);
+
+  /* Static to allow use by quota client without instantiation */
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
 
@@ -81,10 +83,20 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
 
   virtual void Close() override;
 
+  virtual nsresult BeginUsageTracking(const EntryId& aEntryId) override;
+
+  virtual nsresult EndUsageTracking(const EntryId& aEntryId) override;
+
   virtual ~FileSystemDatabaseManagerVersion001() = default;
 
  private:
   nsresult UpdateUsageInDatabase(const EntryId& aEntry, int64_t aNewDiskUsage);
+
+  Result<Ok, QMResult> EnsureUsageIsKnown(const EntryId& aEntryId);
+
+  void DecreaseCachedQuotaUsage(int64_t aDelta);
+
+  nsresult UpdateCachedQuotaUsage(int64_t aDelta);
 
   // This is a raw pointer since we're owned by the FileSystemDataManager.
   FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;
@@ -94,6 +106,10 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   UniquePtr<FileSystemFileManager> mFileManager;
 
   const EntryId mRootEntry;
+
+  const quota::ClientMetadata mClientMetadata;
+
+  int32_t mFilesOfUnknownUsage;
 };
 
 }  // namespace mozilla::dom::fs::data

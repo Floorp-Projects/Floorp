@@ -168,10 +168,10 @@ bool FileSystemAccessHandle::IsInactive() const {
 
 RefPtr<FileSystemAccessHandle::InitPromise>
 FileSystemAccessHandle::BeginInit() {
-  if (!mDataManager->LockExclusive(mEntryId)) {
-    return InitPromise::CreateAndReject(
-        NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, __func__);
-  }
+  QM_TRY(MOZ_TO_RESULT(mDataManager->LockExclusive(mEntryId)),
+         [](const nsresult aRv) {
+           return InitPromise::CreateAndReject(aRv, __func__);
+         });
 
   mLocked = true;
 

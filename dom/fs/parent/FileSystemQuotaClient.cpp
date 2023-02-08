@@ -127,6 +127,9 @@ Result<quota::UsageInfo, nsresult> QuotaClient::InitOrigin(
   QM_TRY_INSPECT(const ResultConnection& conn,
                  GetStorageConnection(origin).mapErr(toNSResult));
 
+  QM_TRY(MOZ_TO_RESULT(
+      data::FileSystemDatabaseManager::RescanUsages(conn, origin)));
+
   return data::FileSystemDatabaseManager::GetUsage(conn, origin)
       .mapErr(toNSResult);
 }

@@ -40,6 +40,8 @@ void HandleFailedStatus(nsresult aError, const RefPtr<Promise>& aPromise) {
     case NS_ERROR_FILE_ACCESS_DENIED:
       aPromise->MaybeRejectWithNotAllowedError("Permission denied");
       break;
+    case NS_ERROR_FILE_NOT_FOUND:
+      [[fallthrough]];
     case NS_ERROR_DOM_NOT_FOUND_ERR:
       aPromise->MaybeRejectWithNotFoundError("Entry not found");
       break;
