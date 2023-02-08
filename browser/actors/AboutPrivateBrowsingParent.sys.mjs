@@ -2,19 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingParent"];
-
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { BrowserUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/BrowserUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { BrowserUtils } from "resource://gre/modules/BrowserUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const SHOWN_PREF = "browser.search.separatePrivateDefault.ui.banner.shown";
 const lazy = {};
@@ -44,7 +36,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // We only show the private search banner once per browser session.
 let gSearchBannerShownThisSession;
 
-class AboutPrivateBrowsingParent extends JSWindowActorParent {
+export class AboutPrivateBrowsingParent extends JSWindowActorParent {
   constructor() {
     super();
     Services.telemetry.setEventRecordingEnabled("aboutprivatebrowsing", true);

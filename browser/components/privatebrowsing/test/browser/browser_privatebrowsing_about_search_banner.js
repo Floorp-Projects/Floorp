@@ -5,8 +5,8 @@
 // This test makes sure that about:privatebrowsing correctly shows the search
 // banner.
 
-const { AboutPrivateBrowsingParent } = ChromeUtils.import(
-  "resource:///actors/AboutPrivateBrowsingParent.jsm"
+const { AboutPrivateBrowsingParent } = ChromeUtils.importESModule(
+  "resource:///actors/AboutPrivateBrowsingParent.sys.mjs"
 );
 
 const PREF_UI_ENABLED = "browser.search.separatePrivateDefault.ui.enabled";
