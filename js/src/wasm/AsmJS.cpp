@@ -1364,7 +1364,6 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   using ArrayViewVector = Vector<ArrayView>;
 
  protected:
-  JSContext* cx_;
   FrontendContext* fc_;
   JS::NativeStackLimit stackLimit_;
   ParserAtomsTable& parserAtoms_;
@@ -1396,12 +1395,10 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   bool errorOverRecursed_ = false;
 
  protected:
-  ModuleValidatorShared(JSContext* cx, FrontendContext* fc,
-                        JS::NativeStackLimit stackLimit,
+  ModuleValidatorShared(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                         ParserAtomsTable& parserAtoms,
                         FunctionNode* moduleFunctionNode)
-      : cx_(cx),
-        fc_(fc),
+      : fc_(fc),
         stackLimit_(stackLimit),
         parserAtoms_(parserAtoms),
         moduleFunctionNode_(moduleFunctionNode),
@@ -1916,12 +1913,10 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   AsmJSParser<Unit>& parser_;
 
  public:
-  ModuleValidator(JSContext* cx, FrontendContext* fc,
-                  JS::NativeStackLimit stackLimit,
+  ModuleValidator(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                   ParserAtomsTable& parserAtoms, AsmJSParser<Unit>& parser,
                   FunctionNode* moduleFunctionNode)
-      : ModuleValidatorShared(cx, fc, stackLimit, parserAtoms,
-                              moduleFunctionNode),
+      : ModuleValidatorShared(fc, stackLimit, parserAtoms, moduleFunctionNode),
         parser_(parser) {}
 
   ~ModuleValidator() {
@@ -6435,7 +6430,7 @@ static bool CheckModuleEnd(ModuleValidator<Unit>& m) {
 }
 
 template <typename Unit>
-static SharedModule CheckModule(JSContext* cx, FrontendContext* fc,
+static SharedModule CheckModule(FrontendContext* fc,
                                 JS::NativeStackLimit stackLimit,
                                 ParserAtomsTable& parserAtoms,
                                 AsmJSParser<Unit>& parser, ParseNode* stmtList,
@@ -6444,7 +6439,7 @@ static SharedModule CheckModule(JSContext* cx, FrontendContext* fc,
 
   FunctionNode* moduleFunctionNode = parser.pc_->functionBox()->functionNode;
 
-  ModuleValidator<Unit> m(cx, fc, stackLimit, parserAtoms, parser,
+  ModuleValidator<Unit> m(fc, stackLimit, parserAtoms, parser,
                           moduleFunctionNode);
   if (!m.init()) {
     return nullptr;
@@ -7144,8 +7139,7 @@ static bool EstablishPreconditions(frontend::ParserBase& parser) {
 }
 
 template <typename Unit>
-static bool DoCompileAsmJS(JSContext* cx, FrontendContext* fc,
-                           JS::NativeStackLimit stackLimit,
+static bool DoCompileAsmJS(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                            ParserAtomsTable& parserAtoms,
                            AsmJSParser<Unit>& parser, ParseNode* stmtList,
                            bool* validated) {
@@ -7160,7 +7154,7 @@ static bool DoCompileAsmJS(JSContext* cx, FrontendContext* fc,
   // WasmModuleObject as result.
   unsigned time;
   SharedModule module =
-      CheckModule(cx, fc, stackLimit, parserAtoms, parser, stmtList, &time);
+      CheckModule(fc, stackLimit, parserAtoms, parser, stmtList, &time);
   if (!module) {
     return NoExceptionPending(fc);
   }
@@ -7180,21 +7174,19 @@ static bool DoCompileAsmJS(JSContext* cx, FrontendContext* fc,
   return NoExceptionPending(fc);
 }
 
-bool js::CompileAsmJS(JSContext* cx, FrontendContext* fc,
-                      JS::NativeStackLimit stackLimit,
+bool js::CompileAsmJS(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                       ParserAtomsTable& parserAtoms,
                       AsmJSParser<char16_t>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, fc, stackLimit, parserAtoms, parser, stmtList,
+  return DoCompileAsmJS(fc, stackLimit, parserAtoms, parser, stmtList,
                         validated);
 }
 
-bool js::CompileAsmJS(JSContext* cx, FrontendContext* fc,
-                      JS::NativeStackLimit stackLimit,
+bool js::CompileAsmJS(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                       ParserAtomsTable& parserAtoms,
                       AsmJSParser<Utf8Unit>& parser, ParseNode* stmtList,
                       bool* validated) {
-  return DoCompileAsmJS(cx, fc, stackLimit, parserAtoms, parser, stmtList,
+  return DoCompileAsmJS(fc, stackLimit, parserAtoms, parser, stmtList,
                         validated);
 }
 
