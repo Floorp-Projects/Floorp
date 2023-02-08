@@ -2343,6 +2343,66 @@ async function setLogPoint(dbg, index, value) {
   await typeInPanel(dbg, value);
   await onBreakpointSet;
 }
+/**
+ * Opens the project search panel
+ *
+ * @param {Object} dbg
+ * @return {Boolean} The project search is open
+ */
+function openProjectSearch(dbg) {
+  info("Opening the project search panel");
+  synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
+  return waitForState(
+    dbg,
+    state => dbg.selectors.getActiveSearch() === "project"
+  );
+}
+
+/**
+ * Starts a project search based on the specified search term
+ *
+ * @param {Object} dbg
+ * @param {String} searchTerm - The test to search for
+ * @return {Array} List of search results element nodes
+ */
+async function doProjectSearch(dbg, searchTerm) {
+  type(dbg, searchTerm);
+  pressKey(dbg, "Enter");
+  return waitForSearchResults(dbg);
+}
+
+/**
+ * Waits for the search resluts node to render
+ *
+ * @param {Object} dbg
+ * @return (Array) List of search result element nodes
+ */
+async function waitForSearchResults(dbg) {
+  await waitForState(dbg, state => state.projectTextSearch.status === "DONE");
+  return findAllElements(dbg, "projectSearchFileResults");
+}
+
+/**
+ * Closes the project search panel
+ *
+ * @param {Object} dbg
+ * @return {Boolean} When the panel closes
+ */
+function closeProjectSearch(dbg) {
+  info("Closing the project search panel");
+  synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
+  return waitForState(dbg, state => !dbg.selectors.getActiveSearch());
+}
+
+/**
+ * Get the no of expanded search results
+ *
+ * @param {Object} dbg
+ * @return {Number} No of expanded results
+ */
+function getExpandedResultsCount(dbg) {
+  return findAllElements(dbg, "projectSearchExpandedResults").length;
+}
 
 /**
  * Instantiate a HTTP Server that serves files from a given test folder.
