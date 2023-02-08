@@ -44,7 +44,7 @@ class AndroidDecoderModule : public PlatformDecoderModule {
 
 extern LazyLogModule sAndroidDecoderModuleLog;
 
-nsCString TranslateMimeType(const nsACString& aMimeType);
+const nsCString TranslateMimeType(const nsACString& aMimeType);
 
 }  // namespace mozilla
 

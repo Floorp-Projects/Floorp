@@ -150,8 +150,7 @@ WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults) {
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output))) {
-    MOZ_ASSERT_IF(output && output->mType == MediaData::Type::VIDEO_DATA,
-                  output.get());
+    MOZ_ASSERT(output.get(), "Upon success, we must receive an output");
     if (ShouldGuardAgaintIncorrectFirstSample(output)) {
       LOG("Discarding sample with time %" PRId64
           " because of ShouldGuardAgaintIncorrectFirstSample check",
@@ -162,12 +161,7 @@ WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults) {
       // Got first valid sample, don't need to guard following sample anymore.
       mInputTimesSet.clear();
     }
-    // When handling encoder delay or padding, it is possible to strip entier
-    // audio packet, and to not have something to return here despite the
-    // decoding having succeeded.
-    if (output) {
-      aResults.AppendElement(std::move(output));
-    }
+    aResults.AppendElement(std::move(output));
     if (mDrainStatus == DrainStatus::DRAINING) {
       break;
     }

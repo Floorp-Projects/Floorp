@@ -76,7 +76,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
 
   AVCodec* codec = FindAVCodec(mLib, mCodecID);
   if (!codec) {
-    FFMPEG_LOG("  couldn't find ffmpeg decoder for codec id %d", mCodecID);
+    FFMPEG_LOG("  unable to find codec");
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("unable to find codec"));
   }
@@ -85,7 +85,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   StaticMutexAutoLock mon(sMutex);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
-    FFMPEG_LOG("  couldn't allocate ffmpeg context for codec %s", codec->name);
+    FFMPEG_LOG("  couldn't init ffmpeg context");
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                        RESULT_DETAIL("Couldn't init ffmpeg context"));
   }
@@ -102,8 +102,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   InitCodecContext();
   MediaResult ret = AllocateExtraData();
   if (NS_FAILED(ret)) {
-    FFMPEG_LOG("  couldn't allocate ffmpeg extra data for codec %s",
-               codec->name);
+    FFMPEG_LOG("  failed to allocate extra data");
     mLib->av_freep(&mCodecContext);
     return ret;
   }
