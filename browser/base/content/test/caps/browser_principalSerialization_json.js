@@ -54,7 +54,7 @@ add_task(async function test_nullPrincipal() {
     let p = Services.scriptSecurityManager.createNullPrincipal(test.input.OA);
     let sp = E10SUtils.serializePrincipal(p);
     // Not sure why cppjson is adding a \n here
-    let spr = sp.replace(nullReplaceRegex, NULL_REPLACE);
+    let spr = atob(sp).replace(nullReplaceRegex, NULL_REPLACE);
     is(
       test.expected,
       spr,
@@ -125,7 +125,16 @@ add_task(async function test_contentPrincipal() {
       test.input.OA
     );
     let sp = E10SUtils.serializePrincipal(p);
-    is(test.expected, sp, "Expected serialized object for " + test.input.uri);
+    is(
+      test.expected,
+      atob(sp),
+      "Expected serialized object for " + test.input.uri
+    );
+    is(
+      btoa(test.expected),
+      sp,
+      "Expected serialized string for " + test.input.uri
+    );
     let dp = E10SUtils.deserializePrincipal(sp);
     is(dp.URI.spec, test.input.uri, "Ensure spec is the same");
 
@@ -150,7 +159,8 @@ add_task(async function test_systemPrincipal() {
 
   let p = Services.scriptSecurityManager.getSystemPrincipal();
   let sp = E10SUtils.serializePrincipal(p);
-  is(expected, sp, "Expected serialized object for system principal");
+  is(expected, atob(sp), "Expected serialized object for system principal");
+  is(btoa(expected), sp, "Expected serialized string for system principal");
   let dp = E10SUtils.deserializePrincipal(sp);
   is(
     dp,

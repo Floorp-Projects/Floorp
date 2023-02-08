@@ -47,13 +47,6 @@
 
 namespace mozilla {
 
-const char* BasePrincipal::JSONEnumKeyStrings[4] = {
-    "0",
-    "1",
-    "2",
-    "3",
-};
-
 BasePrincipal::BasePrincipal(PrincipalKind aKind,
                              const nsACString& aOriginNoSuffix,
                              const OriginAttributes& aOriginAttributes)
@@ -285,53 +278,12 @@ already_AddRefed<BasePrincipal> BasePrincipal::FromJSON(
     return nullptr;
   }
 
-  return FromJSON(root);
-}
-
-// Checks if an ExpandedPrincipal is using the legacy format, where
-// sub-principals are Base64 encoded.
-//
-// Given a legacy expanded principal:
-//
-//         *
-// {"2": {"0": "eyIxIjp7IjAiOiJodHRwczovL2EuY29tLyJ9fQ=="}}
-//   |     |                      |
-//   |     ----------           Value
-//   |              |
-// PrincipalKind    |
-//                  |
-//           SerializableKeys
-//
-// The value is a CSV list of Base64 encoded prinipcals. The new format for this
-// principal is:
-//
-//                       Subsumed principals
-//                               |
-//             ------------------------------------
-//         *   |                                  |
-// {"2": {"0": [{"1": {"0": https://mozilla.com"}}]}}
-//   |            |                  |
-//   --------------                Value
-//         |
-//   PrincipalKind
-//
-// It is possible to tell these apart by checking the type of the property noted
-// in both diagrams with an asterisk. In the legacy format the type will be a
-// string and in the new format it will be an array.
-static bool IsLegacyFormat(const Json::Value& aValue) {
-  const auto& specs = std::to_string(ExpandedPrincipal::eSpecs);
-  return aValue.isMember(specs) && aValue[specs].isString();
-}
-
-/* static */
-already_AddRefed<BasePrincipal> BasePrincipal::FromJSON(
-    const Json::Value& aJSON) {
   int principalKind = -1;
-  const Json::Value* value = GetPrincipalObject(aJSON, principalKind);
+  const Json::Value* value = GetPrincipalObject(root, principalKind);
   if (!value) {
 #ifdef DEBUG
     fprintf(stderr, "Unexpected JSON principal %s\n",
-            aJSON.toStyledString().c_str());
+            root.toStyledString().c_str());
 #endif
     MOZ_ASSERT(false, "Unexpected JSON to deserialize as a principal");
 
@@ -358,15 +310,9 @@ already_AddRefed<BasePrincipal> BasePrincipal::FromJSON(
   }
 
   if (principalKind == eExpandedPrincipal) {
-    // Check if expanded principals is stored in the new or the old format. See
-    // comment for `IsLegacyFormat`.
-    if (IsLegacyFormat(*value)) {
-      nsTArray<ExpandedPrincipal::KeyVal> res =
-          GetJSONKeys<ExpandedPrincipal>(value);
-      return ExpandedPrincipal::FromProperties(res);
-    }
-
-    return ExpandedPrincipal::FromProperties(*value);
+    nsTArray<ExpandedPrincipal::KeyVal> res =
+        GetJSONKeys<ExpandedPrincipal>(value);
+    return ExpandedPrincipal::FromProperties(res);
   }
 
   MOZ_RELEASE_ASSERT(false, "Unexpected enum to deserialize as a principal");
@@ -379,38 +325,26 @@ nsresult BasePrincipal::PopulateJSONObject(Json::Value& aObject) {
 // Returns a JSON representation of the principal.
 // Calling BasePrincipal::FromJSON will deserialize the JSON into
 // the corresponding principal type.
-nsresult BasePrincipal::ToJSON(nsACString& aJSON) {
-  MOZ_ASSERT(aJSON.IsEmpty(), "ToJSON only supports an empty result input");
-  aJSON.Truncate();
+nsresult BasePrincipal::ToJSON(nsACString& aResult) {
+  MOZ_ASSERT(aResult.IsEmpty(), "ToJSON only supports an empty result input");
+  aResult.Truncate();
 
-  Json::Value root = Json::objectValue;
-  nsresult rv = ToJSON(root);
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
+  Json::Value innerJSONObject = Json::objectValue;
+
+  nsresult rv = PopulateJSONObject(innerJSONObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static StaticAutoPtr<Json::StreamWriterBuilder> sJSONBuilderForPrincipals;
-  if (!sJSONBuilderForPrincipals) {
-    sJSONBuilderForPrincipals = new Json::StreamWriterBuilder();
-    (*sJSONBuilderForPrincipals)["indentation"] = "";
-    (*sJSONBuilderForPrincipals)["emitUTF8"] = true;
-    ClearOnShutdown(&sJSONBuilderForPrincipals);
-  }
-  std::string result = Json::writeString(*sJSONBuilderForPrincipals, root);
-  aJSON.Append(result);
-  if (aJSON.Length() == 0) {
+  Json::Value root = Json::objectValue;
+  std::string key = std::to_string(Kind());
+  root[key] = innerJSONObject;
+  std::string result = Json::writeString(builder, root);
+  aResult.Append(result);
+  if (aResult.Length() == 0) {
     MOZ_ASSERT(false, "JSON writer failed to output a principal serialization");
     return NS_ERROR_UNEXPECTED;
   }
-
-  return NS_OK;
-}
-
-nsresult BasePrincipal::ToJSON(Json::Value& aObject) {
-  static_assert(eKindMax < ArrayLength(JSONEnumKeyStrings));
-  nsresult rv = PopulateJSONObject(
-      (aObject[Json::StaticString(JSONEnumKeyStrings[Kind()])] =
-           Json::objectValue));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -1595,13 +1529,6 @@ BasePrincipal::Deserializer::Write(nsIObjectOutputStream* aStream) {
   // Read is used still for legacy principals
   MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
   return NS_OK;
-}
-
-/* static */
-void BasePrincipal::SetJSONValue(Json::Value& aObject, const char* aKey,
-                                 const nsCString& aValue) {
-  aObject[Json::StaticString(aKey)] =
-      Json::Value(aValue.BeginReading(), aValue.EndReading());
 }
 
 }  // namespace mozilla

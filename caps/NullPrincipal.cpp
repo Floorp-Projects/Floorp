@@ -240,12 +240,12 @@ nsresult NullPrincipal::PopulateJSONObject(Json::Value& aObject) {
   nsAutoCString principalURI;
   nsresult rv = mURI->GetSpec(principalURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  SetJSONValue<eSpec>(aObject, principalURI);
+  aObject[std::to_string(eSpec)] = principalURI.get();
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
   if (suffix.Length() > 0) {
-    SetJSONValue<eSuffix>(aObject, suffix);
+    aObject[std::to_string(eSuffix)] = suffix.get();
   }
 
   return NS_OK;
