@@ -6752,24 +6752,7 @@ public class GeckoSession {
   @AnyThread
   public @NonNull GeckoResult<InputStream> saveAsPdf() {
     final GeckoResult<InputStream> geckoResult = new GeckoResult<>();
-    final GeckoSession self = this;
-    this.isPdfJs()
-        .then(
-            new GeckoResult.OnValueListener<Boolean, Void>() {
-              @Override
-              public GeckoResult<Void> onValue(final Boolean isPdfJs) {
-                if (!isPdfJs) {
-                  self.mWindow.printToPdf(geckoResult);
-                } else {
-                  geckoResult.completeFrom(
-                      self.getPdfFileSaver()
-                          .save()
-                          .map(result -> new ByteArrayInputStream(result.bytes)));
-                }
-                return null;
-              }
-            });
-
+    this.mWindow.printToPdf(geckoResult);
     return geckoResult;
   }
 
