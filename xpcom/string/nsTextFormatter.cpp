@@ -697,12 +697,8 @@ int nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
         break;
 
       case 'S':
-        MOZ_ASSERT(thisArg->mKind == STRING16);
-        // Type-based printing below.
-        break;
-
       case 's':
-        MOZ_ASSERT(thisArg->mKind == STRING);
+        MOZ_ASSERT(thisArg->mKind == STRING || thisArg->mKind == STRING16);
         // Type-based printing below.
         break;
 
