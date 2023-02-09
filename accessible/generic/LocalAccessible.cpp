@@ -447,7 +447,23 @@ uint64_t LocalAccessible::NativeInteractiveState() const {
   if (NativelyUnavailable()) return states::UNAVAILABLE;
 
   nsIFrame* frame = GetFrame();
-  if (frame && frame->IsFocusable()) return states::FOCUSABLE;
+  // If we're caching this remote document in the parent process, we
+  // need to cache focusability irrespective of visibility. Otherwise,
+  // if this document is invisible when it first loads, we'll cache that
+  // all descendants are unfocusable and this won't get updated when the
+  // document becomes visible. Even if we did get notified when the
+  // document becomes visible, it would be wasteful to walk the entire
+  // tree to figure out what is now focusable and push cache updates.
+  // Although ignoring visibility means IsFocusable will return true for
+  // visibility: hidden, etc., this isn't a problem because we don't include
+  // those hidden elements in the a11y tree anyway.
+  const bool ignoreVisibility =
+      mDoc->IPCDoc() && StaticPrefs::accessibility_cache_enabled_AtStartup();
+  if (frame && frame->IsFocusable(
+                   /* aWithMouse */ false,
+                   /* aCheckVisibility */ !ignoreVisibility)) {
+    return states::FOCUSABLE;
+  }
 
   return 0;
 }
