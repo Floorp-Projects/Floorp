@@ -6,8 +6,19 @@
 const EXPORTED_SYMBOLS = ["DesktopFileParser"];
 
 
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+
 const DesktopFileParser = {
     async parseFromPath(path) {
+        let file = FileUtils.File(path);
+        if (!file.isFile()) {
+            throw "This is not a file.";
+        }
+        if (file.fileSize > 1048576) {
+            throw "File size is too large.";
+        }
         return this.parseFromText(await IOUtils.readUTF8(path));
     },
     parseFromText(text) {
