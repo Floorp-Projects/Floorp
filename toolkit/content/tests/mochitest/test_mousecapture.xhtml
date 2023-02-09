@@ -284,27 +284,27 @@ SimpleTest.waitForFocus(runTests);
 
   <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
     <hbox id="leftbox" style="width: 100px" flex="1"/>
-    <splitter id="splitter" width="5" height="5"/>
+    <splitter id="splitter" style="width: 5px; height: 5px"/>
     <hbox id="rightbox" style="width: 100px" flex="1"/>
   </hbox>
 
-  <vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
-  <vbox id="custom2" width="10" height="10" onmousedown="this.setCapture(); document.releaseCapture();"/>
-  <vbox id="custom3" width="10" height="10" onmousedown="this.setCapture(); this.releaseCapture();"/>
-  <vbox id="custom4" width="10" height="10" onmousedown="this.setCapture();"
+  <vbox id="custom"  style="width: 10px; height: 10px" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
+  <vbox id="custom2" style="width: 10px; height: 10px" onmousedown="this.setCapture(); document.releaseCapture();"/>
+  <vbox id="custom3" style="width: 10px; height: 10px" onmousedown="this.setCapture(); this.releaseCapture();"/>
+  <vbox id="custom4" style="width: 10px; height: 10px" onmousedown="this.setCapture();"
                                             onmousemove="this.releaseCapture();"/>
-  <hbox id="custom5" width="40" height="40"
+  <hbox id="custom5" style="width: 40px; height: 40px"
         onmousedown="this.setCapture(captureRetargetMode);">
-    <spacer id="custom5spacer" width="5"/>
-    <hbox id="custom5inner" width="35" height="35"/>
+    <spacer id="custom5spacer" style="width: 5px"/>
+    <hbox id="custom5inner" style="width: 35px; height: 35px"/>
   </hbox>
-  <vbox id="custom6" width="10" height="10"
+  <vbox id="custom6" style="width: 10px; height: 10px"
         onmousedown="document.createElement('hbox').setCapture();"/>
 </xul:vbox>
 
-  <iframe width="100" height="100" src="file_mousecapture3.html"/>
-  <iframe width="100" height="100" src="file_mousecapture4.html"/>
-  <iframe width="100" height="100" src="file_mousecapture5.html"/>
+  <iframe style="width: 100px; height: 100px" src="file_mousecapture3.html"/>
+  <iframe style="width: 100px; height: 100px" src="file_mousecapture4.html"/>
+  <iframe style="width: 100px; height: 100px" src="file_mousecapture5.html"/>
 
   <select id="select" xmlns="http://www.w3.org/1999/xhtml" size="4">
     <option id="option1">One</option>

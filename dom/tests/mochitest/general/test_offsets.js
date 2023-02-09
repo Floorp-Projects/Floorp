@@ -89,19 +89,14 @@ function testElement(element) {
 
   var scrollWidth, scrollHeight, clientWidth, clientHeight;
   var doScrollCheck = true;
-  if (element.id == "scrollbox") {
-    var lastchild = $("lastline");
-    scrollWidth =
-      lastchild.getBoundingClientRect().width + paddingLeft + paddingRight;
-    var top = element.firstChild.getBoundingClientRect().top;
-    var bottom = element.lastChild.getBoundingClientRect().bottom;
-    var contentsHeight = bottom - top;
-    scrollHeight = contentsHeight + paddingTop + paddingBottom;
-    clientWidth = paddingLeft + width + paddingRight - scrollbarWidth;
-    clientHeight = paddingTop + height + paddingBottom - scrollbarHeight;
-  } else {
-    clientWidth = paddingLeft + width + paddingRight;
-    clientHeight = paddingTop + height + paddingBottom;
+  {
+    if (element.id == "scrollbox") {
+      clientWidth = paddingLeft + width + paddingRight - scrollbarWidth;
+      clientHeight = paddingTop + height + paddingBottom - scrollbarHeight;
+    } else {
+      clientWidth = paddingLeft + width + paddingRight;
+      clientHeight = paddingTop + height + paddingBottom;
+    }
     if (element.id == "overflow-visible") {
       scrollWidth = 200;
       scrollHeight = 201;
@@ -286,9 +281,10 @@ function checkCoord(element, type, val, testname) {
 
 function checkCoordFuzzy(element, type, val, fuzz, testname) {
   if (val != -10000) {
+    let v = element[type];
     ok(
-      Math.abs(element[type] - Math.round(val)) <= fuzz,
-      testname + " " + type
+      Math.abs(v - Math.round(val)) <= fuzz,
+      `${testname} ${type}: ${v} vs. ${val}`
     );
   }
 }
