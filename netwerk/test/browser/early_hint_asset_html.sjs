@@ -8,11 +8,6 @@ function handleRequest(request, response) {
   let httpCode = qs.get("code");
 
   let url = `early_hint_asset.sjs?as=${asset}`;
-  let uuid = qs.get("uuid");
-
-  if (uuid) {
-    url = `early_hint_asset.sjs?as=${asset}&uuid=${uuid}`;
-  }
 
   // write to raw socket
   response.seizePower();
