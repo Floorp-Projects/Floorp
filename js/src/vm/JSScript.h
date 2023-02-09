@@ -2170,8 +2170,7 @@ struct ScriptAndCounts {
   }
 };
 
-extern JS::UniqueChars FormatIntroducedFilename(JSContext* cx,
-                                                const char* filename,
+extern JS::UniqueChars FormatIntroducedFilename(const char* filename,
                                                 unsigned lineno,
                                                 const char* introducer);
 
