@@ -128,3 +128,31 @@ add_task(async function test_idle_notifications() {
   PlacesFrecencyRecalculator.observe(null, "active", "");
   Assert.ok(spyStop.calledOnce, "Start callback has been invoked");
 });
+
+add_task(async function test_chunk_time_telemetry() {
+  await PlacesUtils.bookmarks.insert({
+    url: "https://test-bookmark.com",
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+  });
+  let histogram = TelemetryTestUtils.getAndClearHistogram(
+    "PLACES_FRECENCY_RECALC_CHUNK_TIME_MS"
+  );
+  let subject = {};
+  PlacesFrecencyRecalculator.observe(subject, "test-execute-taskFn", "");
+  await subject.promise;
+  let snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((a, b) => a + b, 0),
+    1
+  );
+  Assert.greater(snapshot.sum, 0);
+  // It should now not report any new time, since there's nothing to recalculate.
+  histogram.clear();
+  PlacesFrecencyRecalculator.observe(subject, "test-execute-taskFn", "");
+  await subject.promise;
+  snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((a, b) => a + b, 0),
+    0
+  );
+});

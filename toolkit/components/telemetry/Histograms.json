@@ -7219,6 +7219,18 @@
     "n_buckets": 10,
     "description": "PLACES: Time to execute maintenance tasks on idle (ms)"
   },
+  "PLACES_FRECENCY_RECALC_CHUNK_TIME_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1811209],
+    "description": "PLACES: Time to recalculate frecency for a chunk of pages (ms)"
+  },
   "PLACES_ANNOS_BOOKMARKS_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],

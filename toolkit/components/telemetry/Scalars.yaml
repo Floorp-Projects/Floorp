@@ -9141,6 +9141,21 @@ places:
     record_in_processes:
       - main
 
+  pages_need_frecency_recalculation:
+    bug_numbers:
+      - 1811209
+    description: >
+      Number of pages that need a frecency recalculation.
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.
