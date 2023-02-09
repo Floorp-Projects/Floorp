@@ -5,10 +5,7 @@
 "use strict";
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-const {
-  getAllBrowsingContextsForContext,
-  isWindowGlobalPartOfContext,
-} = ChromeUtils.importESModule(
+const { isWindowGlobalPartOfContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
 );
 
@@ -346,9 +343,10 @@ class StorageActorMock extends EventEmitter {
 
   get windows() {
     return (
-      getAllBrowsingContextsForContext(this.watcherActor.sessionContext, {
-        acceptSameProcessIframes: true,
-      })
+      this.watcherActor
+        .getAllBrowsingContexts({
+          acceptSameProcessIframes: true,
+        })
         .map(x => {
           const uri = x.currentWindowGlobal.documentURI;
           return { location: uri };
@@ -379,13 +377,12 @@ class StorageActorMock extends EventEmitter {
   }
 
   getWindowFromHost(host) {
-    const hostBrowsingContext = getAllBrowsingContextsForContext(
-      this.watcherActor.sessionContext,
-      { acceptSameProcessIframes: true }
-    ).find(x => {
-      const hostName = this.getHostName(x.currentWindowGlobal.documentURI);
-      return hostName === host;
-    });
+    const hostBrowsingContext = this.watcherActor
+      .getAllBrowsingContexts({ acceptSameProcessIframes: true })
+      .find(x => {
+        const hostName = this.getHostName(x.currentWindowGlobal.documentURI);
+        return hostName === host;
+      });
     // In case of WebExtension or BrowserToolbox, we may pass privileged hosts
     // which don't relate to any particular window.
     // Like "indexeddb+++fx-devtools" or "chrome".

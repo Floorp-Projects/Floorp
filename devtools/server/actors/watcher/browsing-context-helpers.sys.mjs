@@ -325,6 +325,7 @@ export function isWindowGlobalPartOfContext(
 
 /**
  * Get all the BrowsingContexts that should be debugged by the given session context.
+ * Consider using WatcherActor.getAllBrowsingContexts(options) which will automatically pass the right sessionContext.
  *
  * Really all of them:
  * - For all the privileged windows (browser.xhtml, browser console, ...)
