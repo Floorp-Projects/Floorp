@@ -788,7 +788,7 @@ void DecodeStencilTask::parse(JSContext* cx, FrontendContext* fc) {
   if (!stencilInput_) {
     return;
   }
-  if (!stencilInput_->initForGlobal(cx, fc)) {
+  if (!stencilInput_->initForGlobal(fc)) {
     return;
   }
 
@@ -830,7 +830,7 @@ void MultiStencilsDecodeTask::parse(JSContext* cx, FrontendContext* fc) {
 
   for (auto& source : *sources) {
     frontend::CompilationInput stencilInput(options);
-    if (!stencilInput.initForGlobal(cx, fc)) {
+    if (!stencilInput.initForGlobal(fc)) {
       break;
     }
 

@@ -613,23 +613,23 @@ struct CompilationInput {
       : options(options) {}
 
  private:
-  bool initScriptSource(JSContext* cx, FrontendContext* fc);
+  bool initScriptSource(FrontendContext* fc);
 
  public:
-  bool initForGlobal(JSContext* cx, FrontendContext* fc) {
+  bool initForGlobal(FrontendContext* fc) {
     target = CompilationTarget::Global;
-    return initScriptSource(cx, fc);
+    return initScriptSource(fc);
   }
 
   bool initForSelfHostingGlobal(JSContext* cx) {
     target = CompilationTarget::SelfHosting;
     AutoReportFrontendContext fc(cx);
-    return initScriptSource(cx, &fc);
+    return initScriptSource(&fc);
   }
 
   bool initForStandaloneFunction(JSContext* cx, FrontendContext* fc) {
     target = CompilationTarget::StandaloneFunction;
-    if (!initScriptSource(cx, fc)) {
+    if (!initScriptSource(fc)) {
       return false;
     }
     enclosingScope = InputScope(&cx->global()->emptyGlobalScope());
@@ -637,22 +637,20 @@ struct CompilationInput {
   }
 
   bool initForStandaloneFunctionInNonSyntacticScope(
-      JSContext* cx, FrontendContext* fc,
-      Handle<Scope*> functionEnclosingScope);
+      FrontendContext* fc, Handle<Scope*> functionEnclosingScope);
 
-  bool initForEval(JSContext* cx, FrontendContext* fc,
-                   Handle<Scope*> evalEnclosingScope) {
+  bool initForEval(FrontendContext* fc, Handle<Scope*> evalEnclosingScope) {
     target = CompilationTarget::Eval;
-    if (!initScriptSource(cx, fc)) {
+    if (!initScriptSource(fc)) {
       return false;
     }
     enclosingScope = InputScope(evalEnclosingScope);
     return true;
   }
 
-  bool initForModule(JSContext* cx, FrontendContext* fc) {
+  bool initForModule(FrontendContext* fc) {
     target = CompilationTarget::Module;
-    if (!initScriptSource(cx, fc)) {
+    if (!initScriptSource(fc)) {
       return false;
     }
     // The `enclosingScope` is the emptyGlobalScope.

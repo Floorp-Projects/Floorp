@@ -595,7 +595,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return true;
   }
 
-  if (!input.initForGlobal(cx, fc)) {
+  if (!input.initForGlobal(fc)) {
     return false;
   }
 
