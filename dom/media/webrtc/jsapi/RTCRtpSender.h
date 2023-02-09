@@ -18,11 +18,11 @@
 #include "mozilla/dom/RTCRtpParametersBinding.h"
 #include "RTCStatsReport.h"
 #include "jsep/JsepTrack.h"
+#include "transportbridge/MediaPipeline.h"
 
 class nsPIDOMWindowInner;
 
 namespace mozilla {
-class MediaPipelineTransmit;
 class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
@@ -36,7 +36,9 @@ class RTCDtlsTransport;
 class RTCDTMFSender;
 class RTCRtpTransceiver;
 
-class RTCRtpSender : public nsISupports, public nsWrapperCache {
+class RTCRtpSender : public nsISupports,
+                     public nsWrapperCache,
+                     public MediaPipelineTransmitControlInterface {
  public:
   RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                MediaTransportHandler* aTransportHandler,
@@ -85,8 +87,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
   void BreakCycles();
+  // Terminal state, reached through stopping RTCRtpTransceiver.
   void Stop();
-  void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
   bool IsMyPc(const PeerConnectionImpl* aPc) const { return mPc.get() == aPc; }
   RefPtr<MediaPipelineTransmit> GetPipeline() const;
@@ -120,7 +122,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
     return &mVideoCodecMode;
   }
   AbstractCanonical<std::string>* CanonicalCname() { return &mCname; }
-  AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
+  AbstractCanonical<bool>* CanonicalTransmitting() override {
+    return &mTransmitting;
+  }
 
   bool HasPendingSetParameters() const { return mPendingParameters.isSome(); }
   void InvalidateLastReturnedParameters() {

@@ -6,7 +6,6 @@
 #include "transport/logging.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/Promise.h"
-#include "transportbridge/MediaPipeline.h"
 #include "nsPIDOMWindow.h"
 #include "PrincipalHandle.h"
 #include "nsIPrincipal.h"
@@ -117,6 +116,8 @@ RTCRtpReceiver::RTCRtpReceiver(
         *aConduit->AsVideoSessionConduit(), mTrackSource->Stream(), aTrackingId,
         principalHandle, aPrivacy);
   }
+
+  mPipeline->InitControl(this);
 
   // Spec says remote tracks start out muted.
   mTrackSource->SetMuted(true);
@@ -622,9 +623,6 @@ void RTCRtpReceiver::UpdateTransport() {
 }
 
 void RTCRtpReceiver::UpdateConduit() {
-  mReceiving = false;
-  Stop();
-
   if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
     UpdateVideoConduit();
   } else {
@@ -632,7 +630,6 @@ void RTCRtpReceiver::UpdateConduit() {
   }
 
   if ((mReceiving = GetJsepTransceiver().mRecvTrack.GetActive())) {
-    Start();
     mHaveStartedReceiving = true;
   }
 }
@@ -762,14 +759,8 @@ void RTCRtpReceiver::UpdateAudioConduit() {
 }
 
 void RTCRtpReceiver::Stop() {
-  if (mPipeline) {
-    mPipeline->Stop();
-  }
-}
-
-void RTCRtpReceiver::Start() {
-  mPipeline->Start();
-  mHaveStartedReceiving = true;
+  MOZ_ASSERT(mTransceiver->Stopped());
+  mReceiving = false;
 }
 
 bool RTCRtpReceiver::HasTrack(const dom::MediaStreamTrack* aTrack) const {

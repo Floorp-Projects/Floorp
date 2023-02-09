@@ -238,6 +238,9 @@ class AudioProxyThread {
   UniquePtr<AudioConverter> mAudioConverter;
 };
 
+#define INIT_MIRROR(name, val) \
+  name(AbstractThread::MainThread(), val, "MediaPipeline::" #name " (Mirror)")
+
 MediaPipeline::MediaPipeline(const std::string& aPc,
                              RefPtr<MediaTransportHandler> aTransportHandler,
                              DirectionType aDirection,
@@ -248,7 +251,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mDirection(aDirection),
       mCallThread(std::move(aCallThread)),
       mStsThread(std::move(aStsThread)),
-      mActive(false, "MediaPipeline::mActive"),
+      INIT_MIRROR(mActive, false),
       mLevel(0),
       mTransportHandler(std::move(aTransportHandler)),
       mRtpPacketsSent(0),
@@ -262,25 +265,17 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpHeaderExtensionMap(new webrtc::RtpHeaderExtensionMap()),
       mPacketDumper(PacketDumper::GetPacketDumper(mPc)) {}
 
+#undef INIT_MIRROR
+
 MediaPipeline::~MediaPipeline() {
   MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
           ("Destroying MediaPipeline: %s", mDescription.c_str()));
 }
 
-void MediaPipeline::Start() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mActive = true;
-}
-
-void MediaPipeline::Stop() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mActive = false;
-}
-
 void MediaPipeline::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  Stop();
 
+  mActive.DisconnectIfConnected();
   RUN_ON_THREAD(mStsThread,
                 WrapRunnable(RefPtr<MediaPipeline>(this),
                              &MediaPipeline::DetachTransport_s),
@@ -811,9 +806,13 @@ MediaPipelineTransmit::~MediaPipelineTransmit() {
   MOZ_ASSERT(!mDomTrack.Ref());
 }
 
+void MediaPipelineTransmit::InitControl(
+    MediaPipelineTransmitControlInterface* aControl) {
+  mActive.Connect(aControl->CanonicalTransmitting());
+}
+
 void MediaPipelineTransmit::Shutdown() {
   MediaPipeline::Shutdown();
-  MOZ_ASSERT(!mActive);
   mWatchManager.Shutdown();
   if (mDomTrack.Ref()) {
     mDomTrack.Ref()->RemovePrincipalChangeObserver(this);
@@ -1221,6 +1220,11 @@ MediaPipelineReceive::MediaPipelineReceive(
 
 MediaPipelineReceive::~MediaPipelineReceive() = default;
 
+void MediaPipelineReceive::InitControl(
+    MediaPipelineReceiveControlInterface* aControl) {
+  mActive.Connect(aControl->CanonicalReceiving());
+}
+
 void MediaPipelineReceive::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MediaPipeline::Shutdown();
@@ -1236,10 +1240,10 @@ void MediaPipelineReceive::UpdateMaybeTrackNeedsUnmute() {
 
 void MediaPipelineReceive::OnRtpPacketReceived() {
   ASSERT_ON_THREAD(mStsThread);
-  if (mMaybeTrackNeedsUnmute) {
+  bool needsUnmute = mMaybeTrackNeedsUnmute.exchange(false);
+  if (needsUnmute) {
     mUnmuteEvent.Notify();
   }
-  mMaybeTrackNeedsUnmute = false;
 }
 
 class MediaPipelineReceiveAudio::PipelineListener

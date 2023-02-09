@@ -17,12 +17,12 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "PerformanceRecorder.h"
 #include "RTCStatsReport.h"
+#include "transportbridge/MediaPipeline.h"
 #include <vector>
 
 class nsPIDOMWindowInner;
 
 namespace mozilla {
-class MediaPipelineReceive;
 class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
@@ -38,7 +38,9 @@ struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
 class RTCRtpTransceiver;
 
-class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
+class RTCRtpReceiver : public nsISupports,
+                       public nsWrapperCache,
+                       public MediaPipelineReceiveControlInterface {
  public:
   RTCRtpReceiver(nsPIDOMWindowInner* aWindow, PrincipalPrivacy aPrivacy,
                  PeerConnectionImpl* aPc,
@@ -73,8 +75,8 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   void Shutdown();
   void BreakCycles();
+  // Terminal state, reached through stopping RTCRtpTransceiver.
   void Stop();
-  void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
   void SyncToJsep(JsepTransceiver& aJsepTransceiver) const;
   void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
@@ -132,7 +134,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
     return &mVideoRtpRtcpConfig;
   }
-  AbstractCanonical<bool>* CanonicalReceiving() { return &mReceiving; }
+  AbstractCanonical<bool>* CanonicalReceiving() override { return &mReceiving; }
 
  private:
   virtual ~RTCRtpReceiver();
@@ -171,9 +173,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   Canonical<Ssrc> mSsrc;
   Canonical<Ssrc> mVideoRtxSsrc;
   Canonical<RtpExtList> mLocalRtpExtensions;
-
   Canonical<std::vector<AudioCodecConfig>> mAudioCodecs;
-
   Canonical<std::vector<VideoCodecConfig>> mVideoCodecs;
   Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
   Canonical<bool> mReceiving;
