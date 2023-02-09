@@ -440,10 +440,19 @@ const kActionAlways = 1;
 const kActionDeny = 2;
 const kActionNever = 3;
 
-function activateSecondaryAction(aAction) {
+async function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstElementChild;
   switch (aAction) {
     case kActionNever:
+      if (notification.notification.secondaryActions.length > 1) {
+        // "Always Block" is the first (and only) item in the menupopup.
+        await Promise.all([
+          BrowserTestUtils.waitForEvent(notification.menupopup, "popupshown"),
+          notification.menubutton.click(),
+        ]);
+        notification.menupopup.querySelector("menuitem").click();
+        return;
+      }
       if (!notification.checkbox.checked) {
         notification.checkbox.click();
       }

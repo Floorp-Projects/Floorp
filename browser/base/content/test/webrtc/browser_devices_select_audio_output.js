@@ -30,6 +30,14 @@ async function requestAudioOutputExpectingPrompt(options) {
   checkDeviceSelectors(["speaker"]);
 }
 
+async function requestAudioOutputExpectingDeny(options) {
+  await Promise.all([
+    requestAudioOutput(options),
+    expectObserverCalled("getUserMedia:response:deny"),
+    promiseMessage(permissionError),
+  ]);
+}
+
 async function simulateAudioOutputRequest(options) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -116,10 +124,19 @@ var gTests = [
     },
   },
   {
-    desc: 'User clicks "Block"',
-    run: async function checkBlock() {
+    desc: 'User clicks "Not Now"',
+    run: async function checkNotNow() {
       await requestAudioOutputExpectingPrompt();
+      is(
+        PopupNotifications.getNotification("webRTC-shareDevices")
+          .secondaryActions[0].label,
+        "Not now",
+        "first secondary action label"
+      );
       await deny();
+      info("selectAudioOutput() after Not Now should prompt again.");
+      await requestAudioOutputExpectingPrompt();
+      await escape();
     },
   },
   {
@@ -130,6 +147,20 @@ var gTests = [
       info("selectAudioOutput() after Esc should prompt again.");
       await requestAudioOutputExpectingPrompt();
       await allow();
+      await revokePermission("speaker", true);
+    },
+  },
+  {
+    desc: 'User clicks "Always Block"',
+    run: async function checkAlwaysBlock() {
+      await requestAudioOutputExpectingPrompt();
+      await Promise.all([
+        expectObserverCalled("getUserMedia:response:deny"),
+        promiseMessage(permissionError),
+        activateSecondaryAction(kActionNever),
+      ]);
+      info("selectAudioOutput() after Always Block should not prompt again.");
+      await requestAudioOutputExpectingDeny();
       await revokePermission("speaker", true);
     },
   },
@@ -190,13 +221,7 @@ var gTests = [
         "speaker",
         SitePermissions.BLOCK
       );
-      await Promise.all([
-        expectObserverCalled("getUserMedia:request"),
-        expectObserverCalled("recording-window-ended"),
-        expectObserverCalled("getUserMedia:response:deny"),
-        promiseMessage(permissionError),
-        promiseRequestAudioOutput(),
-      ]);
+      await requestAudioOutputExpectingDeny();
       SitePermissions.removeFromPrincipal(gBrowser.contentPrincipal, "speaker");
     },
   },
