@@ -73,6 +73,7 @@ struct sec_PKCS12SafeBagStr {
         sec_PKCS12CRLBag *crlBag;
         sec_PKCS12SecretBag *secretBag;
         sec_PKCS12SafeContents *safeContents;
+        SECItem *unknownBag;
     } safeBagContent;
 
     sec_PKCS12Attribute **attribs;
