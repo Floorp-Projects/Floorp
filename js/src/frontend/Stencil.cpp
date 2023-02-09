@@ -1280,7 +1280,7 @@ mozilla::Maybe<NameLocation> ScopeContext::getPrivateFieldLocation(
   return mozilla::Some(p->value());
 }
 
-bool CompilationInput::initScriptSource(JSContext* cx, FrontendContext* fc) {
+bool CompilationInput::initScriptSource(FrontendContext* fc) {
   source = do_AddRef(fc->getAllocator()->new_<ScriptSource>());
   if (!source) {
     return false;
@@ -1290,11 +1290,11 @@ bool CompilationInput::initScriptSource(JSContext* cx, FrontendContext* fc) {
 }
 
 bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
-    JSContext* cx, FrontendContext* fc, Handle<Scope*> functionEnclosingScope) {
+    FrontendContext* fc, Handle<Scope*> functionEnclosingScope) {
   MOZ_ASSERT(!functionEnclosingScope->as<GlobalScope>().isSyntactic());
 
   target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
-  if (!initScriptSource(cx, fc)) {
+  if (!initScriptSource(fc)) {
     return false;
   }
   enclosingScope = InputScope(functionEnclosingScope);

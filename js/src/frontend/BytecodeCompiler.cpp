@@ -290,7 +290,7 @@ template <typename Unit>
       return false;
     }
   } else {
-    if (!input.initForGlobal(cx, fc)) {
+    if (!input.initForGlobal(fc)) {
       return false;
     }
   }
@@ -525,7 +525,7 @@ static JSScript* CompileEvalScriptImpl(
     AutoAssertReportedException assertException(cx, &fc);
 
     Rooted<CompilationInput> input(cx, CompilationInput(options));
-    if (!input.get().initForEval(cx, &fc, enclosingScope)) {
+    if (!input.get().initForEval(&fc, enclosingScope)) {
       return nullptr;
     }
 
@@ -900,7 +900,7 @@ template <typename Unit>
     SourceText<Unit>& srcBuf, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
 
-  if (!input.initForModule(cx, fc)) {
+  if (!input.initForModule(fc)) {
     return false;
   }
 
@@ -1467,7 +1467,7 @@ static JSFunction* CompileStandaloneFunction(
     Rooted<CompilationInput> input(cx, CompilationInput(options));
     if (enclosingScope) {
       if (!input.get().initForStandaloneFunctionInNonSyntacticScope(
-              cx, &fc, enclosingScope)) {
+              &fc, enclosingScope)) {
         return nullptr;
       }
     } else {

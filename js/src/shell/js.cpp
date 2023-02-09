@@ -5035,7 +5035,7 @@ static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
   AutoReportFrontendContext fc(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForModule(cx, &fc)) {
+  if (!input.get().initForModule(&fc)) {
     return false;
   }
 
@@ -5094,7 +5094,7 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
   AutoReportFrontendContext fc(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForModule(cx, &fc)) {
+  if (!input.get().initForModule(&fc)) {
     return false;
   }
   frontend::CompilationStencil stencil(nullptr);
@@ -5644,11 +5644,11 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
   if (goal == frontend::ParseGoal::Script) {
-    if (!input.get().initForGlobal(cx, &fc)) {
+    if (!input.get().initForGlobal(&fc)) {
       return false;
     }
   } else {
-    if (!input.get().initForModule(cx, &fc)) {
+    if (!input.get().initForModule(&fc)) {
       return false;
     }
   }
@@ -5726,7 +5726,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   AutoReportFrontendContext fc(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx, &fc)) {
+  if (!input.get().initForGlobal(&fc)) {
     return false;
   }
 
