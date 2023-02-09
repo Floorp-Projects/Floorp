@@ -73,7 +73,6 @@ class ConsoleTable extends Component {
     const rows = [];
     items.forEach((item, index) => {
       const cells = [];
-      const className = index % 2 ? "odd" : "even";
 
       columns.forEach((value, key) => {
         const cellValue = item[key];
@@ -98,7 +97,7 @@ class ConsoleTable extends Component {
           )
         );
       });
-      rows.push(dom.tr({ className }, cells));
+      rows.push(dom.tr({}, cells));
     });
     return dom.tbody({}, rows);
   }

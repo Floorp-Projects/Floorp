@@ -838,7 +838,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 
-.consoletable tr.even td {
+.consoletable tr:nth-child(even) td {
   background-color: var(--table-zebra-background);
 }
 
