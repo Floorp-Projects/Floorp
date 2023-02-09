@@ -15,17 +15,17 @@ function runtest() {
 }
 
 function finish() {
-  document.getElementById('b').style.height = '100px';
+  document.getElementById('b').height = '100';
   document.documentElement.className = "";
 }
 ]]>
 </script>
 
-  <scrollbox id="s" style="height: 200px; overflow: scroll;">
+  <scrollbox id="s" height="200" style="overflow: scroll;">
     <vbox>
-      <vbox style="height: 150px; width: 200px; background: red;" id="b"/>
-      <vbox style="height: 150px; width: 200px; background: green;"/>
-      <vbox style="height: 150px; width: 200px; background: blue;"/>
+      <vbox height="150" width="200" style="background: red;" id="b"/>
+      <vbox height="150" width="200" style="background: green;"/>
+      <vbox height="150" width="200" style="background: blue;"/>
       <label value="a"/>
     </vbox>
   </scrollbox>

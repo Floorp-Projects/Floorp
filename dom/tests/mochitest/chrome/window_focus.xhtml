@@ -450,7 +450,7 @@ function startTest()
     if (element.localName == "area")
       continue;
 
-    mouseOnElement(element, element, true, "mouse on element t" + idx);
+    mouseOnElement(element, getById("t" + idx), true, "mouse on element t" + idx);
     var expectedWindow = (element.ownerGlobal == gChildWindow) ? gChildWindow : window;
     if (element.localName == "richlistbox" && expectedWindow == window &&
         navigator.platform.indexOf("Mac") == 0) {
@@ -1582,7 +1582,7 @@ SimpleTest.waitForFocus(startTest);
 <hbox id="innerbox">
   <button id="t4" accesskey="h" label="no tabindex"/>
   <button id="o1" accesskey="i" label="tabindex = -1" tabindex="-1"/>
-  <richlistbox id="t5" label="tabindex = 0" tabindex="0" style="width: 50px">
+  <richlistbox id="t5" label="tabindex = 0" tabindex="0" width="50">
     <richlistitem height="10"/>
   </richlistbox>
   <button id="t1" label="tabindex = 2" tabindex="2"/>
@@ -1597,8 +1597,8 @@ SimpleTest.waitForFocus(startTest);
   <button id="t7" style="-moz-user-focus: normal;" label="no tabindex"/>
   <button id="o3" style="-moz-user-focus: normal;" label="tabindex = -1" tabindex="-1"/>
   <button id="t8" style="-moz-user-focus: normal;" label="tabindex = 0" tabindex="0"/>
-  <richlistbox id="t3" style="-moz-user-focus: normal; width: 50px" label="tabindex = 2" tabindex="2">
-    <richlistitem style="height: 10px"/>
+  <richlistbox id="t3" style="-moz-user-focus: normal;" label="tabindex = 2" tabindex="2" width="50">
+    <richlistitem height="10"/>
   </richlistbox>
 </hbox>
 <hbox>
@@ -1628,7 +1628,7 @@ SimpleTest.waitForFocus(startTest);
   <dropmarker id="n3" style="-moz-user-focus: none;" value="no tabindex"/>
 </hbox>
 </vbox>
-<browser id="childframe" type="content" src="child_focus_frame.html" style="height: 195px"/>
+<browser id="childframe" type="content" src="child_focus_frame.html" width="300" height="195"/>
 <button id="t34"/>
 <tabbox id="tabbox">
   <tabs><tab id="t35" label="One"/><tab id="tab2" label="Two"/></tabs>
@@ -1657,12 +1657,12 @@ SimpleTest.waitForFocus(startTest);
 <checkbox id="o5"/><checkbox id="o7"/><hbox><checkbox id="o9"/></hbox>
 <checkbox id="o13"/><checkbox id="o15"/><checkbox id="o17"/><checkbox id="o19"/><checkbox id="o21"/><checkbox id="o23"/><checkbox id="o25"/>
 <checkbox id="n2"/><checkbox id="n4"/>
-<richlistbox id="last" style="width: 20px; height: 20px"/>
+<richlistbox id="last" width="20" height="20"/>
 
-<iframe id="ifa" style="-moz-user-focus: ignore; width: 40px; height: 60px" type="content"
+<iframe id="ifa" width="40" height="60" style="-moz-user-focus: ignore;" type="content"
         src="data:text/html,&lt;input id=fra size='2'&gt;&lt;input id='fra-b' size='2'&gt;
         &lt;iframe src='data:text/html,&lt;input id=frc&gt;&lt;iframe src=&quot;data:text/html,&lt;input id=frd&gt;&quot;&gt;&lt;/iframe&gt;'&gt;&lt;/iframe&gt;"/>
-<iframe id="ifb" style="-moz-user-focus: ignore; width: 20px; height: 20px"
+<iframe id="ifb" width="20" height="20" style="-moz-user-focus: ignore;"
         src="data:text/html,&lt;input id=frd&gt;&lt;/iframe&gt;"/>
 
 </hbox>
