@@ -1,21 +1,22 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _REMOTE_TRACK_SOURCE_H_
-#define _REMOTE_TRACK_SOURCE_H_
+#ifndef DOM_MEDIA_WEBRTC_JSAPI_REMOTETRACKSOURCE_H_
+#define DOM_MEDIA_WEBRTC_JSAPI_REMOTETRACKSOURCE_H_
 
 #include "MediaStreamTrack.h"
-#include "MediaStreamError.h"
 
 namespace mozilla {
+
+class SourceMediaTrack;
 
 class RemoteTrackSource : public dom::MediaStreamTrackSource {
  public:
   RemoteTrackSource(SourceMediaTrack* aStream, nsIPrincipal* aPrincipal,
-                    const nsString& aLabel, TrackingId aTrackingId)
-      : dom::MediaStreamTrackSource(aPrincipal, aLabel, std::move(aTrackingId)),
-        mStream(aStream) {}
+                    const nsString& aLabel, TrackingId aTrackingId);
 
   dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Other;
@@ -23,12 +24,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
 
   RefPtr<ApplyConstraintsPromise> ApplyConstraints(
       const dom::MediaTrackConstraints& aConstraints,
-      dom::CallerType aCallerType) override {
-    return ApplyConstraintsPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(
-            dom::MediaStreamError::Name::OverconstrainedError, ""),
-        __func__);
-  }
+      dom::CallerType aCallerType) override;
 
   void Stop() override {
     // XXX (Bug 1314270): Implement rejection logic if necessary when we have
@@ -39,22 +35,16 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
 
   void Enable() override {}
 
-  void SetPrincipal(nsIPrincipal* aPrincipal) {
-    mPrincipal = aPrincipal;
-    PrincipalChanged();
-  }
-  void SetMuted(bool aMuted) { MutedChanged(aMuted); }
-  void ForceEnded() { OverrideEnded(); }
+  void SetPrincipal(nsIPrincipal* aPrincipal);
+  void SetMuted(bool aMuted);
+  void ForceEnded();
 
   const RefPtr<SourceMediaTrack> mStream;
 
- protected:
-  virtual ~RemoteTrackSource() {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mStream->IsDestroyed());
-  }
+ private:
+  virtual ~RemoteTrackSource();
 };
 
 }  // namespace mozilla
 
-#endif  // _REMOTE_TRACK_SOURCE_H_
+#endif  // DOM_MEDIA_WEBRTC_JSAPI_REMOTETRACKSOURCE_H_
