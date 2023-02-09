@@ -63,3 +63,19 @@ export async function clearStoragesForOrigin(principal) {
 
   return request.result;
 }
+
+export async function resetStorage() {
+  const request = Services.qms.reset();
+
+  await new Promise(function(resolve) {
+    request.callback = function() {
+      resolve();
+    };
+  });
+
+  if (request.resultCode != Cr.NS_OK) {
+    throw new RequestError(request.resultCode, request.resultName);
+  }
+
+  return request.result;
+}
