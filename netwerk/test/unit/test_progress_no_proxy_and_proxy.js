@@ -8,6 +8,7 @@
 
 var last = 0;
 var max = 0;
+var using_proxy = false;
 
 const RESPONSE_LENGTH = 3000000;
 const STATUS_RECEIVING_FROM = 0x804b0006;
@@ -68,6 +69,9 @@ ProgressCallback.prototype = {
 
     this._listener.onStopRequest(request, status);
     delete this._listener;
+
+    check_http_info(request, this.expected_httpVersion, using_proxy);
+
     this.finish();
   },
 
@@ -100,25 +104,14 @@ ProgressCallback.prototype = {
   mStatus: 0,
 };
 
-registerCleanupFunction(async () => {
-  http3_clear_prefs();
-});
-
-add_task(async function setup() {
-  await http3_setup_tests("h3-29");
-});
-
-function chanPromise(uri, statusArg) {
+function chanPromise(uri, statusArg, version) {
   return new Promise(resolve => {
-    var chan = NetUtil.newChannel({
-      uri,
-      loadUsingSystemPrincipal: true,
-    });
-    chan.QueryInterface(Ci.nsIHttpChannel);
+    var chan = makeHTTPChannel(uri, using_proxy);
     chan.requestMethod = "GET";
     let listener = new ProgressCallback();
     listener.statusArg = statusArg;
     chan.notificationCallbacks = listener;
+    listener.expected_httpVersion = version;
     listener.finish = resolve;
     chan.asyncOpen(listener);
   });
@@ -129,9 +122,84 @@ function checkRequest(request, data, context) {
   Assert.equal(max, RESPONSE_LENGTH);
 }
 
+async function check_progress(server) {
+  info(`Testing ${server.constructor.name}`);
+  await server.registerPathHandler("/test", (req, resp) => {
+    // Generate a post.
+    function generateContent(size) {
+      return "0".repeat(size);
+    }
+
+    resp.writeHead(200, {
+      "content-type": "application/json",
+      "content-length": "3000000",
+    });
+    resp.end(generateContent(3000000));
+  });
+  await chanPromise(
+    `${server.origin()}/test`,
+    `${server.domain()}`,
+    server.version()
+  );
+}
+
+add_task(async function setup() {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
+});
+
+add_task(async function test_http_1_and_2() {
+  await with_node_servers(
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
+    check_progress
+  );
+});
+
+add_task(async function test_http_proxy() {
+  using_proxy = true;
+  let proxy = new NodeHTTPProxyServer();
+  await proxy.start();
+  await with_node_servers(
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
+    check_progress
+  );
+  await proxy.stop();
+  using_proxy = false;
+});
+
+add_task(async function test_https_proxy() {
+  using_proxy = true;
+  let proxy = new NodeHTTPSProxyServer();
+  await proxy.start();
+  await with_node_servers(
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
+    check_progress
+  );
+  await proxy.stop();
+  using_proxy = false;
+});
+
+add_task(async function test_http2_proxy() {
+  using_proxy = true;
+  let proxy = new NodeHTTP2ProxyServer();
+  await proxy.start();
+  await with_node_servers(
+    [NodeHTTPServer, NodeHTTPSServer, NodeHTTP2Server],
+    check_progress
+  );
+  await proxy.stop();
+  using_proxy = false;
+});
+
 add_task(async function test_http3() {
+  await http3_setup_tests("h3-29");
   await chanPromise(
     "https://foo.example.com/" + RESPONSE_LENGTH,
-    "foo.example.com"
+    "foo.example.com",
+    "h3-29"
   );
+  http3_clear_prefs();
 });

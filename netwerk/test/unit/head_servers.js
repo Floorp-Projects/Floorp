@@ -72,11 +72,17 @@ class BaseNodeServer {
   protocol() {
     return this._protocol;
   }
+  version() {
+    return this._version;
+  }
   origin() {
     return `${this.protocol()}://localhost:${this.port()}`;
   }
   port() {
     return this._port;
+  }
+  domain() {
+    return `localhost`;
   }
 
   /// Stops the server
@@ -119,6 +125,7 @@ class NodeHTTPServerCode extends BaseNodeHTTPServerCode {
 
 class NodeHTTPServer extends BaseNodeServer {
   _protocol = "http";
+  _version = "http/1.1";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
@@ -157,6 +164,7 @@ class NodeHTTPSServerCode extends BaseNodeHTTPServerCode {
 
 class NodeHTTPSServer extends BaseNodeServer {
   _protocol = "https";
+  _version = "http/1.1";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
@@ -195,6 +203,7 @@ class NodeHTTP2ServerCode extends BaseNodeHTTPServerCode {
 
 class NodeHTTP2Server extends BaseNodeServer {
   _protocol = "https";
+  _version = "h2";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
