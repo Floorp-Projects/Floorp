@@ -84,7 +84,6 @@ function init()
   tree.view = view;
   tree.ensureRowIsVisible(0);
   is(tree.getFirstVisibleRow(), 0, "first visible after ensureRowIsVisible on load");
-  tree.setAttribute("rows", "4");
 
   setTimeout(testtag_tree, 0, "tree-view", "treechildren-view", "multiple", "simple", "tree view");
 }
@@ -92,7 +91,7 @@ function init()
 ]]>
 </script>
 
-<tree id="tree-view">
+<tree id="tree-view" rows="4">
   <treecols>
     <treecol id="name" label="Name" sort="label" flex="1"/>
     <treecol id="address" label="Address" flex="1"/>

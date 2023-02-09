@@ -13,36 +13,33 @@
 
 
 <hbox id="box1">
-  <button label="0" width="100" height="40" style="margin: 3px;"/>
+  <button label="0" style="width: 100px; height: 40px; margin: 3px;"/>
 </hbox>
-<scrollbox id="box2" orient="vertical" align="start" width="200" height="50"
-           style="overflow: hidden; margin-left: 2px; padding: 1px;">
+<scrollbox id="box2" orient="vertical" align="start"
+           style="height: 50px; overflow: hidden; margin-left: 2px; padding: 1px;">
   <deck>
-    <scrollbox id="box3" orient="vertical" align="start" height="100"
-               style="overflow: scroll; margin: 1px; padding: 0;">
-      <vbox id="innerscroll" width="200" align="start">
-        <button id="button1" label="1" width="90" maxwidth="100"
-                minheight="25" height="35" maxheight="50"
-                style="min-width: 80px; margin: 5px; border: 4px; padding: 7px;
-                       -moz-appearance: none;"/>
+    <scrollbox id="box3" orient="vertical" align="start"
+               style="height: 100px; overflow: scroll; margin: 1px; padding: 0;">
+      <vbox id="innerscroll" style="width: 200px" align="start">
+        <button id="button1" label="1" style="width: 90px; max-width: 100px; min-width: 80px; min-height: 25px; height: 35px; max-height: 50px; margin: 5px; border: 4px; padding: 7px; appearance: none;"/>
         <menu id="menu">
-          <menupopup id="popup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
+          <menupopup id="popup" style="appearance: none; margin:0; border: 0; padding: 0;"
                                 onpopupshown="menuOpened()"
                                 onpopuphidden="if (event.target == this) SimpleTest.finish()">
             <menuitem label="One"/>
             <menu id="submenu" label="Three">
-              <menupopup id="subpopup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
+              <menupopup id="subpopup" style="appearance: none; margin:0; border: 0; padding: 0;"
                          onpopupshown="submenuOpened()">
                 <menuitem label="Four"/>
               </menupopup>
             </menu>
           </menupopup>
         </menu>
-        <button label="2" maxwidth="100" maxheight="20" style="margin: 5px;"/>
-        <button label="3" maxwidth="100" maxheight="20" style="margin: 5px;"/>
-        <button label="4" maxwidth="100" maxheight="20" style="margin: 5px;"/>
+        <button label="2" style="max-width: 100px; max-height: 20px; margin: 5px;"/>
+        <button label="3" style="max-width: 100px; max-height: 20px; margin: 5px;"/>
+        <button label="4" style="max-width: 100px; max-height: 20px; margin: 5px;"/>
       </vbox>
-      <box height="200"/>
+      <box style="height: 200px"/>
     </scrollbox>
   </deck>
 </scrollbox>
