@@ -46,15 +46,21 @@ class BodyStreamHolder : public nsISupports {
 
   BodyStreamHolder();
 
-  virtual void NullifyStream() = 0;
+  virtual void NullifyStream() { mReadableStreamBody = nullptr; }
 
-  virtual void MarkAsRead() = 0;
+  virtual void MarkAsRead() {}
 
-  virtual void SetReadableStreamBody(ReadableStream* aBody) = 0;
-  virtual ReadableStream* GetReadableStreamBody() = 0;
+  void SetReadableStreamBody(ReadableStream* aBody) {
+    mReadableStreamBody = aBody;
+  }
+  ReadableStream* GetReadableStreamBody() { return mReadableStreamBody; }
 
  protected:
   virtual ~BodyStreamHolder() = default;
+
+  // This is the ReadableStream exposed to content. It's underlying source is a
+  // BodyStream object.
+  RefPtr<ReadableStream> mReadableStreamBody;
 
  private:
   void StoreBodyStream(BodyStream* aBodyStream);

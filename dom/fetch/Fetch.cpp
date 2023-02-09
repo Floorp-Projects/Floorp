@@ -1176,10 +1176,7 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
 
 template <class Derived>
 FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
-    : mOwner(aOwner),
-      mReadableStreamBody(nullptr),
-      mReadableStreamReader(nullptr),
-      mBodyUsed(false) {
+    : mOwner(aOwner), mReadableStreamReader(nullptr), mBodyUsed(false) {
   MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
@@ -1627,7 +1624,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamBody)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1636,7 +1632,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamBody)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
