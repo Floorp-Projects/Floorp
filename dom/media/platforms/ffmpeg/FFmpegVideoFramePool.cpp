@@ -140,6 +140,9 @@ bool VideoFramePool<LIBAV_VER>::ShouldCopySurface() {
       "%f",
       (int)mDMABufSurfaces.Length(), surfacesUsed - surfacesUsedFFmpeg,
       surfacesUsedFFmpeg, mFFMPEGPoolSize, freeRatio);
+  if (StaticPrefs::media_ffmpeg_vaapi_force_surface_copy_AtStartup()) {
+    return true;
+  }
 
   MOZ_DIAGNOSTIC_ASSERT(mTextureCopyWorks.isSome());
   return mTextureCopyWorks.value() && freeRatio < SURFACE_COPY_THRESHOLD;
