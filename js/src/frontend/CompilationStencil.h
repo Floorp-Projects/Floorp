@@ -486,7 +486,7 @@ struct ScopeContext {
   bool hasFunctionNeedsHomeObjectOnChain = false;
 #endif
 
-  bool init(JSContext* cx, FrontendContext* fc, CompilationInput& input,
+  bool init(FrontendContext* fc, CompilationInput& input,
             ParserAtomsTable& parserAtoms, ScopeBindingCache* scopeCache,
             InheritThis inheritThis, JSObject* enclosingEnv);
 
@@ -1415,7 +1415,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
   bool init(JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
             InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {
-    if (!scopeContext.init(cx, fc, input, parserAtoms, scopeCache, inheritThis,
+    if (!scopeContext.init(fc, input, parserAtoms, scopeCache, inheritThis,
                            enclosingEnv)) {
       return false;
     }
