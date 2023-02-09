@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -190,48 +191,50 @@ fun PocketSponsoredStory(
 
     ListItemTabSurface(
         imageUrl = imageUrl,
+        contentPadding = PaddingValues(16.dp, 0.dp),
         backgroundColor = backgroundColor,
         onClick = { onStoryClick(story) },
     ) {
-        Text(
-            text = story.title,
-            modifier = Modifier.semantics {
-                testTagsAsResourceId = true
-                testTag = "pocket.sponsoredStory.title"
-            },
-            color = FirefoxTheme.colors.textPrimary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 2,
-            style = FirefoxTheme.typography.body2,
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(
+                text = story.title,
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "pocket.sponsoredStory.title"
+                },
+                color = FirefoxTheme.colors.textPrimary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
+                style = FirefoxTheme.typography.body2,
+            )
 
-        Spacer(Modifier.height(9.dp))
+            Text(
+                text = stringResource(R.string.pocket_stories_sponsor_indication),
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "pocket.sponsoredStory.identifier"
+                },
+                color = FirefoxTheme.colors.textSecondary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = FirefoxTheme.typography.caption,
+            )
 
-        Text(
-            text = stringResource(R.string.pocket_stories_sponsor_indication),
-            modifier = Modifier.semantics {
-                testTagsAsResourceId = true
-                testTag = "pocket.sponsoredStory.identifier"
-            },
-            color = FirefoxTheme.colors.textSecondary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = FirefoxTheme.typography.caption,
-        )
-
-        Spacer(Modifier.height(7.dp))
-
-        Text(
-            text = story.sponsor,
-            modifier = Modifier.semantics {
-                testTagsAsResourceId = true
-                testTag = "pocket.sponsoredStory.sponsor"
-            },
-            color = FirefoxTheme.colors.textSecondary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = FirefoxTheme.typography.caption,
-        )
+            Text(
+                text = story.sponsor,
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "pocket.sponsoredStory.sponsor"
+                },
+                color = FirefoxTheme.colors.textSecondary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = FirefoxTheme.typography.caption,
+            )
+        }
     }
 }
 
