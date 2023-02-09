@@ -15,8 +15,14 @@ class SourceMediaTrack;
 
 class RemoteTrackSource : public dom::MediaStreamTrackSource {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoteTrackSource,
+                                           dom::MediaStreamTrackSource)
+
   RemoteTrackSource(SourceMediaTrack* aStream, nsIPrincipal* aPrincipal,
                     const nsString& aLabel, TrackingId aTrackingId);
+
+  void Destroy() override;
 
   dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Other;
@@ -39,10 +45,12 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
   void SetMuted(bool aMuted);
   void ForceEnded();
 
-  const RefPtr<SourceMediaTrack> mStream;
+  SourceMediaTrack* Stream() const;
 
  private:
   virtual ~RemoteTrackSource();
+
+  RefPtr<SourceMediaTrack> mStream;
 };
 
 }  // namespace mozilla

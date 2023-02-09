@@ -11,6 +11,19 @@
 
 namespace mozilla {
 
+NS_IMPL_ADDREF_INHERITED(RemoteTrackSource, dom::MediaStreamTrackSource)
+NS_IMPL_RELEASE_INHERITED(RemoteTrackSource, dom::MediaStreamTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoteTrackSource)
+NS_INTERFACE_MAP_END_INHERITING(dom::MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(RemoteTrackSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(RemoteTrackSource,
+                                                dom::MediaStreamTrackSource)
+  tmp->Destroy();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(RemoteTrackSource,
+                                                  dom::MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 RemoteTrackSource::RemoteTrackSource(SourceMediaTrack* aStream,
                                      nsIPrincipal* aPrincipal,
                                      const nsString& aLabel,
@@ -18,9 +31,13 @@ RemoteTrackSource::RemoteTrackSource(SourceMediaTrack* aStream,
     : dom::MediaStreamTrackSource(aPrincipal, aLabel, std::move(aTrackingId)),
       mStream(aStream) {}
 
-RemoteTrackSource::~RemoteTrackSource() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mStream->IsDestroyed());
+RemoteTrackSource::~RemoteTrackSource() { Destroy(); }
+
+void RemoteTrackSource::Destroy() {
+  if (mStream) {
+    mStream->Destroy();
+    mStream = nullptr;
+  }
 }
 
 auto RemoteTrackSource::ApplyConstraints(
@@ -40,5 +57,7 @@ void RemoteTrackSource::SetPrincipal(nsIPrincipal* aPrincipal) {
 void RemoteTrackSource::SetMuted(bool aMuted) { MutedChanged(aMuted); }
 
 void RemoteTrackSource::ForceEnded() { OverrideEnded(); }
+
+SourceMediaTrack* RemoteTrackSource::Stream() const { return mStream; }
 
 }  // namespace mozilla
