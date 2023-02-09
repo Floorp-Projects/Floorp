@@ -1408,7 +1408,11 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
     if (ex instanceof Error) {
       this.msg += String(ex);
     } else {
-      this.msg += JSON.stringify(ex);
+      try {
+        this.msg += JSON.stringify(ex);
+      } catch {
+        this.msg += String(ex);
+      }
     }
   }
 
