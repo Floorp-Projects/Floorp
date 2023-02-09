@@ -34,13 +34,13 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutHostname"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:colorControlHighlight="?attr/textPrimary"
         android:colorControlActivated="?attr/textPrimary"
         android:textColor="?attr/textPrimary"
-        app:layout_constraintEnd_toEndOf="@id/hostnameHeaderText"
-        app:layout_constraintStart_toStartOf="@id/hostnameHeaderText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/hostnameHeaderText"
         app:helperTextEnabled="true"
         app:helperText="@string/add_login_hostname_invalid_text_3"
@@ -50,6 +50,7 @@
             android:id="@+id/hostnameText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:textSize="16sp"
             android:fontFamily="sans-serif"
             android:textStyle="normal"
@@ -98,21 +99,21 @@
         android:textColor="?attr/textPrimary"
         android:letterSpacing="0.05"
         app:layout_constraintBottom_toTopOf="@id/inputLayoutUsername"
-        app:layout_constraintEnd_toStartOf="@id/clearUsernameTextButton"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/inputLayoutHostname"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutUsername"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:colorControlHighlight="?attr/textPrimary"
         android:colorControlActivated="?attr/textPrimary"
         android:textColor="?attr/textPrimary"
         android:contentDescription="@string/saved_login_username_description"
-        app:layout_constraintEnd_toEndOf="@id/usernameHeader"
-        app:layout_constraintStart_toStartOf="@id/usernameHeader"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/usernameHeader"
         app:layout_constraintVertical_chainStyle="packed"
         app:hintEnabled="false">
@@ -121,6 +122,7 @@
             android:id="@+id/usernameText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:textSize="16sp"
             android:fontFamily="sans-serif"
             android:textStyle="normal"
@@ -144,15 +146,14 @@
     <ImageButton
         android:id="@+id/clearUsernameTextButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginBottom="10dp"
+        android:layout_height="48dp"
         android:background="@null"
         android:contentDescription="@string/saved_login_clear_username"
         android:visibility="invisible"
         app:tint="@color/saved_login_clear_edit_text_tint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutUsername"
+        app:layout_constraintBottom_toBottomOf="@+id/inputLayoutUsername"
         app:srcCompat="@drawable/mozac_ic_clear" />
 
     <TextView
@@ -168,14 +169,14 @@
         android:text="@string/preferences_passwords_saved_logins_password"
         android:textColor="?attr/textPrimary"
         app:layout_constraintBottom_toTopOf="@id/inputLayoutPassword"
-        app:layout_constraintEnd_toStartOf="@+id/clearPasswordTextButton"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/inputLayoutUsername"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/inputLayoutPassword"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:colorControlActivated="?attr/textPrimary"
         android:colorControlHighlight="?attr/textPrimary"
@@ -183,8 +184,8 @@
         android:paddingBottom="11dp"
         android:textColor="?attr/textPrimary"
         app:hintEnabled="false"
-        app:layout_constraintEnd_toEndOf="@id/passwordHeader"
-        app:layout_constraintStart_toStartOf="@id/passwordHeader"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/passwordHeader"
         app:layout_constraintVertical_chainStyle="packed">
 
@@ -192,6 +193,7 @@
             android:id="@+id/passwordText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:clickable="true"
             android:colorControlActivated="?attr/textPrimary"
             android:colorControlHighlight="?attr/textPrimary"
@@ -215,9 +217,7 @@
     <ImageButton
         android:id="@+id/clearPasswordTextButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginBottom="10dp"
+        android:layout_height="48dp"
         android:background="@null"
         android:contentDescription="@string/saved_logins_clear_password"
         android:visibility="invisible"
