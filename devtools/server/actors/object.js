@@ -99,7 +99,7 @@ const proto = {
       incrementGripDepth,
       decrementGripDepth,
       customFormatterObjectTagDepth,
-      customFormatterConfig,
+      customFormatterConfigDbgObj,
     },
     conn
   ) {
@@ -119,7 +119,7 @@ const proto = {
       incrementGripDepth,
       decrementGripDepth,
       customFormatterObjectTagDepth,
-      customFormatterConfig,
+      customFormatterConfigDbgObj,
     };
   },
 
@@ -795,7 +795,7 @@ const proto = {
    */
   release() {
     if (this.hooks) {
-      this.hooks.customFormatterConfig = null;
+      this.hooks.customFormatterConfigDbgObj = null;
     }
     this._customFormatterItem = null;
   },

@@ -27,13 +27,6 @@
           header: () => { throw new Error("ERROR"); },
         },
         {
-          // this header shouldn't execute as it has side effects.
-          header: (obj) => {
-            globalThis.localStorage.setItem("custom-formatters-test", "header");
-            return ["span", {}, "COULD EXECUTE HEADER WITH SIDE EFFECTS"];
-          },
-        },
-        {
           header: (obj) => {
             return obj.hasOwnProperty("hasBodyNotAFunction") ?
               ["div", "hasBody not a function"] :
@@ -50,18 +43,6 @@
           },
           // this hasBody throws an exception
           hasBody: () => { throw new Error("ERROR"); },
-        },
-        {
-          header: (obj) => {
-            return obj.hasOwnProperty("hasBodyHasSideEffects") ?
-              ["div", "hasBody has side effects"] :
-              null;
-          },
-          // this hasBody shouldn't execute as it has side effects.
-          hasBody: (obj) => {
-            globalThis.localStorage.setItem("custom-formatters-test", "hasBody");
-            return ["span", {}, "COULD EXECUTE HASBODY WITH SIDE EFFECTS"];
-          },
         },
         {
           header: (obj) => {
@@ -112,19 +93,6 @@
           hasBody: () => true,
           // this body is invalid because it throws an exception
           body: () => { throw new Error("ERROR"); },
-        },
-        {
-          header: (obj) => {
-            return obj.hasOwnProperty("bodyHasSideEffects") ?
-              ["div", "body has side effects"] :
-              null;
-          },
-          hasBody: () => true,
-          // this body shouldn't execute as it has side effects.
-          body: (obj) => {
-            globalThis.localStorage.setItem("custom-formatters-test", "body");
-            return ["span", {}, "COULD EXECUTE BODY WITH SIDE EFFECTS"];
-          },
         },
         {
           header: (obj) => {
@@ -191,13 +159,11 @@
         {},
         {hasBodyNotAFunction: true},
         {hasBodyThrows: true},
-        {hasBodyHasSideEffects: true},
         {bodyNotAFunction: true},
         {bodyReturnsNull: true},
         {bodyNoJsonMl: true},
         {bodyNoElementType: true},
         {bodyThrows: true},
-        {bodyHasSideEffects: true},
         {objectTagWithNoAttribute: true},
         {objectTagWithoutObjectAttribute: true},
         {infiniteObjectTag: true},
