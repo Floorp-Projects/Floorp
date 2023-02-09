@@ -672,8 +672,11 @@ void MediaPipeline::AlpnNegotiated(const std::string& aAlpn,
                                    bool aPrivacyRequested) {
   ASSERT_ON_THREAD(mStsThread);
 
-  if (aPrivacyRequested) {
-    MakePrincipalPrivate_s();
+  if (aPrivacyRequested && Direction() == DirectionType::RECEIVE) {
+    // This will force the receive pipelines to drop data until they have
+    // received a private PrincipalHandle from RTCRtpReceiver (which takes a
+    // detour via main thread).
+    static_cast<MediaPipelineReceive*>(this)->OnPrivacyRequested_s();
   }
 }
 
@@ -1178,6 +1181,7 @@ class GenericReceiveListener : public MediaTrackListener {
         mTrackingId(mTrackSource->mTrackingId),
         mIsAudio(aTrack->AsAudioStreamTrack()),
         mEnabled(false),
+        mEnded(false),
         mMaybeTrackNeedsUnmute(true) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mSource, "Must be used with a SourceMediaTrack");
@@ -1214,19 +1218,18 @@ class GenericReceiveListener : public MediaTrackListener {
   }
 
   void EndTrack() {
+    if (mEnded) {
+      return;
+    }
+    mEnded = true;
+
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("GenericReceiveListener ending track"));
 
-    if (!mSource->IsDestroyed()) {
-      // This breaks the cycle with the SourceMediaTrack
-      mSource->RemoveListener(this);
-      mSource->End();
-      mSource->Destroy();
-    }
-
-    GetMainThreadSerialEventTarget()->Dispatch(
-        NewRunnableMethod("RemoteTrackSource::ForceEnded", mTrackSource.get(),
-                          &RemoteTrackSource::ForceEnded));
+    // This breaks the cycle with the SourceMediaTrack
+    mSource->RemoveListener(this);
+    mSource->End();
+    mTrackSource->Destroy();
   }
 
  protected:
@@ -1236,6 +1239,7 @@ class GenericReceiveListener : public MediaTrackListener {
   const bool mIsAudio;
   // Main thread only.
   bool mEnabled;
+  bool mEnded;
   // Any thread.
   Atomic<bool> mMaybeTrackNeedsUnmute;
 };
@@ -1255,7 +1259,8 @@ class MediaPipelineReceiveAudio::PipelineListener
  public:
   PipelineListener(const RefPtr<dom::MediaStreamTrack>& aTrack,
                    RefPtr<MediaSessionConduit> aConduit,
-                   const PrincipalHandle& aPrincipalHandle)
+                   const PrincipalHandle& aPrincipalHandle,
+                   PrincipalPrivacy aPrivacy)
       : GenericReceiveListener(aTrack),
         mConduit(std::move(aConduit)),
         // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
@@ -1272,6 +1277,7 @@ class MediaPipelineReceiveAudio::PipelineListener
         mPlayedTicks(0),
         mAudioFrame(std::make_unique<webrtc::AudioFrame>()),
         mPrincipalHandle(aPrincipalHandle),
+        mPrivacy(aPrivacy),
         mForceSilence(false) {}
 
   void Init() {
@@ -1285,41 +1291,44 @@ class MediaPipelineReceiveAudio::PipelineListener
     NotifyPullImpl(aDesiredTime);
   }
 
-  void MakePrincipalPrivate_s() {
+  void OnPrivacyRequested_s() {
+    if (mPrivacy == PrincipalPrivacy::Private) {
+      return;
+    }
     mForceSilence = true;
+  }
 
-    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
-        "MediaPipelineReceiveAudio::PipelineListener::MakePrincipalPrivate_s",
-        [self = RefPtr<PipelineListener>(this), this] {
-          class Message : public ControlMessage {
-           public:
-            Message(RefPtr<PipelineListener> aListener,
-                    const PrincipalHandle& aPrivatePrincipal)
-                : ControlMessage(nullptr),
-                  mListener(std::move(aListener)),
-                  mPrivatePrincipal(aPrivatePrincipal) {}
+  void SetPrivatePrincipal(PrincipalHandle aHandle) {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_DIAGNOSTIC_ASSERT(mForceSilence);
 
-            void Run() override {
-              mListener->mPrincipalHandle = mPrivatePrincipal;
-              mListener->mForceSilence = false;
-            }
+    class Message : public ControlMessage {
+     public:
+      Message(RefPtr<PipelineListener> aListener,
+              PrincipalHandle aPrivatePrincipal)
+          : ControlMessage(nullptr),
+            mListener(std::move(aListener)),
+            mPrivatePrincipal(std::move(aPrivatePrincipal)) {}
 
-            const RefPtr<PipelineListener> mListener;
-            PrincipalHandle mPrivatePrincipal;
-          };
+      void Run() override {
+        if (mListener->mPrivacy == PrincipalPrivacy::Private) {
+          return;
+        }
+        mListener->mPrincipalHandle = mPrivatePrincipal;
+        mListener->mPrivacy = PrincipalPrivacy::Private;
+        mListener->mForceSilence = false;
+      }
 
-          RefPtr<nsIPrincipal> privatePrincipal =
-              NullPrincipal::CreateWithInheritedAttributes(
-                  mTrackSource->GetPrincipal());
-          mTrackSource->SetPrincipal(privatePrincipal);
+      const RefPtr<PipelineListener> mListener;
+      PrincipalHandle mPrivatePrincipal;
+    };
 
-          if (mSource->IsDestroyed()) {
-            return;
-          }
+    if (mSource->IsDestroyed()) {
+      return;
+    }
 
-          mSource->GraphImpl()->AppendMessage(
-              MakeUnique<Message>(this, MakePrincipalHandle(privatePrincipal)));
-        }));
+    mSource->GraphImpl()->AppendMessage(
+        MakeUnique<Message>(this, std::move(aHandle)));
   }
 
  private:
@@ -1420,6 +1429,8 @@ class MediaPipelineReceiveAudio::PipelineListener
   // Principal handle used when appending data to the SourceMediaTrack. Graph
   // thread only.
   PrincipalHandle mPrincipalHandle;
+  // Privacy of mPrincipalHandle. Graph thread only.
+  PrincipalPrivacy mPrivacy;
   // Set to true on the sts thread if privacy is requested when ALPN was
   // negotiated. Set to false again when mPrincipalHandle is private.
   Atomic<bool> mForceSilence;
@@ -1430,13 +1441,13 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
     RefPtr<AudioSessionConduit> aConduit,
     const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle)
+    const PrincipalHandle& aPrincipalHandle, PrincipalPrivacy aPrivacy)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
-      mListener(aTrack
-                    ? new PipelineListener(aTrack, mConduit, aPrincipalHandle)
-                    : nullptr),
+      mListener(aTrack ? new PipelineListener(aTrack, mConduit,
+                                              aPrincipalHandle, aPrivacy)
+                       : nullptr),
       mWatchManager(this, AbstractThread::MainThread()) {
   mDescription = mPc + "| Receive audio";
   if (mListener) {
@@ -1454,10 +1465,17 @@ void MediaPipelineReceiveAudio::Shutdown() {
   }
 }
 
-void MediaPipelineReceiveAudio::MakePrincipalPrivate_s() {
+void MediaPipelineReceiveAudio::OnPrivacyRequested_s() {
   ASSERT_ON_THREAD(mStsThread);
   if (mListener) {
-    mListener->MakePrincipalPrivate_s();
+    mListener->OnPrivacyRequested_s();
+  }
+}
+
+void MediaPipelineReceiveAudio::SetPrivatePrincipal(PrincipalHandle aHandle) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mListener) {
+    mListener->SetPrivatePrincipal(std::move(aHandle));
   }
 }
 
@@ -1479,32 +1497,34 @@ class MediaPipelineReceiveVideo::PipelineListener
     : public GenericReceiveListener {
  public:
   PipelineListener(const RefPtr<dom::MediaStreamTrack>& aTrack,
-                   const PrincipalHandle& aPrincipalHandle)
+                   const PrincipalHandle& aPrincipalHandle,
+                   PrincipalPrivacy aPrivacy)
       : GenericReceiveListener(aTrack),
         mImageContainer(
             MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS)),
         mMutex("MediaPipelineReceiveVideo::PipelineListener::mMutex"),
-        mPrincipalHandle(aPrincipalHandle) {}
-
+        mPrincipalHandle(aPrincipalHandle),
+        mPrivacy(aPrivacy) {}
   void Init() { mSource->AddListener(this); }
 
-  void MakePrincipalPrivate_s() {
-    {
-      MutexAutoLock lock(mMutex);
-      mForceDropFrames = true;
+  void OnPrivacyRequested_s() {
+    MutexAutoLock lock(mMutex);
+    if (mPrivacy == PrincipalPrivacy::Private) {
+      return;
     }
+    mForceDropFrames = true;
+  }
 
-    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
-        __func__, [self = RefPtr<PipelineListener>(this), this] {
-          RefPtr<nsIPrincipal> privatePrincipal =
-              NullPrincipal::CreateWithInheritedAttributes(
-                  mTrackSource->GetPrincipal());
-          mTrackSource->SetPrincipal(privatePrincipal);
-
-          MutexAutoLock lock(mMutex);
-          mPrincipalHandle = MakePrincipalHandle(privatePrincipal);
-          mForceDropFrames = false;
-        }));
+  void SetPrivatePrincipal(PrincipalHandle aHandle) {
+    MutexAutoLock lock(mMutex);
+    MOZ_DIAGNOSTIC_ASSERT(mForceDropFrames !=
+                          (PrincipalPrivacy::Private == mPrivacy));
+    if (mPrivacy == PrincipalPrivacy::Private) {
+      return;
+    }
+    mPrincipalHandle = std::move(aHandle);
+    mPrivacy = PrincipalPrivacy::Private;
+    mForceDropFrames = false;
   }
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
@@ -1569,11 +1589,12 @@ class MediaPipelineReceiveVideo::PipelineListener
 
  private:
   RefPtr<layers::ImageContainer> mImageContainer;
-  Mutex mMutex MOZ_UNANNOTATED;  // Protects the below members.
-  PrincipalHandle mPrincipalHandle;
+  Mutex mMutex;
+  PrincipalHandle mPrincipalHandle MOZ_GUARDED_BY(mMutex);
+  PrincipalPrivacy mPrivacy MOZ_GUARDED_BY(mMutex);
   // Set to true on the sts thread if privacy is requested when ALPN was
   // negotiated. Set to false again when mPrincipalHandle is private.
-  bool mForceDropFrames = false;
+  bool mForceDropFrames MOZ_GUARDED_BY(mMutex) = false;
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer
@@ -1600,13 +1621,14 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
     RefPtr<VideoSessionConduit> aConduit,
     const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle)
+    const PrincipalHandle& aPrincipalHandle, PrincipalPrivacy aPrivacy)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
       mRenderer(new PipelineRenderer(this)),
-      mListener(aTrack ? new PipelineListener(aTrack, aPrincipalHandle)
-                       : nullptr),
+      mListener(aTrack
+                    ? new PipelineListener(aTrack, aPrincipalHandle, aPrivacy)
+                    : nullptr),
       mWatchManager(this, AbstractThread::MainThread()) {
   mDescription = mPc + "| Receive video";
   if (mListener) {
@@ -1631,10 +1653,17 @@ void MediaPipelineReceiveVideo::Shutdown() {
   }
 }
 
-void MediaPipelineReceiveVideo::MakePrincipalPrivate_s() {
+void MediaPipelineReceiveVideo::OnPrivacyRequested_s() {
   ASSERT_ON_THREAD(mStsThread);
   if (mListener) {
-    mListener->MakePrincipalPrivate_s();
+    mListener->OnPrivacyRequested_s();
+  }
+}
+
+void MediaPipelineReceiveVideo::SetPrivatePrincipal(PrincipalHandle aHandle) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mListener) {
+    mListener->SetPrivatePrincipal(std::move(aHandle));
   }
 }
 
