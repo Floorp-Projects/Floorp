@@ -807,6 +807,7 @@ BookmarksTracker.prototype = {
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
+        "bookmark-guid-changed",
         "bookmark-keyword-changed",
         "bookmark-tags-changed",
         "bookmark-time-changed",
@@ -826,6 +827,7 @@ BookmarksTracker.prototype = {
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
+        "bookmark-guid-changed",
         "bookmark-keyword-changed",
         "bookmark-tags-changed",
         "bookmark-time-changed",
@@ -883,13 +885,23 @@ BookmarksTracker.prototype = {
         case "bookmark-added":
         case "bookmark-removed":
         case "bookmark-moved":
-        case "bookmark-guid-changed":
         case "bookmark-keyword-changed":
         case "bookmark-tags-changed":
         case "bookmark-time-changed":
         case "bookmark-title-changed":
         case "bookmark-url-changed":
           if (lazy.IGNORED_SOURCES.includes(event.source)) {
+            continue;
+          }
+
+          this._log.trace(`'${event.type}': ${event.id}`);
+          this._upScore();
+          break;
+        case "bookmark-guid-changed":
+          if (event.source !== lazy.PlacesUtils.bookmarks.SOURCES.SYNC) {
+            this._log.warn(
+              "The source of bookmark-guid-changed event shoud be sync."
+            );
             continue;
           }
 
