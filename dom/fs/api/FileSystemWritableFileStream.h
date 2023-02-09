@@ -52,9 +52,11 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
+  bool IsOpen() const;
+
   bool IsClosed() const;
 
-  RefPtr<BoolPromise> BeginClose();
+  [[nodiscard]] RefPtr<BoolPromise> BeginClose();
 
   already_AddRefed<Promise> Write(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aError);
@@ -75,6 +77,8 @@ class FileSystemWritableFileStream final : public WritableStream {
                                                         ErrorResult& aError);
 
  private:
+  class CloseHandler;
+
   FileSystemWritableFileStream(nsIGlobalObject* aGlobal,
                                RefPtr<FileSystemManager>& aManager,
                                RefPtr<FileSystemWritableFileStreamChild> aActor,
@@ -104,7 +108,7 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   fs::FileSystemEntryMetadata mMetadata;
 
-  FlippedOnce<false> mClosed;
+  RefPtr<CloseHandler> mCloseHandler;
 };
 
 }  // namespace dom

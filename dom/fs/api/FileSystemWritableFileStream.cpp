@@ -175,6 +175,78 @@ void WriteImpl(const RefPtr<nsISerialEventTarget>& aTaskQueue,
 
 }  // namespace
 
+class FileSystemWritableFileStream::CloseHandler {
+  enum struct State : uint8_t { Initial = 0, Open, Closing, Closed };
+
+ public:
+  NS_INLINE_DECL_REFCOUNTING(FileSystemWritableFileStream::CloseHandler)
+
+  /**
+   * @brief Are we not yet closing?
+   */
+  bool IsOpen() const { return State::Open == mState; }
+
+  /**
+   * @brief Are we already fully closed?
+   */
+  bool IsClosed() const { return State::Closed == mState; }
+
+  /**
+   * @brief Transition from open to closing state
+   *
+   * @return true if the state was open and became closing after the call
+   * @return false in all the other cases the previous state is preserved
+   */
+  bool TestAndSetClosing() {
+    const bool isOpen = State::Open == mState;
+
+    if (isOpen) {
+      mState = State::Closing;
+    }
+
+    return isOpen;
+  }
+
+  RefPtr<BoolPromise> GetClosePromise() const {
+    MOZ_ASSERT(State::Open != mState,
+               "Please call TestAndSetClosing before GetClosePromise");
+
+    if (State::Closing == mState) {
+      return mClosePromiseHolder.Ensure(__func__);
+    }
+
+    // Instant resolve for initial state due to early shutdown or closed state
+    return BoolPromise::CreateAndResolve(true, __func__);
+  }
+
+  /**
+   * @brief Transition from initial to open state. In initial state
+   *
+   */
+  void Open() {
+    MOZ_ASSERT(State::Initial == mState);
+
+    mState = State::Open;
+  }
+
+  /**
+   * @brief Transition to closed state and resolve all pending promises.
+   *
+   */
+  void Close() {
+    mState = State::Closed;
+    mClosePromiseHolder.ResolveIfExists(true, __func__);
+  }
+
+ protected:
+  virtual ~CloseHandler() = default;
+
+ private:
+  mutable MozPromiseHolder<BoolPromise> mClosePromiseHolder;
+
+  State mState = State::Initial;
+};
+
 FileSystemWritableFileStream::FileSystemWritableFileStream(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
@@ -189,7 +261,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
           std::move(aStream))),
       mWorkerRef(),
       mMetadata(aMetadata),
-      mClosed() {
+      mCloseHandler(MakeAndAddRef<CloseHandler>()) {
   LOG(("Created WritableFileStream %p for fd %p", this, mStreamOwner.get()));
 
   // Connect with the actor directly in the constructor. This way the actor
@@ -203,7 +275,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
 }
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
-  MOZ_ASSERT(mClosed);
+  MOZ_ASSERT(IsClosed());
 
   mozilla::DropJSObjects(this);
 }
@@ -248,11 +320,16 @@ FileSystemWritableFileStream::Create(
                                        taskQueue.forget(),
                                        std::move(inputOutputStream), aMetadata);
 
+  auto autoClose = MakeScopeExit([stream] {
+    stream->mCloseHandler->Close();
+    stream->mActor->SendClose();
+  });
+
   WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
   if (workerPrivate) {
     RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
         workerPrivate, "FileSystemWritableFileStream", [stream]() {
-          if (!stream->IsClosed()) {
+          if (stream->IsOpen()) {
             // We don't need the promise, we just begin the closing process.
             Unused << stream->BeginClose();
           }
@@ -280,6 +357,9 @@ FileSystemWritableFileStream::Create(
     return nullptr;
   }
 
+  autoClose.release();
+  stream->mCloseHandler->Open();
+
   // Step 9: Return stream.
   return stream.forget();
 }
@@ -291,8 +371,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FileSystemWritableFileStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                 WritableStream)
   // Per the comment for the FileSystemManager class, don't unlink mManager!
-  if (!tmp->IsClosed()) {
-    tmp->BeginClose();
+  if (tmp->IsOpen()) {
+    Unused << tmp->BeginClose();
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
@@ -321,40 +401,43 @@ void FileSystemWritableFileStream::ClearActor() {
   mActor = nullptr;
 }
 
-bool FileSystemWritableFileStream::IsClosed() const { return mClosed; }
+bool FileSystemWritableFileStream::IsOpen() const {
+  return mCloseHandler->IsOpen();
+}
+
+bool FileSystemWritableFileStream::IsClosed() const {
+  return mCloseHandler->IsClosed();
+}
 
 RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
-  if (IsClosed()) {
-    return BoolPromise::CreateAndResolve(true, __func__);
+  if (mCloseHandler->TestAndSetClosing()) {
+    InvokeAsync(mTaskQueue, __func__,
+                [streamOwner = mStreamOwner]() mutable {
+                  streamOwner->Close();
+                  return BoolPromise::CreateAndResolve(true, __func__);
+                })
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+                 return self->mTaskQueue->BeginShutdown();
+               })
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [self = RefPtr(this)](
+                   const ShutdownPromise::ResolveOrRejectValue& /* aValue */) {
+                 if (self->mActor) {
+                   self->mActor->SendClose();
+                 }
+
+                 self->mWorkerRef = nullptr;
+                 self->mCloseHandler->Close();
+               });
   }
 
-  mClosed.Flip();  // Caller's cannot wait for completion, fixed by D168796
-
-  return InvokeAsync(mTaskQueue, __func__,
-                     [streamOwner = mStreamOwner]() mutable {
-                       streamOwner->Close();
-                       return BoolPromise::CreateAndResolve(true, __func__);
-                     })
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
-               return self->mTaskQueue->BeginShutdown();
-             })
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr(this)](
-                 const ShutdownPromise::ResolveOrRejectValue& /* aValue */) {
-               if (self->mActor) {
-                 self->mActor->SendClose();
-               }
-
-               self->mWorkerRef = nullptr;
-
-               return BoolPromise::CreateAndResolve(true, __func__);
-             });
+  return mCloseHandler->GetClosePromise();
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
     JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aError) {
-  MOZ_ASSERT(!IsClosed());
+  MOZ_ASSERT(IsOpen());
 
   // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
   // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument
@@ -724,7 +807,7 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallbackImpl(
     return nullptr;
   }
 
-  if (mStream->IsClosed()) {
+  if (!mStream->IsOpen()) {
     promise->MaybeRejectWithTypeError("WritableFileStream closed");
     return promise.forget();
   }
@@ -762,7 +845,9 @@ void WritableFileStreamUnderlyingSinkAlgorithms::ReleaseObjects() {
   // However, calling close here is not a big issue for now because we don't
   // write to a temporary file which would atomically replace the real file
   // during close.
-  mStream->BeginClose();
+  if (mStream->IsOpen()) {
+    Unused << mStream->BeginClose();
+  }
 }
 
 }  // namespace mozilla::dom
