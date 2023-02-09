@@ -23,7 +23,7 @@ Mozilla Bug 666446: lots of animated gifs swamp us with paint events
   <xul:caption label="Bug 666446 - XULTree Test" />
   <xul:separator />
     <br />
-    <xul:window id="main" title="Bug 666446: XUL Tree Testing" width="100" height="100">
+    <xul:window id="main" title="Bug 666446: XUL Tree Testing" style="width: 100px; height: 100px">
       <xul:tree flex="1">
         <xul:treecols>
           <xul:treecol id="icon" label="Icon" flex="1" />
@@ -32,12 +32,12 @@ Mozilla Bug 666446: lots of animated gifs swamp us with paint events
         <xul:treechildren>
           <xul:treeitem id="referenceItem" hidden="true">
             <xul:treerow>
-              <xul:treecell src="animated-gif-finalframe.gif" width="40" height="40" />
+              <xul:treecell src="animated-gif-finalframe.gif" style="width: 40px; height: 40px;" />
             </xul:treerow>
           </xul:treeitem>
           <xul:treeitem id="imageItem" hidden="true">
             <xul:treerow>
-              <xul:treecell src="animated-gif.gif" width="40" height="40" />
+              <xul:treecell src="animated-gif.gif" style="width: 40px; height: 40px;" />
             </xul:treerow>
           </xul:treeitem>
         </xul:treechildren>
