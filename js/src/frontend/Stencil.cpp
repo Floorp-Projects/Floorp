@@ -95,12 +95,12 @@ InputName InputScript::displayAtom() const {
       });
 }
 
-TaggedParserAtomIndex InputName::internInto(JSContext* cx, FrontendContext* fc,
+TaggedParserAtomIndex InputName::internInto(FrontendContext* fc,
                                             ParserAtomsTable& parserAtoms,
                                             CompilationAtomCache& atomCache) {
   return variant_.match(
       [&](JSAtom* ptr) -> TaggedParserAtomIndex {
-        return parserAtoms.internJSAtom(cx, fc, atomCache, ptr);
+        return parserAtoms.internJSAtom(fc, atomCache, ptr);
       },
       [&](NameStencilRef& ref) -> TaggedParserAtomIndex {
         return parserAtoms.internExternalParserAtomIndex(fc, ref.context_,
@@ -838,7 +838,7 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
     CompilationAtomCache& atomCache, InputName& name,
     EnclosingLexicalBindingKind kind) {
   TaggedParserAtomIndex parserName =
-      name.internInto(cx, fc, parserAtoms, atomCache);
+      name.internInto(fc, parserAtoms, atomCache);
   if (!parserName) {
     return false;
   }
@@ -920,7 +920,7 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx, FrontendContext* fc,
                IsPrivateField(scope_ref, bi.name()))) {
             InputName binding(scope_ref, bi.name());
             auto parserName =
-                binding.internInto(cx, fc, parserAtoms, input.atomCache);
+                binding.internInto(fc, parserAtoms, input.atomCache);
             if (!parserName) {
               return false;
             }
@@ -1381,7 +1381,7 @@ bool CompilationSyntaxParseCache::copyFunctionInfo(
     CompilationAtomCache& atomCache, const InputScript& lazy) {
   InputName name = lazy.displayAtom();
   if (!name.isNull()) {
-    displayAtom_ = name.internInto(cx, fc, parseAtoms, atomCache);
+    displayAtom_ = name.internInto(fc, parseAtoms, atomCache);
     if (!displayAtom_) {
       return false;
     }
@@ -1445,7 +1445,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 
     if (fun->displayAtom()) {
       TaggedParserAtomIndex displayAtom =
-          parseAtoms.internJSAtom(cx, fc, atomCache, fun->displayAtom());
+          parseAtoms.internJSAtom(fc, atomCache, fun->displayAtom());
       if (!displayAtom) {
         return false;
       }
@@ -1515,7 +1515,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 
     InputName name{inner, inner.scriptData().functionAtom};
     if (!name.isNull()) {
-      auto displayAtom = name.internInto(cx, fc, parseAtoms, atomCache);
+      auto displayAtom = name.internInto(fc, parseAtoms, atomCache);
       if (!displayAtom) {
         return false;
       }
@@ -1567,7 +1567,7 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
     MOZ_ASSERT(cell->as<JSString>()->isAtom());
 
     auto name = static_cast<JSAtom*>(cell);
-    auto parserAtom = parseAtoms.internJSAtom(cx, fc, atomCache, name);
+    auto parserAtom = parseAtoms.internJSAtom(fc, atomCache, name);
     if (!parserAtom) {
       return false;
     }
@@ -1619,7 +1619,7 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
 
     MOZ_ASSERT(gcThing.isAtom());
     InputName name(lazy, gcThing.toAtom());
-    auto parserAtom = name.internInto(cx, fc, parseAtoms, atomCache);
+    auto parserAtom = name.internInto(fc, parseAtoms, atomCache);
     if (!parserAtom) {
       return false;
     }
