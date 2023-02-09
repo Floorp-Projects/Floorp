@@ -28,7 +28,8 @@
 #include "jsapi.h"
 #include "jsexn.h"
 
-#include "ds/IdValuePair.h"  // js::IdValuePair
+#include "ds/IdValuePair.h"            // js::IdValuePair
+#include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "gc/GCContext.h"
 #include "jit/AtomicOperations.h"
 #include "jit/FlushICache.h"
@@ -578,8 +579,9 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
   JS::AutoFilename af;
   if (JS::DescribeScriptedCaller(cx, &af, &caller->line)) {
     caller->filename =
-        FormatIntroducedFilename(cx, af.get(), caller->line, introducer);
+        FormatIntroducedFilename(af.get(), caller->line, introducer);
     if (!caller->filename) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }

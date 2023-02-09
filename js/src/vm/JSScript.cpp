@@ -1834,8 +1834,7 @@ template bool ScriptSource::initializeUnretrievableUncompressedSource(
 // For example:
 //   foo.js line 7 > eval
 // indicating code compiled by the call to 'eval' on line 7 of foo.js.
-UniqueChars js::FormatIntroducedFilename(JSContext* cx, const char* filename,
-                                         unsigned lineno,
+UniqueChars js::FormatIntroducedFilename(const char* filename, unsigned lineno,
                                          const char* introducer) {
   // Compute the length of the string in advance, so we can allocate a
   // buffer of the right size on the first shot.
@@ -1849,7 +1848,7 @@ UniqueChars js::FormatIntroducedFilename(JSContext* cx, const char* filename,
   size_t introducerLen = strlen(introducer);
   size_t len = filenameLen + 6 /* == strlen(" line ") */ + linenoLen +
                3 /* == strlen(" > ") */ + introducerLen + 1 /* \0 */;
-  UniqueChars formatted(cx->pod_malloc<char>(len));
+  UniqueChars formatted(js_pod_malloc<char>(len));
   if (!formatted) {
     return nullptr;
   }
@@ -1880,8 +1879,9 @@ bool ScriptSource::initFromOptions(JSContext* cx, FrontendContext* fc,
     const char* filename =
         options.filename() ? options.filename() : "<unknown>";
     UniqueChars formatted = FormatIntroducedFilename(
-        cx, filename, options.introductionLineno, options.introductionType);
+        filename, options.introductionLineno, options.introductionType);
     if (!formatted) {
+      ReportOutOfMemory(fc);
       return false;
     }
     if (!setFilename(fc, std::move(formatted))) {
