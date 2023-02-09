@@ -110,8 +110,8 @@ window.addEventListener("pageshow", async function() {
   }
 
   {
-    let prefName = "floorp.tabsleep.tabTimeoutSeconds";
-    let elem = document.getElementById("tabSleepTimeoutSecondsValue");
+    let prefName = "floorp.tabsleep.tabTimeoutMinutes";
+    let elem = document.getElementById("tabSleepTimeoutMinutesValue");
     elem.value = Services.prefs.getIntPref(prefName, undefined);
     elem.addEventListener('change', function () {
       Services.prefs.setIntPref(prefName, Number(elem.value));
