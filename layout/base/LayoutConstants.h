@@ -96,9 +96,6 @@ enum class ContentRelevancyReason {
   // If the content of this Frame is on screen or nearly on screen.
   Visible,
 
-  // If this Frame's element is a descendant of a top layer element.
-  DescendantOfTopLayerElement,
-
   // If this Frame's element has focus in its subtree.
   FocusInSubtree,
 

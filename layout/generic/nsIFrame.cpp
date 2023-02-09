@@ -7039,13 +7039,6 @@ void nsIFrame::UpdateIsRelevantContent(
                       HasSelectionInSubtree());
   }
 
-  if (!oldRelevancy ||
-      aRelevancyToUpdate.contains(
-          ContentRelevancyReason::DescendantOfTopLayerElement)) {
-    setRelevancyValue(ContentRelevancyReason::DescendantOfTopLayerElement,
-                      IsDescendantOfTopLayerElement());
-  }
-
   bool overallRelevancyChanged =
       !oldRelevancy || oldRelevancy->isEmpty() != newRelevancy.isEmpty();
   if (!oldRelevancy || *oldRelevancy != newRelevancy) {
