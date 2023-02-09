@@ -133,11 +133,11 @@ RTCRtpReceiver::RTCRtpReceiver(
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
-        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle);
+        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle, aPrivacy);
   } else {
     mPipeline = new MediaPipelineReceiveVideo(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
-        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle);
+        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle, aPrivacy);
   }
 }
 
@@ -816,6 +816,18 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   if (needsTrackEvent) {
     aChanges->mTrackEvents.push_back({this, mStreamIds});
   }
+}
+
+void RTCRtpReceiver::UpdatePrincipalPrivacy(PrincipalPrivacy aPrivacy) {
+  if (!mPipeline) {
+    return;
+  }
+
+  if (aPrivacy != PrincipalPrivacy::Private) {
+    return;
+  }
+
+  mPipeline->SetPrivatePrincipal(GetPrincipalHandle(mWindow, aPrivacy));
 }
 
 // test-only: adds fake CSRCs and audio data

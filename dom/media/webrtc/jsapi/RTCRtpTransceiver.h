@@ -73,6 +73,8 @@ class RTCRtpTransceiver : public nsISupports,
 
   nsresult UpdateConduit();
 
+  void UpdatePrincipalPrivacy(PrincipalPrivacy aPrivacy);
+
   void ResetSync();
 
   nsresult SyncWithMatchingVideoConduits(

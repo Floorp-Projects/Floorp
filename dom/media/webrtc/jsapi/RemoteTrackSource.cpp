@@ -35,8 +35,12 @@ RemoteTrackSource::~RemoteTrackSource() { Destroy(); }
 
 void RemoteTrackSource::Destroy() {
   if (mStream) {
+    MOZ_ASSERT(!mStream->IsDestroyed());
     mStream->Destroy();
     mStream = nullptr;
+
+    GetMainThreadSerialEventTarget()->Dispatch(NewRunnableMethod(
+        "RemoteTrackSource::ForceEnded", this, &RemoteTrackSource::ForceEnded));
   }
 }
 

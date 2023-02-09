@@ -103,6 +103,10 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   // This is called when we set a remote description; may be an offer or answer.
   void UpdateStreams(StreamAssociationChanges* aChanges);
 
+  // Called when the privacy-needed state changes on the fly, as a result of
+  // ALPN negotiation.
+  void UpdatePrincipalPrivacy(PrincipalPrivacy aPrivacy);
+
   void OnRtcpBye();
   void OnRtcpTimeout();
 

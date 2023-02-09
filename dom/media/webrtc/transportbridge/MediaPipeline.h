@@ -186,10 +186,6 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   void SetDescription_s(const std::string& description);
 
-  // Called when ALPN is negotiated and is requesting privacy, so receive
-  // pipelines do not enter data into the graph under a content principal.
-  virtual void MakePrincipalPrivate_s() {}
-
  public:
   const RefPtr<MediaSessionConduit> mConduit;
   const DirectionType mDirection;
@@ -353,6 +349,14 @@ class MediaPipelineReceive : public MediaPipeline {
                        RefPtr<nsISerialEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
 
+  // Called when ALPN is negotiated and is requesting privacy, so receive
+  // pipelines do not enter data into the graph under a content principal.
+  virtual void OnPrivacyRequested_s() = 0;
+
+  // Called after privacy has been requested, with the updated private
+  // principal.
+  virtual void SetPrivatePrincipal(PrincipalHandle aHandle) = 0;
+
  protected:
   ~MediaPipelineReceive();
 };
@@ -367,13 +371,15 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             RefPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
                             const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle);
+                            const PrincipalHandle& aPrincipalHandle,
+                            PrincipalPrivacy aPrivacy);
 
   void Shutdown() override;
 
   bool IsVideo() const override { return false; }
 
-  void MakePrincipalPrivate_s() override;
+  void OnPrivacyRequested_s() override;
+  void SetPrivatePrincipal(PrincipalHandle aHandle) override;
 
   void OnRtpPacketReceived() override;
 
@@ -397,13 +403,15 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             RefPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
                             const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle);
+                            const PrincipalHandle& aPrincipalHandle,
+                            PrincipalPrivacy aPrivacy);
 
   void Shutdown() override;
 
   bool IsVideo() const override { return true; }
 
-  void MakePrincipalPrivate_s() override;
+  void OnPrivacyRequested_s() override;
+  void SetPrivatePrincipal(PrincipalHandle aHandle) override;
 
   void OnRtpPacketReceived() override;
 

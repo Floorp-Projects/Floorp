@@ -396,7 +396,7 @@ class TestAgentReceive : public TestAgent {
         test_pc, transport_, AbstractThread::MainThread(),
         test_utils->sts_target(),
         static_cast<AudioSessionConduit*>(audio_conduit_.get()), nullptr,
-        PRINCIPAL_HANDLE_NONE);
+        PRINCIPAL_HANDLE_NONE, PrincipalPrivacy::NonPrivate);
 
     audio_pipeline_->Start();
     conduit_control_.Update([](auto& aControl) { aControl.mReceiving = true; });
