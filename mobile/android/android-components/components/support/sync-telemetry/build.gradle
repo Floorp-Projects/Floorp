@@ -37,6 +37,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    namespace 'mozilla.components.support.sync.telemetry'
 }
 
 dependencies {

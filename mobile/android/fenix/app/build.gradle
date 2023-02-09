@@ -236,6 +236,7 @@ android {
         kotlinCompilerExtensionVersion = FenixVersions.androidx_compose_compiler
     }
 
+    namespace 'org.mozilla.fenix'
 }
 
 android.applicationVariants.all { variant ->

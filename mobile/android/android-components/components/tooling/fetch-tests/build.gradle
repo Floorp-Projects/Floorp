@@ -25,6 +25,9 @@ android {
     lint {
         lintConfig file("lint.xml")
     }
+
+    namespace 'mozilla.components.tooling.fetch.tests'
+
 }
 
 dependencies {

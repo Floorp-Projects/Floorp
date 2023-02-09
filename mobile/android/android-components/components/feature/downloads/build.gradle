@@ -37,6 +37,8 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    namespace 'mozilla.components.feature.downloads'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

@@ -22,6 +22,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    namespace 'mozilla.components.lib.crash.sentry'
 }
 
 dependencies {

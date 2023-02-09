@@ -40,6 +40,8 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    namespace  'mozilla.components.browser.engine.gecko'
 }
 
 // Set configuration for the Glean parser to extract metrics.yaml

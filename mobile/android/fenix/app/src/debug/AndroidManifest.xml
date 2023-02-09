@@ -1,6 +1,4 @@
-<manifest
-        package="org.mozilla.fenix"
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />

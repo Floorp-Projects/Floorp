@@ -25,6 +25,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    namespace 'mozilla.components.browser.engine.system'
 }
 
 dependencies {

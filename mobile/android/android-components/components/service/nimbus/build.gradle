@@ -33,6 +33,8 @@ android {
             consumerProguardFiles 'proguard-rules-consumer.pro'
         }
     }
+
+    namespace 'mozilla.components.service.nimbus'
 }
 
 dependencies {

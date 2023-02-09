@@ -22,6 +22,7 @@ android {
         }
     }
 
+    namespace 'mozilla.components.lib.jexl'
 }
 
 dependencies {

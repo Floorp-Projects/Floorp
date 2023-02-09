@@ -32,6 +32,8 @@ android {
     kotlinOptions {
         freeCompilerArgs += "-Xjvm-default=all"
     }
+
+    namespace 'mozilla.components.compose.cfr'
 }
 
 dependencies {

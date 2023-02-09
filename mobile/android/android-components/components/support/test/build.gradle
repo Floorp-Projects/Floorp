@@ -28,6 +28,8 @@ android {
 
         lintConfig file("lint.xml")
     }
+
+    namespace 'mozilla.components.support.test'
 }
 
 dependencies {

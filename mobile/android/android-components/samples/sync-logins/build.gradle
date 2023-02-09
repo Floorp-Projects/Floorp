@@ -32,6 +32,8 @@ android {
             include 'x86', 'arm64-v8a', 'armeabi-v7a'
         }
     }
+
+    namespace 'org.mozilla.samples.sync.logins'
 }
 
 dependencies {

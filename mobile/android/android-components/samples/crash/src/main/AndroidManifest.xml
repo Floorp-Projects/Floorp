@@ -3,14 +3,13 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="org.mozilla.samples.crash">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".CrashApplication"
+        android:name="org.mozilla.samples.crash.CrashApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -21,7 +20,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         tools:targetApi="s"
         tools:ignore="DataExtractionRules">
-        <activity android:name=".CrashActivity"
+        <activity android:name="org.mozilla.samples.crash.CrashActivity"
             android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
@@ -31,9 +30,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".CrashListActivity" android:exported="false" />
+        <activity android:name="org.mozilla.samples.crash.CrashListActivity" android:exported="false" />
 
-        <service android:name=".CrashService"
+        <service android:name="org.mozilla.samples.crash.CrashService"
             android:process=":samples.crash.service" />
     </application>
 </manifest>

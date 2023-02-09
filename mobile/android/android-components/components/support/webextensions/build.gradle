@@ -24,6 +24,8 @@ android {
         warningsAsErrors true
         abortOnError true
     }
+
+    namespace 'mozilla.components.support.webextensions'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

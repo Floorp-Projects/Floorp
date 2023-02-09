@@ -39,6 +39,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
+
+    namespace 'mozilla.components.browser.icons'
 }
 
 tasks.register("updateBuiltInExtensionVersion", Copy) { task ->

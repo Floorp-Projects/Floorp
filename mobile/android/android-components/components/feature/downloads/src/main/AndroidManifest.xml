@@ -4,8 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="mozilla.components.feature.downloads">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage"

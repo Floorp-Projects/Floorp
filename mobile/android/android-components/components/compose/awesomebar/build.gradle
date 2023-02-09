@@ -27,6 +27,9 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
+
+    namespace 'mozilla.components.compose.browser.awesomebar'
+
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

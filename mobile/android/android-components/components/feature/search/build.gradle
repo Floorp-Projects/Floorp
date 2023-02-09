@@ -29,6 +29,8 @@ android {
             }
         }
     }
+
+    namespace 'mozilla.components.feature.search'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

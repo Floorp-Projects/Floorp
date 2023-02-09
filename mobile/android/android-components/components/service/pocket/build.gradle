@@ -32,6 +32,8 @@ android {
         test.assets.srcDirs += files("$projectDir/schemas".toString())
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    namespace 'mozilla.components.service.pocket'
 }
 
 dependencies {

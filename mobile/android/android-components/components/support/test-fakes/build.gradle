@@ -21,6 +21,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt')
         }
     }
+
+    namespace 'mozilla.components.support.test.fakes'
 }
 
 dependencies {

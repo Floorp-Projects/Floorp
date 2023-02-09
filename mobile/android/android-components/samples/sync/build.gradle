@@ -36,6 +36,8 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    namespace 'org.mozilla.samples.sync'
 }
 
 dependencies {

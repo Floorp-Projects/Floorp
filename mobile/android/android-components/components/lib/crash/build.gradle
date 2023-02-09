@@ -55,6 +55,8 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    namespace 'mozilla.components.lib.crash'
 }
 
 dependencies {

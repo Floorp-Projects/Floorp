@@ -24,6 +24,8 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    namespace 'mozilla.components.feature.media'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

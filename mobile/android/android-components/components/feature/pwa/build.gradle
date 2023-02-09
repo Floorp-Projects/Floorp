@@ -37,6 +37,8 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    namespace 'mozilla.components.feature.pwa'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

@@ -27,6 +27,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
+
+    namespace 'mozilla.components.ui.colors'
 }
 
 dependencies {

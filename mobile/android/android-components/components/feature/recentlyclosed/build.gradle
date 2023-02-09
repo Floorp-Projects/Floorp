@@ -41,6 +41,8 @@ android {
     sourceSets {
         test.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    namespace 'mozilla.components.feature.recentlyclosed'
 }
 
 dependencies {

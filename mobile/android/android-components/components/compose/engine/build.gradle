@@ -29,6 +29,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
+
+    namespace 'mozilla.components.compose.engine'
 }
 
 dependencies {

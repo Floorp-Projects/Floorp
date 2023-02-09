@@ -25,6 +25,8 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    namespace 'mozilla.components.feature.accounts.push'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

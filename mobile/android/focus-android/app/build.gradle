@@ -163,6 +163,7 @@ android {
         pickFirst 'META-INF/atomicfu.kotlin_module'
         pickFirst 'META-INF/proguard/coroutines.pro'
     }
+    namespace 'org.mozilla.focus'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

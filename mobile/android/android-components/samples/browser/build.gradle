@@ -56,6 +56,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
+
+    namespace 'org.mozilla.samples.browser'
 }
 
 tasks.register("updateBorderifyExtensionVersion", Copy) { task ->

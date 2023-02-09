@@ -25,6 +25,8 @@ android {
             consumerProguardFiles 'proguard-rules-consumer.pro'
         }
     }
+
+    namespace 'mozilla.components.support.rustlog'
 }
 
 dependencies {

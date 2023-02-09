@@ -43,6 +43,8 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    namespace 'mozilla.components.feature.sitepermissions'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

@@ -18,6 +18,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    namespace 'mozilla.components.ui.fonts'
 }
 
 dependencies {

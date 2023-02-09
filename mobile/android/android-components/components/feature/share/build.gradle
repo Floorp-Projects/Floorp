@@ -41,6 +41,8 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    namespace 'mozilla.components.feature.share'
 }
 
 dependencies {
