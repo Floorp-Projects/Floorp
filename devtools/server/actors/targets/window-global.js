@@ -32,7 +32,10 @@ var {
 var makeDebugger = require("resource://devtools/server/actors/utils/make-debugger.js");
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
+  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
+  {
+    loadInDevToolsLoader: false,
+  }
 );
 const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"

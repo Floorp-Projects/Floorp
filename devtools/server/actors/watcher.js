@@ -8,7 +8,10 @@ const { watcherSpec } = require("resource://devtools/shared/specs/watcher.js");
 
 const Resources = require("resource://devtools/server/actors/resources/index.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
+  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
+  {
+    loadInDevToolsLoader: false,
+  }
 );
 const { WatcherRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
@@ -432,12 +435,14 @@ exports.WatcherActor = class WatcherActor extends Actor {
   }
 
   /**
-   * Try to retrieve a parent process TargetActor:
-   * - either when debugging a parent process page (when browserElement is set to the page's tab),
-   * - or when debugging the main process (when browserElement is null), including xpcshell tests
+   * Try to retrieve a parent process TargetActor which is ignored by the
+   * TARGET_HELPERS. Examples:
+   * - top level target for the browser toolbox
+   * - xpcshell target for xpcshell debugging
    *
-   * See comment in `watchResources`, this will handle targets which are ignored by Frame and Process
-   * target helpers. (and only those which are ignored)
+   * See comment in `watchResources`.
+   *
+   * @return {TargetActor|null} Matching target actor if any, null otherwise.
    */
   getTargetActorInParentProcess() {
     if (TargetActorRegistry.xpcShellTargetActor) {
@@ -451,17 +456,19 @@ exports.WatcherActor = class WatcherActor extends Actor {
       this.conn.prefix
     );
 
-    if (this.sessionContext.type == "all") {
-      return actors.find(actor => actor.typeName === "parentProcessTarget");
-    } else if (this.sessionContext.type == "browser-element") {
-      return actors.find(actor => actor.isTopLevelTarget);
-    } else if (this.sessionContext.type == "webextension") {
-      return actors.find(actor => actor.typeName === "webExtensionTarget");
+    switch (this.sessionContext.type) {
+      case "all":
+        return actors.find(actor => actor.typeName === "parentProcessTarget");
+      case "browser-element":
+      case "webextension":
+        // All target actors for browser-element and webextension sessions
+        // should be created using the JS Window actors.
+        return null;
+      default:
+        throw new Error(
+          "Unsupported session context type: " + this.sessionContext.type
+        );
     }
-
-    throw new Error(
-      "Unsupported session context type: " + this.sessionContext.type
-    );
   }
 
   /**
