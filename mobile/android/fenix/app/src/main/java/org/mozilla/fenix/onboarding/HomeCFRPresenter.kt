@@ -82,7 +82,7 @@ class HomeCFRPresenter(
                     )
                 }
             },
-        )
+        ).show()
 
         // Turn off both the recent tab and synced tab CFR after the recent synced tab CFR is shown.
         context.settings().showSyncCFR = false
