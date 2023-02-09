@@ -40,8 +40,9 @@ add_task(async function() {
           Assert.ok(acceptBtn.disabled, "Accept button is disabled");
 
           let promiseKeywordNotification = PlacesTestUtils.waitForNotification(
-            "onItemChanged",
-            (itemId, prop, isAnno, val) => prop == "keyword" && val == "kw"
+            "bookmark-keyword-changed",
+            events => events.some(event => event.keyword === "kw"),
+            "places"
           );
 
           fillBookmarkTextField("editBMPanel_keywordField", "kw", dialogWin);

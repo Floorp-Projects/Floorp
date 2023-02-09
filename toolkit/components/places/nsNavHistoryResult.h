@@ -76,7 +76,6 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
 class nsNavHistoryResult final
     : public nsSupportsWeakReference,
       public nsINavHistoryResult,
-      public nsINavBookmarkObserver,
       public mozilla::places::INativePlacesEventCallback {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
@@ -85,7 +84,6 @@ class nsNavHistoryResult final
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryResult,
                                            nsINavHistoryResult)
-  NS_DECL_NSINAVBOOKMARKOBSERVER;
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
@@ -318,6 +316,7 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   virtual void OnRemoving();
 
+  nsresult OnItemKeywordChanged(int64_t aItemId, const nsACString& aKeyword);
   nsresult OnItemTagsChanged(int64_t aItemId, const nsAString& aURL);
   nsresult OnItemTimeChanged(int64_t aItemId, const nsACString& aGUID,
                              PRTime aDateAdded, PRTime aLastModified);
@@ -325,15 +324,6 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
                               const nsACString& aTitle, PRTime aLastModified);
   nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,
                             const nsACString& aURL, PRTime aLastModified);
-
-  // Called from result's onItemChanged, see also bookmark observer declaration
-  // in nsNavHistoryFolderResultNode
-  NS_IMETHOD OnItemChanged(int64_t aItemId, const nsACString& aProperty,
-                           bool aIsAnnotationProperty, const nsACString& aValue,
-                           PRTime aNewLastModified, uint16_t aItemType,
-                           int64_t aParentId, const nsACString& aGUID,
-                           const nsACString& aParentGUID,
-                           const nsACString& aOldValue, uint16_t aSource);
 
   virtual nsresult OnMobilePrefChanged(bool newValue) { return NS_OK; };
 
@@ -668,8 +658,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
 
 class nsNavHistoryQueryResultNode final
     : public nsNavHistoryContainerResultNode,
-      public nsINavHistoryQueryResultNode,
-      public nsINavBookmarkObserver {
+      public nsINavHistoryQueryResultNode {
  public:
   nsNavHistoryQueryResultNode(const nsACString& aTitle, PRTime aTime,
                               const nsACString& aQueryURI,
@@ -693,8 +682,6 @@ class nsNavHistoryQueryResultNode final
   bool IsContainersQuery();
 
   virtual nsresult OpenContainer() override;
-
-  NS_DECL_NSINAVBOOKMARKOBSERVER;
 
   nsresult OnItemAdded(int64_t aItemId, int64_t aParentId, int32_t aIndex,
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
@@ -774,7 +761,6 @@ class nsNavHistoryQueryResultNode final
 class nsNavHistoryFolderResultNode final
     : public nsNavHistoryContainerResultNode,
       public nsINavHistoryQueryResultNode,
-      public nsINavBookmarkObserver,
       public mozilla::places::WeakAsyncStatementCallback {
  public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,
@@ -800,11 +786,6 @@ class nsNavHistoryFolderResultNode final
 
   virtual nsresult OpenContainerAsync() override;
   NS_DECL_ASYNCSTATEMENTCALLBACK
-
-  // This object implements a bookmark observer interface. This is called from
-  // the result's actual observer and it knows all observers are
-  // FolderResultNodes
-  NS_DECL_NSINAVBOOKMARKOBSERVER
 
   nsresult OnItemAdded(int64_t aItemId, int64_t aParentId, int32_t aIndex,
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,

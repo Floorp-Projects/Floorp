@@ -48,24 +48,6 @@ function asQuery(aNode) {
 }
 
 /**
- * Sends a bookmarks notification through the given observers.
- *
- * @param observers
- *        array of nsINavBookmarkObserver objects.
- * @param notification
- *        the notification name.
- * @param args
- *        array of arguments to pass to the notification.
- */
-function notify(observers, notification, args) {
-  for (let observer of observers) {
-    try {
-      observer[notification](...args);
-    } catch (ex) {}
-  }
-}
-
-/**
  * Sends a keyword change notification.
  *
  * @param url
@@ -84,23 +66,6 @@ async function notifyKeywordChange(url, keyword, source) {
     ]);
     bookmark.id = ids.get(bookmark.guid);
     bookmark.parentId = ids.get(bookmark.parentGuid);
-  }
-
-  let observers = PlacesUtils.bookmarks.getObservers();
-  for (let bookmark of bookmarks) {
-    notify(observers, "onItemChanged", [
-      bookmark.id,
-      "keyword",
-      false,
-      keyword,
-      bookmark.lastModified * 1000,
-      bookmark.type,
-      bookmark.parentId,
-      bookmark.guid,
-      bookmark.parentGuid,
-      "",
-      source,
-    ]);
   }
 
   const notifications = bookmarks.map(

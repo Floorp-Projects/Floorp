@@ -3,18 +3,6 @@
 const TEST_URL = "about:blank";
 
 add_task(async function() {
-  function promiseOnItemChanged() {
-    return new Promise(resolve => {
-      PlacesUtils.bookmarks.addObserver({
-        onItemChanged(id, property, isAnno, value) {
-          PlacesUtils.bookmarks.removeObserver(this);
-          resolve({ property, value });
-        },
-        QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
-      });
-    });
-  }
-
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,
@@ -50,15 +38,19 @@ add_task(async function() {
       "The keyword field should be empty"
     );
     info("Add a keyword to the bookmark");
-    let promise = promiseOnItemChanged();
+    const promise = PlacesTestUtils.waitForNotification(
+      "bookmark-keyword-changed",
+      () => true,
+      "places"
+    );
     keywordField.focus();
     keywordField.value = "kw";
     EventUtils.sendString(i.toString(), library);
     keywordField.blur();
-    let { property, value } = await promise;
-    is(property, "keyword", "The keyword should have been changed");
-
-    is(value, `kw${i}`, "The new keyword value is correct");
+    const events = await promise;
+    is(events.length, 1, "Number of events fired is correct");
+    const keyword = events[0].keyword;
+    is(keyword, `kw${i}`, "The new keyword value is correct");
   }
 
   for (let i = 0; i < 2; ++i) {

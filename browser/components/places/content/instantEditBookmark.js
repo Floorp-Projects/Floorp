@@ -368,11 +368,11 @@ var gEditItemOverlay = {
 
     // Observe changes.
     if (!this._observersAdded) {
-      PlacesUtils.bookmarks.addObserver(this);
       this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
       PlacesUtils.observers.addListener(
         [
           "bookmark-moved",
+          "bookmark-keyword-changed",
           "bookmark-tags-changed",
           "bookmark-title-changed",
           "bookmark-url-changed",
@@ -560,8 +560,6 @@ var gEditItemOverlay = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
-
   _element(aID) {
     return document.getElementById("editBMPanel_" + aID);
   },
@@ -582,10 +580,10 @@ var gEditItemOverlay = {
     }
 
     if (this._observersAdded) {
-      PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
         [
           "bookmark-moved",
+          "bookmark-keyword-changed",
           "bookmark-tags-changed",
           "bookmark-title-changed",
           "bookmark-url-changed",
@@ -1189,6 +1187,15 @@ var gEditItemOverlay = {
             bm.title
           );
           break;
+        case "bookmark-keyword-changed":
+          if (!this._paneInfo.isItem || this._paneInfo.itemId != event.id) {
+            return;
+          }
+
+          if (this._paneInfo.visibleRows.has("keywordRow")) {
+            this._initKeywordField(event.keyword).catch(console.error);
+          }
+          break;
         case "bookmark-tags-changed":
           if (this._paneInfo.visibleRows.has("tagsRow")) {
             this._onTagsChange(event.guid).catch(console.error);
@@ -1317,30 +1324,6 @@ var gEditItemOverlay = {
           break;
         }
       }
-    }
-  },
-
-  // nsINavBookmarkObserver
-  onItemChanged(
-    aItemId,
-    aProperty,
-    aIsAnnotationProperty,
-    aValue,
-    aLastModified,
-    aItemType,
-    aParentId,
-    aGuid
-  ) {
-    if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId) {
-      return;
-    }
-
-    switch (aProperty) {
-      case "keyword":
-        if (this._paneInfo.visibleRows.has("keywordRow")) {
-          this._initKeywordField(aValue).catch(console.error);
-        }
-        break;
     }
   },
 

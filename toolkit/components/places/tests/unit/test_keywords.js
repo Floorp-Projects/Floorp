@@ -74,40 +74,40 @@ async function check_no_orphans() {
 }
 
 function expectBookmarkNotifications() {
-  let notifications = [];
-  let observer = new Proxy(NavBookmarkObserver, {
-    get(target, name) {
-      if (name == "check") {
-        PlacesUtils.bookmarks.removeObserver(observer);
-        return expectedNotifications =>
-          Assert.deepEqual(notifications, expectedNotifications);
-      }
-
-      if (name.startsWith("onItemChanged")) {
-        return function(itemId, property) {
-          if (property != "keyword") {
-            return;
-          }
-          let args = Array.from(arguments, arg => {
-            if (arg && arg instanceof Ci.nsIURI) {
-              return URL.fromURI(arg);
-            }
-            if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
-              return new Date(parseInt(arg / 1000));
-            }
-            return arg;
-          });
-          notifications.push({ name, arguments: args });
-        };
-      }
-
-      if (name in target) {
-        return target[name];
-      }
-      return undefined;
+  const observer = {
+    notifications: [],
+    _start() {
+      this._handle = this._handle.bind(this);
+      PlacesUtils.observers.addListener(
+        ["bookmark-keyword-changed"],
+        this._handle
+      );
     },
-  });
-  PlacesUtils.bookmarks.addObserver(observer);
+    _handle(events) {
+      for (const event of events) {
+        this.notifications.push({
+          type: event.type,
+          id: event.id,
+          itemType: event.itemType,
+          url: event.url,
+          guid: event.guid,
+          parentGuid: event.parentGuid,
+          keyword: event.keyword,
+          lastModified: new Date(event.lastModified),
+          source: event.source,
+          isTagging: event.isTagging,
+        });
+      }
+    },
+    check(expected) {
+      PlacesUtils.observers.removeListener(
+        ["bookmark-keyword-changed"],
+        this._handle
+      );
+      Assert.deepEqual(this.notifications, expected);
+    },
+  };
+  observer._start();
   return observer;
 }
 
@@ -268,20 +268,16 @@ add_task(async function test_addBookmarkAndKeyword() {
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark.guid),
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -294,20 +290,16 @@ add_task(async function test_addBookmarkAndKeyword() {
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark.guid),
-        "keyword",
-        false,
-        "",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark.guid),
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -446,36 +438,28 @@ add_task(async function test_sameKeywordDifferentURL() {
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark1.guid),
-        "keyword",
-        false,
-        "",
-        bookmark1.lastModified * 1000,
-        bookmark1.type,
-        await PlacesUtils.promiseItemId(bookmark1.parentGuid),
-        bookmark1.guid,
-        bookmark1.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark1.guid),
+      itemType: bookmark1.type,
+      url: bookmark1.url,
+      guid: bookmark1.guid,
+      parentGuid: bookmark1.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark1.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark2.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark2.lastModified * 1000,
-        bookmark2.type,
-        await PlacesUtils.promiseItemId(bookmark2.parentGuid),
-        bookmark2.guid,
-        bookmark2.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      itemType: bookmark2.type,
+      url: bookmark2.url,
+      guid: bookmark2.guid,
+      parentGuid: bookmark2.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark2.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -489,20 +473,16 @@ add_task(async function test_sameKeywordDifferentURL() {
   await PlacesUtils.keywords.remove("keyword");
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark2.guid),
-        "keyword",
-        false,
-        "",
-        bookmark2.lastModified * 1000,
-        bookmark2.type,
-        await PlacesUtils.promiseItemId(bookmark2.parentGuid),
-        bookmark2.guid,
-        bookmark2.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      itemType: bookmark2.type,
+      url: bookmark2.url,
+      guid: bookmark2.guid,
+      parentGuid: bookmark2.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark2.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -538,20 +518,16 @@ add_task(async function test_sameURIDifferentKeyword() {
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark.guid),
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -565,20 +541,16 @@ add_task(async function test_sameURIDifferentKeyword() {
   Assert.equal(await foreign_count("http://example.com/"), fc + 2); // -1 keyword +1 keyword
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark.guid),
-        "keyword",
-        false,
-        "keyword2",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark.guid),
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "keyword2",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -613,36 +585,28 @@ add_task(async function test_deleteKeywordMultipleBookmarks() {
   Assert.equal(await foreign_count("http://example.com/"), fc + 3); // +2 bookmark +1 keyword
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark2.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark2.lastModified * 1000,
-        bookmark2.type,
-        await PlacesUtils.promiseItemId(bookmark2.parentGuid),
-        bookmark2.guid,
-        bookmark2.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      itemType: bookmark2.type,
+      url: bookmark2.url,
+      guid: bookmark2.guid,
+      parentGuid: bookmark2.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark2.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark1.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark1.lastModified * 1000,
-        bookmark1.type,
-        await PlacesUtils.promiseItemId(bookmark1.parentGuid),
-        bookmark1.guid,
-        bookmark1.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark1.guid),
+      itemType: bookmark1.type,
+      url: bookmark1.url,
+      guid: bookmark1.guid,
+      parentGuid: bookmark1.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark1.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -652,36 +616,28 @@ add_task(async function test_deleteKeywordMultipleBookmarks() {
   Assert.equal(await foreign_count("http://example.com/"), fc + 2); // -1 keyword
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark2.guid),
-        "keyword",
-        false,
-        "",
-        bookmark2.lastModified * 1000,
-        bookmark2.type,
-        await PlacesUtils.promiseItemId(bookmark2.parentGuid),
-        bookmark2.guid,
-        bookmark2.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      itemType: bookmark2.type,
+      url: bookmark2.url,
+      guid: bookmark2.guid,
+      parentGuid: bookmark2.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark2.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark1.guid),
-        "keyword",
-        false,
-        "",
-        bookmark1.lastModified * 1000,
-        bookmark1.type,
-        await PlacesUtils.promiseItemId(bookmark1.parentGuid),
-        bookmark1.guid,
-        bookmark1.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark1.guid),
+      itemType: bookmark1.type,
+      url: bookmark1.url,
+      guid: bookmark1.guid,
+      parentGuid: bookmark1.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark1.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
