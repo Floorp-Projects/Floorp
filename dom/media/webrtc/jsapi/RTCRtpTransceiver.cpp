@@ -865,8 +865,6 @@ void RTCRtpTransceiver::StopImpl() {
   if (mStopped) {
     return;
   }
-  mSender->Stop();
-  mReceiver->Stop();
 
   if (mCallWrapper) {
     auto conduit = std::move(mConduit);
@@ -883,6 +881,10 @@ void RTCRtpTransceiver::StopImpl() {
   }
   mStopped = true;
   mCurrentDirection.SetNull();
+
+  mSender->Stop();
+  mReceiver->Stop();
+
   auto self = nsMainThreadPtrHandle<RTCRtpTransceiver>(
       new nsMainThreadPtrHolder<RTCRtpTransceiver>(
           "RTCRtpTransceiver::StopImpl::self", this, false));

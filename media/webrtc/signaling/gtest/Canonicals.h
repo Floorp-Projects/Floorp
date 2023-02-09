@@ -8,6 +8,7 @@
 #define MEDIA_WEBRTC_SIGNALING_GTEST_CANONICALS_H_
 
 #include "MediaConduitControl.h"
+#include "MediaPipeline.h"
 #include "WaitFor.h"
 
 namespace mozilla {
@@ -63,6 +64,8 @@ class ConcreteCanonicals {
 
 class ConcreteControl : public AudioConduitControlInterface,
                         public VideoConduitControlInterface,
+                        public MediaPipelineReceiveControlInterface,
+                        public MediaPipelineTransmitControlInterface,
                         private ConcreteCanonicals {
  private:
   RefPtr<nsISerialEventTarget> mTarget;
@@ -79,7 +82,9 @@ class ConcreteControl : public AudioConduitControlInterface,
   }
 
   // MediaConduitControlInterface
+  // -- MediaPipelineReceiveControlInterface
   AbstractCanonical<bool>* CanonicalReceiving() override { return &mReceiving; }
+  // -- MediaPipelineTransmitControlInterface
   AbstractCanonical<bool>* CanonicalTransmitting() override {
     return &mTransmitting;
   }

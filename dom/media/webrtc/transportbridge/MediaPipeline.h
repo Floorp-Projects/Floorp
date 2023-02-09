@@ -49,6 +49,14 @@ class MediaStreamTrack;
 struct RTCRTPContributingSourceStats;
 }  // namespace dom
 
+struct MediaPipelineReceiveControlInterface {
+  virtual AbstractCanonical<bool>* CanonicalReceiving() = 0;
+};
+
+struct MediaPipelineTransmitControlInterface {
+  virtual AbstractCanonical<bool>* CanonicalTransmitting() = 0;
+};
+
 // A class that represents the pipeline of audio and video
 // The dataflow looks like:
 //
@@ -88,9 +96,6 @@ class MediaPipeline : public sigslot::has_slots<> {
                 DirectionType aDirection, RefPtr<AbstractThread> aCallThread,
                 RefPtr<nsISerialEventTarget> aStsThread,
                 RefPtr<MediaSessionConduit> aConduit);
-
-  void Start();
-  void Stop();
 
   void SetLevel(size_t aLevel) { mLevel = aLevel; }
 
@@ -198,7 +203,7 @@ class MediaPipeline : public sigslot::has_slots<> {
  protected:
   // True if we should be actively transmitting or receiving data. Main thread
   // only.
-  Watchable<bool> mActive;
+  Mirror<bool> mActive;
   Atomic<size_t> mLevel;
   std::string mTransportId;
   const RefPtr<MediaTransportHandler> mTransportHandler;
@@ -257,6 +262,8 @@ class MediaPipelineTransmit
                         RefPtr<AbstractThread> aCallThread,
                         RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
                         RefPtr<MediaSessionConduit> aConduit);
+
+  void InitControl(MediaPipelineTransmitControlInterface* aControl);
 
   void Shutdown() override;
 
@@ -348,6 +355,8 @@ class MediaPipelineReceive : public MediaPipeline {
                        RefPtr<AbstractThread> aCallThread,
                        RefPtr<nsISerialEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
+
+  void InitControl(MediaPipelineReceiveControlInterface* aControl);
 
   // Called when ALPN is negotiated and is requesting privacy, so receive
   // pipelines do not enter data into the graph under a content principal.
