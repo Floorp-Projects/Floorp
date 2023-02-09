@@ -146,11 +146,6 @@ fzf_header_shortcuts = [
 ]
 
 
-def run_cmd(cmd, cwd=None):
-    is_win = platform.system() == "Windows"
-    return subprocess.call(cmd, cwd=cwd, shell=True if is_win else False)
-
-
 def get_fzf_platform():
     if platform.machine() in ["i386", "i686"]:
         print(FZF_NOT_SUPPORTED_X86 % platform.machine())
