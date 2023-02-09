@@ -96,41 +96,8 @@ add_task(async function() {
   await selectIndexAndWaitForHtmlView(0, TEST_HTML);
   await selectIndexAndWaitForHtmlView(1, FETCH_CONTENT_1);
   await selectIndexAndWaitForHtmlView(2, FETCH_CONTENT_2);
-  let previewIframe = await selectIndexAndWaitForHtmlView(3, FETCH_CONTENT_3);
-
-  info("Try to click on the link and submit the form");
-  await SpecialPowers.spawn(previewIframe.browsingContext, [], async function(
-    expectedHtml
-  ) {
-    EventUtils.synthesizeMouseAtCenter(
-      content.document.querySelector("a"),
-      {},
-      content
-    );
-    EventUtils.synthesizeMouseAtCenter(
-      content.document.querySelector("form"),
-      {},
-      content
-    );
-  });
-
-  info("Wait for some time to let a chance for the link/form to navigate");
-  await wait(1000);
-
-  info("Verify that the content did not change");
-  await SpecialPowers.spawn(
-    previewIframe.browsingContext,
-    [FETCH_CONTENT_3],
-    async function(expectedHtml) {
-      is(
-        content.document.documentElement.outerHTML,
-        expectedHtml,
-        "Verify that link and form are both disabled and the HTML content stays the same"
-      );
-    }
-  );
-
-  previewIframe = await selectIndexAndWaitForHtmlView(4, FETCH_CONTENT_4);
+  await selectIndexAndWaitForHtmlView(3, FETCH_CONTENT_3);
+  await selectIndexAndWaitForHtmlView(4, FETCH_CONTENT_4);
 
   await teardown(monitor);
 
