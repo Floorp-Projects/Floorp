@@ -104,7 +104,8 @@ RTCRtpReceiver::RTCRtpReceiver(
     mTrack = MakeAndAddRef<AudioStreamTrack>(aWindow, source, mTrackSource);
     mPipeline = MakeAndAddRef<MediaPipelineReceiveAudio>(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
-        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle, aPrivacy);
+        *aConduit->AsAudioSessionConduit(), mTrackSource->Stream(), aTrackingId,
+        principalHandle, aPrivacy);
   } else {
     auto* source = graph->CreateSourceTrack(MediaSegment::VIDEO);
     mTrackSource = MakeAndAddRef<RemoteTrackSource>(
@@ -112,7 +113,8 @@ RTCRtpReceiver::RTCRtpReceiver(
     mTrack = MakeAndAddRef<VideoStreamTrack>(aWindow, source, mTrackSource);
     mPipeline = MakeAndAddRef<MediaPipelineReceiveVideo>(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
-        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle, aPrivacy);
+        *aConduit->AsVideoSessionConduit(), mTrackSource->Stream(), aTrackingId,
+        principalHandle, aPrivacy);
   }
 
   // Spec says remote tracks start out muted.

@@ -384,8 +384,9 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             RefPtr<AbstractThread> aCallThread,
                             RefPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
-                            const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle,
+                            RefPtr<SourceMediaTrack> aSource,
+                            TrackingId aTrackingId,
+                            PrincipalHandle aPrincipalHandle,
                             PrincipalPrivacy aPrivacy);
 
   void Shutdown() override;
@@ -413,8 +414,9 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             RefPtr<AbstractThread> aCallThread,
                             RefPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
-                            const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle,
+                            RefPtr<SourceMediaTrack> aSource,
+                            TrackingId aTrackingId,
+                            PrincipalHandle aPrincipalHandle,
                             PrincipalPrivacy aPrivacy);
 
   void Shutdown() override;
