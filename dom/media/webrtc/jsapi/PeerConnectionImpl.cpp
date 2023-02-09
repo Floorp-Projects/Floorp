@@ -2764,9 +2764,9 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
             transceiver->Receiver()->UpdateStreams(&changes);
           }
 
-          for (const auto& track : changes.mTracksToMute) {
-            // This sets the muted state for track and all its clones.
-            static_cast<RemoteTrackSource&>(track->GetSource()).SetMuted(true);
+          for (const auto& receiver : changes.mReceiversToMute) {
+            // This sets the muted state for the recv track and all its clones.
+            receiver->SetTrackMuteFromRemoteSdp();
           }
 
           for (const auto& association : changes.mStreamAssociationsRemoved) {
