@@ -442,6 +442,9 @@ class PerftestOutput(object):
             # pylint: disable=W1633
             return round(filters.mean(_filter(vals)), 2)
 
+        if "twitch-animation" in testname:
+            return round(filters.geometric_mean(_filter(vals, "run")), 2)
+
         if testname.startswith("supporting_data"):
             if not unit:
                 return sum(_filter(vals))
