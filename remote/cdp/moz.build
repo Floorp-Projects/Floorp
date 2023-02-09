@@ -20,6 +20,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/page/browser.ini",
     "test/browser/runtime/browser.ini",
     "test/browser/security/browser.ini",
+    "test/browser/systemInfo/browser.ini",
     "test/browser/target/browser.ini",
 ]
 

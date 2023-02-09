@@ -35,6 +35,7 @@ remote.jar:
   content/cdp/domains/parent/Page.sys.mjs (domains/parent/Page.sys.mjs)
   content/cdp/domains/parent/page/DialogHandler.sys.mjs (domains/parent/page/DialogHandler.sys.mjs)
   content/cdp/domains/parent/Security.sys.mjs (domains/parent/Security.sys.mjs)
+  content/cdp/domains/parent/SystemInfo.sys.mjs (domains/parent/SystemInfo.sys.mjs)
   content/cdp/domains/parent/Target.sys.mjs (domains/parent/Target.sys.mjs)
   # observers
   content/cdp/observers/ChannelEventSink.sys.mjs (observers/ChannelEventSink.sys.mjs)
