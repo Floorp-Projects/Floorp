@@ -7,16 +7,20 @@
 #ifndef DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/WritableStream.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 
 class nsIGlobalObject;
+class nsIRandomAccessStream;
 
 namespace mozilla {
 
 template <typename T>
 class Buffer;
 class ErrorResult;
+class TaskQueue;
 
 namespace dom {
 
@@ -26,13 +30,18 @@ class FileSystemManager;
 class FileSystemWritableFileStreamChild;
 class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 class Promise;
+class StrongWorkerRef;
+
+namespace fs {
+class FileSystemThreadSafeStreamOwner;
+}
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
   static already_AddRefed<FileSystemWritableFileStream> Create(
       nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
-      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+      mozilla::ipc::RandomAccessStreamParams aStreamParams,
       const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -43,9 +52,9 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
-  bool IsClosed() const { return mClosed; }
+  bool IsClosed() const;
 
-  void Close();
+  RefPtr<BoolPromise> BeginClose();
 
   already_AddRefed<Promise> Write(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aError);
@@ -66,39 +75,36 @@ class FileSystemWritableFileStream final : public WritableStream {
                                                         ErrorResult& aError);
 
  private:
-  FileSystemWritableFileStream(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      RefPtr<FileSystemWritableFileStreamChild> aActor,
-      const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
-      const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemWritableFileStream(nsIGlobalObject* aGlobal,
+                               RefPtr<FileSystemManager>& aManager,
+                               RefPtr<FileSystemWritableFileStreamChild> aActor,
+                               already_AddRefed<TaskQueue> aTaskQueue,
+                               nsCOMPtr<nsIRandomAccessStream> aStream,
+                               const fs::FileSystemEntryMetadata& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
 
   template <typename T>
   void Write(const T& aData, const Maybe<uint64_t> aPosition,
-             RefPtr<Promise> aPromise);
+             const RefPtr<Promise>& aPromise);
 
-  void Seek(uint64_t aPosition, RefPtr<Promise> aPromise);
+  void Seek(uint64_t aPosition, const RefPtr<Promise>& aPromise);
 
-  void Truncate(uint64_t aSize, RefPtr<Promise> aPromise);
-
-  Result<uint64_t, nsresult> WriteBuffer(const nsACString& aBuffer,
-                                         const Maybe<uint64_t> aPosition);
-
-  Result<uint64_t, nsresult> WriteStream(nsCOMPtr<nsIInputStream> aStream,
-                                         const Maybe<uint64_t> aPosition);
-
-  Result<Ok, nsresult> SeekPosition(uint64_t aPosition);
+  void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);
 
   RefPtr<FileSystemManager> mManager;
 
   RefPtr<FileSystemWritableFileStreamChild> mActor;
 
-  PRFileDesc* mFileDesc;
+  RefPtr<TaskQueue> mTaskQueue;
+
+  RefPtr<fs::FileSystemThreadSafeStreamOwner> mStreamOwner;
+
+  RefPtr<StrongWorkerRef> mWorkerRef;
 
   fs::FileSystemEntryMetadata mMetadata;
 
-  bool mClosed;
+  FlippedOnce<false> mClosed;
 };
 
 }  // namespace dom

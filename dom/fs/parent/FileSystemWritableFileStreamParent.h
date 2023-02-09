@@ -11,6 +11,8 @@
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemWritableFileStreamParent.h"
 
+class nsIInterfaceRequestor;
+
 namespace mozilla::dom {
 
 class FileSystemManagerParent;
@@ -24,11 +26,15 @@ class FileSystemWritableFileStreamParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemWritableFileStreamParent,
                                         override)
 
-  mozilla::ipc::IPCResult RecvClose();
+  mozilla::ipc::IPCResult RecvClose(CloseResolver&& aResolver);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  nsIInterfaceRequestor* GetOrCreateStreamCallbacks();
+
  private:
+  class FileSystemWritableFileStreamCallbacks;
+
   virtual ~FileSystemWritableFileStreamParent();
 
   bool IsClosed() const { return mClosed; }
@@ -36,6 +42,8 @@ class FileSystemWritableFileStreamParent
   void Close();
 
   const RefPtr<FileSystemManagerParent> mManager;
+
+  RefPtr<FileSystemWritableFileStreamCallbacks> mStreamCallbacks;
 
   const fs::EntryId mEntryId;
 

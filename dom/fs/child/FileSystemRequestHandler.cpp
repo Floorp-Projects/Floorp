@@ -28,6 +28,7 @@
 #include "mozilla/dom/fs/IPCRejectReporter.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/RandomAccessStreamUtils.h"
 
 namespace mozilla::dom::fs {
 
@@ -144,15 +145,17 @@ RefPtr<FileSystemWritableFileStream> MakeResolution(
     const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
     const FileSystemEntryMetadata& aMetadata,
     RefPtr<FileSystemManager>& aManager) {
-  const auto& properties =
-      aResponse.get_FileSystemWritableFileStreamProperties();
+  auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
+
+  mozilla::ipc::RandomAccessStreamParams params =
+      std::move(properties.streamParams());
 
   auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
       properties.writableFileStreamChild());
 
   RefPtr<FileSystemWritableFileStream> result =
-      FileSystemWritableFileStream::Create(
-          aGlobal, aManager, actor, properties.fileDescriptor(), aMetadata);
+      FileSystemWritableFileStream::Create(aGlobal, aManager, actor,
+                                           std::move(params), aMetadata);
 
   return result;
 }

@@ -153,7 +153,7 @@ struct FileSystemGetWritableRequest
 
 struct FileSystemWritableFileStreamProperties
 {
-  FileDescriptor fileDescriptor;
+  RandomAccessStreamParams streamParams;
   PFileSystemWritableFileStream writableFileStream;
 };
 
