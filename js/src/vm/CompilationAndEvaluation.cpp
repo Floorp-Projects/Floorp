@@ -181,8 +181,8 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   js::frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
-  if (!compilationState.init(cx, &fc, &scopeCache)) {
+  frontend::CompilationState compilationState(&fc, allocScope, input.get());
+  if (!compilationState.init(&fc, &scopeCache)) {
     return false;
   }
 

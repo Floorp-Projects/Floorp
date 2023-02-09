@@ -2784,7 +2784,7 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       source(std::move(source)),
       parserAtoms(alloc) {}
 
-CompilationState::CompilationState(JSContext* cx, FrontendContext* fc,
+CompilationState::CompilationState(FrontendContext* fc,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
     : ExtensibleCompilationStencil(input),

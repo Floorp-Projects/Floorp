@@ -111,7 +111,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
                                CompilationInput& input,
                                SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, fc, parserAllocScope, input),
+        compilationState_(fc, parserAllocScope, input),
         stackLimit(stackLimit) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
@@ -120,8 +120,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
                           ScopeBindingCache* scopeCache,
                           InheritThis inheritThis = InheritThis::No,
                           JSObject* enclosingEnv = nullptr) {
-    if (!compilationState_.init(cx, fc, scopeCache, inheritThis,
-                                enclosingEnv)) {
+    if (!compilationState_.init(fc, scopeCache, inheritThis, enclosingEnv)) {
       return false;
     }
 
@@ -1187,10 +1186,10 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
       input.functionFlags().isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
-  CompilationState compilationState(cx, fc, parserAllocScope, input);
+  CompilationState compilationState(fc, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
-  if (!compilationState.init(cx, fc, scopeCache, inheritThis)) {
+  if (!compilationState.init(fc, scopeCache, inheritThis)) {
     return false;
   }
 

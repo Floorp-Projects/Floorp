@@ -1388,8 +1388,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   UsedNameTracker usedNames;
 
-  // LifoAlloc scope for `cx->tempLifoAlloc()`, used by Parser for allocating
-  // AST etc.
+  // LifoAlloc scope used by Parser for allocating AST etc.
   //
   // NOTE: This is not used for ExtensibleCompilationStencil.alloc.
   LifoAllocScope& parserAllocScope;
@@ -1406,10 +1405,10 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   // End of fields.
 
-  CompilationState(JSContext* cx, FrontendContext* fc,
-                   LifoAllocScope& parserAllocScope, CompilationInput& input);
+  CompilationState(FrontendContext* fc, LifoAllocScope& parserAllocScope,
+                   CompilationInput& input);
 
-  bool init(JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
+  bool init(FrontendContext* fc, ScopeBindingCache* scopeCache,
             InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {
     if (!scopeContext.init(fc, input, parserAtoms, scopeCache, inheritThis,
