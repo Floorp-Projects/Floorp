@@ -3437,6 +3437,7 @@ this forms our WebDriver implementation.
       -
         | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
         | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
     * - Includes
       -
         | `testing/marionette/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/marionette/\*\*/\*>`__
@@ -3524,6 +3525,8 @@ subscribing to updates from the aforementioned.
     * - Peer(s)
       -
         | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
     * - Owner(s) Emeritus
       - Andreas Tolfsen
     * - Peer(s) Emeritus
@@ -3580,6 +3583,8 @@ Firefox UI test framework.
     * - Peer(s)
       -
         | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
     * - Includes
       -
         | `testing/firefox-ui/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/firefox-ui/\*\*/\*>`__
