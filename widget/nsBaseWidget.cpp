@@ -988,6 +988,18 @@ void nsBaseWidget::CreateCompositor() {
   CreateCompositor(rect.Width(), rect.Height());
 }
 
+void nsIWidget::PauseOrResumeCompositor(bool aPause) {
+  auto* renderer = GetRemoteRenderer();
+  if (!renderer) {
+    return;
+  }
+  if (aPause) {
+    renderer->SendPause();
+  } else {
+    renderer->SendResume();
+  }
+}
+
 already_AddRefed<GeckoContentController>
 nsBaseWidget::CreateRootContentController() {
   RefPtr<GeckoContentController> controller =
