@@ -214,8 +214,13 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   auto writableFileStreamParent =
       MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
 
-  QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
-                NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
+  QM_TRY_UNWRAP(
+      nsCOMPtr<nsIRandomAccessStream> stream,
+      CreateFileRandomAccessStream(quota::PERSISTENCE_TYPE_DEFAULT,
+                                   mDataManager->OriginMetadataRef(),
+                                   quota::Client::FILESYSTEM, file, -1, -1,
+                                   nsIFileRandomAccessStream::DEFER_OPEN),
+      IPC_OK(), reportError);
 
   RandomAccessStreamParams streamParams =
       mozilla::ipc::SerializeRandomAccessStream(

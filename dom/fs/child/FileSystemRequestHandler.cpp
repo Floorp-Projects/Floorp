@@ -25,6 +25,8 @@
 #include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/fs/IPCRejectReporter.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -139,27 +141,6 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
   return result;
 }
 
-RefPtr<FileSystemWritableFileStream> MakeResolution(
-    nsIGlobalObject* aGlobal,
-    FileSystemGetWritableFileStreamResponse&& aResponse,
-    const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
-    const FileSystemEntryMetadata& aMetadata,
-    RefPtr<FileSystemManager>& aManager) {
-  auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
-
-  mozilla::ipc::RandomAccessStreamParams params =
-      std::move(properties.streamParams());
-
-  auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
-      properties.writableFileStreamChild());
-
-  RefPtr<FileSystemWritableFileStream> result =
-      FileSystemWritableFileStream::Create(aGlobal, aManager, actor,
-                                           std::move(params), aMetadata);
-
-  return result;
-}
-
 RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             FileSystemGetFileResponse&& aResponse,
                             const RefPtr<File>& /* aResult */,
@@ -249,6 +230,76 @@ void ResolveCallback(FileSystemResolveResponse&& aResponse,
 
   // Spec says if there is no parent/child relationship, return null
   aPromise->MaybeResolve(JS::NullHandleValue);
+}
+
+// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
+template <>
+void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
+                     // NOLINTNEXTLINE(performance-unnecessary-value-param)
+                     RefPtr<Promise> aPromise,
+                     RefPtr<FileSystemManager>& aManager,
+                     const FileSystemEntryMetadata& aMetadata) {
+  using CreatePromise = FileSystemWritableFileStream::CreatePromise;
+  MOZ_ASSERT(aPromise);
+  QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
+
+  if (FileSystemGetWritableFileStreamResponse::Tnsresult == aResponse.type()) {
+    HandleFailedStatus(aResponse.get_nsresult(), aPromise);
+    return;
+  }
+
+  auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
+
+  auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
+      properties.writableFileStreamChild());
+
+  mozilla::ipc::RandomAccessStreamParams params =
+      std::move(properties.streamParams());
+
+  FileSystemEntryMetadata metadata = aMetadata;
+
+  WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
+  RefPtr<StrongWorkerRef> buildWorkerRef =
+      workerPrivate ? StrongWorkerRef::Create(
+                          workerPrivate, "FileSystemWritableFileStream::Create")
+                    : nullptr;
+
+  FileSystemWritableFileStream::Create(aPromise->GetParentObject(), aManager,
+                                       actor, std::move(params),
+                                       std::move(metadata))
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [buildWorkerRef,
+              aPromise](CreatePromise::ResolveOrRejectValue&& aValue) {
+               if (aValue.IsResolve()) {
+                 RefPtr<FileSystemWritableFileStream> stream =
+                     aValue.ResolveValue();
+
+                 if (buildWorkerRef) {
+                   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+                       buildWorkerRef->Private(),
+                       "FileSystemWritableFileStream", [stream]() {
+                         if (stream->IsOpen()) {
+                           // We don't need the promise, we just begin the
+                           // closing process.
+                           Unused << stream->BeginClose();
+                         }
+                       });
+
+                   stream->SetWorkerRef(std::move(workerRef));
+                 }
+
+                 aPromise->MaybeResolve(stream);
+                 return;
+               }
+
+               if (aValue.IsReject()) {
+                 aPromise->MaybeReject(aValue.RejectValue());
+                 return;
+               }
+
+               aPromise->MaybeRejectWithUnknownError(
+                   "Promise chain resolution is empty");
+             });
 }
 
 template <class TResponse, class TReturns, class... Args,
@@ -445,9 +496,8 @@ void FileSystemRequestHandler::GetWritable(RefPtr<FileSystemManager>& aManager,
   aManager->BeginRequest(
       [request = FileSystemGetWritableRequest(aFile.entryId(), aKeepData),
        onResolve =
-           SelectResolveCallback<FileSystemGetWritableFileStreamResponse,
-                                 RefPtr<FileSystemWritableFileStream>>(
-               aPromise, aFile, aManager),
+           SelectResolveCallback<FileSystemGetWritableFileStreamResponse, void>(
+               aPromise, aManager, aFile),
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendGetWritable(request, std::move(onResolve),
                                std::move(onReject));
