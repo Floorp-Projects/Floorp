@@ -8,6 +8,7 @@
 
 #include "MediaStreamError.h"
 #include "MediaTrackGraph.h"
+#include "RTCRtpReceiver.h"
 
 namespace mozilla {
 
@@ -19,17 +20,21 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(RemoteTrackSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(RemoteTrackSource,
                                                 dom::MediaStreamTrackSource)
   tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReceiver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(RemoteTrackSource,
                                                   dom::MediaStreamTrackSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReceiver)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 RemoteTrackSource::RemoteTrackSource(SourceMediaTrack* aStream,
+                                     dom::RTCRtpReceiver* aReceiver,
                                      nsIPrincipal* aPrincipal,
                                      const nsString& aLabel,
                                      TrackingId aTrackingId)
     : dom::MediaStreamTrackSource(aPrincipal, aLabel, std::move(aTrackingId)),
-      mStream(aStream) {}
+      mStream(aStream),
+      mReceiver(aReceiver) {}
 
 RemoteTrackSource::~RemoteTrackSource() { Destroy(); }
 

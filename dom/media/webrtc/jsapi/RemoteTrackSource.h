@@ -11,6 +11,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class RTCRtpReceiver;
+}
+
 class SourceMediaTrack;
 
 class RemoteTrackSource : public dom::MediaStreamTrackSource {
@@ -19,8 +23,9 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoteTrackSource,
                                            dom::MediaStreamTrackSource)
 
-  RemoteTrackSource(SourceMediaTrack* aStream, nsIPrincipal* aPrincipal,
-                    const nsString& aLabel, TrackingId aTrackingId);
+  RemoteTrackSource(SourceMediaTrack* aStream, dom::RTCRtpReceiver* aReceiver,
+                    nsIPrincipal* aPrincipal, const nsString& aLabel,
+                    TrackingId aTrackingId);
 
   void Destroy() override;
 
@@ -51,6 +56,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
   virtual ~RemoteTrackSource();
 
   RefPtr<SourceMediaTrack> mStream;
+  RefPtr<dom::RTCRtpReceiver> mReceiver;
 };
 
 }  // namespace mozilla

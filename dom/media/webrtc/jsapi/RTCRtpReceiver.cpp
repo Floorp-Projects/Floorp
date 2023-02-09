@@ -100,7 +100,7 @@ RTCRtpReceiver::RTCRtpReceiver(
   if (isAudio) {
     auto* source = graph->CreateSourceTrack(MediaSegment::AUDIO);
     mTrackSource = MakeAndAddRef<RemoteTrackSource>(
-        source, principalHandle, u"remote audio"_ns, aTrackingId);
+        source, this, principalHandle, u"remote audio"_ns, aTrackingId);
     mTrack = MakeAndAddRef<AudioStreamTrack>(aWindow, source, mTrackSource);
     mPipeline = MakeAndAddRef<MediaPipelineReceiveAudio>(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
@@ -109,7 +109,7 @@ RTCRtpReceiver::RTCRtpReceiver(
   } else {
     auto* source = graph->CreateSourceTrack(MediaSegment::VIDEO);
     mTrackSource = MakeAndAddRef<RemoteTrackSource>(
-        source, principalHandle, u"remote video"_ns, aTrackingId);
+        source, this, principalHandle, u"remote video"_ns, aTrackingId);
     mTrack = MakeAndAddRef<VideoStreamTrack>(aWindow, source, mTrackSource);
     mPipeline = MakeAndAddRef<MediaPipelineReceiveVideo>(
         mPc->GetHandle(), aTransportHandler, aCallThread, mStsThread.get(),
