@@ -536,6 +536,8 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
 #endif
 
 SharedScriptDataTableHolder& JSRuntime::scriptDataTableHolder() {
+  // NOTE: Assert that this is not helper thread.
+  //       worker thread also has access to the per-runtime table holder.
   MOZ_ASSERT(CurrentThreadIsMainThread());
   return scriptDataTableHolder_;
 }

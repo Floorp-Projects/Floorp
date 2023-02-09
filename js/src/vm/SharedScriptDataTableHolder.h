@@ -45,8 +45,12 @@ class AutoLockGlobalScriptData {
 //   Maybe<AutoLockGlobalScriptData> lock;
 //   auto& table = holder.getMaybeLocked(lock);
 //
-// Private instance is supposed to be held by the main JSRuntime, and used in
-// the main thread compilation.
+// Private instance is supposed to be held by the each JSRuntime, including
+// both main thread runtime and worker thread runtime, and used in for
+// non-helper-thread compilation.
+//
+// js::globalSharedScriptDataTableHolder singleton is supposed to be used by
+// all helper-thread compilation.
 class SharedScriptDataTableHolder {
   bool needsLock_ = true;
   js::SharedImmutableScriptDataTable scriptDataTable_;
