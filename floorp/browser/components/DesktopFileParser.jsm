@@ -29,7 +29,7 @@ const DesktopFileParser = {
         let currentSection = null;
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
-            if (line.trim() === "") continue;
+            if (line.trim() === "" || line.trim().startsWith("#")) continue;
             if (/^\[.*\]\s*$/.test(line)) {
                 currentSection = line.match(/^\[(.*)\]\s*$/)[1];
                 continue;
