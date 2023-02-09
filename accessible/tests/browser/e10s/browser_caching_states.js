@@ -233,9 +233,38 @@ addAccessibleTask(
   { topLevel: false, iframe: true, remoteIframe: true }
 );
 
+/**
+ * Test caching of the focusable state in iframes which are initially visibility: hidden.
+ */
+addAccessibleTask(
+  `<button id="button"></button>`,
+  async function(browser, topDocAcc) {
+    info("Changing visibility on iframe");
+    let reordered = waitForEvent(EVENT_REORDER, topDocAcc);
+    await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], iframeId => {
+      content.document.getElementById(iframeId).style.visibility = "";
+    });
+    await reordered;
+    // The iframe doc a11y tree might not be built yet.
+    const iframeDoc = await TestUtils.waitForCondition(() =>
+      findAccessibleChildByID(topDocAcc, DEFAULT_IFRAME_DOC_BODY_ID)
+    );
+    // Log/verify whether this is an in-process or OOP iframe.
+    await comparePIDs(browser, gIsRemoteIframe);
+    const button = findAccessibleChildByID(iframeDoc, "button");
+    testStates(button, STATE_FOCUSABLE);
+  },
+  {
+    topLevel: false,
+    iframe: true,
+    remoteIframe: true,
+    iframeAttrs: { style: "visibility: hidden;" },
+    skipFissionDocLoad: true,
+  }
+);
+
 function checkOpacity(acc, present) {
-  // eslint-disable-next-line no-unused-vars
-  let [_, extraState] = getStates(acc);
+  let [, extraState] = getStates(acc);
   let currOpacity = extraState & EXT_STATE_OPAQUE;
   return present ? currOpacity : !currOpacity;
 }
