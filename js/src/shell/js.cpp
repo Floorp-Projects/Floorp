@@ -5655,8 +5655,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
-  if (!compilationState.init(cx, &fc, &scopeCache)) {
+  frontend::CompilationState compilationState(&fc, allocScope, input.get());
+  if (!compilationState.init(&fc, &scopeCache)) {
     return false;
   }
 
@@ -5732,8 +5732,8 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::NoScopeBindingCache scopeCache;
-  frontend::CompilationState compilationState(cx, &fc, allocScope, input.get());
-  if (!compilationState.init(cx, &fc, &scopeCache)) {
+  frontend::CompilationState compilationState(&fc, allocScope, input.get());
+  if (!compilationState.init(&fc, &scopeCache)) {
     return false;
   }
 
