@@ -3993,7 +3993,7 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
   }
 
   RefPtr<RTCRtpTransceiver> transceiver = new RTCRtpTransceiver(
-      mWindow, PrivacyNeeded(), this, mTransportHandler, mJsepSession.get(),
+      mWindow, PrivacyRequested(), this, mTransportHandler, mJsepSession.get(),
       aId, aIsVideo, mSTSThread.get(), aSendTrack, mCall.get(), mIdGenerator);
 
   transceiver->Init(aInit, aRv);
