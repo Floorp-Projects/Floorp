@@ -18,6 +18,8 @@ Each successful operation is noticed by observer for these events and passed to 
   - ``“bookmark-removed”`` - ``data: PlacesBookmarkRemoved`` Fired whenever a bookmark (or a bookmark folder/separator) is removed.
   - ``“bookmark-moved”`` - ``data: PlacesBookmarkMoved`` Fired whenever a bookmark (or a bookmark folder/separator) is moved.
   - ``“bookmark-guid-changed”`` - ``data: PlacesBookmarkGuid`` Fired whenever a bookmark guid changes.
+  - ``“bookmark-keyword-changed”`` - ``data: PlacesBookmarkKeyword`` Fired whenever a bookmark keyword changes.
+
   - ``“bookmark-tags-changed”`` - ``data: PlacesBookmarkTags`` Fired whenever tags of bookmark changes.
   - ``“bookmark-time-changed”`` - ``data: PlacesBookmarkTime`` Fired whenever dateAdded or lastModified of a bookmark is explicitly changed through the Bookmarks API. This notification doesn't fire when a bookmark is created, or when a property of a bookmark (e.g. title) is changed, even if lastModified will be updated as a consequence of that change.
   - ``“bookmark-title-changed”`` - ``data: PlacesBookmarkTitle`` Fired whenever a bookmark title changes.
