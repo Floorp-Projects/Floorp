@@ -1174,7 +1174,7 @@ class GenericReceiveListener : public MediaTrackListener {
       : mTrackSource(new nsMainThreadPtrHolder<RemoteTrackSource>(
             "GenericReceiveListener::mTrackSource",
             &static_cast<RemoteTrackSource&>(aTrack->GetSource()))),
-        mSource(mTrackSource->mStream),
+        mSource(mTrackSource->Stream()),
         mTrackingId(mTrackSource->mTrackingId),
         mIsAudio(aTrack->AsAudioStreamTrack()),
         mEnabled(false),
