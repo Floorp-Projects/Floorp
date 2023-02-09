@@ -8,7 +8,7 @@ const EXPORTED_SYMBOLS = ["DesktopFileParser"];
 
 const DesktopFileParser = {
     async parseFromPath(path) {
-        parseFromPath(await IOUtils.readUTF8(path));
+        return this.parseFromText(await IOUtils.readUTF8(path));
     },
     parseFromText(text) {
         let lines = text.replaceAll("\r\n", "\n")
@@ -18,7 +18,7 @@ const DesktopFileParser = {
         let currentSection = null;
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
-            if (line === "") continue;
+            if (line.trim() === "") continue;
             if (/^\[.*\]\s*$/.test(line)) {
                 currentSection = line.match(/^\[(.*)\]\s*$/)[1];
                 continue;
