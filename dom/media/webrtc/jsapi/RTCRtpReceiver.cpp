@@ -127,6 +127,9 @@ RTCRtpReceiver::RTCRtpReceiver(
     mRtcpTimeoutListener = aConduit->RtcpTimeoutEvent().Connect(
         GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnRtcpTimeout);
   }
+
+  mUnmuteListener = mPipeline->UnmuteEvent().Connect(
+      GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnUnmute);
 }
 
 #undef INIT_CANONICAL
@@ -551,6 +554,7 @@ void RTCRtpReceiver::Shutdown() {
   mCallThread = nullptr;
   mRtcpByeListener.DisconnectIfExists();
   mRtcpTimeoutListener.DisconnectIfExists();
+  mUnmuteListener.DisconnectIfExists();
 }
 
 void RTCRtpReceiver::BreakCycles() {
@@ -836,6 +840,8 @@ void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
 void RTCRtpReceiver::OnRtcpBye() { SetReceiveTrackMuted(true); }
 
 void RTCRtpReceiver::OnRtcpTimeout() { SetReceiveTrackMuted(true); }
+
+void RTCRtpReceiver::OnUnmute() { SetReceiveTrackMuted(false); }
 
 void RTCRtpReceiver::SetReceiveTrackMuted(bool aMuted) {
   if (mTrackSource) {

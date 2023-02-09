@@ -1180,8 +1180,7 @@ class GenericReceiveListener : public MediaTrackListener {
         mSource(mTrackSource->Stream()),
         mTrackingId(mTrackSource->mTrackingId),
         mIsAudio(aTrack->AsAudioStreamTrack()),
-        mEnabled(false),
-        mMaybeTrackNeedsUnmute(true) {
+        mEnabled(false) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mSource, "Must be used with a SourceMediaTrack");
   }
@@ -1196,26 +1195,8 @@ class GenericReceiveListener : public MediaTrackListener {
       return;
     }
     mEnabled = aEnabled;
-    if (aEnabled) {
-      mMaybeTrackNeedsUnmute = true;
-    }
     if (mIsAudio && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mEnabled);
-    }
-  }
-
-  void OnRtpReceived() {
-    if (mMaybeTrackNeedsUnmute) {
-      mMaybeTrackNeedsUnmute = false;
-      GetMainThreadSerialEventTarget()->Dispatch(
-          NewRunnableMethod("GenericReceiveListener::OnRtpReceived_m", this,
-                            &GenericReceiveListener::OnRtpReceived_m));
-    }
-  }
-
-  void OnRtpReceived_m() {
-    if (mEnabled) {
-      mTrackSource->SetMuted(false);
     }
   }
 
@@ -1226,8 +1207,6 @@ class GenericReceiveListener : public MediaTrackListener {
   const bool mIsAudio;
   // Main thread only.
   bool mEnabled;
-  // Any thread.
-  Atomic<bool> mMaybeTrackNeedsUnmute;
 };
 
 MediaPipelineReceive::MediaPipelineReceive(
@@ -1236,9 +1215,35 @@ MediaPipelineReceive::MediaPipelineReceive(
     RefPtr<MediaSessionConduit> aConduit)
     : MediaPipeline(aPc, std::move(aTransportHandler), DirectionType::RECEIVE,
                     std::move(aCallThread), std::move(aStsThread),
-                    std::move(aConduit)) {}
+                    std::move(aConduit)),
+      mWatchManager(this, AbstractThread::MainThread()) {
+  mWatchManager.Watch(mActive,
+                      &MediaPipelineReceive::UpdateMaybeTrackNeedsUnmute);
+  mWatchManager.Watch(mActive, &MediaPipelineReceive::UpdateListener);
+}
 
 MediaPipelineReceive::~MediaPipelineReceive() = default;
+
+void MediaPipelineReceive::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaPipeline::Shutdown();
+  mWatchManager.Shutdown();
+}
+
+void MediaPipelineReceive::UpdateMaybeTrackNeedsUnmute() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mActive.Ref()) {
+    mMaybeTrackNeedsUnmute = true;
+  }
+}
+
+void MediaPipelineReceive::OnRtpPacketReceived() {
+  ASSERT_ON_THREAD(mStsThread);
+  if (mMaybeTrackNeedsUnmute) {
+    mUnmuteEvent.Notify();
+  }
+  mMaybeTrackNeedsUnmute = false;
+}
 
 class MediaPipelineReceiveAudio::PipelineListener
     : public GenericReceiveListener {
@@ -1433,19 +1438,16 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
                            std::move(aConduit)),
       mListener(aTrack ? new PipelineListener(aTrack, mConduit,
                                               aPrincipalHandle, aPrivacy)
-                       : nullptr),
-      mWatchManager(this, AbstractThread::MainThread()) {
+                       : nullptr) {
   mDescription = mPc + "| Receive audio";
   if (mListener) {
     mListener->Init();
   }
-  mWatchManager.Watch(mActive, &MediaPipelineReceiveAudio::UpdateListener);
 }
 
 void MediaPipelineReceiveAudio::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  MediaPipeline::Shutdown();
-  mWatchManager.Shutdown();
+  MediaPipelineReceive::Shutdown();
   if (mListener) {
     mListener->Shutdown();
   }
@@ -1462,13 +1464,6 @@ void MediaPipelineReceiveAudio::SetPrivatePrincipal(PrincipalHandle aHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mListener) {
     mListener->SetPrivatePrincipal(std::move(aHandle));
-  }
-}
-
-void MediaPipelineReceiveAudio::OnRtpPacketReceived() {
-  ASSERT_ON_THREAD(mStsThread);
-  if (mListener) {
-    mListener->OnRtpReceived();
   }
 }
 
@@ -1612,20 +1607,17 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
       mRenderer(new PipelineRenderer(this)),
       mListener(aTrack
                     ? new PipelineListener(aTrack, aPrincipalHandle, aPrivacy)
-                    : nullptr),
-      mWatchManager(this, AbstractThread::MainThread()) {
+                    : nullptr) {
   mDescription = mPc + "| Receive video";
   if (mListener) {
     mListener->Init();
   }
   static_cast<VideoSessionConduit*>(mConduit.get())->AttachRenderer(mRenderer);
-  mWatchManager.Watch(mActive, &MediaPipelineReceiveVideo::UpdateListener);
 }
 
 void MediaPipelineReceiveVideo::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  MediaPipeline::Shutdown();
-  mWatchManager.Shutdown();
+  MediaPipelineReceive::Shutdown();
   if (mListener) {
     mListener->Shutdown();
   }
@@ -1648,13 +1640,6 @@ void MediaPipelineReceiveVideo::SetPrivatePrincipal(PrincipalHandle aHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mListener) {
     mListener->SetPrivatePrincipal(std::move(aHandle));
-  }
-}
-
-void MediaPipelineReceiveVideo::OnRtpPacketReceived() {
-  ASSERT_ON_THREAD(mStsThread);
-  if (mListener) {
-    mListener->OnRtpReceived();
   }
 }
 
