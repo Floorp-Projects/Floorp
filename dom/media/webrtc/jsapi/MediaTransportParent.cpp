@@ -226,12 +226,9 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceStats(
           [aResolve = std::move(aResolve)](
               dom::RTCStatsPromise::ResolveOrRejectValue&& aResult) {
             if (aResult.IsResolve()) {
-              aResolve(
-                  dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection(
-                      *aResult.ResolveValue()));
+              aResolve(aResult.ResolveValue());
             } else {
-              dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection empty;
-              aResolve(empty);
+              aResolve(MakeUnique<dom::RTCStatsCollection>());
             }
           });
 

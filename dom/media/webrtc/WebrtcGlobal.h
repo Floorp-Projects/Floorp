@@ -19,22 +19,6 @@ typedef mozilla::dom::Sequence<nsString> WebrtcGlobalLog;
 
 namespace mozilla {
 namespace dom {
-// webidl dictionaries don't have move semantics, which is something that ipdl
-// needs for async returns. So, we create a "moveable" subclass that just
-// copies. _Really_ lame, but it gets the job done.
-struct NotReallyMovableButLetsPretendItIsRTCStatsCollection
-    : public RTCStatsCollection {
-  NotReallyMovableButLetsPretendItIsRTCStatsCollection() = default;
-  explicit NotReallyMovableButLetsPretendItIsRTCStatsCollection(
-      RTCStatsCollection&& aStats) {
-    RTCStatsCollection::operator=(aStats);
-  }
-  explicit NotReallyMovableButLetsPretendItIsRTCStatsCollection(
-      const RTCStatsCollection& aStats) {
-    RTCStatsCollection::operator=(aStats);
-  }
-};
-
 // Calls aFunction with all public members of aStats.
 // Typical usage would have aFunction take a parameter pack.
 // To avoid inconsistencies, this should be the only explicit list of the
@@ -93,21 +77,6 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateType>
           mozilla::dom::RTCIceCandidateType,
           mozilla::dom::RTCIceCandidateType::Host,
           mozilla::dom::RTCIceCandidateType::EndGuard_> {};
-
-template <>
-struct ParamTraits<
-    mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection> {
-  typedef mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection
-      paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter,
-               static_cast<const mozilla::dom::RTCStatsCollection&>(aParam));
-  }
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader,
-                     static_cast<mozilla::dom::RTCStatsCollection*>(aResult));
-  }
-};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCBundlePolicy>
