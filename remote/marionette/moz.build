@@ -7,4 +7,4 @@ JAR_MANIFESTS += ["jar.mn"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Remote Protocol", "Marionette")
