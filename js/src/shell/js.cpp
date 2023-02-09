@@ -2336,12 +2336,18 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
             "\"envChainObject\" passed to evaluate()", "not an object");
         return false;
-      } else if (v.toObject().is<GlobalObject>()) {
+      }
+
+      JSObject* obj = &v.toObject();
+      if (obj->isUnqualifiedVarObj()) {
         JS_ReportErrorASCII(
             cx,
-            "\"envChainObject\" passed to evaluate() should not be a global");
+            "\"envChainObject\" passed to evaluate() should not be an "
+            "unqualified variables object");
         return false;
-      } else if (!envChain.append(&v.toObject())) {
+      }
+
+      if (!envChain.append(obj)) {
         return false;
       }
     }
