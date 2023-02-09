@@ -840,7 +840,6 @@ struct JSRuntime {
 
  public:
   // Returns the runtime's local script data table holder.
-  // Available only on the main thread.
   js::SharedScriptDataTableHolder& scriptDataTableHolder();
 
  private:
