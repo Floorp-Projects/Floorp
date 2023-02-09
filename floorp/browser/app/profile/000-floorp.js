@@ -248,6 +248,11 @@ pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo,
 pref("gfx.canvas.accelerated", true);
 pref("gfx.webrender.all", true);
 
+// https://developer.mozilla.org/docs/Web/API/Navigator/share
+#ifdef XP_WIN
+pref("dom.webshare.enabled", true);
+#endif
+
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
