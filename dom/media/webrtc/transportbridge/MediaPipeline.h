@@ -280,14 +280,14 @@ class MediaPipelineTransmit
   void TransportReady_s() override;
 
   // Replace a track with a different one.
-  nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
+  nsresult SetTrack(const RefPtr<dom::MediaStreamTrack>& aDomTrack);
 
   // Used to correlate stats
   RefPtr<dom::MediaStreamTrack> GetTrack() const;
 
   // For test use only. This allows a send track to be set without a
   // corresponding dom track.
-  void SetSendTrackOverride(RefPtr<ProcessedMediaTrack> aSendTrack);
+  void SetSendTrackOverride(const RefPtr<ProcessedMediaTrack>& aSendTrack);
 
   // Separate classes to allow ref counting
   class PipelineListener;

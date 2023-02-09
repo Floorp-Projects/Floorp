@@ -247,7 +247,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
     : mConduit(std::move(aConduit)),
       mDirection(aDirection),
       mCallThread(std::move(aCallThread)),
-      mStsThread(aStsThread),
+      mStsThread(std::move(aStsThread)),
       mActive(false, "MediaPipeline::mActive"),
       mLevel(0),
       mTransportHandler(std::move(aTransportHandler)),
@@ -1015,7 +1015,8 @@ void MediaPipelineTransmit::TransportReady_s() {
   mListener->SetActive(true);
 }
 
-nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
+nsresult MediaPipelineTransmit::SetTrack(
+    const RefPtr<MediaStreamTrack>& aDomTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mDomTrack.Ref()) {
     mDomTrack.Ref()->RemovePrincipalChangeObserver(this);
@@ -1031,7 +1032,7 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   }
 
   mDescriptionInvalidated = true;
-  mDomTrack = std::move(aDomTrack);
+  mDomTrack = aDomTrack;
   if (mDomTrack.Ref()) {
     mDomTrack.Ref()->AddPrincipalChangeObserver(this);
     PrincipalChanged(mDomTrack.Ref());
@@ -1046,13 +1047,13 @@ RefPtr<dom::MediaStreamTrack> MediaPipelineTransmit::GetTrack() const {
 }
 
 void MediaPipelineTransmit::SetSendTrackOverride(
-    RefPtr<ProcessedMediaTrack> aSendTrack) {
+    const RefPtr<ProcessedMediaTrack>& aSendTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!mSendTrack);
   MOZ_RELEASE_ASSERT(!mSendPort);
   MOZ_RELEASE_ASSERT(!mSendTrackOverride.Ref());
   mDescriptionInvalidated = true;
-  mSendTrackOverride = std::move(aSendTrack);
+  mSendTrackOverride = aSendTrack;
 }
 
 // Called if we're attached with AddDirectListener()
