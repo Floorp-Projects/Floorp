@@ -2109,10 +2109,6 @@ void nsCocoaWindow::DispatchSizeModeEvent() {
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(newMode);
   }
-
-  if (StaticPrefs::widget_pause_compositor_when_minimized()) {
-    PauseOrResumeCompositor(newMode == nsSizeMode_Minimized);
-  }
 }
 
 void nsCocoaWindow::DispatchOcclusionEvent() {
