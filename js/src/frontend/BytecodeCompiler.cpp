@@ -105,7 +105,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
  protected:
-  explicit SourceAwareCompiler(JSContext* cx, FrontendContext* fc,
+  explicit SourceAwareCompiler(FrontendContext* fc,
                                JS::NativeStackLimit stackLimit,
                                LifoAllocScope& parserAllocScope,
                                CompilationInput& input,
@@ -116,19 +116,18 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
-  [[nodiscard]] bool init(JSContext* cx, FrontendContext* fc,
-                          ScopeBindingCache* scopeCache,
+  [[nodiscard]] bool init(FrontendContext* fc, ScopeBindingCache* scopeCache,
                           InheritThis inheritThis = InheritThis::No,
                           JSObject* enclosingEnv = nullptr) {
     if (!compilationState_.init(fc, scopeCache, inheritThis, enclosingEnv)) {
       return false;
     }
 
-    return createSourceAndParser(cx, fc);
+    return createSourceAndParser(fc);
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  [[nodiscard]] bool createSourceAndParser(JSContext* cx, FrontendContext* fc);
+  [[nodiscard]] bool createSourceAndParser(FrontendContext* fc);
 
   void assertSourceAndParserCreated() const {
     MOZ_ASSERT(compilationState_.source != nullptr);
@@ -172,12 +171,11 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit ScriptCompiler(JSContext* cx, FrontendContext* fc,
-                          JS::NativeStackLimit stackLimit,
+  explicit ScriptCompiler(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -298,9 +296,9 @@ template <typename Unit>
   AutoAssertReportedException assertException(cx, fc);
 
   LifoAllocScope parserAllocScope(&tempLifoAlloc);
-  ScriptCompiler<Unit> compiler(cx, fc, stackLimit, parserAllocScope, input,
+  ScriptCompiler<Unit> compiler(fc, stackLimit, parserAllocScope, input,
                                 srcBuf);
-  if (!compiler.init(cx, fc, scopeCache)) {
+  if (!compiler.init(fc, scopeCache)) {
     return false;
   }
 
@@ -533,9 +531,9 @@ static JSScript* CompileEvalScriptImpl(
 
     JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
     ScopeBindingCache* scopeCache = &cx->caches().scopeCache;
-    ScriptCompiler<Unit> compiler(cx, &fc, stackLimit, parserAllocScope,
+    ScriptCompiler<Unit> compiler(&fc, stackLimit, parserAllocScope,
                                   input.get(), srcBuf);
-    if (!compiler.init(cx, &fc, scopeCache, InheritThis::Yes, enclosingEnv)) {
+    if (!compiler.init(&fc, scopeCache, InheritThis::Yes, enclosingEnv)) {
       return nullptr;
     }
 
@@ -581,12 +579,11 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::parser;
 
  public:
-  explicit ModuleCompiler(JSContext* cx, FrontendContext* fc,
-                          JS::NativeStackLimit stackLimit,
+  explicit ModuleCompiler(FrontendContext* fc, JS::NativeStackLimit stackLimit,
                           LifoAllocScope& parserAllocScope,
                           CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -610,12 +607,12 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
   using typename Base::TokenStreamPosition;
 
  public:
-  explicit StandaloneFunctionCompiler(JSContext* cx, FrontendContext* fc,
+  explicit StandaloneFunctionCompiler(FrontendContext* fc,
                                       JS::NativeStackLimit stackLimit,
                                       LifoAllocScope& parserAllocScope,
                                       CompilationInput& input,
                                       SourceText<Unit>& sourceBuffer)
-      : Base(cx, fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
+      : Base(fc, stackLimit, parserAllocScope, input, sourceBuffer) {}
 
   using Base::init;
   using Base::stencil;
@@ -633,8 +630,7 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
 };
 
 template <typename Unit>
-bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
-                                                      FrontendContext* fc) {
+bool SourceAwareCompiler<Unit>::createSourceAndParser(FrontendContext* fc) {
   const auto& options = compilationState_.input.options;
 
   fc_ = fc;
@@ -907,9 +903,9 @@ template <typename Unit>
   AutoAssertReportedException assertException(cx, fc);
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, fc, stackLimit, parserAllocScope, input,
+  ModuleCompiler<Unit> compiler(fc, stackLimit, parserAllocScope, input,
                                 srcBuf);
-  if (!compiler.init(cx, fc, scopeCache)) {
+  if (!compiler.init(fc, scopeCache)) {
     return false;
   }
 
@@ -1483,8 +1479,8 @@ static JSFunction* CompileStandaloneFunction(
     JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
     ScopeBindingCache* scopeCache = &cx->caches().scopeCache;
     StandaloneFunctionCompiler<char16_t> compiler(
-        cx, &fc, stackLimit, parserAllocScope, input.get(), srcBuf);
-    if (!compiler.init(cx, &fc, scopeCache, inheritThis)) {
+        &fc, stackLimit, parserAllocScope, input.get(), srcBuf);
+    if (!compiler.init(&fc, scopeCache, inheritThis)) {
       return nullptr;
     }
 
