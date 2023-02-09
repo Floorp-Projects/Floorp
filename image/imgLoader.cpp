@@ -833,7 +833,7 @@ static nsresult NewImageChannel(
     nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
     nsLoadFlags aLoadFlags, nsContentPolicyType aPolicyType,
     nsIPrincipal* aTriggeringPrincipal, nsINode* aRequestingNode,
-    bool aRespectPrivacy) {
+    bool aRespectPrivacy, uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(aResult);
 
   nsresult rv;
@@ -945,6 +945,11 @@ static nsresult NewImageChannel(
     if (aReferrerInfo) {
       DebugOnly<nsresult> rv = newHttpChannel->SetReferrerInfo(aReferrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+
+    if (aEarlyHintPreloaderId) {
+      rv = httpChannelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -1776,7 +1781,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
     uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
     nsContentPolicyType aLoadPolicyType, imgRequestProxy** aProxyRequest,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode, bool aLinkPreload,
-    bool* aNewChannelCreated) {
+    uint64_t aEarlyHintPreloaderId, bool* aNewChannelCreated) {
   // now we need to insert a new channel request object in between the real
   // request and the proxy that basically delays loading the image until it
   // gets a 304 or figures out that this needs to be a new request
@@ -1820,10 +1825,11 @@ bool imgLoader::ValidateRequestWithNewChannel(
   // cache.
   nsCOMPtr<nsIChannel> newChannel;
   bool forcePrincipalCheck;
-  rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
-                       aInitialDocumentURI, aCORSMode, aReferrerInfo,
-                       aLoadGroup, aLoadFlags, aLoadPolicyType,
-                       aTriggeringPrincipal, aLoadingDocument, mRespectPrivacy);
+  rv =
+      NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
+                      aInitialDocumentURI, aCORSMode, aReferrerInfo, aLoadGroup,
+                      aLoadFlags, aLoadPolicyType, aTriggeringPrincipal,
+                      aLoadingDocument, mRespectPrivacy, aEarlyHintPreloaderId);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -1902,7 +1908,8 @@ bool imgLoader::ValidateRequestWithNewChannel(
 void imgLoader::NotifyObserversForCachedImage(
     imgCacheEntry* aEntry, imgRequest* request, nsIURI* aURI,
     nsIReferrerInfo* aReferrerInfo, Document* aLoadingDocument,
-    nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode) {
+    nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
+    uint64_t aEarlyHintPreloaderId) {
   if (aEntry->HasNotified()) {
     return;
   }
@@ -1917,11 +1924,11 @@ void imgLoader::NotifyObserversForCachedImage(
 
   nsCOMPtr<nsIChannel> newChannel;
   bool forcePrincipalCheck;
-  nsresult rv =
-      NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
-                      nullptr, aCORSMode, aReferrerInfo, nullptr, 0,
-                      nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                      aTriggeringPrincipal, aLoadingDocument, mRespectPrivacy);
+  nsresult rv = NewImageChannel(
+      getter_AddRefs(newChannel), &forcePrincipalCheck, aURI, nullptr,
+      aCORSMode, aReferrerInfo, nullptr, 0,
+      nsIContentPolicy::TYPE_INTERNAL_IMAGE, aTriggeringPrincipal,
+      aLoadingDocument, mRespectPrivacy, aEarlyHintPreloaderId);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1946,7 +1953,7 @@ bool imgLoader::ValidateEntry(
     nsLoadFlags aLoadFlags, nsContentPolicyType aLoadPolicyType,
     bool aCanMakeNewChannel, bool* aNewChannelCreated,
     imgRequestProxy** aProxyRequest, nsIPrincipal* aTriggeringPrincipal,
-    CORSMode aCORSMode, bool aLinkPreload) {
+    CORSMode aCORSMode, bool aLinkPreload, uint64_t aEarlyHintPreloaderId) {
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
   // If the expiration time is zero, then the request has not gotten far enough
@@ -2081,13 +2088,13 @@ bool imgLoader::ValidateEntry(
         request, aURI, aInitialDocumentURI, aReferrerInfo, aLoadGroup,
         aObserver, aLoadingDocument, innerWindowID, aLoadFlags, aLoadPolicyType,
         aProxyRequest, aTriggeringPrincipal, aCORSMode, aLinkPreload,
-        aNewChannelCreated);
+        aEarlyHintPreloaderId, aNewChannelCreated);
   }
 
   if (!validateRequest) {
     NotifyObserversForCachedImage(aEntry, request, aURI, aReferrerInfo,
                                   aLoadingDocument, aTriggeringPrincipal,
-                                  aCORSMode);
+                                  aCORSMode, aEarlyHintPreloaderId);
   }
 
   return !validateRequest;
@@ -2385,6 +2392,9 @@ nsresult imgLoader::LoadImage(
 
   // Look in the preloaded images of loading document first.
   if (StaticPrefs::network_preload() && !aLinkPreload && aLoadingDocument) {
+    // All Early Hints preloads are Link preloads, therefore we don't have a
+    // Early Hints preload here
+    MOZ_ASSERT(!aEarlyHintPreloaderId);
     auto key =
         PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal, corsmode);
     if (RefPtr<PreloaderBase> preload =
@@ -2452,7 +2462,8 @@ nsresult imgLoader::LoadImage(
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerInfo,
                       aLoadGroup, aObserver, aLoadingDocument, requestFlags,
                       aContentPolicyType, true, &newChannelCreated, _retval,
-                      aTriggeringPrincipal, corsmode, aLinkPreload)) {
+                      aTriggeringPrincipal, corsmode, aLinkPreload,
+                      aEarlyHintPreloaderId)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the
@@ -2501,7 +2512,8 @@ nsresult imgLoader::LoadImage(
     rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
                          aInitialDocumentURI, corsmode, aReferrerInfo,
                          aLoadGroup, requestFlags, aContentPolicyType,
-                         aTriggeringPrincipal, aContext, mRespectPrivacy);
+                         aTriggeringPrincipal, aContext, mRespectPrivacy,
+                         aEarlyHintPreloaderId);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -2560,14 +2572,6 @@ nsresult imgLoader::LoadImage(
                                  aLoadGroup);
 
     nsresult openRes;
-    if (aEarlyHintPreloaderId) {
-      nsCOMPtr<nsIHttpChannelInternal> channelInternal =
-          do_QueryInterface(newChannel);
-      NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
-
-      rv = channelInternal->SetEarlyHintPreloaderId(aEarlyHintPreloaderId);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
     openRes = newChannel->AsyncOpen(listener);
 
     if (NS_FAILED(openRes)) {
@@ -2723,7 +2727,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
       if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver,
                         aLoadingDocument, requestFlags, policyType, false,
-                        nullptr, nullptr, nullptr, CORS_NONE, false)) {
+                        nullptr, nullptr, nullptr, CORS_NONE, false, 0)) {
         request = entry->GetRequest();
       } else {
         nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(channel));
