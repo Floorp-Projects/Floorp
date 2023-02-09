@@ -3193,14 +3193,14 @@ void Selection::NotifySelectionListeners() {
     frameSelection->SetChangesDuringBatchingFlag();
     return;
   }
-  if (mSelectionListeners.IsEmpty()) {
+  if (mSelectionListeners.IsEmpty() && !mNotifyAutoCopy &&
+      !mAccessibleCaretEventHub && !mSelectionChangeEventDispatcher) {
     // If there are no selection listeners, we're done!
     return;
   }
 
   nsCOMPtr<Document> doc;
-  PresShell* presShell = GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = GetPresShell()) {
     doc = presShell->GetDocument();
     presShell->ScheduleContentRelevancyUpdate(ContentRelevancyReason::Selected);
   }
@@ -3232,6 +3232,7 @@ void Selection::NotifySelectionListeners() {
         mSelectionChangeEventDispatcher);
     dispatcher->OnSelectionChange(doc, this, reason);
   }
+
   for (const auto& listener : selectionListeners) {
     // MOZ_KnownLive because 'selectionListeners' is guaranteed to
     // keep it alive.
