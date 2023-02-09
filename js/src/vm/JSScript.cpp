@@ -1860,7 +1860,7 @@ UniqueChars js::FormatIntroducedFilename(const char* filename, unsigned lineno,
   return formatted;
 }
 
-bool ScriptSource::initFromOptions(JSContext* cx, FrontendContext* fc,
+bool ScriptSource::initFromOptions(FrontendContext* fc,
                                    const ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(!filename_);
   MOZ_ASSERT(!introducerFilename_);
