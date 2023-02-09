@@ -1214,6 +1214,17 @@ PopupNotifications.prototype = {
     if (!notificationsToShow.length) {
       return;
     }
+    // Bug 1812232: Interim fix to avoid the Urlbar showing persisted
+    // terms as a Popup is trying to show. This isn't the best solution
+    // since it couples PopupNotifications with browser components, so it
+    // should be refactored (Bug 1815769) via dependency injection.
+    if (
+      this.window.gURLBar &&
+      this.tabbrowser.selectedBrowser.showingSearchTerms
+    ) {
+      this.window.gURLBar.handleRevert(true);
+    }
+
     let notificationIds = notificationsToShow.map(n => n.id);
 
     this._refreshPanel(notificationsToShow);
