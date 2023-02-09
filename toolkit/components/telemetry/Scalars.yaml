@@ -6684,6 +6684,22 @@ urlbar:
       - 'firefox'
     record_in_processes:
       - main
+  autofill_deletion:
+    bug_numbers:
+      - 1815342
+    description: >
+      A uint recording the deletion count for autofilled string in the urlbar.
+      This occurs when the user deletes whole autofilled string by BACKSPACE or
+      DELETE key while the autofilled string is selected.
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   engagement:
     bug_numbers:
       - 1752953

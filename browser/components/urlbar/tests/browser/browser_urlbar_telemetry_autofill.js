@@ -578,3 +578,156 @@ add_task(async function impression() {
     await PlacesUtils.history.clear();
   }
 });
+
+// Checks autofill deletion telemetry.
+add_task(async function deletion() {
+  await PlacesTestUtils.addVisits(["http://example.com/"]);
+
+  info("Delete autofilled value by DELETE key");
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      EventUtils.synthesizeKey("KEY_Delete");
+      Assert.equal(gURLBar.value, "exa");
+    },
+    expectedScalar: 1,
+  });
+
+  info("Delete autofilled value by BACKSPACE key");
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      EventUtils.synthesizeKey("KEY_Backspace");
+      Assert.equal(gURLBar.value, "exa");
+    },
+    expectedScalar: 1,
+  });
+
+  info("Delete autofilled value twice");
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      // Delete autofilled string.
+      EventUtils.synthesizeKey("KEY_Delete");
+      Assert.equal(gURLBar.value, "exa");
+
+      // Re-autofilling.
+      EventUtils.synthesizeKey("m");
+      Assert.equal(gURLBar.value, "example.com/");
+      Assert.equal(gURLBar.selectionStart, "exam".length);
+      Assert.equal(gURLBar.selectionEnd, "example.com/".length);
+
+      // Delete autofilled string again.
+      EventUtils.synthesizeKey("KEY_Backspace");
+      Assert.equal(gURLBar.value, "exam");
+    },
+    expectedScalar: 2,
+  });
+
+  info("Delete one char after unselecting autofilled string");
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      // Cancel selection.
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+      Assert.equal(gURLBar.selectionStart, "example.com/".length);
+      Assert.equal(gURLBar.selectionEnd, "example.com/".length);
+
+      EventUtils.synthesizeKey("KEY_Backspace");
+      Assert.equal(gURLBar.value, "example.com");
+    },
+    expectedScalar: 0,
+  });
+
+  info("Delete autofilled value after unselecting autofilled string");
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      // Cancel selection.
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+      Assert.equal(gURLBar.selectionStart, "example.com/".length);
+      Assert.equal(gURLBar.selectionEnd, "example.com/".length);
+
+      // Delete autofilled string one by one.
+      for (let i = 0; i < "mple.com/".length; i++) {
+        EventUtils.synthesizeKey("KEY_Backspace");
+      }
+      Assert.equal(gURLBar.value, "exa");
+    },
+    expectedScalar: 0,
+  });
+
+  info(
+    "Delete autofilled value after unselecting autofilled string then selecting them manually again"
+  );
+  await doDeletionTest({
+    firstSearchString: "exa",
+    firstAutofilledValue: "example.com/",
+    trigger: () => {
+      // Cancel selection.
+      const previousSelectionStart = gURLBar.selectionStart;
+      const previousSelectionEnd = gURLBar.selectionEnd;
+      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+      Assert.equal(gURLBar.selectionStart, "example.com/".length);
+      Assert.equal(gURLBar.selectionEnd, "example.com/".length);
+
+      // Select same range again.
+      gURLBar.selectionStart = previousSelectionStart;
+      gURLBar.selectionEnd = previousSelectionEnd;
+
+      EventUtils.synthesizeKey("KEY_Backspace");
+      Assert.equal(gURLBar.value, "exa");
+    },
+    expectedScalar: 1,
+  });
+
+  await PlacesUtils.history.clear();
+});
+
+async function doDeletionTest({
+  firstSearchString,
+  firstAutofilledValue,
+  trigger,
+  expectedScalar,
+}) {
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: firstSearchString,
+      fireInputEvent: true,
+    });
+    const details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+    Assert.ok(details.autofill, "Result is autofill");
+    Assert.equal(gURLBar.value, firstAutofilledValue, "gURLBar.value");
+    Assert.equal(
+      gURLBar.selectionStart,
+      firstSearchString.length,
+      "selectionStart"
+    );
+    Assert.equal(
+      gURLBar.selectionEnd,
+      firstAutofilledValue.length,
+      "selectionEnd"
+    );
+
+    await trigger();
+
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    if (expectedScalar) {
+      TelemetryTestUtils.assertScalar(
+        scalars,
+        "urlbar.autofill_deletion",
+        expectedScalar
+      );
+    } else {
+      TelemetryTestUtils.assertScalarUnset(scalars, "urlbar.autofill_deletion");
+    }
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+}

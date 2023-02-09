@@ -3243,6 +3243,16 @@ export class UrlbarInput {
   }
 
   _on_input(event) {
+    if (
+      this._autofillPlaceholder &&
+      this.value === this.window.gBrowser.userTypedValue &&
+      (event.inputType === "deleteContentBackward" ||
+        event.inputType === "deleteContentForward")
+    ) {
+      // Take a telemetry if user deleted whole autofilled value.
+      Services.telemetry.scalarAdd("urlbar.autofill_deletion", 1);
+    }
+
     let value = this.value;
     this.valueIsTyped = true;
     this._untrimmedValue = value;
