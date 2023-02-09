@@ -27,6 +27,7 @@ class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
 class PeerConnectionImpl;
+enum class PrincipalPrivacy : uint8_t;
 
 namespace dom {
 class MediaStreamTrack;
@@ -38,7 +39,7 @@ class RTCRtpTransceiver;
 
 class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
  public:
-  RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+  RTCRtpReceiver(nsPIDOMWindowInner* aWindow, PrincipalPrivacy aPrivacy,
                  PeerConnectionImpl* aPc,
                  MediaTransportHandler* aTransportHandler,
                  AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,

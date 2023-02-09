@@ -1641,7 +1641,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   STAMP_TIMECARD(mTimeCard, "Set Local Description");
 
   if (AnyLocalTrackHasPeerIdentity()) {
-    mPrivacyRequested = Some(true);
+    mRequestedPrivacy = Some(PrincipalPrivacy::Private);
   }
 
   mozilla::dom::RTCSdpHistoryEntryInternal sdpEntry;
@@ -1959,12 +1959,14 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
 
 nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
   PC_AUTO_ENTER_API_CALL(false);
-  if (mPrivacyRequested.isSome()) {
-    MOZ_DIAGNOSTIC_ASSERT(*mPrivacyRequested == aPrivacyRequested);
+  if (mRequestedPrivacy.isSome()) {
+    MOZ_DIAGNOSTIC_ASSERT((*mRequestedPrivacy == PrincipalPrivacy::Private) ==
+                          aPrivacyRequested);
     return NS_OK;
   }
 
-  mPrivacyRequested = Some(aPrivacyRequested);
+  mRequestedPrivacy = Some(aPrivacyRequested ? PrincipalPrivacy::Private
+                                             : PrincipalPrivacy::NonPrivate);
   return NS_OK;
 }
 
@@ -2412,7 +2414,7 @@ nsresult PeerConnectionImpl::SetConfiguration(
 
   if (!aConfiguration.mPeerIdentity.IsEmpty()) {
     mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
-    mPrivacyRequested = Some(true);
+    mRequestedPrivacy = Some(PrincipalPrivacy::Private);
   }
 
   auto proxyConfig = GetProxyConfig();

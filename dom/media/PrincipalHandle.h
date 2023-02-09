@@ -11,6 +11,11 @@
 
 namespace mozilla {
 /**
+ * The level of privacy of a principal as considered by RTCPeerConnection.
+ */
+enum class PrincipalPrivacy : uint8_t { Private, NonPrivate };
+
+/**
  * We pass the principal through the MediaTrackGraph by wrapping it in a thread
  * safe nsMainThreadPtrHandle, since it cannot be used directly off the main
  * thread. We can compare two PrincipalHandles to each other on any thread, but
