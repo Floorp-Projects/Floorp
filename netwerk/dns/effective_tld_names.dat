@@ -10677,6 +10677,11 @@ adobeaemcloud.net
 hlx.page
 hlx3.page
 
+// Adobe Developer Platform : https://developer.adobe.com
+// Submitted by Jesse MacFadyen<jessem@adobe.com>
+adobeio-static.net
+adobeioruntime.net
+
 // Agnat sp. z o.o. : https://domena.pl
 // Submitted by Przemyslaw Plewa <it-admin@domena.pl>
 beep.pl
@@ -10935,6 +10940,10 @@ cdn.prod.atlassian-dev.net
 // Submitted by Lukas Reschke <lukas@authentick.net>
 translated.page
 
+// Autocode : https://autocode.com
+// Submitted by Jacob Lee <jacob@autocode.com>
+autocode.dev
+
 // AVM : https://avm.de
 // Submitted by Andreas Weise <a.weise@avm.de>
 myfritz.net
@@ -11062,6 +11071,11 @@ cafjs.com
 // callidomus : https://www.callidomus.com/
 // Submitted by Marcus Popp <admin@callidomus.com>
 mycd.eu
+
+// Canva Pty Ltd : https://canva.com/
+// Submitted by Joel Aquilina <publicsuffixlist@canva.com>
+canva-apps.cn
+canva-apps.com
 
 // Carrd : https://carrd.co
 // Submitted by AJ <aj@carrd.co>
@@ -11980,6 +11994,7 @@ u.channelsdvr.net
 // Fastly Inc. : http://www.fastly.com/
 // Submitted by Fastly Security <security@fastly.com>
 edgecompute.app
+fastly-edge.com
 fastly-terrarium.com
 fastlylb.net
 map.fastlylb.net
@@ -13690,6 +13705,9 @@ vp4.me
 
 // Snowflake Inc : https://www.snowflake.com/
 // Submitted by Faith Olapade <faith.olapade@snowflake.com>
+snowflake.app
+privatelink.snowflake.app
+streamlit.app
 streamlitapp.com
 
 // Snowplow Analytics : https://snowplowanalytics.com/
@@ -13964,6 +13982,10 @@ hk.com
 hk.org
 ltd.hk
 inc.hk
+
+// UK Intis Telecom LTD : https://it.com
+// Submitted by ITComdomains <to@it.com>
+it.com
 
 // UNIVERSAL DOMAIN REGISTRY : https://www.udr.org.yt/
 // see also: whois -h whois.udr.org.yt help
