@@ -184,6 +184,10 @@ export class NetErrorChild extends RemotePageChild {
   }
 
   RPMIsNativeFallbackFailure() {
+    if (!this.contentWindow?.navigator.onLine) {
+      return false;
+    }
+
     let skipReason = this._getTRRSkipReason();
 
     const warningReasons = new Set([
