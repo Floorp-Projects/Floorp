@@ -456,14 +456,19 @@ const verifyActionActiveScript = async ({
     await testActiveScript(ext3, 2, [], win, verifyExtensionsPanel);
     await testActiveScript(ext4, 1, [], win, verifyExtensionsPanel);
     await testActiveScript(ext5, 1, [], win, verifyExtensionsPanel);
-  });
 
-  await ext0.unload();
-  await ext1.unload();
-  await ext2.unload();
-  await ext3.unload();
-  await ext4.unload();
-  await ext5.unload();
+    // TODO: We must unload the extensions here, not after we close the tab but
+    // this should not be needed ideally.  Bug 1768532 describes why we need to
+    // unload the extensions from within `.withNewTab()` for now. Once this bug
+    // is fixed, we should move the unload calls below to after the
+    // `.withNewTab()` block.
+    await ext0.unload();
+    await ext1.unload();
+    await ext2.unload();
+    await ext3.unload();
+    await ext4.unload();
+    await ext5.unload();
+  });
 };
 
 add_task(async function test_action_activeScript() {
