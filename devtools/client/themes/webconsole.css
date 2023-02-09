@@ -216,7 +216,7 @@
   }
 
   .message-flex-body .message-location {
-    max-width: unset;
+    max-width: 100%;
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: end;
