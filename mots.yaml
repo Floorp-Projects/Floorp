@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-03T16:23:06.801270'
+updated_at: '2023-02-07T15:08:08.908529'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -803,6 +803,10 @@ people:
     bmo_id: 473060
     name: Kagami
     nick: saschanaz
+  - &Sasha
+    bmo_id: 704132
+    name: Alexandra Borovova
+    nick: Sasha
   - &scaraveo
     bmo_id: 443354
     name: ''
@@ -3573,6 +3577,7 @@ modules:
     peers:
       - *jdescottes
       - *jgraham
+      - *Sasha
     meta:
       components:
         - 'Testing :: Marionette'
@@ -3629,6 +3634,8 @@ modules:
       - *whimboo
     peers:
       - *jdescottes
+      - *jgraham
+      - *Sasha
     meta:
       owners_emeritus:
         - Andreas Tolfsen
@@ -3669,6 +3676,8 @@ modules:
       - *whimboo
     peers:
       - *jdescottes
+      - *jgraham
+      - *Sasha
     meta:
       components:
         - 'Testing :: Firefox UI'
@@ -3931,5 +3940,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 47714db6c02039502e3b27e09f3b9dceef4f53e2
-  export: 007d59b012c8e4f69356ff653d1b98e1927f3934
+  config: a0c8d56b9595d04ad261117bc0c3bc5f28868981
+  export: de531465d6c0446a727652ab65b9cea1f4dbfc6b
