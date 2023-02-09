@@ -261,9 +261,11 @@ void gfxConfigManager::ConfigureWebRender() {
                              "FEATURE_FAILURE_DCOMP_NOT_WIN10"_ns);
   }
 
-  if (!mIsNightly) {
+  if (!mIsNightly &&
+      StaticPrefs::gfx_webrender_dcomp_apply_1704954_AtStartup()) {
     // Disable DirectComposition for NVIDIA users with high/mixed refresh rate
-    // monitors due to rendering artifacts.
+    // monitors due to rendering artifacts. (But allow users to override this
+    // disabling due to bug 1763981.)
     nsAutoString adapterVendorID;
     mGfxInfo->GetAdapterVendorID(adapterVendorID);
     if (adapterVendorID == u"0x10de") {
