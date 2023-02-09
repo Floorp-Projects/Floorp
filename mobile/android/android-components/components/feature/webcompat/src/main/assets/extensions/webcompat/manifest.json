@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "110.0.0",
+  "version": "111.0.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -126,6 +126,7 @@
     "shims/history.js",
     "shims/iam.js",
     "shims/iaspet.js",
+    "shims/instagram.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
     "shims/maxmind-geoip.js",
@@ -141,6 +142,7 @@
     "shims/private-browsing-web-api-fixes.js",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
+    "shims/spotify-embed.js",
     "shims/tracking-pixel.png",
     "shims/vast2.xml",
     "shims/vast3.xml",
