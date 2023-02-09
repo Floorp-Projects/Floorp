@@ -424,7 +424,7 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
   if (IPCAccessibilityActive() &&
       StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    DocAccessible* document = GetDocAccessible(aPresShell);
+    DocAccessible* document = aPresShell->GetDocAccessible();
     if (document) {
       // DocAccessible::GetAccessible() won't return the document if a root
       // element like body is passed.
@@ -440,7 +440,7 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
 
 void nsAccessibilityService::NotifyOfComputedStyleChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  DocAccessible* document = GetDocAccessible(aPresShell);
+  DocAccessible* document = aPresShell->GetDocAccessible();
   if (!document) {
     return;
   }
@@ -473,7 +473,7 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
 void nsAccessibilityService::NotifyOfResolutionChange(
     mozilla::PresShell* aPresShell, float aResolution) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    DocAccessible* document = GetDocAccessible(aPresShell);
+    DocAccessible* document = aPresShell->GetDocAccessible();
     if (document && document->IPCDoc()) {
       AutoTArray<mozilla::a11y::CacheData, 1> data;
       RefPtr<AccAttributes> fields = new AccAttributes();
@@ -487,7 +487,7 @@ void nsAccessibilityService::NotifyOfResolutionChange(
 void nsAccessibilityService::NotifyOfDevPixelRatioChange(
     mozilla::PresShell* aPresShell, int32_t aAppUnitsPerDevPixel) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    DocAccessible* document = GetDocAccessible(aPresShell);
+    DocAccessible* document = aPresShell->GetDocAccessible();
     if (document && document->IPCDoc()) {
       AutoTArray<mozilla::a11y::CacheData, 1> data;
       RefPtr<AccAttributes> fields = new AccAttributes();
