@@ -324,47 +324,33 @@ void MediaTransportHandlerIPC::UpdateNetworkState(bool aOnline) {
 
 RefPtr<dom::RTCStatsPromise> MediaTransportHandlerIPC::GetIceStats(
     const std::string& aTransportId, DOMHighResTimeStamp aNow) {
+  using IPCPromise = dom::PMediaTransportChild::GetIceStatsPromise;
   return mInitPromise
-      ->Then(
-          mCallbackThread, __func__,
-          [aTransportId, aNow, this,
-           self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
-            if (!mChild) {
-              return dom::RTCStatsPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
-            }
-            RefPtr<dom::RTCStatsPromise> promise =
-                mChild->SendGetIceStats(aTransportId, aNow)
-                    ->Then(
-                        mCallbackThread, __func__,
-                        [](const dom::RTCStatsCollection& aStats) {
-                          UniquePtr<dom::RTCStatsCollection> stats(
-                              new dom::RTCStatsCollection(aStats));
-                          return dom::RTCStatsPromise::CreateAndResolve(
-                              std::move(stats), __func__);
-                        },
-                        [](ipc::ResponseRejectReason aReason) {
-                          return dom::RTCStatsPromise::CreateAndReject(
-                              NS_ERROR_FAILURE, __func__);
-                        });
-            return promise;
-          },
-          [](const nsCString& aError) {
-            return dom::RTCStatsPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                         __func__);
-          })
       ->Then(mCallbackThread, __func__,
-             [](dom::RTCStatsPromise::ResolveOrRejectValue&& aValue) {
-               // Eat errors! Caller is using MozPromise::All, and we don't
-               // want the whole thing to fail if this fails.
-               if (aValue.IsResolve()) {
-                 return dom::RTCStatsPromise::CreateAndResolve(
-                     std::move(aValue.ResolveValue()), __func__);
+             [aTransportId, aNow, this, self = RefPtr(this)](
+                 const InitPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 return IPCPromise::CreateAndResolve(
+                     MakeUnique<dom::RTCStatsCollection>(),
+                     "MediaTransportHandlerIPC::GetIceStats_1");
                }
-               UniquePtr<dom::RTCStatsCollection> empty(
-                   new dom::RTCStatsCollection);
-               return dom::RTCStatsPromise::CreateAndResolve(std::move(empty),
-                                                             __func__);
+               if (!mChild) {
+                 return IPCPromise::CreateAndResolve(
+                     MakeUnique<dom::RTCStatsCollection>(),
+                     "MediaTransportHandlerIPC::GetIceStats_1");
+               }
+               return mChild->SendGetIceStats(aTransportId, aNow);
+             })
+      ->Then(mCallbackThread, __func__,
+             [](IPCPromise::ResolveOrRejectValue&& aValue) {
+               if (aValue.IsReject()) {
+                 return dom::RTCStatsPromise::CreateAndResolve(
+                     MakeUnique<dom::RTCStatsCollection>(),
+                     "MediaTransportHandlerIPC::GetIceStats_2");
+               }
+               return dom::RTCStatsPromise::CreateAndResolve(
+                   std::move(aValue.ResolveValue()),
+                   "MediaTransportHandlerIPC::GetIceStats_2");
              });
 }
 
