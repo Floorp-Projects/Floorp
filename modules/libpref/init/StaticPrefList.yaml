@@ -10001,6 +10001,13 @@
   type: bool
   value: false
   mirror: once
+
+# Force to copy dmabuf video frames
+# Used for debugging/troubleshooting only
+- name: media.ffmpeg.vaapi.force-surface-copy
+  type: bool
+  value: false
+  mirror: once
 #endif # MOZ_WIDGET_GTK
 
 -   name: media.ffvpx.enabled
