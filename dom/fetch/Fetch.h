@@ -207,16 +207,9 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   // BodyStreamHolder
   void NullifyStream() override {
-    mReadableStreamBody = nullptr;
+    BodyStreamHolder::NullifyStream();
     mReadableStreamReader = nullptr;
     mFetchStreamReader = nullptr;
-  }
-
-  void SetReadableStreamBody(ReadableStream* aBody) override {
-    mReadableStreamBody = aBody;
-  }
-  ReadableStream* GetReadableStreamBody() override {
-    return mReadableStreamBody;
   }
 
   void MarkAsRead() override { mBodyUsed = true; }
@@ -234,10 +227,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
  protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
-
-  // This is the ReadableStream exposed to content. It's underlying source is a
-  // BodyStream object. This needs to be traversed by subclasses.
-  RefPtr<ReadableStream> mReadableStreamBody;
 
   // This is the Reader used to retrieve data from the body. This needs to be
   // traversed by subclasses.

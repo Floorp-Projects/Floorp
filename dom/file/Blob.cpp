@@ -298,57 +298,6 @@ already_AddRefed<Promise> Blob::ConsumeBody(
                               MutableBlobStorage::eOnlyInMemory, aRv);
 }
 
-namespace {
-
-class BlobBodyStreamHolder final : public BodyStreamHolder {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(BlobBodyStreamHolder,
-                                                         BodyStreamHolder)
-
-  BlobBodyStreamHolder() { mozilla::HoldJSObjects(this); }
-
-  void NullifyStream() override { mozilla::DropJSObjects(this); }
-
-  void MarkAsRead() override {}
-
-  void SetReadableStreamBody(ReadableStream* aBody) override {
-    mStream = aBody;
-  }
-  ReadableStream* GetReadableStreamBody() override { return mStream; }
-
- private:
-  RefPtr<ReadableStream> mStream;
-
- protected:
-  ~BlobBodyStreamHolder() override { NullifyStream(); }
-};
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BlobBodyStreamHolder,
-                                               BodyStreamHolder)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BlobBodyStreamHolder,
-                                                  BodyStreamHolder)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStream)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BlobBodyStreamHolder,
-                                                BodyStreamHolder)
-  tmp->NullifyStream();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_ADDREF_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
-NS_IMPL_RELEASE_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BlobBodyStreamHolder)
-NS_INTERFACE_MAP_END_INHERITING(BodyStreamHolder)
-
-}  // anonymous namespace
-
 already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
                                               ErrorResult& aRv) const {
   nsCOMPtr<nsIInputStream> stream;
@@ -362,7 +311,7 @@ already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<BlobBodyStreamHolder> holder = new BlobBodyStreamHolder();
+  RefPtr<BodyStreamHolder> holder = new BodyStreamHolder();
 
   BodyStream::Create(aCx, holder, mGlobal, stream, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
