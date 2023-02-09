@@ -9,14 +9,19 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
-  MainProcessTarget:
-    "chrome://remote/content/cdp/targets/MainProcessTarget.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
 });
 
 let browserContextIds = 1;
+
+// Default filter from CDP specification
+const defaultFilter = [
+  { type: "browser", exclude: true },
+  { type: "tab", exclude: true },
+  {},
+];
 
 export class Target extends Domain {
   #browserContextIds;
@@ -56,19 +61,19 @@ export class Target extends Domain {
     this.#browserContextIds.delete(browserContextId);
   }
 
-  getTargets() {
+  getTargets(options = {}) {
+    const { filter = defaultFilter } = options;
     const { targetList } = this.session.target;
 
-    const targetInfos = [];
-    for (const target of targetList) {
-      if (target instanceof lazy.MainProcessTarget) {
-        continue;
-      }
+    this._validateTargetFilter(filter);
 
-      targetInfos.push(this._getTargetInfo(target));
-    }
+    const targetInfos = [...targetList]
+      .filter(target => this._filterIncludesTarget(target, filter))
+      .map(target => this._getTargetInfo(target));
 
-    return { targetInfos };
+    return {
+      targetInfos,
+    };
   }
 
   setDiscoverTargets(options = {}) {
@@ -188,6 +193,36 @@ export class Target extends Domain {
       attached: target.id == this.session.target.id,
       browserContextId: target.browserContextId,
     };
+  }
+
+  _filterIncludesTarget(target, filter) {
+    for (const entry of filter) {
+      if ([undefined, target.type].includes(entry.type)) {
+        return !entry.exclude;
+      }
+    }
+
+    return false;
+  }
+
+  _validateTargetFilter(filter) {
+    if (!Array.isArray(filter)) {
+      throw new TypeError("filter: array value expected");
+    }
+
+    for (const entry of filter) {
+      if (entry === null || Array.isArray(entry) || typeof entry !== "object") {
+        throw new TypeError("filter: object values expected in array");
+      }
+
+      if (!["undefined", "string"].includes(typeof entry.type)) {
+        throw new TypeError("filter: type: string value expected");
+      }
+
+      if (!["undefined", "boolean"].includes(typeof entry.exclude)) {
+        throw new TypeError("filter: exclude: boolean value expected");
+      }
+    }
   }
 
   _onTargetCreated(eventName, target) {
