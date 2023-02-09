@@ -110,6 +110,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   void OnRtcpBye();
   void OnRtcpTimeout();
+  void OnUnmute();
 
   void SetReceiveTrackMuted(bool aMuted);
 
@@ -160,6 +161,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   MediaEventListener mRtcpByeListener;
   MediaEventListener mRtcpTimeoutListener;
+  MediaEventListener mUnmuteListener;
 
   Canonical<Ssrc> mSsrc;
   Canonical<Ssrc> mVideoRtxSsrc;
