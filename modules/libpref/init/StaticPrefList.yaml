@@ -6552,6 +6552,13 @@
     type: bool
     value: false
     mirror: once
+  # Whether to apply a mitigation disabling DirectComposition for NVIDIA users
+  # with mixed monitor refresh rates. (This mitigation induces bug 1763981 on
+  # some devices.)
+-   name: gfx.webrender.dcomp-apply-1704954
+    type: bool
+    value: true
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.
