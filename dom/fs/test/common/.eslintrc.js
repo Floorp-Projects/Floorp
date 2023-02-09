@@ -9,5 +9,6 @@ module.exports = {
     Assert: true,
     exported_symbols: true,
     require_module: true,
+    Utils: true,
   },
 };

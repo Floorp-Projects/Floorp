@@ -185,6 +185,50 @@ exported_symbols.test6 = async function() {
   }
 };
 
+exported_symbols.quotaTest = async function() {
+  const shrinkedStorageSizeKB = 5 * 1024;
+  const defaultDatabaseSize = 294912;
+
+  // Shrink storage size to 5MB.
+  await Utils.shrinkStorageSize(shrinkedStorageSizeKB);
+
+  let root = await navigator.storage.getDirectory();
+  Assert.ok(root, "Can we access the root directory?");
+
+  // Fill entire storage.
+  const fileHandle = await root.getFileHandle("test.txt");
+  Assert.ok(!!fileHandle, "Can we get file handle?");
+
+  const accessHandle = await fileHandle.createSyncAccessHandle();
+  Assert.ok(!!accessHandle, "Can we create sync access handle?");
+
+  const buffer = new ArrayBuffer(
+    shrinkedStorageSizeKB * 1024 - defaultDatabaseSize
+  );
+  Assert.ok(!!buffer, "Can we create array buffer?");
+
+  const written = accessHandle.write(buffer);
+  Assert.equal(written, buffer.byteLength, "Can we write entire buffer?");
+
+  // Try to write one more byte.
+  const fileHandle2 = await root.getFileHandle("test2.txt");
+  Assert.ok(!!fileHandle2, "Can we get file handle?");
+
+  const accessHandle2 = await fileHandle2.createSyncAccessHandle();
+  Assert.ok(!!accessHandle2, "Can we create sync access handle?");
+
+  const buffer2 = new ArrayBuffer(1);
+  Assert.ok(!!buffer2, "Can we create array buffer?");
+
+  const written2 = accessHandle2.write(buffer2);
+  Assert.equal(written2, 0, "Can we write beyond the limit?");
+
+  await accessHandle.close();
+  await accessHandle2.close();
+
+  await Utils.restoreStorageSize();
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
