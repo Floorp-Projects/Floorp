@@ -73,6 +73,11 @@ urlbar.abandonment
   urlbar to focus a different part of the window. It can also happen when the
   user switches to another window while the urlbar is focused.
 
+urlbar.autofill_deletion
+  A uint recording the deletion count for autofilled string in the urlbar.
+  This occurs when the user deletes whole autofilled string by BACKSPACE or
+  DELETE key while the autofilled string is selected.
+
 urlbar.engagement
   A uint recording the number of engagements the user completes in the urlbar.
   An engagement occurs when the user navigates to a page using the urlbar, for
