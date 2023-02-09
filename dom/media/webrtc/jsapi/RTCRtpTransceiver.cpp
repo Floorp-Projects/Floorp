@@ -169,7 +169,8 @@ RTCRtpTransceiver::RTCRtpTransceiver(
       mCallWrapper(aCallWrapper),
       mSendTrack(aSendTrack),
       mIdGenerator(aIdGenerator),
-      mPrivacyNeeded(aPrivacyNeeded),
+      mPrincipalPrivacy(aPrivacyNeeded ? PrincipalPrivacy::Private
+                                       : PrincipalPrivacy::NonPrivate),
       mIsVideo(aIsVideo),
       INIT_CANONICAL(mMid, std::string()),
       INIT_CANONICAL(mSyncGroup, std::string()) {}
@@ -213,7 +214,7 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
     return;
   }
 
-  mReceiver = new RTCRtpReceiver(mWindow, mPrivacyNeeded, mPc,
+  mReceiver = new RTCRtpReceiver(mWindow, mPrincipalPrivacy, mPc,
                                  mTransportHandler, mCallWrapper->mCallThread,
                                  mStsThread, mConduit, this, trackingId);
 

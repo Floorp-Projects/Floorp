@@ -33,6 +33,7 @@ class RTCStatsIdGenerator;
 class WebrtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 class PeerConnectionImpl;
+enum class PrincipalPrivacy : uint8_t;
 
 namespace dom {
 class RTCDtlsTransport;
@@ -215,7 +216,7 @@ class RTCRtpTransceiver : public nsISupports,
   bool mStopped = false;
   bool mShutdown = false;
   bool mHasBeenUsedToSend = false;
-  bool mPrivacyNeeded = false;
+  PrincipalPrivacy mPrincipalPrivacy;
   bool mShouldRemove = false;
   bool mHasTransport = false;
   bool mIsVideo;
