@@ -312,7 +312,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
   });
 
   describe("AboutWelcomeDefaults for MR split template proton", () => {
-    // Pass true as argument for templateMR parameter
     const getData = () => AboutWelcomeDefaults.getDefaults(true);
     beforeEach(() => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
@@ -331,7 +330,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
   describe("AboutWelcomeDefaults prepareMobileDownload", () => {
     const TEST_CONTENT = {
-      templateMR: true,
       screens: [
         {
           id: "AW_MOBILE_DOWNLOAD",
@@ -364,7 +362,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const data = await AboutWelcomeDefaults.prepareContentForReact(
         TEST_CONTENT
       );
-      assert.propertyVal(data, "templateMR", true);
       assert.propertyVal(
         data.screens[0].content.hero_image,
         "url",

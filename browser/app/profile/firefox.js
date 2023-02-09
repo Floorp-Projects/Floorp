@@ -1668,8 +1668,6 @@ pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
 pref("browser.aboutwelcome.screens", "");
 pref("browser.aboutwelcome.skipFocus", true);
-// Used to enable template for MR 2022 Onboarding
-pref("browser.aboutwelcome.templateMR", true);
 // Used to enable window modal onboarding
 pref("browser.aboutwelcome.showModal", false);
 

@@ -399,20 +399,16 @@ function removeScreens(check, screens) {
 }
 
 // Function to evalute the appropriate string for the welcome screen button label
-function evaluateWelcomeScreenButtonLabel(removeDefault, content) {
-  if (content.templateMR) {
-    return removeDefault
-      ? "mr2022-onboarding-get-started-primary-button-label"
-      : "mr2022-onboarding-set-default-primary-button-label";
-  }
+function evaluateWelcomeScreenButtonLabel(removeDefault) {
   return removeDefault
-    ? "mr1-onboarding-get-started-primary-button-label"
-    : "mr1-onboarding-set-default-only-primary-button-label";
+    ? "mr2022-onboarding-get-started-primary-button-label"
+    : "mr2022-onboarding-set-default-primary-button-label";
 }
 
 function prepareMobileDownload(screens) {
-  let mobileContent = screens.find(screen => screen.id === "AW_MOBILE_DOWNLOAD")
-    ?.content;
+  let mobileContent = screens?.find(
+    screen => screen.id === "AW_MOBILE_DOWNLOAD"
+  )?.content;
 
   if (!mobileContent) {
     return;
@@ -499,18 +495,15 @@ async function prepareContentForReact(content) {
     if (pinScreen?.content) {
       pinScreen.id = removeDefault ? "AW_GET_STARTED" : "AW_ONLY_DEFAULT";
       pinScreen.content.title = {
-        string_id: content.templateMR
-          ? "mr2022-onboarding-welcome-pin-header"
-          : "mr1-onboarding-welcome-header",
+        string_id: "mr2022-onboarding-welcome-pin-header",
       };
 
-      if (content.templateMR) {
-        pinScreen.content.subtitle = {
-          string_id: removeDefault
-            ? "mr2022-onboarding-get-started-primary-subtitle"
-            : "mr2022-onboarding-set-default-only-subtitle",
-        };
-      }
+      pinScreen.content.subtitle = {
+        string_id: removeDefault
+          ? "mr2022-onboarding-get-started-primary-subtitle"
+          : "mr2022-onboarding-set-default-only-subtitle",
+      };
+
       pinScreen.content.primary_button = {
         label: {
           string_id: evaluateWelcomeScreenButtonLabel(removeDefault, content),
@@ -519,11 +512,8 @@ async function prepareContentForReact(content) {
           navigate: true,
         },
       };
-
       // Get started content will navigate without action, so remove "Not now."
-      if (removeDefault) {
-        if (!content.templateMR) delete pinScreen.content.secondary_button;
-      } else {
+      if (!removeDefault) {
         // The "pin" screen will now handle "default" so remove other "default."
         pinScreen.content.primary_button.action.type = "SET_DEFAULT_BROWSER";
         removeDefault = true;
@@ -574,11 +564,7 @@ async function prepareContentForReact(content) {
     removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH", screens);
   }
 
-  if (content.templateMR) {
-    return prepareMRContent(content);
-  }
-
-  return content;
+  return prepareMRContent(content);
 }
 
 const AboutWelcomeDefaults = {

@@ -258,11 +258,6 @@ aboutwelcome:
     transitions:
       type: boolean
       description: Enable transition effect between screens
-    templateMR:
-      type: boolean
-      fallbackPref: browser.aboutwelcome.templateMR
-      description: >-
-        Should users see the MR 50-50 split template?
     showModal:
       type: boolean
       fallbackPref: browser.aboutwelcome.showModal

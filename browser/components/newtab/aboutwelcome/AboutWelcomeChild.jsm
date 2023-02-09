@@ -252,24 +252,16 @@ class AboutWelcomeChild extends JSWindowActorChild {
       );
     }
 
-    // The MR2022 onboarding variable overrides the about:welcome templateMR
-    // variable if enrolled.
-    const useMROnboarding = lazy.NimbusFeatures.majorRelease2022.getVariable(
-      "onboarding"
-    );
-    const useTemplateMR = useMROnboarding ?? featureConfig.templateMR;
-
     // FeatureConfig (from experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
     // override the default with `null`
-    let defaults = lazy.AboutWelcomeDefaults.getDefaults(useTemplateMR);
+    let defaults = lazy.AboutWelcomeDefaults.getDefaults();
 
     const content = await lazy.AboutWelcomeDefaults.prepareContentForReact({
       ...attributionData,
       ...experimentMetadata,
       ...defaults,
       ...featureConfig,
-      templateMR: useTemplateMR,
       screens: featureConfig.screens ?? defaults.screens,
       backdrop: featureConfig.backdrop ?? defaults.backdrop,
     });
