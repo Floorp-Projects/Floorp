@@ -33,14 +33,7 @@ evaluate("(function() { assertEq(someVar, 2);})()", evalOpt);
 evaluate("(function() { assertEq(this !== alsoSomeObject, true);})()", evalOpt);
 evaluate("(function() { assertEq(this.someVar, 1);})()", evalOpt);
 
-var globalEvalOpt = {
-    envChainObject: this
-};
-try {
-  evaluate("assertEq(someVar, 1);", globalEvalOpt);
-  throw new Error("Globals aren't allowed as a envChainObject argument to evaluate");
-} catch (e) {
-}
-
+// `this` is ShellWindowProxy instead of GlobalObject, and it's allowed.
+evaluate("assertEq(someVar, 1);", { envChainObject: this });
 
 reportCompare(true, true);

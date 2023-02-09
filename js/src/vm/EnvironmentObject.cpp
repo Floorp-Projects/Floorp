@@ -3324,8 +3324,7 @@ bool js::CreateObjectsForEnvironmentChain(JSContext* cx,
 #ifdef DEBUG
   for (size_t i = 0; i < chain.length(); ++i) {
     cx->check(chain[i]);
-    MOZ_ASSERT(!chain[i]->is<GlobalObject>() &&
-               !chain[i]->is<NonSyntacticVariablesObject>());
+    MOZ_ASSERT(!chain[i]->isUnqualifiedVarObj());
   }
 #endif
 
