@@ -21,6 +21,9 @@ const platform = AppConstants.platform;
 const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
 );
+const { DesktopFileParser } = ChromeUtils.import(
+    "resource:///modules/DesktopFileParser.jsm"
+);
 
 function getBrowsersOnWindows() {
     let browsers = [];
@@ -151,7 +154,7 @@ function getDefaultBrowserOnWindows(protocol, browsers = null) {
     return browser;
 }
 
-function getBrowsersOnLinux() {
+async function getBrowsersOnLinux() {
     let checkDirs = [];
 
     let xdgDataHome = env.get("XDG_DATA_HOME");
@@ -168,21 +171,44 @@ function getBrowsersOnLinux() {
     }
     checkDirs.push(...xdgDataDirs);
 
+    let desktopInfo = {};
     for (let checkDir of checkDirs) {
         let applications_dir_path = PathUtils.join(checkDir, "applications");
-        console.log(applications_dir_path);
+        let dir = FileUtils.File(applications_dir_path);
+        if (dir.exists()) {
+            let desktopFiles = [];
+            let dir_entries = dir.directoryEntries;
+            while (dir_entries.hasMoreElements()) {
+                let dir_entry = dir_entries.getNext().QueryInterface(Ci.nsIFile);
+                if (dir_entry.isFile() && dir_entry.leafName.endsWith(".desktop")) {
+                    desktopFiles.push(dir_entry);
+                }
+            }
+            for (let desktopFile of desktopFiles) {
+                if (!desktopInfo[desktopFile.leafName]) {
+                    try {
+                        desktopInfo[desktopFile.leafName] = 
+                            await DesktopFileParser.parseFromPath(desktopFile.path);
+                    } catch (e) {
+                        console.log(`Failed to load ${desktopFile.path}`);
+                        console.error(e);
+                    }
+                }
+            }
+        }
     }
+    console.log(desktopInfo);
 }
 
-function OpenLinkInExternal(url) {
+async function OpenLinkInExternal(url) {
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
     let browsers;
     let browser;
     if (platform === "linux") {
-        browsers = getBrowsersOnLinux();
-        browser = getDefaultBrowserOnLinux(browsers);
+        browsers = await getBrowsersOnLinux();
+        browser = await getDefaultBrowserOnLinux(browsers);
     } else if (platform === "win") {
         browsers = getBrowsersOnWindows();
         browser = getDefaultBrowserOnWindows(protocol, browsers);
