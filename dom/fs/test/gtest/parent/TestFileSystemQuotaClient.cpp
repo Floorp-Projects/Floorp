@@ -50,34 +50,7 @@ class TestFileSystemQuotaClient
   void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
 
   void TearDown() override {
-    PerformOnIOThread([]() {
-      // We use QM_TRY here to avoid failures if this cleanup is unnecessary
-      const auto& originMeta = GetTestQuotaOriginMetadata();
-
-      QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& dbFile,
-                     data::GetDatabaseFile(originMeta.mOrigin), QM_VOID);
-      ASSERT_TRUE(dbFile);
-
-      bool exists = false;
-      QM_TRY(MOZ_TO_RESULT(dbFile->Exists(&exists)), QM_VOID);
-      QM_TRY(OkIf(exists), QM_VOID);
-
-      int64_t dbSize = 0;
-      QM_TRY(MOZ_TO_RESULT(dbFile->GetFileSize(&dbSize)), QM_VOID);
-
-      quota::QuotaManager* qm = quota::QuotaManager::Get();
-      QM_TRY(OkIf(qm), QM_VOID);
-      qm->DecreaseUsageForClient(
-          quota::ClientMetadata{originMeta, quota::Client::FILESYSTEM}, dbSize);
-
-      QM_WARNONLY_TRY(MOZ_TO_RESULT(dbFile->Remove(/* recursive */ false)));
-
-      exists = true;
-      QM_TRY(MOZ_TO_RESULT(dbFile->Exists(&exists)), QM_VOID);
-      ASSERT_FALSE(exists);
-    });
-
-    ASSERT_NO_FATAL_FAILURE(
+    EXPECT_NO_FATAL_FAILURE(
         ClearStoragesForOrigin(GetTestQuotaOriginMetadata()));
     ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
   }
