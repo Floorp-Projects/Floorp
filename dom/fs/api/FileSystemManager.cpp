@@ -43,22 +43,25 @@ NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal, mStorageManager);
 void FileSystemManager::Shutdown() {
   mShutdown.Flip();
 
-  if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
-    // FileSystemAccessHandles prevent shutdown until they are full closed, so
-    // at this point, we should see no open FileSystemAccessHandles.
-    MOZ_ASSERT(mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
-                   ->AllSyncAccessHandlesClosed());
+  auto shutdownAndDisconnect = MakeScopeExit([self = RefPtr(this)]() {
+    self->mBackgroundRequestHandler->Shutdown();
 
-    mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
-        ->CloseAllWritableFileStreams();
+    for (RefPtr<PromiseRequestHolder<BoolPromise>> holder :
+         self->mPromiseRequestHolders.ForwardRange()) {
+      holder->DisconnectIfExists();
+    }
+  });
+
+  if (!mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
+    return;
   }
 
-  mBackgroundRequestHandler->Shutdown();
-
-  for (RefPtr<PromiseRequestHolder<BoolPromise>> holder :
-       mPromiseRequestHolders.ForwardRange()) {
-    holder->DisconnectIfExists();
-  }
+  // FileSystemAccessHandles and FileSystemWritableFileStreams prevent shutdown
+  // until they are full closed, so at this point, they all should be closed.
+  MOZ_ASSERT(mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
+                 ->AllSyncAccessHandlesClosed());
+  MOZ_ASSERT(mBackgroundRequestHandler->FileSystemManagerChildStrongRef()
+                 ->AllWritableFileStreamsClosed());
 }
 
 const RefPtr<FileSystemManagerChild>& FileSystemManager::ActorStrongRef()

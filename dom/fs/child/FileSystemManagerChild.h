@@ -7,6 +7,7 @@
 #ifndef DOM_FS_CHILD_FILESYSTEMMANAGERCHILD_H_
 #define DOM_FS_CHILD_FILESYSTEMMANAGERCHILD_H_
 
+#include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/PFileSystemManagerChild.h"
 #include "nsISupportsImpl.h"
 
@@ -24,9 +25,9 @@ class FileSystemManagerChild : public PFileSystemManagerChild {
 
 #ifdef DEBUG
   virtual bool AllSyncAccessHandlesClosed() const;
-#endif
 
-  virtual void CloseAllWritableFileStreams();
+  virtual bool AllWritableFileStreamsClosed() const;
+#endif
 
   virtual void Shutdown();
 

@@ -7,10 +7,22 @@
 #include "FileSystemWritableFileStreamParent.h"
 
 #include "FileSystemDataManager.h"
+#include "FileSystemStreamCallbacks.h"
 #include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
+#include "mozilla/dom/quota/RemoteQuotaObjectParent.h"
 
 namespace mozilla::dom {
+
+class FileSystemWritableFileStreamParent::FileSystemWritableFileStreamCallbacks
+    : public FileSystemStreamCallbacks {
+ public:
+  void CloseRemoteQuotaObjectParent() {
+    if (mRemoteQuotaObjectParent) {
+      mRemoteQuotaObjectParent->Close();
+    }
+  }
+};
 
 FileSystemWritableFileStreamParent::FileSystemWritableFileStreamParent(
     RefPtr<FileSystemManagerParent> aManager, const fs::EntryId& aEntryId)
@@ -20,16 +32,37 @@ FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() {
   MOZ_ASSERT(mClosed);
 }
 
-mozilla::ipc::IPCResult FileSystemWritableFileStreamParent::RecvClose() {
+mozilla::ipc::IPCResult FileSystemWritableFileStreamParent::RecvClose(
+    CloseResolver&& aResolver) {
   Close();
+
+  aResolver(void_t());
 
   return IPC_OK();
 }
 
 void FileSystemWritableFileStreamParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (mStreamCallbacks) {
+    mStreamCallbacks->CloseRemoteQuotaObjectParent();
+    mStreamCallbacks = nullptr;
+  }
+
   if (!IsClosed()) {
     Close();
   }
+}
+
+nsIInterfaceRequestor*
+FileSystemWritableFileStreamParent::GetOrCreateStreamCallbacks() {
+  if (!mStreamCallbacks) {
+    if (mClosed) {
+      return nullptr;
+    }
+
+    mStreamCallbacks = MakeRefPtr<FileSystemWritableFileStreamCallbacks>();
+  }
+
+  return mStreamCallbacks.get();
 }
 
 void FileSystemWritableFileStreamParent::Close() {

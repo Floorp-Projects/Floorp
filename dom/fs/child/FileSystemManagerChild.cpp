@@ -35,15 +35,28 @@ bool FileSystemManagerChild::AllSyncAccessHandlesClosed() const {
 
   return true;
 }
-#endif
 
-void FileSystemManagerChild::CloseAllWritableFileStreams() {
+bool FileSystemManagerChild::AllWritableFileStreamsClosed() const {
   for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
-    auto* child = static_cast<FileSystemWritableFileStreamChild*>(item);
+    auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
+    if (!child) {
+      continue;
+    }
 
-    child->MutableWritableFileStreamPtr()->Close();
+    auto* const handle = child->MutableWritableFileStreamPtr();
+    if (!handle) {
+      continue;
+    }
+
+    if (!handle->IsClosed()) {
+      return false;
+    }
   }
+
+  return true;
 }
+
+#endif
 
 void FileSystemManagerChild::Shutdown() {
   if (!CanSend()) {
@@ -77,13 +90,23 @@ FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
     }
   }
 
-  CloseAllWritableFileStreams();
+  for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
+    auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
+    if (!child) {
+      continue;
+    }
+
+    auto* const handle = child->MutableWritableFileStreamPtr();
+    if (handle && !handle->IsClosed()) {
+      promises.AppendElement(handle->BeginClose());
+    }
+  }
 
   BoolPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [resolver = std::move(aResolver)](
                  const BoolPromise::AllSettledPromiseType::ResolveOrRejectValue&
-                     aValues) { resolver(NS_OK); });
+                 /* aValues */) { resolver(NS_OK); });
 
   return IPC_OK();
 }

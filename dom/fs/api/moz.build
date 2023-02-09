@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     "/dom/fs/child",
     "/dom/fs/include",
+    "/netwerk/base",
 ]
 
 FINAL_LIBRARY = "xul"

@@ -19,11 +19,13 @@ UNIFIED_SOURCES += [
     "FileSystemDirectoryIteratorFactory.cpp",
     "FileSystemManagerChild.cpp",
     "FileSystemRequestHandler.cpp",
+    "FileSystemThreadSafeStreamOwner.cpp",
     "FileSystemWritableFileStreamChild.cpp",
 ]
 
 LOCAL_INCLUDES += [
     "/dom/fs/include",
+    "/netwerk/base",
 ]
 
 FINAL_LIBRARY = "xul"

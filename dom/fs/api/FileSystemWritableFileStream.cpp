@@ -6,8 +6,13 @@
 
 #include "FileSystemWritableFileStream.h"
 
+#include "fs/FileSystemThreadSafeStreamOwner.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/InputStreamLengthHelper.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/Blob.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemLog.h"
@@ -15,16 +20,31 @@
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
 #include "mozilla/dom/FileSystemWritableFileStreamChild.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/RandomAccessStreamUtils.h"
+#include "nsAsyncStreamCopier.h"
 #include "nsIInputStream.h"
+#include "nsIRequestObserver.h"
+#include "nsISupportsImpl.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "private/pprio.h"
+#include "nsStreamUtils.h"
+#include "nsStringStream.h"
 
 namespace mozilla::dom {
 
 namespace {
+
+constexpr bool IsFileNotFoundError(const nsresult aRv) {
+  return NS_ERROR_DOM_FILE_NOT_FOUND_ERR == aRv ||
+         NS_ERROR_FILE_NOT_FOUND == aRv;
+}
 
 class WritableFileStreamUnderlyingSinkAlgorithms final
     : public UnderlyingSinkAlgorithmsWrapper {
@@ -55,44 +75,102 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
   RefPtr<FileSystemWritableFileStream> mStream;
 };
 
-/**
- * TODO: Duplicated from netwerk/cache2/CacheFileIOManager.cpp
- * Please remove after bug 1286601 is fixed,
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1286601
- */
-nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF) {
-#if defined(XP_UNIX)
-  if (ftruncate(PR_FileDesc2NativeHandle(aFD), aEOF) != 0) {
-    NS_ERROR("ftruncate failed");
-    return NS_ERROR_FAILURE;
-  }
-#elif defined(XP_WIN)
-  const int64_t currentOffset = PR_Seek64(aFD, 0, PR_SEEK_CUR);
-  if (currentOffset == -1) {
-    return NS_ERROR_FAILURE;
-  }
+class CopyPromiseResolver final : public nsIRequestObserver {
+  RefPtr<Promise> mPromise;
+  nsCOMPtr<nsISerialEventTarget> mResolveTarget;
 
-  int64_t cnt = PR_Seek64(aFD, aEOF, PR_SEEK_SET);
-  if (cnt == -1) {
-    return NS_ERROR_FAILURE;
-  }
+ public:
+  explicit CopyPromiseResolver(already_AddRefed<Promise> aPromise,
+                               nsISerialEventTarget* aResolveTarget)
+      : mPromise(aPromise), mResolveTarget(aResolveTarget) {}
 
-  if (!SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD))) {
-    NS_ERROR("SetEndOfFile failed");
-    return NS_ERROR_FAILURE;
-  }
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+ private:
+  ~CopyPromiseResolver() = default;
+};
 
-  if (PR_Seek64(aFD, currentOffset, PR_SEEK_SET) == -1) {
-    NS_ERROR("Restoring seek offset failed");
-    return NS_ERROR_FAILURE;
-  }
+NS_IMPL_ISUPPORTS(CopyPromiseResolver, nsIRequestObserver)
 
-#else
-  MOZ_ASSERT(false, "Not implemented!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
+NS_IMETHODIMP
+CopyPromiseResolver::OnStartRequest(nsIRequest* aRequest) { return NS_OK; }
+
+NS_IMETHODIMP
+CopyPromiseResolver::OnStopRequest(nsIRequest* /*aRequest*/, nsresult aStatus) {
+  InvokeAsync(mResolveTarget, __func__,
+              [promise = std::move(mPromise), aStatus]() {
+                if (NS_SUCCEEDED(aStatus)) {
+                  promise->MaybeResolve(0);  // Written amount?
+                } else if (IsFileNotFoundError(aStatus)) {
+                  promise->MaybeRejectWithNotFoundError("File not found");
+                } else {
+                  promise->MaybeReject(aStatus);
+                }
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 
   return NS_OK;
+}
+
+// Same value as in FileSystemSyncAccessHandle
+const uint32_t kWritableStreamCopyBlockSize = 1024 * 1024;
+
+// TODO: Refactor this function, see Bug 1804614
+void WriteImpl(const RefPtr<nsISerialEventTarget>& aTaskQueue,
+               already_AddRefed<nsIInputStream> aInputStream,
+               RefPtr<fs::FileSystemThreadSafeStreamOwner>& aOutStreamOwner,
+               const Maybe<uint64_t> aPosition,
+               const RefPtr<Promise>& aPromise) {
+  auto rejectAndReturn = [&aPromise](const nsresult rv) {
+    if (IsFileNotFoundError(rv)) {
+      aPromise->MaybeRejectWithNotFoundError("File not found");
+      return;
+    }
+    aPromise->MaybeReject(rv);
+  };
+
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIAsyncStreamCopier> copier =
+      do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
+  QM_TRY(MOZ_TO_RESULT(rv), rejectAndReturn);
+  MOZ_ASSERT(copier);
+
+  nsCOMPtr<nsIInputStream> bufferedSource;
+  QM_TRY(MOZ_TO_RESULT(NS_NewBufferedInputStream(getter_AddRefs(bufferedSource),
+                                                 std::move(aInputStream),
+                                                 kWritableStreamCopyBlockSize)),
+         rejectAndReturn);
+  MOZ_ASSERT(bufferedSource);
+
+  if (aPosition.isSome()) {
+    LOG(("%p: Seeking to %" PRIu64, aOutStreamOwner.get(), aPosition.value()));
+
+    QM_TRY(MOZ_TO_RESULT(aOutStreamOwner->Seek(aPosition.value())),
+           rejectAndReturn);
+  }
+
+  nsCOMPtr<nsIOutputStream> streamSink = aOutStreamOwner->OutputStream();
+  MOZ_ASSERT(streamSink);
+  QM_TRY(MOZ_TO_RESULT(copier->Init(
+             bufferedSource, streamSink, aTaskQueue, /* sourceBuffered */ true,
+             /* sinkBuffered */ false, kWritableStreamCopyBlockSize,
+             /* closeSource */ true, /* closeSink */ false)),
+         rejectAndReturn);
+
+  nsCOMPtr<nsISerialEventTarget> resolveTarget = GetCurrentSerialEventTarget();
+
+  // Observer will live on main thread, copier dispatches work on taskQueue
+  InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
+              [copier = std::move(copier), promise = aPromise,
+               resolveTarget = std::move(resolveTarget)]() mutable {
+                RefPtr<CopyPromiseResolver> callbacks =
+                    new CopyPromiseResolver(promise.forget(), resolveTarget);
+                // Error through callback promise
+                QM_TRY(MOZ_TO_RESULT(copier->AsyncCopy(callbacks, nullptr)),
+                       CreateAndRejectBoolPromise);
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 }
 
 }  // namespace
@@ -100,18 +178,19 @@ nsresult TruncFile(PRFileDesc* aFD, int64_t aEOF) {
 FileSystemWritableFileStream::FileSystemWritableFileStream(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
-    const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+    already_AddRefed<TaskQueue> aTaskQueue,
+    nsCOMPtr<nsIRandomAccessStream> aStream,
     const fs::FileSystemEntryMetadata& aMetadata)
     : WritableStream(aGlobal, HoldDropJSObjectsCaller::Explicit),
       mManager(aManager),
       mActor(std::move(aActor)),
-      mFileDesc(nullptr),
+      mTaskQueue(aTaskQueue),
+      mStreamOwner(MakeAndAddRef<fs::FileSystemThreadSafeStreamOwner>(
+          std::move(aStream))),
+      mWorkerRef(),
       mMetadata(aMetadata),
-      mClosed(false) {
-  auto rawFD = aFileDescriptor.ClonePlatformHandle();
-  mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
-
-  LOG(("Created WritableFileStream %p for fd %p", this, mFileDesc));
+      mClosed() {
+  LOG(("Created WritableFileStream %p for fd %p", this, mStreamOwner.get()));
 
   // Connect with the actor directly in the constructor. This way the actor
   // can call `FileSystemWritableFileStream::ClearActor` when we call
@@ -124,7 +203,6 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
 }
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
-  MOZ_ASSERT(!mActor);
   MOZ_ASSERT(mClosed);
 
   mozilla::DropJSObjects(this);
@@ -140,7 +218,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<FileSystemWritableFileStream>
 FileSystemWritableFileStream::Create(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
-    const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
+    mozilla::ipc::RandomAccessStreamParams aStreamParams,
     const fs::FileSystemEntryMetadata& aMetadata) {
   AutoJSAPI jsapi;
   if (!jsapi.Init(aGlobal)) {
@@ -150,9 +228,38 @@ FileSystemWritableFileStream::Create(
 
   // Step 1. Let stream be a new FileSystemWritableFileStream in realm.
   // Step 2. Set stream.[[file]] to file. (Covered by the constructor)
+  QM_TRY_UNWRAP(
+      MovingNotNull<nsCOMPtr<nsIRandomAccessStream>> inputOutputStream,
+      mozilla::ipc::DeserializeRandomAccessStream(aStreamParams), nullptr);
+
+  QM_TRY_UNWRAP(auto streamTransportService,
+                MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
+                                        MOZ_SELECT_OVERLOAD(do_GetService),
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID),
+                nullptr);
+  RefPtr<TaskQueue> taskQueue =
+      TaskQueue::Create(streamTransportService.forget(), "WritableStreamQueue");
+  MOZ_ASSERT(taskQueue);
+
+  // Step 5. Perform ! InitializeWritableStream(stream).
+  // (Done by the constructor)
   RefPtr<FileSystemWritableFileStream> stream =
       new FileSystemWritableFileStream(aGlobal, aManager, std::move(aActor),
-                                       aFileDescriptor, aMetadata);
+                                       taskQueue.forget(),
+                                       std::move(inputOutputStream), aMetadata);
+
+  WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (workerPrivate) {
+    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+        workerPrivate, "FileSystemWritableFileStream", [stream]() {
+          if (!stream->IsClosed()) {
+            // We don't need the promise, we just begin the closing process.
+            Unused << stream->BeginClose();
+          }
+        });
+
+    stream->mWorkerRef = std::move(workerRef);
+  }
 
   // Step 3 - 5
   auto algorithms =
@@ -184,7 +291,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FileSystemWritableFileStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                 WritableStream)
   // Per the comment for the FileSystemManager class, don't unlink mManager!
-  tmp->Close();
+  if (!tmp->IsClosed()) {
+    tmp->BeginClose();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                   WritableStream)
@@ -192,7 +301,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void FileSystemWritableFileStream::LastRelease() {
-  Close();
+  // We can't call `FileSystemWritableFileStream::Close` here because it may
+  // need to keep FileSystemWritableFileStream object alive which isn't possible
+  // when the object is about to be deleted. There are other mechanisms which
+  // ensure that the object is correctly closed before destruction. For example
+  // the object unlinking and the worker shutdown (we get notified about it via
+  // the callback passed to `StrongWorkerRef`) are used to close the object if
+  // it hasn't been closed yet.
 
   if (mActor) {
     PFileSystemWritableFileStreamChild::Send__delete__(mActor);
@@ -206,29 +321,40 @@ void FileSystemWritableFileStream::ClearActor() {
   mActor = nullptr;
 }
 
-void FileSystemWritableFileStream::Close() {
-  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
-  // Step 4. Let closeAlgorithm be these steps:
+bool FileSystemWritableFileStream::IsClosed() const { return mClosed; }
 
-  if (mClosed) {
-    return;
+RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
+  if (IsClosed()) {
+    return BoolPromise::CreateAndResolve(true, __func__);
   }
 
-  LOG(("%p: Closing", mFileDesc));
+  mClosed.Flip();  // Caller's cannot wait for completion, fixed by D168796
 
-  mClosed = true;
+  return InvokeAsync(mTaskQueue, __func__,
+                     [streamOwner = mStreamOwner]() mutable {
+                       streamOwner->Close();
+                       return BoolPromise::CreateAndResolve(true, __func__);
+                     })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue&) {
+               return self->mTaskQueue->BeginShutdown();
+             })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](
+                 const ShutdownPromise::ResolveOrRejectValue& /* aValue */) {
+               if (self->mActor) {
+                 self->mActor->SendClose();
+               }
 
-  PR_Close(mFileDesc);
-  mFileDesc = nullptr;
+               self->mWorkerRef = nullptr;
 
-  if (mActor) {
-    mActor->SendClose();
-  }
+               return BoolPromise::CreateAndResolve(true, __func__);
+             });
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
     JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aError) {
-  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(!IsClosed());
 
   // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
   // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument
@@ -293,8 +419,8 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
           return promise.forget();
         }
 
-        // Step 3.5.1. If chunk.position is undefined, reject p with a TypeError
-        // and abort.
+        // Step 3.5.1. If chunk.position is undefined, reject p with a
+        // TypeError and abort.
         if (params.mPosition.Value().IsNull()) {
           promise->MaybeRejectWithTypeError("seek() with null position");
           return promise.forget();
@@ -455,41 +581,41 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
 template <typename T>
 void FileSystemWritableFileStream::Write(const T& aData,
                                          const Maybe<uint64_t> aPosition,
-                                         RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(!mClosed);
-
+                                         const RefPtr<Promise>& aPromise) {
   auto rejectAndReturn = [&aPromise](const nsresult rv) {
-    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+    if (IsFileNotFoundError(rv)) {
       aPromise->MaybeRejectWithNotFoundError("File not found");
-    } else {
-      aPromise->MaybeReject(rv);
+      return;
     }
+    aPromise->MaybeReject(rv);
   };
+
+  nsCOMPtr<nsIInputStream> inputStream;
 
   // https://fs.spec.whatwg.org/#write-a-chunk
   // Step 3.4.6 If data is a BufferSource, let dataBytes be a copy of data.
   if (aData.IsArrayBuffer() || aData.IsArrayBufferView()) {
-    const auto dataSpan = [&aData]() {
+    const auto dataSpan = [&aData]() -> mozilla::Span<uint8_t> {
       if (aData.IsArrayBuffer()) {
         const ArrayBuffer& buffer = aData.GetAsArrayBuffer();
         buffer.ComputeState();
         return Span{buffer.Data(), buffer.Length()};
       }
-      MOZ_ASSERT(aData.IsArrayBufferView());
+
       const ArrayBufferView& buffer = aData.GetAsArrayBufferView();
       buffer.ComputeState();
       return Span{buffer.Data(), buffer.Length()};
     }();
 
-    nsCString dataBuffer;
-    QM_TRY(MOZ_TO_RESULT(dataBuffer.Assign(
-               AsChars(dataSpan).data(), dataSpan.Length(), mozilla::fallible)),
-           rejectAndReturn);
-    QM_TRY_INSPECT(const auto& written, WriteBuffer(dataBuffer, aPosition),
-                   rejectAndReturn);
+    // Here we copy
 
-    LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
-    aPromise->MaybeResolve(written);
+    QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(getter_AddRefs(inputStream),
+                                               AsChars(dataSpan),
+                                               NS_ASSIGNMENT_COPY)),
+           rejectAndReturn);
+
+    WriteImpl(mTaskQueue, inputStream.forget(), mStreamOwner, aPosition,
+              aPromise);
     return;
   }
 
@@ -497,121 +623,81 @@ void FileSystemWritableFileStream::Write(const T& aData,
   if (aData.IsBlob()) {
     Blob& blob = aData.GetAsBlob();
 
-    nsCOMPtr<nsIInputStream> stream;
     ErrorResult error;
-    blob.CreateInputStream(getter_AddRefs(stream), error);
+    blob.CreateInputStream(getter_AddRefs(inputStream), error);
     QM_TRY((MOZ_TO_RESULT(!error.Failed()).mapErr([&error](const nsresult rv) {
              return error.StealNSResult();
            })),
            rejectAndReturn);
 
-    QM_TRY_INSPECT(const auto& written,
-                   WriteStream(std::move(stream), aPosition), rejectAndReturn);
-
-    LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
-    aPromise->MaybeResolve(written);
+    WriteImpl(mTaskQueue, inputStream.forget(), mStreamOwner, aPosition,
+              aPromise);
     return;
   }
 
   // Step 3.4.8 Otherwise ...
   MOZ_ASSERT(aData.IsUTF8String());
 
-  QM_TRY_INSPECT(const auto& written,
-                 WriteBuffer(aData.GetAsUTF8String(), aPosition),
-                 rejectAndReturn);
+  // Here we copy
+  nsCString dataString;
+  if (!dataString.Assign(aData.GetAsUTF8String(), mozilla::fallible)) {
+    rejectAndReturn(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
-  LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
-  aPromise->MaybeResolve(written);
+  // Input stream takes ownership
+  QM_TRY(MOZ_TO_RESULT(NS_NewCStringInputStream(getter_AddRefs(inputStream),
+                                                std::move(dataString))),
+         rejectAndReturn);
+
+  WriteImpl(mTaskQueue, inputStream.forget(), mStreamOwner, aPosition,
+            aPromise);
 }
 
 void FileSystemWritableFileStream::Seek(uint64_t aPosition,
-                                        RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(!mClosed);
+                                        const RefPtr<Promise>& aPromise) {
+  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mStreamOwner.get(), aPosition));
+  InvokeAsync(mTaskQueue, __func__,
+              [aPosition, streamOwner = mStreamOwner]() mutable {
+                QM_TRY(MOZ_TO_RESULT(streamOwner->Seek(aPosition)),
+                       CreateAndRejectBoolPromise);
 
-  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mFileDesc, aPosition));
-
-  QM_TRY(SeekPosition(aPosition), [&aPromise](const nsresult rv) {
-    aPromise->MaybeReject(rv);
-    return;
-  });
-
-  aPromise->MaybeResolveWithUndefined();
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aPromise](const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 auto rv = aValue.RejectValue();
+                 if (IsFileNotFoundError(rv)) {
+                   aPromise->MaybeRejectWithNotFoundError("File not found");
+                   return;
+                 }
+                 aPromise->MaybeReject(rv);
+                 return;
+               }
+               MOZ_ASSERT(aValue.IsResolve());
+               aPromise->MaybeResolveWithUndefined();
+             });
 }
 
 void FileSystemWritableFileStream::Truncate(uint64_t aSize,
-                                            RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(!mClosed);
+                                            const RefPtr<Promise>& aPromise) {
+  InvokeAsync(mTaskQueue, __func__,
+              [aSize, streamOwner = mStreamOwner]() mutable {
+                QM_TRY(MOZ_TO_RESULT(streamOwner->Truncate(aSize)),
+                       CreateAndRejectBoolPromise);
 
-  // truncate filehandle (can extend with 0's)
-  LOG_VERBOSE(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
-  if (NS_WARN_IF(NS_FAILED(TruncFile(mFileDesc, aSize)))) {
-    aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
-    return;
-  }
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aPromise](const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 aPromise->MaybeReject(aValue.RejectValue());
+                 return;
+               }
 
-  // We truncated; per non-normative text in the spec (2.5.3) we should
-  // adjust the cursor position to be within the new file size
-  int64_t where = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
-  if (where == -1) {
-    aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
-    return;
-  }
-
-  if (where > (int64_t)aSize) {
-    where = PR_Seek(mFileDesc, 0, PR_SEEK_END);
-    if (where == -1) {
-      aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
-      return;
-    }
-  }
-
-  aPromise->MaybeResolveWithUndefined();
-}
-
-Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteBuffer(
-    const nsACString& aBuffer, const Maybe<uint64_t> aPosition) {
-  MOZ_ASSERT(!mClosed);
-
-  const auto checkedLength = CheckedInt<PRInt32>(aBuffer.Length());
-  QM_TRY(MOZ_TO_RESULT(checkedLength.isValid()));
-
-  if (aPosition) {
-    QM_TRY(SeekPosition(*aPosition));
-  }
-
-  return PR_Write(mFileDesc, aBuffer.BeginReading(), checkedLength.value());
-}
-
-Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
-    nsCOMPtr<nsIInputStream> aStream, const Maybe<uint64_t> aPosition) {
-  MOZ_ASSERT(aStream);
-  MOZ_ASSERT(!mClosed);
-
-  nsCString rawBuffer;
-  QM_TRY(MOZ_TO_RESULT(NS_ReadInputStreamToString(aStream, rawBuffer, -1)));
-  QM_TRY_RETURN(WriteBuffer(rawBuffer, aPosition));
-}
-
-Result<Ok, nsresult> FileSystemWritableFileStream::SeekPosition(
-    uint64_t aPosition) {
-  MOZ_ASSERT(!mClosed);
-
-  const auto checkedPosition = CheckedInt<int64_t>(aPosition);
-  QM_TRY(MOZ_TO_RESULT(checkedPosition.isValid()));
-
-  int64_t cnt = PR_Seek64(mFileDesc, checkedPosition.value(), PR_SEEK_SET);
-  if (cnt == int64_t(-1)) {
-    LOG(("Failed to seek to %" PRIu64 " (errno %d)", aPosition, errno));
-    return Err(NS_ErrorAccordingToNSPR());
-  }
-
-  if (cnt != checkedPosition.value()) {
-    LOG(("Failed to seek to %" PRIu64 " (errno %d), ended up at %" PRId64,
-         aPosition, errno, cnt));
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  return Ok{};
+               aPromise->MaybeResolveWithUndefined();
+             });
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
@@ -643,11 +729,18 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallbackImpl(
     return promise.forget();
   }
 
-  // XXX The close should be async. For now we have to always fallback to a
-  // resolved promise.
-  mStream->Close();
+  mStream->BeginClose()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](const BoolPromise::ResolveOrRejectValue& aValue) {
+        // Step 2.3. Return a promise resolved with undefined.
+        if (aValue.IsResolve()) {
+          promise->MaybeResolveWithUndefined();
+          return;
+        }
+        promise->MaybeRejectWithAbortError(
+            "Internal error closing file stream");
+      });
 
-  promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
@@ -655,14 +748,13 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallbackImpl(
 // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 already_AddRefed<Promise>
 WritableFileStreamUnderlyingSinkAlgorithms::AbortCallbackImpl(
-    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+    JSContext* aCx, const Optional<JS::Handle<JS::Value>>& /* aReason */,
     ErrorResult& aRv) {
-  // XXX The close or rather a dedicated abort should be async. For now we have
-  // to always fall back to return null.
-  // (Step 3.3 of https://streams.spec.whatwg.org/#readablestream-set-up will
-  // turn it into a resolved promise)
-  mStream->Close();
-  return nullptr;
+  // https://streams.spec.whatwg.org/#writablestream-set-up
+  // Step 3. Let abortAlgorithmWrapper be an algorithm that runs these steps:
+  // Step 3.3. Return a promise resolved with undefined.
+
+  return CloseCallbackImpl(aCx, aRv);
 }
 
 void WritableFileStreamUnderlyingSinkAlgorithms::ReleaseObjects() {
@@ -670,7 +762,7 @@ void WritableFileStreamUnderlyingSinkAlgorithms::ReleaseObjects() {
   // However, calling close here is not a big issue for now because we don't
   // write to a temporary file which would atomically replace the real file
   // during close.
-  mStream->Close();
+  mStream->BeginClose();
 }
 
 }  // namespace mozilla::dom
