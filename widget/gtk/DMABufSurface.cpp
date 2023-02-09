@@ -1059,15 +1059,20 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane) {
     return false;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(mGbmBufferObject[aPlane] == nullptr);
   bool useModifiers = (mBufferModifiers[aPlane] != DRM_FORMAT_MOD_INVALID);
   if (useModifiers) {
+    LOGDMABUF(("    Creating with modifiers"));
     mGbmBufferObject[aPlane] = nsGbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth[aPlane], mHeight[aPlane],
         mDrmFormats[aPlane], mBufferModifiers + aPlane, 1);
-  } else {
+  }
+  if (!mGbmBufferObject[aPlane]) {
+    LOGDMABUF(("    Creating without modifiers"));
     mGbmBufferObject[aPlane] = nsGbmLib::Create(
         GetDMABufDevice()->GetGbmDevice(), mWidth[aPlane], mHeight[aPlane],
         mDrmFormats[aPlane], GBM_BO_USE_RENDERING);
+    mBufferModifiers[aPlane] = DRM_FORMAT_MOD_INVALID;
   }
   if (!mGbmBufferObject[aPlane]) {
     LOGDMABUF(("    Failed to create GbmBufferObject: %s", strerror(errno)));
