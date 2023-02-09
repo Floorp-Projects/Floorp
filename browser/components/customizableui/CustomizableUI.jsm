@@ -1201,12 +1201,14 @@ var CustomizableUIInternal = {
                   widget.currentArea = null;
                 }
               }
-              if (palette && !this.isSpecialWidget(node.id)) {
-                palette.appendChild(node);
-                this.removeLocationAttributes(node);
-              } else {
-                container.removeChild(node);
-              }
+              this.notifyDOMChange(node, null, container, true, () => {
+                if (palette && !this.isSpecialWidget(node.id)) {
+                  palette.appendChild(node);
+                  this.removeLocationAttributes(node);
+                } else {
+                  container.removeChild(node);
+                }
+              });
             } else {
               node.setAttribute("removable", false);
               lazy.log.debug(
@@ -1416,31 +1418,18 @@ var CustomizableUIInternal = {
         continue;
       }
 
-      this.notifyListeners(
-        "onWidgetBeforeDOMChange",
-        widgetNode,
-        null,
-        container,
-        true
-      );
-
-      // We remove location attributes here to make sure they're gone too when a
-      // widget is removed from a toolbar to the palette. See bug 930950.
-      this.removeLocationAttributes(widgetNode);
-      // We also need to remove the panel context menu if it's there:
-      this.ensureButtonContextMenu(widgetNode);
-      if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
-        container.removeChild(widgetNode);
-      } else {
-        window.gNavToolbox.palette.appendChild(widgetNode);
-      }
-      this.notifyListeners(
-        "onWidgetAfterDOMChange",
-        widgetNode,
-        null,
-        container,
-        true
-      );
+      this.notifyDOMChange(widgetNode, null, container, true, () => {
+        // We remove location attributes here to make sure they're gone too when a
+        // widget is removed from a toolbar to the palette. See bug 930950.
+        this.removeLocationAttributes(widgetNode);
+        // We also need to remove the panel context menu if it's there:
+        this.ensureButtonContextMenu(widgetNode);
+        if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
+          container.removeChild(widgetNode);
+        } else {
+          window.gNavToolbox.palette.appendChild(widgetNode);
+        }
+      });
 
       let windowCache = gSingleWrapperCache.get(window);
       if (windowCache) {
@@ -1660,19 +1649,27 @@ var CustomizableUIInternal = {
   },
 
   insertWidgetBefore(aNode, aNextNode, aContainer, aArea) {
+    this.notifyDOMChange(aNode, aNextNode, aContainer, false, () => {
+      this.setLocationAttributes(aNode, aArea);
+      aContainer.insertBefore(aNode, aNextNode);
+    });
+  },
+
+  notifyDOMChange(aNode, aNextNode, aContainer, aIsRemove, aCallback) {
     this.notifyListeners(
       "onWidgetBeforeDOMChange",
       aNode,
       aNextNode,
-      aContainer
+      aContainer,
+      aIsRemove
     );
-    this.setLocationAttributes(aNode, aArea);
-    aContainer.insertBefore(aNode, aNextNode);
+    aCallback();
     this.notifyListeners(
       "onWidgetAfterDOMChange",
       aNode,
       aNextNode,
-      aContainer
+      aContainer,
+      aIsRemove
     );
   },
 
