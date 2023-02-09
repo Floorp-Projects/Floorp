@@ -123,6 +123,7 @@
 
 #permission-popup-permissions-content {
   padding-inline: 1.25em;
+  min-width: 0;
 }
 
 /* CONTENT */
