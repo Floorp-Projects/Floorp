@@ -11,7 +11,7 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/scoped_refptr.h"
 #include "AudioSegment.h"
-#include "ConcreteConduitControl.h"
+#include "Canonicals.h"
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -244,7 +244,7 @@ class LoopbackTransport : public MediaTransportHandler {
 class TestAgent {
  public:
   explicit TestAgent(const RefPtr<SharedWebrtcState>& aSharedState)
-      : conduit_control_(aSharedState->mCallWorkerThread),
+      : control_(aSharedState->mCallWorkerThread),
         audio_config_(109, "opus", 48000, 2, false),
         call_(WebrtcCallWrapper::Create(mozilla::dom::RTCStatsTimestampMaker(),
                                         nullptr, aSharedState)),
@@ -253,7 +253,7 @@ class TestAgent {
         audio_pipeline_(),
         transport_(new LoopbackTransport) {
     Unused << WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {
-      audio_conduit_->InitControl(&conduit_control_);
+      audio_conduit_->InitControl(&control_);
       return GenericPromise::CreateAndResolve(true, "TestAgent()");
     }));
   }
@@ -286,7 +286,7 @@ class TestAgent {
       audio_pipeline_->Stop();
     }
     if (audio_conduit_) {
-      conduit_control_.Update([](auto& aControl) {
+      control_.Update([](auto& aControl) {
         aControl.mTransmitting = false;
         aControl.mReceiving = false;
       });
@@ -338,7 +338,7 @@ class TestAgent {
   }
 
  protected:
-  ConcreteConduitControl conduit_control_;
+  ConcreteControl control_;
   AudioCodecConfig audio_config_;
   RefPtr<WebrtcCallWrapper> call_;
   RefPtr<AudioSessionConduit> audio_conduit_;
@@ -354,7 +354,7 @@ class TestAgentSend : public TestAgent {
  public:
   explicit TestAgentSend(const RefPtr<SharedWebrtcState>& aSharedState)
       : TestAgent(aSharedState) {
-    conduit_control_.Update([&](auto& aControl) {
+    control_.Update([&](auto& aControl) {
       aControl.mAudioSendCodec = Some(audio_config_);
     });
     audio_track_ = new FakeAudioTrack();
@@ -369,8 +369,7 @@ class TestAgentSend : public TestAgent {
 
     audio_pipeline->SetSendTrackOverride(audio_track_);
     audio_pipeline->Start();
-    conduit_control_.Update(
-        [](auto& aControl) { aControl.mTransmitting = true; });
+    control_.Update([](auto& aControl) { aControl.mTransmitting = true; });
 
     audio_pipeline_ = audio_pipeline;
 
@@ -382,7 +381,7 @@ class TestAgentReceive : public TestAgent {
  public:
   explicit TestAgentReceive(const RefPtr<SharedWebrtcState>& aSharedState)
       : TestAgent(aSharedState) {
-    conduit_control_.Update([&](auto& aControl) {
+    control_.Update([&](auto& aControl) {
       std::vector<AudioCodecConfig> codecs;
       codecs.push_back(audio_config_);
       aControl.mAudioRecvCodecs = codecs;
@@ -399,7 +398,7 @@ class TestAgentReceive : public TestAgent {
         TrackingId(), PRINCIPAL_HANDLE_NONE, PrincipalPrivacy::NonPrivate);
 
     audio_pipeline_->Start();
-    conduit_control_.Update([](auto& aControl) { aControl.mReceiving = true; });
+    control_.Update([](auto& aControl) { aControl.mReceiving = true; });
 
     audio_pipeline_->UpdateTransport_m(aTransportId, std::move(bundle_filter_));
   }

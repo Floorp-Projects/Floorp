@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MEDIA_WEBRTC_SIGNALING_GTEST_CONCRETECONDUITCONTROL_H_
-#define MEDIA_WEBRTC_SIGNALING_GTEST_CONCRETECONDUITCONTROL_H_
+#ifndef MEDIA_WEBRTC_SIGNALING_GTEST_CANONICALS_H_
+#define MEDIA_WEBRTC_SIGNALING_GTEST_CANONICALS_H_
 
 #include "MediaConduitControl.h"
 #include "WaitFor.h"
@@ -61,14 +61,14 @@ class ConcreteCanonicals {
 };
 #undef INIT_CANONICAL
 
-class ConcreteConduitControl : public AudioConduitControlInterface,
-                               public VideoConduitControlInterface,
-                               private ConcreteCanonicals {
+class ConcreteControl : public AudioConduitControlInterface,
+                        public VideoConduitControlInterface,
+                        private ConcreteCanonicals {
  private:
   RefPtr<nsISerialEventTarget> mTarget;
 
  public:
-  explicit ConcreteConduitControl(RefPtr<nsISerialEventTarget> aTarget)
+  explicit ConcreteControl(RefPtr<nsISerialEventTarget> aTarget)
       : mTarget(std::move(aTarget)) {}
 
   template <typename Function>

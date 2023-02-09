@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 
 #include "AudioConduit.h"
-#include "ConcreteConduitControl.h"
+#include "Canonicals.h"
 #include "WaitFor.h"
 
 #include "MockCall.h"
@@ -38,7 +38,7 @@ class AudioConduitTest : public ::testing::Test {
 
   const RefPtr<MockCallWrapper> mCallWrapper;
   const RefPtr<WebrtcAudioConduit> mAudioConduit;
-  ConcreteConduitControl mControl;
+  ConcreteControl mControl;
 };
 
 TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {

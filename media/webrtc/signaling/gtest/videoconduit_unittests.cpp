@@ -10,7 +10,7 @@
 #include "nss.h"
 #include "ssl.h"
 
-#include "ConcreteConduitControl.h"
+#include "Canonicals.h"
 #include "VideoConduit.h"
 #include "RtpRtcpConfig.h"
 #include "WebrtcCallWrapper.h"
@@ -88,7 +88,7 @@ class VideoConduitTest : public Test {
 
   const RefPtr<MockCallWrapper> mCallWrapper;
   const RefPtr<mozilla::WebrtcVideoConduit> mVideoConduit;
-  ConcreteConduitControl mControl;
+  ConcreteControl mControl;
 };
 
 TEST_F(VideoConduitTest, TestConfigureReceiveMediaCodecs) {
