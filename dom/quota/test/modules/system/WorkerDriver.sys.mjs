@@ -9,10 +9,26 @@ export async function runTestInWorker(script, base, listener) {
       "resource://testing-common/dom/quota/test/modules/worker/head.js"
     );
 
+    let modules = {};
+
     const worker = new Worker(globalHeadUrl.href);
 
     worker.onmessage = function(event) {
       const data = event.data;
+      const moduleName = data.moduleName;
+      const objectName = data.objectName;
+
+      if (moduleName && objectName) {
+        if (!modules[moduleName]) {
+          modules[moduleName] = ChromeUtils.importESModule(
+            "resource://testing-common/dom/quota/test/modules/" +
+              moduleName +
+              ".sys.mjs"
+          );
+        }
+        modules[moduleName][objectName].OnMessageReceived(worker, data);
+        return;
+      }
 
       switch (data.op) {
         case "ok":
