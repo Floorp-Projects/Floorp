@@ -126,8 +126,7 @@ class LayoutView {
     if (!this._swatchColorPickerTooltip) {
       this._swatchColorPickerTooltip = new SwatchColorPickerTooltip(
         this.inspector.toolbox.doc,
-        this.inspector,
-        { supportsCssColor4ColorFunction: () => false }
+        this.inspector
       );
     }
 

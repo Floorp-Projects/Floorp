@@ -26,14 +26,8 @@ class CssPropertiesActor extends Actor {
   getCSSDatabase() {
     const properties = generateCssProperties();
     const pseudoElements = InspectorUtils.getCSSPseudoElementNames();
-    const supportedFeature = {
-      // checking for css-color-4 color function support.
-      "css-color-4-color-function": InspectorUtils.isValidCSSColor(
-        "rgb(1 1 1 / 100%)"
-      ),
-    };
 
-    return { properties, pseudoElements, supportedFeature };
+    return { properties, pseudoElements };
   }
 }
 exports.CssPropertiesActor = CssPropertiesActor;

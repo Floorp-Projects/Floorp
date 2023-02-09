@@ -92,10 +92,6 @@ function TooltipsOverlay(view) {
 }
 
 TooltipsOverlay.prototype = {
-  get _cssProperties() {
-    return this.view.inspector.cssProperties;
-  },
-
   get isEditing() {
     for (const [, tooltip] of this._instances) {
       if (typeof tooltip.isEditing == "function" && tooltip.isEditing()) {
@@ -157,11 +153,7 @@ TooltipsOverlay.prototype = {
     switch (name) {
       case "colorPicker":
         const SwatchColorPickerTooltip = require("resource://devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip.js");
-        tooltip = new SwatchColorPickerTooltip(
-          doc,
-          this.view.inspector,
-          this._cssProperties
-        );
+        tooltip = new SwatchColorPickerTooltip(doc, this.view.inspector);
         break;
       case "cubicBezier":
         const SwatchCubicBezierTooltip = require("resource://devtools/client/shared/widgets/tooltip/SwatchCubicBezierTooltip.js");

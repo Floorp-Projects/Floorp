@@ -83,18 +83,9 @@ function CssProperties(db) {
   this.properties = db.properties;
   this.pseudoElements = db.pseudoElements;
 
-  // supported feature
-  this.cssColor4ColorFunction = hasFeature(
-    db.supportedFeature,
-    "css-color-4-color-function"
-  );
-
   this.isKnown = this.isKnown.bind(this);
   this.isInherited = this.isInherited.bind(this);
   this.supportsType = this.supportsType.bind(this);
-  this.supportsCssColor4ColorFunction = this.supportsCssColor4ColorFunction.bind(
-    this
-  );
 }
 
 CssProperties.prototype = {
@@ -179,15 +170,6 @@ CssProperties.prototype = {
     }
     return [];
   },
-
-  /**
-   * Checking for the css-color-4 color function support.
-   *
-   * @return {Boolean} Return true if the server supports css-color-4 color function.
-   */
-  supportsCssColor4ColorFunction() {
-    return this.cssColor4ColorFunction;
-  },
 };
 
 /**
@@ -198,20 +180,6 @@ CssProperties.prototype = {
  */
 function isCssVariable(input) {
   return !!input.match(IS_VARIABLE_TOKEN);
-}
-
-/**
- * Query the feature supporting status in the featureSet.
- *
- * @param {Hashmap} featureSet the feature set hashmap
- * @param {String} feature the feature name string
- * @return {Boolean} has the feature or not
- */
-function hasFeature(featureSet, feature) {
-  if (feature in featureSet) {
-    return featureSet[feature];
-  }
-  return false;
 }
 
 /**
@@ -279,11 +247,6 @@ function normalizeCssData(db) {
   }
 
   reattachCssColorValues(db);
-
-  // If there is no supportedFeature in db, create an empty one.
-  if (!db.supportedFeature) {
-    db.supportedFeature = {};
-  }
 
   return db;
 }

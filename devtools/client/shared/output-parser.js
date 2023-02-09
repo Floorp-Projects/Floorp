@@ -100,13 +100,8 @@ const TRUNCATE_NODE_CLASSNAME = "propertyvalue-long-text";
  *        - supportsTypes - A function that returns a boolean when asked if a css
  *          property name supports a given css type.  The function is
  *          executed like supportsType("color", "timing-function")
- *        - supportsCssColor4ColorFunction - A function for checking
- *          the supporting of css-color-4 color function.
  */
-function OutputParser(
-  document,
-  { supportsType, supportsCssColor4ColorFunction }
-) {
+function OutputParser(document, { supportsType }) {
   this.parsed = [];
   this.doc = document;
   this.supportsType = supportsType;
@@ -114,8 +109,6 @@ function OutputParser(
   this.angleSwatches = new WeakMap();
   this._onColorSwatchMouseDown = this._onColorSwatchMouseDown.bind(this);
   this._onAngleSwatchMouseDown = this._onAngleSwatchMouseDown.bind(this);
-
-  this.cssColor4 = supportsCssColor4ColorFunction();
 }
 
 OutputParser.prototype = {
@@ -1508,7 +1501,7 @@ OutputParser.prototype = {
    *         _mergeOptions().
    */
   _appendColor(color, options = {}) {
-    const colorObj = new colorUtils.CssColor(color, this.cssColor4);
+    const colorObj = new colorUtils.CssColor(color);
 
     if (this._isValidColor(colorObj)) {
       const container = this._createNode("span", {
