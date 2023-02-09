@@ -116,7 +116,14 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
-  if (frame->IsTransformed() && aContent->HasChildren()) {
+  // Ditto for content which is position: fixed or sticky.
+  // However, don't do this for XUL widgets, as this breaks XUL a11y code
+  // expectations in some cases. XUL widgets are only used in the parent
+  // process and can't be cached anyway.
+  if (aContent->HasChildren() && !aContent->IsXULElement() &&
+      (frame->IsTransformed() || frame->IsStickyPositioned() ||
+       (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+        nsLayoutUtils::IsReallyFixedPos(frame)))) {
     return true;
   }
 
@@ -446,10 +453,15 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
   if (!accessible && aContent && aContent->HasChildren()) {
     // If the content has children and its frame has a transform, create an
     // Accessible so that we can account for the transform when calculating
-    // the Accessible's bounds using the parent process cache.
+    // the Accessible's bounds using the parent process cache. Ditto for
+    // position: fixed/sticky content.
     const nsIFrame* frame = aContent->GetPrimaryFrame();
     const ComputedStyle* newStyle = frame ? frame->Style() : nullptr;
-    if (newStyle && newStyle->StyleDisplay()->HasTransform(frame)) {
+    if (newStyle &&
+        (newStyle->StyleDisplay()->HasTransform(frame) ||
+         newStyle->StyleDisplay()->mPosition == StylePositionProperty::Fixed ||
+         newStyle->StyleDisplay()->mPosition ==
+             StylePositionProperty::Sticky)) {
       document->ContentInserted(aContent, aContent->GetNextSibling());
     }
   } else if (accessible && IPCAccessibilityActive() &&

@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* import-globals-from ../../mochitest/layout.js */
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 requestLongerTimeout(2);
 
@@ -316,6 +315,65 @@ addAccessibleTask(
 );
 
 /**
+ * Test position: fixed for containers that would otherwise be pruned from the
+ * a11y tree.
+ */
+addAccessibleTask(
+  `
+<div id="fixed" role="presentation" style="position: fixed;">fixed</div>
+<div id="mutate" role="presentation">mutate</div>
+<hr style="height: 200vh;">
+<p>bottom</p>
+  `,
+  async function(browser, docAcc) {
+    ok(findAccessibleChildByID(docAcc, "fixed"), "fixed is accessible");
+    ok(!findAccessibleChildByID(docAcc, "mutate"), "mutate inaccessible");
+    info("Setting position: fixed on mutate");
+    let shown = waitForEvent(EVENT_SHOW, "mutate");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").style.position = "fixed";
+    });
+    await shown;
+    const origFixedBounds = await testBoundsWithContent(
+      docAcc,
+      "fixed",
+      browser
+    );
+    const origMutateBounds = await testBoundsWithContent(
+      docAcc,
+      "mutate",
+      browser
+    );
+    info("Scrolling to bottom of page");
+    await invokeContentTask(browser, [], () => {
+      content.window.scrollTo(0, content.document.body.scrollHeight);
+    });
+    await waitForContentPaint(browser);
+    const newFixedBounds = await testBoundsWithContent(
+      docAcc,
+      "fixed",
+      browser
+    );
+    Assert.deepEqual(
+      newFixedBounds,
+      origFixedBounds,
+      "fixed bounds are unchanged"
+    );
+    const newMutateBounds = await testBoundsWithContent(
+      docAcc,
+      "mutate",
+      browser
+    );
+    Assert.deepEqual(
+      newMutateBounds,
+      origMutateBounds,
+      "mutate bounds are unchanged"
+    );
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/**
  * Test scroll offset on sticky-pos acc
  */
 addAccessibleTask(
@@ -466,4 +524,82 @@ addAccessibleTask(
     }
   },
   { chrome: false, iframe: false, remoteIframe: false }
+);
+
+/**
+ * Test position: sticky for containers that would otherwise be pruned from the
+ * a11y tree.
+ */
+addAccessibleTask(
+  `
+<hr style="height: 100vh;">
+<div id="stickyContainer">
+  <div id="sticky" role="presentation" style="position: sticky; top: 0px;">sticky</div>
+  <hr style="height: 100vh;">
+  <p id="stickyEnd">stickyEnd</p>
+</div>
+<div id="mutateContainer">
+  <div id="mutate" role="presentation" style="top: 0px;">mutate</div>
+  <hr style="height: 100vh;">
+  <p id="mutateEnd">mutateEnd</p>
+</div>
+  `,
+  async function(browser, docAcc) {
+    ok(findAccessibleChildByID(docAcc, "sticky"), "sticky is accessible");
+    info("Scrolling to sticky");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("sticky").scrollIntoView();
+    });
+    await waitForContentPaint(browser);
+    const origStickyBounds = await testBoundsWithContent(
+      docAcc,
+      "sticky",
+      browser
+    );
+    info("Scrolling to stickyEnd");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("stickyEnd").scrollIntoView();
+    });
+    await waitForContentPaint(browser);
+    const newStickyBounds = await testBoundsWithContent(
+      docAcc,
+      "sticky",
+      browser
+    );
+    Assert.deepEqual(
+      newStickyBounds,
+      origStickyBounds,
+      "sticky bounds are unchanged"
+    );
+
+    ok(!findAccessibleChildByID(docAcc, "mutate"), "mutate inaccessible");
+    info("Setting position: sticky on mutate");
+    let shown = waitForEvent(EVENT_SHOW, "mutate");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").style.position = "sticky";
+    });
+    await shown;
+    info("Scrolling to mutate");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").scrollIntoView();
+    });
+    await waitForContentPaint(browser);
+    const origMutateBounds = await testBoundsWithContent(
+      docAcc,
+      "mutate",
+      browser
+    );
+    info("Scrolling to mutateEnd");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutateEnd").scrollIntoView();
+    });
+    await waitForContentPaint(browser);
+    const newMutateBounds = await testBoundsWithContent(
+      docAcc,
+      "mutate",
+      browser
+    );
+    assertBoundsFuzzyEqual(newMutateBounds, origMutateBounds);
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
 );
