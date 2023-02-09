@@ -55,9 +55,8 @@ const SPECIALVALUES = new Set([
  *   Valid values for COLOR_UNIT_PREF are contained in CssColor.COLORUNIT.
  */
 
-function CssColor(colorValue, supportsCssColor4ColorFunction = false) {
+function CssColor(colorValue) {
   this.newColor(colorValue);
-  this.cssColor4 = supportsCssColor4ColorFunction;
 }
 
 module.exports.colorUtils = {
@@ -93,9 +92,6 @@ CssColor.prototype = {
   authored: null,
   // A lower-cased copy of |authored|.
   lowerCased: null,
-
-  // Whether the value should be parsed using css-color-4 rules.
-  cssColor4: false,
 
   _setColorUnitUppercase(color) {
     // Specifically exclude the case where the color is
@@ -672,13 +668,11 @@ function roundTo(number, digits) {
  *         Color in the form of hex, hsl, hsla, rgb, rgba.
  * @param  {Number} alpha
  *         Alpha value for the color, between 0 and 1.
- * @param  {Boolean} useCssColor4ColorFunction
- *         use css-color-4 color function or not.
  * @return {String}
  *         Converted color with `alpha` value in rgba form.
  */
-function setAlpha(colorValue, alpha, useCssColor4ColorFunction = false) {
-  const color = new CssColor(colorValue, useCssColor4ColorFunction);
+function setAlpha(colorValue, alpha) {
+  const color = new CssColor(colorValue);
 
   // Throw if the color supplied is not valid.
   if (!color.valid) {
