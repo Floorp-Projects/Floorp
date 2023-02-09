@@ -609,9 +609,12 @@ async function doEagerEvalDOMGetters(commands) {
     ["typeof window.windowGlobalChild", "undefined"],
     ["window.visualViewport.constructor.name", "VisualViewport"],
     ["typeof window.caches", "undefined"],
-    ["window.scheduler.constructor.name", "Scheduler"],
     ["window.location.href.startsWith('data:')", true],
   ];
+  if (typeof Scheduler === "function") {
+    // Scheduler is behind a pref.
+    testData.push(["window.scheduler.constructor.name", "Scheduler"]);
+  }
 
   for (const [code, expectedResult] of testData) {
     const response = await commands.scriptCommand.execute(code, {
