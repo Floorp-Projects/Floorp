@@ -66,8 +66,7 @@
     ]]></string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
-        <label> <b>%1$s</b> HTTP qatań transport qáwipsizligi (HSTS) dep atalǵan qáwipsizlik siyasatına iye, yaǵnıy <b>%2$s</b> oǵan tek ǵana qáwipsiz jalǵanıwı múmkin. Bul saytqa kiriw ushın esaptan tısqarılardı qosa almaysız.
-    ]]></string>
+        <label> <b>%1$s</b> HTTP qatań transport qáwipsizligi (HSTS) dep atalǵan qáwipsizlik siyasatına iye, yaǵnıy <b>%2$s</b> oǵan tek ǵana qáwipsiz jalǵanıwı múmkin. Bul saytqa kiriw ushın esaptan tısqarılardı qosa almaysız.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Artqa qaytıw</string>
 
@@ -293,7 +292,7 @@
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Zıyanlı sayt mashqalası</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[%1$s saytı paydalanıwshılardıń qurılmalarına hújim islew ushın qollanılatuǵınlıǵı haqqında maǵlıwmat bar hám siziń qawipsizlik sazlawlarıńız tiykarında bloklanǵan.]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>%1$s saytı paydalanıwshılardıń qurılmalarına hújim islew ushın qollanılatuǵınlıǵı haqqında maǵlıwmat bar hám siziń qawipsizlik sazlawlarıńız tiykarında bloklanǵan.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Kútilmegen sayt mashqalası</string>
