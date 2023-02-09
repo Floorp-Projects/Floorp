@@ -391,10 +391,8 @@ class ImageResource : public Image {
       if (self->mURI && profiler_thread_is_being_profiled_for_markers()) {
         mStartTime = TimeStamp::Now();
         static const size_t sMaxTruncatedLength = 1024;
-        self->mURI->GetSpec(mSpec);
-        if (mSpec.Length() >= sMaxTruncatedLength) {
-          mSpec.Truncate(sMaxTruncatedLength);
-        }
+        mSpec = nsContentUtils::TruncatedURLForDisplay(self->mURI,
+                                                       sMaxTruncatedLength);
       }
     }
 

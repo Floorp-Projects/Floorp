@@ -554,7 +554,11 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
         profiler_thread_is_being_profiled_for_markers()
             ? StringJoin(","_ns, aScriptURLs,
                          [](nsACString& dest, const auto& scriptUrl) {
-                           AppendUTF16toUTF8(scriptUrl, dest);
+                           AppendUTF16toUTF8(
+                               Substring(
+                                   scriptUrl, 0,
+                                   std::min(size_t(128), scriptUrl.Length())),
+                               dest);
                          })
             : nsAutoCString{});
     workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,

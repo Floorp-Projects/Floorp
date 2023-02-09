@@ -116,13 +116,9 @@ already_AddRefed<Image> ImageFactory::CreateImage(
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     static const size_t sMaxTruncatedLength = 1024;
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    if (spec.Length() >= sMaxTruncatedLength) {
-      spec.Truncate(sMaxTruncatedLength);
-    }
-    PROFILER_MARKER_TEXT("Image Load", GRAPHICS,
-                         MarkerInnerWindowId(aInnerWindowId), spec);
+    PROFILER_MARKER_TEXT(
+        "Image Load", GRAPHICS, MarkerInnerWindowId(aInnerWindowId),
+        nsContentUtils::TruncatedURLForDisplay(aURI, sMaxTruncatedLength));
   }
 
   // Select the type of image to create based on MIME type.

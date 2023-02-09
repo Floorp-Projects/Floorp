@@ -8035,8 +8035,9 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
         if (profiler_thread_is_being_profiled_for_markers()) {
           nsCOMPtr<nsIURI> prinURI;
           BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
-          nsPrintfCString marker("Iframe loaded in background: %s",
-                                 prinURI->GetSpecOrDefault().get());
+          nsPrintfCString marker(
+              "Iframe loaded in background: %s",
+              nsContentUtils::TruncatedURLForDisplay(prinURI).get());
           PROFILER_MARKER_TEXT("Background Iframe", DOM, {}, marker);
         }
         SetBackgroundLoadIframe();

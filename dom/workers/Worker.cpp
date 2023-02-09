@@ -95,9 +95,14 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  NS_ConvertUTF16toUTF8 nameOrScriptURL(mWorkerPrivate->WorkerName().IsEmpty()
-                                            ? mWorkerPrivate->ScriptURL()
-                                            : mWorkerPrivate->WorkerName());
+  NS_ConvertUTF16toUTF8 nameOrScriptURL(
+      mWorkerPrivate->WorkerName().IsEmpty()
+          ? Substring(
+                mWorkerPrivate->ScriptURL(), 0,
+                std::min(size_t(1024), mWorkerPrivate->ScriptURL().Length()))
+          : Substring(
+                mWorkerPrivate->WorkerName(), 0,
+                std::min(size_t(1024), mWorkerPrivate->WorkerName().Length())));
   AUTO_PROFILER_MARKER_TEXT("Worker.postMessage", DOM, {}, nameOrScriptURL);
   uint32_t flags = uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS);
   if (mWorkerPrivate->IsChromeWorker()) {

@@ -6361,7 +6361,8 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     uri = contentRoot->GetDocumentURI();
   }
   url = uri ? uri->GetSpecOrDefault() : "N/A"_ns;
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS("Paint", GRAPHICS, url);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
+      "Paint", GRAPHICS, Substring(url, std::min(size_t(128), url.Length())));
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
