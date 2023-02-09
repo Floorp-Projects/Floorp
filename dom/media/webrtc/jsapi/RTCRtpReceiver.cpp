@@ -770,8 +770,7 @@ bool RTCRtpReceiver::HasTrack(const dom::MediaStreamTrack* aTrack) const {
 void RTCRtpReceiver::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
   // If a SRD has unset the receive bit, block unmute events so RTP passing
   // through MediaPipeline does not unmute the receive track.
-  mBlockUnmuteEvents = !aJsepTransceiver.mRecvTrack.GetRemoteSetSendBit() ||
-                       !aJsepTransceiver.mRecvTrack.GetActive();
+  mBlockUnmuteEvents = !aJsepTransceiver.mRecvTrack.GetRemoteSetSendBit();
 }
 
 void RTCRtpReceiver::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {}
