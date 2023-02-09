@@ -28,6 +28,7 @@ class MediaTransportHandler;
 class JsepTransceiver;
 class PeerConnectionImpl;
 enum class PrincipalPrivacy : uint8_t;
+class RemoteTrackSource;
 
 namespace dom {
 class MediaStreamTrack;
@@ -147,6 +148,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   RefPtr<AbstractThread> mCallThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   RefPtr<dom::MediaStreamTrack> mTrack;
+  RefPtr<RemoteTrackSource> mTrackSource;
   RefPtr<MediaPipelineReceive> mPipeline;
   RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<RTCRtpTransceiver> mTransceiver;
