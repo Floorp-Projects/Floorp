@@ -821,7 +821,7 @@ class CompilationSyntaxParseCache {
 
   // Initialize the SynaxParse cache given a LifoAlloc. The JSContext is only
   // used for reporting allocation errors.
-  [[nodiscard]] bool init(JSContext* cx, FrontendContext* fc, LifoAlloc& alloc,
+  [[nodiscard]] bool init(FrontendContext* fc, LifoAlloc& alloc,
                           ParserAtomsTable& parseAtoms,
                           CompilationAtomCache& atomCache,
                           const InputScript& lazy);
@@ -841,26 +841,24 @@ class CompilationSyntaxParseCache {
     return taggedScriptIndex.toFunction();
   }
 
-  [[nodiscard]] bool copyFunctionInfo(JSContext* cx, FrontendContext* fc,
+  [[nodiscard]] bool copyFunctionInfo(FrontendContext* fc,
                                       ParserAtomsTable& parseAtoms,
                                       CompilationAtomCache& atomCache,
                                       const InputScript& lazy);
-  [[nodiscard]] bool copyScriptInfo(JSContext* cx, FrontendContext* fc,
-                                    LifoAlloc& alloc,
+  [[nodiscard]] bool copyScriptInfo(FrontendContext* fc, LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
                                     BaseScript* lazy);
-  [[nodiscard]] bool copyScriptInfo(JSContext* cx, FrontendContext* fc,
-                                    LifoAlloc& alloc,
+  [[nodiscard]] bool copyScriptInfo(FrontendContext* fc, LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
                                     const ScriptStencilRef& lazy);
-  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, FrontendContext* fc,
+  [[nodiscard]] bool copyClosedOverBindings(FrontendContext* fc,
                                             LifoAlloc& alloc,
                                             ParserAtomsTable& parseAtoms,
                                             CompilationAtomCache& atomCache,
                                             BaseScript* lazy);
-  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, FrontendContext* fc,
+  [[nodiscard]] bool copyClosedOverBindings(FrontendContext* fc,
                                             LifoAlloc& alloc,
                                             ParserAtomsTable& parseAtoms,
                                             CompilationAtomCache& atomCache,
@@ -1423,8 +1421,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
     if (input.isDelazifying()) {
       InputScript lazy = input.lazyOuterScript();
       auto& atomCache = input.atomCache;
-      if (!previousParseCache.init(cx, fc, alloc, parserAtoms, atomCache,
-                                   lazy)) {
+      if (!previousParseCache.init(fc, alloc, parserAtoms, atomCache, lazy)) {
         return false;
       }
     }
