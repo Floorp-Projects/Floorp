@@ -621,10 +621,9 @@ struct CompilationInput {
     return initScriptSource(fc);
   }
 
-  bool initForSelfHostingGlobal(JSContext* cx) {
+  bool initForSelfHostingGlobal(FrontendContext* fc) {
     target = CompilationTarget::SelfHosting;
-    AutoReportFrontendContext fc(cx);
-    return initScriptSource(&fc);
+    return initScriptSource(fc);
   }
 
   bool initForStandaloneFunction(JSContext* cx, FrontendContext* fc) {
