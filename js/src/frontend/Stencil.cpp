@@ -371,12 +371,10 @@ bool ScopeContext::init(FrontendContext* fc, CompilationInput& input,
   cacheEnclosingScope(input.enclosingScope);
 
   if (input.target == CompilationInput::CompilationTarget::Eval) {
-    JSContext* cx = fc->maybeCurrentJSContext();
-    MOZ_ASSERT(cx, "JSContext* should be provided for eval");
-    if (!cacheEnclosingScopeBindingForEval(cx, fc, input, parserAtoms)) {
+    if (!cacheEnclosingScopeBindingForEval(fc, input, parserAtoms)) {
       return false;
     }
-    if (!cachePrivateFieldsForEval(cx, fc, input, enclosingEnv, effectiveScope,
+    if (!cachePrivateFieldsForEval(fc, input, enclosingEnv, effectiveScope,
                                    parserAtoms)) {
       return false;
     }
@@ -756,7 +754,7 @@ static uint32_t DepthOfNearestVarScopeForDirectEval(const InputScope& scope) {
 }
 
 bool ScopeContext::cacheEnclosingScopeBindingForEval(
-    JSContext* cx, FrontendContext* fc, CompilationInput& input,
+    FrontendContext* fc, CompilationInput& input,
     ParserAtomsTable& parserAtoms) {
   enclosingLexicalBindingCache_.emplace();
 
@@ -777,7 +775,7 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
                               : EnclosingLexicalBindingKind::Let;
               InputName binding(scope_ref, bi.name());
               if (!addToEnclosingLexicalBindingCache(
-                      cx, fc, parserAtoms, input.atomCache, binding, kind)) {
+                      fc, parserAtoms, input.atomCache, binding, kind)) {
                 return false;
               }
             }
@@ -787,7 +785,7 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
           case BindingKind::Const: {
             InputName binding(scope_ref, bi.name());
             if (!addToEnclosingLexicalBindingCache(
-                    cx, fc, parserAtoms, input.atomCache, binding,
+                    fc, parserAtoms, input.atomCache, binding,
                     EnclosingLexicalBindingKind::Const)) {
               return false;
             }
@@ -797,7 +795,7 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
           case BindingKind::Synthetic: {
             InputName binding(scope_ref, bi.name());
             if (!addToEnclosingLexicalBindingCache(
-                    cx, fc, parserAtoms, input.atomCache, binding,
+                    fc, parserAtoms, input.atomCache, binding,
                     EnclosingLexicalBindingKind::Synthetic)) {
               return false;
             }
@@ -807,7 +805,7 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
           case BindingKind::PrivateMethod: {
             InputName binding(scope_ref, bi.name());
             if (!addToEnclosingLexicalBindingCache(
-                    cx, fc, parserAtoms, input.atomCache, binding,
+                    fc, parserAtoms, input.atomCache, binding,
                     EnclosingLexicalBindingKind::PrivateMethod)) {
               return false;
             }
@@ -836,7 +834,7 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
 }
 
 bool ScopeContext::addToEnclosingLexicalBindingCache(
-    JSContext* cx, FrontendContext* fc, ParserAtomsTable& parserAtoms,
+    FrontendContext* fc, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache, InputName& name,
     EnclosingLexicalBindingKind kind) {
   TaggedParserAtomIndex parserName =
@@ -900,7 +898,7 @@ static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
   return false;
 }
 
-bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx, FrontendContext* fc,
+bool ScopeContext::cachePrivateFieldsForEval(FrontendContext* fc,
                                              CompilationInput& input,
                                              JSObject* enclosingEnvironment,
                                              const InputScope& effectiveScope,

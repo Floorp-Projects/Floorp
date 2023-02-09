@@ -518,17 +518,16 @@ struct ScopeContext {
 
   InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);
 
-  bool cachePrivateFieldsForEval(JSContext* cx, FrontendContext* fc,
-                                 CompilationInput& input,
+  bool cachePrivateFieldsForEval(FrontendContext* fc, CompilationInput& input,
                                  JSObject* enclosingEnvironment,
                                  const InputScope& effectiveScope,
                                  ParserAtomsTable& parserAtoms);
 
-  bool cacheEnclosingScopeBindingForEval(JSContext* cx, FrontendContext* fc,
+  bool cacheEnclosingScopeBindingForEval(FrontendContext* fc,
                                          CompilationInput& input,
                                          ParserAtomsTable& parserAtoms);
 
-  bool addToEnclosingLexicalBindingCache(JSContext* cx, FrontendContext* fc,
+  bool addToEnclosingLexicalBindingCache(FrontendContext* fc,
                                          ParserAtomsTable& parserAtoms,
                                          CompilationAtomCache& atomCache,
                                          InputName& name,
