@@ -25,6 +25,10 @@ enum PlacesEventType {
    */
   "bookmark-guid-changed",
   /**
+   * data: PlacesBookmarkKeyword. Fired whenever a bookmark keyword changes.
+   */
+  "bookmark-keyword-changed",
+  /**
    * data: PlacesBookmarkTags. Fired whenever tags of bookmark changes.
    */
   "bookmark-tags-changed",
@@ -310,6 +314,29 @@ dictionary PlacesBookmarkGuidInit {
 [ChromeOnly, Exposed=Window]
 interface PlacesBookmarkGuid : PlacesBookmarkChanged {
   constructor(PlacesBookmarkGuidInit initDict);
+};
+
+dictionary PlacesBookmarkKeywordInit {
+  required long long id;
+  required unsigned short itemType;
+  DOMString? url = null;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required ByteString keyword;
+  required long long lastModified;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkKeyword : PlacesBookmarkChanged {
+  constructor(PlacesBookmarkKeywordInit initDict);
+
+  /**
+   * Keyword the bookmark has currently.
+   */
+  [Constant,Cached]
+  readonly attribute ByteString keyword;
 };
 
 dictionary PlacesBookmarkTagsInit {

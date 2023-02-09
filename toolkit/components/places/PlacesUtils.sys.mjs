@@ -85,6 +85,7 @@ async function notifyKeywordChange(url, keyword, source) {
     bookmark.id = ids.get(bookmark.guid);
     bookmark.parentId = ids.get(bookmark.parentGuid);
   }
+
   let observers = PlacesUtils.bookmarks.getObservers();
   for (let bookmark of bookmarks) {
     notify(observers, "onItemChanged", [
@@ -100,6 +101,24 @@ async function notifyKeywordChange(url, keyword, source) {
       "",
       source,
     ]);
+  }
+
+  const notifications = bookmarks.map(
+    bookmark =>
+      new PlacesBookmarkKeyword({
+        id: bookmark.id,
+        itemType: bookmark.type,
+        url,
+        guid: bookmark.guid,
+        parentGuid: bookmark.parentGuid,
+        keyword,
+        lastModified: bookmark.lastModified,
+        source,
+        isTagging: false,
+      })
+  );
+  if (notifications.length) {
+    PlacesObservers.notifyListeners(notifications);
   }
 }
 
