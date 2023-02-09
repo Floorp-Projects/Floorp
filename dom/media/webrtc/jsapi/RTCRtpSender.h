@@ -134,12 +134,8 @@ class RTCRtpSender : public nsISupports,
  private:
   virtual ~RTCRtpSender();
 
-  void UpdateVideoConduit();
-  void UpdateAudioConduit();
-
   std::string GetMid() const;
   JsepTransceiver& GetJsepTransceiver();
-  void ConfigureVideoCodecMode();
   void SetJsepRids(const RTCRtpSendParameters& aParameters);
   static void ApplyJsEncodingToConduitEncoding(
       const RTCRtpEncodingParameters& aJsEncoding,
