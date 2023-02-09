@@ -337,31 +337,38 @@ sec_pkcs12_decoder_safe_bag_update(void *arg, const char *data,
     SEC_PKCS12DecoderContext *p12dcx;
     SECStatus rv;
 
-    /* make sure that we are not skipping the current safeBag,
-     * and that there are no errors.  If so, just return rather
-     * than continuing to process.
-     */
-    if (!safeContentsCtx || !safeContentsCtx->p12dcx ||
-        safeContentsCtx->p12dcx->error || safeContentsCtx->skipCurrentSafeBag) {
+    if (!safeContentsCtx || !safeContentsCtx->p12dcx || !safeContentsCtx->currentSafeBagA1Dcx) {
         return;
     }
     p12dcx = safeContentsCtx->p12dcx;
 
+    /* make sure that there are no errors and we are not skipping the current safeBag */
+    if (p12dcx->error || safeContentsCtx->skipCurrentSafeBag) {
+        goto loser;
+    }
+
     rv = SEC_ASN1DecoderUpdate(safeContentsCtx->currentSafeBagA1Dcx, data, len);
     if (rv != SECSuccess) {
         p12dcx->errorValue = PORT_GetError();
+        p12dcx->error = PR_TRUE;
+        goto loser;
+    }
+
+    /* The update may have set safeContentsCtx->skipCurrentSafeBag, and we
+     * may not get another opportunity to clean up the decoder context.
+     */
+    if (safeContentsCtx->skipCurrentSafeBag) {
         goto loser;
     }
 
     return;
 
 loser:
-    /* set the error, and finish the decoder context.  because there
+    /* Finish the decoder context. Because there
      * is not a way of returning an error message, it may be worth
      * while to do a check higher up and finish any decoding contexts
      * that are still open.
      */
-    p12dcx->error = PR_TRUE;
     SEC_ASN1DecoderFinish(safeContentsCtx->currentSafeBagA1Dcx);
     safeContentsCtx->currentSafeBagA1Dcx = NULL;
     return;
