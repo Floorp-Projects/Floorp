@@ -472,3 +472,50 @@ function BinaryHttpResponse(status, headerNames, headerValues, content) {
 BinaryHttpResponse.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpResponse"]),
 };
+
+function check_http_info(request, expected_httpVersion, expected_proxy) {
+  let httpVersion = "";
+  try {
+    httpVersion = request.protocolVersion;
+  } catch (e) {}
+
+  request.QueryInterface(Ci.nsIProxiedChannel);
+  var httpProxyConnectResponseCode = request.httpProxyConnectResponseCode;
+
+  Assert.equal(expected_httpVersion, httpVersion);
+  if (expected_proxy) {
+    Assert.equal(httpProxyConnectResponseCode, 200);
+  } else {
+    Assert.equal(httpProxyConnectResponseCode, -1);
+  }
+}
+
+function makeHTTPChannel(url, with_proxy) {
+  function createPrincipal(url) {
+    var ssm = Services.scriptSecurityManager;
+    try {
+      return ssm.createContentPrincipal(Services.io.newURI(url), {});
+    } catch (e) {
+      return null;
+    }
+  }
+
+  if (with_proxy) {
+    return Services.io
+      .newChannelFromURIWithProxyFlags(
+        Services.io.newURI(url),
+        null,
+        Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL,
+        null,
+        createPrincipal(url),
+        createPrincipal(url),
+        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+        Ci.nsIContentPolicy.TYPE_OTHER
+      )
+      .QueryInterface(Ci.nsIHttpChannel);
+  }
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
+}
