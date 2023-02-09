@@ -21,7 +21,6 @@
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
 #include "MediaStreamTrack.h"
-#include "jsapi/RemoteTrackSource.h"
 #include "RtpLogger.h"
 #include "VideoFrameConverter.h"
 #include "VideoSegment.h"
@@ -1173,13 +1172,11 @@ void MediaPipelineTransmit::PipelineListener::NewData(
 
 class GenericReceiveListener : public MediaTrackListener {
  public:
-  explicit GenericReceiveListener(const RefPtr<dom::MediaStreamTrack>& aTrack)
-      : mTrackSource(new nsMainThreadPtrHolder<RemoteTrackSource>(
-            "GenericReceiveListener::mTrackSource",
-            &static_cast<RemoteTrackSource&>(aTrack->GetSource()))),
-        mSource(mTrackSource->Stream()),
-        mTrackingId(mTrackSource->mTrackingId),
-        mIsAudio(aTrack->AsAudioStreamTrack()),
+  GenericReceiveListener(RefPtr<SourceMediaTrack> aSource,
+                         TrackingId aTrackingId)
+      : mSource(std::move(aSource)),
+        mTrackingId(std::move(aTrackingId)),
+        mIsAudio(mSource->mType == MediaSegment::AUDIO),
         mEnabled(false) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mSource, "Must be used with a SourceMediaTrack");
@@ -1201,7 +1198,6 @@ class GenericReceiveListener : public MediaTrackListener {
   }
 
  protected:
-  const nsMainThreadPtrHandle<RemoteTrackSource> mTrackSource;
   const RefPtr<SourceMediaTrack> mSource;
   const TrackingId mTrackingId;
   const bool mIsAudio;
@@ -1248,11 +1244,10 @@ void MediaPipelineReceive::OnRtpPacketReceived() {
 class MediaPipelineReceiveAudio::PipelineListener
     : public GenericReceiveListener {
  public:
-  PipelineListener(const RefPtr<dom::MediaStreamTrack>& aTrack,
+  PipelineListener(RefPtr<SourceMediaTrack> aSource, TrackingId aTrackingId,
                    RefPtr<MediaSessionConduit> aConduit,
-                   const PrincipalHandle& aPrincipalHandle,
-                   PrincipalPrivacy aPrivacy)
-      : GenericReceiveListener(aTrack),
+                   PrincipalHandle aPrincipalHandle, PrincipalPrivacy aPrivacy)
+      : GenericReceiveListener(std::move(aSource), std::move(aTrackingId)),
         mConduit(std::move(aConduit)),
         // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
         // This is an artificial limitation, it would however require more
@@ -1267,7 +1262,7 @@ class MediaPipelineReceiveAudio::PipelineListener
             "AudioPipelineListener")),
         mPlayedTicks(0),
         mAudioFrame(std::make_unique<webrtc::AudioFrame>()),
-        mPrincipalHandle(aPrincipalHandle),
+        mPrincipalHandle(std::move(aPrincipalHandle)),
         mPrivacy(aPrivacy),
         mForceSilence(false) {}
 
@@ -1430,15 +1425,16 @@ class MediaPipelineReceiveAudio::PipelineListener
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
-    RefPtr<AudioSessionConduit> aConduit,
-    const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle, PrincipalPrivacy aPrivacy)
+    RefPtr<AudioSessionConduit> aConduit, RefPtr<SourceMediaTrack> aSource,
+    TrackingId aTrackingId, PrincipalHandle aPrincipalHandle,
+    PrincipalPrivacy aPrivacy)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
-      mListener(aTrack ? new PipelineListener(aTrack, mConduit,
-                                              aPrincipalHandle, aPrivacy)
-                       : nullptr) {
+      mListener(aSource ? new PipelineListener(
+                              std::move(aSource), std::move(aTrackingId),
+                              mConduit, std::move(aPrincipalHandle), aPrivacy)
+                        : nullptr) {
   mDescription = mPc + "| Receive audio";
   if (mListener) {
     mListener->Init();
@@ -1477,14 +1473,13 @@ void MediaPipelineReceiveAudio::UpdateListener() {
 class MediaPipelineReceiveVideo::PipelineListener
     : public GenericReceiveListener {
  public:
-  PipelineListener(const RefPtr<dom::MediaStreamTrack>& aTrack,
-                   const PrincipalHandle& aPrincipalHandle,
-                   PrincipalPrivacy aPrivacy)
-      : GenericReceiveListener(aTrack),
+  PipelineListener(RefPtr<SourceMediaTrack> aSource, TrackingId aTrackingId,
+                   PrincipalHandle aPrincipalHandle, PrincipalPrivacy aPrivacy)
+      : GenericReceiveListener(std::move(aSource), std::move(aTrackingId)),
         mImageContainer(
             MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS)),
         mMutex("MediaPipelineReceiveVideo::PipelineListener::mMutex"),
-        mPrincipalHandle(aPrincipalHandle),
+        mPrincipalHandle(std::move(aPrincipalHandle)),
         mPrivacy(aPrivacy) {}
   void OnPrivacyRequested_s() {
     MutexAutoLock lock(mMutex);
@@ -1598,16 +1593,17 @@ class MediaPipelineReceiveVideo::PipelineRenderer
 MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
-    RefPtr<VideoSessionConduit> aConduit,
-    const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle, PrincipalPrivacy aPrivacy)
+    RefPtr<VideoSessionConduit> aConduit, RefPtr<SourceMediaTrack> aSource,
+    TrackingId aTrackingId, PrincipalHandle aPrincipalHandle,
+    PrincipalPrivacy aPrivacy)
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
       mRenderer(new PipelineRenderer(this)),
-      mListener(aTrack
-                    ? new PipelineListener(aTrack, aPrincipalHandle, aPrivacy)
-                    : nullptr) {
+      mListener(aSource ? new PipelineListener(
+                              std::move(aSource), std::move(aTrackingId),
+                              std::move(aPrincipalHandle), aPrivacy)
+                        : nullptr) {
   mDescription = mPc + "| Receive video";
   if (mListener) {
     mListener->Init();
