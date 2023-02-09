@@ -133,6 +133,12 @@ tasks:
             - [youtube-watch, youtube-w]
             - allrecipes
 
+    speedometer3:
+        description: "Raptor Speedometer 3 Benchmark tests on Fenix"
+        test-name: speedometer3
+        run-visual-metrics: False
+        chimera: False
+
     youtube-playback-av1-sfr:
         description: "Raptor YouTube Playback AV1 SFR on Fenix"
         test-name: youtube-playback-av1-sfr
