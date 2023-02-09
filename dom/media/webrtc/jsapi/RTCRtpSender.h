@@ -147,9 +147,11 @@ class RTCRtpSender : public nsISupports,
   Sequence<RTCRtpEncodingParameters> ToSendEncodings(
       const std::vector<std::string>& aRids) const;
   void MaybeGetJsepRids();
+  void UpdateDtmfSender();
 
   void WarnAboutBadSetParameters(const nsCString& aError);
 
+  WatchManager<RTCRtpSender> mWatchManager;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;

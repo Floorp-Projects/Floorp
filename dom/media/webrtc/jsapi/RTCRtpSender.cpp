@@ -52,7 +52,8 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                            dom::MediaStreamTrack* aTrack,
                            const Sequence<RTCRtpEncodingParameters>& aEncodings,
                            RTCRtpTransceiver* aTransceiver)
-    : mWindow(aWindow),
+    : mWatchManager(this, AbstractThread::MainThread()),
+      mWindow(aWindow),
       mPc(aPc),
       mSenderTrack(aTrack),
       mTransportHandler(aTransportHandler),
@@ -103,6 +104,10 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
     Unused << mParameters.mEncodings.AppendElement(defaultEncoding, fallible);
     UpdateRestorableEncodings(mParameters.mEncodings);
     MaybeGetJsepRids();
+  }
+
+  if (mDtmf) {
+    mWatchManager.Watch(mTransmitting, &RTCRtpSender::UpdateDtmfSender);
   }
 }
 
@@ -1164,6 +1169,7 @@ bool RTCRtpSender::SetSenderTrackWithClosedCheck(
 
 void RTCRtpSender::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
+  mWatchManager.Shutdown();
   mPipeline->Shutdown();
   mPipeline = nullptr;
 }
@@ -1474,9 +1480,6 @@ void RTCRtpSender::ApplyVideoConfig(const VideoConfig& aConfig) {
 
 void RTCRtpSender::ApplyAudioConfig(const AudioConfig& aConfig) {
   mTransmitting = false;
-  if (mDtmf) {
-    mDtmf->StopPlayout();
-  }
 
   mSsrcs = aConfig.mSsrcs;
   mCname = aConfig.mCname;
@@ -1493,9 +1496,6 @@ void RTCRtpSender::ApplyAudioConfig(const AudioConfig& aConfig) {
 
 void RTCRtpSender::Stop() {
   MOZ_ASSERT(mTransceiver->Stopped());
-  if (mDtmf) {
-    mDtmf->StopPlayout();
-  }
   mTransmitting = false;
 }
 
@@ -1519,6 +1519,18 @@ std::string RTCRtpSender::GetMid() const { return mTransceiver->GetMidAscii(); }
 
 JsepTransceiver& RTCRtpSender::GetJsepTransceiver() {
   return *mTransceiver->GetJsepTransceiver();
+}
+
+void RTCRtpSender::UpdateDtmfSender() {
+  if (!mDtmf) {
+    return;
+  }
+
+  if (mTransmitting) {
+    return;
+  }
+
+  mDtmf->StopPlayout();
 }
 
 }  // namespace mozilla::dom
