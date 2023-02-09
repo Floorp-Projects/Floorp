@@ -1350,19 +1350,18 @@ void CompilationInput::trace(JSTracer* trc) {
   enclosingScope.trace(trc);
 }
 
-bool CompilationSyntaxParseCache::init(JSContext* cx, FrontendContext* fc,
-                                       LifoAlloc& alloc,
+bool CompilationSyntaxParseCache::init(FrontendContext* fc, LifoAlloc& alloc,
                                        ParserAtomsTable& parseAtoms,
                                        CompilationAtomCache& atomCache,
                                        const InputScript& lazy) {
-  if (!copyFunctionInfo(cx, fc, parseAtoms, atomCache, lazy)) {
+  if (!copyFunctionInfo(fc, parseAtoms, atomCache, lazy)) {
     return false;
   }
   bool success = lazy.raw().match([&](auto& ref) {
-    if (!copyScriptInfo(cx, fc, alloc, parseAtoms, atomCache, ref)) {
+    if (!copyScriptInfo(fc, alloc, parseAtoms, atomCache, ref)) {
       return false;
     }
-    if (!copyClosedOverBindings(cx, fc, alloc, parseAtoms, atomCache, ref)) {
+    if (!copyClosedOverBindings(fc, alloc, parseAtoms, atomCache, ref)) {
       return false;
     }
     return true;
@@ -1377,7 +1376,7 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, FrontendContext* fc,
 }
 
 bool CompilationSyntaxParseCache::copyFunctionInfo(
-    JSContext* cx, FrontendContext* fc, ParserAtomsTable& parseAtoms,
+    FrontendContext* fc, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, const InputScript& lazy) {
   InputName name = lazy.displayAtom();
   if (!name.isNull()) {
@@ -1397,9 +1396,8 @@ bool CompilationSyntaxParseCache::copyFunctionInfo(
 }
 
 bool CompilationSyntaxParseCache::copyScriptInfo(
-    JSContext* cx, FrontendContext* fc, LifoAlloc& alloc,
-    ParserAtomsTable& parseAtoms, CompilationAtomCache& atomCache,
-    BaseScript* lazy) {
+    FrontendContext* fc, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, BaseScript* lazy) {
   using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
   using ScriptDataSpan = mozilla::Span<ScriptStencil>;
   using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
@@ -1436,7 +1434,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 
   for (size_t i = 0; i < length; i++) {
     gc::Cell* cell = gcthings[i].asCell();
-    RootedFunction fun(cx, &cell->as<JSObject>()->as<JSFunction>());
+    JSFunction* fun = &cell->as<JSObject>()->as<JSFunction>();
     gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
     new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
     ScriptStencil& data = scriptData[i];
@@ -1470,9 +1468,8 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 }
 
 bool CompilationSyntaxParseCache::copyScriptInfo(
-    JSContext* cx, FrontendContext* fc, LifoAlloc& alloc,
-    ParserAtomsTable& parseAtoms, CompilationAtomCache& atomCache,
-    const ScriptStencilRef& lazy) {
+    FrontendContext* fc, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
   using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
   using ScriptDataSpan = mozilla::Span<ScriptStencil>;
   using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
@@ -1533,9 +1530,8 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 }
 
 bool CompilationSyntaxParseCache::copyClosedOverBindings(
-    JSContext* cx, FrontendContext* fc, LifoAlloc& alloc,
-    ParserAtomsTable& parseAtoms, CompilationAtomCache& atomCache,
-    BaseScript* lazy) {
+    FrontendContext* fc, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, BaseScript* lazy) {
   using ClosedOverBindingsSpan = mozilla::Span<TaggedParserAtomIndex>;
   closedOverBindings_ = ClosedOverBindingsSpan(nullptr);
 
@@ -1581,9 +1577,8 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
 }
 
 bool CompilationSyntaxParseCache::copyClosedOverBindings(
-    JSContext* cx, FrontendContext* fc, LifoAlloc& alloc,
-    ParserAtomsTable& parseAtoms, CompilationAtomCache& atomCache,
-    const ScriptStencilRef& lazy) {
+    FrontendContext* fc, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
   using ClosedOverBindingsSpan = mozilla::Span<TaggedParserAtomIndex>;
   closedOverBindings_ = ClosedOverBindingsSpan(nullptr);
 
