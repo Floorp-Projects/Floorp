@@ -191,10 +191,10 @@ downloads-history =
     .label = Show all downloads
     .accesskey = S
 
-# This string is shown at the top of the Download Details Panel, to indicate
+# This string is shown at the top of the download details sub-panel to indicate
 # that we are showing the details of a single download.
 downloads-details =
-    .title = Download Details
+    .title = Download details
 
 ## Displayed when a site attempts to automatically download many files.
 ## Variables:
