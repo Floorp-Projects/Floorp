@@ -55,8 +55,14 @@ def main():
     all_key_value_pairs = {
         x.lower(): buildconfig.substs[x] for x in important_substitutions
     }
+
+    def stringify(x):
+        if isinstance(x, (tuple, list)):
+            return " ".join(x)
+        return x or ""
+
     all_key_value_pairs.update(
-        {x.lower(): buildconfig.substs.get(x, "") for x in other_substitutions}
+        {x.lower(): stringify(buildconfig.substs.get(x)) for x in other_substitutions}
     )
     build_id = os.environ["MOZ_BUILD_DATE"]
     all_key_value_pairs.update(
