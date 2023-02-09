@@ -24,18 +24,18 @@
 
 <panel id="panel" type="arrow" animate="false"
        onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
-  <box style="width: 115px; height: 65px"/>
+  <box width="115" height="65"/>
 </panel>
 
 <panel id="bigpanel" type="arrow" animate="false"
        onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
-  <box style="width: 125px; height: 3000px"/>
+  <box width="125" height="3000"/>
 </panel>
 
 <panel id="animatepanel" type="arrow"
        onpopupshown="animatedPopupShown = true;"
        onpopuphidden="animatedPopupHidden = true; runNextTest.next();">
-  <label value="Animate Closed" style="height: 40px"/>
+  <label value="Animate Closed" height="40"/>
 </panel>
 
 <html:style type="text/css">
@@ -318,7 +318,7 @@ function isWithinHalfPixel(a, b, desc)
 
 function checkBigPanel(panel)
 {
-  ok(panel.getBoundingClientRect().height < screen.height, "big panel height");
+  ok(panel.firstChild.getBoundingClientRect().height < 2800, "big panel height");
   panel.hidePopup();
 }
 

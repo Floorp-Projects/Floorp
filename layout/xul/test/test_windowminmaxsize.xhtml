@@ -22,8 +22,8 @@
 <panel id="panel" onpopupshown="doPanelTest(this)" onpopuphidden="nextPopupTest(this)"
        orient="vertical"
        align="start" pack="start" style="appearance: none; margin: 0; border: 0; padding: 0;">
-  <hbox id="popupresizer" dir="bottomright" flex="1"
-           style="width: 60px; height: 60px; appearance: none; margin: 0; border: 0; padding: 0;"/>
+  <hbox id="popupresizer" dir="bottomright" flex="1" width="60" height="60"
+           style="appearance: none; margin: 0; border: 0; padding: 0;"/>
 </panel>
 
 <script>
@@ -74,18 +74,17 @@ var popupTests = [
     width: 60, height: 60
   },
   { testname: "popup with minimum size",
-    minWidth: 150, minHeight: 180,
+    minwidth: 150, minheight: 180,
     width: 150, height: 180
   },
   { testname: "popup with maximum size",
-    maxWidth: 50, maxHeight: 45,
+    maxwidth: 50, maxheight: 45,
     width: 50, height: 45,
   }
 ];
 
 function nextTest()
 {
-  info(`Running test ${gTestId}`);
   // Run through each of the tests above by opening a simple window with
   // the attributes or style defined for that test. The comparisons will be
   // done by windowOpened. gTestId holds the index into the tests array.
@@ -95,7 +94,6 @@ function nextTest()
     SimpleTest.waitForFocus(function () { nextPopupTest(document.getElementById("panel")) } );
   }
   else {
-    info(`opening ${tests[gTestId].src}`);
     tests[gTestId].window = window.browsingContext.topChromeWindow.open(tests[gTestId].src, "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(windowOpened, tests[gTestId].window);
   }
@@ -131,16 +129,16 @@ function nextPopupTest(panel)
     SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
   }
   else {
-    function setStyle(attr) {
+    function setattr(attr) {
       if (attr in popupTests[gTestId])
-        panel.style[attr] = popupTests[gTestId][attr] + "px";
+        panel.setAttribute(attr, popupTests[gTestId][attr]);
       else
-        panel.style[attr] = "";
+        panel.removeAttribute(attr);
     }
-    setStyle("minWidth");
-    setStyle("minHeight");
-    setStyle("maxWidth");
-    setStyle("maxHeight");
+    setattr("minwidth");
+    setattr("minheight");
+    setattr("maxwidth");
+    setattr("maxheight");
 
     // Prevent event loop starvation as a result of popup events being
     // synchronous. See bug 1131576.

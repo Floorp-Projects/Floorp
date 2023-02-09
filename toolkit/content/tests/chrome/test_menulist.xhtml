@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="xul_selectcontrol.js"></script>
 
-<vbox id="scroller" style="overflow: auto; height: 60px">
+<vbox id="scroller" style="overflow: auto" height="60">
   <menulist id="menulist" onpopupshown="test_menulist_open(this, this.parentNode)"
             onpopuphidden="$('menulist-in-listbox').open = true;">
     <menupopup id="menulist-popup"/>
@@ -18,7 +18,7 @@
   <button label="Two"/>
   <button label="Three"/>
 </vbox>
-<richlistbox id="scroller-in-listbox" style="overflow: auto; height: 60px">
+<richlistbox id="scroller-in-listbox" style="overflow: auto" height="60">
   <richlistitem allowevents="true">
     <menulist id="menulist-in-listbox" onpopupshown="test_menulist_open(this, this.parentNode.parentNode)"
               onpopuphidden="SimpleTest.executeSoon(() => checkScrollAndFinish().catch(ex => ok(false, ex)));">
@@ -38,7 +38,7 @@
 <hbox>
   <menulist id="menulist-size">
     <menupopup>
-      <menuitem label="Menuitem Label" style="width: 200px"/>
+      <menuitem label="Menuitem Label" width="200"/>
     </menupopup>
   </menulist>
 </hbox>
@@ -59,7 +59,7 @@
 </menulist>
 
 <menulist id="menulist-clipped">
-  <menupopup style="height: 65px">
+  <menupopup height="65">
     <menuitem label="One" value="one"/>
     <menuitem label="Two" value="two"/>
     <menuitem label="Three" value="three"/>
