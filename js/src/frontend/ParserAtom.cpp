@@ -14,6 +14,7 @@
 
 #include "frontend/BytecodeCompiler.h"  // IsIdentifier
 #include "frontend/CompilationStencil.h"
+#include "js/GCAPI.h"           // JS::AutoSuppressGCAnalysis
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
@@ -615,8 +616,7 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(FrontendContext* fc,
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
-    JSContext* cx, FrontendContext* fc, CompilationAtomCache& atomCache,
-    JSAtom* atom) {
+    FrontendContext* fc, CompilationAtomCache& atomCache, JSAtom* atom) {
   TaggedParserAtomIndex parserAtom;
   {
     JS::AutoCheckCannotGC nogc;
@@ -640,7 +640,12 @@ TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(toJSAtom(cx, fc, parserAtom, atomCache) == atom);
+#ifdef DEBUG
+  if (JSContext* cx = fc->maybeCurrentJSContext()) {
+    JS::AutoSuppressGCAnalysis suppress(cx);
+    MOZ_ASSERT(toJSAtom(cx, fc, parserAtom, atomCache) == atom);
+  }
+#endif
 
   return parserAtom;
 }

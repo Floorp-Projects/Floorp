@@ -361,7 +361,7 @@ struct InputName {
   // The InputName is either from an instantiated name, or from another
   // CompilationStencil. This method interns the current name in the parser atom
   // table of a CompilationState, which has a corresponding CompilationInput.
-  TaggedParserAtomIndex internInto(JSContext* cx, FrontendContext* fc,
+  TaggedParserAtomIndex internInto(FrontendContext* fc,
                                    ParserAtomsTable& parserAtoms,
                                    CompilationAtomCache& atomCache);
 
