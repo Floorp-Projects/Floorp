@@ -2505,7 +2505,9 @@ export class SearchService {
     for (let elem of this._engines) {
       engine = elem[1];
       if (engine instanceof lazy.OpenSearchEngine) {
-        searchURI = engine.getSubmission("").uri;
+        searchURI = engine
+          ._getURLOfType("text/html")
+          .getSubmission("", engine, "searchbar").uri;
         updateURI = engine._updateURI;
 
         if (lazy.SearchUtils.isSecureURIForOpenSearch(searchURI)) {
@@ -2514,8 +2516,6 @@ export class SearchService {
           totalInsecure++;
         }
 
-        // Note: there is a possibility that an OpenSearch engine doesn't have
-        // an updateURI at all, hence the else if clause below
         if (updateURI && lazy.SearchUtils.isSecureURIForOpenSearch(updateURI)) {
           totalWithSecureUpdates++;
         } else if (updateURI) {
