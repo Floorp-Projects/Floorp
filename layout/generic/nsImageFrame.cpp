@@ -513,9 +513,6 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   mListener = new nsImageListener(this);
 
-  GetImageMap();  // Ensure to init the image map asap. This is important to
-                  // make <area> elements focusable.
-
   if (!gIconLoad) {
     LoadIcons(PresContext());
   }
