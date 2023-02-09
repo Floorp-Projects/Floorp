@@ -14,5 +14,6 @@ ChromeUtils.defineESModuleGetters(ParentProcessDomains, {
   Network: "chrome://remote/content/cdp/domains/parent/Network.sys.mjs",
   Page: "chrome://remote/content/cdp/domains/parent/Page.sys.mjs",
   Security: "chrome://remote/content/cdp/domains/parent/Security.sys.mjs",
+  SystemInfo: "chrome://remote/content/cdp/domains/parent/SystemInfo.sys.mjs",
   Target: "chrome://remote/content/cdp/domains/parent/Target.sys.mjs",
 });
