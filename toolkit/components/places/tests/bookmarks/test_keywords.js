@@ -39,48 +39,40 @@ async function check_orphans() {
 }
 
 function expectNotifications() {
-  let notifications = [];
-  let observer = new Proxy(NavBookmarkObserver, {
-    get(target, name) {
-      if (name == "check") {
-        PlacesUtils.bookmarks.removeObserver(observer);
-        return expectedNotifications =>
-          Assert.deepEqual(notifications, expectedNotifications);
-      }
-
-      if (name.startsWith("onItemChanged")) {
-        return function(
-          id,
-          prop,
-          isAnno,
-          val,
-          lastMod,
-          itemType,
-          parentId,
-          guid,
-          parentGuid,
-          oldVal
-        ) {
-          if (prop != "keyword") {
-            return;
-          }
-          let args = Array.from(arguments, arg => {
-            if (arg && arg instanceof Ci.nsIURI) {
-              return URL.fromURI(arg);
-            }
-            if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
-              return new Date(parseInt(arg / 1000));
-            }
-            return arg;
-          });
-          notifications.push({ name, arguments: args });
-        };
-      }
-
-      return target[name];
+  const observer = {
+    notifications: [],
+    _start() {
+      this._handle = this._handle.bind(this);
+      PlacesUtils.observers.addListener(
+        ["bookmark-keyword-changed"],
+        this._handle
+      );
     },
-  });
-  PlacesUtils.bookmarks.addObserver(observer);
+    _handle(events) {
+      for (const event of events) {
+        this.notifications.push({
+          type: event.type,
+          id: event.id,
+          itemType: event.itemType,
+          url: event.url,
+          guid: event.guid,
+          parentGuid: event.parentGuid,
+          keyword: event.keyword,
+          lastModified: new Date(event.lastModified),
+          source: event.source,
+          isTagging: event.isTagging,
+        });
+      }
+    },
+    check(expected) {
+      PlacesUtils.observers.removeListener(
+        ["bookmark-keyword-changed"],
+        this._handle
+      );
+      Assert.deepEqual(this.notifications, expected);
+    },
+  };
+  observer._start();
   return observer;
 }
 
@@ -107,20 +99,16 @@ add_task(async function test_addBookmarkAndKeyword() {
   let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "keyword",
-        false,
-        "keyword",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: itemId,
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
   await check_keyword(URI1, "keyword");
@@ -169,36 +157,28 @@ add_task(async function test_sameKeywordDifferentURI() {
   let bookmark1 = await PlacesUtils.bookmarks.fetch({ url: URI1 });
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark1.guid),
-        "keyword",
-        false,
-        "",
-        bookmark1.lastModified * 1000,
-        bookmark1.type,
-        await PlacesUtils.promiseItemId(bookmark1.parentGuid),
-        bookmark1.guid,
-        bookmark1.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark1.guid),
+      itemType: bookmark1.type,
+      url: bookmark1.url,
+      guid: bookmark1.guid,
+      parentGuid: bookmark1.parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmark1.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmark2.guid),
-        "keyword",
-        false,
-        "keyword",
-        bookmark2.lastModified * 1000,
-        bookmark2.type,
-        await PlacesUtils.promiseItemId(bookmark2.parentGuid),
-        bookmark2.guid,
-        bookmark2.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      itemType: bookmark2.type,
+      url: bookmark2.url,
+      guid: bookmark2.guid,
+      parentGuid: bookmark2.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark2.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -226,36 +206,28 @@ add_task(async function test_sameURIDifferentKeyword() {
   await PlacesUtils.bookmarks.fetch({ url: URI2 }, bm => bookmarks.push(bm));
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmarks[0].guid),
-        "keyword",
-        false,
-        "keyword2",
-        bookmarks[0].lastModified * 1000,
-        bookmarks[0].type,
-        await PlacesUtils.promiseItemId(bookmarks[0].parentGuid),
-        bookmarks[0].guid,
-        bookmarks[0].parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmarks[0].guid),
+      itemType: bookmarks[0].type,
+      url: bookmarks[0].url,
+      guid: bookmarks[0].guid,
+      parentGuid: bookmarks[0].parentGuid,
+      keyword: "keyword2",
+      lastModified: new Date(bookmarks[0].lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmarks[1].guid),
-        "keyword",
-        false,
-        "keyword2",
-        bookmarks[1].lastModified * 1000,
-        bookmarks[1].type,
-        await PlacesUtils.promiseItemId(bookmarks[1].parentGuid),
-        bookmarks[1].guid,
-        bookmarks[1].parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmarks[1].guid),
+      itemType: bookmarks[1].type,
+      url: bookmarks[1].url,
+      guid: bookmarks[1].guid,
+      parentGuid: bookmarks[1].parentGuid,
+      keyword: "keyword2",
+      lastModified: new Date(bookmarks[1].lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
   await check_keyword(URI2, "keyword2");
@@ -299,52 +271,40 @@ add_task(async function test_unsetKeyword() {
   Assert.equal(bookmarks.length, 3, "Check number of bookmarks");
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmarks[0].guid),
-        "keyword",
-        false,
-        "",
-        bookmarks[0].lastModified * 1000,
-        bookmarks[0].type,
-        await PlacesUtils.promiseItemId(bookmarks[0].parentGuid),
-        bookmarks[0].guid,
-        bookmarks[0].parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmarks[0].guid),
+      itemType: bookmarks[0].type,
+      url: bookmarks[0].url,
+      guid: bookmarks[0].guid,
+      parentGuid: bookmarks[0].parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmarks[0].lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmarks[1].guid),
-        "keyword",
-        false,
-        "",
-        bookmarks[1].lastModified * 1000,
-        bookmarks[1].type,
-        await PlacesUtils.promiseItemId(bookmarks[1].parentGuid),
-        bookmarks[1].guid,
-        bookmarks[1].parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmarks[1].guid),
+      itemType: bookmarks[1].type,
+      url: bookmarks[1].url,
+      guid: bookmarks[1].guid,
+      parentGuid: bookmarks[1].parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmarks[1].lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        await PlacesUtils.promiseItemId(bookmarks[2].guid),
-        "keyword",
-        false,
-        "",
-        bookmarks[2].lastModified * 1000,
-        bookmarks[2].type,
-        await PlacesUtils.promiseItemId(bookmarks[2].parentGuid),
-        bookmarks[2].guid,
-        bookmarks[2].parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: await PlacesUtils.promiseItemId(bookmarks[2].guid),
+      itemType: bookmarks[2].type,
+      url: bookmarks[2].url,
+      guid: bookmarks[2].guid,
+      parentGuid: bookmarks[2].parentGuid,
+      keyword: "",
+      lastModified: new Date(bookmarks[2].lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -369,20 +329,16 @@ add_task(async function test_addRemoveBookmark() {
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "keyword",
-        false,
-        "keyword",
-        bookmark.lastModified * 1000,
-        bookmark.type,
-        await PlacesUtils.promiseItemId(bookmark.parentGuid),
-        bookmark.guid,
-        bookmark.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-keyword-changed",
+      id: itemId,
+      itemType: bookmark.type,
+      url: bookmark.url,
+      guid: bookmark.guid,
+      parentGuid: bookmark.parentGuid,
+      keyword: "keyword",
+      lastModified: new Date(bookmark.lastModified),
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 
@@ -425,68 +381,52 @@ add_task(async function test_reassign() {
     await PlacesUtils.keywords.reassign(oldURL, newURL);
     observer.check([
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(oldBmk.guid),
-          "keyword",
-          false,
-          "",
-          oldBmk.lastModified * 1000,
-          oldBmk.type,
-          await PlacesUtils.promiseItemId(oldBmk.parentGuid),
-          oldBmk.guid,
-          oldBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(oldBmk.guid),
+        itemType: oldBmk.type,
+        url: oldBmk.url,
+        guid: oldBmk.guid,
+        parentGuid: oldBmk.parentGuid,
+        keyword: "",
+        lastModified: new Date(oldBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "kw1-1",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "kw1-1",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "kw1-2",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "kw1-2",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
     ]);
 
@@ -568,68 +508,52 @@ add_task(async function test_reassign() {
     await PlacesUtils.keywords.reassign(oldURL, newURL);
     observer.check([
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(oldBmk.guid),
-          "keyword",
-          false,
-          "",
-          oldBmk.lastModified * 1000,
-          oldBmk.type,
-          await PlacesUtils.promiseItemId(oldBmk.parentGuid),
-          oldBmk.guid,
-          oldBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(oldBmk.guid),
+        itemType: oldBmk.type,
+        url: oldBmk.url,
+        guid: oldBmk.guid,
+        parentGuid: oldBmk.parentGuid,
+        keyword: "",
+        lastModified: new Date(oldBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "kw8-1",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "kw8-1",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
       {
-        name: "onItemChanged",
-        arguments: [
-          await PlacesUtils.promiseItemId(newBmk.guid),
-          "keyword",
-          false,
-          "kw8-2",
-          newBmk.lastModified * 1000,
-          newBmk.type,
-          await PlacesUtils.promiseItemId(newBmk.parentGuid),
-          newBmk.guid,
-          newBmk.parentGuid,
-          "",
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-        ],
+        type: "bookmark-keyword-changed",
+        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        itemType: newBmk.type,
+        url: newBmk.url,
+        guid: newBmk.guid,
+        parentGuid: newBmk.parentGuid,
+        keyword: "kw8-2",
+        lastModified: new Date(newBmk.lastModified),
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+        isTagging: false,
       },
     ]);
 
@@ -683,9 +607,10 @@ add_task(async function test_invalidation() {
 
   info("Change URL of bookmark with keyword");
   let promiseNotification = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (id, prop, isAnnoProp, newValue, lastModified, type, parentId, guid) =>
-      guid == fx.guid && prop == "keyword" && newValue == "fx"
+    "bookmark-keyword-changed",
+    events =>
+      events.some(event => event.guid === fx.guid && event.keyword === "fx"),
+    "places"
   );
   await PlacesUtils.bookmarks.update({
     guid: fx.guid,
