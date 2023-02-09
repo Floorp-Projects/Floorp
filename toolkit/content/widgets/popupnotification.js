@@ -48,7 +48,7 @@
       // inherited attributes, its data-l10n-id needs to be unset or
       // DOM Localization will overwrite the values.
       if (name === "buttonlabel" || name === "buttonaccesskey") {
-        document.l10n.setAttributes(this.button, "");
+        this.button?.removeAttribute("data-l10n-id");
       }
 
       super.attributeChangedCallback(name, oldValue, newValue);
