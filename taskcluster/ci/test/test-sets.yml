@@ -177,6 +177,7 @@ linux-talos-flex:
 # Windows
 
 windows-7-tests:
+    - cppunit
     - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-browser-media
