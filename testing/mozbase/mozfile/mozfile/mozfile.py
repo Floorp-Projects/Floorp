@@ -41,13 +41,20 @@ def extract_tarball(src, dest, ignore=None):
 
     import tarfile
 
+    def _is_within_directory(directory, target):
+        abs_directory = os.path.abspath(directory)
+        abs_target = os.path.abspath(target)
+        prefix = os.path.commonprefix([abs_directory, abs_target])
+        return prefix == abs_directory
+
     with tarfile.open(src) as bundle:
         namelist = []
 
         for m in bundle:
             # Mitigation for CVE-2007-4559, Python's tarfile library will allow
             # writing files outside of the intended destination.
-            if ".." in m.name:
+            member_path = os.path.join(dest, m.name)
+            if not _is_within_directory(dest, member_path):
                 raise RuntimeError(
                     dedent(
                         f"""
@@ -58,6 +65,18 @@ def extract_tarball(src, dest, ignore=None):
                     """
                     )
                 )
+            if m.mode & (stat.S_ISUID | stat.S_ISGID):
+                raise RuntimeError(
+                    dedent(
+                        f"""
+                    Tar bundle '{src}' may be maliciously crafted to setuid/setgid!
+                    The following path was detected:
+
+                      {m.name}
+                    """
+                    )
+                )
+
             if ignore and any(match(m.name, i) for i in ignore):
                 continue
             bundle.extract(m, path=dest)
