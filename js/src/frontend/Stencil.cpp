@@ -1286,7 +1286,7 @@ bool CompilationInput::initScriptSource(JSContext* cx, FrontendContext* fc) {
     return false;
   }
 
-  return source->initFromOptions(cx, fc, options);
+  return source->initFromOptions(fc, options);
 }
 
 bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(

@@ -643,7 +643,7 @@ class ScriptSource {
       js_delete(this);
     }
   }
-  [[nodiscard]] bool initFromOptions(JSContext* cx, FrontendContext* fc,
+  [[nodiscard]] bool initFromOptions(FrontendContext* fc,
                                      const JS::ReadOnlyCompileOptions& options);
 
   /**
