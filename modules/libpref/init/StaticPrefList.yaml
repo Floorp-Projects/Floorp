@@ -3974,7 +3974,7 @@
 # Whether the File System API is enabled
 - name: dom.fs.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether the WritableFileStream is enabled or disabled.
