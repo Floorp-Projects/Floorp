@@ -322,13 +322,7 @@ class PeerConnectionImpl final
   void SetId(const nsAString& id) { mName = NS_ConvertUTF16toUTF8(id).get(); }
 
   // this method checks to see if we've made a promise to protect media.
-  bool PrivacyRequested() const {
-    return mPrivacyRequested.isSome() && *mPrivacyRequested;
-  }
-
-  bool PrivacyNeeded() const {
-    return mPrivacyRequested.isSome() && *mPrivacyRequested;
-  }
+  bool PrivacyRequested() const { return mPrivacyRequested.valueOr(false); }
 
   NS_IMETHODIMP GetFingerprint(char** fingerprint);
   void GetFingerprint(nsAString& fingerprint) {
