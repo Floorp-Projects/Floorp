@@ -1,19 +1,21 @@
 "use strict";
 
-/* globals exportFunction */
-
 /**
  * Bug 1605611 - Cannot change Departure/arrival dates in Google Maps on Android
  *
  * This patch re-enables the disabled "Leave now" button.
  *
- * See https://bugzilla.mozilla.org/show_bug.cgi?id=1605611 for details.
+ * See https://bugzilla.mozilla.org/show_bug.cgi?id=1800498 and
+ *     https://bugzilla.mozilla.org/show_bug.cgi?id=1605611 for details.
  */
+
+const selector =
+  ".ml-directions-searchbox-parent [aria-haspopup=dialog][disabled=true]";
 
 document.addEventListener("DOMContentLoaded", () => {
   // In case the element appeared before the MutationObserver was activated.
-  for (const elem of document.querySelectorAll(".ml-icon-access-time")) {
-    elem.parentNode.disabled = false;
+  for (const elem of document.querySelectorAll(selector)) {
+    elem.disabled = false;
   }
   // Start watching for the insertion of the "Leave now" button.
   const moOptions = {
@@ -22,19 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
     subtree: true,
   };
   const mo = new MutationObserver(function(records) {
-    let restore = false;
     for (const { target } of records) {
-      if (target.querySelector(".ml-icon-access-time")) {
-        if (!restore) {
-          restore = true;
-          mo.disconnect();
-        }
-
+      if (target.matches(selector)) {
         target.disabled = false;
       }
-    }
-    if (restore) {
-      mo.observe(document.body, moOptions);
     }
   });
   mo.observe(document.body, moOptions);
