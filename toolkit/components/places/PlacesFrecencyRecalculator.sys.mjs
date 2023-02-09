@@ -94,15 +94,7 @@ export class PlacesFrecencyRecalculator {
     }
 
     this.#task = new lazy.DeferredTask(
-      () => {
-        if (this.#task.isFinalized) {
-          return;
-        }
-        this.recalculateSomeFrecencies().catch(ex => {
-          console.error(ex);
-          lazy.logger.error(ex);
-        });
-      },
+      this.#taskFn.bind(this),
       DEFERRED_TASK_INTERVAL_MS,
       DEFERRED_TASK_MAX_IDLE_WAIT_MS
     );
@@ -127,6 +119,26 @@ export class PlacesFrecencyRecalculator {
 
     // Run once on startup, so we pick up any leftover work.
     this.#task.arm();
+  }
+
+  async #taskFn() {
+    if (this.#task.isFinalized) {
+      return;
+    }
+    const refObj = {};
+    const histogram = "PLACES_FRECENCY_RECALC_CHUNK_TIME_MS";
+    TelemetryStopwatch.start(histogram, refObj);
+    try {
+      if (await this.recalculateSomeFrecencies()) {
+        TelemetryStopwatch.finish(histogram, refObj);
+      } else {
+        TelemetryStopwatch.cancel(histogram, refObj);
+      }
+    } catch (ex) {
+      TelemetryStopwatch.cancel(histogram, refObj);
+      console.error(ex);
+      lazy.logger.error(ex);
+    }
   }
 
   #finalize() {
@@ -165,7 +177,7 @@ export class PlacesFrecencyRecalculator {
    * values to update at the end of the process, it may rearm the task.
    * @param {Number} chunkSize maximum number of entries to update at a time,
    *   set to -1 to update any entry.
-   * @resolves once the process is complete.
+   * @resolves {Number} Number of affected pages.
    */
   async recalculateSomeFrecencies({ chunkSize = DEFAULT_CHUNK_SIZE } = {}) {
     lazy.logger.trace(`Recalculate ${chunkSize} frecency values`);
@@ -199,6 +211,7 @@ export class PlacesFrecencyRecalculator {
     } else {
       this.#task.disarm();
     }
+    return affected.length;
   }
 
   /**
@@ -296,6 +309,8 @@ export class PlacesFrecencyRecalculator {
       case "active":
         this.startRecalculationCheckInterval();
         break;
+      case "test-execute-taskFn":
+        subject.promise = this.#taskFn();
     }
   }
 }

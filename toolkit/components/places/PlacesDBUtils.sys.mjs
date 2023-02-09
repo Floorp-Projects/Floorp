@@ -1221,6 +1221,10 @@ export var PlacesDBUtils = {
           }
         },
       },
+      {
+        scalar: "places.pages_need_frecency_recalculation",
+        query: "SELECT count(*) FROM moz_places WHERE recalc_frecency = 1",
+      },
     ];
 
     for (let probe of probes) {
@@ -1236,8 +1240,14 @@ export var PlacesDBUtils = {
       if ("callback" in probe) {
         val = await probe.callback(val);
       }
-      probeValues[probe.histogram] = val;
-      Services.telemetry.getHistogramById(probe.histogram).add(val);
+      probeValues[probe.histogram || probe.scalar] = val;
+      if (probe.histogram) {
+        Services.telemetry.getHistogramById(probe.histogram).add(val);
+      } else if (probe.scalar) {
+        Services.telemetry.scalarSet(probe.scalar, val);
+      } else {
+        throw new Error("Unknwon telemetry probe type");
+      }
     }
   },
 

@@ -59,6 +59,10 @@ FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS
   with 50 buckets. Values are in milliseconds. This histogram was introduced in
   Firefox 110.0 in bug 1806765.
 
+PLACES_FRECENCY_RECALC_CHUNK_TIME_MS
+  This records the time necessary to recalculate frecency of a chunk of pages,
+  as defined in the `PlacesFrecencyRecalculator <https://searchfox.org/mozilla-central/source/toolkit/components/places/PlacesFrecencyRecalculator.sys.mjs>`_ module.
+
 Scalars
 -------
 
@@ -404,7 +408,7 @@ urlbar.quickaction.picked
   in order for the suggestion to show. See bug 1783155.
 
 places.*
-  This is places related telemetry.
+  This is Places related telemetry.
 
   Valid result types are:
 
@@ -412,6 +416,11 @@ places.*
     Number of sponsored visits that could not find their triggering URL in
     history. We expect this to be a small number just due to the navigation layer
     manipulating URLs. A large or growing value may be a concern.
+  - ``pages_need_frecency_recalculation``
+    Number of pages in need of a frecency recalculation. This number should
+    remain small compared to the total number of pages in the database (see the
+    `PLACES_PAGES_COUNT` histogram). It can be used to valuate the frequency
+    and size of recalculations, for performance reasons.
 
 Search Engagement Telemetry
 ---------------------------
