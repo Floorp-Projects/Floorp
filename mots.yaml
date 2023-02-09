@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-07T15:08:08.908529'
+updated_at: '2023-02-07T17:52:24.212324'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3564,23 +3564,7 @@ modules:
       - *standard8
       - *jandem
     meta:
-  - machine_name: marionette
-    name: Marionette
-    description: Marionette is a remote protocol that lets out-of-process programs
-      communicate with, instrument, and control Gecko-based browsers. Combined with
-      geckodriver, this forms our WebDriver implementation.
-    includes:
-      - testing/marionette/**/*
-    excludes: []
-    owners:
-      - *whimboo
-    peers:
-      - *jdescottes
-      - *jgraham
-      - *Sasha
-    meta:
-      components:
-        - 'Testing :: Marionette'
+
   - name: mots config
     includes:
       - mots.yaml
@@ -3621,6 +3605,7 @@ modules:
     meta:
       components:
         - 'Developer Infrastructure :: Lint and Formatting'
+
   - machine_name: remote_protocol
     name: Remote Protocol
     description: Low-level remote protocol exposing interfaces for inspecting state
@@ -3629,23 +3614,105 @@ modules:
       subscribing to updates from the aforementioned.
     includes:
       - remote/**/*
-    excludes: []
+    meta:
+      components:
+        - Remote Protocol
+      url: https://firefox-source-docs.mozilla.org/remote/
     owners:
       - *whimboo
     peers:
       - *jdescottes
       - *jgraham
       - *Sasha
-    meta:
-      owners_emeritus:
-        - Andreas Tolfsen
-      peers_emeritus:
-        - Maja Frydrychowicz
-        - Alexandre Poirot
-        - Yulia Startsev
-      components:
-        - Remote Protocol
-      url: https://firefox-source-docs.mozilla.org/remote/
+    submodules:
+
+      - machine_name: remote_protocol_agent
+        name: Agent
+        description: Underlying transport layer and server to allow remoting of Firefox
+          for automation and debugging.
+        includes:
+          - remote/**/*
+        excludes:
+          - remote/cdp/*
+          - remote/marionette/*
+          - remote/webdriver-bidi/*
+        meta:
+          owners_emeritus:
+            - Andreas Tolfsen
+          peers_emeritus:
+            - Maja Frydrychowicz
+            - Alexandre Poirot
+            - Yulia Startsev
+          components:
+            - 'Remote Protocol :: Agent'
+        owners:
+          - *whimboo
+        peers:
+          - *jdescottes
+          - *jgraham
+          - *Sasha
+
+      - machine_name: remote_protocol_cdp
+        name: CDP
+        description: The core implementation for CDP support. Please file domain specific
+          issues and requests under the appropriate CDP-prefixed Remote Protocol component.
+        includes:
+          - remote/cdp/*
+        meta:
+          owners_emeritus:
+            - Andreas Tolfsen
+          peers_emeritus:
+            - Maja Frydrychowicz
+            - Alexandre Poirot
+            - Yulia Startsev
+          components:
+            - 'Remote Protocol :: CDP'
+        owners:
+          - *whimboo
+        peers:
+          - *jdescottes
+          - *jgraham
+          - *Sasha
+
+      - machine_name: remote_protocol_marionette
+        name: Marionette
+        description: Marionette is a remote protocol that lets out-of-process programs
+          communicate with, instrument, and control Gecko-based browsers. Combined
+          with geckodriver, this forms our WebDriver classic implementation.
+        includes:
+          - remote/marionette/*
+        meta:
+          owners_emeritus:
+            - Andreas Tolfsen
+          peers_emeritus:
+            - Maja Frydrychowicz
+            - David Burns
+          components:
+            - 'Remote Protocol :: Marionette'
+          group: dev-webdriver
+        owners:
+          - *whimboo
+        peers:
+          - *jdescottes
+          - *jgraham
+          - *Sasha
+
+      - machine_name: remote_protocol_webdriver_bidi
+        name: WebDriver BiDi
+        description: W3C WebDriver BiDi implementation for Gecko-based browsers.
+        includes:
+          - remote/webdriver-bidi/*
+        meta:
+          components:
+            - 'Remote Protocol :: WebDriver BiDi'
+          group: dev-webdriver
+        owners:
+          - *whimboo
+        peers:
+          - *jdescottes
+          - *jgraham
+          - *Sasha
+
   - machine_name: sync
     name: Sync
     description: Firefox Sync client
@@ -3666,21 +3733,24 @@ modules:
       url: https://wiki.mozilla.org/Services/Process/Code_Review
       components:
         - Sync
+
   - machine_name: testing_firefox_ui
     name: firefox-ui
     description: Firefox UI test framework.
     includes:
       - testing/firefox-ui/**/*
-    excludes: []
+    meta:
+      peers_emeritus:
+        - Maja Frydrychowicz
+      components:
+        - 'Testing :: Firefox UI'
     owners:
       - *whimboo
     peers:
       - *jdescottes
       - *jgraham
       - *Sasha
-    meta:
-      components:
-        - 'Testing :: Firefox UI'
+
   - machine_name: testing_geckodriver
     name: geckodriver
     description: Proxy for using W3C WebDriver-compatible clients to interact with
@@ -3695,6 +3765,8 @@ modules:
     meta:
       components:
         - 'Testing :: geckodriver'
+      group: dev-webdriver
+
   - machine_name: testing_gtest
     name: gtest
     description: GTest test harness.
@@ -3707,6 +3779,27 @@ modules:
     meta:
       components:
         - 'Testing :: GTest'
+
+  - machine_name: testing_marionette_client_harness
+    name: Marionette Client & Harness
+    description: Python client and harness for the Marionette remote protocol implementation.
+    includes:
+      - testing/marionette/**/*
+    meta:
+      owners_emeritus:
+        - Andreas Tolfsen
+      peers_emeritus:
+        - Maja Frydrychowicz
+        - David Burns
+      components:
+        - 'Testing :: Marionette Client & Harness'
+    owners:
+      - *whimboo
+    peers:
+      - *jdescottes
+      - *jgraham
+      - *Sasha
+
   - machine_name: testing_mochitest
     name: Mochitest
     description: Mochitest test framework
@@ -3940,5 +4033,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: a0c8d56b9595d04ad261117bc0c3bc5f28868981
-  export: de531465d6c0446a727652ab65b9cea1f4dbfc6b
+  config: eb1c7127cab45ded7b82c157fa2557b252fc7c0e
+  export: 281744e23b0aa4732edddeca7f4cf915269664b1

@@ -3419,31 +3419,6 @@ configurations, formatting and naming style.
         | `\*\*/.eslintrc.js <https://searchfox.org/mozilla-central/search?q=&path=\*\*/.eslintrc.js>`__
         | `tools/lint/eslint/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/lint/eslint/\*\*/\*>`__
 
-Marionette
-~~~~~~~~~~
-Marionette is a remote protocol that lets out-of-process programs communicate
-with, instrument, and control Gecko-based browsers. Combined with geckodriver,
-this forms our WebDriver implementation.
-
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s)
-      -
-        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
-    * - Peer(s)
-      -
-        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
-        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
-        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
-    * - Includes
-      -
-        | `testing/marionette/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/marionette/\*\*/\*>`__
-    * - Bugzilla Components
-      - Testing :: Marionette
-
 mots config
 ~~~~~~~~~~~
 
@@ -3527,10 +3502,6 @@ subscribing to updates from the aforementioned.
         | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
         | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
         | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
-    * - Owner(s) Emeritus
-      - Andreas Tolfsen
-    * - Peer(s) Emeritus
-      - Maja Frydrychowicz, Alexandre Poirot, Yulia Startsev
     * - Includes
       -
         | `remote/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/\*\*/\*>`__
@@ -3538,6 +3509,127 @@ subscribing to updates from the aforementioned.
       - https://firefox-source-docs.mozilla.org/remote/
     * - Bugzilla Components
       - Remote Protocol
+
+Agent
+=====
+Underlying transport layer and server to allow remoting of Firefox for
+automation and debugging.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Owner(s) Emeritus
+      - Andreas Tolfsen
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz, Alexandre Poirot, Yulia Startsev
+    * - Includes
+      -
+        | `remote/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/\*\*/\*>`__
+    * - Excludes
+      -
+        | `remote/cdp/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/cdp/\*>`__
+        | `remote/marionette/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/marionette/\*>`__
+        | `remote/webdriver-bidi/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/webdriver-bidi/\*>`__
+    * - Bugzilla Components
+      - Remote Protocol :: Agent
+
+
+CDP
+===
+The core implementation for CDP support. Please file domain specific issues and
+requests under the appropriate CDP-prefixed Remote Protocol component.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Owner(s) Emeritus
+      - Andreas Tolfsen
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz, Alexandre Poirot, Yulia Startsev
+    * - Includes
+      -
+        | `remote/cdp/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/cdp/\*>`__
+    * - Bugzilla Components
+      - Remote Protocol :: CDP
+
+
+Marionette
+==========
+Marionette is a remote protocol that lets out-of-process programs communicate
+with, instrument, and control Gecko-based browsers. Combined with geckodriver,
+this forms our WebDriver classic implementation.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Owner(s) Emeritus
+      - Andreas Tolfsen
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz, David Burns
+    * - Includes
+      -
+        | `remote/marionette/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/marionette/\*>`__
+    * - Group
+      - dev-webdriver
+    * - Bugzilla Components
+      - Remote Protocol :: Marionette
+
+
+WebDriver BiDi
+==============
+W3C WebDriver BiDi implementation for Gecko-based browsers.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Includes
+      -
+        | `remote/webdriver-bidi/\* <https://searchfox.org/mozilla-central/search?q=&path=remote/webdriver-bidi/\*>`__
+    * - Group
+      - dev-webdriver
+    * - Bugzilla Components
+      - Remote Protocol :: WebDriver BiDi
+
 
 Sync
 ~~~~
@@ -3585,6 +3677,8 @@ Firefox UI test framework.
         | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
         | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
         | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz
     * - Includes
       -
         | `testing/firefox-ui/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/firefox-ui/\*\*/\*>`__
@@ -3610,6 +3704,8 @@ browsers.
     * - Includes
       -
         | `testing/geckodriver/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/geckodriver/\*\*/\*>`__
+    * - Group
+      - dev-webdriver
     * - Bugzilla Components
       - Testing :: geckodriver
 
@@ -3630,6 +3726,33 @@ GTest test harness.
         | `testing/gtest/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/gtest/\*\*/\*>`__
     * - Bugzilla Components
       - Testing :: GTest
+
+Marionette Client & Harness
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python client and harness for the Marionette remote protocol implementation.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Henrik Skupin (whimboo) <https://people.mozilla.org/s?query=whimboo>`__
+    * - Peer(s)
+      -
+        | `Julian Descottes (jdescottes) <https://people.mozilla.org/s?query=jdescottes>`__
+        | `James Graham (jgraham) <https://people.mozilla.org/s?query=jgraham>`__
+        | `Alexandra Borovova (Sasha) <https://people.mozilla.org/s?query=Sasha>`__
+    * - Owner(s) Emeritus
+      - Andreas Tolfsen
+    * - Peer(s) Emeritus
+      - Maja Frydrychowicz, David Burns
+    * - Includes
+      -
+        | `testing/marionette/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/marionette/\*\*/\*>`__
+    * - Bugzilla Components
+      - Testing :: Marionette Client & Harness
 
 Mochitest
 ~~~~~~~~~
