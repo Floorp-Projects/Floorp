@@ -25,8 +25,6 @@ const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 // Test differently for windows 7 as theme screens are removed.
 // eslint-disable-next-line no-unused-vars
 const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
-// Pref to enable/disable the MR new user onboarding layout.
-const MR_TEMPLATE_PREF = "browser.aboutwelcome.templateMR";
 
 function popPrefs() {
   return SpecialPowers.popPrefEnv();
@@ -188,7 +186,6 @@ async function setAboutWelcomePref(value) {
 
 // eslint-disable-next-line no-unused-vars
 async function openMRAboutWelcome() {
-  await pushPrefs([MR_TEMPLATE_PREF, true]);
   await setAboutWelcomePref(true); // NB: Calls pushPrefs
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -201,7 +198,6 @@ async function openMRAboutWelcome() {
     cleanup: async () => {
       BrowserTestUtils.removeTab(tab);
       await popPrefs(); // for setAboutWelcomePref()
-      await popPrefs(); // for pushPrefs()
     },
   };
 }
