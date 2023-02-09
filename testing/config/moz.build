@@ -6,7 +6,7 @@ with Files("**"):
     BUG_COMPONENT = ("Testing", "General")
 
 with Files("marionette*"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Testing", "Marionette Client and Harness")
 
 with Files("mozbase*"):
     BUG_COMPONENT = ("Testing", "Mozbase")

@@ -12,6 +12,6 @@ XPIDL_SOURCES += [
 XPCOM_MANIFESTS += ["components.conf"]
 
 with Files("Marionette.sys.mjs"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Remote Protocol", "Marionette")
 with Files("nsIMarionette.idl"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Remote Protocol", "Marionette")

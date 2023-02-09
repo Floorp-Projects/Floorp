@@ -5,7 +5,7 @@
 MARIONETTE_UNIT_MANIFESTS += ["harness/marionette_harness/tests/unit/unit-tests.ini"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Testing", "Marionette Client and Harness")
 
 with Files("harness/**"):
     SCHEDULES.exclusive = ["marionette", "firefox-ui"]
