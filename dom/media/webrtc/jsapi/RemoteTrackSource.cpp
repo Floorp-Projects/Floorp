@@ -36,6 +36,7 @@ RemoteTrackSource::~RemoteTrackSource() { Destroy(); }
 void RemoteTrackSource::Destroy() {
   if (mStream) {
     MOZ_ASSERT(!mStream->IsDestroyed());
+    mStream->End();
     mStream->Destroy();
     mStream = nullptr;
 
