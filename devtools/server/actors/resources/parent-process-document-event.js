@@ -11,9 +11,6 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false
 );
-const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
-);
 const {
   WILL_NAVIGATE_TIME_SHIFT,
 } = require("resource://devtools/server/actors/webconsole/listeners/document-events.js");
@@ -51,9 +48,9 @@ class ParentProcessDocumentEventWatcher {
     this._onceWillNavigate = new Map();
 
     // Filter browsing contexts to only have the top BrowsingContext of each tree of BrowsingContexts…
-    const topLevelBrowsingContexts = getAllBrowsingContextsForContext(
-      this.watcherActor.sessionContext
-    ).filter(browsingContext => browsingContext.top == browsingContext);
+    const topLevelBrowsingContexts = this.watcherActor
+      .getAllBrowsingContexts()
+      .filter(browsingContext => browsingContext.top == browsingContext);
 
     // Only register one WebProgressListener per BrowsingContext tree.
     // We will be notified about children BrowsingContext navigations/state changes via the top level BrowsingContextWebProgressListener,
