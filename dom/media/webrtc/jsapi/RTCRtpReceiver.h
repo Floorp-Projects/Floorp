@@ -91,7 +91,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   };
 
   struct StreamAssociationChanges {
-    std::vector<RefPtr<MediaStreamTrack>> mTracksToMute;
+    std::vector<RefPtr<RTCRtpReceiver>> mReceiversToMute;
     std::vector<StreamAssociation> mStreamAssociationsRemoved;
     std::vector<StreamAssociation> mStreamAssociationsAdded;
     std::vector<TrackEventInfo> mTrackEvents;
@@ -110,9 +110,11 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   void OnRtcpBye();
   void OnRtcpTimeout();
-  void OnUnmute();
 
-  void SetReceiveTrackMuted(bool aMuted);
+  void SetTrackMuteFromRemoteSdp();
+  void OnUnmute();
+  void UpdateUnmuteBlockingState();
+  void UpdateReceiveTrackMute();
 
   AbstractCanonical<Ssrc>* CanonicalSsrc() { return &mSsrc; }
   AbstractCanonical<Ssrc>* CanonicalVideoRtxSsrc() { return &mVideoRtxSsrc; }
@@ -142,6 +144,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   JsepTransceiver& GetJsepTransceiver();
   const JsepTransceiver& GetJsepTransceiver() const;
 
+  WatchManager<RTCRtpReceiver> mWatchManager;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   bool mHaveStartedReceiving = false;
@@ -158,6 +161,8 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   // where the stream list for the whole RTCPeerConnection lives..
   std::vector<std::string> mStreamIds;
   bool mRemoteSetSendBit = false;
+  Watchable<bool> mReceiveTrackMute{true, "RTCRtpReceiver::mReceiveTrackMute"};
+  Watchable<bool> mBlockUnmuteEvents{false, "RTCRtpReceiver::mBlockUnmuteEve~"};
 
   MediaEventListener mRtcpByeListener;
   MediaEventListener mRtcpTimeoutListener;
