@@ -3978,13 +3978,9 @@
   mirror: always
 
 # Whether the WritableFileStream is enabled or disabled.
-# WritableFileStream implementation is currently only experimental:
-# it does not update quota information and does synchronous IO on the current
-# thread which is okish for workers but not for the main thread.
-# The situation will change after bug 1798513 is fixed.
 - name: dom.fs.writable_file_stream.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # LocalStorage data limit as determined by summing up the lengths of all string
