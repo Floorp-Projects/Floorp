@@ -175,24 +175,23 @@ async function getBrowsersOnLinux() {
     for (let checkDir of checkDirs) {
         let applications_dir_path = PathUtils.join(checkDir, "applications");
         let dir = FileUtils.File(applications_dir_path);
-        if (dir.exists()) {
-            let desktopFiles = [];
-            let dir_entries = dir.directoryEntries;
-            while (dir_entries.hasMoreElements()) {
-                let dir_entry = dir_entries.getNext().QueryInterface(Ci.nsIFile);
-                if (dir_entry.isFile() && dir_entry.leafName.endsWith(".desktop")) {
-                    desktopFiles.push(dir_entry);
-                }
+        if (!dir.exists()) continue;
+        let desktopFiles = [];
+        let dir_entries = dir.directoryEntries;
+        while (dir_entries.hasMoreElements()) {
+            let dir_entry = dir_entries.getNext().QueryInterface(Ci.nsIFile);
+            if (dir_entry.isFile() && dir_entry.leafName.endsWith(".desktop")) {
+                desktopFiles.push(dir_entry);
             }
-            for (let desktopFile of desktopFiles) {
-                if (!desktopInfo[desktopFile.leafName]) {
-                    try {
-                        desktopInfo[desktopFile.leafName] = 
-                            await DesktopFileParser.parseFromPath(desktopFile.path);
-                    } catch (e) {
-                        console.log(`Failed to load ${desktopFile.path}`);
-                        console.error(e);
-                    }
+        }
+        for (let desktopFile of desktopFiles) {
+            if (!desktopInfo[desktopFile.leafName]) {
+                try {
+                    desktopInfo[desktopFile.leafName] = 
+                        await DesktopFileParser.parseFromPath(desktopFile.path);
+                } catch (e) {
+                    console.log(`Failed to load ${desktopFile.path}`);
+                    console.error(e);
                 }
             }
         }
@@ -201,19 +200,28 @@ async function getBrowsersOnLinux() {
 }
 
 async function OpenLinkInExternal(url) {
+    let openInDefault = true; // Temporary
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
-    let browsers;
-    let browser;
+    let browsers, browser, browserPath;
     if (platform === "linux") {
         browsers = await getBrowsersOnLinux();
-        browser = await getDefaultBrowserOnLinux(browsers);
+        if (openInDefault) {
+            browser = await getDefaultBrowserOnLinux(browsers);
+        } else {
+            // TODO
+        }
+        //browserPath = browser["Desktop Entry"]["Exec"]; // TODO: extract executable file path  For example: "/usr/bin/floorp %u"
     } else if (platform === "win") {
         browsers = getBrowsersOnWindows();
-        browser = getDefaultBrowserOnWindows(protocol, browsers);
+        if (openInDefault) {
+            browser = getDefaultBrowserOnWindows(protocol, browsers);
+        } else {
+            // TODO
+        }
+        browserPath = browser["path"];
     }
-    let browserPath = browser["path"];
     const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(FileUtils.File(browserPath));
     process.runAsync([url], 1);
