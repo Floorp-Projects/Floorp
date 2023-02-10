@@ -12,16 +12,10 @@
 #include "MFCDMExtra.h"
 #include "MediaEventSource.h"
 #include "mozilla/PMFCDM.h"
+#include "mozilla/KeySystemConfig.h"
 #include "nsAString.h"
 
 namespace mozilla {
-
-// TODO : remove this and use the ones in KeySystemConfig.h after landing
-// 1810817.
-enum class SessionType {
-  Temporary = 1,
-  PersistentLicense = 2,
-};
 
 // MFCDMSession represents a key session defined by the EME spec, it operates
 // the IMFContentDecryptionModuleSession directly and forward events from
@@ -31,7 +25,7 @@ class MFCDMSession final {
  public:
   ~MFCDMSession();
 
-  static MFCDMSession* Create(SessionType aSessionType,
+  static MFCDMSession* Create(KeySystemConfig::SessionType aSessionType,
                               IMFContentDecryptionModule* aCdm,
                               nsISerialEventTarget* aManagerThread);
 
