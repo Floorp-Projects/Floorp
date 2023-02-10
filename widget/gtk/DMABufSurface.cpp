@@ -342,12 +342,19 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
   if (mDmabufFds[aPlane] >= 0) {
     return true;
   }
+  gbm_bo* bo = mGbmBufferObject[0];
+  if (NS_WARN_IF(!bo)) {
+    LOGDMABUF(
+        ("DMABufSurfaceRGBA::OpenFileDescriptorForPlane: Missing "
+         "mGbmBufferObject object!"));
+    return false;
+  }
+
   if (mBufferPlaneCount == 1) {
     MOZ_ASSERT(aPlane == 0, "DMABuf: wrong surface plane!");
-    mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject[0]);
+    mDmabufFds[0] = nsGbmLib::GetFd(bo);
   } else {
-    uint32_t handle =
-        nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], aPlane).u32;
+    uint32_t handle = nsGbmLib::GetHandleForPlane(bo, aPlane).u32;
     int ret = nsGbmLib::DrmPrimeHandleToFD(GetDMABufDevice()->GetDRMFd(),
                                            handle, 0, &mDmabufFds[aPlane]);
     if (ret < 0) {
