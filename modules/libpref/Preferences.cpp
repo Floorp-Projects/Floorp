@@ -308,6 +308,26 @@ union PrefValue {
     }
   }
 
+  void ToString(PrefType aType, nsCString& aStr) {
+    switch (aType) {
+      case PrefType::Bool:
+        aStr.Append(mBoolVal ? "true" : "false");
+        break;
+
+      case PrefType::Int:
+        aStr.AppendInt(mIntVal);
+        break;
+
+      case PrefType::String: {
+        aStr.Append(nsDependentCString(mStringVal));
+        break;
+      }
+
+      case PrefType::None:
+      default:;
+    }
+  }
+
   static char* Deserialize(PrefType aType, char* aStr,
                            Maybe<dom::PrefValue>* aDomValue) {
     char* p = aStr;
@@ -452,6 +472,61 @@ static float ParsePrefFloat(const nsCString& aString, nsresult* aError) {
   *aError = (stopped == aString.EndReading()) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
   return result;
 }
+
+struct PreferenceMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Preference");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aPrefName,
+                                   const Maybe<PrefValueKind>& aPrefKind,
+                                   PrefType aPrefType,
+                                   const ProfilerString8View& aPrefValue) {
+    aWriter.StringProperty("prefName", aPrefName);
+    aWriter.StringProperty("prefKind", PrefValueKindToString(aPrefKind));
+    aWriter.StringProperty("prefType", PrefTypeToString(aPrefType));
+    aWriter.StringProperty("prefValue", aPrefValue);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormatSearchable("prefName", "Name", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::String);
+    schema.AddKeyLabelFormat("prefType", "Type", MS::Format::String);
+    schema.AddKeyLabelFormat("prefValue", "Value", MS::Format::String);
+    schema.SetTableLabel(
+        "{marker.name} — {marker.data.prefName}: {marker.data.prefValue} "
+        "({marker.data.prefType})");
+    return schema;
+  }
+
+ private:
+  static Span<const char> PrefValueKindToString(
+      const Maybe<PrefValueKind>& aKind) {
+    if (aKind) {
+      return *aKind == PrefValueKind::Default ? MakeStringSpan("Default")
+                                              : MakeStringSpan("User");
+    }
+    return "Shared";
+  }
+
+  static Span<const char> PrefTypeToString(PrefType type) {
+    switch (type) {
+      case PrefType::None:
+        return "None";
+      case PrefType::Int:
+        return "Int";
+      case PrefType::Bool:
+        return "Bool";
+      case PrefType::String:
+        return "String";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown preference type.");
+        return "Unknown";
+    }
+  }
+};
 
 namespace mozilla {
 struct PrefsSizes {
@@ -1823,6 +1898,14 @@ static nsresult pref_SetPref(const nsCString& aPrefName, PrefType aType,
   }
 
   if (valueChanged) {
+    if (!aFromInit && profiler_thread_is_being_profiled_for_markers()) {
+      nsAutoCString value;
+      aValue.ToString(aType, value);
+      profiler_add_marker(
+          "Preference Write", baseprofiler::category::OTHER_PreferenceRead, {},
+          PreferenceMarker{}, aPrefName, Some(aKind), aType, value);
+    }
+
     if (aKind == PrefValueKind::User) {
       Preferences::HandleDirty();
     }
@@ -4601,61 +4684,6 @@ static nsCString PrefValueToString(const nsACString& s) { return nsCString(s); }
 // We define these methods in a struct which is made friend of Preferences in
 // order to access private members.
 struct Internals {
-  struct PreferenceReadMarker {
-    static constexpr Span<const char> MarkerTypeName() {
-      return MakeStringSpan("PreferenceRead");
-    }
-    static void StreamJSONMarkerData(
-        baseprofiler::SpliceableJSONWriter& aWriter,
-        const ProfilerString8View& aPrefName,
-        const Maybe<PrefValueKind>& aPrefKind, PrefType aPrefType,
-        const ProfilerString8View& aPrefValue) {
-      aWriter.StringProperty("prefName", aPrefName);
-      aWriter.StringProperty("prefKind", PrefValueKindToString(aPrefKind));
-      aWriter.StringProperty("prefType", PrefTypeToString(aPrefType));
-      aWriter.StringProperty("prefValue", aPrefValue);
-    }
-    static MarkerSchema MarkerTypeDisplay() {
-      using MS = MarkerSchema;
-      MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-      schema.AddKeyLabelFormatSearchable("prefName", "Name", MS::Format::String,
-                                         MS::Searchable::Searchable);
-      schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::String);
-      schema.AddKeyLabelFormat("prefType", "Type", MS::Format::String);
-      schema.AddKeyLabelFormat("prefValue", "Value", MS::Format::String);
-      schema.SetTableLabel(
-          "{marker.data.prefName}: {marker.data.prefValue} "
-          "({marker.data.prefType})");
-      return schema;
-    }
-
-   private:
-    static Span<const char> PrefValueKindToString(
-        const Maybe<PrefValueKind>& aKind) {
-      if (aKind) {
-        return *aKind == PrefValueKind::Default ? MakeStringSpan("Default")
-                                                : MakeStringSpan("User");
-      }
-      return "Shared";
-    }
-
-    static Span<const char> PrefTypeToString(PrefType type) {
-      switch (type) {
-        case PrefType::None:
-          return "None";
-        case PrefType::Int:
-          return "Int";
-        case PrefType::Bool:
-          return "Bool";
-        case PrefType::String:
-          return "String";
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown preference type.");
-          return "Unknown";
-      }
-    }
-  };
-
   template <typename T>
   static nsresult GetPrefValue(const char* aPrefName, T&& aResult,
                                PrefValueKind aKind) {
@@ -4667,8 +4695,8 @@ struct Internals {
 
       if (profiler_thread_is_being_profiled_for_markers()) {
         profiler_add_marker(
-            "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
-            PreferenceReadMarker{},
+            "Preference Read", baseprofiler::category::OTHER_PreferenceRead, {},
+            PreferenceMarker{},
             ProfilerString8View::WrapNullTerminatedString(aPrefName),
             Some(aKind), pref->Type(), PrefValueToString(aResult));
       }
@@ -4686,8 +4714,8 @@ struct Internals {
 
       if (profiler_thread_is_being_profiled_for_markers()) {
         profiler_add_marker(
-            "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
-            PreferenceReadMarker{},
+            "Preference Read", baseprofiler::category::OTHER_PreferenceRead, {},
+            PreferenceMarker{},
             ProfilerString8View::WrapNullTerminatedString(aName),
             Nothing() /* indicates Shared */, pref->Type(),
             PrefValueToString(aResult));
