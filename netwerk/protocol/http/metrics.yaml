@@ -54,3 +54,78 @@ netwerk:
       - necko@mozilla.com
       - manuel@mozilla.com
     expires: never
+
+network:
+  data_size_per_type:
+    type: labeled_counter
+    labels:
+      - text_html
+      - text_css
+      - text_json
+      - text_plain
+      - text_javascript
+      - text_other
+      - audio
+      - video
+      - multipart
+      - icon
+      - image
+      - ocsp
+      - xpinstall
+      - wasm
+      - pdf
+      - octet_stream
+      - proxy
+      - compressed
+      - x509
+      - application_other
+    description: >
+      Number of KB we transferred keyed by "contentType"
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1808695
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1808695
+    notification_emails:
+      - necko@mozilla.com
+      - rtestard@mozilla.com
+    expires: 130
+    telemetry_mirror: NETWORKING_DATA_TRANSFERRED_PER_CONTENT_TYPE
+    no_lint:
+      - COMMON_PREFIX
+
+  data_size_pb_per_type:
+    type: labeled_counter
+    labels:
+      - text_html
+      - text_css
+      - text_json
+      - text_plain
+      - text_javascript
+      - text_other
+      - audio
+      - video
+      - multipart
+      - icon
+      - image
+      - ocsp
+      - xpinstall
+      - wasm
+      - pdf
+      - octet_stream
+      - proxy
+      - compressed
+      - x509
+      - application_other
+    description: >
+      Number of KB we transferred keyed by "contentType"
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1808695
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1808695
+    notification_emails:
+      - necko@mozilla.com
+      - rtestard@mozilla.com
+    expires: 130
+    telemetry_mirror: NETWORKING_DATA_TRANSFERRED_PB_PER_CONTENT_TYPE
+    no_lint:
+      - COMMON_PREFIX
