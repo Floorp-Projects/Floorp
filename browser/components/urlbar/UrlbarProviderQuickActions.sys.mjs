@@ -270,7 +270,7 @@ class ProviderQuickActions extends UrlbarProvider {
         );
       }
 
-      result.payload.results.forEach(({ key }) => {
+      result?.payload.results.forEach(({ key }) => {
         Services.telemetry.keyedScalarAdd(
           `quickaction.impression`,
           `${key}-${queryContext.trimmedSearchString.length}`,
