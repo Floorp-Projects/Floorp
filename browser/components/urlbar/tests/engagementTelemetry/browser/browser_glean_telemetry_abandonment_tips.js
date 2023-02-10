@@ -5,6 +5,11 @@
 
 // Test for abandonment telemetry for tips using Glean.
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser-tips/head.js",
+  this
+);
+
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -42,7 +47,7 @@ add_task(async function tip_persist() {
       gURLBar.blur();
     });
 
-    assertGleanTelemetry([{ results: "tip_persist" }]);
+    assertAbandonmentTelemetry([{ results: "tip_persist" }]);
   });
 });
 
@@ -53,7 +58,7 @@ add_task(async function mouse_down_with_tip() {
       EventUtils.synthesizeMouseAtCenter(browser, {});
     });
 
-    assertGleanTelemetry([{ results: "tip_persist" }]);
+    assertAbandonmentTelemetry([{ results: "tip_persist" }]);
   });
 });
 
@@ -61,57 +66,9 @@ add_task(async function mouse_down_without_tip() {
   await doTest(async browser => {
     EventUtils.synthesizeMouseAtCenter(browser, {});
 
-    assertGleanTelemetry([]);
+    assertAbandonmentTelemetry([]);
   });
 });
-
-function assertGleanTelemetry(expectedExtraList) {
-  const telemetries = Glean.urlbar.abandonment.testGetValue() ?? [];
-  Assert.equal(telemetries.length, expectedExtraList.length);
-
-  for (let i = 0; i < telemetries.length; i++) {
-    const telemetry = telemetries[i];
-    Assert.equal(telemetry.category, "urlbar");
-    Assert.equal(telemetry.name, "abandonment");
-
-    const expectedExtra = expectedExtraList[i];
-    for (const key of Object.keys(expectedExtra)) {
-      Assert.equal(
-        telemetry.extra[key],
-        expectedExtra[key],
-        `${key} is correct`
-      );
-    }
-  }
-}
-
-async function doEnter() {
-  const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  EventUtils.synthesizeKey("KEY_Enter");
-  await onLoad;
-}
-
-async function doTest(testFn) {
-  await Services.fog.testFlushAllChildren();
-  Services.fog.testResetFOG();
-  gURLBar.controller.engagementEvent.reset();
-
-  await BrowserTestUtils.withNewTab(gBrowser, testFn);
-}
-
-async function openPopup(input) {
-  await UrlbarTestUtils.promisePopupOpen(window, async () => {
-    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
-    await BrowserTestUtils.waitForCondition(
-      () =>
-        gURLBar.inputField.ownerDocument.activeElement === gURLBar.inputField
-    );
-    for (let i = 0; i < input.length; i++) {
-      EventUtils.synthesizeKey(input.charAt(i));
-    }
-  });
-  await UrlbarTestUtils.promiseSearchComplete(window);
-}
 
 async function showPersistSearchTip(word) {
   await openPopup(word);

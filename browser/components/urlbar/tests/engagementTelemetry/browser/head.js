@@ -357,6 +357,16 @@ async function selectRowByProvider(provider) {
   }
 }
 
+async function selectRowByType(type) {
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+    const detail = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    if (detail.result.payload.type === type) {
+      UrlbarTestUtils.setSelectedRowIndex(window, i);
+      return;
+    }
+  }
+}
+
 async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
