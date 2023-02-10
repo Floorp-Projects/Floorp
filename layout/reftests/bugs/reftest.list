@@ -1513,7 +1513,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-== chrome://reftest/content/bugs/579323-1.html chrome://reftest/content/bugs/579323-1-ref.html
+pref(layout.css.moz-box-flexbox-emulation.enabled,true) == chrome://reftest/content/bugs/579323-1.html chrome://reftest/content/bugs/579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy(0-1,0-10000) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway
