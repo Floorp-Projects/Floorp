@@ -1599,7 +1599,10 @@ var BookmarkingUI = {
     // If the bookmarks are here but it's early in startup, show the message.
     // It'll get made visibility: hidden early in startup anyway - it's just
     // to ensure the toolbar has height.
-    if (!this.toolbar.hasAttribute("initialized")) {
+    //
+    // If we're customizing, we might have visible children anyways, even if we
+    // haven't really initialized the toolbar, so go through the usual path.
+    if (!this._isCustomizing && !this.toolbar.hasAttribute("initialized")) {
       emptyMsg.hidden = false;
       emptyMsg.setAttribute("nowidth", "");
       return;
