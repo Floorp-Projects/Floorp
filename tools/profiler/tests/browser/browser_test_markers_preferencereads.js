@@ -8,7 +8,7 @@ const kContentPref = "font.size.variable.x-western";
 
 function countPrefReadsInThread(pref, thread) {
   let count = 0;
-  for (let payload of getPayloadsOfType(thread, "PreferenceRead")) {
+  for (let payload of getPayloadsOfType(thread, "Preference")) {
     if (payload.prefName === pref) {
       count++;
     }
@@ -34,7 +34,7 @@ async function waitForPaintAfterLoad() {
 }
 
 /**
- * Test the PreferenceRead markers.
+ * Test the Preference Read markers.
  */
 add_task(async function test_profile_preferencereads_markers() {
   Assert.ok(
@@ -59,14 +59,14 @@ add_task(async function test_profile_preferencereads_markers() {
       Services.prefs.getIntPref(pref);
     });
 
-    // Check that some PreferenceRead profile markers were generated.
+    // Check that some Preference Read profile markers were generated.
     {
       const { contentThread } = await stopProfilerNowAndGetThreads(contentPid);
 
       Assert.greater(
         countPrefReadsInThread(kContentPref, contentThread),
         0,
-        `PreferenceRead profile markers for ${kContentPref} were recorded.`
+        `Preference Read profile markers for ${kContentPref} were recorded.`
       );
     }
   });
