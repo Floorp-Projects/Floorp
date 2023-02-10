@@ -836,7 +836,7 @@ featureCallout:
   hasExposure: false
   isEarlyStartup: false
   variables:
-    pdfjsInitialPref:
+    pdfJsTourProgress:
       description: A JSON String representing the intitial state of the pref that holds the progress of the PDF.js feature tour.
       type: string
       setPref: "browser.pdfjs.feature-tour"
