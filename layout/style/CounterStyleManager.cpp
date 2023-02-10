@@ -50,7 +50,7 @@ struct PadType {
 static bool GetCyclicCounterText(CounterValue aOrdinal, nsAString& aResult,
                                  Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 1, "No symbol available for cyclic counter.");
-  auto n = aSymbols.Length();
+  auto n = CounterValue(aSymbols.Length());
   CounterValue index = (aOrdinal - 1) % n;
   aResult = aSymbols[index >= 0 ? index : index + n];
   return true;
