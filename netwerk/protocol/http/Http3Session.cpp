@@ -941,6 +941,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     LOG3(("Http3Session::AddStream new  WeTransport session %p atrans=%p.\n",
           this, aHttpTransaction));
     stream = new Http3WebTransportSession(aHttpTransaction, this);
+    mHasWebTransportSession = true;
   } else {
     LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
     stream = new Http3Stream(aHttpTransaction, this, cos,
@@ -956,6 +957,12 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
       if (!mCannotDo0RTTStreams.Contains(stream)) {
         mCannotDo0RTTStreams.AppendElement(stream);
       }
+      if ((mWebTransportNegotiationStatus ==
+           WebTransportNegotiation::NEGOTIATING) &&
+          (trans && trans->IsForWebTransport())) {
+        LOG(("waiting for negotiation"));
+        mWaitingForWebTransportNegotiation.AppendElement(stream);
+      }
       return true;
     }
     m0RTTStreams.AppendElement(stream);
@@ -964,6 +971,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   if ((mWebTransportNegotiationStatus ==
        WebTransportNegotiation::NEGOTIATING) &&
       (trans && trans->IsForWebTransport())) {
+    LOG(("waiting for negotiation"));
     mWaitingForWebTransportNegotiation.AppendElement(stream);
     return true;
   }
@@ -982,7 +990,7 @@ bool Http3Session::CanReuse() {
   // TODO: we assume "pooling" is disabled here, so we don't allow this session
   // to be reused. "pooling" will be implemented in bug 1815735.
   return CanSandData() && !(mGoawayReceived || mShouldClose) &&
-         !mConnInfo->GetWebTransport();
+         !mHasWebTransportSession;
 }
 
 void Http3Session::QueueStream(Http3StreamBase* stream) {
@@ -1068,6 +1076,15 @@ nsresult Http3Session::TryActivating(
   } else {
     MOZ_RELEASE_ASSERT(aStream->GetHttp3WebTransportSession(),
                        "It must be a WebTransport session");
+    // Don't call CreateWebTransport if we are still waiting for the negotiation
+    // result.
+    if (mWebTransportNegotiationStatus ==
+        WebTransportNegotiation::NEGOTIATING) {
+      if (!mWaitingForWebTransportNegotiation.Contains(aStream)) {
+        mWaitingForWebTransportNegotiation.AppendElement(aStream);
+      }
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    }
     rv = mHttp3Connection->CreateWebTransport(aAuthorityHeader, aPath, aHeaders,
                                               aStreamId);
   }
