@@ -33,12 +33,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["CSSRuleTypeName", "findCssSelector", "prettifyCSS"],
-  "resource://devtools/shared/inspector/css-logic.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "isCssPropertyKnown",
   "resource://devtools/server/actors/css-properties.js",
   true
@@ -63,14 +57,6 @@ loader.lazyRequireGetter(
 );
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-
-const SUPPORTED_RULE_TYPES = [
-  CSSRule.STYLE_RULE,
-  CSSRule.SUPPORTS_RULE,
-  CSSRule.KEYFRAME_RULE,
-  CSSRule.KEYFRAMES_RULE,
-  CSSRule.MEDIA_RULE,
-];
 
 /**
  * An actor that represents a CSS style object on the protocol.
@@ -97,10 +83,7 @@ class StyleRuleActor extends Actor {
       this.type = item.type;
       this.rawRule = item;
       this._computeRuleIndex();
-      if (
-        SUPPORTED_RULE_TYPES.includes(this.type) &&
-        this.rawRule.parentStyleSheet
-      ) {
+      if (this.#isRuleSupported() && this.rawRule.parentStyleSheet) {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
@@ -196,8 +179,8 @@ class StyleRuleActor extends Actor {
         // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
         type: rule.rawRule.type,
         // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
-        typeName: CSSRuleTypeName[rule.rawRule.type],
-        // Conditions of @media and @supports rules (ex: "min-width: 1em")
+        typeName: SharedCssLogic.getCSSAtRuleTypeName(rule.rawRule),
+        // Conditions of @container, @media and @supports rules (ex: "min-width: 1em")
         conditionText: rule.rawRule.conditionText,
         // Name of @keyframes rule; refrenced by the animation-name CSS property.
         name: rule.rawRule.name,
@@ -212,7 +195,7 @@ class StyleRuleActor extends Actor {
     if (this.type === ELEMENT_STYLE && this.rawNode) {
       // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
       try {
-        data.selector = findCssSelector(this.rawNode);
+        data.selector = SharedCssLogic.findCssSelector(this.rawNode);
       } catch (err) {}
 
       data.source = {
@@ -294,22 +277,23 @@ class StyleRuleActor extends Actor {
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
       const ruleClassName = ChromeUtils.getClassName(ancestorRule.rawRule);
+      const type = SharedCssLogic.CSSAtRuleClassNameType[ruleClassName];
       if (
         ruleClassName === "CSSMediaRule" &&
         ancestorRule.rawRule.media?.length
       ) {
         form.ancestorData.push({
-          type: "media",
+          type,
           value: Array.from(ancestorRule.rawRule.media).join(", "),
         });
       } else if (ruleClassName === "CSSLayerBlockRule") {
         form.ancestorData.push({
-          type: "layer",
+          type,
           value: ancestorRule.rawRule.name,
         });
       } else if (ruleClassName === "CSSContainerRule") {
         form.ancestorData.push({
-          type: "container",
+          type,
           // Send containerName and containerQuery separately (instead of conditionText)
           // so the client has more flexibility to display the information.
           containerName: ancestorRule.rawRule.containerName,
@@ -317,7 +301,7 @@ class StyleRuleActor extends Actor {
         });
       } else if (ruleClassName === "CSSSupportsRule") {
         form.ancestorData.push({
-          type: "supports",
+          type,
           conditionText: ancestorRule.rawRule.conditionText,
         });
       }
@@ -561,6 +545,25 @@ class StyleRuleActor extends Actor {
     }
   }
 
+  #SUPPORTED_RULES_CLASSNAMES = new Set([
+    "CSSKeyframeRule",
+    "CSSKeyframesRule",
+    "CSSMediaRule",
+    "CSSStyleRule",
+    "CSSSupportsRule",
+  ]);
+
+  #isRuleSupported() {
+    // this.rawRule might not be an actual CSSRule (e.g. when this represent an element style),
+    // and in such case, ChromeUtils.getClassName will throw
+    try {
+      const ruleClassName = ChromeUtils.getClassName(this.rawRule);
+      return this.#SUPPORTED_RULES_CLASSNAMES.has(ruleClassName);
+    } catch (e) {}
+
+    return false;
+  }
+
   /**
    * Return a promise that resolves to the authored form of a rule's
    * text, if available.  If the authored form is not available, the
@@ -575,7 +578,7 @@ class StyleRuleActor extends Actor {
    *        may be outdated if a descendant of this rule has changed.
    */
   async getAuthoredCssText(skipCache = false) {
-    if (!this.canSetRuleText || !SUPPORTED_RULE_TYPES.includes(this.type)) {
+    if (!this.canSetRuleText || !this.#isRuleSupported()) {
       return Promise.resolve("");
     }
 
@@ -609,13 +612,12 @@ class StyleRuleActor extends Actor {
    */
   async getRuleText() {
     // Bail out if the rule is not supported or not an element inline style.
-    if (![...SUPPORTED_RULE_TYPES, ELEMENT_STYLE].includes(this.type)) {
+    if (!this.#isRuleSupported(true) && this.type !== ELEMENT_STYLE) {
       return Promise.resolve("");
     }
 
     let ruleBodyText;
     let selectorText;
-    let text;
 
     // For element inline styles, use the style attribute and generated unique selector.
     if (this.type === ELEMENT_STYLE) {
@@ -640,18 +642,8 @@ class StyleRuleActor extends Actor {
       selectorText = stylesheetText.substring(start, end);
     }
 
-    // CSS rule type as a string "@media", "@supports", "@keyframes", etc.
-    const typeName = CSSRuleTypeName[this.type];
-
-    // When dealing with at-rules, getSelectorOffsets() will not return the rule type.
-    // We prepend it ourselves.
-    if (typeName) {
-      text = `${typeName}${selectorText} {${ruleBodyText}}`;
-    } else {
-      text = `${selectorText} {${ruleBodyText}}`;
-    }
-
-    const { result } = prettifyCSS(text);
+    const text = `${selectorText} {${ruleBodyText}}`;
+    const { result } = SharedCssLogic.prettifyCSS(text);
     return Promise.resolve(result);
   }
 
