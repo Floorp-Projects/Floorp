@@ -80,6 +80,17 @@ union MFCDMInitResult {
   MFCDMInitIPDL;
 };
 
+struct MFCDMCreateSessionParamsIPDL {
+  SessionType sessionType;
+  nsString initDataType;
+  uint8_t[] initData;
+};
+
+union MFCDMSessionResult {
+  nsString;
+  nsresult;
+};
+
 [ManualDealloc]
 async protocol PMFCDM
 {
@@ -87,6 +98,8 @@ async protocol PMFCDM
 parent:
   async GetCapabilities() returns (MFCDMCapabilitiesResult result);
   async Init(MFCDMInitParamsIPDL params) returns (MFCDMInitResult result);
+  async CreateSessionAndGenerateRequest(MFCDMCreateSessionParamsIPDL type)
+      returns (MFCDMSessionResult result);
   async __delete__();
 };
 
