@@ -390,6 +390,35 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
+    const MFCDMCreateSessionParamsIPDL& aParams,
+    CreateSessionAndGenerateRequestResolver&& aResolver) {
+  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
+
+  UniquePtr<MFCDMSession> session{
+      MFCDMSession::Create(aParams.sessionType(), mCDM.Get(), mManagerThread)};
+  if (!session) {
+    MFCDM_PARENT_LOG("Failed to create CDM session");
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+
+  MFCDM_REJECT_IF_FAILED(session->GenerateRequest(aParams.initDataType(),
+                                                  aParams.initData().Elements(),
+                                                  aParams.initData().Length()),
+                         NS_ERROR_FAILURE);
+
+  // TODO : now we assume all session ID is available after session is created,
+  // but this is not always true. Need to remove this assertion and handle cases
+  // where session Id is not available yet.
+  const auto& sessionId = session->SessionID();
+  MOZ_ASSERT(sessionId);
+  mSessions.emplace(*sessionId, std::move(session));
+
+  aResolver(*sessionId);
+  return IPC_OK();
+}
+
 #undef MFCDM_REJECT_IF_FAILED
 #undef MFCDM_REJECT_IF
 #undef MFCDM_RETURN_IF_FAILED

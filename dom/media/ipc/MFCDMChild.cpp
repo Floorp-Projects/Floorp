@@ -77,9 +77,11 @@ void MFCDMChild::Shutdown() {
 
   mRemoteRequest.DisconnectIfExists();
   mInitRequest.DisconnectIfExists();
+  mCreateSessionRequest.DisconnectIfExists();
   mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+  mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 
   if (mState == NS_OK) {
     mManagerThread->Dispatch(NS_NewRunnableFunction(
@@ -189,6 +191,42 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
   };
 
   return InvokeAsync(std::move(doSend), __func__, mInitPromiseHolder);
+}
+
+RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
+    KeySystemConfig::SessionType aSessionType, const nsAString& aInitDataType,
+    const nsTArray<uint8_t>& aInitData) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  mManagerThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr{this}, this,
+                 params = MFCDMCreateSessionParamsIPDL{
+                     aSessionType, nsString{aInitDataType}, aInitData}] {
+        SendCreateSessionAndGenerateRequest(params)
+            ->Then(
+                mManagerThread, __func__,
+                [self, this](const MFCDMSessionResult& result) {
+                  mCreateSessionRequest.Complete();
+                  if (result.type() == MFCDMSessionResult::Tnsresult) {
+                    mCreateSessionPromiseHolder.RejectIfExists(
+                        result.get_nsresult(), __func__);
+                    return;
+                  }
+                  LOG("session ID=[%zu]%s", result.get_nsString().Length(),
+                      NS_ConvertUTF16toUTF8(result.get_nsString()).get());
+                  mCreateSessionPromiseHolder.ResolveIfExists(
+                      result.get_nsString(), __func__);
+                },
+                [self,
+                 this](const mozilla::ipc::ResponseRejectReason& aReason) {
+                  mCreateSessionRequest.Complete();
+                  mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
+                                                             __func__);
+                })
+            ->Track(mCreateSessionRequest);
+      }));
+  return mCreateSessionPromiseHolder.Ensure(__func__);
 }
 
 #undef SLOG
