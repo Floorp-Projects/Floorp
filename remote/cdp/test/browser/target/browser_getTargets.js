@@ -21,6 +21,7 @@ add_task(
     is(targetInfo.type, "page", "Got expected target type");
     is(targetInfo.title, "Test Page", "Got expected target title");
     is(targetInfo.url, PAGE_TEST, "Got expected target URL");
+    ok(targetInfo.attached, "Got expected target attached status");
   },
   { createTab: false }
 );
@@ -38,6 +39,21 @@ add_task(
     const targetIds = targetInfos.map(info => info.id);
     ok(targetIds.includes(target.id), "Got expected original target id");
     ok(targetIds.includes(newTabTargetInfo.id), "Got expected new target id");
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function getTargetsAttached({ client }) {
+    const { Target } = client;
+    await openTab(Target);
+
+    await loadURL(PAGE_TEST);
+
+    const { targetInfos } = await Target.getTargets();
+
+    ok(targetInfos[0].attached, "Current target is attached");
+    ok(!targetInfos[1].attached, "New tab target is detached");
   },
   { createTab: false }
 );

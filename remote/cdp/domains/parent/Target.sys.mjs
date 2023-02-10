@@ -184,13 +184,16 @@ export class Target extends Domain {
   }
 
   _getTargetInfo(target) {
+    const attached = [...this.session.connection.sessions.values()].some(
+      session => session.target.id === target.id
+    );
+
     return {
       targetId: target.id,
       type: target.type,
       title: target.title,
       url: target.url,
-      // TODO: Correctly determine if target is attached (bug 1680780)
-      attached: target.id == this.session.target.id,
+      attached,
       browserContextId: target.browserContextId,
     };
   }

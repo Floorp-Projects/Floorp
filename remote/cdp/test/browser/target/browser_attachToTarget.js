@@ -30,6 +30,8 @@ add_task(
     const { Target } = client;
     const { targetInfo } = await openTab(Target);
 
+    ok(!targetInfo.attached, "New target is not attached");
+
     info("Attach new target");
     const { sessionId } = await Target.attachToTarget({
       targetId: targetInfo.targetId,
@@ -40,6 +42,13 @@ add_task(
       "string",
       "attachToTarget returns the session id as string"
     );
+
+    const { targetInfos } = await Target.getTargets();
+    const listedTarget = targetInfos.find(
+      info => info.targetId === targetInfo.targetId
+    );
+
+    ok(listedTarget.attached, "New target is attached");
   },
   { createTab: false }
 );
