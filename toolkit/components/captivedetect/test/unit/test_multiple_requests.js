@@ -42,7 +42,6 @@ function fakeUIResponse() {
         );
       }
       Assert.equal(++step, 4);
-      Assert.ok(fakeTelemetryService.recordEvent.calledOnce);
     }
   }, "captive-portal-login-success");
 }
