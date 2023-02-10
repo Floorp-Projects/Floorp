@@ -6402,6 +6402,42 @@ networking:
       - 'main'
       - 'socket'
 
+  data_transferred_per_content_type:
+    bug_numbers:
+      - 1808695
+    description: >
+      Number of bytes we transferred keyed by "contentType"
+    expires: "130"
+    keyed: true
+    kind: uint
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - rtestard@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
+  data_transferred_pb_per_content_type:
+    bug_numbers:
+      - 1808695
+    description: >
+      Number of bytes we transferred in private browsing keyed by "contentType"
+    expires: "130"
+    keyed: true
+    kind: uint
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - rtestard@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:
