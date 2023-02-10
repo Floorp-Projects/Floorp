@@ -127,6 +127,15 @@
              Do not translate or transliterate Klar.-->
     <string name="text_selection_search_action_klar">Search in Klar</string>
 
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Search in Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Search in Focus Nightly</string>
+
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s puts you in control.</p>
@@ -678,8 +687,20 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Site permissions</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Cookie Banner Reduction</string>
+
     <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
     <string name="preferences_cookie_banner_summary_on">On</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Off</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Cookie Banner Reduction</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">See fewer banners by automatically rejecting cookie requests, when possible.</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Autoplay</string>
@@ -969,24 +990,35 @@
 
     !-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Close</string>
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_picture_content_description">Search widget</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Browsing history cleared! 🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">We’ll leave you to your private browsing, but get a quicker start next time with the %1$s widget on your Home screen.</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Add widget to home screen</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
     <string name="promote_search_widget_snackbar_message">Widget added to home screen</string>
 </resources>
