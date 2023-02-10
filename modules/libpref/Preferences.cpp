@@ -6084,6 +6084,8 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("gfx.blacklist."),
     PREF_LIST_ENTRY("font.system.whitelist"),
     PREF_LIST_ENTRY("font.name."),
+    PREF_LIST_ENTRY("intl.date_time.pattern_override."),
+    PREF_LIST_ENTRY("intl.hyphenation-alias."),
     PREF_LIST_ENTRY("logging.config.LOG_FILE"),
     PREF_LIST_ENTRY("marionette.log.level"),
     PREF_LIST_ENTRY("media.audio_loopback_dev"),
