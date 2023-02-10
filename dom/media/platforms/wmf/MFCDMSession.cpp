@@ -8,6 +8,7 @@
 
 #include "MFMediaEngineUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
+#include "mozilla/dom/MediaKeyStatusMapBinding.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -39,45 +40,6 @@ static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
   } else {
     return L"unknown";
   }
-}
-
-// TODO : define a status type in ipdl in order to pass an enum over IPC, not a
-// uint.
-static uint32_t ToKeyStatus(MF_MEDIAKEY_STATUS aStatus) {
-  // https://learn.microsoft.com/en-us/windows/win32/api/mfidl/ne-mfidl-mf_mediakey_status
-  switch (aStatus) {
-    case MF_MEDIAKEY_STATUS_USABLE:
-      return 0;
-    case MF_MEDIAKEY_STATUS_EXPIRED:
-      return 1;
-    case MF_MEDIAKEY_STATUS_OUTPUT_DOWNSCALED:
-      return 2;
-    // TODO : This is for legacy use and should not happen in normal cases. Map
-    // it to internal error in case it happens.
-    case MF_MEDIAKEY_STATUS_OUTPUT_NOT_ALLOWED:
-      return 3;
-    case MF_MEDIAKEY_STATUS_STATUS_PENDING:
-      return 4;
-    case MF_MEDIAKEY_STATUS_INTERNAL_ERROR:
-      return 5;
-    case MF_MEDIAKEY_STATUS_RELEASED:
-      return 6;
-    case MF_MEDIAKEY_STATUS_OUTPUT_RESTRICTED:
-      return 7;
-  }
-  MOZ_ASSERT_UNREACHABLE("Invalid MF_MEDIAKEY_STATUS enum value");
-  return 5;
-}
-
-void ByteArrayFromGUID(REFGUID aGuid, nsTArray<uint8_t>& aByteArrayOut) {
-  aByteArrayOut.SetCapacity(sizeof(GUID));
-  // GUID is little endian. The byte array in network order is big endian.
-  GUID* reversedGuid = reinterpret_cast<GUID*>(aByteArrayOut.Elements());
-  *reversedGuid = aGuid;
-  reversedGuid->Data1 = _byteswap_ulong(aGuid.Data1);
-  reversedGuid->Data2 = _byteswap_ushort(aGuid.Data2);
-  reversedGuid->Data3 = _byteswap_ushort(aGuid.Data3);
-  // Data4 is already a byte array so no need to byte swap.
 }
 
 // The callback interface which IMFContentDecryptionModuleSession uses for
@@ -145,13 +107,10 @@ MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
   MOZ_ASSERT(aSession);
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aManagerThread);
-  // It's ok to capture `this` here because the forwarder will be disconnected
-  // before this class get destroyed, which means `this` is always valid inside
-  // lambda.
   mKeyMessageListener = aCallback->KeyMessageEvent().Connect(
       mManagerThread, this, &MFCDMSession::OnSessionKeyMessage);
   mKeyChangeListener = aCallback->KeyChangeEvent().Connect(
-      mManagerThread, [this]() { OnSessionKeysChange(); });
+      mManagerThread, this, &MFCDMSession::OnSessionKeysChange);
 }
 
 MFCDMSession::~MFCDMSession() {
@@ -236,20 +195,58 @@ void MFCDMSession::OnSessionKeysChange() {
   UINT count = 0;
   RETURN_VOID_IF_FAILED(mSession->GetKeyStatuses(&keyStatuses, &count));
 
-  CopyableTArray<KeyInfo> keyInfos;
-  keyInfos.SetCapacity(count);
+  static auto ByteArrayFromGUID = [](REFGUID aGuid,
+                                     nsTArray<uint8_t>& aByteArrayOut) {
+    aByteArrayOut.SetCapacity(sizeof(GUID));
+    // GUID is little endian. The byte array in network order is big endian.
+    GUID* reversedGuid = reinterpret_cast<GUID*>(aByteArrayOut.Elements());
+    *reversedGuid = aGuid;
+    reversedGuid->Data1 = _byteswap_ulong(aGuid.Data1);
+    reversedGuid->Data2 = _byteswap_ushort(aGuid.Data2);
+    reversedGuid->Data3 = _byteswap_ushort(aGuid.Data3);
+    // Data4 is already a byte array so no need to byte swap.
+  };
+
+  static auto ToMediaKeyStatus = [](MF_MEDIAKEY_STATUS aStatus) {
+    // https://learn.microsoft.com/en-us/windows/win32/api/mfidl/ne-mfidl-mf_mediakey_status
+    switch (aStatus) {
+      case MF_MEDIAKEY_STATUS_USABLE:
+        return dom::MediaKeyStatus::Usable;
+      case MF_MEDIAKEY_STATUS_EXPIRED:
+        return dom::MediaKeyStatus::Expired;
+      case MF_MEDIAKEY_STATUS_OUTPUT_DOWNSCALED:
+        return dom::MediaKeyStatus::Output_downscaled;
+      // This is for legacy use and should not happen in normal cases. Map it to
+      // internal error in case it happens.
+      case MF_MEDIAKEY_STATUS_OUTPUT_NOT_ALLOWED:
+        return dom::MediaKeyStatus::Internal_error;
+      case MF_MEDIAKEY_STATUS_STATUS_PENDING:
+        return dom::MediaKeyStatus::Status_pending;
+      case MF_MEDIAKEY_STATUS_INTERNAL_ERROR:
+        return dom::MediaKeyStatus::Internal_error;
+      case MF_MEDIAKEY_STATUS_RELEASED:
+        return dom::MediaKeyStatus::Released;
+      case MF_MEDIAKEY_STATUS_OUTPUT_RESTRICTED:
+        return dom::MediaKeyStatus::Output_restricted;
+    }
+    MOZ_ASSERT_UNREACHABLE("Invalid MF_MEDIAKEY_STATUS enum value");
+    return dom::MediaKeyStatus::Internal_error;
+  };
+
+  CopyableTArray<MFCDMKeyInformation> keyInfos;
   for (uint32_t idx = 0; idx < count; idx++) {
     const MFMediaKeyStatus& keyStatus = keyStatuses[idx];
     if (keyStatus.cbKeyId != sizeof(GUID)) {
       LOG("Key ID with unsupported size ignored");
       continue;
     }
-    KeyInfo* info = keyInfos.AppendElement();
-    ByteArrayFromGUID(reinterpret_cast<REFGUID>(keyStatus.pbKeyId),
-                      info->mKeyId);
-    info->mKeyStatus = ToKeyStatus(keyStatus.eMediaKeyStatus);
+    CopyableTArray<uint8_t> keyId;
+    ByteArrayFromGUID(reinterpret_cast<REFGUID>(keyStatus.pbKeyId), keyId);
+    keyInfos.AppendElement(MFCDMKeyInformation{
+        std::move(keyId), ToMediaKeyStatus(keyStatus.eMediaKeyStatus)});
   }
-  mKeyChangeEvent.Notify(std::move(keyInfos));
+  mKeyChangeEvent.Notify(
+      MFCDMKeyStatusChange{*mSessionId, std::move(keyInfos)});
 
   // ScopedCoMem<MFMediaKeyStatus> only releases memory for |keyStatuses|. We
   // need to manually release memory for |pbKeyId| here.

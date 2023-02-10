@@ -34,11 +34,6 @@ struct ExpirationInfo {
   const double mExpiredTimeMilliSecondsSinceEpoch;
 };
 
-struct KeyInfo {
-  CopyableTArray<uint8_t> mKeyId;
-  uint32_t mKeyStatus;
-};
-
 // MFCDMSession represents a key session defined by the EME spec, it operates
 // the IMFContentDecryptionModuleSession directly and forward events from
 // IMFContentDecryptionModuleSession to its caller. It's not thread-safe and
@@ -63,7 +58,7 @@ class MFCDMSession final {
   MediaEventSource<MFCDMKeyMessage>& KeyMessageEvent() {
     return mKeyMessageEvent;
   }
-  MediaEventSource<CopyableTArray<KeyInfo>>& KeyChangeEvent() {
+  MediaEventSource<MFCDMKeyStatusChange>& KeyChangeEvent() {
     return mKeyChangeEvent;
   }
   MediaEventSource<ExpirationInfo>& ExpirationEvent() {
@@ -96,7 +91,7 @@ class MFCDMSession final {
   const nsCOMPtr<nsISerialEventTarget> mManagerThread;
 
   MediaEventProducer<MFCDMKeyMessage> mKeyMessageEvent;
-  MediaEventProducer<CopyableTArray<KeyInfo>> mKeyChangeEvent;
+  MediaEventProducer<MFCDMKeyStatusChange> mKeyChangeEvent;
   MediaEventProducer<ExpirationInfo> mExpirationEvent;
   MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;
