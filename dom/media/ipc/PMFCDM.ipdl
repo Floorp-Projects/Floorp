@@ -10,6 +10,7 @@ using mozilla::KeySystemConfig::Requirement from "mozilla/KeySystemConfig.h";
 using mozilla::KeySystemConfig::SessionType from "mozilla/KeySystemConfig.h";
 using mozilla::CryptoScheme from "MediaData.h";
 using mozilla::dom::MediaKeyMessageType from "mozilla/dom/MediaKeyMessageEventBinding.h";
+using mozilla::dom::MediaKeyStatus from "mozilla/dom/MediaKeyStatusMapBinding.h";
 
 namespace mozilla {
 
@@ -25,7 +26,7 @@ struct MFCDMKeyMessage {
 // https://w3c.github.io/encrypted-media/#dom-evt-keystatuseschange
 struct MFCDMKeyInformation {
   uint8_t[] keyId;
-  uint32_t status;
+  MediaKeyStatus status;
 };
 
 struct MFCDMKeyStatusChange {

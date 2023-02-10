@@ -9,6 +9,7 @@
 #include "MediaData.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
+#include "mozilla/dom/MediaKeyStatusMapBinding.h"
 
 namespace IPC {
 
@@ -38,6 +39,13 @@ struct ParamTraits<mozilla::dom::MediaKeyMessageType>
           mozilla::dom::MediaKeyMessageType,
           mozilla::dom::MediaKeyMessageType::License_request,
           mozilla::dom::MediaKeyMessageType::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::MediaKeyStatus>
+    : public ContiguousEnumSerializer<mozilla::dom::MediaKeyStatus,
+                                      mozilla::dom::MediaKeyStatus::Usable,
+                                      mozilla::dom::MediaKeyStatus::EndGuard_> {
+};
 
 }  // namespace IPC
 
