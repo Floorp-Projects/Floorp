@@ -11,6 +11,7 @@
 
 #include "MFCDMExtra.h"
 #include "MediaEventSource.h"
+#include "mozilla/PMFCDM.h"
 #include "nsAString.h"
 
 namespace mozilla {
@@ -25,14 +26,6 @@ enum class SessionType {
 // TODO: declare them in the ipdl so that we can send them over IPC directly.
 // Also, refine them if needed because now I am not sure what exact information
 // caller expects to see from these events.
-struct KeyMessageInfo {
-  KeyMessageInfo(MF_MEDIAKEYSESSION_MESSAGETYPE aType, const BYTE* aMessage,
-                 DWORD aMessageSize)
-      : mMessageType(aType), mMessage(aMessage, aMessage + aMessageSize) {}
-  const MF_MEDIAKEYSESSION_MESSAGETYPE mMessageType;
-  const std::vector<uint8_t> mMessage;
-};
-
 struct ExpirationInfo {
   ExpirationInfo(const nsString& aSessionId, double aExpiredTime)
       : mSessionId(aSessionId),
@@ -67,7 +60,7 @@ class MFCDMSession final {
   HRESULT Remove();
 
   // Session status related events
-  MediaEventSource<KeyMessageInfo>& KeyMessageEvent() {
+  MediaEventSource<MFCDMKeyMessage>& KeyMessageEvent() {
     return mKeyMessageEvent;
   }
   MediaEventSource<CopyableTArray<KeyInfo>>& KeyChangeEvent() {
@@ -90,6 +83,8 @@ class MFCDMSession final {
 
   bool RetrieveSessionId();
   void OnSessionKeysChange();
+  void OnSessionKeyMessage(const MF_MEDIAKEYSESSION_MESSAGETYPE& aType,
+                           const nsTArray<uint8_t>& aMessage);
 
   HRESULT UpdateExpirationIfNeeded();
 
@@ -100,9 +95,10 @@ class MFCDMSession final {
   const Microsoft::WRL::ComPtr<IMFContentDecryptionModuleSession> mSession;
   const nsCOMPtr<nsISerialEventTarget> mManagerThread;
 
-  MediaEventForwarder<KeyMessageInfo> mKeyMessageEvent;
+  MediaEventProducer<MFCDMKeyMessage> mKeyMessageEvent;
   MediaEventProducer<CopyableTArray<KeyInfo>> mKeyChangeEvent;
   MediaEventProducer<ExpirationInfo> mExpirationEvent;
+  MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;
 
   // IMFContentDecryptionModuleSession's id might not be ready immediately after
