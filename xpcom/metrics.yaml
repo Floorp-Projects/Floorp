@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Core :: XPCOM"
+
+timer_thread:
+  timers_fired_per_wakeup:
+    type: custom_distribution
+    description: >
+      How many timers were processed in a single wake-up of the Timer Thread.
+    range_min: 0
+    range_max: 80
+    bucket_count: 20
+    histogram_type: exponential
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814718
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814718
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - jlink@mozilla.com
+    expires: never
