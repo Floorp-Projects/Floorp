@@ -42,10 +42,8 @@ add_task(async function test_session_data_update_contexts() {
   const tab2 = await addTab(TEST_PAGE);
   const browsingContext2 = tab2.linkedBrowser.browsingContext;
 
-  // TODO: We currently call applyInitialSessionDataItems too many times on
-  // MessageHandler startup, once per value. See Bug 1810687.
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 1);
+  is(processedUpdates.length, 1);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-1", "text-2", "text-3"],
@@ -70,7 +68,7 @@ add_task(async function test_session_data_update_contexts() {
   );
 
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 2);
+  is(processedUpdates.length, 2);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-1", "text-2", "text-3", "text-4", "text-5"],
@@ -95,7 +93,7 @@ add_task(async function test_session_data_update_contexts() {
   );
 
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 3);
+  is(processedUpdates.length, 3);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-2", "text-3", "text-4"],
@@ -134,7 +132,7 @@ add_task(async function test_session_data_update_contexts() {
   );
 
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 4);
+  is(processedUpdates.length, 4);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-2", "text-3", "text-4", "text-6"],
@@ -165,7 +163,7 @@ add_task(async function test_session_data_update_contexts() {
   );
 
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 5);
+  is(processedUpdates.length, 5);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-2", "text-3", "text-4", "text-6", "text-7"],
@@ -186,7 +184,7 @@ add_task(async function test_session_data_update_contexts() {
   );
 
   processedUpdates = await getUpdates(root, browsingContext2);
-  todo_is(processedUpdates.length, 6);
+  is(processedUpdates.length, 6);
   assertUpdate(
     processedUpdates.at(-1),
     ["text-2", "text-3", "text-4", "text-6"],
