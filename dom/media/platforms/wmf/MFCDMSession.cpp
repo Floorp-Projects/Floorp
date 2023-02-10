@@ -274,7 +274,7 @@ HRESULT MFCDMSession::UpdateExpirationIfNeeded() {
       mExpiredTimeMilliSecondsSinceEpoch, newExpiredEpochTimeMs);
   mExpiredTimeMilliSecondsSinceEpoch = newExpiredEpochTimeMs;
   mExpirationEvent.Notify(
-      ExpirationInfo{*mSessionId, mExpiredTimeMilliSecondsSinceEpoch});
+      MFCDMKeyExpiration{*mSessionId, mExpiredTimeMilliSecondsSinceEpoch});
   return S_OK;
 }
 
