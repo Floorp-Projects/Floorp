@@ -200,25 +200,25 @@ async function getBrowsersOnLinux() {
 }
 
 async function OpenLinkInExternal(url) {
-    let openInDefault = true; // Temporary
+    let userSelectedBrowserId = Services.prefs.getStringPref("floorp.openInExternal.browserId", "");
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
     let browsers, browser, browserPath;
     if (platform === "linux") {
         browsers = await getBrowsersOnLinux();
-        if (openInDefault) {
+        if (userSelectedBrowserId === "") {
             browser = await getDefaultBrowserOnLinux(browsers);
         } else {
-            // TODO
+            browser = browsers.filter(browser => browser.desktopFileName === userSelectedBrowserId + ".desktop");
         }
         //browserPath = browser["Desktop Entry"]["Exec"]; // TODO: extract executable file path  For example: "/usr/bin/floorp %u"
     } else if (platform === "win") {
         browsers = getBrowsersOnWindows();
-        if (openInDefault) {
+        if (userSelectedBrowserId === "") {
             browser = getDefaultBrowserOnWindows(protocol, browsers);
         } else {
-            // TODO
+            browser = browsers.filter(browser => browser.keyName === userSelectedBrowserId);
         }
         browserPath = browser["path"];
     }
