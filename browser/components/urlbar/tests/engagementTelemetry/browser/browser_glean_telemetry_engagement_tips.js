@@ -5,6 +5,11 @@
 
 // Test for engagement telemetry for tips using Glean.
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser-tips/head.js",
+  this
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
@@ -74,11 +79,11 @@ add_task(async function selected_result_tip() {
 
     await doTest(async browser => {
       await openPopup("example");
-      await selectRow(type);
+      await selectRowByType(type);
       EventUtils.synthesizeKey("VK_RETURN");
       await deferred.promise;
 
-      assertGleanTelemetry([
+      assertEngagementTelemetry([
         {
           selected_result: expected,
           results: expected,
@@ -155,60 +160,16 @@ add_task(async function selected_result_intervention_update() {
   );
 });
 
-function assertGleanTelemetry(expectedExtraList) {
-  const telemetries = Glean.urlbar.engagement.testGetValue();
-  Assert.equal(telemetries.length, expectedExtraList.length);
-
-  for (let i = 0; i < telemetries.length; i++) {
-    const telemetry = telemetries[i];
-    Assert.equal(telemetry.category, "urlbar");
-    Assert.equal(telemetry.name, "engagement");
-
-    const expectedExtra = expectedExtraList[i];
-    for (const key of Object.keys(expectedExtra)) {
-      Assert.equal(
-        telemetry.extra[key],
-        expectedExtra[key],
-        `${key} is correct`
-      );
-    }
-  }
-}
-
 async function doInterventionTest(keyword, type, dialog, expectedTelemetry) {
   await doTest(async browser => {
     await openPopup(keyword);
-    await selectRow(type);
+    await selectRowByType(type);
     const onDialog = BrowserTestUtils.promiseAlertDialog("cancel", dialog, {
       isSubDialog: true,
     });
     EventUtils.synthesizeKey("VK_RETURN");
     await onDialog;
 
-    assertGleanTelemetry(expectedTelemetry);
+    assertEngagementTelemetry(expectedTelemetry);
   });
-}
-
-async function doTest(testFn) {
-  Services.fog.testResetFOG();
-
-  await BrowserTestUtils.withNewTab(gBrowser, testFn);
-}
-
-async function openPopup(input) {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: input,
-    fireInputEvent: true,
-  });
-}
-
-async function selectRow(type) {
-  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
-    const detail = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (detail.result.payload.type === type) {
-      UrlbarTestUtils.setSelectedRowIndex(window, i);
-      return;
-    }
-  }
 }
