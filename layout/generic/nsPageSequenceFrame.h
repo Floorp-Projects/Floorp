@@ -88,6 +88,11 @@ class nsSharedPageData {
   uint32_t mPagesPerSheetNumCols = 1;
   nsPoint mPagesPerSheetGridOrigin;
 
+  // The size of each cell on the sheet into which pages are to be placed.
+  // (The default values are arbitrary.)
+  float mCellWidth = 1.0f;
+  float mCellHeight = 1.0f;
+
   // Lazy getter, to look up our pages-per-sheet info based on mPrintSettings
   // (if it's available).  The result is stored in our mPagesPerSheetInfo
   // member-var to speed up subsequent lookups.
