@@ -99,6 +99,12 @@ pref("intl.locale.requested", "");
 
 pref("app.feedback.baseURL", "https://support.ablaze.one/");
 
+// 多段タブ
+pref("floorp.enable.multitab", false);
+pref("floorp.browser.tabbar.multirow.max.enabled", true);
+pref("floorp.browser.tabbar.multirow.newtab-inside.enabled", false);
+pref("floorp.browser.tabbar.multirow.max.row", 3);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
@@ -232,11 +238,6 @@ pref("extensions.webcompat-reporter.enabled", false);
 pref("browser.startup.page", 3);//自動復元
 pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように]
 pref("general.config.obscure_value", 0);
-
-pref("floorp.enable.multitab", false);
-pref("floorp.browser.tabbar.multirow.max.enable", true);
-pref("floorp.browser.tabbar.multirow.newtab.enable", false);
-pref("floorp.browser.tabbar.multirow.max.row", 3);
 
 //font
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka,Meiryo");

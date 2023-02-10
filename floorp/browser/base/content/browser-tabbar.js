@@ -70,7 +70,12 @@ function setMultirowTabMaxHeight() {
   document.querySelector("#tabbrowser-arrowscrollbox")
     .shadowRoot
     .querySelector("[part=scrollbox]")
-    .setAttribute("style", Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enable") ? ("max-height: " + tabHeight*rowValue + "px !important;") : "");
+    .setAttribute(
+      "style", 
+      Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enabled") ?
+        ("max-height: " + tabHeight*rowValue + "px !important;") :
+        ""
+    );
 }
 
 function removeMultirowTabMaxHeight() {
@@ -81,7 +86,7 @@ function removeMultirowTabMaxHeight() {
 }
 
 function setNewTabInTabs(){
-  if(Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.newtab.enable")){
+  if(Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.newtab-inside.enabled")){
     document.querySelector("#tabs-newtab-button").style.display = "initial"
     document.querySelector("#new-tab-button").style.display = "none"
   }else{
@@ -99,8 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 3000);
   
   Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);
-  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.enable",setMultirowTabMaxHeight);
-  Services.prefs.addObserver("floorp.browser.tabbar.multirow.newtab.enable",setNewTabInTabs)
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.enabled",setMultirowTabMaxHeight);
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.newtab-inside.enabled",setNewTabInTabs)
   
   Services.prefs.addObserver("floorp.enable.multitab", function(){
     if (Services.prefs.getBoolPref("floorp.enable.multitab")) {

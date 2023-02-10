@@ -39,8 +39,8 @@ Preferences.addAll([
   { id: "floorp.disable.fullscreen.notification", type: "bool" },
   { id: "floorp.tabsleep.enabled", type: "bool" },
   { id: "floorp.tabs.showPinnedTabsTitle", type: "bool" },
-  { id: "floorp.browser.tabbar.multirow.max.enable", type: "bool"},
-  { id: "floorp.browser.tabbar.multirow.newtab.enable", type: "bool"},
+  { id: "floorp.browser.tabbar.multirow.max.enabled", type: "bool"},
+  { id: "floorp.browser.tabbar.multirow.newtab-inside.enabled", type: "bool"},
 ]);
 
 window.addEventListener("pageshow", async function() {
