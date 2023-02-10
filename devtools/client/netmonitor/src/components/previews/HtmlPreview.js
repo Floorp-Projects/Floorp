@@ -27,12 +27,9 @@ class HTMLPreview extends Component {
     this.iframe = iframe;
     iframe.setAttribute("type", "content");
     iframe.setAttribute("remote", "true");
-    // Bug 1800916 allow interaction with the preview page until
-    // we find a way to prevent navigation without preventing copy paste from it.
-    //
-    // iframe.addEventListener("mousedown", e => e.preventDefault(), {
-    //   capture: true,
-    // });
+    iframe.addEventListener("mousedown", e => e.preventDefault(), {
+      capture: true,
+    });
     container.appendChild(iframe);
 
     // browsingContext attribute is only available after the iframe
