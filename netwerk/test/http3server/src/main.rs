@@ -135,7 +135,7 @@ impl Http3TestServer {
         for (expires, sessions) in self.sessions_to_close.iter_mut() {
             if *expires <= now {
                 for s in sessions.iter_mut() {
-                    s.close_session(0, "").unwrap();
+                    mem::drop(s.close_session(0, ""));
                 }
             }
         }

@@ -350,6 +350,7 @@ nsresult Http3WebTransportStream::ReadSegments() {
           rv = NS_OK;
           break;
         }
+        mSendState = SENDING;
         rv = mSendStreamPipeIn->ReadSegments(ReadRequestSegment, this,
                                              nsIOService::gDefaultSegmentSize,
                                              &sendBytes);

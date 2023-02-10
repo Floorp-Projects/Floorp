@@ -237,7 +237,7 @@ add_task(async function test_wt_stream_send_and_stats() {
   let stream = await streamCreatePromise(webTransport, false);
   let outputStream = stream.outputStream;
 
-  let data = "123456";
+  let data = "1234567890ABC";
   outputStream.write(data, data.length);
 
   // We need some time to send the packet out.
