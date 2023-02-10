@@ -637,3 +637,22 @@ void js::DumpHeap(JSContext* cx, FILE* fp,
 
   fflush(dtrc.output);
 }
+
+void DumpFmtV(FILE* fp, const char* fmt, va_list args) {
+  js::Fprinter out(fp);
+  out.vprintf(fmt, args);
+}
+
+void js::DumpFmt(FILE* fp, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  DumpFmtV(fp, fmt, args);
+  va_end(args);
+}
+
+void js::DumpFmt(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  DumpFmtV(stderr, fmt, args);
+  va_end(args);
+}
