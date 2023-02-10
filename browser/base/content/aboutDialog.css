@@ -90,20 +90,8 @@
   width: 16px;
   min-height: 16px;
   margin-inline-end: 3px;
-}
-
-html|img.update-throbber {
   vertical-align: middle;
-}
-
-image.update-throbber {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .update-throbber {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
+  content: image-set(url("chrome://global/skin/icons/loading.png"), url("chrome://global/skin/icons/loading@2x.png") 2x);
 }
 
 description > .text-link {
