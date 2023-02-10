@@ -980,7 +980,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
 bool Http3Session::CanReuse() {
   // TODO: we assume "pooling" is disabled here, so we don't allow this session
-  // to be reused.
+  // to be reused. "pooling" will be implemented in bug 1815735.
   return CanSandData() && !(mGoawayReceived || mShouldClose) &&
          !mConnInfo->GetWebTransport();
 }
@@ -1766,6 +1766,21 @@ void Http3Session::DontReuse() {
   if (!mStreamTransactionHash.Count()) {
     Close(NS_OK);
   }
+}
+
+void Http3Session::CloseWebTransportConn() {
+  LOG3(("Http3Session::CloseWebTransportConn %p\n", this));
+  // We need to dispatch, since Http3Session could be released in
+  // HttpConnectionUDP::CloseTransaction.
+  gSocketTransportService->Dispatch(
+      NS_NewRunnableFunction("Http3Session::CloseWebTransportConn",
+                             [self = RefPtr{this}]() {
+                               if (self->mUdpConn) {
+                                 self->mUdpConn->CloseTransaction(
+                                     self, NS_ERROR_ABORT);
+                               }
+                             }),
+      NS_DISPATCH_NORMAL);
 }
 
 void Http3Session::TopBrowsingContextIdChanged(uint64_t id) {

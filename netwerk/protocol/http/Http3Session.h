@@ -209,6 +209,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   uint64_t MaxDatagramSize(uint64_t aSessionId);
 
+  void CloseWebTransportConn();
+
  private:
   ~Http3Session();
 

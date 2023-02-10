@@ -328,6 +328,8 @@ void Http3WebTransportSession::Close(nsresult aResult) {
     mTransaction = nullptr;
   }
   mRecvState = RECV_DONE;
+
+  mSession->CloseWebTransportConn();
 }
 
 void Http3WebTransportSession::OnSessionClosed(uint32_t aStatus,
@@ -341,6 +343,8 @@ void Http3WebTransportSession::OnSessionClosed(uint32_t aStatus,
     mListener = nullptr;
   }
   mRecvState = RECV_DONE;
+
+  mSession->CloseWebTransportConn();
 }
 
 void Http3WebTransportSession::CloseSession(uint32_t aStatus,
