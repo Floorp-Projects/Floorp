@@ -386,6 +386,26 @@ static HRESULT BuildCDMProperties(
 
 mozilla::ipc::IPCResult MFCDMParent::RecvInit(
     const MFCDMInitParamsIPDL& aParams, InitResolver&& aResolver) {
+  static auto RequirementToStr = [](KeySystemConfig::Requirement aRequirement) {
+    switch (aRequirement) {
+      case KeySystemConfig::Requirement::Required:
+        return "Required";
+      case KeySystemConfig::Requirement::Optional:
+        return "Optional";
+      default:
+        return "NotAllowed";
+    }
+  };
+
+  MFCDM_PARENT_LOG(
+      "Creating a CDM (key-system=%s, origin=%s, distinctiveID=%s, "
+      "persistentState=%s, "
+      "hwSecure=%d)",
+      NS_ConvertUTF16toUTF8(mKeySystem).get(),
+      NS_ConvertUTF16toUTF8(aParams.origin()).get(),
+      RequirementToStr(aParams.distinctiveID()),
+      RequirementToStr(aParams.persistentState()), aParams.hwSecure());
+
   // Get access object to CDM.
   Microsoft::WRL::ComPtr<IPropertyStore> accessConfig;
   MFCDM_REJECT_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig),
@@ -408,6 +428,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
 
   mCDM.Swap(cdm);
   aResolver(MFCDMInitIPDL{mId});
+  MFCDM_PARENT_LOG("Created a CDM!");
   return IPC_OK();
 }
 
@@ -416,6 +437,20 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
     CreateSessionAndGenerateRequestResolver&& aResolver) {
   MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
 
+  static auto SessionTypeToStr = [](KeySystemConfig::SessionType aSessionType) {
+    switch (aSessionType) {
+      case KeySystemConfig::SessionType::Temporary:
+        return "temporary";
+      case KeySystemConfig::SessionType::PersistentLicense:
+        return "persistent-license";
+      default: {
+        MOZ_ASSERT_UNREACHABLE("Unsupported license type!");
+        return "invalid";
+      }
+    }
+  };
+  MFCDM_PARENT_LOG("Creating session for type '%s'",
+                   SessionTypeToStr(aParams.sessionType()));
   UniquePtr<MFCDMSession> session{
       MFCDMSession::Create(aParams.sessionType(), mCDM.Get(), mManagerThread)};
   if (!session) {
@@ -436,7 +471,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
   const auto& sessionId = session->SessionID();
   MOZ_ASSERT(sessionId);
   mSessions.emplace(*sessionId, std::move(session));
-
+  MFCDM_PARENT_LOG("Created a CDM session!");
   aResolver(*sessionId);
   return IPC_OK();
 }
