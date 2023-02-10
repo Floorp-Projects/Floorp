@@ -34,7 +34,6 @@
           "stackwalk",
           "jsallocations",
           "nostacksampling",
-          "preferencereads",
           "nativeallocations",
           "ipcmessages",
           "audiocallbacktracing",

@@ -465,11 +465,6 @@ const featureDescriptions = [
       "JS Tracer is currently disabled due to crashes. See Bug 1565788.",
   },
   {
-    name: "Preference Read",
-    value: "preferencereads",
-    title: "Track Preference Reads",
-  },
-  {
     name: "IPC Messages",
     value: "ipcmessages",
     title: "Track IPC messages.",
