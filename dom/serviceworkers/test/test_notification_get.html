@@ -93,11 +93,6 @@
         ok(notification instanceof Notification, "Should be a Notification");
         is(notification.title, "This is a title", "Title should match");
         for (var key in options) {
-          if (key === "data") {
-            ok(NotificationTest.customDataMatches(notification.data),
-               "data property should match");
-            continue;
-          }
           is(notification[key], options[key], key + " property should match");
         }
         notification.close();

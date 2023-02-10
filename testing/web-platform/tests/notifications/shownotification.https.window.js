@@ -1,5 +1,6 @@
 // META: script=/resources/testdriver.js
 // META: script=/resources/testdriver-vendor.js
+// META: script=resources/custom-data.js
 
 "use strict";
 
@@ -95,3 +96,11 @@ promise_test(async t => {
   assert_equals(notifications.length, 1, "Should return a notification");
   assert_equals(notifications[0].title, "Hello", "Title should match");
 }, "fetching only persistent notifications")
+
+promise_test(async t => {
+  t.add_cleanup(cleanup);
+  await registration.showNotification("Hello", { data: fakeCustomData });
+  const notifications = await registration.getNotifications();
+  assert_equals(notifications.length, 1, "Should return a notification");
+  assert_custom_data(notifications[0].data);
+}, "fetching a notification with custom data")
