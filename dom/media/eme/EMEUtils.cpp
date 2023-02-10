@@ -72,14 +72,19 @@ bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
 }
 #endif
 
-nsString KeySystemToGMPName(const nsAString& aKeySystem) {
+nsString KeySystemToProxyName(const nsAString& aKeySystem) {
   if (IsClearkeyKeySystem(aKeySystem)) {
     return u"gmp-clearkey"_ns;
   }
   if (IsWidevineKeySystem(aKeySystem)) {
     return u"gmp-widevinecdm"_ns;
   }
-  MOZ_ASSERT(false, "We should only call this for known GMPs");
+#ifdef MOZ_MF_CDM
+  if (IsPlayReadyKeySystem(aKeySystem)) {
+    return u"mfcdm-playready"_ns;
+  }
+#endif
+  MOZ_ASSERT_UNREACHABLE("Not supported key system!");
   return u""_ns;
 }
 

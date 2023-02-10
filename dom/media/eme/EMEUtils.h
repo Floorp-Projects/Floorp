@@ -76,7 +76,7 @@ struct ArrayData {
 ArrayData GetArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView);
 
-nsString KeySystemToGMPName(const nsAString& aKeySystem);
+nsString KeySystemToProxyName(const nsAString& aKeySystem);
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem);
 

@@ -29,8 +29,7 @@ class WMFCDMProxy : public CDMProxy {
 
   // CDMProxy interface
   void Init(PromiseId aPromiseId, const nsAString& aOrigin,
-            const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName) override;
+            const nsAString& aTopLevelOrigin, const nsAString& aName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
                      MediaKeySessionType aSessionType, PromiseId aPromiseId,
