@@ -2109,6 +2109,14 @@ void nsCocoaWindow::DispatchSizeModeEvent() {
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(newMode);
   }
+
+  if (StaticPrefs::widget_pause_compositor_when_minimized()) {
+    if (newMode == nsSizeMode_Minimized) {
+      PauseCompositor();
+    } else {
+      ResumeCompositor();
+    }
+  }
 }
 
 void nsCocoaWindow::DispatchOcclusionEvent() {
@@ -2145,6 +2153,30 @@ void nsCocoaWindow::ReportSizeEvent() {
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
+void nsCocoaWindow::PauseCompositor() {
+  nsIWidget* mainChildView = static_cast<nsIWidget*>([[mWindow mainChildView] widget]);
+  if (!mainChildView) {
+    return;
+  }
+  CompositorBridgeChild* remoteRenderer = mainChildView->GetRemoteRenderer();
+  if (!remoteRenderer) {
+    return;
+  }
+  remoteRenderer->SendPause();
+}
+
+void nsCocoaWindow::ResumeCompositor() {
+  nsIWidget* mainChildView = static_cast<nsIWidget*>([[mWindow mainChildView] widget]);
+  if (!mainChildView) {
+    return;
+  }
+  CompositorBridgeChild* remoteRenderer = mainChildView->GetRemoteRenderer();
+  if (!remoteRenderer) {
+    return;
+  }
+  remoteRenderer->SendResume();
 }
 
 void nsCocoaWindow::SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar) {
@@ -2564,12 +2596,6 @@ bool nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType, const WidgetKey
   // treated as in a vertical content.
   keyBindings->GetEditCommands(aEvent, Nothing(), aCommands);
   return true;
-}
-
-void nsCocoaWindow::PauseOrResumeCompositor(bool aPause) {
-  if (auto* mainChildView = static_cast<nsIWidget*>([[mWindow mainChildView] widget])) {
-    mainChildView->PauseOrResumeCompositor(aPause);
-  }
 }
 
 bool nsCocoaWindow::AsyncPanZoomEnabled() const {
