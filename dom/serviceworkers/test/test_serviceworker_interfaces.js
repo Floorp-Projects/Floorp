@@ -189,13 +189,13 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "FileReader",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FileSystemDirectoryHandle", nightly: true },
+  { name: "FileSystemDirectoryHandle" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FileSystemFileHandle", nightly: true },
+  { name: "FileSystemFileHandle" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FileSystemHandle", nightly: true },
+  { name: "FileSystemHandle" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FileSystemWritableFileStream", nightly: true },
+  { name: "FileSystemWritableFileStream" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "FontFace",
   // IMPORTANT: Do not change this list without review from a DOM peer!
