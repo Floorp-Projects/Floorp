@@ -599,7 +599,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   AddRef();
   mProxy->Init(mCreatePromiseId, NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
-               KeySystemToGMPName(mKeySystem));
+               KeySystemToProxyName(mKeySystem));
 
   ConnectInnerWindow();
 

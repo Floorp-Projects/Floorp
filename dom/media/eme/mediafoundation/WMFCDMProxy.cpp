@@ -21,7 +21,7 @@ WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
 
 void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
-                       const nsAString& aGMPName) {
+                       const nsAString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
