@@ -67,7 +67,8 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
 
 #ifdef MOZ_MF_CDM
 bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
-  return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName);
+  return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
+         aKeySystem.EqualsLiteral(kPlayReadyKeySystemNameDeprecated);
 }
 #endif
 
