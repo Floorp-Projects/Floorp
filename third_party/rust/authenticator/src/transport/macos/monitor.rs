@@ -103,7 +103,7 @@ where
             if rv == 0 {
                 Ok(())
             } else {
-                Err(io_err(&format!("Couldn't open HID Manager, rv={}", rv)))
+                Err(io_err(&format!("Couldn't open HID Manager, rv={rv}")))
             }
         }
     }
@@ -145,7 +145,7 @@ where
         let mut send_failed = false;
 
         // Ignore the report if we can't find a device for it.
-        if let Some(&DeviceData { ref tx, .. }) = this.map.get(&device_ref) {
+        if let Some(DeviceData { tx, .. }) = this.map.get(&device_ref) {
             let data = unsafe { slice::from_raw_parts(report, report_len as usize).to_vec() };
             send_failed = tx.send(data).is_err();
         }

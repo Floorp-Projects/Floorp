@@ -681,8 +681,7 @@ pub mod test {
             .expect("Failed to serialize MakeCredentials request");
         assert_eq!(
             req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1,
-            "\nGot:      {:X?}\nExpected: {:X?}",
-            req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1
+            "\nGot:      {req_serialized:X?}\nExpected: {MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1:X?}"
         );
         let (attestation_object, _collected_client_data) = match req
             .handle_response_ctap1(Ok(()), &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1, &())

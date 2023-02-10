@@ -321,7 +321,7 @@ pub struct Signature(#[serde(with = "serde_bytes")] pub(crate) ByteBuf);
 impl fmt::Debug for Signature {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let value = base64::encode_config(&self.0, base64::URL_SAFE_NO_PAD);
-        write!(f, "Signature({})", value)
+        write!(f, "Signature({value})")
     }
 }
 
@@ -494,7 +494,7 @@ impl<'de> Deserialize<'de> for AttestationObject {
                                 }
                             }
                         }
-                        k => return Err(M::Error::custom(format!("unexpected key: {:?}", k))),
+                        k => return Err(M::Error::custom(format!("unexpected key: {k:?}"))),
                     }
                 }
 
@@ -748,7 +748,7 @@ mod test {
     #[test]
     fn parse_attestation_object() {
         let value: AttestationObject = from_slice(&SAMPLE_ATTESTATION).unwrap();
-        println!("{:?}", value);
+        println!("{value:?}");
 
         //assert_eq!(true, false);
     }
@@ -795,7 +795,7 @@ mod test {
         ];
         let expected = "AAGuid(cb69481e-8ff0-0039-93ec-0a2729a154a8)";
         let result = AAGuid::from(&input).expect("Failed to parse AAGuid");
-        let res_str = format!("{:?}", result);
+        let res_str = format!("{result:?}");
         assert_eq!(expected, &res_str);
     }
 }

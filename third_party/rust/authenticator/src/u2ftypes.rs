@@ -8,7 +8,7 @@ use serde::Serialize;
 use std::{cmp, fmt, io, str};
 
 pub fn to_hex(data: &[u8], joiner: &str) -> String {
-    let parts: Vec<String> = data.iter().map(|byte| format!("{:02x}", byte)).collect();
+    let parts: Vec<String> = data.iter().map(|byte| format!("{byte:02x}")).collect();
     parts.join(joiner)
 }
 

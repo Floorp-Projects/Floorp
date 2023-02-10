@@ -17,7 +17,7 @@ pub struct RpIdHash(pub [u8; 32]);
 impl fmt::Debug for RpIdHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let value = base64::encode_config(self.0, base64::URL_SAFE_NO_PAD);
-        write!(f, "RpIdHash({})", value)
+        write!(f, "RpIdHash({value})")
     }
 }
 
@@ -151,7 +151,7 @@ impl<'de> Deserialize<'de> for PublicKeyCredentialParameters {
 
                             let v: &str = map.next_value()?;
                             if v != "public-key" {
-                                return Err(SerdeError::custom(format!("invalid value: {}", v)));
+                                return Err(SerdeError::custom(format!("invalid value: {v}")));
                             }
                             found_type = true;
                         }
@@ -266,7 +266,7 @@ impl<'de> Deserialize<'de> for PublicKeyCredentialDescriptor {
                             }
                             let v: &str = map.next_value()?;
                             if v != "public-key" {
-                                return Err(SerdeError::custom(format!("invalid value: {}", v)));
+                                return Err(SerdeError::custom(format!("invalid value: {v}")));
                             }
                             found_type = true;
                         }
@@ -342,7 +342,7 @@ mod test {
         };
 
         let payload = ser::to_vec(&user).unwrap();
-        println!("payload = {:?}", payload);
+        println!("payload = {payload:?}");
         assert_eq!(
             payload,
             vec![
@@ -394,7 +394,7 @@ mod test {
         };
 
         let payload = ser::to_vec(&user).unwrap();
-        println!("payload = {:?}", payload);
+        println!("payload = {payload:?}");
         assert_eq!(
             payload,
             vec![
@@ -431,7 +431,7 @@ mod test {
         ];
 
         let payload = ser::to_vec(&keys);
-        println!("payload = {:?}", payload);
+        println!("payload = {payload:?}");
         let payload = payload.unwrap();
         assert_eq!(
             payload,
@@ -471,7 +471,7 @@ mod test {
         };
 
         let payload = ser::to_vec(&key);
-        println!("payload = {:?}", payload);
+        println!("payload = {payload:?}");
         let payload = payload.unwrap();
 
         assert_eq!(

@@ -122,7 +122,7 @@ impl U2FDevice for Device {
     }
 
     fn get_property(&self, prop_name: &str) -> io::Result<String> {
-        Ok(format!("{} not implemented", prop_name))
+        Ok(format!("{prop_name} not implemented"))
     }
     fn get_device_info(&self) -> U2FDeviceInfo {
         self.dev_info.clone().unwrap()

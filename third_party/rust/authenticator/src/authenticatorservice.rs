@@ -81,6 +81,7 @@ pub struct SignArgsCtap2 {
     pub options: GetAssertionOptions,
     pub extensions: GetAssertionExtensions,
     pub pin: Option<Pin>,
+    pub alternate_rp_id: Option<String>,
     // Todo: Extensions
 }
 
@@ -839,6 +840,7 @@ mod tests {
             options: Default::default(),
             extensions: Default::default(),
             pin: None,
+            alternate_rp_id: None,
         };
         assert!(s
             .sign(

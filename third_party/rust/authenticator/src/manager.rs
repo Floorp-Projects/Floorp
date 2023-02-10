@@ -495,6 +495,7 @@ impl AuthenticatorTransport for Manager {
                             options,
                             Default::default(),
                             None,
+                            None,
                         )?;
 
                         let action = QueueAction::SignCtap2 {
@@ -528,6 +529,7 @@ impl AuthenticatorTransport for Manager {
                     args.options,
                     args.extensions,
                     args.pin,
+                    args.alternate_rp_id,
                 )?;
 
                 let action = QueueAction::SignCtap2 {

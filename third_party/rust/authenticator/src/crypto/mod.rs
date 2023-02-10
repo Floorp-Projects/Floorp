@@ -490,7 +490,7 @@ impl<'de> Deserialize<'de> for COSEKey {
                             }
                             let value: u64 = map.next_value()?;
                             let val = COSEKeyTypeId::try_from(value).map_err(|_| {
-                                SerdeError::custom(format!("unsupported key_type {}", value))
+                                SerdeError::custom(format!("unsupported key_type {value}"))
                             })?;
                             key_type = Some(val);
                             // key_type = Some(map.next_value()?);
@@ -510,7 +510,7 @@ impl<'de> Deserialize<'de> for COSEKey {
                                 }
                                 let value: u64 = map.next_value()?;
                                 let val = ECDSACurve::try_from(value).map_err(|_| {
-                                    SerdeError::custom(format!("unsupported curve {}", value))
+                                    SerdeError::custom(format!("unsupported curve {value}"))
                                 })?;
                                 curve = Some(val);
                                 // curve = Some(map.next_value()?);
@@ -536,7 +536,7 @@ impl<'de> Deserialize<'de> for COSEKey {
                             }
                             let value: i64 = map.next_value()?;
                             let val = COSEAlgorithm::try_from(value).map_err(|_| {
-                                SerdeError::custom(format!("unsupported algorithm {}", value))
+                                SerdeError::custom(format!("unsupported algorithm {value}"))
                             })?;
                             alg = Some(val);
                             // alg = map.next_value()?;

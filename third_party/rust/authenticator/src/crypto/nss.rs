@@ -33,7 +33,7 @@ pub enum BackendError {
 
 impl From<NSSError> for BackendError {
     fn from(e: NSSError) -> Self {
-        BackendError::NSSError(format!("{}", e))
+        BackendError::NSSError(format!("{e}"))
     }
 }
 

@@ -36,6 +36,7 @@ const SIGN_RESULT_AUTH_DATA: u8 = 2;
 const SIGN_RESULT_SIGNATURE: u8 = 3;
 const SIGN_RESULT_USER_ID: u8 = 4;
 const SIGN_RESULT_USER_NAME: u8 = 5;
+const SIGN_RESULT_RP_ID_HASH: u8 = 6;
 
 #[repr(C)]
 pub struct AuthenticatorArgsUser {
@@ -307,6 +308,7 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
     status_callback: Ctap2StatusUpdateCallback,
     challenge: AuthenticatorArgsChallenge,
     relying_party_id: *const c_char,
+    alternate_relying_party_id: *const c_char,
     origin_ptr: *const c_char,
     allow_list: *const Ctap2PubKeyCredDescriptors,
     options: AuthenticatorArgsOptions,
@@ -333,6 +335,11 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
     let rpid = CStr::from_ptr(relying_party_id)
         .to_string_lossy()
         .to_string();
+    let alternate_rp_id = if alternate_relying_party_id.is_null() {
+        None
+    } else {
+        Some(CStr::from_ptr(alternate_relying_party_id).to_string_lossy().to_string())
+    };
     let origin = CStr::from_ptr(origin_ptr).to_string_lossy().to_string();
     let challenge = from_raw(challenge.ptr, challenge.len);
     let allow_list: Vec<_> = (*allow_list).clone();
@@ -382,6 +389,7 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
         challenge,
         origin,
         relying_party_id: rpid,
+        alternate_rp_id,
         allow_list,
         options: GetAssertionOptions {
             user_presence: options.user_presence.then_some(true),
@@ -672,6 +680,7 @@ fn sign_result_item_len(assertion: &Assertion, item_idx: u8) -> Option<usize> {
                 .or(u.name.as_ref())
                 .map(|n| n.as_bytes().len())
         }),
+        SIGN_RESULT_RP_ID_HASH => Some(assertion.auth_data.rp_id_hash.0.len()),
         _ => None,
     }
 }
@@ -756,6 +765,7 @@ unsafe fn sign_result_item_copy(assertion: &Assertion, item_idx: u8, dst: *mut u
                 .or(u.name.as_ref())
                 .map(|n| n.as_bytes())
         }),
+        SIGN_RESULT_RP_ID_HASH => Some(assertion.auth_data.rp_id_hash.0.as_ref()),
         _ => None,
     };
 

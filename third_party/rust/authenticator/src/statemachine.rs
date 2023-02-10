@@ -10,6 +10,7 @@ use crate::ctap2::commands::reset::Reset;
 use crate::ctap2::commands::{
     repackage_pin_errors, CommandError, PinAuthCommand, Request, StatusCode,
 };
+use crate::ctap2::server::{RelyingParty, RelyingPartyWrapper};
 use crate::errors::{self, AuthenticatorError, UnsupportedOption};
 use crate::statecallback::StateCallback;
 use crate::transport::device_selector::{
@@ -606,7 +607,16 @@ impl StateMachineCtap2 {
                 debug!("{:?}", getassertion);
                 debug!("------------------------------------------------------------------");
 
-                let resp = dev.send_msg(&getassertion);
+                let mut resp = dev.send_msg(&getassertion);
+                if resp.is_err() {
+                    // Retry with a different RP ID if one was supplied. This is intended to be
+                    // used with the AppID provided in the WebAuthn FIDO AppID extension.
+                    if let Some(alternate_rp_id) = getassertion.alternate_rp_id {
+                        getassertion.rp = RelyingPartyWrapper::Data(RelyingParty{id: alternate_rp_id, ..Default::default()});
+                        getassertion.alternate_rp_id = None;
+                        resp = dev.send_msg(&getassertion);
+                    }
+                }
                 if resp.is_ok() {
                     send_status(
                         &status,
