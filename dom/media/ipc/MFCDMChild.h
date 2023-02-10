@@ -40,6 +40,13 @@ class MFCDMChild final : public PMFCDMChild {
       const KeySystemConfig::SessionType aSessionType,
       const nsAString& aInitDataType, const nsTArray<uint8_t>& aInitData);
 
+  mozilla::ipc::IPCResult RecvOnSessionKeyMessage(
+      const MFCDMKeyMessage& aMessage);
+  mozilla::ipc::IPCResult RecvOnSessionKeyStatusesChanged(
+      const MFCDMKeyStatusChange& aKeyStatuses);
+  mozilla::ipc::IPCResult RecvOnSessionKeyExpiration(
+      const MFCDMKeyExpiration& aExpiration);
+
   uint64_t Id() const { return mId; }
 
   void IPDLActorDestroyed() {

@@ -101,6 +101,11 @@ parent:
   async CreateSessionAndGenerateRequest(MFCDMCreateSessionParamsIPDL type)
       returns (MFCDMSessionResult result);
   async __delete__();
+
+child:
+  async OnSessionKeyMessage(MFCDMKeyMessage message);
+  async OnSessionKeyStatusesChanged(MFCDMKeyStatusChange keystatuses);
+  async OnSessionKeyExpiration(MFCDMKeyExpiration expiration);
 };
 
 } // namespace mozilla

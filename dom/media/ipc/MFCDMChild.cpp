@@ -229,6 +229,24 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
   return mCreateSessionPromiseHolder.Ensure(__func__);
 }
 
+mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
+    const MFCDMKeyMessage& aMessage) {
+  // TODO : implement this.
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyStatusesChanged(
+    const MFCDMKeyStatusChange& aKeyStatuses) {
+  // TODO : implement this.
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyExpiration(
+    const MFCDMKeyExpiration& aExpiration) {
+  // TODO : implement this.
+  return IPC_OK();
+}
+
 #undef SLOG
 #undef LOG
 

@@ -246,6 +246,7 @@ void MFCDMSession::OnSessionKeysChange() {
     keyInfos.AppendElement(MFCDMKeyInformation{
         std::move(keyId), ToMediaKeyStatus(keyStatus.eMediaKeyStatus)});
   }
+  LOG("Notify 'keychange' for %s", NS_ConvertUTF16toUTF8(*mSessionId).get());
   mKeyChangeEvent.Notify(
       MFCDMKeyStatusChange{*mSessionId, std::move(keyInfos)});
 
@@ -271,8 +272,9 @@ HRESULT MFCDMSession::UpdateExpirationIfNeeded() {
     return S_OK;
   }
 
-  LOG("Session expiration change from %f to %f",
-      mExpiredTimeMilliSecondsSinceEpoch, newExpiredEpochTimeMs);
+  LOG("Session expiration change from %f to %f, notify 'expiration' for %s",
+      mExpiredTimeMilliSecondsSinceEpoch, newExpiredEpochTimeMs,
+      NS_ConvertUTF16toUTF8(*mSessionId).get());
   mExpiredTimeMilliSecondsSinceEpoch = newExpiredEpochTimeMs;
   mExpirationEvent.Notify(
       MFCDMKeyExpiration{*mSessionId, mExpiredTimeMilliSecondsSinceEpoch});
@@ -302,6 +304,7 @@ void MFCDMSession::OnSessionKeyMessage(
         return dom::MediaKeyMessageType::EndGuard_;
     }
   };
+  LOG("Notify 'keymessage' for %s", NS_ConvertUTF16toUTF8(*mSessionId).get());
   mKeyMessageEvent.Notify(MFCDMKeyMessage{
       *mSessionId, ToMediaKeyMessageType(aType), std::move(aMessage)});
 }
