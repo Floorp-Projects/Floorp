@@ -18,7 +18,7 @@ const { AppConstants } = ChromeUtils.import(
 );
 try {
   ChromeUtils.import("resource:///modules/FloorpStartup.jsm");
-} catch (e) { console.log(e) }
+} catch (e) { console.error(e) }
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
