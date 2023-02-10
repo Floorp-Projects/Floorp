@@ -152,9 +152,11 @@ Result<EntryId, QMResult> GetEntryHandle(
 
 FileSystemDataManager::FileSystemDataManager(
     const quota::OriginMetadata& aOriginMetadata,
+    RefPtr<quota::QuotaManager> aQuotaManager,
     MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
     MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mOriginMetadata(aOriginMetadata),
+      mQuotaManager(std::move(aQuotaManager)),
       mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
       mIOTarget(std::move(aIOTarget)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
@@ -183,7 +185,11 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
       return dataManager->OnOpen()->Then(
           GetCurrentSerialEventTarget(), __func__,
           [dataManager = Registered<FileSystemDataManager>(dataManager)](
-              const BoolPromise::ResolveOrRejectValue&) {
+              const BoolPromise::ResolveOrRejectValue& aValue) {
+            if (aValue.IsReject()) {
+              return CreatePromise::CreateAndReject(aValue.RejectValue(),
+                                                    __func__);
+            }
             return CreatePromise::CreateAndResolve(dataManager, __func__);
           });
     }
@@ -207,6 +213,10 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
         Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
   }
 
+  QM_TRY_UNWRAP(RefPtr<quota::QuotaManager> quotaManager,
+                quota::QuotaManager::GetOrCreate(),
+                CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
+
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
                                         MOZ_SELECT_OVERLOAD(do_GetService),
@@ -219,7 +229,8 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
       TaskQueue::Create(do_AddRef(streamTransportService), taskQueueName.get());
 
   auto dataManager = MakeRefPtr<FileSystemDataManager>(
-      aOriginMetadata, WrapMovingNotNull(streamTransportService),
+      aOriginMetadata, std::move(quotaManager),
+      WrapMovingNotNull(streamTransportService),
       WrapMovingNotNull(ioTaskQueue));
 
   AddFileSystemDataManager(aOriginMetadata.mOrigin, dataManager);
@@ -227,7 +238,11 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
   return dataManager->BeginOpen()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [dataManager = Registered<FileSystemDataManager>(dataManager)](
-          const BoolPromise::ResolveOrRejectValue&) {
+          const BoolPromise::ResolveOrRejectValue& aValue) {
+        if (aValue.IsReject()) {
+          return CreatePromise::CreateAndReject(aValue.RejectValue(), __func__);
+        }
+
         return CreatePromise::CreateAndResolve(dataManager, __func__);
       });
 }
@@ -397,18 +412,16 @@ void FileSystemDataManager::RequestAllowToClose() {
 }
 
 RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
+  MOZ_ASSERT(mQuotaManager);
   MOZ_ASSERT(mState == State::Initial);
 
   mState = State::Opening;
 
-  QM_TRY_UNWRAP(const NotNull<RefPtr<quota::QuotaManager>> quotaManager,
-                quota::QuotaManager::GetOrCreate(), CreateAndRejectBoolPromise);
-
   RefPtr<quota::ClientDirectoryLock> directoryLock =
-      quotaManager->CreateDirectoryLock(quota::PERSISTENCE_TYPE_DEFAULT,
-                                        mOriginMetadata,
-                                        mozilla::dom::quota::Client::FILESYSTEM,
-                                        /* aExclusive */ false);
+      mQuotaManager->CreateDirectoryLock(
+          quota::PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+          mozilla::dom::quota::Client::FILESYSTEM,
+          /* aExclusive */ false);
 
   directoryLock->Acquire()
       ->Then(GetCurrentSerialEventTarget(), __func__,
@@ -424,7 +437,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
-      ->Then(quotaManager->IOThread(), __func__,
+      ->Then(mQuotaManager->IOThread(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
                if (value.IsReject()) {

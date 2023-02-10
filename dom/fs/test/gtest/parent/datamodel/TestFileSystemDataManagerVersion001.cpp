@@ -47,7 +47,7 @@ class MockFileSystemDataManager final : public data::FileSystemDataManager {
   MockFileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
                             MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
                             MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
-      : FileSystemDataManager(aOriginMetadata, std::move(aIOTarget),
+      : FileSystemDataManager(aOriginMetadata, nullptr, std::move(aIOTarget),
                               std::move(aIOTaskQueue)) {}
 
   virtual ~MockFileSystemDataManager() {
