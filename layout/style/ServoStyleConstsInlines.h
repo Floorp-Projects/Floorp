@@ -1078,7 +1078,14 @@ inline bool StyleFontStyle::IsOblique() const {
   return !IsItalic() && !IsNormal();
 }
 
-inline float StyleFontStyle::ObliqueAngle() const { return ToFloat(); }
+inline float StyleFontStyle::ObliqueAngle() const {
+  MOZ_ASSERT(IsOblique());
+  return ToFloat();
+}
+
+inline float StyleFontStyle::SlantAngle() const {
+  return IsNormal() ? 0 : IsItalic() ? DEFAULT_OBLIQUE_DEGREES : ObliqueAngle();
+}
 
 using FontStretch = StyleFontStretch;
 using FontSlantStyle = StyleFontStyle;

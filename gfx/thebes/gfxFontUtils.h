@@ -1262,7 +1262,7 @@ static inline double StyleDistance(const mozilla::SlantStyleRange& aRange,
     return kReverse;
   }
 
-  const double kDefaultAngle = mozilla::FontSlantStyle::OBLIQUE.ObliqueAngle();
+  const double kDefaultAngle = mozilla::FontSlantStyle::DEFAULT_OBLIQUE_DEGREES;
 
   if (aTargetStyle.IsItalic()) {
     if (minStyle.IsOblique()) {

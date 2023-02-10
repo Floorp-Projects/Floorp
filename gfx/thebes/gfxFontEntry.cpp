@@ -1349,18 +1349,14 @@ void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
     // The 'ital' axis is normally a binary toggle; intermediate values
     // can only be set using font-variation-settings.
     aResult.AppendElement(gfxFontVariation{HB_TAG('i', 't', 'a', 'l'), 1.0f});
-  } else if (HasSlantVariation()) {
+  } else if (aStyle.style != StyleFontStyle::NORMAL && HasSlantVariation()) {
     // Figure out what slant angle we should try to match from the
     // requested style.
-    float angle = aStyle.style.IsNormal() ? 0.0f
-                  : aStyle.style.IsItalic()
-                      ? FontSlantStyle::DEFAULT_OBLIQUE_DEGREES
-                      : aStyle.style.ObliqueAngle();
+    float angle = aStyle.style.SlantAngle();
     // Clamp to the available range, unless the face is a user font
     // with no explicit descriptor.
     if (!(IsUserFont() && (mRangeFlags & RangeFlags::eAutoSlantStyle))) {
-      angle =
-          SlantStyle().Clamp(FontSlantStyle::FromFloat(angle)).ObliqueAngle();
+      angle = SlantStyle().Clamp(FontSlantStyle::FromFloat(angle)).SlantAngle();
     }
     // OpenType and CSS measure angles in opposite directions, so we have to
     // invert the sign of the CSS oblique value when setting OpenType 'slnt'.

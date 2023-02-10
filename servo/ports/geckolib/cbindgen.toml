@@ -906,7 +906,9 @@ renaming_overrides_prefixing = true
 
  inline bool IsItalic() const;
  inline bool IsOblique() const;
- inline float ObliqueAngle() const;
+ inline float ObliqueAngle() const;  // Only for use when IsOblique() is true
+ inline float SlantAngle() const;  // Returns angle for any font-style, including
+                                   // normal/italic as well as explicit oblique
 """
 
 "FontStretch" = """

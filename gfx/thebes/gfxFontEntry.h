@@ -181,8 +181,9 @@ class gfxFontEntry {
   bool IsItalic() const { return SlantStyle().Min().IsItalic(); }
   bool IsOblique() const { return SlantStyle().Min().IsOblique(); }
   bool IsUpright() const { return SlantStyle().Min().IsNormal(); }
-  inline bool SupportsItalic();
-  inline bool SupportsBold();  // defined below, because of RangeFlags use
+  inline bool SupportsItalic();  // defined below, because of RangeFlags use
+  inline bool SupportsBold();
+  inline bool MayUseSyntheticSlant();
   bool IgnoreGDEF() const { return mIgnoreGDEF; }
   bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
@@ -832,6 +833,22 @@ inline bool gfxFontEntry::SupportsBold() {
   return Weight().Max().IsBold() ||
          ((mRangeFlags & RangeFlags::eAutoWeight) == RangeFlags::eAutoWeight &&
           HasBoldVariableWeight());
+}
+
+inline bool gfxFontEntry::MayUseSyntheticSlant() {
+  if (!IsUpright()) {
+    return false;  // The resource is already non-upright.
+  }
+  if (HasSlantVariation()) {
+    if (mRangeFlags & RangeFlags::eAutoSlantStyle) {
+      return false;
+    }
+    if (!SlantStyle().IsSingle()) {
+      return false;  // The resource has a 'slnt' axis, and has not been
+                     // clamped to just its upright setting.
+    }
+  }
+  return true;
 }
 
 // used when iterating over all fonts looking for a match for a given character
