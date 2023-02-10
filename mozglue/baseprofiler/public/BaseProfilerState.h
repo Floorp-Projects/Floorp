@@ -200,41 +200,38 @@ class MOZ_RAII AutoProfilerStats {
           "Disable all stack sampling: Cancels \"js\", \"stackwalk\" and "   \
           "labels")                                                          \
                                                                              \
-    MACRO(11, "preferencereads", PreferenceReads,                            \
-          "Track when preferences are read")                                 \
-                                                                             \
-    MACRO(12, "nativeallocations", NativeAllocations,                        \
+    MACRO(11, "nativeallocations", NativeAllocations,                        \
           "Collect the stacks from a smaller subset of all native "          \
           "allocations, biasing towards collecting larger allocations")      \
                                                                              \
-    MACRO(13, "ipcmessages", IPCMessages,                                    \
+    MACRO(12, "ipcmessages", IPCMessages,                                    \
           "Have the IPC layer track cross-process messages")                 \
                                                                              \
-    MACRO(14, "audiocallbacktracing", AudioCallbackTracing,                  \
+    MACRO(13, "audiocallbacktracing", AudioCallbackTracing,                  \
           "Audio callback tracing")                                          \
                                                                              \
-    MACRO(15, "cpu", CPUUtilization, "CPU utilization")                      \
+    MACRO(14, "cpu", CPUUtilization, "CPU utilization")                      \
                                                                              \
-    MACRO(16, "notimerresolutionchange", NoTimerResolutionChange,            \
+    MACRO(15, "notimerresolutionchange", NoTimerResolutionChange,            \
           "Do not adjust the timer resolution for fast sampling, so that "   \
           "other Firefox timers do not get affected")                        \
                                                                              \
-    MACRO(17, "cpuallthreads", CPUAllThreads,                                \
+    MACRO(16, "cpuallthreads", CPUAllThreads,                                \
           "Sample the CPU utilization of all registered threads")            \
                                                                              \
-    MACRO(18, "samplingallthreads", SamplingAllThreads,                      \
+    MACRO(17, "samplingallthreads", SamplingAllThreads,                      \
           "Sample the stacks of all registered threads")                     \
                                                                              \
-    MACRO(19, "markersallthreads", MarkersAllThreads,                        \
+    MACRO(18, "markersallthreads", MarkersAllThreads,                        \
           "Record markers from all registered threads")                      \
                                                                              \
-    MACRO(20, "unregisteredthreads", UnregisteredThreads,                    \
+    MACRO(19, "unregisteredthreads", UnregisteredThreads,                    \
           "Discover and profile unregistered threads -- beware: expensive!") \
                                                                              \
-    MACRO(21, "processcpu", ProcessCPU,                                      \
+    MACRO(20, "processcpu", ProcessCPU,                                      \
           "Sample the CPU utilization of each process")                      \
                                                                              \
-    MACRO(22, "power", Power, POWER_HELP)
+    MACRO(21, "power", Power, POWER_HELP)
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

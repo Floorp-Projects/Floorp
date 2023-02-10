@@ -4665,7 +4665,7 @@ struct Internals {
     if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
       rv = pref->GetValue(aKind, std::forward<T>(aResult));
 
-      if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+      if (profiler_thread_is_being_profiled_for_markers()) {
         profiler_add_marker(
             "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
             PreferenceReadMarker{},
@@ -4684,7 +4684,7 @@ struct Internals {
     if (Maybe<PrefWrapper> pref = pref_SharedLookup(aName)) {
       rv = pref->GetValue(PrefValueKind::User, aResult);
 
-      if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+      if (profiler_thread_is_being_profiled_for_markers()) {
         profiler_add_marker(
             "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
             PreferenceReadMarker{},
