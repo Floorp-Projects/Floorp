@@ -229,7 +229,8 @@ class StructuredOutputParser(OutputParser):
                 if not allow:
                     self.update_levels(*fail_pair)
                     msg = "Got " + msg
-                    self.error(msg)
+                    # Force level to be WARNING as message is not necessary in Treeherder
+                    self.warning(msg)
                 else:
                     msg = "Ignored " + msg
                     self.warning(msg)

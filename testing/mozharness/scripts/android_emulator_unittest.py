@@ -538,10 +538,10 @@ class AndroidEmulatorTest(
                         return
                 else:
                     self.record_status(tbpl_status, level=log_level)
-                    self.log(
+                    # report as INFO instead of log_level to avoid extra Treeherder lines
+                    self.info(
                         "The %s suite: %s ran with return status: %s"
                         % (suite_category, suite, tbpl_status),
-                        level=log_level,
                     )
 
 

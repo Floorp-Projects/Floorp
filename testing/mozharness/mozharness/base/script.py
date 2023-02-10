@@ -1659,12 +1659,11 @@ class ScriptMixin(PlatformMixin):
             )
             return -1
 
-        return_level = INFO
         if returncode not in success_codes:
-            return_level = error_level
             if throw_exception:
                 raise subprocess.CalledProcessError(returncode, command)
-        self.log("Return code: %d" % returncode, level=return_level)
+        # Force level to be INFO as message is not necessary in Treeherder
+        self.log("Return code: %d" % returncode, level=INFO)
 
         if halt_on_failure:
             _fail = False
@@ -1861,7 +1860,8 @@ class ScriptMixin(PlatformMixin):
             self.rmtree(tmp_stdout_filename, log_level=DEBUG)
         if p.returncode and throw_exception:
             raise subprocess.CalledProcessError(p.returncode, command)
-        self.log("Return code: %d" % p.returncode, level=return_level)
+        # Force level to be INFO as message is not necessary in Treeherder
+        self.log("Return code: %d" % p.returncode, level=INFO)
         if halt_on_failure and return_level == ERROR:
             self.return_code = fatal_exit_code
             self.fatal(
