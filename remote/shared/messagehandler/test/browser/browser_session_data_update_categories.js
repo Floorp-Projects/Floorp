@@ -81,5 +81,14 @@ add_task(async function test_session_data_update_categories() {
   assertUpdate(processedUpdates.at(-2), ["value1-2", "value1-3"], "category1");
   assertUpdate(processedUpdates.at(-1), ["value2-1"], "category2");
 
+  info("Opening a new tab triggers an update for each category");
+  const tab2 = await addTab(TEST_PAGE);
+  const browsingContext2 = tab2.linkedBrowser.browsingContext;
+  processedUpdates = await getUpdates(root, browsingContext2);
+  is(processedUpdates.length, 2);
+  assertUpdate(processedUpdates.at(-2), ["value1-2", "value1-3"], "category1");
+  assertUpdate(processedUpdates.at(-1), ["value2-1"], "category2");
+
   root.destroy();
+  gBrowser.removeTab(tab2);
 });

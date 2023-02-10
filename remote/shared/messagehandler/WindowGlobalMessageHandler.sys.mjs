@@ -72,29 +72,51 @@ export class WindowGlobalMessageHandler extends MessageHandler {
       type: WindowGlobalMessageHandler.type,
     };
 
-    const sessionDataPromises = sessionDataItems.map(sessionDataItem => {
-      const { moduleName, category, contextDescriptor } = sessionDataItem;
+    // Create a Map with the structure moduleName -> category -> relevant session data items.
+    const structuredUpdates = new Map();
+    for (const sessionDataItem of sessionDataItems) {
+      const { category, contextDescriptor, moduleName } = sessionDataItem;
+
       if (!this.matchesContext(contextDescriptor)) {
-        return Promise.resolve();
+        continue;
+      }
+      if (!structuredUpdates.has(moduleName)) {
+        // Skip session data item if the module is not present
+        // for the destination.
+        if (!this.moduleCache.hasModule(moduleName, destination)) {
+          continue;
+        }
+        structuredUpdates.set(moduleName, new Map());
       }
 
-      // Don't apply session data if the module is not present
-      // for the destination.
-      if (!this.moduleCache.hasModule(moduleName, destination)) {
-        return Promise.resolve();
+      if (!structuredUpdates.get(moduleName).has(category)) {
+        structuredUpdates.get(moduleName).set(category, new Set());
       }
 
-      return this.handleCommand({
-        moduleName,
-        commandName: "_applySessionData",
-        params: {
-          category,
-          initial: true,
-          sessionData: sessionDataItems,
-        },
-        destination,
-      });
-    });
+      structuredUpdates
+        .get(moduleName)
+        .get(category)
+        .add(sessionDataItem);
+    }
+
+    const sessionDataPromises = [];
+
+    for (const [moduleName, categories] of structuredUpdates.entries()) {
+      for (const [category, relevantSessionData] of categories.entries()) {
+        sessionDataPromises.push(
+          this.handleCommand({
+            moduleName,
+            commandName: "_applySessionData",
+            params: {
+              category,
+              initial: true,
+              sessionData: Array.from(relevantSessionData),
+            },
+            destination,
+          })
+        );
+      }
+    }
 
     await Promise.all(sessionDataPromises);
 
