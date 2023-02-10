@@ -37,10 +37,9 @@
     });
   }
 
-  function unregisterSW() {
-    return testFrame('notification/unregister.html').then(function() {
-      ok(true, "Unregistered service worker.");
-    });
+  async function unregisterSW() {
+    const reg = await navigator.serviceWorker.getRegistration("./notification/");
+    await reg.unregister();
   }
 
   function testDismiss() {
