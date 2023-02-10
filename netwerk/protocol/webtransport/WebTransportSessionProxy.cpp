@@ -92,6 +92,13 @@ nsresult WebTransportSessionProxy::AsyncConnect(
     ChangeState(WebTransportSessionProxyState::NEGOTIATING);
   }
 
+  // https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-04.html#section-6
+  rv = httpChannel->SetRequestHeader("Sec-Webtransport-Http3-Draft02"_ns,
+                                     "1"_ns, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   rv = mChannel->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     MutexAutoLock lock(mMutex);
