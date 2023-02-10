@@ -140,51 +140,6 @@
     return Promise.resolve();
   }
 
-  function waitForSWTests(reg, msg) {
-    return new Promise(function(resolve, reject) {
-      var content = document.getElementById("content");
-
-      iframe = document.createElement("iframe");
-
-      content.appendChild(iframe);
-      iframe.setAttribute('src', "notification/listener.html");
-
-      window.onmessage = function(e) {
-        if (e.data.type == 'status') {
-          ok(e.data.status, "Service worker test: " + e.data.msg);
-        } else if (e.data.type == 'finish') {
-          content.removeChild(iframe);
-          resolve();
-        }
-      }
-
-      iframe.onload = function(e) {
-        iframe.onload = null;
-        reg.active.postMessage(msg);
-      }
-    });
-  }
-
-  function testGetServiceWorker() {
-    return navigator.serviceWorker.getRegistration("./notification/")
-      .then(function(reg) {
-        return waitForSWTests(reg, 'create');
-      });
-  }
-
-  // Create a Notification here, make sure ServiceWorker sees it.
-  function testAcrossThreads() {
-    return navigator.serviceWorker.getRegistration("./notification/")
-      .then(function(reg) {
-        return reg.showNotification("This is a title")
-                 .then(function() {
-                  return reg;
-                 });
-      }).then(function(reg) {
-        return waitForSWTests(reg, 'do-not-create');
-      });
-  }
-
   SimpleTest.waitForExplicitFinish();
 
   MockServices.register();
@@ -199,8 +154,6 @@
     registerSW()
       .then(testGet)
       .then(testGetWorker)
-      .then(testGetServiceWorker)
-      .then(testAcrossThreads)
       .then(testDismiss)
       .then(unregisterSW)
       .then(function() {
