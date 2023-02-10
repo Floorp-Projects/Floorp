@@ -9,6 +9,7 @@
 #ifndef js_friend_DumpFunctions_h
 #define js_friend_DumpFunctions_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
 #include <stddef.h>  // size_t
@@ -113,6 +114,10 @@ enum DumpHeapNurseryBehaviour {
 extern JS_PUBLIC_API void DumpHeap(
     JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour,
     mozilla::MallocSizeOf mallocSizeOf = nullptr);
+
+extern JS_PUBLIC_API void DumpFmt(FILE* fp, const char* fmt, ...)
+    MOZ_FORMAT_PRINTF(2, 3);
+extern JS_PUBLIC_API void DumpFmt(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2);
 
 }  // namespace js
 
