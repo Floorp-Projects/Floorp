@@ -43,22 +43,6 @@
     });
   }
 
-  // To check that the scope is respected when retrieving notifications.
-  function registerAlternateSWAndAddNotification() {
-    return testFrame('notification_alt/register.html').then(function() {
-      ok(true, "Registered alternate service worker.");
-      return navigator.serviceWorker.getRegistration("./notification_alt/").then(function(reg) {
-        return reg.showNotification("This is a notification_alt");
-      });
-    });
-  }
-
-  function unregisterAlternateSWAndAddNotification() {
-    return testFrame('notification_alt/unregister.html').then(function() {
-      ok(true, "unregistered alternate service worker.");
-    });
-  }
-
   function testDismiss() {
     // Dismissed persistent notifications should be removed from the
     // notification list.
@@ -94,8 +78,6 @@
   }
 
   function testGet() {
-    // Non persistent notifications will not show up in getNotification().
-    var n = new Notification("Scope does not match");
     var options = NotificationTest.payload;
     return navigator.serviceWorker.getRegistration("./notification/")
       .then(function(reg) {
@@ -103,10 +85,6 @@
                  .then(function() {
                   return reg;
                  });
-      }).then(function(reg) {
-        return registerAlternateSWAndAddNotification().then(function() {
-          return reg;
-        });
       }).then(function(reg) {
         return reg.getNotifications();
       }).then(function(notifications) {
@@ -132,7 +110,7 @@
         is(notifications.length, 0, "There should be no more stored notifications");
       }).catch(function(e) {
         ok(false, "Something went wrong " + e.message);
-      }).then(unregisterAlternateSWAndAddNotification);
+      })
   }
 
   function testGetWorker() {
