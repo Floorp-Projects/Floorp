@@ -313,7 +313,7 @@ const tests = [
     } catch (e) {
     }
     let newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to stale transactionId in setParameters");
+    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due to empty encodings in setParameters");
 
     // Glean should only record the error once per sender!
     oldRate = newRate;
@@ -324,7 +324,7 @@ const tests = [
     } catch (e) {
     }
     newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to stale transactionId in setParameters");
+    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due empty encodings in setParameters");
   },
 
   async function checkBadSetParametersOtherError() {
