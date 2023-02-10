@@ -18,6 +18,66 @@
 #include "gc/Barrier.h"
 #include "vm/NativeObject.h"
 
+/*
+ * [SMDOC] For-in enumeration
+ *
+ * A for-in loop in JS iterates over the string-valued, enumerable
+ * property keys of an object and its prototype chain. The order in
+ * which keys appear is specified to the extent that implementations
+ * historically agreed, and implementation-defined beyond that. See
+ * https://tc39.es/ecma262/#sec-enumerate-object-properties for the
+ * gory details. Each key appears only once in the enumeration.
+ *
+ * We enumerate properties using PropertyEnumerator, which creates an
+ * ordered list of PropertyKeys, using ShapePropertyIter for native
+ * objects and calling enumerate hooks where necessary. This list is
+ * used to create a NativeIterator, which contains (among other
+ * things) a trailing array of strings representing the property keys
+ * of the object, and a cursor pointing into that array. This
+ * NativeIterator is wrapped in a PropertyIteratorObject, which is
+ * pushed by JSOp::Iter and used by JSOp::MoreIter and JSOp::EndIter.
+ *
+ * While active, a NativeIterator is registered in a doubly linked
+ * list, rooted in the compartment. When any property is deleted from
+ * an object, this list is used to remove the deleted property from
+ * any active enumerations. See SuppressDeletedProperty. This slows
+ * down deletion but speeds up enumeration, which is generally a good
+ * tradeoff.
+ *
+ * In many cases, objects with the same shape will have the same set
+ * of property keys. (The most common exception is objects with dense
+ * elements, which can be added or removed without changing the shape
+ * of the object.) In such cases, we can reuse an existing iterator by
+ * storing a pointer to the PropertyIteratorObject in the shape's
+ * |cache_| pointer. Before reusing an iterator, we have to verify
+ * that the prototype chain has not changed and no dense elements have
+ * been added, which is done by storing a trailing array of prototype
+ * shapes in the NativeIterator and comparing it against the shapes of
+ * the prototype chain.
+ *
+ * One of the most frequent uses of for-in loops is in loops that look
+ * like this, which iterate over each property of an object and do
+ * something with those values:
+ *   for (var key in obj) {
+ *     if (obj.hasOwnProperty(key)) {
+ *       doSomethingWith(obj[key]);
+ *     }
+ *   }
+ * Most objects don't have any enumerable properties on the prototype
+ * chain. In such cases, we can speed up property access inside the
+ * loop by precomputing some information and storing it in the
+ * iterator.  When we see a pattern like this in Ion, we generate a
+ * call to GetIteratorWithIndices instead of GetIterator. In this
+ * case, in addition to the list of property keys, PropertyEnumerator
+ * will try to generate a list of corresponding PropertyIndex values,
+ * which represent the location of the own property key in the object
+ * (fixed slot/dynamic slot/dense element + offset). This list will be
+ * stored in NativeIterator as yet another trailing array. When
+ * present, it can be used by Ion code to speed up property access
+ * inside for-in loops. See OptimizeIteratorIndices in
+ * IonAnalysis.cpp.
+ */
+
 namespace js {
 
 class ArrayObject;
