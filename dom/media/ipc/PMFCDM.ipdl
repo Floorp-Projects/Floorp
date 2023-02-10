@@ -9,8 +9,36 @@ include protocol PRemoteDecoderManager;
 using mozilla::KeySystemConfig::Requirement from "mozilla/KeySystemConfig.h";
 using mozilla::KeySystemConfig::SessionType from "mozilla/KeySystemConfig.h";
 using mozilla::CryptoScheme from "MediaData.h";
+using mozilla::dom::MediaKeyMessageType from "mozilla/dom/MediaKeyMessageEventBinding.h";
 
 namespace mozilla {
+
+// For EME spec 'message' event
+// https://w3c.github.io/encrypted-media/#queue-message
+struct MFCDMKeyMessage {
+  nsString sessionId;
+  MediaKeyMessageType type;
+  uint8_t[] message;
+};
+
+// For EME spec 'keystatuseschange' event
+// https://w3c.github.io/encrypted-media/#dom-evt-keystatuseschange
+struct MFCDMKeyInformation {
+  uint8_t[] keyId;
+  uint32_t status;
+};
+
+struct MFCDMKeyStatusChange {
+  nsString sessionId;
+  MFCDMKeyInformation[] keyInfo;
+};
+
+// For EME spec Update Expiration algorithm
+// https://w3c.github.io/encrypted-media/#update-expiration
+struct MFCDMKeyExpiration {
+  nsString sessionId;
+  double expiredTimeMilliSecondsSinceEpoch;
+};
 
 // For GetCapabilities()
 struct MFCDMMediaCapability {
