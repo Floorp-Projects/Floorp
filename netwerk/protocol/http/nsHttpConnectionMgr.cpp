@@ -1201,8 +1201,7 @@ bool nsHttpConnectionMgr::AtActiveConnectionLimit(ConnectionEntry* ent,
 
   if (ci->IsHttp3()) {
     if (ci->GetWebTransport()) {
-      // TODO: we need to find a way to clean up the existing connection and
-      // also limit the number of webtransport connections.
+      // TODO: implement this properly in bug 1815735.
       return false;
     }
     return totalCount > 0;
