@@ -175,7 +175,7 @@ fn status_word_to_result<T>(status: [u8; 2], val: T) -> io::Result<T> {
         SW_WRONG_DATA => Err(io::Error::new(InvalidData, "wrong data")),
         SW_WRONG_LENGTH => Err(io::Error::new(InvalidInput, "wrong length")),
         SW_CONDITIONS_NOT_SATISFIED => Err(io_err("conditions not satisfied")),
-        _ => Err(io_err(&format!("failed with status {:?}", status))),
+        _ => Err(io_err(&format!("failed with status {status:?}"))),
     }
 }
 

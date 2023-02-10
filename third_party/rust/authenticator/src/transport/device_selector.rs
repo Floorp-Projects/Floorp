@@ -325,7 +325,7 @@ pub mod tests {
         add_devices(devices.iter(), &selector);
         devices.iter_mut().for_each(|d| {
             if !d.is_u2f() {
-                send_no_token(&d, &selector);
+                send_no_token(d, &selector);
             }
         });
 

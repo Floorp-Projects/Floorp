@@ -21,7 +21,7 @@ use std::sync::mpsc::{channel, RecvError};
 use std::{env, thread};
 
 fn print_usage(program: &str, opts: Options) {
-    let brief = format!("Usage: {} [options]", program);
+    let brief = format!("Usage: {program} [options]");
     print!("{}", opts.usage(&brief));
 }
 
@@ -63,7 +63,7 @@ fn main() {
             timeout_s * 1_000
         }
         Err(e) => {
-            println!("{}", e);
+            println!("{e}");
             print_usage(&program, opts);
             return;
         }
@@ -86,19 +86,19 @@ fn main() {
     thread::spawn(move || loop {
         match status_rx.recv() {
             Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
-                println!("STATUS: device available: {}", dev_info)
+                println!("STATUS: device available: {dev_info}")
             }
             Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
-                println!("STATUS: device unavailable: {}", dev_info)
+                println!("STATUS: device unavailable: {dev_info}")
             }
             Ok(StatusUpdate::Success { dev_info }) => {
-                println!("STATUS: success using device: {}", dev_info);
+                println!("STATUS: success using device: {dev_info}");
             }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
-                println!("STATUS: Continuing with device: {}", dev_info);
+                println!("STATUS: Continuing with device: {dev_info}");
             }
             Ok(StatusUpdate::PinError(error, sender)) => match error {
                 PinError::PinRequired => {
@@ -111,8 +111,7 @@ fn main() {
                     println!(
                         "Wrong PIN! {}",
                         attempts.map_or("Try again.".to_string(), |a| format!(
-                            "You have {} attempts left.",
-                            a
+                            "You have {a} attempts left."
                         ))
                     );
                     let raw_pin = rpassword::prompt_password_stderr("Enter PIN: ")
@@ -255,6 +254,7 @@ fn main() {
             },
         },
         pin: None,
+        alternate_rp_id: None,
     };
 
     loop {
@@ -280,7 +280,7 @@ fn main() {
         match sign_result {
             Ok(SignResult::CTAP1(..)) => panic!("Requested CTAP2, but got CTAP1 sign results!"),
             Ok(SignResult::CTAP2(assertion_object, _client_data)) => {
-                println!("Assertion Object: {:?}", assertion_object);
+                println!("Assertion Object: {assertion_object:?}");
                 println!("Done.");
                 break;
             }

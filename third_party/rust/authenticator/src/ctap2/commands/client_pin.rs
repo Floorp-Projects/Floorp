@@ -751,12 +751,12 @@ impl fmt::Display for PinError {
         match *self {
             PinError::PinRequired => write!(f, "PinError: Pin required."),
             PinError::PinIsTooShort => write!(f, "PinError: pin is too short"),
-            PinError::PinIsTooLong(len) => write!(f, "PinError: pin is too long ({})", len),
+            PinError::PinIsTooLong(len) => write!(f, "PinError: pin is too long ({len})"),
             PinError::InvalidKeyLen => write!(f, "PinError: invalid key len"),
             PinError::InvalidPin(ref e) => {
                 let mut res = write!(f, "PinError: Invalid Pin.");
                 if let Some(pin_retries) = e {
-                    res = write!(f, " Retries left: {:?}", pin_retries)
+                    res = write!(f, " Retries left: {pin_retries:?}")
                 }
                 res
             }
@@ -769,7 +769,7 @@ impl fmt::Display for PinError {
                 "PinError: No retries left. Pin blocked. Device needs reset."
             ),
             PinError::PinNotSet => write!(f, "PinError: Pin needed but not set on device."),
-            PinError::Backend(ref e) => write!(f, "PinError: Crypto backend error: {:?}", e),
+            PinError::Backend(ref e) => write!(f, "PinError: Crypto backend error: {e:?}"),
         }
     }
 }

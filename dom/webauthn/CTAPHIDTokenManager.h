@@ -221,6 +221,10 @@ class CTAPResult {
     return Ctap2SignResCopyBuffer(index, CTAP2_SIGN_RESULT_AUTH_DATA, aBuffer);
   }
 
+  bool Ctap2CopyRpIdHash(nsTArray<uint8_t>& aBuffer, size_t index) {
+    return Ctap2SignResCopyBuffer(index, CTAP2_SIGN_RESULT_RP_ID_HASH, aBuffer);
+  }
+
   bool Ctap2HasPubKeyCredential(size_t index) {
     return Ctap2SignResContains(index, CTAP2_SIGN_RESULT_PUBKEY_CRED_ID);
   }

@@ -64,23 +64,22 @@ impl fmt::Display for AuthenticatorError {
                 "no transports were configured in the authenticator service"
             ),
             AuthenticatorError::Platform => write!(f, "unknown platform error"),
-            AuthenticatorError::InternalError(ref err) => write!(f, "internal error: {}", err),
+            AuthenticatorError::InternalError(ref err) => write!(f, "internal error: {err}"),
             AuthenticatorError::U2FToken(ref err) => {
-                write!(f, "A u2f token error occurred {:?}", err)
+                write!(f, "A u2f token error occurred {err:?}")
             }
-            AuthenticatorError::Custom(ref err) => write!(f, "A custom error occurred {:?}", err),
+            AuthenticatorError::Custom(ref err) => write!(f, "A custom error occurred {err:?}"),
             AuthenticatorError::VersionMismatch(manager, version) => write!(
                 f,
-                "{} expected arguments of version CTAP{}",
-                manager, version
+                "{manager} expected arguments of version CTAP{version}"
             ),
-            AuthenticatorError::HIDError(ref e) => write!(f, "Device error: {}", e),
+            AuthenticatorError::HIDError(ref e) => write!(f, "Device error: {e}"),
             AuthenticatorError::CryptoError => {
                 write!(f, "The cryptography implementation encountered an error")
             }
-            AuthenticatorError::PinError(ref e) => write!(f, "PIN Error: {}", e),
+            AuthenticatorError::PinError(ref e) => write!(f, "PIN Error: {e}"),
             AuthenticatorError::UnsupportedOption(ref e) => {
-                write!(f, "Unsupported option: {:?}", e)
+                write!(f, "Unsupported option: {e:?}")
             }
         }
     }

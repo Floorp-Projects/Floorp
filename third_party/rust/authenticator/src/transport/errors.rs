@@ -31,7 +31,7 @@ impl fmt::Display for ApduErrorStatus {
             ApduErrorStatus::ConditionsNotSatisfied => write!(f, "Apdu: condition not satisfied"),
             ApduErrorStatus::WrongData => write!(f, "Apdu: wrong data"),
             ApduErrorStatus::WrongLength => write!(f, "Apdu: wrong length"),
-            ApduErrorStatus::Unknown(ref u) => write!(f, "Apdu: unknown error: {:?}", u),
+            ApduErrorStatus::Unknown(ref u) => write!(f, "Apdu: unknown error: {u:?}"),
         }
     }
 }
@@ -87,11 +87,11 @@ impl fmt::Display for HIDError {
             HIDError::UnsupportedCommand => {
                 write!(f, "Error: command is not supported on this device")
             }
-            HIDError::IO(ref p, ref e) => write!(f, "Error: Ioerror({:?}): {}", p, e),
-            HIDError::Command(ref e) => write!(f, "Error: Error issuing command: {}", e),
-            HIDError::UnexpectedCmd(s) => write!(f, "Error: Unexpected status: {}", s),
+            HIDError::IO(ref p, ref e) => write!(f, "Error: Ioerror({p:?}): {e}"),
+            HIDError::Command(ref e) => write!(f, "Error: Error issuing command: {e}"),
+            HIDError::UnexpectedCmd(s) => write!(f, "Error: Unexpected status: {s}"),
             HIDError::ApduStatus(ref status) => {
-                write!(f, "Error: Unexpected apdu status: {:?}", status)
+                write!(f, "Error: Unexpected apdu status: {status:?}")
             }
         }
     }

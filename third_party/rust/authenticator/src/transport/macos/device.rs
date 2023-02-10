@@ -39,20 +39,14 @@ impl Device {
         if prop_ref.is_null() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!(
-                    "IOHIDDeviceGetProperty received nullptr for property {}",
-                    prop_name
-                ),
+                format!("IOHIDDeviceGetProperty received nullptr for property {prop_name}"),
             ));
         }
 
         if CFGetTypeID(prop_ref) != CFStringGetTypeID() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                format!(
-                    "IOHIDDeviceGetProperty returned non-string type for property {}",
-                    prop_name
-                ),
+                format!("IOHIDDeviceGetProperty returned non-string type for property {prop_name}"),
             ));
         }
 

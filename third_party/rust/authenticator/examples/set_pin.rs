@@ -12,7 +12,7 @@ use std::sync::mpsc::{channel, RecvError};
 use std::{env, thread};
 
 fn print_usage(program: &str, opts: Options) {
-    let brief = format!("Usage: {} [options]", program);
+    let brief = format!("Usage: {program} [options]");
     print!("{}", opts.usage(&brief));
 }
 
@@ -53,7 +53,7 @@ fn main() {
             timeout_s * 1_000
         }
         Err(e) => {
-            println!("{}", e);
+            println!("{e}");
             print_usage(&program, opts);
             return;
         }
@@ -71,19 +71,19 @@ fn main() {
     thread::spawn(move || loop {
         match status_rx.recv() {
             Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
-                println!("STATUS: device available: {}", dev_info)
+                println!("STATUS: device available: {dev_info}")
             }
             Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
-                println!("STATUS: device unavailable: {}", dev_info)
+                println!("STATUS: device unavailable: {dev_info}")
             }
             Ok(StatusUpdate::Success { dev_info }) => {
-                println!("STATUS: success using device: {}", dev_info);
+                println!("STATUS: success using device: {dev_info}");
             }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
-                println!("STATUS: Continuing with device: {}", dev_info);
+                println!("STATUS: Continuing with device: {dev_info}");
             }
             Ok(StatusUpdate::PinError(error, sender)) => match error {
                 PinError::PinRequired => {
@@ -96,8 +96,7 @@ fn main() {
                     println!(
                         "Wrong PIN! {}",
                         attempts.map_or("Try again.".to_string(), |a| format!(
-                            "You have {} attempts left.",
-                            a
+                            "You have {a} attempts left."
                         ))
                     );
                     let raw_pin = rpassword::prompt_password_stderr("Enter current PIN: ")

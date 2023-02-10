@@ -15,6 +15,7 @@ const uint8_t CTAP2_SIGN_RESULT_AUTH_DATA = 2;
 const uint8_t CTAP2_SIGN_RESULT_SIGNATURE = 3;
 const uint8_t CTAP2_SIGN_RESULT_USER_ID = 4;
 const uint8_t CTAP2_SIGN_RESULT_USER_NAME = 5;
+const uint8_t CTAP2_SIGN_RESULT_RP_ID_HASH = 6;
 
 typedef struct {
     const uint8_t *id_ptr;
@@ -93,7 +94,7 @@ uint64_t rust_ctap2_mgr_register(
 uint64_t rust_ctap2_mgr_sign(
     rust_ctap_manager* mgr, uint64_t timeout, rust_ctap2_sign_callback, rust_ctap2_status_update_callback,
     AuthenticatorArgsChallenge challenge,
-    const char* relying_party_id, const char *origin_ptr,
+    const char* relying_party_id, const char* alternate_relying_party_id, const char *origin_ptr,
     const rust_ctap2_pub_key_cred_descriptors* allow_list, AuthenticatorArgsOptions options,
     const char *pin
 );

@@ -400,19 +400,19 @@ impl fmt::Display for CommandError {
         match *self {
             CommandError::InputTooSmall => write!(f, "CommandError: Input is too small"),
             CommandError::MissingRequiredField(field) => {
-                write!(f, "CommandError: Missing required field {}", field)
+                write!(f, "CommandError: Missing required field {field}")
             }
             CommandError::Deserializing(ref e) => {
-                write!(f, "CommandError: Error while parsing: {}", e)
+                write!(f, "CommandError: Error while parsing: {e}")
             }
             CommandError::Serializing(ref e) => {
-                write!(f, "CommandError: Error while serializing: {}", e)
+                write!(f, "CommandError: Error while serializing: {e}")
             }
             CommandError::StatusCode(ref code, ref value) => {
-                write!(f, "CommandError: Unexpected code: {:?} ({:?})", code, value)
+                write!(f, "CommandError: Unexpected code: {code:?} ({value:?})")
             }
-            CommandError::Json(ref e) => write!(f, "CommandError: Json serializing error: {}", e),
-            CommandError::Crypto(ref e) => write!(f, "CommandError: Crypto error: {:?}", e),
+            CommandError::Json(ref e) => write!(f, "CommandError: Json serializing error: {e}"),
+            CommandError::Crypto(ref e) => write!(f, "CommandError: Crypto error: {e:?}"),
             CommandError::UnsupportedPinProtocol => {
                 write!(f, "CommandError: Pin protocol is not supported")
             }

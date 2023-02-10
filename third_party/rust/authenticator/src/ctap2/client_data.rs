@@ -92,7 +92,7 @@ impl<'de> Deserialize<'de> for TokenBinding {
                             id = Some(map.next_value()?);
                         }
                         k => {
-                            return Err(M::Error::custom(format!("unexpected key: {:?}", k)));
+                            return Err(M::Error::custom(format!("unexpected key: {k:?}")));
                         }
                     }
                 }
@@ -107,7 +107,7 @@ impl<'de> Deserialize<'de> for TokenBinding {
                             }
                         }
                         "supported" => Ok(TokenBinding::Supported),
-                        k => Err(M::Error::custom(format!("unexpected status key: {:?}", k))),
+                        k => Err(M::Error::custom(format!("unexpected status key: {k:?}"))),
                     }
                 } else {
                     Err(SerdeError::missing_field("status"))

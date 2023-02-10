@@ -190,6 +190,9 @@ pub struct GetAssertion {
     pub(crate) options: GetAssertionOptions,
     pub(crate) pin: Option<Pin>,
     pub(crate) pin_auth: Option<PinAuth>,
+
+    // This is used to implement the FIDO AppID extension.
+    pub(crate) alternate_rp_id: Option<String>,
     //TODO(MS): pinProtocol
 }
 
@@ -201,6 +204,7 @@ impl GetAssertion {
         options: GetAssertionOptions,
         extensions: GetAssertionExtensions,
         pin: Option<Pin>,
+        alternate_rp_id: Option<String>,
     ) -> Result<Self, HIDError> {
         let client_data_wrapper = CollectedClientDataWrapper::new(client_data_wrapper)?;
         Ok(Self {
@@ -211,6 +215,7 @@ impl GetAssertion {
             options,
             pin,
             pin_auth: None,
+            alternate_rp_id,
         })
     }
 }
@@ -642,7 +647,7 @@ impl<'de> Deserialize<'de> for GetAssertionResponse {
                             }
                             number_of_credentials = Some(map.next_value()?);
                         }
-                        k => return Err(M::Error::custom(format!("unexpected key: {:?}", k))),
+                        k => return Err(M::Error::custom(format!("unexpected key: {k:?}"))),
                     }
                 }
 
@@ -719,6 +724,7 @@ pub mod test {
                 user_verification: None,
             },
             Default::default(),
+            None,
             None,
         )
         .expect("Failed to create GetAssertion");
@@ -929,6 +935,7 @@ pub mod test {
             },
             Default::default(),
             None,
+            None,
         )
         .expect("Failed to create GetAssertion");
         let mut device = Device::new("commands/get_assertion").unwrap(); // not really used (all functions ignore it)
@@ -1021,6 +1028,7 @@ pub mod test {
                 user_verification: None,
             },
             Default::default(),
+            None,
             None,
         )
         .expect("Failed to create GetAssertion");
