@@ -1415,6 +1415,8 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::DynamicImport:
     case JSOp::InitialYield:
     case JSOp::Yield:
+    case JSOp::Await:
+    case JSOp::CanSkipAwait:
       return true;
 
     case JSOp::Nop:
@@ -1606,8 +1608,6 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::Resume:
     case JSOp::CheckResumeKind:
     case JSOp::AfterYield:
-    case JSOp::Await:
-    case JSOp::CanSkipAwait:
     case JSOp::MaybeExtractAwaitValue:
     case JSOp::Generator:
     case JSOp::AsyncAwait:
