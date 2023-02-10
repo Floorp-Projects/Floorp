@@ -520,28 +520,37 @@ abstract class BaseBrowserFragment :
                 requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
             },
             customFirstPartyDownloadDialog = { filename, contentSize, positiveAction, negativeAction ->
-                FirstPartyDownloadDialog(
-                    activity = requireActivity(),
-                    filename = filename.value,
-                    contentSize = contentSize.value,
-                    positiveButtonAction = positiveAction.value,
-                    negativeButtonAction = negativeAction.value,
-                ).onDismiss {
-                    currentStartDownloadDialog = null
-                }.show(binding.startDownloadDialogContainer).also {
-                    currentStartDownloadDialog = it
+                run {
+                    if (currentStartDownloadDialog == null) {
+                        FirstPartyDownloadDialog(
+                            activity = requireActivity(),
+                            filename = filename.value,
+                            contentSize = contentSize.value,
+                            positiveButtonAction = positiveAction.value,
+                            negativeButtonAction = negativeAction.value,
+                        ).onDismiss {
+                            currentStartDownloadDialog = null
+                        }.show(binding.startDownloadDialogContainer)
+                            .also {
+                                currentStartDownloadDialog = it
+                            }
+                    }
                 }
             },
             customThirdPartyDownloadDialog = { downloaderApps, onAppSelected, negativeActionCallback ->
-                ThirdPartyDownloadDialog(
-                    activity = requireActivity(),
-                    downloaderApps = downloaderApps.value,
-                    onAppSelected = onAppSelected.value,
-                    negativeButtonAction = negativeActionCallback.value,
-                ).onDismiss {
-                    currentStartDownloadDialog = null
-                }.show(binding.startDownloadDialogContainer).also {
-                    currentStartDownloadDialog = it
+                run {
+                    if (currentStartDownloadDialog == null) {
+                        ThirdPartyDownloadDialog(
+                            activity = requireActivity(),
+                            downloaderApps = downloaderApps.value,
+                            onAppSelected = onAppSelected.value,
+                            negativeButtonAction = negativeActionCallback.value,
+                        ).onDismiss {
+                            currentStartDownloadDialog = null
+                        }.show(binding.startDownloadDialogContainer).also {
+                            currentStartDownloadDialog = it
+                        }
+                    }
                 }
             },
         )
