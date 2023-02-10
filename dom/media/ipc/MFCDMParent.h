@@ -52,10 +52,7 @@ class MFCDMParent final : public PMFCDMParent {
     MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
   }
 
-  void Destroy() {
-    AssertOnManagerThread();
-    mIPDLSelfRef = nullptr;
-  }
+  void Destroy();
 
  private:
   ~MFCDMParent() { Unregister(); }
@@ -70,6 +67,8 @@ class MFCDMParent final : public PMFCDMParent {
     MOZ_ASSERT(sRegisteredCDMs.Contains(this->mId));
     sRegisteredCDMs.Remove(this->mId);
   }
+
+  void ConnectSessionEvents(MFCDMSession* aSession);
 
   nsString mKeySystem;
 
@@ -86,6 +85,14 @@ class MFCDMParent final : public PMFCDMParent {
   Microsoft::WRL::ComPtr<IMFContentDecryptionModule> mCDM;
 
   std::map<nsString, UniquePtr<MFCDMSession>> mSessions;
+
+  MediaEventForwarder<MFCDMKeyMessage> mKeyMessageEvents;
+  MediaEventForwarder<MFCDMKeyStatusChange> mKeyChangeEvents;
+  MediaEventForwarder<MFCDMKeyExpiration> mExpirationEvents;
+
+  MediaEventListener mKeyMessageListener;
+  MediaEventListener mKeyChangeListener;
+  MediaEventListener mExpirationListener;
 };
 
 }  // namespace mozilla
