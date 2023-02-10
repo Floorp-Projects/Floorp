@@ -1287,10 +1287,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                             self.info("Per-test run abandoned due to RETRY status")
                             return False
                     else:
-                        self.log(
+                        # report as INFO instead of log_level to avoid extra Treeherder lines
+                        self.info(
                             "The %s suite: %s ran with return status: %s"
                             % (suite_category, suite, tbpl_status),
-                            level=log_level,
                         )
 
             if executed_too_many_tests:

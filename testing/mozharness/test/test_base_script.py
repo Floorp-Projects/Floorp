@@ -226,7 +226,7 @@ class TestScript(unittest.TestCase):
             env={"GARBLE": "FARG"},
             error_list=errors.PythonErrorList,
         )
-        error_logsize = os.path.getsize("test_logs/test_error.log")
+        error_logsize = os.path.getsize("test_logs/test_info.log")
         self.assertTrue(error_logsize > 0, msg="command not found error not hit")
 
     def test_run_command_in_bad_dir(self):

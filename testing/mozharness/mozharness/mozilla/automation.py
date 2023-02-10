@@ -64,7 +64,6 @@ class AutomationMixin(object):
                 self.info(
                     "Current worst status %s is worse; keeping it." % self.worst_status
                 )
-            self.add_summary("# TBPL %s #" % self.worst_status, level=level)
             if set_return_code:
                 self.return_code = EXIT_STATUS_DICT[self.worst_status]
 
