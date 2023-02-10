@@ -159,7 +159,7 @@ class ReaderView {
    * @param optional language of the article, defaults to en.
    */
   getReadingTime(length, lang = "en") {
-    const readingSpeed = this.getReadingSpeedForLanguage(lang);
+    const [readingSpeed, readingSpeedLang] = this.getReadingSpeedForLanguage(lang);
     const charactersPerMinuteLow = readingSpeed.cpm - readingSpeed.variance;
     const charactersPerMinuteHigh = readingSpeed.cpm + readingSpeed.variance;
     const readingTimeMinsSlow = Math.ceil(length / charactersPerMinuteLow);
@@ -169,7 +169,7 @@ class ReaderView {
     // If we have both a fast and slow reading time we'll show both e.g.
     // "2 - 4 minutes", otherwise we'll just show "4 minutes".
     try {
-      var parts = new Intl.RelativeTimeFormat(lang).formatToParts(readingTimeMinsSlow, 'minute');
+      var parts = new Intl.RelativeTimeFormat(readingSpeedLang).formatToParts(readingTimeMinsSlow, 'minute');
       if (parts.length == 3) {
         // No need to use part[0] which represents the literal "in".
         var readingTime = parts[1].value; // reading time in minutes
@@ -218,7 +218,7 @@ class ReaderView {
       [ "zh", {cpm: 255,  variance: 29 } ],
     ]);
 
-    return readingSpeed.get(lang) || readingSpeed.get("en");
+    return readingSpeed.has(lang) ? [readingSpeed.get(lang), lang] : [readingSpeed.get("en"), "en"];
    }
 
    getByline(article) {
