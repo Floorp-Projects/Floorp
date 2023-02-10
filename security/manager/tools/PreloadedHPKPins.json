@@ -59,8 +59,22 @@
     {
       "name": "mozilla_services",
       "sha256_hashes": [
+        // Current Digicert root hierarchy (G1)
+        // Digicert is migrating users off this root hierarchy
+        // https://knowledge.digicert.com/generalinformation/digicert-root-and-intermediate-ca-certificate-updates-2023.html
         "DigiCert Global Root CA",
         "DigiCert High Assurance EV Root CA",
+        // New Digicert root hierarchy (G2)
+        // Digicert is migrating users to this root hierarchy
+        // https://knowledge.digicert.com/generalinformation/digicert-root-and-intermediate-ca-certificate-updates-2023.html
+        "DigiCert Global Root G2",
+        // Future Digicert root hierarchy (G5)
+        // Digicert will be switching to this root hierarchy in the future
+        // https://knowledge.digicert.com/generalinformation/digicert-g5-root-and-intermediate-ca-certificate-migration.html
+        "DigiCert TLS ECC P384 Root G5",
+        "DigiCert TLS RSA4096 Root G5",
+        // Current Let’s Encrypt root hierachy
+        // https://letsencrypt.org/certificates/
         "ISRG Root X1"
       ]
     },
