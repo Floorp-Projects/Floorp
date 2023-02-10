@@ -35,6 +35,58 @@ exported_symbols.test0 = async function() {
   Assert.ok(fileSize == writeBuffer.byteLength);
 };
 
+exported_symbols.quotaTest = async function() {
+  const shrinkedStorageSizeKB = 5 * 1024;
+  const defaultDatabaseSize = 294912;
+
+  // Shrink storage size to 5MB.
+  await Utils.shrinkStorageSize(shrinkedStorageSizeKB);
+
+  let root = await navigator.storage.getDirectory();
+  Assert.ok(root, "Can we access the root directory?");
+
+  // Fill entire storage.
+  const fileHandle = await root.getFileHandle("test.txt", allowCreate);
+  Assert.ok(!!fileHandle, "Can we get file handle?");
+
+  const writable = await fileHandle.createWritable();
+  Assert.ok(!!writable, "Can we create writable file stream?");
+
+  const buffer = new ArrayBuffer(
+    shrinkedStorageSizeKB * 1024 - defaultDatabaseSize
+  );
+  Assert.ok(!!buffer, "Can we create array buffer?");
+
+  // XXX Can't check the returned value because it causes a crash.
+  // const result = await writable.write(buffer);
+  // Assert.equal(result, 0, "Can we write entire buffer?");
+  await writable.write(buffer);
+
+  // Try to write one more byte.
+  const fileHandle2 = await root.getFileHandle("test2.txt", allowCreate);
+  Assert.ok(!!fileHandle2, "Can we get file handle?");
+
+  const writable2 = await fileHandle2.createWritable();
+  Assert.ok(!!writable2, "Can we create writable file stream?");
+
+  const buffer2 = new ArrayBuffer(1);
+  Assert.ok(!!buffer2, "Can we create array buffer?");
+
+  try {
+    await writable2.write(buffer2);
+    Assert.ok(false, "Should have thrown");
+  } catch (ex) {
+    Assert.ok(true, "Did throw");
+    Assert.ok(DOMException.isInstance(ex), "Threw DOMException");
+    Assert.equal(ex.name, "QuotaExceededError", "Threw right DOMException");
+  }
+
+  await writable.close();
+  // writable2 is already closed because of the failed write above
+
+  await Utils.restoreStorageSize();
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
