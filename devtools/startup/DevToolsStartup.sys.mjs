@@ -441,7 +441,10 @@ DevToolsStartup.prototype = {
    * top-level window.
    */
   onWindowReady(window) {
-    if (this.isDisabledByPolicy()) {
+    if (
+      this.isDisabledByPolicy() ||
+      AppConstants.MOZ_APP_NAME == "thunderbird"
+    ) {
       return;
     }
 
