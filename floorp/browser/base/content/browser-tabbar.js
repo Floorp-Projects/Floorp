@@ -70,7 +70,7 @@ function setMultirowTabMaxHeight() {
   document.querySelector("#tabbrowser-arrowscrollbox")
     .shadowRoot
     .querySelector("[part=scrollbox]")
-    .setAttribute("style", "max-height: " + tabHeight*rowValue + "px !important;");
+    .setAttribute("style", Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enable") ? ("max-height: " + tabHeight*rowValue + "px !important;") : "");
 }
 
 function removeMultirowTabMaxHeight() {
@@ -80,14 +80,28 @@ function removeMultirowTabMaxHeight() {
     .removeAttribute("style");
 }
 
+function setNewTabInTabs(){
+  if(Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.newtab.enable")){
+    document.querySelector("#tabs-newtab-button").style.display = "initial"
+    document.querySelector("#new-tab-button").style.display = "none"
+  }else{
+    document.querySelector("#tabs-newtab-button").style.display = ""
+    document.querySelector("#new-tab-button").style.display = ""
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   window.setTimeout(function(){
+    setNewTabInTabs()
     if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
       setMultirowTabMaxHeight();
     }
   }, 3000);
   
   Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.enable",setMultirowTabMaxHeight);
+  Services.prefs.addObserver("floorp.browser.tabbar.multirow.newtab.enable",setNewTabInTabs)
+  
   Services.prefs.addObserver("floorp.enable.multitab", function(){
     if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
       setBrowserDesign();
