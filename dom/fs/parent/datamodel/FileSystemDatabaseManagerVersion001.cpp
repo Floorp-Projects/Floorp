@@ -505,14 +505,14 @@ nsresult UpdateUsageForFileEntry(const FileSystemConnection& aConnection,
 
   // A file could have changed in a way which doesn't allow to read its size.
   QM_TRY_UNWRAP(
-      const int64_t fileSize,
+      const Usage fileSize,
       QM_OR_ELSE_WARN_IF(
           // Expression.
           MOZ_TO_RESULT_INVOKE_MEMBER(fileHandle, GetFileSize),
           // Predicate.
           ([](const nsresult rv) { return rv == NS_ERROR_FILE_NOT_FOUND; }),
           // Fallback. If the file does no longer exist, treat it as 0-sized.
-          ErrToDefaultOk<int64_t>));
+          ErrToDefaultOk<Usage>));
 
   QM_TRY(MOZ_TO_RESULT(aUpdateCache(fileSize)));
 
@@ -665,22 +665,6 @@ Result<Ok, QMResult> DeleteEntry(const FileSystemConnection& aConnection,
   return Ok{};
 }
 
-nsresult IncreaseCachedQuotaUsage(const FileSystemConnection& aConnection,
-                                  int64_t aDelta) {
-  RefPtr<quota::QuotaObject> quotaObject;
-  {
-    RefPtr<quota::QuotaObject> dummy;
-    QM_TRY(MOZ_TO_RESULT(aConnection->GetQuotaObjects(
-        getter_AddRefs(quotaObject), getter_AddRefs(dummy))));
-  }
-  MOZ_ASSERT(quotaObject);
-
-  QM_TRY(OkIf(quotaObject->IncreaseSize(aDelta)),
-         NS_ERROR_FILE_NO_DEVICE_SPACE);
-
-  return NS_OK;
-}
-
 Result<int32_t, QMResult> GetTrackedFilesCount(
     const FileSystemConnection& aConnection) {
   // TODO: We could query the count directly
@@ -766,7 +750,7 @@ Result<Usage, QMResult> FileSystemDatabaseManagerVersion001::GetFileUsage(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::UpdateUsageInDatabase(
-    const EntryId& aEntry, int64_t aNewDiskUsage) {
+    const EntryId& aEntry, Usage aNewDiskUsage) {
   const nsLiteralCString updateUsageQuery =
       "INSERT INTO Usages "
       "( handle, usage ) "
@@ -1016,7 +1000,7 @@ nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
   QM_TRY_UNWRAP(file, mFileManager->GetOrCreateFile(aEntry));
   MOZ_ASSERT(file);
 
-  int64_t fileSize = 0;
+  Usage fileSize = 0;
   QM_TRY(MOZ_TO_RESULT(file->GetFileSize(&fileSize)));
 
   QM_TRY(MOZ_TO_RESULT(UpdateUsageInDatabase(aEntry, fileSize)));
@@ -1025,16 +1009,20 @@ nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::UpdateCachedQuotaUsage(
-    int64_t aDelta) {
-  if (0 == aDelta) {
-    return NS_OK;
-  }
+    const EntryId& aEntryId, Usage aOldUsage, Usage aNewUsage) {
+  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
-  if (0 < aDelta) {
-    return IncreaseCachedQuotaUsage(mConnection, aDelta);
-  }
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileObj,
+                mFileManager->GetFile(aEntryId).mapErr(toNSResult));
 
-  DecreaseCachedQuotaUsage(-aDelta);  // Minus aDelta > 0 of quota free'd
+  RefPtr<quota::QuotaObject> quotaObject = quotaManager->GetQuotaObject(
+      quota::PERSISTENCE_TYPE_DEFAULT, mClientMetadata,
+      quota::Client::FILESYSTEM, fileObj, aOldUsage);
+  MOZ_ASSERT(quotaObject);
+
+  QM_TRY(OkIf(quotaObject->MaybeUpdateSize(aNewUsage, /* aTruncate */ true)),
+         NS_ERROR_FILE_NO_DEVICE_SPACE);
 
   return NS_OK;
 }
@@ -1055,8 +1043,9 @@ Result<Ok, QMResult> FileSystemDatabaseManagerVersion001::EnsureUsageIsKnown(
     return Ok{};  // Usage is 0 or it was successfully recorded at unlocking.
   }
 
-  auto quotaCacheUpdate = [this, oldSize = oldUsage.value()](int64_t aNewSize) {
-    return UpdateCachedQuotaUsage(aNewSize - oldSize);
+  auto quotaCacheUpdate = [this, &aEntryId,
+                           oldSize = oldUsage.value()](Usage aNewSize) {
+    return UpdateCachedQuotaUsage(aEntryId, oldSize, aNewSize);
   };
 
   static const nsLiteralCString updateUsagesKeepTrackedQuery =

@@ -90,13 +90,14 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual ~FileSystemDatabaseManagerVersion001() = default;
 
  private:
-  nsresult UpdateUsageInDatabase(const EntryId& aEntry, int64_t aNewDiskUsage);
+  nsresult UpdateUsageInDatabase(const EntryId& aEntry, Usage aNewDiskUsage);
 
   Result<Ok, QMResult> EnsureUsageIsKnown(const EntryId& aEntryId);
 
   void DecreaseCachedQuotaUsage(int64_t aDelta);
 
-  nsresult UpdateCachedQuotaUsage(int64_t aDelta);
+  nsresult UpdateCachedQuotaUsage(const EntryId& aEntryId, Usage aOldUsage,
+                                  Usage aNewUsage);
 
   // This is a raw pointer since we're owned by the FileSystemDataManager.
   FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;
