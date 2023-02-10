@@ -28,7 +28,7 @@
 #  include "MFMediaEngineParent.h"
 #endif
 
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
 #  include "MFCDMParent.h"
 #endif
 
@@ -259,7 +259,7 @@ bool RemoteDecoderManagerParent::DeallocPMFMediaEngineParent(
 
 PMFCDMParent* RemoteDecoderManagerParent::AllocPMFCDMParent(
     const nsAString& aKeySystem) {
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   return new MFCDMParent(aKeySystem, this, sRemoteDecoderManagerParentThread);
 #else
   return nullptr;
@@ -267,7 +267,7 @@ PMFCDMParent* RemoteDecoderManagerParent::AllocPMFCDMParent(
 }
 
 bool RemoteDecoderManagerParent::DeallocPMFCDMParent(PMFCDMParent* actor) {
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   static_cast<MFCDMParent*>(actor)->Destroy();
 #endif
   return true;

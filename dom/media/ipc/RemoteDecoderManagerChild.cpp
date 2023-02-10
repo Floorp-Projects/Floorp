@@ -29,7 +29,7 @@
 #  include "MFMediaEngineChild.h"
 #endif
 
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
 #  include "MFCDMChild.h"
 #endif
 
@@ -704,7 +704,7 @@ PMFCDMChild* RemoteDecoderManagerChild::AllocPMFCDMChild(const nsAString&) {
 }
 
 bool RemoteDecoderManagerChild::DeallocPMFCDMChild(PMFCDMChild* actor) {
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   static_cast<MFCDMChild*>(actor)->IPDLActorDestroyed();
 #endif
   return true;
