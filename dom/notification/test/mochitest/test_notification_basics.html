@@ -87,12 +87,15 @@
       is(notification.onerror, null, "onerror() should be null");
       is(notification.onclose, null, "onclose() should be null");
       is(typeof notification.close, "function", "close() should exist");
+      is(typeof notification.data, "object", "data should be a JS object");
 
       is(notification.dir, options.dir, "auto should get set");
       is(notification.lang, options.lang, "lang should get set");
       is(notification.body, options.body, "body should get set");
       is(notification.tag, options.tag, "tag should get set");
       is(notification.icon, options.icon, "icon should get set");
+      ok(NotificationTest.customDataMatches(notification.data),
+         "data should get set");
 
       // store notification in test context
       this.notification = notification;
