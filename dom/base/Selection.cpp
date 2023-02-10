@@ -1949,7 +1949,11 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   // If the given range is part of another Selection, we need to clone the
   // range first.
   RefPtr<nsRange> range;
-  if (aRange.IsInSelection() && aRange.GetSelection() != this) {
+  if (aRange.IsInSelection()) {
+    // If we already have the range, we don't need to handle this.
+    if (aRange.GetSelection() == this) {
+      return;
+    }
     // Because of performance reason, when there is a cached range, let's use
     // it.  Otherwise, clone the range.
     range = aRange.CloneRange();

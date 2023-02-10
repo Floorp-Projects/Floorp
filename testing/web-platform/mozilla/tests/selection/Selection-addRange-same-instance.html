@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+"use strict";
+
+promise_test(async () => {
+  await new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve));
+
+  getSelection().removeAllRanges();
+  const range = document.createRange();
+  range.setStart(document.querySelector("span"), 0);
+  getSelection().addRange(range);
+  getSelection().addRange(range);
+  assert_equals(getSelection().rangeCount, 1, "Adding same collapsed range twice should not clone the range");
+  assert_equals(getSelection().getRangeAt(0), range, "The first range should be the added range");
+  assert_equals(getSelection().focusNode, document.querySelector("span"), "Focus node should be the <span>");
+  assert_equals(getSelection().focusOffset, 0, "Focus offset should be 0");
+  assert_true(getSelection().isCollapsed, "Selection should be collapsed");
+}, "Adding same collapsed range should not change selections");
+
+promise_test(async () => {
+  getSelection().removeAllRanges();
+  const range = document.createRange();
+  range.selectNodeContents(document.querySelector("div"));
+  getSelection().addRange(range);
+  getSelection().addRange(range);
+  assert_equals(getSelection().rangeCount, 1, "Adding same range twice should not clone the range");
+  assert_equals(getSelection().getRangeAt(0), range, "The first range should be the added range");
+  assert_equals(getSelection().anchorNode, document.querySelector("div"), "Anchor node should be the <div>");
+  assert_equals(getSelection().anchorOffset, 0, "Anchor offset should be 0");
+  assert_equals(getSelection().focusNode, document.querySelector("div"), "Focus node should be the <div>");
+  assert_equals(getSelection().focusOffset, 1, "Focus offset should be 1");
+}, "Adding non-collapsed range after updating the range should not change selections");
+
+promise_test(async () => {
+  getSelection().removeAllRanges();
+  const range = document.createRange();
+  range.collapse(document.querySelector("span"), 0);
+  getSelection().addRange(range);
+  range.selectNodeContents(document.querySelector("div"));
+  getSelection().addRange(range);
+  assert_equals(getSelection().rangeCount, 1, "Adding same range twice should not clone the range");
+  assert_equals(getSelection().getRangeAt(0), range, "The first range should be the added range");
+  assert_equals(getSelection().anchorNode, document.querySelector("div"), "Anchor node should be the <div>");
+  assert_equals(getSelection().anchorOffset, 0, "Anchor offset should be 0");
+  assert_equals(getSelection().focusNode, document.querySelector("div"), "Focus node should be the <div>");
+  assert_equals(getSelection().focusOffset, 1, "Focus offset should be 1");
+}, "Adding same collapsed range after updating the range should not change selections");
+</script>
+</head>
+<body><div><span></span></div></body>
+</html>
