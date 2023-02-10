@@ -7,6 +7,7 @@
 #include <winerror.h>
 
 #include "MFMediaEngineUtils.h"
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -97,7 +98,9 @@ class MFCDMSession::SessionCallbacks final
   STDMETHODIMP KeyMessage(MF_MEDIAKEYSESSION_MESSAGETYPE aType,
                           const BYTE* aMessage, DWORD aMessageSize,
                           LPCWSTR aUrl) final {
-    mKeyMessageEvent.Notify(KeyMessageInfo{aType, aMessage, aMessageSize});
+    CopyableTArray<uint8_t> msg{static_cast<const uint8_t*>(aMessage),
+                                aMessageSize};
+    mKeyMessageEvent.Notify(aType, std::move(msg));
     return S_OK;
   }
 
@@ -106,13 +109,15 @@ class MFCDMSession::SessionCallbacks final
     return S_OK;
   }
 
-  MediaEventSource<KeyMessageInfo>& KeyMessageEvent() {
+  MediaEventSource<MF_MEDIAKEYSESSION_MESSAGETYPE, nsTArray<uint8_t>>&
+  KeyMessageEvent() {
     return mKeyMessageEvent;
   }
   MediaEventSource<void>& KeyChangeEvent() { return mKeyChangeEvent; }
 
  private:
-  MediaEventProducer<KeyMessageInfo> mKeyMessageEvent;
+  MediaEventProducer<MF_MEDIAKEYSESSION_MESSAGETYPE, nsTArray<uint8_t>>
+      mKeyMessageEvent;
   MediaEventProducer<void> mKeyChangeEvent;
 };
 
@@ -136,25 +141,23 @@ MFCDMSession* MFCDMSession::Create(SessionType aSessionType,
 MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
                            SessionCallbacks* aCallback,
                            nsISerialEventTarget* aManagerThread)
-    : mSession(aSession),
-      mManagerThread(aManagerThread),
-      mKeyMessageEvent(mManagerThread) {
+    : mSession(aSession), mManagerThread(aManagerThread) {
   MOZ_ASSERT(aSession);
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aManagerThread);
   // It's ok to capture `this` here because the forwarder will be disconnected
   // before this class get destroyed, which means `this` is always valid inside
   // lambda.
-  mKeyMessageEvent.ForwardIf(aCallback->KeyMessageEvent(),
-                             [this]() { return RetrieveSessionId(); });
+  mKeyMessageListener = aCallback->KeyMessageEvent().Connect(
+      mManagerThread, this, &MFCDMSession::OnSessionKeyMessage);
   mKeyChangeListener = aCallback->KeyChangeEvent().Connect(
       mManagerThread, [this]() { OnSessionKeysChange(); });
 }
 
 MFCDMSession::~MFCDMSession() {
   // TODO : maybe disconnect them in `Close()`?
-  mKeyMessageEvent.DisconnectAll();
   mKeyChangeListener.DisconnectIfExists();
+  mKeyMessageListener.DisconnectIfExists();
 }
 
 HRESULT MFCDMSession::GenerateRequest(const nsAString& aInitDataType,
@@ -276,6 +279,33 @@ HRESULT MFCDMSession::UpdateExpirationIfNeeded() {
   mExpirationEvent.Notify(
       ExpirationInfo{*mSessionId, mExpiredTimeMilliSecondsSinceEpoch});
   return S_OK;
+}
+
+void MFCDMSession::OnSessionKeyMessage(
+    const MF_MEDIAKEYSESSION_MESSAGETYPE& aType,
+    const nsTArray<uint8_t>& aMessage) {
+  AssertOnManagerThread();
+  // Only send key message after the session Id is ready.
+  if (!RetrieveSessionId()) {
+    return;
+  }
+  static auto ToMediaKeyMessageType = [](MF_MEDIAKEYSESSION_MESSAGETYPE aType) {
+    switch (aType) {
+      case MF_MEDIAKEYSESSION_MESSAGETYPE_LICENSE_REQUEST:
+        return dom::MediaKeyMessageType::License_request;
+      case MF_MEDIAKEYSESSION_MESSAGETYPE_LICENSE_RENEWAL:
+        return dom::MediaKeyMessageType::License_renewal;
+      case MF_MEDIAKEYSESSION_MESSAGETYPE_LICENSE_RELEASE:
+        return dom::MediaKeyMessageType::License_release;
+      case MF_MEDIAKEYSESSION_MESSAGETYPE_INDIVIDUALIZATION_REQUEST:
+        return dom::MediaKeyMessageType::Individualization_request;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown session message type");
+        return dom::MediaKeyMessageType::EndGuard_;
+    }
+  };
+  mKeyMessageEvent.Notify(MFCDMKeyMessage{
+      *mSessionId, ToMediaKeyMessageType(aType), std::move(aMessage)});
 }
 
 #undef LOG
