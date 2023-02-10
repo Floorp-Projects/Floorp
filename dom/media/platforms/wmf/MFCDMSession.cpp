@@ -20,11 +20,12 @@ using Microsoft::WRL::MakeAndInitialize;
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
           ("MFCDMSession=%p, " msg, this, ##__VA_ARGS__))
 
-static inline MF_MEDIAKEYSESSION_TYPE ConvertSessionType(SessionType aType) {
+static inline MF_MEDIAKEYSESSION_TYPE ConvertSessionType(
+    KeySystemConfig::SessionType aType) {
   switch (aType) {
-    case SessionType::Temporary:
+    case KeySystemConfig::SessionType::Temporary:
       return MF_MEDIAKEYSESSION_TYPE_TEMPORARY;
-    case SessionType::PersistentLicense:
+    case KeySystemConfig::SessionType::PersistentLicense:
       return MF_MEDIAKEYSESSION_TYPE_PERSISTENT_LICENSE;
   }
 }
@@ -84,7 +85,7 @@ class MFCDMSession::SessionCallbacks final
 };
 
 /* static*/
-MFCDMSession* MFCDMSession::Create(SessionType aSessionType,
+MFCDMSession* MFCDMSession::Create(KeySystemConfig::SessionType aSessionType,
                                    IMFContentDecryptionModule* aCdm,
                                    nsISerialEventTarget* aManagerThread) {
   MOZ_ASSERT(aCdm);
