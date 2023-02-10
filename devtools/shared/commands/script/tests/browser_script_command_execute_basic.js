@@ -58,6 +58,11 @@ add_task(async () => {
     var testDataView = new DataView(testArrayBuffer, 2);
 
     var testCanvasContext = document.createElement("canvas").getContext("2d");
+
+    async function testAsync() { return 10; }
+    async function testAsyncAwait() { await 1; return 10; }
+    async function * testAsyncGen() { return 10; }
+    async function * testAsyncGenAwait() { await 1; return 10; }
   </script>
   <body id="body1" class="class2"><h1>Body text</h1></body>
   </html>`);
@@ -79,6 +84,7 @@ add_task(async () => {
   await doEagerEvalWithSideEffectMonkeyPatched(commands);
   await doEagerEvalESGetters(commands);
   await doEagerEvalDOMGetters(commands);
+  await doEagerEvalAsyncFunctions(commands);
 
   await commands.destroy();
 });
@@ -666,6 +672,54 @@ async function doEagerEvalDOMGetters(commands) {
 
     // CanvasRenderingContext2D / CanvasCompositing
     `testCanvasContext.globalAlpha`,
+  ];
+
+  for (const code of testDataWithSideEffect) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: { type: "undefined" },
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalAsyncFunctions(commands) {
+  // [code, expectedResult]
+  const testData = [["typeof testAsync()", "object"]];
+
+  for (const [code, expectedResult] of testData) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: expectedResult,
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+
+  const testDataWithSideEffect = [
+    // await is effectful
+    "testAsyncAwait()",
+
+    // initial yield is effectful
+    "testAsyncGen()",
+    "testAsyncGenAwait()",
   ];
 
   for (const code of testDataWithSideEffect) {
