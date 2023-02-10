@@ -114,4 +114,71 @@ void WMFCDMProxy::RejectPromiseWithStateError(PromiseId aId,
   RejectPromise(aId, std::move(rv), aReason);
 }
 
+void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
+                                MediaKeySessionType aSessionType,
+                                PromiseId aPromiseId,
+                                const nsAString& aInitDataType,
+                                nsTArray<uint8_t>& aInitData) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static auto ConvertSessionType = [](dom::MediaKeySessionType aType) {
+    switch (aType) {
+      case dom::MediaKeySessionType::Temporary:
+        return KeySystemConfig::SessionType::Temporary;
+      case dom::MediaKeySessionType::Persistent_license:
+        return KeySystemConfig::SessionType::PersistentLicense;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid session type");
+        return KeySystemConfig::SessionType::Temporary;
+    }
+  };
+  static auto SessionTypeToStr = [](dom::MediaKeySessionType aType) {
+    switch (aType) {
+      case dom::MediaKeySessionType::Temporary:
+        return "Temporary";
+      case dom::MediaKeySessionType::Persistent_license:
+        return "PersistentLicense";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid session type");
+        return "Invalid";
+    }
+  };
+  EME_LOG("WMFCDMProxy::CreateSession(this=%p, pid=%" PRIu32
+          "), sessionType=%s",
+          this, aPromiseId, SessionTypeToStr(aSessionType));
+  mCDM->CreateSession(ConvertSessionType(aSessionType), aInitDataType,
+                      aInitData)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aCreateSessionToken,
+           aPromiseId](nsString sessionID) {
+            mCreateSessionRequest.Complete();
+            if (mKeys.IsNull()) {
+              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
+                      ") : abort the create session due to "
+                      "empty key",
+                      this, aPromiseId);
+              return;
+            }
+            if (RefPtr<dom::MediaKeySession> session =
+                    mKeys->GetPendingSession(aCreateSessionToken)) {
+              session->SetSessionId(std::move(sessionID));
+            }
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mCreateSessionRequest.Complete();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString(
+                    "WMFCDMProxy::CreateSession: cannot create session"));
+          })
+      ->Track(mCreateSessionRequest);
+}
+
+void WMFCDMProxy::Shutdown() {
+  // TODO: reject pending promise.
+  mCreateSessionRequest.DisconnectIfExists();
+}
+
 }  // namespace mozilla
