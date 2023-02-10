@@ -20,7 +20,7 @@
 #  include "nsMimeTypes.h"
 #endif
 
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
 #  include "mediafoundation/WMFCDMImpl.h"
 #endif
 
@@ -40,7 +40,7 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
     return true;
   }
 #endif
-#if MOZ_WMF_CDM
+#if MOZ_MF_CDM
   if (IsPlayReadyKeySystem(aKeySystem) && WMFCDMImpl::Supports(aKeySystem)) {
     return true;
   }
@@ -175,7 +175,7 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
 #endif
     return true;
   }
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   if (IsPlayReadyKeySystem(aKeySystem)) {
     RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
     return cdm->GetCapabilities(aConfig);

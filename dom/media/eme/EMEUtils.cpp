@@ -65,7 +65,7 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kWidevineKeySystemName);
 }
 
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
 bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
          aKeySystem.EqualsLiteral(kPlayReadyKeySystemNameDeprecated);
@@ -79,7 +79,7 @@ nsString KeySystemToProxyName(const nsAString& aKeySystem) {
   if (IsWidevineKeySystem(aKeySystem)) {
     return u"gmp-widevinecdm"_ns;
   }
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   if (IsPlayReadyKeySystem(aKeySystem)) {
     return u"mfcdm-playready"_ns;
   }

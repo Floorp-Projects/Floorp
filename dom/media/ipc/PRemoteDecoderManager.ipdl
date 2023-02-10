@@ -6,7 +6,7 @@
 #ifdef MOZ_WMF_MEDIA_ENGINE
   include protocol PMFMediaEngine;
 #endif
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   include protocol PMFCDM;
 #endif
 
@@ -45,7 +45,7 @@ sync protocol PRemoteDecoderManager
 #ifdef MOZ_WMF_MEDIA_ENGINE
   manages PMFMediaEngine;
 #endif
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   manages PMFCDM;
 #endif
 
@@ -53,7 +53,7 @@ parent:
 #ifdef MOZ_WMF_MEDIA_ENGINE
   async PMFMediaEngine();
 #endif
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
   async PMFCDM(nsString keySystem);
 #endif
   async PRemoteDecoder(RemoteDecoderInfoIPDL info,

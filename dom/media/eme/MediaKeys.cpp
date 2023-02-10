@@ -36,7 +36,7 @@
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #endif
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
 #  include "mozilla/WMFCDMProxy.h"
 #endif
 
@@ -438,7 +438,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
         mConfig.mPersistentState == MediaKeysRequirement::Required);
   } else
 #endif
-#ifdef MOZ_WMF_CDM
+#ifdef MOZ_MF_CDM
       if (IsPlayReadyKeySystem(mKeySystem)) {
     proxy = new WMFCDMProxy(
         this, mKeySystem,
