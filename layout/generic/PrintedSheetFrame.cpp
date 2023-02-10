@@ -324,6 +324,8 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   mPD->mPagesPerSheetGridOrigin = pageGridOrigin;
   mPD->mPagesPerSheetNumCols = numCols;
   mPD->mPagesPerSheetScale = scale;
+  mPD->mCellWidth = float(availSpaceOnSheet.width) / float(numCols);
+  mPD->mCellHeight = float(availSpaceOnSheet.height) / float(numRows);
 }
 
 #ifdef DEBUG_FRAME_DUMP
