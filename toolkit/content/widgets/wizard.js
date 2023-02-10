@@ -112,6 +112,7 @@
         document.l10n.connectRoot(this.shadowRoot);
       }
       document.documentElement.setAttribute("role", "dialog");
+      document.documentElement.classList.add("wizard-window");
       this._maybeStartWizard();
 
       window.addEventListener("close", event => {
@@ -395,7 +396,7 @@
       this._maybeStartWizard();
     }
 
-    _maybeStartWizard(aIsConnected) {
+    _maybeStartWizard() {
       if (
         !this._hasStarted &&
         this.isConnected &&

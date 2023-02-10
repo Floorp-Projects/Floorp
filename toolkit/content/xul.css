@@ -715,8 +715,16 @@ dialog {
 wizard {
   -moz-box-flex: 1;
   -moz-box-orient: vertical;
-  width: 40em;
-  height: 30em;
+  contain: inline-size;
+  min-width: 40em;
+  min-height: 30em;
+}
+
+.wizard-window {
+  /* TODO: This can be removed once
+   * layout.css.moz-box-flexbox-emulation.enabled
+   * is true unconditionally */
+  -moz-box-layout: flex;
 }
 
 wizard > wizardpage {
