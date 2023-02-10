@@ -23,17 +23,6 @@ enum class SessionType {
   PersistentLicense = 2,
 };
 
-// TODO: declare them in the ipdl so that we can send them over IPC directly.
-// Also, refine them if needed because now I am not sure what exact information
-// caller expects to see from these events.
-struct ExpirationInfo {
-  ExpirationInfo(const nsString& aSessionId, double aExpiredTime)
-      : mSessionId(aSessionId),
-        mExpiredTimeMilliSecondsSinceEpoch(aExpiredTime) {}
-  const nsString mSessionId;
-  const double mExpiredTimeMilliSecondsSinceEpoch;
-};
-
 // MFCDMSession represents a key session defined by the EME spec, it operates
 // the IMFContentDecryptionModuleSession directly and forward events from
 // IMFContentDecryptionModuleSession to its caller. It's not thread-safe and
@@ -61,7 +50,7 @@ class MFCDMSession final {
   MediaEventSource<MFCDMKeyStatusChange>& KeyChangeEvent() {
     return mKeyChangeEvent;
   }
-  MediaEventSource<ExpirationInfo>& ExpirationEvent() {
+  MediaEventSource<MFCDMKeyExpiration>& ExpirationEvent() {
     return mExpirationEvent;
   }
 
@@ -92,7 +81,7 @@ class MFCDMSession final {
 
   MediaEventProducer<MFCDMKeyMessage> mKeyMessageEvent;
   MediaEventProducer<MFCDMKeyStatusChange> mKeyChangeEvent;
-  MediaEventProducer<ExpirationInfo> mExpirationEvent;
+  MediaEventProducer<MFCDMKeyExpiration> mExpirationEvent;
   MediaEventListener mKeyMessageListener;
   MediaEventListener mKeyChangeListener;
 
