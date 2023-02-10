@@ -231,7 +231,7 @@ class ProviderSearchTips extends UrlbarProvider {
         };
         break;
       case TIPS.PERSIST:
-        result.heuristic = true;
+        result.heuristic = false;
         result.payload.titleL10n = {
           id: "urlbar-search-tips-persist",
         };

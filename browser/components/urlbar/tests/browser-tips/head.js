@@ -594,7 +594,7 @@ async function checkTip(win, expectedTip, closeView = true) {
         `${name} and your browsing history.`;
       break;
     case UrlbarProviderSearchTips.TIP_TYPE.PERSIST:
-      heuristic = true;
+      heuristic = false;
       title =
         "Searching just got simpler." +
         " Try making your search more specific here in the address bar." +
