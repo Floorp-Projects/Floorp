@@ -628,11 +628,20 @@ spotlight:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+#
+# Before each Nightly leaves the station for Beta, we're currently
+# experimenting with ensuring that we have enough fx-messages-* messages to
+# accomodate all the rollout possibilities for Release that we're aware of,
+# plus one for a buffer just-in-case.
+#
+# When adding an fxms-message-* feature id, be sure to also add it to the
+# MESSAGING_EXPERIMENTS_DEFAULT_FEATURES list in ASRouter.
+
 # currently in use by 107+ exp/rollout pair of Import Bookmarks Infrequent
 # Existing Users with 5 bookmarks:
 # https://experimenter.services.mozilla.com/nimbus/import-infrequent-rollout-make-yourself-at-home/summary
-# More info about the fx-message-* feature id prototype is available at:
-# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-1:
   description: "A Firefox Messaging System message"
   owner: omc@mozilla.com
@@ -667,6 +676,40 @@ fxms-message-2:
 # https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
 fxms-message-3:
   description: "Firefox Messaging System message 3"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
+
+# next potential planned use: 111+ exp/rollout pair for PDF annotations callout
+# (https://mozilla-hub.atlassian.net/browse/FXE-83) experiment.
+#
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+fxms-message-4:
+  description: "Firefox Messaging System message 4"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
+
+# next planned use: buffer, just in case we need to rollout something we're
+# we're not expecting
+
+# More info about the fx-message-* feature id prototype is available at:
+# https://docs.google.com/document/d/1KdtaNycZL5j240nXofbibm9yKh7qVvu1-uZFLdmYM7Y/
+fxms-message-5:
+  description: "Firefox Messaging System message 5"
   owner: omc@mozilla.com
   hasExposure: true
   exposureDescription: >-

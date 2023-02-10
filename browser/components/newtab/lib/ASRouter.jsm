@@ -104,6 +104,8 @@ const MESSAGING_EXPERIMENTS_DEFAULT_FEATURES = [
   "fxms-message-1",
   "fxms-message-2",
   "fxms-message-3",
+  "fxms-message-4",
+  "fxms-message-5",
   "infobar",
   "moments-page",
   "pbNewtab",
