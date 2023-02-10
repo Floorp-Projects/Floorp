@@ -8,6 +8,7 @@
 #include "ipc/EnumSerializer.h"
 #include "MediaData.h"
 #include "mozilla/KeySystemConfig.h"
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"
 
 namespace IPC {
 
@@ -30,6 +31,13 @@ struct ParamTraits<mozilla::CryptoScheme>
     : public ContiguousEnumSerializerInclusive<mozilla::CryptoScheme,
                                                mozilla::CryptoScheme::None,
                                                mozilla::CryptoScheme::Cbcs> {};
+
+template <>
+struct ParamTraits<mozilla::dom::MediaKeyMessageType>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::MediaKeyMessageType,
+          mozilla::dom::MediaKeyMessageType::License_request,
+          mozilla::dom::MediaKeyMessageType::EndGuard_> {};
 
 }  // namespace IPC
 
