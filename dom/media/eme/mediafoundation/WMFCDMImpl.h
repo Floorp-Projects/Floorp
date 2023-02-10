@@ -44,6 +44,13 @@ class WMFCDMImpl final {
 
   RefPtr<InitPromise> Init(const InitParams& aParams);
 
+  RefPtr<MFCDMChild::SessionPromise> CreateSession(
+      const KeySystemConfig::SessionType aSessionType,
+      const nsAString& aInitDataType, const nsTArray<uint8_t>& aInitData) {
+    return mCDM->CreateSessionAndGenerateRequest(aSessionType, aInitDataType,
+                                                 aInitData);
+  }
+
   uint64_t Id() {
     MOZ_ASSERT(mCDM->Id() != 0,
                "Should be called only after Init() is resolved");

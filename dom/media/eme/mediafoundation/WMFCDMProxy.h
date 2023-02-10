@@ -9,6 +9,7 @@
 
 #include "mozilla/CDMProxy.h"
 #include "mozilla/CDMCaps.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/RefPtr.h"
@@ -34,7 +35,7 @@ class WMFCDMProxy : public CDMProxy {
   void CreateSession(uint32_t aCreateSessionToken,
                      MediaKeySessionType aSessionType, PromiseId aPromiseId,
                      const nsAString& aInitDataType,
-                     nsTArray<uint8_t>& aInitData) override {}
+                     nsTArray<uint8_t>& aInitData) override;
 
   void LoadSession(PromiseId aPromiseId, dom::MediaKeySessionType aSessionType,
                    const nsAString& aSessionId) override {}
@@ -57,9 +58,7 @@ class WMFCDMProxy : public CDMProxy {
       OutputProtectionCheckStatus aCheckStatus,
       OutputProtectionCaptureStatus aCaptureStatus) override {}
 
-  void Shutdown() override {
-    // TODO: reject pending promise.
-  }
+  void Shutdown() override;
 
   void Terminated() override {}
 
@@ -117,6 +116,8 @@ class WMFCDMProxy : public CDMProxy {
   void RejectPromiseWithStateError(PromiseId aId, const nsCString& aReason);
 
   RefPtr<WMFCDMImpl> mCDM;
+
+  MozPromiseRequestHolder<MFCDMChild::SessionPromise> mCreateSessionRequest;
 };
 
 }  // namespace mozilla
