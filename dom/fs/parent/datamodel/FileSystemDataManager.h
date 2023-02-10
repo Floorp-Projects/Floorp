@@ -37,6 +37,7 @@ class FileSystemChildMetadata;
 
 namespace quota {
 class DirectoryLock;
+class QuotaManager;
 }  // namespace quota
 
 namespace fs::data {
@@ -54,6 +55,7 @@ class FileSystemDataManager
   enum struct State : uint8_t { Initial = 0, Opening, Open, Closing, Closed };
 
   FileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
+                        RefPtr<quota::QuotaManager> aQuotaManager,
                         MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
@@ -152,6 +154,7 @@ class FileSystemDataManager
   const quota::OriginMetadata mOriginMetadata;
   nsTHashSet<EntryId> mExclusiveLocks;
   NS_DECL_OWNINGEVENTTARGET
+  const RefPtr<quota::QuotaManager> mQuotaManager;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<nsCOMPtr<nsIEventTarget>> mIOTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
