@@ -62,6 +62,7 @@ exports.STATUS = {
  * Mapping of CSS at-Rule className to CSSRule type name.
  */
 exports.CSSAtRuleClassNameType = {
+  CSSContainerRule: "container",
   CSSCounterStyleRule: "counter-style",
   CSSDocumentRule: "document",
   CSSFontFaceRule: "font-face",
@@ -69,6 +70,7 @@ exports.CSSAtRuleClassNameType = {
   CSSImportRule: "import",
   CSSKeyframeRule: "keyframe",
   CSSKeyframesRule: "keyframes",
+  CSSLayerBlockRule: "layer",
   CSSMediaRule: "media",
   CSSNamespaceRule: "namespace",
   CSSPageRule: "page",

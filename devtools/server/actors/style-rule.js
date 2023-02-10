@@ -546,8 +546,10 @@ class StyleRuleActor extends Actor {
   }
 
   #SUPPORTED_RULES_CLASSNAMES = new Set([
+    "CSSContainerRule",
     "CSSKeyframeRule",
     "CSSKeyframesRule",
+    "CSSLayerBlockRule",
     "CSSMediaRule",
     "CSSStyleRule",
     "CSSSupportsRule",
