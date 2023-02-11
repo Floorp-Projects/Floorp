@@ -173,7 +173,7 @@
 
 #detailsPane {
   border-top: 1px solid color-mix(in srgb, FieldText 50%, transparent);
-  height: 16em;
+  min-height: 16em;
   padding: 10px;
 }
 

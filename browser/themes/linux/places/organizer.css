@@ -129,7 +129,7 @@
 }
 
 #detailsPane {
-  height: 16em;
+  min-height: 16em;
   padding: 5px;
 }
 
