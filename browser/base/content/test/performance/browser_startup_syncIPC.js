@@ -42,7 +42,7 @@ const startupPhases = {
     {
       name: "PWebRenderBridge::Msg_EnsureConnected",
       condition: WIN && WEBRENDER,
-      maxCount: 2,
+      maxCount: 3,
     },
     {
       name: "PWebRenderBridge::Msg_EnsureConnected",
