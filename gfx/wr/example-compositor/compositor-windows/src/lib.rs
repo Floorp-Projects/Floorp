@@ -88,8 +88,6 @@ extern {
     );
 
     fn com_dc_end_transaction(window: *mut Window);
-
-    fn deinit(window: *mut Window);
 }
 
 pub fn create_window(
@@ -262,6 +260,6 @@ pub fn swap_buffers(window: *mut Window) {
     }
 }
 
-pub fn deinit(window: *mut Window) {
+pub fn deinit(_window: *mut Window) {
     todo!()
 }
