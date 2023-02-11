@@ -3,6 +3,13 @@
 
 // Test PlacesFrecencyRecalculator scheduling.
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 async function getOriginFrecency(origin) {
   let db = await PlacesUtils.promiseDBConnection();
   return (
