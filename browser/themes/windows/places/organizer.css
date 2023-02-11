@@ -306,7 +306,7 @@ treechildren::-moz-tree-separator(selected) {
 #detailsPane {
   background-color: var(--organizer-pane-background);
   color: var(--organizer-color);
-  height: 16em;
+  min-height: 16em;
   padding: 5px;
   border-top: 1px solid var(--organizer-border-color);
 }
