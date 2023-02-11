@@ -525,7 +525,7 @@ HRESULT MFMediaSource::GetInputTrustAuthority(DWORD aStreamId, REFIID aRiid,
       return MF_E_SHUTDOWN;
     }
   }
-
+#ifdef MOZ_WMF_CDM
   if (!mCDMProxy) {
     return MF_E_NOT_PROTECTED;
   }
@@ -542,6 +542,7 @@ HRESULT MFMediaSource::GetInputTrustAuthority(DWORD aStreamId, REFIID aRiid,
 
   RETURN_IF_FAILED(
       mCDMProxy->GetInputTrustAuthority(aStreamId, nullptr, 0, aRiid, aITAOut));
+#endif
   return S_OK;
 }
 
@@ -571,12 +572,14 @@ MFMediaEngineStream* MFMediaSource::GetStreamByIndentifier(
   return nullptr;
 }
 
+#ifdef MOZ_WMF_CDM
 void MFMediaSource::SetCDMProxy(MFCDMProxy* aCDMProxy) {
   // TODO : add threading assertion, not sure what thread it would be running on
   // now.
   mCDMProxy = aCDMProxy;
   // TODO : ask cdm proxy to refresh trusted input
 }
+#endif
 
 void MFMediaSource::AssertOnManagerThread() const {
   MOZ_ASSERT(mManagerThread->IsOnCurrentThread());

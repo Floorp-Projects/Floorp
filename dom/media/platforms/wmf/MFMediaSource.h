@@ -95,7 +95,9 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
 
   MFMediaEngineStream* GetStreamByIndentifier(DWORD aStreamId) const;
 
+#ifdef MOZ_WMF_CDM
   void SetCDMProxy(MFCDMProxy* aCDMProxy);
+#endif
 
   TaskQueue* GetTaskQueue() const { return mTaskQueue; }
 
@@ -174,7 +176,9 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   // Modify and access on MF thread pool.
   float mPlaybackRate = 0.0f;
 
+#ifdef MOZ_WMF_CDM
   RefPtr<MFCDMProxy> mCDMProxy;
+#endif
 };
 
 }  // namespace mozilla

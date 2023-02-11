@@ -20,10 +20,6 @@ EXPORTS += [
 
 if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
     EXPORTS += [
-        "MFCDMExtra.h",
-        "MFCDMProxy.h",
-        "MFCDMSession.h",
-        "MFContentProtectionManager.h",
         "MFMediaEngineAudioStream.h",
         "MFMediaEngineDecoderModule.h",
         "MFMediaEngineExtra.h",
@@ -32,9 +28,6 @@ if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         "MFMediaSource.h",
     ]
     UNIFIED_SOURCES += [
-        "MFCDMProxy.cpp",
-        "MFCDMSession.cpp",
-        "MFContentProtectionManager.cpp",
         "MFMediaEngineAudioStream.cpp",
         "MFMediaEngineDecoderModule.cpp",
         "MFMediaEngineExtension.cpp",
@@ -42,6 +35,19 @@ if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         "MFMediaEngineStream.cpp",
         "MFMediaEngineVideoStream.cpp",
         "MFMediaSource.cpp",
+    ]
+
+if CONFIG["MOZ_WMF_CDM"]:
+    EXPORTS += [
+        "MFCDMExtra.h",
+        "MFCDMProxy.h",
+        "MFCDMSession.h",
+        "MFContentProtectionManager.h",
+    ]
+    UNIFIED_SOURCES += [
+        "MFCDMProxy.cpp",
+        "MFCDMSession.cpp",
+        "MFContentProtectionManager.cpp",
     ]
 
 UNIFIED_SOURCES += [
