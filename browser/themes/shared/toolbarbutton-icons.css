@@ -10,7 +10,7 @@
 }
 
 :root:-moz-lwtheme,
-:is(panel, toolbar, #urlbar, #searchbar):-moz-lwtheme {
+:where(panel, toolbar, #urlbar, #searchbar):-moz-lwtheme {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
 }
 
