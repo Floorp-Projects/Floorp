@@ -4,20 +4,21 @@
 
 /*
 
-    An example of how to implement the Compositor trait that
-    allows picture caching surfaces to be composited by the operating
-    system.
+   An example of how to implement the Compositor trait that
+   allows picture caching surfaces to be composited by the operating
+   system.
 
-    The current example supports DirectComposite on Windows only.
+   The current example supports DirectComposite on Windows only.
 
- */
+*/
 
 use euclid::Angle;
 use gleam::gl;
 use std::ffi::CString;
 use std::sync::mpsc;
-use webrender::{CompositorSurfaceTransform, Transaction, api::*, euclid::point2};
+use webrender::{CompositorSurfaceTransform, Transaction, api::*};
 use webrender::api::units::*;
+use webrender::Device;
 #[cfg(target_os = "windows")]
 use compositor_windows as compositor;
 #[cfg(target_os = "linux")]
@@ -34,15 +35,14 @@ struct DirectCompositeInterface {
 
 impl DirectCompositeInterface {
     fn new(window: *mut compositor::Window) -> Self {
-        DirectCompositeInterface {
-            window,
-        }
+        DirectCompositeInterface { window }
     }
 }
 
 impl webrender::Compositor for DirectCompositeInterface {
     fn create_surface(
         &mut self,
+        _device: &mut Device,
         id: webrender::NativeSurfaceId,
         _virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
@@ -57,39 +57,21 @@ impl webrender::Compositor for DirectCompositeInterface {
         );
     }
 
-    fn destroy_surface(
-        &mut self,
-        id: webrender::NativeSurfaceId,
-    ) {
+    fn destroy_surface(&mut self, _device: &mut Device, id: webrender::NativeSurfaceId) {
         compositor::destroy_surface(self.window, id.0);
     }
 
-    fn create_tile(
-        &mut self,
-        id: webrender::NativeTileId,
-    ) {
-        compositor::create_tile(
-            self.window,
-            id.surface_id.0,
-            id.x,
-            id.y,
-        );
+    fn create_tile(&mut self, _device: &mut Device, id: webrender::NativeTileId) {
+        compositor::create_tile(self.window, id.surface_id.0, id.x, id.y);
     }
 
-    fn destroy_tile(
-        &mut self,
-        id: webrender::NativeTileId,
-    ) {
-        compositor::destroy_tile(
-            self.window,
-            id.surface_id.0,
-            id.x,
-            id.y,
-        );
+    fn destroy_tile(&mut self, _device: &mut Device, id: webrender::NativeTileId) {
+        compositor::destroy_tile(self.window, id.surface_id.0, id.x, id.y);
     }
 
     fn bind(
         &mut self,
+        _device: &mut Device,
         id: webrender::NativeTileId,
         dirty_rect: DeviceIntRect,
         _valid_rect: DeviceIntRect,
@@ -111,16 +93,17 @@ impl webrender::Compositor for DirectCompositeInterface {
         }
     }
 
-    fn unbind(&mut self) {
+    fn unbind(&mut self, _device: &mut Device) {
         compositor::unbind_surface(self.window);
     }
 
-    fn begin_frame(&mut self) {
+    fn begin_frame(&mut self, _device: &mut Device) {
         compositor::begin_transaction(self.window);
     }
 
     fn add_surface(
         &mut self,
+        _device: &mut Device,
         id: webrender::NativeSurfaceId,
         transform: CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
@@ -129,8 +112,8 @@ impl webrender::Compositor for DirectCompositeInterface {
         compositor::add_surface(
             self.window,
             id.0,
-            transform.transform_point2d(point2(0., 0.)).unwrap().x as i32,
-            transform.transform_point2d(point2(0., 0.)).unwrap().y as i32,
+            transform.offset.x as i32,
+            transform.offset.y as i32,
             clip_rect.min.x,
             clip_rect.min.y,
             clip_rect.width(),
@@ -138,28 +121,36 @@ impl webrender::Compositor for DirectCompositeInterface {
         );
     }
 
-    fn end_frame(&mut self) {
+    fn end_frame(&mut self, _device: &mut Device) {
         compositor::end_transaction(self.window);
     }
-    fn create_external_surface(&mut self, _: webrender::NativeSurfaceId, _: bool) { todo!() }
-
-    fn attach_external_image(
+    fn create_external_surface(
         &mut self,
+        _device: &mut Device,
         _id: webrender::NativeSurfaceId,
-        _external_image: ExternalImageId
+        _: bool,
     ) {
         todo!()
     }
 
-    fn enable_native_compositor(&mut self, _enable: bool) {
+    fn attach_external_image(
+        &mut self,
+        _device: &mut Device,
+        _id: webrender::NativeSurfaceId,
+        _external_image: ExternalImageId,
+    ) {
         todo!()
     }
 
-    fn deinit(&mut self) {
+    fn enable_native_compositor(&mut self, _device: &mut Device, _enable: bool) {
+        todo!()
+    }
+
+    fn deinit(&mut self, _device: &mut Device) {
         compositor::deinit(self.window);
     }
 
-    fn get_capabilities(&self) -> webrender::CompositorCapabilities {
+    fn get_capabilities(&self, _device: &mut Device) -> webrender::CompositorCapabilities {
         webrender::CompositorCapabilities {
             virtual_surface_size: 1024 * 1024,
             ..Default::default()
@@ -168,15 +159,33 @@ impl webrender::Compositor for DirectCompositeInterface {
 
     fn invalidate_tile(
         &mut self,
+        _device: &mut Device,
         _id: webrender::NativeTileId,
         _valid_rect: DeviceIntRect,
-    ) {}
+    ) {
+    }
 
     fn start_compositing(
         &mut self,
+        _device: &mut Device,
+        _color: webrender::webrender_api::ColorF,
         _dirty_rects: &[DeviceIntRect],
         _opaque_rects: &[DeviceIntRect],
-    ) {}
+    ) {
+    }
+
+    fn create_backdrop_surface(
+        &mut self,
+        _device: &mut Device,
+        _id: webrender::NativeSurfaceId,
+        _color: webrender::webrender_api::ColorF,
+    ) {
+        todo!()
+    }
+
+    fn get_window_visibility(&self, _device: &mut Device) -> webrender::WindowVisibility {
+        todo!()
+    }
 }
 
 // Simplisitic implementation of the WR notifier interface to know when a frame
@@ -187,26 +196,20 @@ struct Notifier {
 
 impl Notifier {
     fn new(tx: mpsc::Sender<()>) -> Self {
-        Notifier {
-            tx,
-        }
+        Notifier { tx }
     }
 }
 
 impl RenderNotifier for Notifier {
     fn clone(&self) -> Box<dyn RenderNotifier> {
         Box::new(Notifier {
-            tx: self.tx.clone()
+            tx: self.tx.clone(),
         })
     }
 
-    fn wake_up(&self, _composite_needed: bool) {
-    }
+    fn wake_up(&self, _composite_needed: bool) {}
 
-    fn new_frame_ready(&self,
-                       _: DocumentId,
-                       _scrolled: bool,
-                       _composite_needed: bool) {
+    fn new_frame_ready(&self, _: DocumentId, _scrolled: bool, _composite_needed: bool) {
         self.tx.send(()).ok();
     }
 }
@@ -216,9 +219,10 @@ fn push_rotated_rect(
     rect: LayoutRect,
     color: ColorF,
     spatial_id: SpatialId,
-    root_pipeline_id: PipelineId,
+    _root_pipeline_id: PipelineId,
     angle: f32,
     time: f32,
+    item_key: SpatialTreeItemKey,
 ) {
     let color = color.scale_rgb(time);
     let rotation = LayoutTransform::rotation(
@@ -227,7 +231,8 @@ fn push_rotated_rect(
         1.0,
         Angle::radians(2.0 * std::f32::consts::PI * angle),
     );
-    let transform_origin = rect.center().extend(0.0);
+    let center = rect.center();
+    let transform_origin = LayoutVector3D::new(center.x, center.y, 0.0);
     let transform = rotation
         .pre_translate(-transform_origin)
         .then_translate(transform_origin);
@@ -241,14 +246,14 @@ fn push_rotated_rect(
             should_snap: false,
             paired_with_perspective: false,
         },
-        SpatialTreeItemKey::new(0, 0),
+        item_key,
     );
     builder.push_rect(
         &CommonItemProperties::new(
             rect,
             SpaceAndClipInfo {
                 spatial_id,
-                clip_id: ClipId::root(root_pipeline_id),
+                clip_chain_id: ClipChainId::INVALID,
             },
         ),
         rect,
@@ -271,18 +276,18 @@ fn build_display_list(
 
     let fixed_space_info = SpaceAndClipInfo {
         spatial_id: SpatialId::root_scroll_node(root_pipeline_id),
-        clip_id: ClipId::root(root_pipeline_id),
+        clip_chain_id: ClipChainId::INVALID,
     };
 
-    let scroll_space_info = builder.define_scroll_frame(
-        &fixed_space_info,
+    let scroll_spatial_id = builder.define_scroll_frame(
+        fixed_space_info.spatial_id,
         scroll_id,
         LayoutRect::from_size(layout_size),
         LayoutRect::from_size(layout_size),
         LayoutVector2D::zero(),
         APZScrollGeneration::default(),
         HasScrollLinkedEffect::No,
-        SpatialTreeItemKey::new(0, 1),
+        SpatialTreeItemKey::new(1, 0),
     );
 
     builder.push_rect(
@@ -301,10 +306,11 @@ fn build_display_list(
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),
         ColorF::new(1.0, 0.0, 0.0, 1.0),
-        scroll_space_info.spatial_id,
+        scroll_spatial_id,
         root_pipeline_id,
         time,
         time,
+        SpatialTreeItemKey::new(1, 1),
     );
 
     push_rotated_rect(
@@ -318,6 +324,7 @@ fn build_display_list(
         root_pipeline_id,
         0.2,
         time,
+        SpatialTreeItemKey::new(1, 2),
     );
 
     push_rotated_rect(
@@ -327,10 +334,11 @@ fn build_display_list(
             LayoutSize::new(size_factor * 300.0, size_factor * 300.0),
         ),
         ColorF::new(0.0, 0.0, 1.0, 1.0),
-        scroll_space_info.spatial_id,
+        scroll_spatial_id,
         root_pipeline_id,
         0.1,
         time,
+        SpatialTreeItemKey::new(1, 3),
     );
 
     push_rotated_rect(
@@ -340,10 +348,11 @@ fn build_display_list(
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),
         ColorF::new(1.0, 1.0, 0.0, 1.0),
-        scroll_space_info.spatial_id,
+        scroll_spatial_id,
         root_pipeline_id,
         time,
         time,
+        SpatialTreeItemKey::new(1, 4),
     );
 
     push_rotated_rect(
@@ -353,10 +362,11 @@ fn build_display_list(
             LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
         ),
         ColorF::new(0.0, 1.0, 1.0, 1.0),
-        scroll_space_info.spatial_id,
+        scroll_spatial_id,
         root_pipeline_id,
         time,
         time,
+        SpatialTreeItemKey::new(1, 5),
     );
 }
 
@@ -440,20 +450,14 @@ fn main() {
     let (tx, rx) = mpsc::channel();
     let notifier = Box::new(Notifier::new(tx));
     let gl = unsafe {
-        gl::GlesFns::load_with(
-            |symbol| {
-                let symbol = CString::new(symbol).unwrap();
-                let ptr = compositor::get_proc_address(symbol.as_ptr());
-                ptr
-            }
-        )
+        gl::GlesFns::load_with(|symbol| {
+            let symbol = CString::new(symbol).unwrap();
+            let ptr = compositor::get_proc_address(symbol.as_ptr());
+            ptr
+        })
     };
-    let (mut renderer, sender) = webrender::Renderer::new(
-        gl.clone(),
-        notifier,
-        opts,
-        None,
-    ).unwrap();
+    let (mut renderer, sender) =
+        webrender::create_webrender_instance(gl.clone(), notifier, opts, None).unwrap();
     let mut api = sender.create_api();
     let document_id = api.add_document(device_size);
     let device_pixel_ratio = 1.0;
@@ -480,12 +484,7 @@ fn main() {
             inv_mode,
         );
 
-        txn.set_display_list(
-            current_epoch,
-            None,
-            layout_size,
-            root_builder.end(),
-        );
+        txn.set_display_list(current_epoch, None, layout_size, root_builder.end());
     }
 
     txn.generate_frame(0, RenderReasons::empty());
@@ -518,18 +517,16 @@ fn main() {
                         inv_mode,
                     );
 
-                    txn.set_display_list(
-                        current_epoch,
-                        None,
-                        layout_size,
-                        root_builder.end(),
-                    );
+                    txn.set_display_list(current_epoch, None, layout_size, root_builder.end());
                 }
                 Invalidations::Scrolling => {
                     let d = 0.5 - 0.5 * (2.0 * f32::consts::PI * 5.0 * time).cos();
-                    txn.set_scroll_offset(
+                    txn.set_scroll_offsets(
                         scroll_id,
-                        LayoutPoint::new(0.0, (d * 100.0).round()),
+                        vec![SampledScrollOffset {
+                            offset: LayoutVector2D::new(0.0, (d * 100.0).round()),
+                            generation: APZScrollGeneration::default(),
+                        }],
                     );
                 }
             }
