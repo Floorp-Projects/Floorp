@@ -266,6 +266,16 @@ add_task(async function test_dnr_limits_namespace_properties() {
       permissions: ["declarativeNetRequest"],
     },
     background() {
+      browser.test.assertEq(
+        "_dynamic",
+        browser.declarativeNetRequest.DYNAMIC_RULESET_ID,
+        "Value of DYNAMIC_RULESET_ID constant"
+      );
+      browser.test.assertEq(
+        "_session",
+        browser.declarativeNetRequest.SESSION_RULESET_ID,
+        "Value of SESSION_RULESET_ID constant"
+      );
       const {
         GUARANTEED_MINIMUM_STATIC_RULES,
         MAX_NUMBER_OF_STATIC_RULESETS,
