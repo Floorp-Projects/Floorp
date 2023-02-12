@@ -14,14 +14,12 @@
     <string name="content_description_disable_private_browsing_button">I-disable ang private browsing</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Maghanap o ilagay ang address</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Ipasok ang mga search terms</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ipapakita rito ang iyong nakabukas na mga tab.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ipapakita rito ang iyong mga pribadong tab.</string>
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 nakabukas na tab. I-tap para lumipat ng tab.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s nakabukas na tab. I-tap para lumipat ng tab.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ang napili</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -35,34 +33,18 @@
     <string name="tab_tray_close_multiselect_content_description">Umalis sa multiselect mode</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">I-save ang mga napiling tab sa collection</string>
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Napiling %1$s</string>
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Hindi napiling %1$s</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Umalis na sa multiselect mode</string>
-    <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Pumasok na sa multiselect mode, pumili ng mga tab para mai-save sa isang collection</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Napili</string>
 
-    <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Nai-save kamakailan</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Mga na-bookmark kamakailan</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Ipakita lahat</string>
-
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Button para maipakita lahat ng mga naka-save na bookmark</string>
+    <string name="recently_saved_show_all_content_description_2">Maipakita lahat ng mga naka-save na bookmark</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Alisin</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Ang %1$s ay gawa ng Mozilla.</string>
 
     <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string name="private_browsing_title">Ikaw ay nasa pribadong sesyon</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
@@ -70,24 +52,22 @@
     <string name="private_browsing_common_myths">
        Mga karaniwang pamahiin tungkol sa pribadong pag-browse
     </string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Burahin ang sesyon</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Magdagdag ng shortcut para makapagbukas ng mga pribadong tab mula sa iyong Home screen.</string>
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Magdagdag ng shortcut para makapagbukas ng mga pribadong tab mula sa iyong Home screen.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Magdagdag ng shortcut</string>
-    <!-- Text for the negative button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Magdagdag ng shortcut</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Salamat na lang</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Maaari mong itakda sa Firefox na kusang buksan ang mga link sa mga app.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Magpunta sa Settings</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Alisin</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Alisin</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kailangan ng camera access. Pumunta sa Android settings, i-tap ang permiso, at i-tap ang payagan.</string>
@@ -103,13 +83,24 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Alisin</string>
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Ang mga tab na hindi mo natingnan sa loob ng dalawang linggo ay inilipat dito.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">I-off sa mga setting</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Awtomatikong isara pagkatapos ng isang buwan?</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Isara</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">I-on ang auto-close</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Bagong tab</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Bagong private tab</string>
-    <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Mga pangunahing site</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -117,9 +108,19 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Ipakita lahat</string>
 
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Tangalin</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Kamakailang binisita</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Alisin</string>
+
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Buksan ang mga Tab</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Bumalik</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -128,14 +129,8 @@
     <string name="browser_menu_refresh">i-Refresh</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Tumigil</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Bookmark</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">i-Edit ang Bookmark</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Mga Add-on</string>
-    <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Mga extension</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Walang mga add-on dito</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -152,20 +147,14 @@
     <string name="browser_menu_add_to_homescreen">Idagdag sa Home screen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">i-Install</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Mga naka-sync na tab</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">i-Resync</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Hanapin sa pahina</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Pribadong tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">i-Save sa koleksyon</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Ibahagi</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Ibahagi sa…</string>
 
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
@@ -182,8 +171,6 @@
     <string name="browser_menu_read_close">Isara ang reader view</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Buksan sa app</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Itsura</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Customize reader view</string>
@@ -192,19 +179,15 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">I-edit</string>
 
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">i-Customize ang homepage</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Home screen</string>
 
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Hindi makakonekta. Hindi kilalang URL scheme.</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Mamili ng wika</string>
-    <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Hanapin</string>
 
     <!-- Text for default locale item -->
     <string name="default_locale_text">Sundin ang wika sa device</string>
@@ -219,8 +202,6 @@
     <string name="search_engine_button">Search engine</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Mga search engine setting</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Ngayon naman, maghanap gamit ang:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Punan ang link mula sa clipboard</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -232,17 +213,27 @@
     <string name="search_suggestions_onboarding_title">Payagan ang mga mungkahi sa paghahanap sa mga pribadong session?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">Ibabahagi ng %s ang lahat ng ita-type mo sa address bar sa iyong default na search engine.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Alamin</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Hanapin sa %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Maghanap direkta mula sa address bar</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Hanapin sa mga settings</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Magsimula</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Mag-sign in</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Laktawan</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Isara</string>
+
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Magbukas ng bagong Firefox tab</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Buksan ng bagong %1$s tab</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Maghanap</string>
     <!-- Text preview for larger sized widgets -->
@@ -254,8 +245,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Mga Setting</string>
-    <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Basics</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Pangkalahatan</string>
     <!-- Preference category for all links about Fenix -->
@@ -266,27 +255,15 @@
     <string name="preferences_search">Paghahanap</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Address bar</string>
-    <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Tulong</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">I-rate sa Google Play</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Magbigay ng puna</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Tungkol sa %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Ang Iyong mga Karapatan</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Mga Password</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Mga credit card at tirahan</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Itakda bilang default browser</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Advanced</string>
-    <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Pribasiya</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Pribasiya at Seguridad</string>
     <!-- Preference for advanced site permissions -->
@@ -301,6 +278,17 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Kapag pinayagan, makikita rin ang mga pribadong tab kapag maraming nakabukas na app</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Magdagdag ng private browsing shortcut</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">HTTPS-Only Mode</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Nakabukas</string>
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">Nakasara</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Alamin</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Malamang sa malamang, ang website ay sadyang hindi suportado ang HTTPS.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibility</string>
     <!-- Preference to override the Firefox Account server -->
@@ -311,20 +299,18 @@
     <string name="toast_override_fxa_sync_server_done">Nabago ang Firefox Account/Sync server. Magsasara na ang application para mailapat ang mga pagbabago…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">mag-Sign in</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Home</string>
+    <string name="preferences_home_2">Ang homepage</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Mga gesture</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ipasadya</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Mag-sync ng mga bookmark, kasaysayan, at iba pa gamit ang iyong Firefox Account</string>
+    <string name="preferences_sign_in_description_2">Mag sign-in para i-sync ang mga tabs, bookmarks, passwords at iba pa.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -337,10 +323,6 @@
     <string name="preferences_data_choices">Mga pamimilian sa data</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Pagkolekta ng data</string>
-    <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Paunawa sa privacy</string>
-    <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Developer tools</string>
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging sa USB</string>
@@ -390,6 +372,38 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Nabago ang Add-on collection. Magsasara na ang application para mailapat ang mga pagbabago…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Balikan ang naiwan</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Mga kamakailang bookmarks</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Kamakailang binisita</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Mga na-sponsor na kwento</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Mga Wallpapers</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Mga naka-sponsor na shortcuts</string>
+
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Na-update ang wallpaper!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Tingnan</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Hindi ma-download ang wallpaper</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Subukan muli</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Hindi mapalitan ang wallpaper</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Alamin</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Ang bagong Independent Voices koleksiyon. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Ang bagong Independent Voices koleksiyon.</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -444,22 +458,12 @@
     <string name="fxa_received_tab_channel_description">Mga abiso para sa mga tab na natanggap mula sa ibang mga Firefox device.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">May natanggap na tab</string>
-    <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">May natanggap na mga tab</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab mula sa %s</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Tracking Protection</string>
-    <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Tracking Protection</string>
-    <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Harangin ang content at mga script na sumusubaybay sa iyo online</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Mga exception</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Nakasara ang Tracking Protection sa mga website na ito</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Buksan sa lahat ng mga site</string>
     <!-- Text displayed when there are no exceptions -->
@@ -467,42 +471,22 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Alamin</string>
 
-    <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Usage at technical data</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Ibinabahagi sa Mozilla ang datos patungkol sa performance, paggamit, hardware at customization sa browser mo para mapaganda lalo ang %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketing data</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Ibinabahagi ang datos tungkol sa mga feature na ginagamit mo sa %1$s kay Leanplum, ang aming mobile marketing vendor.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Nagbabahagi ng basic usage data sa Adjust, ang aming mobile marketing vendor</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Mga pag-aaral</string>
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Pinapayagan ang Mozilla para magkabit at magpatakbo ng mga pag-aaral</string>
-    <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Mga eksperimento</string>
-
-    <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Pinapayagan ang Mozilla para magkabit at magkolekta ng datos para sa mga eksperimental na feature</string>
-    <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Crash reporter</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla location service</string>
-
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s health report</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Buksan ang Sync</string>
-    <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Scan pairing code in desktop Firefox</string>
-    <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Mag-sign in</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">i-Sync at i-save ang iyong data</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Mag-sign in para mag-reconnect</string>
     <!-- Preference for removing FxA account -->
@@ -511,10 +495,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[i-Scan ang QR code na ipinapakita sa <b>firefox.com/pair</b>]]></string>
-    <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Buksan ang Camera</string>
-    <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Kanselahin</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -544,10 +524,6 @@
     <string name="preference_gestures_swipe_toolbar_show_tabs">Mag-swipe pataas sa toolbar para maipakita ang mga tab</string>
 
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Mga session</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Mga Screenshot</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Mga Download</string>
     <!-- Option in library to open Bookmarks page -->
@@ -564,18 +540,17 @@
     <string name="library_history">Kasaysayan</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Bagong tab</string>
-    <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Hanapin sa pahina</string>
-    <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Reading List</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Hanapin</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Mga Setting</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Menu para sa listahan ng kasaysayan</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Isara</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d site</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sites</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Mga isinarang tab kamakailan</string>
@@ -613,15 +588,18 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Pagkatapos ng isang buwan</string>
 
-    <!-- Start on Home -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Magsimula sa home</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Matapos ng apat na oras</string>
-    <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Palagi</string>
-    <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Hindi kailanman</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Awtomatikong isara ang mga bukas na tab</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Pagbubukas ng screen</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Ang homepage</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Huling tab</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Homepage pagkatapos ng apat na oras na walang aktibo</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Manu-manong isara</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -631,23 +609,34 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Isara pagkatapos ng isang buwan</string>
 
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Ilipat ang mga lumang tab sa hindi aktibo</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Ang mga tab na hindi mo natingnan sa loob ng dalawang linggo ay inilipat sa hindi aktibong seksyon.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Tanggalin</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktibo</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">Paminsan-minsan, maaaring mag-install at magpatakbo ang %1$s ng mga pag-aaral.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Matuto ng higit pa</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Aalis ang application upang ilapat ang mga pagbabago</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">OK</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Kanselahin</string>
 
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Inihinto ang application para maglapat ng mga pagbabago </string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Buksan ang mga tab</string>
-    <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Pribadong session</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Mga pribadong tab</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -660,28 +649,18 @@
     <string name="tab_drawer_fab_content">Pribado</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sync</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Buksan ang mga Tab</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">I-save sa collection</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Pumili</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Ibahagi lahat ng mga tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Mga isinarang tab kamakailan</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Kamakailang isinara</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Mga account setting</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Mga tab setting</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Isara lahat ng mga tab</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Bagong Tab</string>
-    <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Pumunta sa home</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">i-Toggle ang tab mode</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -700,28 +679,10 @@
     <string name="close_tab_title">Isara ang tab na %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Buksan ang menu ng mga tab</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Isara lahat ng mga tab</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Ibahagi ang mga tab</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">I-save ang mga tab sa collection</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Menu ng tab</string>
-    <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Ibahagi ang tab</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Burahin</string>
 
 
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">i-Save</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Ibahagi</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Kasalukuyang session image</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">I-save sa collection</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Burahin ang collection</string>
     <!-- Text for the menu button to rename a collection -->
@@ -738,45 +699,28 @@
     <string name="delete_from_history">Burahin sa kasaysayan</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Pribadong Mode)</string>
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">i-Save</string>
 
 
     <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Ipasok ang mga search term</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Burahin ang kasaysayan</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Sigurado ka bang gusto mong burahin ang iyong kasaysayan?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Nabura na ang Kasaysayan</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Binura na ang %1$s</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Alisin</string>
-    <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Kopyahin</string>
 
 
-    <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Ibahagi</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Buksan sa bagong tab</string>
-    <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Buksan sa pribadong tab</string>
-    <!-- Text for the button to delete a single history item -->
+    <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Burahin</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">May %1$d napili</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Burahin ang %1$d item</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Ngayon</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Kahapon</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Nakaraang 24 oras</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Huling 7 araw</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -788,10 +732,6 @@
     <string name="history_empty_message">Walang kasaysayan dito</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Burahin ang mga download</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Sigurado ka bang gusto mong burahin lahat ng iyong mga download?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Natanggal na ang mga Download</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -801,8 +741,6 @@
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">May %1$d napili</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Buksan</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -812,8 +750,6 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Pasensya na. Hindi kayang ma-load ng %1$s ang pahina.</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Maaari mong subukang i-restore o isara ang tab na ito sa baba.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Ipadala ang crash report sa Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -821,25 +757,13 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">I-restore ang tab</string>
 
-    <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Mga pagpipilian sa session</string>
-
-    <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Ibahagi ang session</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Bookmark menu</string>
-    <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">i-Edit ang bookmark</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Pumili ng folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Sigurado ka bang gusto mong burahin ang folder na ito?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">Buburahin ng %s ang mga napiling item.</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Nabura na ang %1$s</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Kanselahin</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Magdagdag ng folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -848,8 +772,6 @@
     <string name="edit_bookmark_snackbar_action">I-EDIT</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">i-Edit</string>
-    <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Pumili</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopyahin</string>
 
@@ -899,9 +821,10 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">I-UNDO</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Ipasok ang mga search term</string>
+
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string name="permissions_header">Mga permiso</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Pumunta sa mga Setting</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -910,12 +833,18 @@
     <string name="quick_settings_sheet">Listahan ng mga quick setting</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Inirerekomenda</string>
-    <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">i-Manage ang mga site permission</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Alisin ang pahintulot</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Kansel</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Alisin ang pahintulot</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Kansel</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Alisin ang mga pahintulot sa lahat ng site</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -930,6 +859,8 @@
     <string name="preference_phone_feature_notification">Mga abiso</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Persistent Storage</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Mga cross-site cookies</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM-controlled content</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -943,7 +874,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Mga exception</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Nakabukas</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Nakabukas</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Nakasara</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -966,6 +897,11 @@
     <string name="delete_browsing_data_quit_on">Nakabukas</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Nakasara</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Nakabukas</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Nakasara</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1008,31 +944,36 @@
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Tingnan</string>
 
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Kanselahin</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Ika-%d collection</string>
 
     <!-- Share -->
-    <!-- Share screen header -->
-    <string name="share_header">Ipadala at Ibahagi</string>
     <!-- Share screen header -->
     <string name="share_header_2">Ibahagi</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Ibahagi</string>
 
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Magbahagi ng link</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">i-Save bilang PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Ipadala sa device</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
     <string name="share_link_all_apps_subheader">Lahat ng pagkilos</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Kagagamit lamang</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Sign in to sync</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Kopyahin sa clipboard</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Kinopya sa clipboard</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Mag-sign in sa Sync</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Ipadala sa lahat ng mga device</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Kumonekta muli sa Sync</string>
@@ -1056,18 +997,8 @@
     <string name="sync_add_new_device_connect_button">Magkonekta ng Isa Pang Device…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Private browsing session</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Burahin ang mga pribadong tab</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Isara ang mga pribadong tab</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Buksan</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Burahin at Buksan</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Pinatatakbo Ng</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
@@ -1084,36 +1015,22 @@
     <string name="snackbar_collection_deleted">Nabura na ang collection</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Nabago na ang pangalan ng collection</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Nabura na ang tab</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Nabura na ang mga tab</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Naisara na ang tab</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Naisara na ang mga tab</string>
-    <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Naisara na ang mga tab!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Na-save na ang mga bookmark!</string>
-    <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Tingnan</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Naidagdag na sa mga top site!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Nadagdag sa shortcuts!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Naisara na ang pribadong tab</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Naisara na ang mga pribadong tab</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Nabura na ang mga pribadong tab</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">i-UNDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Natanggal na ang site</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">i-Undo</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Kumpirmahin</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Payagan ang %1$s na buksan ang %2$s</string>
@@ -1121,6 +1038,10 @@
     <string name="qr_scanner_dialog_positive">PAYAGAN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">TANGGIHAN</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Hindi wasto ang web address.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Sigurado ka bang gusto mong burahin ang %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1129,8 +1050,6 @@
     <string name="delete_tab_and_collection_dialog_title">Burahin ang %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Burahin</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Kanselahin</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Pumapasok sa full screen mode</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1159,11 +1078,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d address</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Kasaysayan</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pahina</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Mga cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1180,16 +1094,21 @@
     <string name="preferences_delete_browsing_data_button">Burahin ang browsing data</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Burahin ang browsing data sa pag-alis</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Kusang magbubura ng browsing data kapag pinili mo ang &quot;Umalis&quot; mula sa main menu</string>
 
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Kusang magbubura ng browsing data kapag pinili mo ang \&quot;Umalis\&quot; mula sa main menu</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Umalis</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Buburahin nito lahat ng iyong browsing data.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Saklaw ng oras upang burahin</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Huling oras</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Ngayon at kahapon</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Lahat</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">Buburahin ng %s ang mga napiling browsing data.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1201,106 +1120,41 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Binubura ang browsing data…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Ang Firefox Preview ay Firefox Nightly na ngayon</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">
-        Gabi-gabing naa-update ang Firefox Nightly at may mga eksperimental na bagong feature.
-        Subalit maaari itong maging sirain. I-download ang aming beta browser para sa mas panatag na karanasan.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Kunin ang Firefox para sa Android Beta</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Kanselahin</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Burahin</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Natanggal ang grupo</string>
 
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Lumipat na ang Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">
-        Ang app na ito ay hindi na makatatanggap ng mga security update. Tigilan nang gamitin ang app na ito at lumipat na sa bagong Nightly.
-        \n\nPara mailipat ang iyong mga bookmark, login, at kasaysayan sa isa pang app, gumawa ng isang Firefox account.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Lumipat na sa bagong Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Lumipat na ang Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">
-        Ang app na ito ay hindi na makatatanggap ng mga security update. Kunin na ang bagong Nightly at tigilan nang gamitin ang app na ito.
-        \n\nPara mailipat ang iyong mga bookmark, login, at kasaysayan sa isa pang app, gumawa ng isang Firefox account.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Kunin na ang bagong Nightly</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Maligayang pagdating sa %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Mayroon nang account?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Tingnan kung ano ang bago</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">May mga katanungan tungkol sa bagong-disenyong %s? Nais malaman alin ang nabago?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Kumuha ng mga kasagutan dito</string>
-
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sync Firefox between devices</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Browser na binuo para sa mga tao, hindi para sa kita.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Kunin kung saan ka umalis</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Bring bookmarks, history, and passwords to Firefox on this device.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Naka-sign in ka bilang %s sa isa pang Firefox browser sa device na ito. Nais mo bang mag-sign in gamit ito?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Oo, i-sign in mo ako</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Nagsa-sign in…</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Mag-sign up</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Manatiling naka-sign out</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Mag-sign in</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Nakabukas ang Sync</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Bigong makapag-sign-in</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Always-on Privacy</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">Pinipigilan ng Firefox ang mga kumpanyang lihim na sinusundan ang iyong mga gawain sa web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Karaniwan (default)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Balanced for privacy and performance. Pages load normally.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Mahigpit (inirerekomenda)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Mahigpit</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_3">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Pilin ang paglalagyan ng toolbar</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Mag-browse nang pribado</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Magbukas ng isang pribadong tab: I-tap ang %s icon.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Magbukas ng pribadong tab sa bawat pagkakataon: I-update ang iyong mga setting sa pribadong pag-browse.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Buksan ang mga setting</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Ang iyong pribasiya</string>
 
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Dinisenyo namin ang %s para bigyan ka ng kontrol sa mga ibinahabagi mo online at kung ano ang ibinabahagi mo sa amin.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Binibigyan ka ng Firefox ng mamahala sa mga ibinabahagi mo online at kung ano ang ibinabahagi mo sa amin.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Basahin ang aming paunawa sa privacy</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Isara</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Handa ka nang magbukas ng isang kamangha-manghang internet?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Simulan nang mag-browse</string>
 
@@ -1338,8 +1192,6 @@
     <string name="sign_in_with_email">Gumamit na lang ng email</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Walang account? <u>Gumawa ng isa</u> para makapag-sync ng Firefox sa mga device.]]></string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Titigil na ang Firefox sa pag-sync sa iyong account, pero hindi nito buburahin ang kahit anong browsing data sa device na ito.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">Titigil na ang %s sa pag-sync sa iyong account, pero hindi nito buburahin ang kahit anong browsing data sa device na ito.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1390,18 +1242,20 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Lahat ng mga third-party na cookie (maaaring maging sanhi upang masira ang mga website)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Lahat ng mga cookie (tiyak na ikasisira ng mga website)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ihiwalay ang mga cross-site cookies</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Tracking content</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Sa lahat ng mga tab</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Sa mga Pribadong tab lamang</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Sa mga Pasadyang tab lamang</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Mga cryptominer</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Mga fingerprinter</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Mga detalye</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Hinarang</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1412,6 +1266,8 @@
     <string name="etp_social_media_trackers_description">Nililimitahan ang kakayahan ng mga social network para subaybayan ang iyong browsing activity sa web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Mga Cross-Site Tracking Cookie</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Mga Cross-Site Cookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Hinaharang ang mga cookie na ginagamit ng mga ad network at analytics company para pagsama-samahin ang iyong browsing data sa iba\'t-ibang mga site.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1426,8 +1282,6 @@
     <string name="etp_tracking_content_title">Tracking Content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Pinipigilang mag-load ang mga panlabas na mga ad, video, at iba pang content na nagtataglay ng tracking code. Maaaring maapektuhan ang ilang aspeto ng website.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Tuwing kulay lila ang kalasag, may naharang na mga tracker ang %s sa site. I-tap para sa karagdagang impormasyon.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">NAKABUKAS ang mga protection sa site na ito</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1437,10 +1291,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Bumalik</string>
-    <!-- About page Your rights link text -->
-    <string name="about_your_rights">Ang iyong mga karapatan</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Mga open source library na ginagamit namin</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Ano’ng bago sa %s</string>
     <!-- Open source licenses page title
@@ -1451,6 +1301,9 @@
 
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Inaalis ang mga cookie na itinakda ng mga redirect sa mga kilalang tracking website.</string>
+
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Alamin</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Suporta</string>
@@ -1469,11 +1322,6 @@
         The first parameter is number of long clicks left to enable the menu -->
     <string name="about_debug_menu_toast_progress">Debug menu: %1$d natitirang click para ma-enable</string>
     <string name="about_debug_menu_toast_done">Naka-enable na ang debug menu</string>
-
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 tab</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d tab</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1508,17 +1356,18 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Tanungin kung ise-save</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Huwag mag-save kailanman</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autofill</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">i-Autofill ang %1$s</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">i-Autofill sa ibang apps</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Mag-dagdag ng login</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Mag-sync ng mga login</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Mag-sync ng mga login sa iba\'t-ibang mga device</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Kumonekta muli</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Mag-sign in sa Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Mga naka-save na login</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1535,36 +1384,16 @@
     <string name="preferences_passwords_exceptions_remove_all">Burahin lahat ng mga exception</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Hanapin sa mga login</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Alpabetikal</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Ginamit kamakailan</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Username</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Password</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Muling ipasok ang PIN</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">i-Unlock para makita ang mga naka-save na login</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Ang koneksyong ito ay di-ligtas. Maaaring makompromiso ang mga login na ipapasok dito.</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Alamin</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Gusto mo bang i-save ng %s ang login na ito?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">i-Save</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Huwag i-save</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Nakopya na ang password sa clipboard</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Nakopya na ang username sa clipboard</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Nakopya na ang site sa clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopyahin ang password</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1573,9 +1402,9 @@
     <string name="saved_login_copy_username">Kopyahin ang username</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Alisin ang username</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Kopyahin ang site</string>
 
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Alisin ang hostname</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Buksan ang site sa browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1607,7 +1436,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu sa pagsunud-sunod ng login</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Mga autofill</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Mga tirahan</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Mga Credit card</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1622,6 +1455,11 @@
     <string name="preferences_credit_cards_add_credit_card">Magdagdag ng credit card</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Manage saved cards</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Maglagay ng tirahan</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">i-Save at i-autofill ang mga addresses</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Magdagdag ng card</string>
     <!-- Title of the "Edit card" screen -->
@@ -1636,17 +1474,19 @@
     <string name="credit_cards_expiration_date_year">Petsa ng Pag-expire, Taon</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Pangalan sa Card</string>
-    <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Palayaw ng Card</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Tanggalin ang card</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Tanggalin ang card</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Sigurado ka bang gusto mong burahin itong credit card?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">i-Delete</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">i-Save</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">i-Save</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Kaselahin</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Mga naka-save na card</string>
@@ -1670,6 +1510,13 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">I-unlock para magamit ang nakaimbak na credit card information</string>
 
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Baguhin ang tirahan</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">I-save</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Tanggalin ang address</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Magdagdag ng search engine</string>
     <!-- Title of the Edit search engine screen -->
@@ -1691,19 +1538,12 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Gagamiting teksto ng paghahanap</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Alamin</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Pasadyang detalye ng search engine</string>
 
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Link para sa Alamin</string>
-
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Ipasok ang pangalan ng search engine</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Mayroon nang search engine na nagngangalang “%s”.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Magpasok ng search string</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1717,19 +1557,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Nabura na ang %s</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Maligayang pagdating sa isang bagung-bagong %s</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Nasa harapan mo ang isang bagong-disenyong browser, na pinaghusay ang performance at mga feature na makatutulong sa iyo nang husto online.\n\nMangyaring maghintay habang ina-update namin ang %s kasama ang iyong</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Ina-update ang %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Simulan ang %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Tapos na ang pag-angkat</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Mga password</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Para payagan ito:</string>
     <!-- First step for the allowing a permission -->
@@ -1739,10 +1566,6 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. i-Toggle ang <b>%1$s</b> sa nakabukas]]></string>
 
-    <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Ligtas na Koneksyon</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Hindi Ligtas na Koneksyon</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Sigurado ka bang gusto mong alisin lahat ng mga pahintulot sa lahat ng mga site?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1751,12 +1574,8 @@
     <string name="confirm_clear_permission_site">Sigurado ka bang gusto mong alisin itong pahintulot sa site na ito?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Walang mga site exception</string>
-    <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Mga Pangunahing Artikulo</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Sigurado ka bang gusto mong burahin itong bookmark?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Idagdag sa mga top site</string>
 
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
@@ -1779,11 +1598,9 @@
     <string name="saved_login_password_description">Ang editable text field para sa password ng login.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">i-Save ang mga pagbabago sa login.</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Isantabi ang mga pagbabago</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">i-Edit</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Kinakailangan ang password</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Paghanap gamit ang boses</string>
@@ -1808,29 +1625,15 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Walang nakabukas na mga tab</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Naabot na ang hangganan ng bilang sa top site</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Magtanggal ng isa para makapagdagdag ng bagong pangunahing site. Pindutin nang matagal ang site at piliin ang tanggalin.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Nakuha ko</string>
-    <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Ipakita ang pinakamadalas na bisitahing site</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Pangalan</string>
-	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Pangalan ng pangunahing site</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Kanselahin</string>
-
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 araw</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 linggo</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Set links from websites, emails, and messages to open automatically in Firefox.</string>
@@ -1847,4 +1650,4 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Isara</string>
 
-</resources>
+    </resources>
