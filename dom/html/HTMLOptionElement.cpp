@@ -96,9 +96,11 @@ void HTMLOptionElement::SetSelected(bool aValue) {
   HTMLSelectElement* selectInt = GetSelect();
   if (selectInt) {
     int32_t index = Index();
-    uint32_t mask = HTMLSelectElement::SET_DISABLED | HTMLSelectElement::NOTIFY;
+    HTMLSelectElement::OptionFlags mask{
+        HTMLSelectElement::OptionFlag::SetDisabled,
+        HTMLSelectElement::OptionFlag::Notify};
     if (aValue) {
-      mask |= HTMLSelectElement::IS_SELECTED;
+      mask += HTMLSelectElement::OptionFlag::IsSelected;
     }
 
     // This should end up calling SetSelectedInternal
@@ -169,13 +171,14 @@ nsresult HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   mIsInSetDefaultSelected = true;
 
   int32_t index = Index();
-  uint32_t mask = HTMLSelectElement::SET_DISABLED;
+  HTMLSelectElement::OptionFlags mask =
+      HTMLSelectElement::OptionFlag::SetDisabled;
   if (aValue) {
-    mask |= HTMLSelectElement::IS_SELECTED;
+    mask += HTMLSelectElement::OptionFlag::IsSelected;
   }
 
   if (aNotify) {
-    mask |= HTMLSelectElement::NOTIFY;
+    mask += HTMLSelectElement::OptionFlag::Notify;
   }
 
   // This can end up calling SetSelectedInternal if our selected state needs to

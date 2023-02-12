@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
+#include "mozilla/EnumSet.h"
 #include "nsCheapSets.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -77,26 +78,31 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
                                 public ConstraintValidation {
  public:
   /**
-   *  IS_SELECTED   whether to set the option(s) to true or false
+   *  IsSelected        whether to set the option(s) to true or false
    *
-   *  CLEAR_ALL     whether to clear all other options (for example, if you
-   *                are normal-clicking on the current option)
+   *  ClearAll          whether to clear all other options (for example, if you
+   *                     are normal-clicking on the current option)
    *
-   *  SET_DISABLED  whether it is permissible to set disabled options
-   *                (for JavaScript)
+   *  SetDisabled       whether it is permissible to set disabled options
+   *                     (for JavaScript)
    *
-   *  NOTIFY        whether to notify frames and such
+   *  Notify             whether to notify frames and such
    *
-   *  NO_RESELECT   no need to select something after an option is deselected
-   *                (for reset)
+   *  NoReselect        no need to select something after an option is
+   * deselected (for reset)
+   *
+   *  InsertingOptions  if an option has just been inserted some bailouts can't
+   * be taken
    */
-  enum OptionType {
-    IS_SELECTED = 1 << 0,
-    CLEAR_ALL = 1 << 1,
-    SET_DISABLED = 1 << 2,
-    NOTIFY = 1 << 3,
-    NO_RESELECT = 1 << 4
+  enum class OptionFlag : uint8_t {
+    IsSelected,
+    ClearAll,
+    SetDisabled,
+    Notify,
+    NoReselect,
+    InsertingOptions
   };
+  using OptionFlags = EnumSet<OptionFlag>;
 
   using ConstraintValidation::GetValidationMessage;
 
@@ -258,7 +264,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    * @return whether any options were actually changed
    */
   bool SetOptionsSelectedByIndex(int32_t aStartIndex, int32_t aEndIndex,
-                                 uint32_t aOptionsMask);
+                                 OptionFlags aOptionsMask);
 
   /**
    * Called when an attribute is about to be changed
