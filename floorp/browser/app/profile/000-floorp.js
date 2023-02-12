@@ -256,6 +256,17 @@ pref("gfx.webrender.all", true);
 pref("dom.webshare.enabled", true);
 #endif
 
+// アドオンのバージョン制限のチェックを無効化
+pref("extensions.checkCompatibility.102.8", false);
+pref("extensions.checkCompatibility.102.9", false);
+pref("extensions.checkCompatibility.102.10", false);
+pref("extensions.checkCompatibility.102.11", false);
+pref("extensions.checkCompatibility.102.12", false);
+pref("extensions.checkCompatibility.102.13", false);
+pref("extensions.checkCompatibility.102.14", false);
+pref("extensions.checkCompatibility.102.15", false);
+pref("extensions.checkCompatibility.nightly", false);
+
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
