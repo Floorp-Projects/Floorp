@@ -887,34 +887,34 @@ bool nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
                                                      int32_t aEndIndex,
                                                      bool aValue,
                                                      bool aClearAll) {
-  RefPtr<dom::HTMLSelectElement> selectElement =
-      dom::HTMLSelectElement::FromNode(mContent);
+  using OptionFlag = HTMLSelectElement::OptionFlag;
+  RefPtr<HTMLSelectElement> selectElement =
+      HTMLSelectElement::FromNode(mContent);
 
-  uint32_t mask = dom::HTMLSelectElement::NOTIFY;
+  HTMLSelectElement::OptionFlags mask = OptionFlag::Notify;
   if (mForceSelection) {
-    mask |= dom::HTMLSelectElement::SET_DISABLED;
+    mask += OptionFlag::SetDisabled;
   }
   if (aValue) {
-    mask |= dom::HTMLSelectElement::IS_SELECTED;
+    mask += OptionFlag::IsSelected;
   }
   if (aClearAll) {
-    mask |= dom::HTMLSelectElement::CLEAR_ALL;
+    mask += OptionFlag::ClearAll;
   }
 
   return selectElement->SetOptionsSelectedByIndex(aStartIndex, aEndIndex, mask);
 }
 
 bool nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex) {
-  RefPtr<dom::HTMLOptionElement> option =
-      GetOption(static_cast<uint32_t>(aIndex));
+  RefPtr<HTMLOptionElement> option = GetOption(static_cast<uint32_t>(aIndex));
   NS_ENSURE_TRUE(option, false);
 
-  RefPtr<dom::HTMLSelectElement> selectElement =
-      dom::HTMLSelectElement::FromNode(mContent);
+  RefPtr<HTMLSelectElement> selectElement =
+      HTMLSelectElement::FromNode(mContent);
 
-  uint32_t mask = dom::HTMLSelectElement::NOTIFY;
+  HTMLSelectElement::OptionFlags mask = HTMLSelectElement::OptionFlag::Notify;
   if (!option->Selected()) {
-    mask |= dom::HTMLSelectElement::IS_SELECTED;
+    mask += HTMLSelectElement::OptionFlag::IsSelected;
   }
 
   return selectElement->SetOptionsSelectedByIndex(aIndex, aIndex, mask);
