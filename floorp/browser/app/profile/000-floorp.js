@@ -85,7 +85,7 @@ pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
 pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
 
 // url:URL width:幅 userAgent:userAgent usercontext:コンテナタブ
-pref("floorp.browser.sidebar2.data", "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}");
+pref("floorp.browser.sidebar2.data", '{"data":{"1":{"url":"floorp//bmt","width":600},"2":{"url":"floorp//bookmarks","width":415},"3":{"url":"floorp//history","width":415},"4":{"url":"floorp//downloads","width":415},"5":{"url":"floorp//tst","width":415},"w1":{"url":"https://freasearch.org"},"w2":{"url":"https://translate.google.com"},"w3":{"url":"https://misskey.io"}},"index":["1","2","3","4","5","w1","w2","w3"]}');
 
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
@@ -96,6 +96,14 @@ pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/syst
 
 // 言語設定をシステムに合わせる
 pref("intl.locale.requested", "");
+
+pref("app.feedback.baseURL", "https://support.ablaze.one/");
+
+// 多段タブ
+pref("floorp.enable.multitab", false);
+pref("floorp.browser.tabbar.multirow.max.enabled", true);
+pref("floorp.browser.tabbar.multirow.newtab-inside.enabled", false);
+pref("floorp.browser.tabbar.multirow.max.row", 3);
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -231,9 +239,6 @@ pref("browser.startup.page", 3);//自動復元
 pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように]
 pref("general.config.obscure_value", 0);
 
-pref("floorp.enable.multitab", false);
-pref("floorp.browser.tabbar.multirow.max.row", 3);
-
 //font
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka,Meiryo");
 #ifdef XP_WIN
@@ -245,6 +250,11 @@ pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo,
 // 多少のパフォーマンス改善
 pref("gfx.canvas.accelerated", true);
 pref("gfx.webrender.all", true);
+
+// https://developer.mozilla.org/docs/Web/API/Navigator/share
+#ifdef XP_WIN
+pref("dom.webshare.enabled", true);
+#endif
 
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 

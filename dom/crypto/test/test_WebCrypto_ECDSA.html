@@ -187,6 +187,19 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Importing an RSA key as an ECDSA key should fail",
+  function() {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-256" };
+
+    // tv.spki is the SPKI for an RSA key, not an ECDSA key
+    crypto.subtle.importKey("spki", tv.spki, alg, false, ["verify"])
+      .then(error(that), complete(that));
+  }
+);
+
 /* ]]>*/</script>
 </head>
 

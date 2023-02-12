@@ -5,9 +5,6 @@
 browser.jar:
 % content userchromejs %content/userchromejs/ contentaccessible=yes
 
-# userScript
-   content/userchromejs/chromecss.uc.js             (chromecss.uc.js)
-
 # Loader
    content/userchromejs/BootstrapLoader.jsm         (loader/BootstrapLoader.jsm)
    content/userchromejs/RDFDataSource.jsm           (loader/RDFDataSource.jsm)

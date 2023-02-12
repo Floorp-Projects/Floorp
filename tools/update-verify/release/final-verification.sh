@@ -161,7 +161,7 @@ do
     then
         log "  Downloading config file '${file}'"
         cfg=$(mktemp)
-        curl -fL "${file}" > "$cfg"
+        curl -fL --compressed "${file}" > "$cfg"
         if [ "$?" != 0 ]; then
             log "Error downloading config file '${file}'"
             BAD_FILE=1

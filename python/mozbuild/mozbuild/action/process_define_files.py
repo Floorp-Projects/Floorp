@@ -36,7 +36,7 @@ def process_define_file(output, input):
     ) and not config.substs.get("JS_STANDALONE"):
         config = PartialConfigEnvironment(mozpath.join(topobjdir, "js", "src"))
 
-    with open(path, "rU") as input:
+    with open(path, "r") as input:
         r = re.compile(
             "^\s*#\s*(?P<cmd>[a-z]+)(?:\s+(?P<name>\S+)(?:\s+(?P<value>\S+))?)?", re.U
         )

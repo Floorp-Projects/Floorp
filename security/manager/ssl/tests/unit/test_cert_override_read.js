@@ -10,19 +10,19 @@ function run_test() {
   // bad_certs/mitm.pem
   let cert1 = {
     sha256Fingerprint:
-      "B6:E6:16:9F:A0:9D:97:AF:B4:8C:AF:94:FD:08:C6:D3:AE:E6:B8:62:B9:B2:81:B5:52:AB:6E:7C:17:25:8E:F8",
+      "E9:3A:91:F6:15:11:FB:DD:02:76:DD:45:8C:4B:F4:9B:D1:14:13:91:2E:96:4B:EC:D2:4F:90:D5:F4:BB:29:5C",
     dbKey: "This isn't relevant for this test.",
   };
   // bad_certs/selfsigned.pem
   let cert2 = {
     sha256Fingerprint:
-      "7B:23:9E:6C:46:D8:D1:F3:59:DC:E6:05:5C:DB:06:FB:98:21:50:92:9C:B7:EC:3A:A3:B9:A5:4E:25:B2:C3:F8",
+      "51:BC:41:90:C1:FD:6E:73:18:19:B0:60:08:DD:A3:3D:59:B2:5B:FB:D0:3D:DD:89:19:A5:BB:C6:2B:5A:72:A7",
     dbKey: "This isn't relevant for this test.",
   };
   // bad_certs/noValidNames.pem
   let cert3 = {
     sha256Fingerprint:
-      "CB:E3:D7:05:40:05:22:B4:0D:85:01:01:A6:3F:14:44:C1:AE:C1:1C:FA:77:C2:36:56:1F:2B:AD:6D:94:77:A4",
+      "C3:A3:61:02:CA:64:CC:EC:45:1D:24:B6:A0:69:DB:DB:F0:D8:58:76:FC:50:36:52:5A:E8:40:4C:55:72:08:F4",
     dbKey: "This isn't relevant for this test.",
   };
 

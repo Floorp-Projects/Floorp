@@ -648,7 +648,7 @@ uint64_t Navigator::HardwareConcurrency() {
   }
 
   return rts->ClampedHardwareConcurrency(
-      nsContentUtils::ShouldResistFingerprinting(mWindow->GetExtantDoc()));
+      nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting());
 }
 
 namespace {
@@ -1816,9 +1816,9 @@ network::Connection* Navigator::GetConnection(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
     mConnection = network::Connection::CreateForWindow(
-        mWindow, nsContentUtils::ShouldResistFingerprinting(doc));
+        mWindow,
+        nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting());
   }
 
   return mConnection;

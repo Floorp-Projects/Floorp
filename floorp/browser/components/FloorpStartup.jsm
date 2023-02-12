@@ -213,4 +213,6 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 
 
 // Load Tab Sleep feature
-ChromeUtils.import("resource:///modules/TabSleep.jsm");
+try {
+    ChromeUtils.import("resource:///modules/TabSleep.jsm");
+} catch (e) { console.error(e) }

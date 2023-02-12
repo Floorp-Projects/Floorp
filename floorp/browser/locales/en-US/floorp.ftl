@@ -27,10 +27,14 @@ auto-reboot = If you change any of the settings below, your browser will be rest
 tab-width = Minimum width of tabs
 enable-multitab = 
  .label = Enable multi-row tabs
-multirow-tabs-value = Number of Rows When Multi-row Tabs Are Enabled 
+multirow-tabs-limit = 
+ .label = Enable row limit for multi-row tabs.
+multirow-tabs-newtab = 
+ .label = Always place the Open New Tab button within the column of multi-row tabs
+multirow-tabs-value = Number of rows when multi-row tabs are enabled
 enable-tab-sleep = 
  .label = Enable Tab Sleep
-tab-sleep-timeout-value = Grace time to sleep inactive tabs (seconds)
+tab-sleep-timeout-minutes-value = Time to put tabs to sleep (minutes)
 enable-tab-scroll-change = 
  .label = Switch Tabs by Scrolling
 enable-doble-click-block = 
@@ -321,9 +325,9 @@ newtab-background-not-background =
     .label = Disable Background
 
 newtab-background-selected-image =
-    .label = Use a Images in the Selected Folder
+    .label = Use Images from a Selected Folder
 
-newtab-background-folder = Selected Directory
+newtab-background-folder = Selected Folder
 
 newtab-background-folder-reload = 
   .label = Reload Images
@@ -332,7 +336,7 @@ newtab-background-folder-default =
   .label = Restore Default
 
 newtab-background-folder-open = 
-  .label = Open Directory
+  .label = Open Folder
 
 newtab-background-folder-choose = Choose Images Folder
 
@@ -531,6 +535,10 @@ appmenuitem-reboot =
 ####################################################################### menu ###############################################################
 
 css-menu =
+    .label = CSS
+    .accesskey = C
+
+css-menubar =
     .label = CSS
     .accesskey = C
 

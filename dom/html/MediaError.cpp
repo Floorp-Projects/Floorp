@@ -34,12 +34,13 @@ MediaError::MediaError(HTMLMediaElement* aParent, uint16_t aCode,
 void MediaError::GetMessage(nsAString& aResult) const {
   // When fingerprinting resistance is enabled, only messages in this list
   // can be returned to content script.
+  // FIXME: An unordered_set seems overkill for this.
   static const std::unordered_set<std::string> whitelist = {
       "404: Not Found"
       // TODO
   };
 
-  bool shouldBlank = (whitelist.find(mMessage.get()) == whitelist.end());
+  const bool shouldBlank = whitelist.find(mMessage.get()) == whitelist.end();
 
   if (shouldBlank) {
     // Print a warning message to JavaScript console to alert developers of
@@ -65,13 +66,12 @@ void MediaError::GetMessage(nsAString& aResult) const {
           NS_ConvertASCIItoUTF16(message), nsIScriptError::warningFlag,
           "MediaError"_ns, ownerDoc);
     }
-  }
 
-  if (!nsContentUtils::IsCallerChrome() &&
-      nsContentUtils::ShouldResistFingerprinting(mParent->OwnerDoc()) &&
-      shouldBlank) {
-    aResult.Truncate();
-    return;
+    if (!nsContentUtils::IsCallerChrome() &&
+        ownerDoc->ShouldResistFingerprinting()) {
+      aResult.Truncate();
+      return;
+    }
   }
 
   CopyUTF8toUTF16(mMessage, aResult);
