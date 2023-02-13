@@ -5,19 +5,19 @@
 "use strict";
 
 /**
- * @typedef {import("./@types/perf").Action} Action
- * @typedef {import("./@types/perf").Library} Library
- * @typedef {import("./@types/perf").PerfFront} PerfFront
- * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
- * @typedef {import("./@types/perf").RecordingState} RecordingState
- * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
- * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
- * @typedef {import("./@types/perf").PerformancePref} PerformancePref
- * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
- * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
- * @typedef {import("./@types/perf").GetActiveBrowserID} GetActiveBrowserID
- * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
- * * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
+ * @typedef {import("../@types/perf").Action} Action
+ * @typedef {import("../@types/perf").Library} Library
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").SymbolicationService} SymbolicationService
+ * @typedef {import("../@types/perf").PreferenceFront} PreferenceFront
+ * @typedef {import("../@types/perf").PerformancePref} PerformancePref
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
+ * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
+ * @typedef {import("../@types/perf").GetActiveBrowserID} GetActiveBrowserID
+ * @typedef {import("../@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
+ * * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 
 /** @type {PerformancePref["UIBaseUrl"]} */

@@ -89,7 +89,8 @@ function require(path) {
 const lazy = createLazyLoaders({
   Utils: () =>
     require("resource://devtools/client/performance-new/shared/utils.js"),
-  BrowserModule: () => require("devtools/client/performance-new/browser"),
+  BrowserModule: () =>
+    require("resource://devtools/client/performance-new/shared/browser.js"),
   RecordingUtils: () =>
     require("resource://devtools/shared/performance-new/recording-utils.js"),
   CustomizableUI: () =>
