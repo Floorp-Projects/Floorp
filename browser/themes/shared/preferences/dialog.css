@@ -30,7 +30,7 @@ dialog.doScroll::part(content-box) {
 }
 
 tree:not(#rejectsTree) {
-  height: 15em;
+  min-height: 15em;
 }
 
 .actionButtons {
