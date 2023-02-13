@@ -38,11 +38,11 @@ unified-extensions-item {
 
 /* On the main unified extensions button, we draw the attention on the icon element. */
 #unified-extensions-button[attention] > .toolbarbutton-icon,
-/* For extension widgets placed in a toolbar, we use the stack element
- * (containing the icon) of the action button to draw the attention dot.
+/* For extension widgets placed in a toolbar, we use the stack element (containing the icon)
+ * of the action button to draw the attention dot.
  * Otherwise (in the extensions panel), we use the action button itself. */
-.unified-extensions-item[attention] > .unified-extensions-item-action-button.toolbarbutton-1 > .toolbarbutton-badge-stack,
-.unified-extensions-item[attention] > .unified-extensions-item-action-button.subviewbutton {
+toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-button > .toolbarbutton-badge-stack,
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button {
   background-image: radial-gradient(circle, var(--uei-button-attention-dot-color), var(--uei-button-attention-dot-color) 2px, transparent 2px);
   background-size: var(--uei-attention-dot-size) var(--uei-attention-dot-size);
   background-repeat: no-repeat;
@@ -50,17 +50,17 @@ unified-extensions-item {
 
 /* Adjust attention dots position in the toolbar. */
 #unified-extensions-button[attention] > .toolbarbutton-icon,
-.unified-extensions-item[attention] > .unified-extensions-item-action-button.toolbarbutton-1 > .toolbarbutton-badge-stack {
+toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-button > .toolbarbutton-badge-stack {
   background-position: center bottom calc(var(--toolbarbutton-inner-padding) / 2 - var(--uei-attention-dot-size) / 2);
 }
 
 /* Adjust attention dots position in the unified extensions panel. */
-.unified-extensions-item[attention] > .unified-extensions-item-action-button.subviewbutton {
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button {
   background-position: left var(--uei-dot-horizontal-position-in-panel) bottom var(--uei-dot-vertical-position-in-panel);
 }
 
 /* Adjust attention dots position in the unified extensions panel for RTL. */
-.unified-extensions-item[attention] > .unified-extensions-item-action-button.subviewbutton:-moz-locale-dir(rtl) {
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action-button:-moz-locale-dir(rtl) {
   background-position-x: right var(--uei-dot-horizontal-position-in-panel);
 }
 
@@ -80,19 +80,19 @@ unified-extensions-item {
   color: var(--panel-description-color);
 }
 
-.unified-extensions-item-action-button[disabled] > .unified-extensions-item-icon {
+.unified-extensions-item-action-button[disabled] .unified-extensions-item-icon {
   opacity: 0.5;
 }
 
 .unified-extensions-item-icon,
-.unified-extensions-item .webextension-browser-action.subviewbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+#unified-extensions-panel .unified-extensions-item .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: var(--uei-icon-size);
   width: var(--uei-icon-size);
 }
 
 /* The first selector is for the custom elements icon, which appears only in the UEP. */
 .unified-extensions-item-icon,
-.unified-extensions-item .webextension-browser-action.subviewbutton > .toolbarbutton-badge-stack {
+#unified-extensions-panel .unified-extensions-item .webextension-browser-action > .toolbarbutton-badge-stack {
   margin-inline-end: 6px;
 }
 
@@ -130,12 +130,12 @@ unified-extensions-item {
 
 /* --- browser action CUI widget styles --- */
 
-/* Hide the menu button and the unified extensions content when the extension
- * item is placed on the toolbar. */
-.unified-extensions-item[cui-areatype="toolbar"]:not([overflowedItem="true"]) :is(
-  .unified-extensions-item-menu-button,
-  .unified-extensions-item-contents
-) {
+toolbar toolbaritem.unified-extensions-item .unified-extensions-item-menu-button {
+  display: none;
+}
+
+/* Hide unified extensions content by default. */
+toolbar .unified-extensions-item .unified-extensions-item-contents {
   display: none;
 }
 
@@ -148,8 +148,7 @@ toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subview
 
 /* --- browser action CUI widget styles in the extensions panel --- */
 
-/* Align CUI widgets with the custom elements in the unified extensions panel,
- * especially when the widgets overflow in the panel. */
+/* Align CUI widgets with the custom elements in the unified extensions panel. */
 #unified-extensions-panel toolbaritem.unified-extensions-item {
   max-width: max-content;
 }

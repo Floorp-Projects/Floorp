@@ -19,5 +19,4 @@ add_task(async function test_hide_panel_when_customizing() {
   CustomizableUI.dispatchToolboxEvent("customizationstarting", {});
   await panelHidden;
   Assert.equal(panel.state, "closed");
-  CustomizableUI.dispatchToolboxEvent("aftercustomization", {});
 });
