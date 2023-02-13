@@ -119,6 +119,7 @@ def get_flavors(graph_config, param):
             "release_promotion_flavor": {
                 "type": "string",
                 "description": "The flavor of release promotion to perform.",
+                "default": "FILL ME OUT",
                 "enum": sorted(graph_config["release-promotion"]["flavors"].keys()),
             },
             "rebuild_kinds": {
@@ -205,10 +206,12 @@ def get_flavors(graph_config, param):
             },
             "release_enable_partner_repack": {
                 "type": "boolean",
+                "default": False,
                 "description": "Toggle for creating partner repacks",
             },
             "release_enable_partner_attribution": {
                 "type": "boolean",
+                "default": False,
                 "description": "Toggle for creating partner attribution",
             },
             "release_partner_build_number": {
@@ -239,6 +242,7 @@ def get_flavors(graph_config, param):
             },
             "release_enable_emefree": {
                 "type": "boolean",
+                "default": False,
                 "description": "Toggle for creating EME-free repacks",
             },
             "required_signoffs": {
@@ -369,11 +373,9 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
         release_enable_emefree = False
     else:
         # for promotion or ship phases, we use the action input to turn the repacks/attribution off
-        release_enable_partner_repack = input.get("release_enable_partner_repack", True)
-        release_enable_partner_attribution = input.get(
-            "release_enable_partner_attribution", True
-        )
-        release_enable_emefree = input.get("release_enable_emefree", True)
+        release_enable_partner_repack = input["release_enable_partner_repack"]
+        release_enable_partner_attribution = input["release_enable_partner_attribution"]
+        release_enable_emefree = input["release_enable_emefree"]
 
     partner_url_config = get_partner_url_config(parameters, graph_config)
     if (
