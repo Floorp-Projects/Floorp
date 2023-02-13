@@ -70,6 +70,7 @@ DIRS += [
     "/third_party/libwebrtc/api/simulated_network_api_gn",
     "/third_party/libwebrtc/api/task_queue/pending_task_safety_flag_gn",
     "/third_party/libwebrtc/api/task_queue/task_queue_gn",
+    "/third_party/libwebrtc/api/test/metrics/global_metrics_logger_and_exporter_gn",
     "/third_party/libwebrtc/api/test/metrics/metric_gn",
     "/third_party/libwebrtc/api/test/metrics/metrics_exporter_gn",
     "/third_party/libwebrtc/api/test/metrics/metrics_logger_and_exporter_gn",
