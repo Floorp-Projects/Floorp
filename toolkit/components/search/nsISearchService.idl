@@ -29,24 +29,22 @@ interface nsISearchEngine : nsISupports
    * Gets a nsISearchSubmission object that contains information about what to
    * send to the search engine, including the URI and postData, if applicable.
    *
-   * @param  data
-   *         Data to add to the submission object.
-   *         i.e. the search terms.
+   * @param searchTerms
+   *   The search term(s) for the submission.
    *
-   * @param  responseType [optional]
-   *         The MIME type that we'd like to receive in response
-   *         to this submission.  If null, will default to "text/html".
+   * @param responseType [optional]
+   *   The MIME type that we'd like to receive in response
+   *   to this submission.  If null, will default to "text/html".
    *
    * @param purpose [optional]
-   *        A string meant to indicate the context of the search request. This
-   *        allows the search service to provide a different nsISearchSubmission
-   *        depending on e.g. where the search is triggered in the UI.
+   *   A string that indicates the context of the search request. This may then
+   *   be used to provide different submission data depending on the context.
    *
-   * @returns A nsISearchSubmission object that contains information about what
-   *          to send to the search engine.  If no submission can be
-   *          obtained for the given responseType, returns null.
+   * @returns nsISearchSubmission
+   *   The submission data. If no appropriate submission can be determined for
+   *   the request type, this may be null.
    */
-  nsISearchSubmission getSubmission(in AString data,
+  nsISearchSubmission getSubmission(in AString searchTerms,
                                     [optional] in AString responseType,
                                     [optional] in AString purpose);
   /**
