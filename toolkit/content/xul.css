@@ -32,6 +32,7 @@
   -moz-control-character-visibility: visible;
   width: 100%;
   height: 100%;
+  user-select: none;
 }
 
 :root:-moz-locale-dir(rtl) {
@@ -506,7 +507,6 @@ treecolpicker {
 
 treechildren {
   display: -moz-box;
-  user-select: none;
   -moz-box-flex: 1;
 }
 
@@ -618,7 +618,6 @@ tooltip[titletip="true"] {
 /********** textbox **********/
 
 search-textbox {
-  user-select: text;
   text-shadow: none;
 }
 
