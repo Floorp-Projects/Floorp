@@ -214,14 +214,14 @@ class ThreadRegistration {
       DataLock mDataLock;
     };
 
-    [[nodiscard]] RWOnThreadWithLock LockedRWOnThread() {
+    [[nodiscard]] RWOnThreadWithLock GetLockedRWOnThread() {
       return RWOnThreadWithLock{mThreadRegistration->mData,
                                 mThreadRegistration->mDataMutex};
     }
 
     template <typename F>
     auto WithLockedRWOnThread(F&& aF) {
-      RWOnThreadWithLock lockedData = LockedRWOnThread();
+      RWOnThreadWithLock lockedData = GetLockedRWOnThread();
       return std::forward<F>(aF)(lockedData.DataRef());
     }
 
