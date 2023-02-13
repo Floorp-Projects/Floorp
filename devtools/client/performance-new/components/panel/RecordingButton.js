@@ -18,8 +18,8 @@
 
 /**
  * @typedef {Object} OwnProps
- * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
- * @property {import("../@types/perf").PerfFront} perfFront
+ * @property {import("../../@types/perf").OnProfileReceived} onProfileReceived
+ * @property {import("../../@types/perf").PerfFront} perfFront
  */
 
 /**
@@ -33,9 +33,9 @@
 /**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
  * @typedef {StateProps & DispatchProps & OwnProps} Props
- * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PageContext} PageContext
+ * @typedef {import("../../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").PageContext} PageContext
  */
 
 "use strict";

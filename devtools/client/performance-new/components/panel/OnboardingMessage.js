@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("../../@types/perf").PanelWindow} PanelWindow
  */
 
 "use strict";

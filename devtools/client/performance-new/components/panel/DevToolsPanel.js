@@ -15,14 +15,14 @@
 
 /**
  * @typedef {Object} OwnProps
- * @property {import("../@types/perf").PerfFront} perfFront
- * @property {import("../@types/perf").OnProfileReceived} onProfileReceived
+ * @property {import("../../@types/perf").PerfFront} perfFront
+ * @property {import("../../@types/perf").OnProfileReceived} onProfileReceived
  * @property {() => void} onEditSettingsLinkClicked
  */
 
 /**
  * @typedef {StateProps & OwnProps} Props
- * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").State} StoreState
  */
 
 "use strict";
@@ -39,16 +39,16 @@ const {
   hr,
 } = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const RecordingButton = createFactory(
-  require("resource://devtools/client/performance-new/components/RecordingButton.js")
+  require("resource://devtools/client/performance-new/components/panel/RecordingButton.js")
 );
 const Description = createFactory(
-  require("resource://devtools/client/performance-new/components/Description.js")
+  require("resource://devtools/client/performance-new/components/panel/Description.js")
 );
 const DevToolsPresetSelection = createFactory(
-  require("resource://devtools/client/performance-new/components/DevToolsPresetSelection.js")
+  require("resource://devtools/client/performance-new/components/panel/DevToolsPresetSelection.js")
 );
 const OnboardingMessage = createFactory(
-  require("resource://devtools/client/performance-new/components/OnboardingMessage.js")
+  require("resource://devtools/client/performance-new/components/panel/OnboardingMessage.js")
 );
 
 const selectors = require("resource://devtools/client/performance-new/store/selectors.js");

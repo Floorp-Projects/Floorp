@@ -34,7 +34,7 @@ const Localized = createFactory(
  * @typedef {Object} PresetProps
  * @property {string} presetName
  * @property {boolean} selected
- * @property {import("../@types/perf").PresetDefinition | null} preset
+ * @property {import("../../@types/perf").PresetDefinition | null} preset
  * @property {(presetName: string) => void} onChange
  */
 
@@ -91,7 +91,7 @@ class Preset extends PureComponent {
 /**
  * @typedef {Object} StateProps
  * @property {string} selectedPresetName
- * @property {import("../@types/perf").Presets} presets
+ * @property {import("../../@types/perf").Presets} presets
  */
 
 /**
@@ -102,7 +102,7 @@ class Preset extends PureComponent {
 /**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
  * @typedef {StateProps & DispatchProps} Props
- * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").State} StoreState
  */
 
 /**

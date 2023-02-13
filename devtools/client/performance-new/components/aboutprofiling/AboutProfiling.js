@@ -18,8 +18,8 @@
 
 /**
  * @typedef {StateProps} Props
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").PageContext} PageContext
+ * @typedef {import("../../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").PageContext} PageContext
  */
 
 "use strict";
@@ -40,10 +40,10 @@ const Localized = createFactory(
   require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
 const Settings = createFactory(
-  require("resource://devtools/client/performance-new/components/Settings.js")
+  require("resource://devtools/client/performance-new/components/aboutprofiling/Settings.js")
 );
 const Presets = createFactory(
-  require("resource://devtools/client/performance-new/components/Presets.js")
+  require("resource://devtools/client/performance-new/components/aboutprofiling/Presets.js")
 );
 
 const selectors = require("resource://devtools/client/performance-new/store/selectors.js");

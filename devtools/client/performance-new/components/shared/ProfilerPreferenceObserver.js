@@ -9,13 +9,13 @@
  */
 
 /**
- * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").State} StoreState
  */
 
 /**
  * @typedef {Object} StateProps
- * @property {import("../@types/perf").RecordingSettings} recordingSettingsFromRedux
- * @property {import("../@types/perf").PageContext} pageContext
+ * @property {import("../../@types/perf").RecordingSettings} recordingSettingsFromRedux
+ * @property {import("../../@types/perf").PageContext} pageContext
  * @property {string[]} supportedFeatures
  */
 
