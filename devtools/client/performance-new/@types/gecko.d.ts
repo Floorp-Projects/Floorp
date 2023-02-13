@@ -26,7 +26,7 @@ declare namespace MockedExports {
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
-    "resource://devtools/client/performance-new/popup/background.jsm.js": typeof import("resource://devtools/client/performance-new/popup/background.jsm.js");
+    "resource://devtools/client/performance-new/shared/background.jsm.js": typeof import("resource://devtools/client/performance-new/shared/background.jsm.js");
     "resource://devtools/shared/loader/browser-loader.js": any;
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
     "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/typescript-lazy-load.jsm.js");
@@ -327,8 +327,8 @@ declare module "resource://gre/modules/AppConstants.sys.mjs" {
   export = MockedExports.AppConstantsSYSMJS;
 }
 
-declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {
-  import * as Background from "devtools/client/performance-new/popup/background.jsm.js";
+declare module "resource://devtools/client/performance-new/shared/background.jsm.js" {
+  import * as Background from "devtools/client/performance-new/shared/background.jsm.js";
   export = Background;
 }
 

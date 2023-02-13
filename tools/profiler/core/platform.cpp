@@ -268,7 +268,7 @@ class GeckoJavaSampler
                                             featureStringArray.length());
 
     // 128 * 1024 * 1024 is the entries preset that is given in
-    // devtools/client/performance-new/popup/background.jsm.js
+    // devtools/client/performance-new/shared/background.jsm.js
     profiler_start(PowerOfTwo32(128 * 1024 * 1024), 5.0, features,
                    filtersTemp.begin(), filtersTemp.length(), 0, Nothing());
   }

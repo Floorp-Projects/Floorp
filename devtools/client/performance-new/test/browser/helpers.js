@@ -515,7 +515,7 @@ async function withDevToolsPanel(url, callback, aWindow = window) {
  */
 function getActiveConfiguration() {
   const BackgroundJSM = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
+    "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
 
   const { startProfiler, stopProfiler } = BackgroundJSM;

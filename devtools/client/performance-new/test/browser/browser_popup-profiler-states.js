@@ -15,7 +15,7 @@ add_task(async function test() {
   await makeSureProfilerPopupIsEnabled();
 
   const { toggleProfiler, captureProfile } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
+    "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
 
   const button = document.getElementById("profiler-button-button");
