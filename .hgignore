@@ -56,6 +56,12 @@ compile_commands\.json
 # Ignore newtab component build assets
 ^browser/components/newtab/logs/
 
+# Ignore ASRouter generated test files
+^browser/components/newtab/content-src/asrouter/schemas/corpus/CFRMessageProvider.messages.json
+^browser/components/newtab/content-src/asrouter/schemas/corpus/OnboardingMessageProvider.messages.json
+^browser/components/newtab/content-src/asrouter/schemas/corpus/PanelTestProvider.messages.json
+^browser/components/newtab/content-src/asrouter/schemas/corpus/PanelTestProvider_toast_notification.messages.json
+
 # Ignore Pocket component build and dev assets
 browser/components/pocket/content/panels/css/main.compiled.css.map
 

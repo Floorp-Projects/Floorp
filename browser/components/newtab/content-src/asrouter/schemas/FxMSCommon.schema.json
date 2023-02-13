@@ -102,11 +102,11 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "id",
-        "content",
-        "template"
-      ]
+      "dependentRequired": {
+        "id": ["content", "template"],
+        "content": ["id", "template"],
+        "template": ["id", "content"]
+      }
     },
     "localizedText": {
       "type": "object",
