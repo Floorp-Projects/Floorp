@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1812154 - Vendor libwebrtc from 3609a5aeb6
+Modified build files in third_party/libwebrtc - Bug 1812154 - (fix-9d9c2d5795) Removed dependency transport:stun_types fixing error generating build files. r=mjf
