@@ -219,11 +219,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         // Ensure the extension context menuitems are available by setting this
         // on all button children and the item.
         button.setAttribute("data-extensionid", extension.id);
-        button.classList.add(
-          "toolbarbutton-1",
-          "unified-extensions-item-action-button",
-          "subviewbutton"
-        );
+        button.classList.add("unified-extensions-item-action-button");
 
         let contents = document.createXULElement("vbox");
         contents.classList.add("unified-extensions-item-contents");
