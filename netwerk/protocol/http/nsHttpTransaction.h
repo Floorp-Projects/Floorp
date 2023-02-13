@@ -292,6 +292,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   };
   void SetRestartReason(TRANSACTION_RESTART_REASON aReason);
 
+  bool HandleWebTransportResponse(uint16_t aStatus);
+
  private:
   class UpdateSecurityCallbacks : public Runnable {
    public:
