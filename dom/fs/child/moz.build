@@ -14,6 +14,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "FileSystemAccessHandleChild.cpp",
     "FileSystemAccessHandleControlChild.cpp",
+    "FileSystemAsyncCopy.cpp",
     "FileSystemBackgroundRequestHandler.cpp",
     "FileSystemChildFactory.cpp",
     "FileSystemDirectoryIteratorFactory.cpp",
