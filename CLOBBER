@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1812154 - Vendor libwebrtc from 6c2dae21e9
+Modified build files in third_party/libwebrtc - Bug 1812154 - Vendor libwebrtc from 0c4563c0c4

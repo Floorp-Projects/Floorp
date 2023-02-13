@@ -284,7 +284,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/codec_globals_headers_gn",
     "/third_party/libwebrtc/modules/video_coding/codecs/av1/av1_svc_config_gn",
     "/third_party/libwebrtc/modules/video_coding/codecs/av1/dav1d_decoder_gn",
-    "/third_party/libwebrtc/modules/video_coding/codecs/av1/libaom_av1_decoder_gn",
     "/third_party/libwebrtc/modules/video_coding/encoded_frame_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_dependencies_calculator_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_helpers_gn",
