@@ -72,6 +72,7 @@ DIRS += [
     "/third_party/libwebrtc/api/task_queue/task_queue_gn",
     "/third_party/libwebrtc/api/test/metrics/metric_gn",
     "/third_party/libwebrtc/api/test/metrics/metrics_exporter_gn",
+    "/third_party/libwebrtc/api/test/metrics/metrics_logger_and_exporter_gn",
     "/third_party/libwebrtc/api/test/metrics/stdout_metrics_exporter_gn",
     "/third_party/libwebrtc/api/transport/bitrate_settings_gn",
     "/third_party/libwebrtc/api/transport/datagram_transport_interface_gn",
