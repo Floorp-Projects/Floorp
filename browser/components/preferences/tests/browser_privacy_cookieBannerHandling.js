@@ -133,12 +133,14 @@ add_task(async function test_checkbox_checked_reject_mode() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Test that toggling the checkbox toggles the mode pref value as expected.
-add_task(async function test_checkbox_modifies_mode_pref() {
+// Test that toggling the checkbox toggles the mode pref value as expected,
+// and also disables detect only mode, as expected.
+add_task(async function test_checkbox_modifies_prefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
+      [MODE_PREF, Ci.nsICookieBannerService.MODE_UNSET],
+      [DETECT_ONLY_PREF, true],
     ],
   });
 
@@ -151,18 +153,9 @@ add_task(async function test_checkbox_modifies_mode_pref() {
 
       section.scrollIntoView();
 
-      Assert.ok(checkbox.checked, "initially, the checkbox should be checked");
-
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        checkboxSelector,
-        {},
-        browser
-      );
-      Assert.ok(!checkbox.checked, "checkbox should be unchecked");
-      Assert.equal(
-        Ci.nsICookieBannerService.MODE_DISABLED,
-        Services.prefs.getIntPref(MODE_PREF),
-        "cookie banner handling mode should be set to DISABLED mode after unchecking the checkbox"
+      Assert.ok(
+        !checkbox.checked,
+        "initially, the checkbox should be unchecked"
       );
 
       await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -175,6 +168,28 @@ add_task(async function test_checkbox_modifies_mode_pref() {
         Ci.nsICookieBannerService.MODE_REJECT,
         Services.prefs.getIntPref(MODE_PREF),
         "cookie banner handling mode should be set to REJECT mode after checking the checkbox"
+      );
+      Assert.equal(
+        false,
+        Services.prefs.getBoolPref(DETECT_ONLY_PREF),
+        "cookie banner handling detect-only mode should be disabled after checking the checkbox"
+      );
+
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        checkboxSelector,
+        {},
+        browser
+      );
+      Assert.ok(!checkbox.checked, "checkbox should be unchecked");
+      Assert.equal(
+        Ci.nsICookieBannerService.MODE_DISABLED,
+        Services.prefs.getIntPref(MODE_PREF),
+        "cookie banner handling mode should be set to DISABLED mode after unchecking the checkbox"
+      );
+      Assert.equal(
+        false,
+        Services.prefs.getBoolPref(DETECT_ONLY_PREF),
+        "cookie banner handling detect-only mode should still be disabled after unchecking the checkbox"
       );
     }
   );
