@@ -30,7 +30,7 @@ declare namespace MockedExports {
     "resource://devtools/client/performance-new/shared/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/shared/symbolication.jsm.js");
     "resource://devtools/shared/loader/browser-loader.js": any;
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
-    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/typescript-lazy-load.jsm.js");
+    "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js");
     "resource://devtools/client/performance-new/popup/panel.jsm.js": typeof import("resource://devtools/client/performance-new/popup/panel.jsm.js");
     "resource:///modules/PanelMultiView.jsm": typeof import("resource:///modules/PanelMultiView.jsm");
   }

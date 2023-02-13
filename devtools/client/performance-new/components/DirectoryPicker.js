@@ -24,7 +24,7 @@ const {
 } = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const {
   withCommonPathPrefixRemoved,
-} = require("resource://devtools/client/performance-new/utils.js");
+} = require("resource://devtools/client/performance-new/shared/utils.js");
 const Localized = createFactory(
   require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );

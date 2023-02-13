@@ -56,7 +56,7 @@ const actions = require("resource://devtools/client/performance-new/store/action
 const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 const {
   featureDescriptions,
-} = require("resource://devtools/client/performance-new/utils.js");
+} = require("resource://devtools/client/performance-new/shared/utils.js");
 const Localized = createFactory(
   require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
