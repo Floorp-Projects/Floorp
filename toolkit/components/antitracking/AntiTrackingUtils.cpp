@@ -85,7 +85,7 @@ already_AddRefed<nsIURI> AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(
     // coming from an OnStopRequest notification, which might mean that our
     // document may still be in the loading process, so we may need to pass in
     // the uriBeingLoaded argument explicitly.
-    rv = aChannel->GetURI(getter_AddRefs(uriBeingLoaded));
+    rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uriBeingLoaded));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
