@@ -43,8 +43,6 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
-exports.arrayByteLength = arrayByteLength;
-exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
@@ -538,41 +536,6 @@ function stringToBytes(str) {
   }
   return bytes;
 }
-function arrayByteLength(arr) {
-  if (arr.length !== undefined) {
-    return arr.length;
-  }
-  if (arr.byteLength !== undefined) {
-    return arr.byteLength;
-  }
-  unreachable("Invalid argument for arrayByteLength");
-}
-function arraysToBytes(arr) {
-  const length = arr.length;
-  if (length === 1 && arr[0] instanceof Uint8Array) {
-    return arr[0];
-  }
-  let resultLength = 0;
-  for (let i = 0; i < length; i++) {
-    resultLength += arrayByteLength(arr[i]);
-  }
-  let pos = 0;
-  const data = new Uint8Array(resultLength);
-  for (let i = 0; i < length; i++) {
-    let item = arr[i];
-    if (!(item instanceof Uint8Array)) {
-      if (typeof item === "string") {
-        item = stringToBytes(item);
-      } else {
-        item = new Uint8Array(item);
-      }
-    }
-    const itemLength = item.byteLength;
-    data.set(item, pos);
-    pos += itemLength;
-  }
-  return data;
-}
 function string32(value) {
   return String.fromCharCode(value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff);
 }
@@ -955,7 +918,7 @@ function getDocument(src) {
   const docId = task.docId;
   const fetchDocParams = {
     docId,
-    apiVersion: '3.4.62',
+    apiVersion: '3.4.97',
     data,
     password,
     disableAutoFetch,
@@ -1651,7 +1614,7 @@ class PDFPageProxy {
 }
 exports.PDFPageProxy = PDFPageProxy;
 class LoopbackPort {
-  #listeners = [];
+  #listeners = new Set();
   #deferred = Promise.resolve();
   postMessage(obj, transfers) {
     const event = {
@@ -1664,14 +1627,13 @@ class LoopbackPort {
     });
   }
   addEventListener(name, listener) {
-    this.#listeners.push(listener);
+    this.#listeners.add(listener);
   }
   removeEventListener(name, listener) {
-    const i = this.#listeners.indexOf(listener);
-    this.#listeners.splice(i, 1);
+    this.#listeners.delete(listener);
   }
   terminate() {
-    this.#listeners.length = 0;
+    this.#listeners.clear();
   }
 }
 exports.LoopbackPort = LoopbackPort;
@@ -2624,9 +2586,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.4.62';
+const version = '3.4.97';
 exports.version = version;
-const build = '9cea76483';
+const build = '22618213c';
 exports.build = build;
 
 /***/ }),
@@ -13039,8 +13001,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.4.62';
-const pdfjsBuild = '9cea76483';
+const pdfjsVersion = '3.4.97';
+const pdfjsBuild = '22618213c';
 })();
 
 /******/ 	return __webpack_exports__;
