@@ -29,7 +29,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc/clipping_predictor.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/clipping_predictor.cc",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/clipping_predictor_level_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
