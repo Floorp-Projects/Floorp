@@ -5,7 +5,7 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 
 /* Global rules */
-* {
+:root {
   user-select: text;
 }
 
@@ -90,8 +90,9 @@ description.indent,
 
 button,
 treecol,
-html|option {
-  /* override the * rule */
+menulist,
+html|select {
+  /* override the root rule */
   user-select: none;
 }
 
