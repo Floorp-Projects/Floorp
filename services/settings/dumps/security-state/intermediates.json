@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1675997293717,
+      "derHash": "9OJr6wJ5Io2W1HsF33RK5s5qrYiKO3V9JJ6z0i0n9MY=",
+      "subject": "CN=Namirial OV SSL CA 2023,O=Namirial S.p.A,C=IT",
+      "subjectDN": "MEgxCzAJBgNVBAYTAklUMRcwFQYDVQQKEw5OYW1pcmlhbCBTLnAuQTEgMB4GA1UEAxMXTmFtaXJpYWwgT1YgU1NMIENBIDIwMjM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "729128c4afbb50cea67b02caf56f09bef7eb6469a5f7df8956336ba9538b8324",
+        "size": 1707,
+        "filename": "GhBA08YZ8vp_Xes0LrygZD8ksGEubqU9Lay8MPHlSmc=.pem",
+        "location": "security-state-staging/intermediates/19849d6e-4747-43ee-8681-ec845c5cc334.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "GhBA08YZ8vp/Xes0LrygZD8ksGEubqU9Lay8MPHlSmc=",
+      "crlite_enrolled": false,
+      "id": "5c37fcd9-61bf-4a7a-b0f4-074e7f39c7f4",
+      "last_modified": 1675997823498
+    },
+    {
+      "schema": 1675997292858,
+      "derHash": "Nm3WHs5J72in4HBZFezn7nuqPF1xuTY81Ifg/gJCpjQ=",
+      "subject": "CN=Namirial EV SSL CA 2023,O=Namirial S.p.A,C=IT",
+      "subjectDN": "MEgxCzAJBgNVBAYTAklUMRcwFQYDVQQKEw5OYW1pcmlhbCBTLnAuQTEgMB4GA1UEAxMXTmFtaXJpYWwgRVYgU1NMIENBIDIwMjM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "67364967a3577cdd142e29b9d2aec50384f1d310ab4b97e8c2ac04683dc6688a",
+        "size": 1707,
+        "filename": "myEH9rFEfLuM-7OFEGOGt8yzAJoO4ynKNAdhB4SZjHA=.pem",
+        "location": "security-state-staging/intermediates/a24d726b-c5e0-44b0-ad89-2a3a333460f3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "myEH9rFEfLuM+7OFEGOGt8yzAJoO4ynKNAdhB4SZjHA=",
+      "crlite_enrolled": false,
+      "id": "847f09f1-f458-4197-81f2-5992fd609725",
+      "last_modified": 1675997823490
+    },
+    {
       "schema": 1675759682957,
       "derHash": "zBufnkNw+2gUHSihFeqoY/jq23oE4r0js8YvnZ8XwmM=",
       "subject": "CN=FIRMAPROFESIONAL ICA A01 QWAC 2022,O=Firmaprofesional SA,C=ES",
@@ -27379,5 +27415,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1675760222914
+  "timestamp": 1675997823498
 }
