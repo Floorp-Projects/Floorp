@@ -33,8 +33,8 @@
  */
 
 /**
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").FeatureDescription} FeatureDescription
+ * @typedef {import("../../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").FeatureDescription} FeatureDescription
  *
  * @typedef {StateProps & DispatchProps} Props
  */
@@ -69,10 +69,10 @@ const {
   span,
 } = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const Range = createFactory(
-  require("resource://devtools/client/performance-new/components/Range.js")
+  require("resource://devtools/client/performance-new/components/aboutprofiling/Range.js")
 );
 const DirectoryPicker = createFactory(
-  require("resource://devtools/client/performance-new/components/DirectoryPicker.js")
+  require("resource://devtools/client/performance-new/components/aboutprofiling/DirectoryPicker.js")
 );
 const {
   makeLinear10Scale,

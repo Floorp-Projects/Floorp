@@ -4,7 +4,7 @@
 // @ts-check
 
 /**
- * @typedef {import("../@types/perf").ScaleFunctions} ScaleFunctions
+ * @typedef {import("../../@types/perf").ScaleFunctions} ScaleFunctions
  */
 
 /**

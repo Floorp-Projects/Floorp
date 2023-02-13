@@ -14,7 +14,7 @@
  * @property {number} interval
  * @property {string[]} threads
  * @property {string[]} features
- * @property {import("../@types/perf").Presets} presets
+ * @property {import("../../@types/perf").Presets} presets
  */
 
 /**
@@ -30,8 +30,8 @@
 /**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
  * @typedef {StateProps & DispatchProps & OwnProps} Props
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").FeatureDescription} FeatureDescription
+ * @typedef {import("../../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").FeatureDescription} FeatureDescription
  */
 
 "use strict";

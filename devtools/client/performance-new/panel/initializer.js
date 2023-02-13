@@ -53,13 +53,13 @@ const LocalizationProvider = React.createFactory(
   FluentReact.LocalizationProvider
 );
 const DevToolsPanel = React.createFactory(
-  require("resource://devtools/client/performance-new/components/DevToolsPanel.js")
+  require("resource://devtools/client/performance-new/components/panel/DevToolsPanel.js")
 );
 const ProfilerEventHandling = React.createFactory(
-  require("resource://devtools/client/performance-new/components/ProfilerEventHandling.js")
+  require("resource://devtools/client/performance-new/components/panel/ProfilerEventHandling.js")
 );
 const ProfilerPreferenceObserver = React.createFactory(
-  require("resource://devtools/client/performance-new/components/ProfilerPreferenceObserver.js")
+  require("resource://devtools/client/performance-new/components/shared/ProfilerPreferenceObserver.js")
 );
 const createStore = require("resource://devtools/client/shared/redux/create-store.js");
 const selectors = require("resource://devtools/client/performance-new/store/selectors.js");

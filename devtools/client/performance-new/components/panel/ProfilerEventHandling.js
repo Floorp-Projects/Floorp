@@ -4,11 +4,11 @@
 // @ts-check
 
 /**
- * @typedef {import("../@types/perf").PerfFront} PerfFront
- * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").State} StoreState
- * @typedef {import("../@types/perf").RootTraits} RootTraits
- * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("../../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../../@types/perf").State} StoreState
+ * @typedef {import("../../@types/perf").RootTraits} RootTraits
+ * @typedef {import("../../@types/perf").PanelWindow} PanelWindow
  */
 
 /**
