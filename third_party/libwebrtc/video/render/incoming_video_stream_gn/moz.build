@@ -23,25 +23,13 @@ FINAL_LIBRARY = "webrtc"
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
-    "/media/libyuv/",
-    "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
     "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/common_video/bitrate_adjuster.cc",
-    "/third_party/libwebrtc/common_video/frame_rate_estimator.cc",
-    "/third_party/libwebrtc/common_video/framerate_controller.cc",
-    "/third_party/libwebrtc/common_video/h264/h264_bitstream_parser.cc",
-    "/third_party/libwebrtc/common_video/h264/h264_common.cc",
-    "/third_party/libwebrtc/common_video/h264/pps_parser.cc",
-    "/third_party/libwebrtc/common_video/h264/sps_parser.cc",
-    "/third_party/libwebrtc/common_video/h264/sps_vui_rewriter.cc",
-    "/third_party/libwebrtc/common_video/libyuv/webrtc_libyuv.cc",
-    "/third_party/libwebrtc/common_video/video_frame_buffer.cc",
-    "/third_party/libwebrtc/common_video/video_frame_buffer_pool.cc"
+    "/third_party/libwebrtc/video/render/incoming_video_stream.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -69,7 +57,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "GLESv2",
         "log"
     ]
 
@@ -97,11 +84,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    OS_LIBS += [
-        "dl",
-        "rt"
-    ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -145,9 +127,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     OS_LIBS += [
-        "crypt32",
-        "iphlpapi",
-        "secur32",
         "winmm"
     ]
 
@@ -231,4 +210,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("common_video_gn")
+Library("incoming_video_stream_gn")

@@ -453,6 +453,8 @@ DIRS += [
     "/third_party/libwebrtc/video/frame_decode_scheduler_gn",
     "/third_party/libwebrtc/video/frame_decode_timing_gn",
     "/third_party/libwebrtc/video/frame_dumping_decoder_gn",
+    "/third_party/libwebrtc/video/render/incoming_video_stream_gn",
+    "/third_party/libwebrtc/video/render/video_render_frames_gn",
     "/third_party/libwebrtc/video/task_queue_frame_decode_scheduler_gn",
     "/third_party/libwebrtc/video/unique_timestamp_counter_gn",
     "/third_party/libwebrtc/video/video_gn",
