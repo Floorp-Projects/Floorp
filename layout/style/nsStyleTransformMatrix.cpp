@@ -36,7 +36,7 @@ namespace nsStyleTransformMatrix {
 // correctly, since when the frames are initially being reflowed, their
 // continuations all compute their bounding rects independently of each other
 // and consequently get the wrong value.
-//#define UNIFIED_CONTINUATIONS
+// #define UNIFIED_CONTINUATIONS
 
 void TransformReferenceBox::EnsureDimensionsAreCached() {
   if (mIsCached) {

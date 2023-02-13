@@ -285,8 +285,7 @@ TEST(IntlDisplayNames, Calendar)
 
   {
     // Code with non-ascii alpha letters.
-    auto err =
-        displayNames->GetCalendar(buffer, MakeStringSpan("🥸 not ascii"));
+    auto err = displayNames->GetCalendar(buffer, MakeStringSpan("🥸 not ascii"));
     ASSERT_TRUE(err.isErr());
     ASSERT_EQ(err.unwrapErr(), DisplayNamesError::InvalidOption);
   }

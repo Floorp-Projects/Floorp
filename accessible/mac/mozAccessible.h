@@ -39,8 +39,8 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
   return reinterpret_cast<mozAccessible*>(proxy->GetWrapper());
 }
 
-}  // a11y
-}  // mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 @interface mozAccessible : MOXAccessibleBase {
   /**

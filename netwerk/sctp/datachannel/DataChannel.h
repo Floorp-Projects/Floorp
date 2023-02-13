@@ -64,9 +64,7 @@ class OutgoingMsg {
   ~OutgoingMsg() = default;
   ;
   void Advance(size_t offset);
-  struct sctp_sendv_spa& GetInfo() {
-    return *mInfo;
-  };
+  struct sctp_sendv_spa& GetInfo() { return *mInfo; };
   size_t GetLength() const { return mLength; };
   size_t GetLeft() const { return mLength - mPos; };
   const uint8_t* GetData() { return (const uint8_t*)(mData + mPos); };

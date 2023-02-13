@@ -41,7 +41,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace JS;
 
-//#define STRICT_CHECK_OF_UNICODE
+// #define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
 #  define ILLEGAL_RANGE(c) (0 != ((c)&0xFF80))
 #else  // STRICT_CHECK_OF_UNICODE

@@ -248,8 +248,10 @@ nsresult OSFileConstantsService::InitOSFileConstants() {
  *
  * Produces a |ConstantSpec|.
  */
-#define INT_CONSTANT(name) \
-  { #name, JS::Int32Value(name) }
+#define INT_CONSTANT(name)      \
+  {                             \
+#    name, JS::Int32Value(name) \
+  }
 
 /**
  * Define a simple read-only property holding an unsigned integer.
@@ -259,8 +261,10 @@ nsresult OSFileConstantsService::InitOSFileConstants() {
  *
  * Produces a |ConstantSpec|.
  */
-#define UINT_CONSTANT(name) \
-  { #name, JS::NumberValue(name) }
+#define UINT_CONSTANT(name)      \
+  {                              \
+#    name, JS::NumberValue(name) \
+  }
 
 /**
  * End marker for ConstantSpec

@@ -54,6 +54,6 @@ class ScopedSendingEvent {
   DISALLOW_COPY_AND_ASSIGN(ScopedSendingEvent);
 };
 
-}  // chrome_application_mac
+}  // namespace chrome_application_mac
 
 #endif  // BASE_CHROME_APPLICATION_MAC_H_

@@ -353,11 +353,12 @@ class Section {
   Section &L16(uint16_t), &L32(uint32_t), &L64(uint64_t), &B16(uint16_t),
       &B32(uint32_t), &B64(uint64_t), &D16(uint16_t), &D32(uint32_t),
       &D64(uint64_t);
-  Section &L8(const Label&label), &L16(const Label&label),
-      &L32(const Label&label), &L64(const Label&label), &B8(const Label&label),
-      &B16(const Label&label), &B32(const Label&label), &B64(const Label&label),
-      &D8(const Label&label), &D16(const Label&label), &D32(const Label&label),
-      &D64(const Label&label);
+  Section &L8(const Label& label), &L16(const Label& label),
+      &L32(const Label& label), &L64(const Label& label),
+      &B8(const Label& label), &B16(const Label& label),
+      &B32(const Label& label), &B64(const Label& label),
+      &D8(const Label& label), &D16(const Label& label),
+      &D32(const Label& label), &D64(const Label& label);
 
   // Append VALUE in a signed LEB128 (Little-Endian Base 128) form.
   //

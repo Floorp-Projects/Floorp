@@ -33,7 +33,7 @@ class IntCount {
   struct IntPair {
     int idx;
     int cnt;
-  } * iPair;
+  }* iPair;
 };
 
 #endif

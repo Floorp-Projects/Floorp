@@ -168,5 +168,5 @@ void MediaHardwareKeysEventSourceMacMediaCenter::SetMediaMetadata(
   [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
 
-}
-}
+}  // namespace widget
+}  // namespace mozilla

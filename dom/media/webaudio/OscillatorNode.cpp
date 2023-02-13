@@ -288,7 +288,6 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(mSource == aTrack, "Invalid source track");
     TRACE("OscillatorNodeEngine::ProcessBlock");
 
-
     TrackTime ticks = mDestination->GraphTimeToTrackTime(aFrom);
     if (mStart == -1) {
       ComputeSilence(aOutput);

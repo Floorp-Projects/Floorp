@@ -356,7 +356,7 @@ static void FreeArgv(char** argv, int argc) {
     // String was allocated with strndup, so need to use free to deallocate.
     free(argv[ix]);
   }
-  delete[](argv);
+  delete[] (argv);
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL

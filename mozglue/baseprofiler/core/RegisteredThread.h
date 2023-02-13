@@ -74,9 +74,7 @@ class RacyRegisteredThread final {
 
   BaseProfilerThreadId ThreadId() const { return mThreadId; }
 
-  class ProfilingStack& ProfilingStack() {
-    return mProfilingStack;
-  }
+  class ProfilingStack& ProfilingStack() { return mProfilingStack; }
   const class ProfilingStack& ProfilingStack() const { return mProfilingStack; }
 
  private:

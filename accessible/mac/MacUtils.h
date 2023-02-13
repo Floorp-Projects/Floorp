@@ -44,8 +44,8 @@ NSString* LocalizedString(const nsString& aString);
  * nil if no attribute is found.
  */
 NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName);
-}
-}
-}
+}  // namespace utils
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

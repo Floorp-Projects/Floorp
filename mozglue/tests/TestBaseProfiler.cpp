@@ -5615,7 +5615,8 @@ void TestPredefinedMarkers() {
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("media"), mozilla::baseprofiler::category::OTHER,
-      {}, mozilla::baseprofiler::markers::VideoFallingBehindMarker{}, 123, 456));
+      {}, mozilla::baseprofiler::markers::VideoFallingBehindMarker{}, 123,
+      456));
 
 #  ifdef DEBUG
   buffer.Dump();

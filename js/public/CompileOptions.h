@@ -302,7 +302,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   template <typename Printer>
   void dumpWith(Printer& print) const {
-#  define PrintFields_(Name) print(#  Name, Name)
+#  define PrintFields_(Name) print(#Name, Name)
     PrintFields_(filename_);
     PrintFields_(introducerFilename_);
     PrintFields_(sourceMapURL_);
@@ -381,7 +381,7 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   template <typename Printer>
   void dumpWith(Printer& print) const {
     this->TransitiveCompileOptions::dumpWith(print);
-#  define PrintFields_(Name) print(#  Name, Name)
+#  define PrintFields_(Name) print(#Name, Name)
     PrintFields_(lineno);
     PrintFields_(column);
     PrintFields_(scriptSourceOffset);

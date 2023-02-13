@@ -16,7 +16,7 @@
 using namespace mozilla;
 using mozilla::dom::HTMLInputElement;
 
-//#define FCF_NOISY
+// #define FCF_NOISY
 
 nsCheckboxRadioFrame* NS_NewCheckboxRadioFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {

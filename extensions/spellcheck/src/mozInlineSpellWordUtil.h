@@ -17,7 +17,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-//#define DEBUG_SPELLCHECK
+// #define DEBUG_SPELLCHECK
 
 class nsRange;
 class nsINode;

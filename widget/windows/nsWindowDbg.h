@@ -13,17 +13,17 @@
 #include "nsWindowDefs.h"
 
 // Enables debug output for popup rollup hooks
-//#define POPUP_ROLLUP_DEBUG_OUTPUT
+// #define POPUP_ROLLUP_DEBUG_OUTPUT
 
 // Enable window size and state debug output
-//#define WINSTATE_DEBUG_OUTPUT
+// #define WINSTATE_DEBUG_OUTPUT
 
 // nsIWidget defines a set of debug output statements
 // that are called in various places within the code.
-//#define WIDGET_DEBUG_OUTPUT
+// #define WIDGET_DEBUG_OUTPUT
 
 // Enable IS_VK_DOWN debug output
-//#define DEBUG_VK
+// #define DEBUG_VK
 
 namespace mozilla::widget {
 // Windows message debugging data

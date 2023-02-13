@@ -11,13 +11,13 @@
 #ifndef __MMI_HELPERS_H__
 #define __MMI_HELPERS_H__
 
-#define __mm_packxxxx(_f, _D, _d, _s, _t)                                  \
-#  _f " %[" #  _t "], %[" #  _d "h], %[" #  _s "h] \n\t" #  _f " %[" #  _D \
-      "l], %[" #  _d "l], %[" #  _s                                        \
-      "l] \n\t"                                                            \
-      "punpckhwd %[" #  _D "h], %[" #  _D "l], %[" #  _t                   \
-      "] \n\t"                                                             \
-      "punpcklwd %[" #  _D "l], %[" #  _D "l], %[" #  _t "] \n\t"
+#define __mm_packxxxx(_f, _D, _d, _s, _t)                                     \
+#  _f " %[" #_t "], %[" #_d "h], %[" #_s "h] \n\t" #_f " %[" #_D "l], %[" #_d \
+      "l], %[" #_s                                                            \
+      "l] \n\t"                                                               \
+      "punpckhwd %[" #_D "h], %[" #_D "l], %[" #_t                            \
+      "] \n\t"                                                                \
+      "punpcklwd %[" #_D "l], %[" #_D "l], %[" #_t "] \n\t"
 
 #define _mm_or(_D, _d, _s)              \
   "or %[" #_D "h], %[" #_d "h], %[" #_s \

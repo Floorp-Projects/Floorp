@@ -48,7 +48,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-//#define NOISY_SEARCH 1
+// #define NOISY_SEARCH 1
 
 // BUG 848725 Drawing failure with stretchy horizontal parenthesis when no fonts
 // are installed. "kMaxScaleFactor" is required to limit the scale for the

@@ -118,8 +118,8 @@ Maybe<nsSize> XULResizerElement::GetCurrentSize() const {
     return Nothing();
   }
   return Some(frame->StylePosition()->mBoxSizing == StyleBoxSizing::Content
-                ? frame->GetContentRect().Size()
-                : frame->GetRect().Size());
+                  ? frame->GetContentRect().Size()
+                  : frame->GetRect().Size());
 }
 
 void XULResizerElement::PostHandleEventInternal(

@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-//#define DEBUG_SPANNING_CELL_SORTER
+// #define DEBUG_SPANNING_CELL_SORTER
 
 SpanningCellSorter::SpanningCellSorter()
     : mState(ADDING),

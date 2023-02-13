@@ -23,8 +23,8 @@
 
 using namespace mozilla;
 
-using mozilla::dom::Event;
 using mozilla::dom::CallerType;
+using mozilla::dom::Event;
 
 nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
                          nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode)

@@ -21,7 +21,7 @@
 #include "nsTHashtable.h"
 #include "prio.h"
 
-//#define DEBUG_HANDLES 1
+// #define DEBUG_HANDLES 1
 
 class nsIFile;
 class nsITimer;

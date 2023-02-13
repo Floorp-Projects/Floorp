@@ -71,7 +71,7 @@ static uint64_t LoggingBits = 0;
 static mozilla::Atomic<uint32_t, mozilla::Relaxed> filteredOutCompilations(0);
 
 static const char* const ChannelNames[] = {
-#  define JITSPEW_CHANNEL(name) #  name,
+#  define JITSPEW_CHANNEL(name) #name,
     JITSPEW_CHANNEL_LIST(JITSPEW_CHANNEL)
 #  undef JITSPEW_CHANNEL
 };
