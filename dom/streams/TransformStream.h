@@ -34,9 +34,6 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
       const GlobalObject& aGlobal, TransformerAlgorithmsWrapper& aAlgorithms,
       ErrorResult& aRv);
 
-  TransformStream(nsIGlobalObject* aGlobal, ReadableStream* aReadable,
-                  WritableStream* aWritable);
-
   // Internal slot accessors
   bool Backpressure() const { return mBackpressure; }
   Promise* BackpressureChangePromise() { return mBackpressureChangePromise; }
@@ -60,8 +57,11 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
       MessagePort& aPort2, JS::MutableHandle<JSObject*> aReturnObject);
 
  protected:
-  ~TransformStream();
+  TransformStream(nsIGlobalObject* aGlobal, ReadableStream* aReadable,
+                  WritableStream* aWritable);
   explicit TransformStream(nsIGlobalObject* aGlobal);
+
+  ~TransformStream();
 
   MOZ_CAN_RUN_SCRIPT void Initialize(
       JSContext* aCx, Promise* aStartPromise, double aWritableHighWaterMark,

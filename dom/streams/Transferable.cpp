@@ -854,10 +854,9 @@ bool ReadableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
 }
 
 // https://streams.spec.whatwg.org/#ref-for-transfer-receiving-steps
-MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream>
-ReadableStreamTransferReceivingStepsImpl(JSContext* aCx,
-                                         nsIGlobalObject* aGlobal,
-                                         MessagePort& aPort) {
+MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream>
+ReadableStream::ReceiveTransferImpl(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                    MessagePort& aPort) {
   // Step 1: Let deserializedRecord be
   // ! StructuredDeserializeWithTransfer(dataHolder.[[port]], the current
   // Realm).
@@ -877,7 +876,7 @@ bool ReadableStream::ReceiveTransfer(
     JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
     JS::MutableHandle<JSObject*> aReturnObject) {
   RefPtr<ReadableStream> readable =
-      ReadableStreamTransferReceivingStepsImpl(aCx, aGlobal, aPort);
+      ReadableStream::ReceiveTransferImpl(aCx, aGlobal, aPort);
   if (!readable) {
     return false;
   }
@@ -911,7 +910,7 @@ bool WritableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
   }
 
   // Step 5: Let readable be a new ReadableStream in the current Realm.
-  auto readable = MakeRefPtr<ReadableStream>(mGlobal);
+  RefPtr<ReadableStream> readable = new ReadableStream(mGlobal);
 
   // Step 6: Perform ! SetUpCrossRealmTransformReadable(readable, port1).
   // MOZ_KnownLive because Port1 never changes before CC
@@ -940,16 +939,15 @@ bool WritableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
 }
 
 // https://streams.spec.whatwg.org/#ref-for-transfer-receiving-steps①
-MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream>
-WritableStreamTransferReceivingStepsImpl(JSContext* aCx,
-                                         nsIGlobalObject* aGlobal,
-                                         MessagePort& aPort) {
+MOZ_CAN_RUN_SCRIPT already_AddRefed<WritableStream>
+WritableStream::ReceiveTransferImpl(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                    MessagePort& aPort) {
   // Step 1: Let deserializedRecord be !
   // StructuredDeserializeWithTransfer(dataHolder.[[port]], the current Realm).
   // Step 2: Let port be a deserializedRecord.[[Deserialized]].
 
   // Step 3: Perform ! SetUpCrossRealmTransformWritable(value, port).
-  auto writable = MakeRefPtr<WritableStream>(
+  RefPtr<WritableStream> writable = new WritableStream(
       aGlobal, WritableStream::HoldDropJSObjectsCaller::Implicit);
   ErrorResult rv;
   SetUpCrossRealmTransformWritable(writable, &aPort, rv);
@@ -964,7 +962,7 @@ bool WritableStream::ReceiveTransfer(
     JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
     JS::MutableHandle<JSObject*> aReturnObject) {
   RefPtr<WritableStream> writable =
-      WritableStreamTransferReceivingStepsImpl(aCx, aGlobal, aPort);
+      WritableStream::ReceiveTransferImpl(aCx, aGlobal, aPort);
   if (!writable) {
     return false;
   }
@@ -1011,7 +1009,7 @@ bool TransformStream::ReceiveTransfer(
   // StructuredDeserializeWithTransfer(dataHolder.[[readable]], the current
   // Realm).
   RefPtr<ReadableStream> readable =
-      ReadableStreamTransferReceivingStepsImpl(aCx, aGlobal, aPort1);
+      ReadableStream::ReceiveTransferImpl(aCx, aGlobal, aPort1);
   if (!readable) {
     return false;
   }
@@ -1020,7 +1018,7 @@ bool TransformStream::ReceiveTransfer(
   // StructuredDeserializeWithTransfer(dataHolder.[[writable]], the current
   // Realm).
   RefPtr<WritableStream> writable =
-      WritableStreamTransferReceivingStepsImpl(aCx, aGlobal, aPort2);
+      WritableStream::ReceiveTransferImpl(aCx, aGlobal, aPort2);
   if (!writable) {
     return false;
   }
@@ -1029,7 +1027,8 @@ bool TransformStream::ReceiveTransfer(
   // Step 4: Set value.[[writable]] to writableRecord.[[Deserialized]].
   // Step 5: Set value.[[backpressure]], value.[[backpressureChangePromise]],
   // and value.[[controller]] to undefined.
-  auto stream = MakeRefPtr<TransformStream>(aGlobal, readable, writable);
+  RefPtr<TransformStream> stream =
+      new TransformStream(aGlobal, readable, writable);
   JS::Rooted<JS::Value> value(aCx);
   if (!GetOrCreateDOMReflector(aCx, stream, &value)) {
     JS_ClearPendingException(aCx);

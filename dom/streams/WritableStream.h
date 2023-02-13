@@ -33,12 +33,13 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WritableStream)
 
+  friend class ReadableStream;
+
  protected:
   virtual ~WritableStream();
 
   virtual void LastRelease() {}
 
- public:
   // If one extends WritableStream with another cycle collectable class,
   // calling HoldJSObjects and DropJSObjects should happen using 'this' of
   // that extending class. And in that case Explicit should be passed to the
@@ -46,23 +47,12 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1801214.
   enum class HoldDropJSObjectsCaller { Implicit, Explicit };
 
-  // XXX: Do not call this constructor outside of dom/streams/ unless you are
-  // subclassing, instead use WritableStream::CreateNative, because currently
-  // the constructor is fallible. (See bug 1762233)
-  // Subclasses need to call SetUpNative method separately as a part of the
-  // construction.
   explicit WritableStream(const GlobalObject& aGlobal,
                           HoldDropJSObjectsCaller aHoldDropCaller);
-  // XXX: Do not call this constructor outside of dom/streams/ unless you are
-  // subclassing, instead use WritableStream::CreateNative, because currently
-  // the constructor is fallible. (See bug 1762233)
-  // Subclasses need to call SetUpNative method separately as a part of the
-  // construction.
   explicit WritableStream(nsIGlobalObject* aGlobal,
                           HoldDropJSObjectsCaller aHoldDropCaller);
 
-  enum class WriterState { Writable, Closed, Erroring, Errored };
-
+ public:
   // Slot Getter/Setters:
   bool Backpressure() const { return mBackpressure; }
   void SetBackpressure(bool aBackpressure) { mBackpressure = aBackpressure; }
@@ -94,6 +84,8 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   WritableStreamDefaultWriter* GetWriter() const { return mWriter; }
   void SetWriter(WritableStreamDefaultWriter* aWriter) { mWriter = aWriter; }
 
+  enum class WriterState { Writable, Closed, Erroring, Errored };
+
   WriterState State() const { return mState; }
   void SetState(const WriterState& aState) { mState = aState; }
 
@@ -105,6 +97,12 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   void AppendWriteRequest(RefPtr<Promise>& aRequest) {
     mWriteRequests.AppendElement(aRequest);
   }
+
+  // CreateWritableStream
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream> CreateAbstract(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
+      QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
   // WritableStreamCloseQueuedOrInFlight
   bool CloseQueuedOrInFlight() const {
@@ -160,7 +158,10 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT bool Transfer(JSContext* aCx,
                                    UniqueMessagePortId& aPortId);
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-receiving-steps
-  static MOZ_CAN_RUN_SCRIPT bool ReceiveTransfer(
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream>
+  ReceiveTransferImpl(JSContext* aCx, nsIGlobalObject* aGlobal,
+                      MessagePort& aPort);
+  MOZ_CAN_RUN_SCRIPT static bool ReceiveTransfer(
       JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
       JS::MutableHandle<JSObject*> aReturnObject);
 
@@ -170,7 +171,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   // https://streams.spec.whatwg.org/#writablestream-set-up
  protected:
   // Sets up the WritableStream. Intended for subclasses.
-  // TODO: Do this in constructor if bug 1762233 makes this infallible.
   MOZ_CAN_RUN_SCRIPT void SetUpNative(
       JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
       Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
@@ -179,7 +179,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
  public:
   // Creates and sets up a WritableStream. Use SetUpNative for this purpose in
   // subclasses.
-  // TODO: Do this in constructor if bug 1762233 makes this infallible.
   MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream> CreateNative(
       JSContext* aCx, nsIGlobalObject& aGlobal,
       UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
@@ -244,11 +243,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
 };
 
 namespace streams_abstract {
-
-MOZ_CAN_RUN_SCRIPT already_AddRefed<WritableStream> CreateWritableStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSinkAlgorithmsBase* aAlgorithms, double aHighWaterMark,
-    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
 inline bool IsWritableStreamLocked(WritableStream* aStream) {
   return aStream->Locked();

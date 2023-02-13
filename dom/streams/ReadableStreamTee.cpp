@@ -985,7 +985,7 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   auto branch1Algorithms =
       MakeRefPtr<ByteStreamTeeSourceAlgorithms>(teeState, TeeBranch::Branch1);
   teeState->SetBranch1(
-      CreateReadableByteStream(aCx, global, branch1Algorithms, aRv));
+      ReadableStream::CreateByteAbstract(aCx, global, branch1Algorithms, aRv));
   if (aRv.Failed()) {
     return;
   }
@@ -994,7 +994,7 @@ void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
   auto branch2Algorithms =
       MakeRefPtr<ByteStreamTeeSourceAlgorithms>(teeState, TeeBranch::Branch2);
   teeState->SetBranch2(
-      CreateReadableByteStream(aCx, global, branch2Algorithms, aRv));
+      ReadableStream::CreateByteAbstract(aCx, global, branch2Algorithms, aRv));
   if (aRv.Failed()) {
     return;
   }
