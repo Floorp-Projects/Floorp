@@ -7768,11 +7768,6 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
           mCachedContentIsValid = false;
           StoreCachedContentIsPartial(1);
 
-          // We are about to perform a different network request.
-          // We must set mRaceCacheWithNetwork to false because otherwise
-          // we would ignore the network response thinking we didn't need it.
-          mRaceCacheWithNetwork = false;
-
           // Perform the range request
           rv = ContinueConnect();
           if (NS_SUCCEEDED(rv)) {
@@ -9369,11 +9364,7 @@ void nsHttpChannel::ReportNetVSCacheTelemetry() {
 NS_IMETHODIMP
 nsHttpChannel::Test_delayCacheEntryOpeningBy(int32_t aTimeout) {
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
-  mRaceCacheWithNetwork = true;
   mCacheOpenDelay = aTimeout;
-  if (mCacheOpenTimer) {
-    mCacheOpenTimer->SetDelay(aTimeout);
-  }
   return NS_OK;
 }
 
@@ -9478,11 +9469,13 @@ nsresult nsHttpChannel::TriggerNetwork() {
   // If |mCacheOpenFunc| is assigned, we're delaying opening the entry to
   // simulate racing. Although cache entry opening hasn't started yet, we're
   // actually racing, so we must set mRaceCacheWithNetwork to true now.
-  mRaceCacheWithNetwork =
-      AwaitingCacheCallbacks() &&
-      (mCacheOpenFunc || StaticPrefs::network_http_rcwn_enabled());
+  if (mCacheOpenFunc) {
+    mRaceCacheWithNetwork = true;
+  } else if (AwaitingCacheCallbacks()) {
+    mRaceCacheWithNetwork = StaticPrefs::network_http_rcwn_enabled();
+  }
 
-  LOG(("  triggering network rcwn=%d\n", bool(mRaceCacheWithNetwork)));
+  LOG(("  triggering network\n"));
   return ContinueConnect();
 }
 
