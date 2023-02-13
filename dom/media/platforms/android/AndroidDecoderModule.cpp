@@ -43,6 +43,10 @@ const nsCString TranslateMimeType(const nsACString& aMimeType) {
     static constexpr auto vp9 = "video/x-vnd.on2.vp9"_ns;
     return vp9;
   }
+  if (aMimeType.EqualsLiteral("video/av1")) {
+    static constexpr auto av1 = "video/av01"_ns;
+    return av1;
+  }
   return nsCString(aMimeType);
 }
 
