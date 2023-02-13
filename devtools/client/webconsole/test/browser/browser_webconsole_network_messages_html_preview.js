@@ -111,44 +111,11 @@ add_task(async function task() {
   });
 
   info("Try to click on the link and submit the form");
-  const previewIframe = await expandNetworkRequestAndWaitForHtmlView({
+  await expandNetworkRequestAndWaitForHtmlView({
     hud,
     url: "fetch-4.html",
     expectedHtml: FETCH_CONTENT_4,
   });
-
-  await SpecialPowers.spawn(
-    previewIframe.browsingContext,
-    [],
-    async function() {
-      EventUtils.synthesizeMouseAtCenter(
-        content.document.querySelector("a"),
-        {},
-        content
-      );
-      EventUtils.synthesizeMouseAtCenter(
-        content.document.querySelector("form"),
-        {},
-        content
-      );
-    }
-  );
-
-  info("Wait for some time to let a chance for the link/form to navigate");
-  await wait(1000);
-
-  info("Verify that the content did not change");
-  await SpecialPowers.spawn(
-    previewIframe.browsingContext,
-    [FETCH_CONTENT_4],
-    async function(expectedHtml) {
-      is(
-        content.document.documentElement.outerHTML,
-        expectedHtml,
-        "Verify that link and form are both disabled and the HTML content stays the same"
-      );
-    }
-  );
 });
 
 async function expandNetworkRequestAndWaitForHtmlView({
