@@ -244,7 +244,9 @@ export class NetErrorParent extends JSWindowActorParent {
 
     let offlinePagePath = `chrome://global/content/neterror/supportpages/${supportPageSlug}.html`;
     let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    this.browser.loadURI(offlinePagePath, { triggeringPrincipal });
+    this.browser.loadURI(Services.io.newURI(offlinePagePath), {
+      triggeringPrincipal,
+    });
   }
 
   receiveMessage(message) {

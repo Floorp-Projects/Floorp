@@ -437,7 +437,7 @@ var gSyncPane = {
     // Get the <browser> element hosting us.
     let browser = window.docShell.chromeEventHandler;
     // And tell it to load our URL.
-    browser.loadURI(url, {
+    browser.loadURI(Services.io.newURI(url), {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
       ),
