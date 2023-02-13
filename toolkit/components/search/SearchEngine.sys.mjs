@@ -1461,6 +1461,23 @@ export class SearchEngine {
   }
 
   /**
+   * Returns a search URL with no search terms. This is typically used for
+   * purposes where we want to check something on the URL, but not use it for
+   * an actual submission to the search engine.
+   *
+   * Note: getSubmission cannot be used for this case, as that returns the
+   * search form when passed an empty string.
+   *
+   * @returns {nsIURI}
+   */
+  get searchURLWithNoTerms() {
+    return this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH).getSubmission(
+      "",
+      this
+    ).uri;
+  }
+
+  /**
    * Returns the search term of a possible search result URI if and only if:
    * - The URI has the same scheme, host, and path as the engine.
    * - All query parameters of the URI have a matching name and value in the engine.
@@ -1576,12 +1593,8 @@ export class SearchEngine {
     if (this._searchUrlPublicSuffix != null) {
       return this._searchUrlPublicSuffix;
     }
-    let submission = this.getSubmission(
-      "{searchTerms}",
-      lazy.SearchUtils.URL_TYPE.SEARCH
-    );
     let searchURLPublicSuffix = Services.eTLD.getKnownPublicSuffix(
-      submission.uri
+      this.searchURLWithNoTerms
     );
     return (this._searchUrlPublicSuffix = searchURLPublicSuffix);
   }
@@ -1711,7 +1724,7 @@ export class SearchEngine {
     }
     let connector = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
 
-    let searchURI = this.getSubmission("dummy").uri;
+    let searchURI = this.searchURLWithNoTerms;
 
     let callbacks = options.window.docShell.QueryInterface(Ci.nsILoadContext);
 
