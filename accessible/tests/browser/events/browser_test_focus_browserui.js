@@ -26,7 +26,7 @@ async function runTests(browser, accDoc) {
   let url = snippetToURL(`<input id="input" type="button" value="button">`, {
     contentDocBodyAttrs: { id: "buttonInputDoc" },
   });
-  browser.loadURI(url, {
+  browser.loadURI(Services.io.newURI(url), {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   evt = await onFocus;

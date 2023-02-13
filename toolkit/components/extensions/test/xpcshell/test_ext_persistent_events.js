@@ -539,7 +539,7 @@ add_task(async function test_shutdown_before_background_loaded() {
   let bgAbortedPromise = new Promise(resolve => {
     let Management = ExtensionParent.apiManager;
     Management.once("extension-browser-inserted", (eventName, browser) => {
-      browser.loadURI = async () => {
+      browser.fixupAndLoadURIString = async () => {
         // The fire.wakeup/fire.async promises created while loading the
         // background page should settle when the page fails to load.
         fire = (await primeListenerPromise)[0].fire;

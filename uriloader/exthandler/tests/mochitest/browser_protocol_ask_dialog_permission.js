@@ -146,7 +146,7 @@ function useTriggeringPrincipal(principal = undefined) {
     let triggeringPrincipal = principal ?? browser.contentPrincipal;
 
     info("Loading uri: " + uri);
-    browser.loadURI(uri, { triggeringPrincipal });
+    browser.loadURI(Services.io.newURI(uri), { triggeringPrincipal });
   };
 }
 
