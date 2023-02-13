@@ -447,6 +447,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/pffft/pffft_gn",
     "/third_party/libwebrtc/third_party/rnnoise/rnn_vad_gn",
     "/third_party/libwebrtc/video/adaptation/video_adaptation_gn",
+    "/third_party/libwebrtc/video/config/streams_config_gn",
     "/third_party/libwebrtc/video/decode_synchronizer_gn",
     "/third_party/libwebrtc/video/frame_cadence_adapter_gn",
     "/third_party/libwebrtc/video/frame_decode_scheduler_gn",
