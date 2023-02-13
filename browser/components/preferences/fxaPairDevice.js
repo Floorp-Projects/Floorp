@@ -46,7 +46,7 @@ var gFxaPairDeviceDialog = {
     // When the modal closes we want to remove any query params
     // To prevent refreshes/restores from reopening the dialog
     const browser = window.docShell.chromeEventHandler;
-    browser.loadURI("about:preferences#sync", {
+    browser.loadURI(Services.io.newURI("about:preferences#sync"), {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 

@@ -210,7 +210,7 @@ function restoreSession() {
 
 function startNewSession() {
   if (Services.prefs.getIntPref("browser.startup.page") == 0) {
-    getBrowserWindow().gBrowser.loadURI("about:blank", {
+    getBrowserWindow().gBrowser.loadURI(Services.io.newURI("about:blank"), {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
       ),

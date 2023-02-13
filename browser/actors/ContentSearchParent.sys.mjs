@@ -234,7 +234,7 @@ export let ContentSearch = {
       // Since we're going to load the search in the same browser, blur the search
       // UI to prevent further interaction before we start loading.
       this._reply(actor, "Blur");
-      browser.loadURI(submission.uri.spec, {
+      browser.loadURI(submission.uri, {
         postData: submission.postData,
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
           {

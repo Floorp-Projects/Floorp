@@ -216,7 +216,10 @@ ContentRestoreInternal.prototype = {
           // restore.
           remoteTypeOverride: Services.appinfo.remoteType,
         };
-        webNavigation.loadURI("about:blank", loadURIOptions);
+        webNavigation.loadURI(
+          Services.io.newURI("about:blank"),
+          loadURIOptions
+        );
       }
 
       return true;
@@ -368,7 +371,7 @@ HistoryListener.prototype = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       loadFlags,
     };
-    this.webNavigation.loadURI(newURI.spec, loadURIOptions);
+    this.webNavigation.loadURI(newURI, loadURIOptions);
   },
 
   OnHistoryReload() {
