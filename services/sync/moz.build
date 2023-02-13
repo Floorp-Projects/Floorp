@@ -16,48 +16,48 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES["services-sync"] += [
-    "modules/addonsreconciler.js",
-    "modules/addonutils.js",
-    "modules/bridged_engine.js",
-    "modules/collection_validator.js",
+    "modules/addonsreconciler.sys.mjs",
+    "modules/addonutils.sys.mjs",
+    "modules/bridged_engine.sys.mjs",
+    "modules/collection_validator.sys.mjs",
     "modules/constants.js",
-    "modules/doctor.js",
-    "modules/engines.js",
-    "modules/keys.js",
-    "modules/main.js",
-    "modules/policies.js",
-    "modules/record.js",
-    "modules/resource.js",
-    "modules/service.js",
-    "modules/status.js",
-    "modules/sync_auth.js",
-    "modules/SyncDisconnect.jsm",
-    "modules/SyncedTabs.jsm",
-    "modules/telemetry.js",
-    "modules/UIState.jsm",
-    "modules/util.js",
-    "Weave.jsm",
+    "modules/doctor.sys.mjs",
+    "modules/engines.sys.mjs",
+    "modules/keys.sys.mjs",
+    "modules/main.sys.mjs",
+    "modules/policies.sys.mjs",
+    "modules/record.sys.mjs",
+    "modules/resource.sys.mjs",
+    "modules/service.sys.mjs",
+    "modules/status.sys.mjs",
+    "modules/sync_auth.sys.mjs",
+    "modules/SyncDisconnect.sys.mjs",
+    "modules/SyncedTabs.sys.mjs",
+    "modules/telemetry.sys.mjs",
+    "modules/UIState.sys.mjs",
+    "modules/util.sys.mjs",
+    "Weave.sys.mjs",
 ]
 
 EXTRA_JS_MODULES["services-sync"].engines += [
-    "modules/engines/addons.js",
-    "modules/engines/clients.js",
-    "modules/engines/extension-storage.js",
-    "modules/engines/passwords.js",
-    "modules/engines/prefs.js",
+    "modules/engines/addons.sys.mjs",
+    "modules/engines/clients.sys.mjs",
+    "modules/engines/extension-storage.sys.mjs",
+    "modules/engines/passwords.sys.mjs",
+    "modules/engines/prefs.sys.mjs",
 ]
 
 if not CONFIG["MOZ_THUNDERBIRD"]:
     EXTRA_JS_MODULES["services-sync"].engines += [
-        "modules/engines/bookmarks.js",
-        "modules/engines/forms.js",
-        "modules/engines/history.js",
-        "modules/engines/tabs.js",
+        "modules/engines/bookmarks.sys.mjs",
+        "modules/engines/forms.sys.mjs",
+        "modules/engines/history.sys.mjs",
+        "modules/engines/tabs.sys.mjs",
     ]
 
 EXTRA_JS_MODULES["services-sync"].stages += [
-    "modules/stages/declined.js",
-    "modules/stages/enginesync.js",
+    "modules/stages/declined.sys.mjs",
+    "modules/stages/enginesync.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
@@ -65,10 +65,10 @@ XPCOM_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES.services.sync += [
-    "modules-testing/fakeservices.js",
-    "modules-testing/fxa_utils.js",
-    "modules-testing/rotaryengine.js",
-    "modules-testing/utils.js",
+    "modules-testing/fakeservices.sys.mjs",
+    "modules-testing/fxa_utils.sys.mjs",
+    "modules-testing/rotaryengine.sys.mjs",
+    "modules-testing/utils.sys.mjs",
 ]
 
 SPHINX_TREES["/services/sync"] = "docs"
