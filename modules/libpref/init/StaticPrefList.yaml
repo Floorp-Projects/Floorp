@@ -6327,7 +6327,7 @@
   mirror: always
 
 # Should we override the blocklist to enable WebGPU?
-- name: gfx.webgpu.force-enabled
+- name: gfx.webgpu.ignore-blocklist
   type: bool
   value: false
   mirror: once

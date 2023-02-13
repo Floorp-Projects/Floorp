@@ -14,9 +14,16 @@
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
 
+#include <optional>
+#include <string_view>
+
 namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(Instance, mOwner)
+
+static inline nsDependentCString ToCString(const std::string_view s) {
+  return {s.data(), s.length()};
+}
 
 /*static*/
 already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
@@ -42,10 +49,30 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
     return nullptr;
   }
 
-  if (!gfx::gfxVars::AllowWebGPU()) {
-    promise->MaybeRejectWithNotSupportedError("WebGPU is not enabled!");
+  // -
+  // Check if we should allow the request.
+
+  const auto errStr = [&]() -> std::optional<std::string_view> {
+#ifdef RELEASE_OR_BETA
+    if (true) {
+      return "WebGPU is not yet available in Release or Beta builds.";
+    }
+#endif
+    if (!gfx::gfxVars::AllowWebGPU()) {
+      return "WebGPU is disabled by blocklist.";
+    }
+    if (!StaticPrefs::dom_webgpu_enabled()) {
+      return "WebGPU is disabled by dom.webgpu.enabled:false.";
+    }
+    return {};
+  }();
+  if (errStr) {
+    promise->MaybeRejectWithNotSupportedError(ToCString(*errStr));
     return promise.forget();
   }
+
+  // -
+  // Make the request.
 
   auto* const canvasManager = gfx::CanvasManagerChild::Get();
   if (!canvasManager) {
