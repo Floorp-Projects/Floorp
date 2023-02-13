@@ -140,7 +140,7 @@ html|input.findbar-textbox[flash="true"] {
 
 .findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
 .findbar-find-next[disabled="true"] > .toolbarbutton-icon {
-  opacity: .4;
+  opacity: var(--toolbarbutton-disabled-opacity);
 }
 
 /* Checkboxes & Labels */

@@ -41,11 +41,8 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-:root:not([customizing]) .toolbarbutton-1[disabled=true],
-/* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
-#nav-bar-overflow-button[disabled=true],
-#PanelUI-menu-button[disabled=true] {
-  opacity: 0.4;
+:root:not([customizing]) .toolbarbutton-1[disabled=true] {
+  opacity: var(--toolbarbutton-disabled-opacity);
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
