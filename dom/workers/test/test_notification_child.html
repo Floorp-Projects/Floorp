@@ -40,10 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916893
   }
 
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv(
-    {"set": [["dom.webnotifications.workers.enabled", true]]},
-    runTest
-  );
+  runTest();
 </script>
 </body>
 </html>
