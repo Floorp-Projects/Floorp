@@ -760,12 +760,10 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
   }
 
   // Now we've computed the float's margin inline-size.
-  if (!HasFloatPushedDown() && aAvailableISizeInCurrentLine &&
+  if (aAvailableISizeInCurrentLine &&
       floatMarginISize > *aAvailableISizeInCurrentLine) {
-    // We haven't needed to push down the float-placement block-dir coordinate
-    // (for float clearance), but the float cannot fit in the available
-    // inline-size of the current line. Let's notify our caller to place it
-    // later.
+    // The float cannot fit in the available inline-size of the current line.
+    // Let's notify our caller to place it later.
     return PlaceFloatResult::ShouldPlaceBelowCurrentLine;
   }
 
