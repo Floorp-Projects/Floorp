@@ -176,6 +176,7 @@ Test task config
           "test/foo-opt"
       ],
       "use-artifact-builds": true,
+      "disable-pgo": true,
       "version": 1
   }
   
