@@ -1404,8 +1404,27 @@ export class SearchEngine {
     return this._queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
   }
 
-  // from nsISearchEngine
-  getSubmission(data, responseType, purpose) {
+  /**
+   * Gets an object that contains information about what to send to the search
+   * engine, for a request. This will be a URI and may also include data for POST
+   * requests.
+   *
+   * @param {string} searchTerms
+   *   The search term(s) for the submission.
+   *   Note: If an empty data string is supplied, the search form of the search
+   *   engine will be returned. This is intentional, as in some cases on the current
+   *   UI an empty search is intended to open the search engine's home/search page.
+   * @param {lazy.SearchUtils.URL_TYPE} [responseType]
+   *   The MIME type that we'd like to receive in response
+   *   to this submission.  If null, will default to "text/html".
+   * @param {string} [purpose]
+   *   A string that indicates the context of the search request. This may then
+   *   be used to provide different submission data depending on the context.
+   * @returns {nsISearchSubmission|null}
+   *   The submission data. If no appropriate submission can be determined for
+   *   the request type, this may be null.
+   */
+  getSubmission(searchTerms, responseType, purpose) {
     // We can't use a default parameter as that doesn't work correctly with
     // the idl interfaces.
     if (!responseType) {
@@ -1418,7 +1437,7 @@ export class SearchEngine {
       return null;
     }
 
-    if (!data) {
+    if (!searchTerms) {
       // Return a dummy submission object with our searchForm attribute
       return new Submission(lazy.SearchUtils.makeURI(this.searchForm));
     }
@@ -1427,7 +1446,7 @@ export class SearchEngine {
     try {
       submissionData = Services.textToSubURI.ConvertAndEscape(
         this.queryCharset,
-        data
+        searchTerms
       );
     } catch (ex) {
       lazy.logConsole.warn(
@@ -1435,7 +1454,7 @@ export class SearchEngine {
       );
       submissionData = Services.textToSubURI.ConvertAndEscape(
         lazy.SearchUtils.DEFAULT_QUERY_CHARSET,
-        data
+        searchTerms
       );
     }
     return url.getSubmission(submissionData, this, purpose);
