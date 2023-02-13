@@ -1378,7 +1378,6 @@ Document::Document(const char* aContentType)
       mInDestructor(false),
       mIsGoingAway(false),
       mInXBLUpdate(false),
-      mNeedsReleaseAfterStackRefCntRelease(false),
       mStyleSetFilled(false),
       mQuirkSheetAdded(false),
       mContentEditableSheetAdded(false),
@@ -1447,7 +1446,6 @@ Document::Document(const char* aContentType)
       mBFCacheEntry(nullptr),
       mInSyncOperationCount(0),
       mBlockDOMContentLoaded(0),
-      mStackRefCnt(0),
       mUpdateNestLevel(0),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mViewportType(Unknown),
@@ -2440,34 +2438,9 @@ NS_INTERFACE_TABLE_HEAD(Document)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Document)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Document)
-NS_IMETHODIMP_(MozExternalRefCountType)
-Document::Release() {
-  MOZ_ASSERT(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(Document);
-  nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(Document)::Upcast(this);
-  bool shouldDelete = false;
-  nsrefcnt count = mRefCnt.decr(base, &shouldDelete);
-  NS_LOG_RELEASE(this, count, "Document");
-  if (count == 0) {
-    if (mStackRefCnt && !mNeedsReleaseAfterStackRefCntRelease) {
-      mNeedsReleaseAfterStackRefCntRelease = true;
-      NS_ADDREF_THIS();
-      return mRefCnt.get();
-    }
-    mRefCnt.incr(base);
-    LastRelease();
-    mRefCnt.decr(base);
-    if (shouldDelete) {
-      mRefCnt.stabilizeForDeletion();
-      DeleteCycleCollectable();
-    }
-  }
-  return count;
-}
-
-NS_IMETHODIMP_(void)
-Document::DeleteCycleCollectable() { delete this; }
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(Document)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    Document, LastRelease())
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Document)
   if (Element::CanSkip(tmp, aRemovingAllowed)) {
@@ -10690,21 +10663,10 @@ void Document::FlushPendingNotifications(FlushType aType) {
   FlushPendingNotifications(flush);
 }
 
-class nsDocumentOnStack {
- public:
-  explicit nsDocumentOnStack(Document* aDoc) : mDoc(aDoc) {
-    mDoc->IncreaseStackRefCnt();
-  }
-  ~nsDocumentOnStack() { mDoc->DecreaseStackRefCnt(); }
-
- private:
-  Document* mDoc;
-};
-
 void Document::FlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   FlushType flushType = aFlush.mFlushType;
 
-  nsDocumentOnStack dos(this);
+  RefPtr<Document> documentOnStack = this;
 
   // We need to flush the sink for non-HTML documents (because the XML
   // parser still does insertion with deferred notifications).  We
