@@ -121,7 +121,7 @@ class RemoteWebNavigation {
       Ci.nsIRemoteTab.NAVIGATE_URL,
       { uri }
     );
-    this._browser.browsingContext.loadURI(aURI, {
+    this._browser.browsingContext.fixupAndLoadURIString(aURI, {
       ...aLoadURIOptions,
       cancelContentJSEpoch,
     });
