@@ -616,8 +616,7 @@ const PDFViewerApplication = {
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     this.appConfig = appConfig;
-    await this._readPreferences();
-    await this._parseHashParameters();
+    await this._initializeOptions();
     this._forceCssTheme();
     await this._initializeL10n();
     if (this.isViewerEmbedded && _app_options.AppOptions.get("externalLinkTarget") === _pdf_link_service.LinkTarget.NONE) {
@@ -634,17 +633,17 @@ const PDFViewerApplication = {
     });
     this._initializedCapability.resolve();
   },
-  async _readPreferences() {
+  async _initializeOptions() {
     try {
       _app_options.AppOptions.setAll(await this.preferences.getAll());
     } catch (reason) {
-      console.error(`_readPreferences: "${reason?.message}".`);
+      console.error(`_initializeOptions: "${reason.message}".`);
+    }
+    if (_app_options.AppOptions.get("pdfBugEnabled")) {
+      await this._parseHashParams();
     }
   },
-  async _parseHashParameters() {
-    if (!_app_options.AppOptions.get("pdfBugEnabled")) {
-      return;
-    }
+  async _parseHashParams() {
     const hash = document.location.hash.substring(1);
     if (!hash) {
       return;
@@ -658,7 +657,7 @@ const PDFViewerApplication = {
       try {
         await loadFakeWorker();
       } catch (ex) {
-        console.error(`_parseHashParameters: "${ex.message}".`);
+        console.error(`_parseHashParams: "${ex.message}".`);
       }
     }
     if (params.has("disablerange")) {
@@ -692,7 +691,7 @@ const PDFViewerApplication = {
             await loadPDFBug(this);
             this._PDFBug.loadCSS();
           } catch (ex) {
-            console.error(`_parseHashParameters: "${ex.message}".`);
+            console.error(`_parseHashParams: "${ex.message}".`);
           }
           break;
       }
@@ -707,7 +706,7 @@ const PDFViewerApplication = {
           OPS: _pdfjsLib.OPS
         }, mainContainer, enabled);
       } catch (ex) {
-        console.error(`_parseHashParameters: "${ex.message}".`);
+        console.error(`_parseHashParams: "${ex.message}".`);
       }
     }
   },
@@ -3392,11 +3391,9 @@ class AppOptions {
   static remove(name) {
     delete userOptions[name];
   }
-  static _hasUserOptions() {
-    return Object.keys(userOptions).length > 0;
-  }
 }
 exports.AppOptions = AppOptions;
+;
 
 /***/ }),
 /* 7 */
@@ -6009,7 +6006,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.4.62';
+    const viewerVersion = '3.4.97';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7697,6 +7694,7 @@ class PDFPageView {
     if (treeDom) {
       this.canvas?.append(treeDom);
     }
+    this.structTreeLayer?.show();
   }
   async #buildXfaTextContentItems(textDivs) {
     const text = await this.pdfPage.getTextContent();
@@ -7766,6 +7764,7 @@ class PDFPageView {
     if (textLayerNode) {
       this.textLayer.hide();
     }
+    this.structTreeLayer?.hide();
     if (!zoomLayerNode) {
       if (this.canvas) {
         this.paintedViewportMap.delete(this.canvas);
@@ -7946,6 +7945,7 @@ class PDFPageView {
     if (this.textLayer) {
       if (hideTextLayer) {
         this.textLayer.hide();
+        this.structTreeLayer?.hide();
       } else if (redrawTextLayer) {
         this.#renderTextLayer();
       }
@@ -8511,6 +8511,16 @@ class StructTreeLayerBuilder {
     const treeDom = this.#walk(structTree);
     treeDom?.classList.add("structTree");
     return this.#treeDom = treeDom;
+  }
+  hide() {
+    if (this.#treeDom && !this.#treeDom.hidden) {
+      this.#treeDom.hidden = true;
+    }
+  }
+  show() {
+    if (this.#treeDom?.hidden) {
+      this.#treeDom.hidden = false;
+    }
   }
   #setAttributes(structElement, htmlElement) {
     if (structElement.alt !== undefined) {
@@ -9405,8 +9415,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.4.62';
-const pdfjsBuild = '9cea76483';
+const pdfjsVersion = '3.4.97';
+const pdfjsBuild = '22618213c';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
