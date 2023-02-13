@@ -1760,6 +1760,7 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (aParent.HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR)) {
     SetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
   }
+  aParent.SetFlags(NODE_MAY_HAVE_ELEMENT_CHILDREN);
 
   // Now set the parent.
   mParent = &aParent;

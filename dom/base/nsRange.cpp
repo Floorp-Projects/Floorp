@@ -646,13 +646,16 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
+  nsINode* startContainer = mStart.Container();
+  nsINode* endContainer = mEnd.Container();
+
   RawRangeBoundary newStart;
   RawRangeBoundary newEnd;
   Maybe<bool> gravitateStart;
   bool gravitateEnd;
 
   // Adjust position if a sibling was removed...
-  if (container == mStart.Container()) {
+  if (container == startContainer) {
     // We're only interested if our boundary reference was removed, otherwise
     // we can just invalidate the offset.
     if (aChild == mStart.Ref()) {
@@ -662,14 +665,14 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
       newStart.InvalidateOffset();
     }
   } else {
-    gravitateStart = Some(mStart.Container()->IsInclusiveDescendantOf(aChild));
+    gravitateStart = Some(startContainer->IsInclusiveDescendantOf(aChild));
     if (gravitateStart.value()) {
       newStart = {container, aPreviousSibling};
     }
   }
 
   // Do same thing for end boundry.
-  if (container == mEnd.Container()) {
+  if (container == endContainer) {
     if (aChild == mEnd.Ref()) {
       newEnd = {container, aPreviousSibling};
     } else {
@@ -677,19 +680,21 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
       newEnd.InvalidateOffset();
     }
   } else {
-    if (mStart.Container() == mEnd.Container() && gravitateStart.isSome()) {
+    if (startContainer == endContainer && gravitateStart.isSome()) {
       gravitateEnd = gravitateStart.value();
     } else {
-      gravitateEnd = mEnd.Container()->IsInclusiveDescendantOf(aChild);
+      gravitateEnd = endContainer->IsInclusiveDescendantOf(aChild);
     }
     if (gravitateEnd) {
       newEnd = {container, aPreviousSibling};
     }
   }
 
-  if (newStart.IsSet() || newEnd.IsSet()) {
-    DoSetRange(newStart.IsSet() ? newStart : mStart.AsRaw(),
-               newEnd.IsSet() ? newEnd : mEnd.AsRaw(), mRoot);
+  bool newStartIsSet = newStart.IsSet();
+  bool newEndIsSet = newEnd.IsSet();
+  if (newStartIsSet || newEndIsSet) {
+    DoSetRange(newStartIsSet ? newStart : mStart.AsRaw(),
+               newEndIsSet ? newEnd : mEnd.AsRaw(), mRoot);
   } else {
     nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
@@ -957,7 +962,9 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
 
   // This needs to be the last thing this function does, other than notifying
   // selection listeners. See comment in ParentChainChanged.
-  mRoot = aRootNode;
+  if (mRoot != aRootNode) {
+    mRoot = aRootNode;
+  }
 
   // Notify any selection listeners. This has to occur last because otherwise
   // the world could be observed by a selection listener while the range was in
