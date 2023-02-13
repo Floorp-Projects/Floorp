@@ -246,6 +246,8 @@ enum TextureDumpMode {
   DoNotCompress  // dump texture uncompressed
 };
 
+// Corresponding bit masks for allowed touch behaviors
+// are defined in AllowedTouchBehavior
 typedef uint32_t TouchBehaviorFlags;
 
 // Some specialized typedefs of Matrix4x4Typed.

@@ -892,14 +892,12 @@ PointerEventsConsumableFlags AsyncPanZoomController::ArePointerEventsConsumable(
   bool pannableX = aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(
       this, ScrollDirection::eHorizontal);
   bool touchActionAllowsX = aBlock->TouchActionAllowsPanningX();
-  bool pannableY =
-
-      (aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(
-           this, ScrollDirection::eVertical) ||
-       // In the case of the root APZC with any dynamic toolbar, it
-       // shoule be pannable if there is room moving the dynamic
-       // toolbar.
-       (IsRootContent() && CanVerticalScrollWithDynamicToolbar()));
+  bool pannableY = (aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(
+                        this, ScrollDirection::eVertical) ||
+                    // In the case of the root APZC with any dynamic toolbar, it
+                    // shoule be pannable if there is room moving the dynamic
+                    // toolbar.
+                    (IsRootContent() && CanVerticalScrollWithDynamicToolbar()));
   bool touchActionAllowsY = aBlock->TouchActionAllowsPanningY();
 
   bool pannable;
@@ -6619,6 +6617,19 @@ std::ostream& operator<<(std::ostream& aOut,
       aOut << "UNKNOWN_STATE";
       break;
   }
+  return aOut;
+}
+
+bool operator==(const PointerEventsConsumableFlags& aLhs,
+                const PointerEventsConsumableFlags& aRhs) {
+  return (aLhs.mHasRoom == aRhs.mHasRoom) &&
+         (aLhs.mAllowedByTouchAction == aRhs.mAllowedByTouchAction);
+}
+
+std::ostream& operator<<(std::ostream& aOut,
+                         const PointerEventsConsumableFlags& aFlags) {
+  aOut << std::boolalpha << "{ hasRoom: " << aFlags.mHasRoom
+       << ", allowedByTouchAction: " << aFlags.mAllowedByTouchAction << "}";
   return aOut;
 }
 
