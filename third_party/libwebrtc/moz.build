@@ -350,7 +350,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/histogram_percentile_counter_gn",
     "/third_party/libwebrtc/rtc_base/ignore_wundef_gn",
     "/third_party/libwebrtc/rtc_base/ip_address_gn",
-    "/third_party/libwebrtc/rtc_base/location_gn",
     "/third_party/libwebrtc/rtc_base/logging_gn",
     "/third_party/libwebrtc/rtc_base/macromagic_gn",
     "/third_party/libwebrtc/rtc_base/memory/aligned_malloc_gn",
