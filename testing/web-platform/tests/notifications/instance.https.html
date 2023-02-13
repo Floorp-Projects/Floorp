@@ -3,6 +3,7 @@
 <title>Notification instance basic tests</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="resources/custom-data.js"></script>
 <script>
 var n = new Notification("Radio check",
     {
@@ -11,6 +12,7 @@ var n = new Notification("Radio check",
         body: "This is a radio check.",
         tag: "radio_check999",
         icon: "http://example.com/icon.png",
+        data: fakeCustomData,
     }
 )
 n.onshow = function() {
@@ -52,4 +54,7 @@ test(function() {
 test(function() {
     assert_equals("http://example.com/icon.png", n.icon)
 },"Attribute exists with expected value: icon")
+test(function() {
+    assert_custom_data(n.data);
+},"Attribute exists with expected value: data")
 </script>
