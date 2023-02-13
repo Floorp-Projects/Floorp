@@ -1612,9 +1612,16 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   margin-inline-start: calc(var(--arrowpanel-header-info-icon-full-width) + var(--arrowpanel-header-info-icon-margin-inline-end));
 }
 
-.panel-header > .subviewbutton-back + h1 {
+.panel-header:not(.panel-header-with-info-button) > .subviewbutton-back + h1 {
   /* Add the size of the back button to center properly. */
   margin-inline-end: var(--arrowpanel-header-back-icon-full-width);
+}
+
+.panel-header.panel-header-with-info-button > .subviewbutton-back + h1 {
+  margin-inline-start: 0;
+  margin-inline-end: calc(var(--arrowpanel-header-back-icon-full-width)
+                          - var(--arrowpanel-header-info-icon-full-width)
+                          - var(--arrowpanel-header-info-icon-margin-inline-end));
 }
 
 .panel-header > h1 > span {
@@ -1837,10 +1844,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 :where(#PanelUI-profiler) :is(description, label) {
   margin: 0;
-}
-
-#widget-overflow #PanelUI-profiler-header {
-  display: none;
 }
 
 #PanelUI-profiler-header[isinfocollapsed="false"] {

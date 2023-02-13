@@ -1377,10 +1377,23 @@ var PanelView = class extends AssociatedToNode {
     // If the header already exists, update or remove it as requested.
     let header = this.node.querySelector(".panel-header");
     if (header) {
+      let headerInfoButton = header.querySelector(".panel-info-button");
+      let headerBackButton = header.querySelector(".subviewbutton-back");
+      if (headerBackButton && this.node.getAttribute("mainview")) {
+        // A back button should not appear in a mainview.
+        // This codepath can be reached if a user enters a panelview in
+        // the overflow panel, and then unpins it back to the toolbar.
+        headerBackButton.remove();
+      }
       if (!this.node.getAttribute("mainview")) {
         if (value) {
-          // The back button has a label in it - we want to select
-          // the span that's a child of the header.
+          if (headerInfoButton && !headerBackButton) {
+            // If we're not in a mainview and an info button is present,
+            // that means the panel header is a custom one and a back
+            // button should be added, if not already present.
+            header.prepend(this.createHeaderBackButton());
+          }
+          // Set the header title based on the value given.
           header.querySelector(".panel-header > h1 > span").textContent = value;
           ensureHeaderSeparator(header);
         } else {
@@ -1406,6 +1419,22 @@ var PanelView = class extends AssociatedToNode {
     header = this.document.createXULElement("box");
     header.classList.add("panel-header");
 
+    let backButton = this.createHeaderBackButton();
+    let h1 = this.document.createElement("h1");
+    let span = this.document.createElement("span");
+    span.textContent = value;
+    h1.appendChild(span);
+
+    header.append(backButton, h1);
+    this.node.prepend(header);
+
+    ensureHeaderSeparator(header);
+  }
+
+  /**
+   * Creates and returns a panel header back toolbarbutton.
+   */
+  createHeaderBackButton() {
     let backButton = this.document.createXULElement("toolbarbutton");
     backButton.className =
       "subviewbutton subviewbutton-iconic subviewbutton-back";
@@ -1420,16 +1449,7 @@ var PanelView = class extends AssociatedToNode {
       this.node.panelMultiView.goBack();
       backButton.blur();
     });
-
-    let h1 = this.document.createElement("h1");
-    let span = this.document.createElement("span");
-    span.textContent = value;
-    h1.appendChild(span);
-
-    header.append(backButton, h1);
-    this.node.prepend(header);
-
-    ensureHeaderSeparator(header);
+    return backButton;
   }
 
   /**
