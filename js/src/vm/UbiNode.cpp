@@ -26,6 +26,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/PropMap.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
@@ -165,7 +166,7 @@ Value Node::exposeToJS() const {
 
   if (is<JSObject>()) {
     JSObject& obj = *as<JSObject>();
-    if (obj.is<js::EnvironmentObject>()) {
+    if (obj.is<js::EnvironmentObject>() || obj.is<js::ScriptSourceObject>()) {
       v.setUndefined();
     } else if (obj.is<JSFunction>() && js::IsInternalFunctionObject(obj)) {
       v.setUndefined();
