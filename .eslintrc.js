@@ -138,6 +138,7 @@ module.exports = {
     {
       ...removeOverrides(xpcshellTestConfig),
       files: testPaths.xpcshell.map(path => `${path}**`),
+      excludedFiles: ["**/*.jsm", "**/*.mjs"],
     },
     {
       // If it is an xpcshell head file, we turn off global unused variable checks, as it
@@ -176,15 +177,21 @@ module.exports = {
     {
       ...browserTestConfig,
       files: testPaths.browser.map(path => `${path}**`),
+      excludedFiles: ["**/*.jsm", "**/*.mjs"],
     },
     {
       ...removeOverrides(mochitestTestConfig),
       files: testPaths.mochitest.map(path => `${path}**`),
-      excludedFiles: ["security/manager/ssl/tests/mochitest/browser/**"],
+      excludedFiles: [
+        "**/*.jsm",
+        "**/*.mjs",
+        "security/manager/ssl/tests/mochitest/browser/**",
+      ],
     },
     {
       ...removeOverrides(chromeTestConfig),
       files: testPaths.chrome.map(path => `${path}**`),
+      excludedFiles: ["**/*.jsm", "**/*.mjs"],
     },
     {
       env: {
@@ -206,7 +213,7 @@ module.exports = {
     },
     {
       // Bug 877389 - Gradually migrate from Cu.reportError to console.error.
-      // Report as warnings where it is not yet passing.
+      // Enable these as we fix more areas.
       files: [
         "dom/push/test/mockpushserviceparent.js",
         "browser/components/extensions/**",
