@@ -78,6 +78,7 @@ class InternalHeaders final {
               ErrorResult& aRv);
   void Delete(const nsACString& aName, ErrorResult& aRv);
   void Get(const nsACString& aName, nsACString& aValue, ErrorResult& aRv) const;
+  void GetSetCookie(nsTArray<nsCString>& aValues) const;
   void GetFirst(const nsACString& aName, nsACString& aValue,
                 ErrorResult& aRv) const;
   bool Has(const nsACString& aName, ErrorResult& aRv) const;

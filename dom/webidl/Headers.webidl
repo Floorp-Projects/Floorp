@@ -26,6 +26,7 @@ interface Headers {
   [Throws] undefined append(ByteString name, ByteString value);
   [Throws] undefined delete(ByteString name);
   [Throws] ByteString? get(ByteString name);
+  sequence<ByteString> getSetCookie();
   [Throws] boolean has(ByteString name);
   [Throws] undefined set(ByteString name, ByteString value);
   iterable<ByteString, ByteString>;

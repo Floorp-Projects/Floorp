@@ -81,6 +81,10 @@ class Headers final : public nsISupports, public nsWrapperCache {
     mInternalHeaders->Get(aName, aValue, aRv);
   }
 
+  void GetSetCookie(nsTArray<nsCString>& aValues) const {
+    mInternalHeaders->GetSetCookie(aValues);
+  }
+
   void GetFirst(const nsACString& aName, nsACString& aValue,
                 ErrorResult& aRv) const {
     mInternalHeaders->GetFirst(aName, aValue, aRv);
