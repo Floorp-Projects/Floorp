@@ -35,6 +35,8 @@
 #include "RecentEventsBuffer.h"  // for RecentEventsBuffer
 #include "SampledAPZCState.h"
 
+#include <iosfwd>
+
 namespace mozilla {
 
 namespace ipc {
@@ -146,6 +148,10 @@ struct PointerEventsConsumableFlags {
   bool mAllowedByTouchAction = false;
 
   bool IsConsumable() const { return mHasRoom && mAllowedByTouchAction; }
+  friend bool operator==(const PointerEventsConsumableFlags& aLhs,
+                         const PointerEventsConsumableFlags& aRhs);
+  friend std::ostream& operator<<(std::ostream& aOut,
+                                  const PointerEventsConsumableFlags& aFlags);
 };
 
 /**
