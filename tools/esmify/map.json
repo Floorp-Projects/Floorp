@@ -731,8 +731,8 @@
     "devtools/client/jsonview/Converter.jsm",
   "resource://devtools/client/jsonview/Sniffer.jsm":
     "devtools/client/jsonview/Sniffer.jsm",
-  "resource://devtools/client/performance-new/popup/background.jsm.js":
-    "devtools/client/performance-new/popup/background.jsm.js",
+  "resource://devtools/client/performance-new/shared/background.jsm.js":
+    "devtools/client/performance-new/shared/background.jsm.js",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js":
     "devtools/client/performance-new/popup/menu-button.jsm.js",
   "resource://devtools/client/performance-new/popup/panel.jsm.js":

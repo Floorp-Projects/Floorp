@@ -22,7 +22,7 @@ const { CustomizableUI } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
   return ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
+    "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
 });
 
@@ -49,7 +49,8 @@ function moduleEnvVarPresent() {
  *   logging preset, so that all logging statements are recorded in the profile
  *   as markers.
  *
- * [1]: The keys of https://searchfox.org/mozilla-central/rev/88f285c5163f73abd209d4f73cfa476660351982/devtools/client/performance-new/popup/background.jsm.js#119
+ * [1]: The keys of the `presets` object defined in
+ * https://searchfox.org/mozilla-central/source/devtools/client/performance-new/shared/background.jsm.js
  */
 const gLoggingPresets = {
   networking: {

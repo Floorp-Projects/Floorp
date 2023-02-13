@@ -10,7 +10,7 @@ add_task(async function test() {
   );
 
   const { startProfiler } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
+    "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
 
   info("Start the profiler before DevTools is loaded.");
