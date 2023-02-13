@@ -222,7 +222,6 @@ about-logins-breach-alert-date = This breach occurred on { DATETIME($date, day: 
 # Variables:
 #   $hostname (String) - The hostname of the website associated with the login, e.g. "example.com"
 about-logins-breach-alert-link = Go to { $hostname }
-about-logins-breach-alert-learn-more-link = Learn more
 
 ## Vulnerable Password notification
 
