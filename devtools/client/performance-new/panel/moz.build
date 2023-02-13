@@ -3,17 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "aboutprofiling",
-    "components",
-    "store",
-    "panel",
-    "popup",
-    "shared",
-]
-
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+DevToolsModules(
+    "initializer.js",
+    "panel.js",
+)
 
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")

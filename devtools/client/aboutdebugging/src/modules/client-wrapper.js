@@ -178,7 +178,7 @@ class ClientWrapper {
 
   // This method will be mocked to return a dummy URL during mochitests
   getPerformancePanelUrl() {
-    return "chrome://devtools/content/performance-new/index.xhtml";
+    return "chrome://devtools/content/performance-new/panel/index.xhtml";
   }
 
   /**

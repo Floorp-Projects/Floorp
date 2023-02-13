@@ -5,16 +5,16 @@
 /* exported gInit, gDestroy, loader */
 
 /**
- * @typedef {import("./@types/perf").PerfFront} PerfFront
- * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
- * @typedef {import("./@types/perf").RecordingSettings} RecordingSettings
- * @typedef {import("./@types/perf").PageContext} PageContext
- * @typedef {import("./@types/perf").PanelWindow} PanelWindow
- * @typedef {import("./@types/perf").Store} Store
- * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
- * @typedef {import("./@types/perf").ProfileCaptureResult} ProfileCaptureResult
- * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
- * @typedef {import("./@types/perf").RootTraits} RootTraits
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").PreferenceFront} PreferenceFront
+ * @typedef {import("../@types/perf").RecordingSettings} RecordingSettings
+ * @typedef {import("../@types/perf").PageContext} PageContext
+ * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("../@types/perf").Store} Store
+ * @typedef {import("../@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
+ * @typedef {import("../@types/perf").ProfileCaptureResult} ProfileCaptureResult
+ * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
+ * @typedef {import("../@types/perf").RootTraits} RootTraits
  */
 "use strict";
 
