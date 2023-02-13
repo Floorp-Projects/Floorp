@@ -45,7 +45,7 @@
               ]),
             });
           });
-          b.loadURI("about:blank", { triggeringPrincipal });
+          b.loadURI(null /*blank*/, { triggeringPrincipal });
           await loaded;
         }
       });

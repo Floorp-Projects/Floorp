@@ -147,8 +147,8 @@ add_task(async function test_unload_extension_during_background_page_startup() {
     // Prevent the background page from actually loading.
     Management.once("extension-browser-inserted", (eventName, browser) => {
       // Intercept background page load.
-      let browserLoadURI = browser.loadURI;
-      browser.loadURI = function() {
+      let browserFixupAndLoadURIString = browser.fixupAndLoadURIString;
+      browser.fixupAndLoadURIString = function() {
         Assert.equal(++backgroundLoadCount, 1, "loadURI should be called once");
         Assert.equal(
           arguments[0],
@@ -157,7 +157,7 @@ add_task(async function test_unload_extension_during_background_page_startup() {
         );
         // Reset to "about:blank" to not load the actual background page.
         arguments[0] = "about:blank";
-        browserLoadURI.apply(this, arguments);
+        browserFixupAndLoadURIString.apply(this, arguments);
 
         // And force the extension process to crash.
         if (browser.isRemote) {

@@ -24,7 +24,7 @@ add_task(async function test_interactions_referrer() {
       true,
       Services.io.newURI(TEST_REFERRER_URL)
     );
-    browser.loadURI(TEST_URL, {
+    browser.loadURI(Services.io.newURI(TEST_URL), {
       referrerInfo: referrerInfo1,
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}

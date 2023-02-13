@@ -15,7 +15,7 @@ function testOnPrivateWindow(aCallback) {
   win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href == "about:privatebrowsing") {
-        win.gBrowser.loadURI(contentPage, {
+        win.gBrowser.loadURI(Services.io.newURI(contentPage), {
            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
         return;

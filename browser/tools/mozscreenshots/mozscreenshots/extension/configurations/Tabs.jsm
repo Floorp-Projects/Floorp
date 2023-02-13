@@ -206,7 +206,7 @@ function closeAllButOneTab(url = "about:blank") {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.selectedTab, { animate: false });
   }
-  gBrowser.selectedBrowser.loadURI(url, {
+  gBrowser.selectedBrowser.loadURI(Services.io.newURI(url), {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   if (gBrowser.selectedTab.pinned) {
