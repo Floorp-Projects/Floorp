@@ -162,12 +162,12 @@ class AutofillTelemetryBase {
     return undefined;
   }
 
-  recordDoorhangerEvent(method, flowId, isCapture) {
+  recordDoorhangerEvent(method, record) {
     Services.telemetry.recordEvent(
       this.EVENT_CATEGORY,
       method,
-      isCapture ? "capture_doorhanger" : "update_doorhanger",
-      flowId
+      record.guid ? "update_doorhanger" : "capture_doorhanger",
+      record.flowId
     );
   }
 
@@ -485,12 +485,12 @@ class AutofillTelemetry {
    * Event name: doorhanger
    */
 
-  static recordDoorhangerShown(type, flowId, isCapture) {
+  static recordDoorhangerShown(type, record) {
     const telemetry = this.#getTelemetryByType(type);
-    telemetry.recordDoorhangerEvent("show", flowId, isCapture);
+    telemetry.recordDoorhangerEvent("show", record);
   }
 
-  static recordDoorhangerClicked(type, method, flowId, isCapture) {
+  static recordDoorhangerClicked(type, method, record) {
     const telemetry = this.#getTelemetryByType(type);
 
     // We don't have `create` method in telemetry, we treat `create` as `save`
@@ -503,7 +503,7 @@ class AutofillTelemetry {
         break;
     }
 
-    telemetry.recordDoorhangerEvent(method, flowId, isCapture);
+    telemetry.recordDoorhangerEvent(method, record);
   }
 
   /**

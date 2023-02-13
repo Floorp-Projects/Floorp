@@ -53,7 +53,7 @@ if (AppConstants.platform == "macosx") {
 }
 
 const CONTENT = {
-  addFirstTimeUse: {
+  firstTimeUse: {
     notificationId: "autofill-address",
     message: formatStringFromName("saveAddressesMessage", [brandShortName]),
     anchor: {
@@ -371,7 +371,6 @@ let FormAutofillPrompter = {
       checkbox.addEventListener("command", options.checkbox.callback);
     }
   },
-
   _removeCheckboxListener(browser, { notificationId, options }) {
     if (!options.checkbox) {
       return;
@@ -383,74 +382,32 @@ let FormAutofillPrompter = {
     }
   },
 
-  async promptToSaveAddress(browser, storage, record, flowId) {
-    // Overwrite the guid if there is a duplicate
-    let doorhangerType;
-    const duplicateRecord = (await storage.getDuplicateRecords(record).next())
-      .value;
-    if (duplicateRecord) {
-      doorhangerType = "updateAddress";
-    } else {
-      doorhangerType = "addFirstTimeUse";
-
-      this._updateStorageAfterInteractWithPrompt("save", storage, record);
-
-      // Show first time use doorhanger
-      if (FormAutofill.isAutofillAddressesFirstTimeUse) {
-        Services.prefs.setBoolPref(
-          FormAutofill.ADDRESSES_FIRST_TIME_USE_PREF,
-          false
-        );
-      } else {
-        return;
-      }
-    }
-
-    const description = FormAutofillUtils.getAddressLabel(record);
-    const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
+  async promptToSaveAddress(browser, address, description) {
+    const state = this._showCCorAddressCaptureDoorhanger(
       browser,
-      doorhangerType,
-      description,
-      { flowId }
+      address,
+      address.guid ? "updateAddress" : "firstTimeUse",
+      description
     );
 
-    if (state == "cancel") {
-      return;
-    } else if (state == "open-pref") {
-      browser.ownerGlobal.openPreferences("privacy-address-autofill");
-      return;
-    }
-
-    this._updateStorageAfterInteractWithPrompt(
-      state,
-      storage,
-      record,
-      duplicateRecord?.guid
-    );
+    return state;
   },
 
-  async promptToSaveCreditCard(browser, storage, record, flowId) {
-    let number = record["cc-number"] || record["cc-number-decrypted"];
-    let name = record["cc-name"];
-    let network = lazy.CreditCard.getType(number);
+  async promptToSaveCreditCard(browser, creditCard, storage) {
+    let number =
+      creditCard.record["cc-number"] ||
+      creditCard.record["cc-number-decrypted"];
+    let name = creditCard.record["cc-name"];
+    let type = lazy.CreditCard.getType(number);
     let maskedNumber = lazy.CreditCard.getMaskedNumber(number);
     let description = `${maskedNumber}` + (name ? `, ${name}` : ``);
 
-    // Overwrite the guid if there is a duplicate
-    let doorhangerType;
-    const duplicateRecord = (await storage.getDuplicateRecords(record).next())
-      .value;
-    if (duplicateRecord) {
-      doorhangerType = "updateCreditCard";
-    } else {
-      doorhangerType = "addCreditCard";
-    }
-
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
-      doorhangerType,
+      creditCard,
+      creditCard.guid ? "updateCreditCard" : "addCreditCard",
       description,
-      { network, flowId }
+      type
     );
 
     if (state == "cancel") {
@@ -465,28 +422,18 @@ let FormAutofillPrompter = {
       return;
     }
 
-    this._updateStorageAfterInteractWithPrompt(
-      state,
-      storage,
-      record,
-      duplicateRecord?.guid
-    );
-  },
-
-  async _updateStorageAfterInteractWithPrompt(
-    state,
-    storage,
-    record,
-    guid = null
-  ) {
     let changedGUID = null;
     if (state == "create" || state == "save") {
-      changedGUID = await storage.add(record);
+      changedGUID = await storage.creditCards.add(creditCard.record);
     } else if (state == "update") {
-      await storage.update(guid, record, true);
-      changedGUID = guid;
+      await storage.creditCards.update(
+        creditCard.guid,
+        creditCard.record,
+        true
+      );
+      changedGUID = creditCard.guid;
     }
-    storage.notifyUsed(changedGUID);
+    storage.creditCards.notifyUsed(changedGUID);
   },
 
   _getUpdatedCCIcon(network) {
@@ -496,26 +443,25 @@ let FormAutofillPrompter = {
   /**
    * Show different types of doorhanger by leveraging PopupNotifications.
    *
-   * @param {XULElement} browser Target browser element for showing doorhanger.
-   * @param {string} type The type of the doorhanger. There will have first time use/update/credit card.
-   * @param {string} description The message that provides more information on doorhanger.
-   * @param {object} [options = {}] a list of options for this method
-   * @param {string} options.network The network type for credit card doorhangers.
-   * @param {string} options.flowId guid used to correlate events relating to the same form
+   * @param  {XULElement} browser Target browser element for showing doorhanger.
+   * @param  {object} record The record being saved
+   * @param  {string} type The type of the doorhanger. There will have first time use/update/credit card.
+   * @param  {string} description The message that provides more information on doorhanger.
+   * @param  {string} network The network type for credit card doorhangers.
    * @returns {Promise} Resolved with action type when action callback is triggered.
    */
   async _showCCorAddressCaptureDoorhanger(
     browser,
+    record,
     type,
     description,
-    { network, flowId }
+    network
   ) {
-    const telemetryType = type.endsWith("CreditCard")
+    const telemetryType = ["updateCreditCard", "addCreditCard"].includes(type)
       ? AutofillTelemetry.CREDIT_CARD
       : AutofillTelemetry.ADDRESS;
-    const isCapture = type.startsWith("add");
 
-    AutofillTelemetry.recordDoorhangerShown(telemetryType, flowId, isCapture);
+    AutofillTelemetry.recordDoorhangerShown(telemetryType, record);
 
     lazy.log.debug("show doorhanger with type:", type);
     return new Promise(resolve => {
@@ -552,7 +498,7 @@ let FormAutofillPrompter = {
         this._addCheckboxListener(browser, { notificationId, options });
 
         // There's no preferences link or other customization in first time use doorhanger.
-        if (type == "addFirstTimeUse") {
+        if (type == "firstTimeUse") {
           return;
         }
 
@@ -587,12 +533,7 @@ let FormAutofillPrompter = {
         options
       );
     }).then(state => {
-      AutofillTelemetry.recordDoorhangerClicked(
-        telemetryType,
-        state,
-        flowId,
-        isCapture
-      );
+      AutofillTelemetry.recordDoorhangerClicked(telemetryType, state, record);
       return state;
     });
   },

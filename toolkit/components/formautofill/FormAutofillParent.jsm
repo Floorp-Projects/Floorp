@@ -476,30 +476,107 @@ class FormAutofillParent extends JSWindowActorParent {
   }
 
   async _onAddressSubmit(address, browser) {
-    const storage = lazy.gFormAutofillStorage.addresses;
-    // Make sure record is normalized before comparing with records in the storage
-    storage._normalizeRecord(address.record);
+    let showDoorhanger = null;
 
-    // If the record alreay exists in the storage, don't bother showing the prompt
-    const matchRecord = (await storage.getMatchRecords(address.record).next())
-      .value;
-    if (matchRecord) {
-      storage.notifyUsed(matchRecord.guid);
-      return false;
-    }
-
+    // Bug 1808176 - We should always ecord used count in this function regardless
+    // whether capture is enabled or not.
     if (!FormAutofill.isAutofillAddressesCaptureEnabled) {
-      return false;
+      return showDoorhanger;
     }
-
-    return async () => {
-      await lazy.FormAutofillPrompter.promptToSaveAddress(
-        browser,
-        storage,
-        address.record,
-        address.flowId
+    if (address.guid) {
+      // Avoid updating the fields that users don't modify.
+      let originalAddress = await lazy.gFormAutofillStorage.addresses.get(
+        address.guid
       );
-    };
+      for (let field in address.record) {
+        if (address.untouchedFields.includes(field) && originalAddress[field]) {
+          address.record[field] = originalAddress[field];
+        }
+      }
+
+      if (
+        !(await lazy.gFormAutofillStorage.addresses.mergeIfPossible(
+          address.guid,
+          address.record,
+          true
+        ))
+      ) {
+        showDoorhanger = async () => {
+          const description = FormAutofillUtils.getAddressLabel(address.record);
+          const state = await lazy.FormAutofillPrompter.promptToSaveAddress(
+            browser,
+            address,
+            description
+          );
+
+          // Bug 1808176 : We should sync how we run the following code with Credit Card
+          let changedGUIDs = await lazy.gFormAutofillStorage.addresses.mergeToStorage(
+            address.record,
+            true
+          );
+          switch (state) {
+            case "create":
+              if (!changedGUIDs.length) {
+                changedGUIDs.push(
+                  await lazy.gFormAutofillStorage.addresses.add(address.record)
+                );
+              }
+              break;
+            case "update":
+              if (!changedGUIDs.length) {
+                await lazy.gFormAutofillStorage.addresses.update(
+                  address.guid,
+                  address.record,
+                  true
+                );
+                changedGUIDs.push(address.guid);
+              } else {
+                lazy.gFormAutofillStorage.addresses.remove(address.guid);
+              }
+              break;
+          }
+          changedGUIDs.forEach(guid =>
+            lazy.gFormAutofillStorage.addresses.notifyUsed(guid)
+          );
+        };
+      } else {
+        lazy.gFormAutofillStorage.addresses.notifyUsed(address.guid);
+      }
+    } else {
+      let changedGUIDs = await lazy.gFormAutofillStorage.addresses.mergeToStorage(
+        address.record
+      );
+      if (!changedGUIDs.length) {
+        changedGUIDs.push(
+          await lazy.gFormAutofillStorage.addresses.add(address.record)
+        );
+      }
+      changedGUIDs.forEach(guid =>
+        lazy.gFormAutofillStorage.addresses.notifyUsed(guid)
+      );
+
+      // Show first time use doorhanger
+      if (FormAutofill.isAutofillAddressesFirstTimeUse) {
+        Services.prefs.setBoolPref(
+          FormAutofill.ADDRESSES_FIRST_TIME_USE_PREF,
+          false
+        );
+        showDoorhanger = async () => {
+          const description = FormAutofillUtils.getAddressLabel(address.record);
+          const state = await lazy.FormAutofillPrompter.promptToSaveAddress(
+            browser,
+            address,
+            description
+          );
+          if (state !== "open-pref") {
+            return;
+          }
+
+          browser.ownerGlobal.openPreferences("privacy-address-autofill");
+        };
+      }
+    }
+    return showDoorhanger;
   }
 
   async _onCreditCardSubmit(creditCard, browser) {
@@ -507,16 +584,16 @@ class FormAutofillParent extends JSWindowActorParent {
     // pick it up.
     delete creditCard.record["cc-type"];
 
-    const storage = lazy.gFormAutofillStorage.creditCards;
     // Make sure record is normalized before comparing with records in the storage
-    storage._normalizeRecord(creditCard.record);
+    lazy.gFormAutofillStorage.creditCards._normalizeRecord(creditCard.record);
 
     // If the record alreay exists in the storage, don't bother showing the prompt
-    const matchRecord = (
-      await storage.getMatchRecords(creditCard.record).next()
-    ).value;
+    const getMatchRecord = lazy.gFormAutofillStorage.creditCards.getMatchRecord(
+      creditCard.record
+    );
+    const matchRecord = (await getMatchRecord.next()).value;
     if (matchRecord) {
-      storage.notifyUsed(matchRecord.guid);
+      lazy.gFormAutofillStorage.creditCards.notifyUsed(matchRecord.guid);
       return false;
     }
 
@@ -525,12 +602,20 @@ class FormAutofillParent extends JSWindowActorParent {
       return false;
     }
 
+    // Overwrite the guid if there is a duplicate
+    const getDuplicateRecord = lazy.gFormAutofillStorage.creditCards.getDuplicateRecord(
+      creditCard.record
+    );
+    let existingRecord = (await getDuplicateRecord.next()).value;
+    if (existingRecord) {
+      creditCard.guid = existingRecord.guid;
+    }
+
     return async () => {
       await lazy.FormAutofillPrompter.promptToSaveCreditCard(
         browser,
-        storage,
-        creditCard.record,
-        creditCard.flowId
+        creditCard,
+        lazy.gFormAutofillStorage
       );
     };
   }

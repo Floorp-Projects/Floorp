@@ -1741,92 +1741,6 @@ class AddressesBase extends AutofillRecords {
   async mergeIfPossible(guid, address, strict) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
-
-  compareAddressField(field, a, b, collator) {
-    switch (field) {
-      case "street-address":
-        let ret = lazy.FormAutofillUtils.compareStreetAddress(a, b, collator);
-        return ret;
-      // TODO: support other cases
-      default:
-        return a == b;
-    }
-  }
-
-  /**
-   * Normalize the given record and return records that are either the same
-   * or is superset of the normalized given record.
-   *
-   * See the comments in `getDuplicateRecords` to see the difference between
-   * `getDuplicateRecords` and `getMatchRecords`
-   *
-   * @param {object} record
-   *        The address entry for match checking. please make sure the
-   *        record is normalized.
-   * @returns {object}
-   *          Return the first matched record found in storage, null otherwise.
-   */
-  async *getMatchRecords(record) {
-    const collators = lazy.FormAutofillUtils.getSearchCollators(
-      FormAutofill.DEFAULT_REGION
-    );
-
-    for (const recordInStorage of this._data) {
-      if (
-        this.VALID_FIELDS.every(
-          field =>
-            !record[field] ||
-            this.compareAddressField(
-              field,
-              record[field],
-              recordInStorage[field],
-              collators
-            )
-        )
-      ) {
-        yield recordInStorage;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Normalize the given record and return a duplicate address record in
-   * the storage.
-   *
-   * This is different from `getMatchRecords`, which ensures all the fields with
-   * value in the the record is equal to the returned record.
-   *
-   * @param {object} record
-   *        The address entry for duplication checking. please make sure the
-   *        record is normalized.
-   * @returns {object}
-   *          Return the first duplicated record found in storage, null otherwise.
-   */
-  async *getDuplicateRecords(record) {
-    const collators = lazy.FormAutofillUtils.getSearchCollators(
-      FormAutofill.DEFAULT_REGION
-    );
-
-    for (const recordInStorage of this._data) {
-      if (
-        this.VALID_FIELDS.every(
-          field =>
-            !record[field] ||
-            !recordInStorage[field] ||
-            this.compareAddressField(
-              field,
-              record[field],
-              recordInStorage[field],
-              collators
-            )
-        )
-      ) {
-        yield recordInStorage;
-      }
-    }
-    return null;
-  }
 }
 
 class CreditCardsBase extends AutofillRecords {
@@ -2071,8 +1985,8 @@ class CreditCardsBase extends AutofillRecords {
    * Find a match credit card record in storage that is either exactly the same
    * as the given record or a superset of the given record.
    *
-   * See the comments in `getDuplicateRecords` to see the difference between
-   * `getDuplicateRecords` and `getMatchRecords`
+   * See the comments in `getDuplicateRecord` to see the difference between
+   * `getDuplicateRecord` and `getMatchRecord`
    *
    * @param {object} record
    *        The credit card for match checking. please make sure the
@@ -2080,8 +1994,8 @@ class CreditCardsBase extends AutofillRecords {
    * @returns {object}
    *          Return the first matched record found in storage, null otherwise.
    */
-  async *getMatchRecords(record) {
-    for await (const recordInStorage of this.getDuplicateRecords(record)) {
+  async *getMatchRecord(record) {
+    for await (const recordInStorage of this.getDuplicateRecord(record)) {
       const fields = this.VALID_FIELDS.filter(f => f != "cc-number");
       if (
         fields.every(
@@ -2102,7 +2016,7 @@ class CreditCardsBase extends AutofillRecords {
    * different. For example, one record has the same credit card number but has
    * different expiration date as the other record are still considered as
    * "duplicate".
-   * This is different from `getMatchRecords`, which ensures all the fields with
+   * This is different from `getMatchRecord`, which ensures all the fields with
    * value in the the record is equal to the returned record.
    *
    * @param {object} record
@@ -2111,7 +2025,7 @@ class CreditCardsBase extends AutofillRecords {
    * @returns {object}
    *          Return the first duplicated record found in storage, null otherwise.
    */
-  async *getDuplicateRecords(record) {
+  async *getDuplicateRecord(record) {
     if (!record["cc-number"]) {
       return null;
     }
