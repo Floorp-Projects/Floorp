@@ -1361,8 +1361,7 @@ void gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet,
   // a family is actually used, it will be populated with gfxFontEntry
   // records and the patterns moved to those.
 
-  if (!aFontSet) {
-    NS_WARNING("AddFontSetFamilies called with a null font set.");
+  if (NS_WARN_IF(!aFontSet)) {
     return;
   }
 
@@ -1831,6 +1830,9 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   auto addFontSetFamilies = [&addPattern](FcFontSet* aFontSet,
                                           SandboxPolicy* aPolicy,
                                           bool aAppFonts) -> void {
+    if (NS_WARN_IF(!aFontSet)) {
+      return;
+    }
     FcChar8* lastFamilyName = (FcChar8*)"";
     RefPtr<gfxFontconfigFontFamily> fontFamily;
     nsAutoCString familyName;
