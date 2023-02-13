@@ -191,8 +191,11 @@ enum {
   NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(16),
 
   NODE_KEEPS_DOMARENA = NODE_FLAG_BIT(17),
+
+  NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(18),
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 18
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 19
 };
 
 // Make sure we have space for our bits

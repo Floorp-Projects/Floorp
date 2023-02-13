@@ -12,7 +12,9 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=Window]
+// Use ProbablyShortLivingWrapper so that the Range object could be deleted
+// as soon as possible, and thus slow down DOM operations less.
+[Exposed=Window, ProbablyShortLivingWrapper]
 interface Range : AbstractRange {
   [Throws]
   constructor();

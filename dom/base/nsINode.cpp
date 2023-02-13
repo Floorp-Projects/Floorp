@@ -140,7 +140,15 @@ void nsINode::operator delete(void* aPtr) { free_impl(aPtr); }
 bool nsINode::IsInclusiveDescendantOf(const nsINode* aNode) const {
   MOZ_ASSERT(aNode, "The node is nullptr.");
 
-  for (nsINode* node : InclusiveAncestors(*this)) {
+  if (aNode == this) {
+    return true;
+  }
+
+  if (!aNode->HasFlag(NODE_MAY_HAVE_ELEMENT_CHILDREN)) {
+    return GetParentNode() == aNode;
+  }
+
+  for (nsINode* node : Ancestors(*this)) {
     if (node == aNode) {
       return true;
     }
