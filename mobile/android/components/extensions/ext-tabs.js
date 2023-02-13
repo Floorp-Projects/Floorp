@@ -142,7 +142,7 @@ this.tabs = class extends ExtensionAPI {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       }
 
-      browser.loadURI(url, {
+      browser.fixupAndLoadURIString(url, {
         flags,
         triggeringPrincipal: principal,
       });
