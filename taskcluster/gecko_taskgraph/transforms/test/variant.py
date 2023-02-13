@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import datetime
+
 import jsone
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, validate_schema
@@ -46,6 +48,30 @@ def split_variants(config, tasks):
     """
     validate_schema(variant_description_schema, TEST_VARIANTS, "In variants.yml:")
 
+    def find_expired_variants(variants):
+        expired = []
+
+        today = datetime.datetime.today()
+        for variant in variants:
+
+            expiration = variants[variant]["expiration"]
+            if len(expiration.split("-")) == 1:
+                continue
+            expires_at = datetime.datetime.strptime(expiration, "%Y-%m-%d")
+            if expires_at < today:
+                expired.append(variant)
+        return expired
+
+    def remove_expired(variants, expired):
+        remaining_variants = []
+        for name in variants:
+            parts = [p for p in name.split("+") if p not in expired]
+            if len(parts) == 0:
+                continue
+
+            remaining_variants.append(name)
+        return remaining_variants
+
     def apply_variant(variant, task):
         task["description"] = variant["description"].format(**task)
 
@@ -65,8 +91,10 @@ def split_variants(config, tasks):
         task.update(variant.get("replace", {}))
         return merge(task, variant.get("merge", {}))
 
+    expired_variants = find_expired_variants(TEST_VARIANTS)
     for task in tasks:
         variants = task.pop("variants", [])
+        variants = remove_expired(variants, expired_variants)
 
         if task.pop("run-without-variant"):
             yield copy_task(task)
