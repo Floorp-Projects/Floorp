@@ -49,9 +49,6 @@ const TEST_NEW_VALUES = {
   "#tel": "1-345-345-3456",
 };
 
-const TEST_UPDATE_PROFILE_2_VALUES = {
-  "#email": "profile2@mozilla.org",
-};
 const TEST_BASIC_ADDRESS_FORM_URL = ADDRESS_FORM_URL;
 const TEST_BASIC_ADDRESS_FORM_WITHOUT_AC_URL = ADDRESS_FORM_WITHOUT_AUTOCOMPLETE_URL;
 // This should be sync with the address fields that appear in TEST_BASIC_ADDRESS_FORM
@@ -439,7 +436,7 @@ add_task(async function test_submit_autofill_profile_update() {
     useCount = {},
     expectChanged = undefined
   ) {
-    await setStorage(TEST_PROFILE_2);
+    await setStorage(TEST_PROFILE);
     let profiles = await getProfiles();
     Assert.equal(profiles.length, 1, "1 entry in storage");
 
@@ -459,11 +456,11 @@ add_task(async function test_submit_autofill_profile_update() {
         await waitForAutofill(
           browser,
           TEST_FOCUS_NAME_FIELD_SELECTOR,
-          TEST_PROFILE_2[TEST_FOCUS_NAME_FIELD]
+          TEST_PROFILE[TEST_FOCUS_NAME_FIELD]
         );
         await focusUpdateSubmitForm(browser, {
           focusSelector: TEST_FOCUS_NAME_FIELD_SELECTOR,
-          newValues: TEST_UPDATE_PROFILE_2_VALUES,
+          newValues: TEST_NEW_VALUES,
         });
         await onPopupShown;
         await clickDoorhangerButton(command, idx);
@@ -497,27 +494,21 @@ add_task(async function test_submit_autofill_profile_update() {
   let expected_content = [
     ...formArgs("detected", {}, fields, "true", "false"),
     ...formArgs("popup_shown", { field_name: TEST_FOCUS_NAME_FIELD }),
-    ...formArgs(
-      "filled",
-      {
-        given_name: "filled",
-        street_address: "filled",
-        country: "filled",
-      },
-      fields,
-      "not_filled",
-      "unavailable"
-    ),
+    ...formArgs("filled", {}, fields, "filled", "unavailable"),
+    ...formArgs("filled_modified", { field_name: "given-name" }),
+    ...formArgs("filled_modified", { field_name: "organization" }),
+    ...formArgs("filled_modified", { field_name: "street-address" }),
+    ...formArgs("filled_modified", { field_name: "tel" }),
     ...formArgs(
       "submitted",
       {
-        given_name: "autofilled",
-        street_address: "autofilled",
-        country: "autofilled",
-        email: "user_filled",
+        given_name: "user_filled",
+        organization: "user_filled",
+        street_address: "user_filled",
+        tel: "user_filled",
       },
       fields,
-      "not_filled",
+      "autofilled",
       "unavailable"
     ),
   ];

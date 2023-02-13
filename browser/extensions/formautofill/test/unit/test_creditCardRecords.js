@@ -747,7 +747,7 @@ add_task(async function test_mergeToStorage() {
   );
 });
 
-add_task(async function test_getDuplicateRecords() {
+add_task(async function test_getDuplicateRecord() {
   let profileStorage = await initProfileStorage(
     TEST_STORE_FILE_NAME,
     [TEST_CREDIT_CARD_3],
@@ -756,38 +756,38 @@ add_task(async function test_getDuplicateRecords() {
   let guid = profileStorage.creditCards._data[0].guid;
 
   // Absolutely a duplicate.
-  let getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
+  let getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(
     TEST_CREDIT_CARD_3
   );
-  let dupe = (await getDuplicateRecords.next()).value;
+  let dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Absolutely not a duplicate.
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(
     TEST_CREDIT_CARD_1
   );
-  dupe = (await getDuplicateRecords.next()).value;
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe, null);
 
   // Subset with the same number is a duplicate.
   let record = Object.assign({}, TEST_CREDIT_CARD_3);
   delete record["cc-exp-month"];
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Superset with the same number is a duplicate.
   record = Object.assign({}, TEST_CREDIT_CARD_3);
   record["cc-name"] = "John Doe";
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Numbers with the same last 4 digits shouldn't be treated as a duplicate.
   record = Object.assign({}, TEST_CREDIT_CARD_3);
   let last4Digits = record["cc-number"].substr(-4);
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // This number differs from TEST_CREDIT_CARD_3 by swapping the order of the
@@ -795,12 +795,12 @@ add_task(async function test_getDuplicateRecords() {
   record["cc-number"] = "358999378390" + last4Digits;
 
   // We don't treat numbers with the same last 4 digits as a duplicate.
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe, null);
 });
 
-add_task(async function test_getDuplicateRecordsMatch() {
+add_task(async function test_getDuplicateRecordMatch() {
   let profileStorage = await initProfileStorage(
     TEST_STORE_FILE_NAME,
     [TEST_CREDIT_CARD_2],
@@ -809,37 +809,37 @@ add_task(async function test_getDuplicateRecordsMatch() {
   let guid = profileStorage.creditCards._data[0].guid;
 
   // Absolutely a duplicate.
-  let getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
+  let getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(
     TEST_CREDIT_CARD_2
   );
-  let dupe = (await getDuplicateRecords.next()).value;
+  let dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // Absolutely not a duplicate.
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(
     TEST_CREDIT_CARD_1
   );
-  dupe = (await getDuplicateRecords.next()).value;
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe, null);
 
   record = Object.assign({}, TEST_CREDIT_CARD_2);
 
   // We change month from `1` to `2`
   record["cc-exp-month"] = 2;
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // We change year from `2000` to `2001`
   record["cc-exp-year"] = 2001;
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 
   // New name, same card
   record["cc-name"] = "John Doe";
-  getDuplicateRecords = profileStorage.creditCards.getDuplicateRecords(record);
-  dupe = (await getDuplicateRecords.next()).value;
+  getDuplicateRecord = profileStorage.creditCards.getDuplicateRecord(record);
+  dupe = (await getDuplicateRecord.next()).value;
   Assert.equal(dupe.guid, guid);
 });
 
@@ -858,18 +858,18 @@ add_task(async function test_getMatchRecord() {
   };
 
   // Absolutely a match.
-  let getMatchRecords = profileStorage.creditCards.getMatchRecords(
+  let getMatchRecord = profileStorage.creditCards.getMatchRecord(
     TEST_CREDIT_CARD_2
   );
-  let match = (await getMatchRecords.next()).value;
+  let match = (await getMatchRecord.next()).value;
   Assert.equal(match.guid, guid);
 
   // Subset with the same number is a match.
   for (const field of Object.keys(TEST_FIELDS)) {
     let record = Object.assign({}, TEST_CREDIT_CARD_2);
     delete record[field];
-    getMatchRecords = profileStorage.creditCards.getMatchRecords(record);
-    match = (await getMatchRecords.next()).value;
+    getMatchRecord = profileStorage.creditCards.getMatchRecord(record);
+    match = (await getMatchRecord.next()).value;
     Assert.equal(match.guid, guid);
   }
 
@@ -879,8 +879,8 @@ add_task(async function test_getMatchRecord() {
       "cc-number": TEST_CREDIT_CARD_1["cc-number"],
     });
     delete record[field];
-    getMatchRecords = profileStorage.creditCards.getMatchRecords(record);
-    match = (await getMatchRecords.next()).value;
+    getMatchRecord = profileStorage.creditCards.getMatchRecord(record);
+    match = (await getMatchRecord.next()).value;
     Assert.equal(match, null);
   }
 
@@ -888,8 +888,8 @@ add_task(async function test_getMatchRecord() {
   for (const [field, value] of Object.entries(TEST_FIELDS)) {
     let record = Object.assign({}, TEST_CREDIT_CARD_2);
     record[field] = value;
-    getMatchRecords = profileStorage.creditCards.getMatchRecords(record);
-    match = (await getMatchRecords.next()).value;
+    getMatchRecord = profileStorage.creditCards.getMatchRecord(record);
+    match = (await getMatchRecord.next()).value;
     Assert.equal(match, null);
   }
 
@@ -899,8 +899,8 @@ add_task(async function test_getMatchRecord() {
       "cc-number": TEST_CREDIT_CARD_1["cc-number"],
     });
     record[field] = value;
-    getMatchRecords = profileStorage.creditCards.getMatchRecords(record);
-    match = (await getMatchRecords.next()).value;
+    getMatchRecord = profileStorage.creditCards.getMatchRecord(record);
+    match = (await getMatchRecord.next()).value;
     Assert.equal(match, null);
   }
 });

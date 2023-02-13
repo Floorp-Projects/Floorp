@@ -55,7 +55,7 @@ add_task(async function test_iframe_autocomplete() {
   await focusUpdateSubmitForm(iframeBC, {
     focusSelector: "#organization",
     newValues: {
-      "#tel": "+16172535702",
+      "#organization": "Example Inc.",
     },
   });
   await onPopupShown;
@@ -65,17 +65,21 @@ add_task(async function test_iframe_autocomplete() {
   await clickDoorhangerButton(MAIN_BUTTON);
   await onUpdated;
 
-  // Check that the tel number was updated properly.
+  // Check that the organization was updated properly.
   let addresses = await getAddresses();
   is(addresses.length, 3, "Still 1 address in storage");
-  is(addresses[1].tel, "+16172535702", "Verify the tel field");
+  is(
+    addresses[1].organization,
+    "Example Inc.",
+    "Verify the organization field"
+  );
 
   // Fill in the details again and then clear the form from the dropdown.
   await openPopupOnSubframe(browser, iframeBC, "#street-address");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  await waitForAutofill(iframeBC, "#tel", "+16172535702");
+  await waitForAutofill(iframeBC, "#organization", "Example Inc.");
 
   // Open the dropdown and select the Clear Form item.
   await openPopupOnSubframe(browser, iframeBC, "#street-address");
@@ -106,7 +110,7 @@ add_task(async function test_iframe_autocomplete_preferences() {
   let iframeBC = browser.browsingContext.children[1];
   await openPopupOnSubframe(browser, iframeBC, "#organization");
 
-  await expectWarningText(browser, "Also autofills address, phone, email");
+  await expectWarningText(browser, "Also autofills address, email");
 
   const prefTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
