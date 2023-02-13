@@ -21,8 +21,9 @@
 function getActiveBrowserID() {
   const win = Services.wm.getMostRecentWindow("navigator:browser");
 
-  if (win?.gBrowser?.selectedBrowser?.browsingContext?.browserId) {
-    return win.gBrowser.selectedBrowser.browsingContext.browserId;
+  const browserId = win?.gBrowser?.selectedBrowser?.browsingContext?.browserId;
+  if (browserId) {
+    return browserId;
   }
 
   console.error(
