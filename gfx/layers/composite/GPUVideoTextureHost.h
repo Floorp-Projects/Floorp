@@ -68,6 +68,8 @@ class GPUVideoTextureHost : public TextureHost {
 
   TextureHostType GetTextureHostType() override;
 
+  bool NeedsDeferredDeletion() const override;
+
  protected:
   GPUVideoTextureHost(TextureFlags aFlags,
                       const SurfaceDescriptorGPUVideo& aDescriptor);
