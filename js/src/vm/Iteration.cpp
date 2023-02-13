@@ -835,11 +835,23 @@ static inline size_t AllocationSize(size_t propertyCount, size_t shapeCount,
 
 static PropertyIteratorObject* CreatePropertyIterator(
     JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
-    bool supportsIndices, PropertyIndexVector* indices, uint32_t numShapes) {
+    bool supportsIndices, PropertyIndexVector* indices,
+    uint32_t cacheableProtoChainLength) {
   MOZ_ASSERT_IF(indices, supportsIndices);
   if (props.length() > NativeIterator::PropCountLimit) {
     ReportAllocationOverflow(cx);
     return nullptr;
+  }
+
+  bool hasIndices = !!indices;
+
+  // If the iterator is cacheable, we store the shape of each object
+  // along the proto chain in the iterator. If the iterator is not
+  // cacheable, but has indices, then we store one shape (the shape of
+  // the object being iterated.)
+  uint32_t numShapes = cacheableProtoChainLength;
+  if (numShapes == 0 && hasIndices) {
+    numShapes = 1;
   }
 
   Rooted<PropertyIteratorObject*> propIter(cx, NewPropertyIteratorObject(cx));
@@ -848,7 +860,7 @@ static PropertyIteratorObject* CreatePropertyIterator(
   }
 
   void* mem = cx->pod_malloc_with_extra<NativeIterator, uint8_t>(
-      NumTrailingBytes(props.length(), numShapes, !!indices));
+      NumTrailingBytes(props.length(), numShapes, hasIndices));
   if (!mem) {
     return nullptr;
   }
@@ -938,29 +950,25 @@ NativeIterator::NativeIterator(JSContext* cx,
     // which incorporates Shape* addresses that could have changed during a GC
     // triggered in (among other places) |IdToString| above.
     JSObject* pobj = objBeingIterated;
-#ifdef DEBUG
-    uint32_t i = 0;
-#endif
     HashNumber shapesHash = 0;
-    do {
+    for (uint32_t i = 0; i < numShapes; i++) {
       MOZ_ASSERT(pobj->is<NativeObject>());
       Shape* shape = pobj->shape();
       new (shapesEnd_) GCPtr<Shape*>(shape);
       shapesEnd_++;
-#ifdef DEBUG
-      i++;
-#endif
-
       shapesHash = mozilla::AddToHash(shapesHash, HashIteratorShape(shape));
-
-      // The one caller of this method that passes |numShapes > 0|, does
-      // so only if the entire chain consists of cacheable objects (that
-      // necessarily have static prototypes).
       pobj = pobj->staticPrototype();
-    } while (pobj);
-
+    }
     shapesHash_ = shapesHash;
-    MOZ_ASSERT(i == numShapes);
+
+    // There are two cases in which we need to store shapes. If this
+    // iterator is cacheable, we store the shapes for the entire proto
+    // chain so we can check that the cached iterator is still valid
+    // (see MacroAssembler::maybeLoadIteratorFromShape). If this iterator
+    // has indices, then even if it isn't cacheable we need to store the
+    // shape of the iterated object itself (see IteratorHasIndicesAndBranch).
+    // In the former case, assert that we're storing the entire proto chain.
+    MOZ_ASSERT_IF(numShapes > 1, pobj == nullptr);
   }
   MOZ_ASSERT(static_cast<void*>(shapesEnd_) == propertyCursor_);
 
@@ -1032,8 +1040,8 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
 }
 
 static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
-    JSContext* cx, JSObject* obj, uint32_t* numShapes) {
-  MOZ_ASSERT(*numShapes == 0);
+    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength) {
+  MOZ_ASSERT(*cacheableProtoChainLength == 0);
 
   if (obj->shape()->cache().isIterator() &&
       CanCompareIterableObjectToCache(obj)) {
@@ -1057,7 +1065,7 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
       }
     }
     MOZ_ASSERT(CanStoreInIteratorCache(obj));
-    *numShapes = ni->shapeCount();
+    *cacheableProtoChainLength = ni->shapeCount();
     return iterobj;
   }
 
@@ -1082,7 +1090,7 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
   } while (pobj);
 
   MOZ_ASSERT(!shapes.empty());
-  *numShapes = shapes.length();
+  *cacheableProtoChainLength = shapes.length();
 
   IteratorHashPolicy::Lookup lookup(shapes.begin(), shapes.length(),
                                     shapesHash);
@@ -1205,9 +1213,9 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   MOZ_ASSERT(cx->compartment() == obj->compartment(),
              "We may end up allocating shapes in the wrong zone!");
 
-  uint32_t numShapes = 0;
+  uint32_t cacheableProtoChainLength = 0;
   if (PropertyIteratorObject* iterobj =
-          LookupInIteratorCache(cx, obj, &numShapes)) {
+          LookupInIteratorCache(cx, obj, &cacheableProtoChainLength)) {
     NativeIterator* ni = iterobj->getNativeIterator();
     bool recreateWithIndices = WantIndices && ni->indicesAvailableOnRequest();
     if (!recreateWithIndices) {
@@ -1219,8 +1227,8 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
     }
   }
 
-  if (numShapes > 0 && !CanStoreInIteratorCache(obj)) {
-    numShapes = 0;
+  if (cacheableProtoChainLength > 0 && !CanStoreInIteratorCache(obj)) {
+    cacheableProtoChainLength = 0;
   }
 
   RootedIdVector keys(cx);
@@ -1260,7 +1268,7 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   PropertyIndexVector* indicesPtr =
       WantIndices && supportsIndices ? &indices : nullptr;
   PropertyIteratorObject* iterobj = CreatePropertyIterator(
-      cx, obj, keys, supportsIndices, indicesPtr, numShapes);
+      cx, obj, keys, supportsIndices, indicesPtr, cacheableProtoChainLength);
   if (!iterobj) {
     return nullptr;
   }
@@ -1280,7 +1288,7 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
 #endif
 
   // Cache the iterator object.
-  if (numShapes > 0) {
+  if (cacheableProtoChainLength > 0) {
     if (!StoreInIteratorCache(cx, obj, iterobj)) {
       return nullptr;
     }
@@ -1300,8 +1308,8 @@ PropertyIteratorObject* js::GetIteratorWithIndices(JSContext* cx,
 
 PropertyIteratorObject* js::LookupInIteratorCache(JSContext* cx,
                                                   HandleObject obj) {
-  uint32_t numShapes = 0;
-  return LookupInIteratorCache(cx, obj, &numShapes);
+  uint32_t dummy = 0;
+  return LookupInIteratorCache(cx, obj, &dummy);
 }
 
 // ES 2017 draft 7.4.7.
