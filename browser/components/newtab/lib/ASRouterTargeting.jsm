@@ -22,7 +22,6 @@ const { ShellService } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -34,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",

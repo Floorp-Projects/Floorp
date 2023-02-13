@@ -3,8 +3,8 @@
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { AttributionCode } = ChromeUtils.importESModule(
-  "resource:///modules/AttributionCode.sys.mjs"
+const { AttributionCode } = ChromeUtils.import(
+  "resource:///modules/AttributionCode.jsm"
 );
 const { AddonRepository } = ChromeUtils.import(
   "resource://gre/modules/addons/AddonRepository.jsm"

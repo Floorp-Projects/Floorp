@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { AttributionCode } = ChromeUtils.importESModule(
-  "resource:///modules/AttributionCode.sys.mjs"
+const { AttributionCode } = ChromeUtils.import(
+  "resource:///modules/AttributionCode.jsm"
 );
 
 // Keep in sync with `BROWSER_ATTRIBUTION_ERRORS` in Histograms.json.
