@@ -22,7 +22,7 @@ function getter(obj, name) {
 
 const TypedArray = Reflect.getPrototypeOf(Int8Array);
 
-module.exports = [
+const allowList = [
   Array,
   Array.from,
   Array.isArray,
@@ -193,3 +193,21 @@ module.exports = [
   getter(TypedArray.prototype, Symbol.toStringTag),
   getter(TypedArray, Symbol.species),
 ];
+
+// TODO: Integrate in main list when changes array by copy ships by default
+const changesArrayByCopy = [
+  Array.prototype.toReversed,
+  Array.prototype.toSorted,
+  Array.prototype.toSpliced,
+  Array.prototype.with,
+  TypedArray.prototype.toReversed,
+  TypedArray.prototype.toSorted,
+  TypedArray.prototype.with,
+];
+for (const fn of changesArrayByCopy) {
+  if (typeof fn == "function") {
+    allowList.push(fn);
+  }
+}
+
+module.exports = allowList;
