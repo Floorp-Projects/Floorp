@@ -15,7 +15,7 @@ from tryselect.task_config import Pernosco, all_task_configs
 TASK_CONFIG_TESTS = {
     "artifact": [
         (["--no-artifact"], None),
-        (["--artifact"], {"use-artifact-builds": True}),
+        (["--artifact"], {"use-artifact-builds": True, "disable-pgo": True}),
     ],
     "chemspill-prio": [
         ([], None),
