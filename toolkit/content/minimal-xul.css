@@ -17,7 +17,6 @@
 
 * {
   -moz-user-focus: ignore;
-  user-select: none;
   display: -moz-box;
   box-sizing: border-box;
 }
@@ -92,7 +91,6 @@
      * cannot match :root, so no need to duplicate them.
      */
     -moz-user-focus: ignore;
-    user-select: none;
     display: -moz-box;
     box-sizing: border-box;
   }
@@ -204,7 +202,7 @@ thumb[collapsed="true"] {
   visibility: hidden;
 }
 
-scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb, resizer {
   user-select: none;
 }
 
