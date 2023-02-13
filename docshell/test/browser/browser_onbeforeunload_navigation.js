@@ -99,7 +99,7 @@ add_task(async function test() {
         // page after each test, since the tests will each navigate away
         // from it.
         await promiseLoaded(TEST_PAGE, () => {
-          browser.loadURI(TEST_PAGE, {
+          browser.loadURI(Services.io.newURI(TEST_PAGE), {
             triggeringPrincipal: document.nodePrincipal,
           });
         });

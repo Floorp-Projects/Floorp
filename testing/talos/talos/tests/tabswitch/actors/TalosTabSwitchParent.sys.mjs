@@ -230,7 +230,7 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
     // We'll switch back to about:blank after each tab switch
     // in an attempt to put the graphics layer into a "steady"
     // state before switching to the next tab.
-    initialTab.linkedBrowser.loadURI("about:blank", {
+    initialTab.linkedBrowser.loadURI(Services.io.newURI("about:blank"), {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
       ),

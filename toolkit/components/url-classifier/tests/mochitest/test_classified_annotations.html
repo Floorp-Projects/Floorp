@@ -31,7 +31,7 @@ function testOnWindow() {
                               subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
-            win.gBrowser.loadURI(contentPage, {
+            win.gBrowser.loadURI(Services.io.newURI(contentPage), {
               triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
             });
             return;
@@ -47,7 +47,7 @@ function testOnWindow() {
           }, false, true);
         }, true);
         SimpleTest.executeSoon(function() {
-          win.gBrowser.loadURI(contentPage, {
+          win.gBrowser.loadURI(Services.io.newURI(contentPage), {
             triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
           });
         });

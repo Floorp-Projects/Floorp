@@ -124,7 +124,10 @@ var waitForLoad = async function(uri) {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     referrerInfo,
   };
-  gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
+  gBrowser.selectedBrowser.webNavigation.loadURI(
+    Services.io.newURI(uri),
+    loadURIOptions
+  );
 
   await BrowserTestUtils.browserStopped(gBrowser, uri);
 };

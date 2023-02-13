@@ -27,13 +27,13 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href == "about:privatebrowsing") {
-        win.gBrowser.loadURI(contentPage);
+        win.gBrowser.loadURI(Services.io.newURI(contentPage));
         return;
       }
       win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
       SimpleTest.executeSoon(function() { aCallback(win); });
     }, true);
-    win.gBrowser.loadURI(contentPage);
+    win.gBrowser.loadURI(Services.io.newURI(contentPage));
   }, {capture: true, once: true});
 }
 

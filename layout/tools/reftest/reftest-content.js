@@ -1157,7 +1157,7 @@ function LoadURI(uri)
     let loadURIOptions = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
-    webNavigation().loadURI(uri, loadURIOptions);
+    webNavigation().loadURI(Services.io.newURI(uri), loadURIOptions);
 }
 
 function LogError(str)

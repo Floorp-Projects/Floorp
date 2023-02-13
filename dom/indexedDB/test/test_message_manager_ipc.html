@@ -206,7 +206,7 @@ async function chromeScriptFunc() {
 
   const system = Services.scriptSecurityManager.getSystemPrincipal();
   browser.loadURI(
-    "data:text/html,<!DOCTYPE HTML><html><body></body></html>",
+    Services.io.newURI("data:text/html,<!DOCTYPE HTML><html><body></body></html>"),
     { triggeringPrincipal: system }
   );
 
