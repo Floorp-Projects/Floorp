@@ -202,7 +202,7 @@ static_assert(sizeof STRUCTURED_CLONE_MAGIC % 8 == 0,
               "Magic number should be an array of uint64_t");
 
 /**
- * Reads the contents of a LZ4-compressed file, as stored by the OS.File
+ * Reads the contents of a LZ4-compressed file, as stored by the IOUtils
  * module, and returns the decompressed contents on success.
  */
 static Result<nsCString, nsresult> ReadFileLZ4(nsIFile* file) {

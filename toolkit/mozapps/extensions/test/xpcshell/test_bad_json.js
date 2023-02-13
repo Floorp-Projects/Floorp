@@ -22,7 +22,9 @@ add_task(async function() {
 
   // First startup/shutdown finished
   // Replace the JSON store with something bogus
-  await saveJSON({ not: "what we expect to find" }, gExtensionsJSON.path);
+  await IOUtils.writeJSON(gExtensionsJSON.path, {
+    not: "what we expect to find",
+  });
 
   await promiseStartupManager();
   // Retrieve an addon to force the database to rebuild
@@ -33,7 +35,7 @@ add_task(async function() {
   await promiseShutdownManager();
 
   // Make sure our JSON database has schemaVersion and our installed extension
-  let data = await loadJSON(gExtensionsJSON.path);
+  let data = await IOUtils.readJSON(gExtensionsJSON.path);
   Assert.ok("schemaVersion" in data);
   Assert.equal(data.addons[0].id, ID);
 });

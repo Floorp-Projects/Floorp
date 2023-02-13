@@ -292,14 +292,13 @@ async function getSystemAddonDirectories() {
   const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
   let subdirs = [];
 
-  if (await OS.File.exists(updatesDir.path)) {
-    let iterator = new OS.File.DirectoryIterator(updatesDir.path);
-    await iterator.forEach(entry => {
-      if (entry.isDir) {
-        subdirs.push(entry);
+  if (await IOUtils.exists(updatesDir.path)) {
+    for (const child of await IOUtils.getChildren(updatesDir.path)) {
+      const stat = await IOUtils.stat(child);
+      if (stat.type === "directory") {
+        subdirs.push(child);
       }
-    });
-    iterator.close();
+    }
   }
 
   return subdirs;

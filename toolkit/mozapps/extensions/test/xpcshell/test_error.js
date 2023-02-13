@@ -24,10 +24,7 @@ add_task(async function run_test_1() {
 // Checks that a corrupt file shows an error
 add_task(async function run_test_2() {
   let xpi = AddonTestUtils.allocTempXPIFile();
-  await OS.File.writeAtomic(
-    xpi.path,
-    new TextEncoder().encode("this is not a zip file")
-  );
+  await IOUtils.writeUTF8(xpi.path, "this is not a zip file");
 
   let install = await AddonManager.getInstallForFile(xpi);
   Assert.notEqual(install, null);
