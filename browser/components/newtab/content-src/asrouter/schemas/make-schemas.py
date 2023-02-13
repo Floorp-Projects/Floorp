@@ -91,8 +91,9 @@ SCHEMAS = [
             ),
         },
         bundle_common=True,
-        # These are generated via extract-test-corpus.js
         test_corpus={
+            "ReachExperiments": Path("corpus", "ReachExperiments.messages.json"),
+            # These are generated via extract-test-corpus.js
             "CFRMessageProvider": Path("corpus", "CFRMessageProvider.messages.json"),
             "OnboardingMessageProvider": Path(
                 "corpus", "OnboardingMessageProvider.messages.json"
@@ -316,57 +317,42 @@ def bundle_schema(schema_def: SchemaDefinition):
         "$id": schema_def.schema_id,
         "title": "Messaging Experiment",
         "description": "A Firefox Messaging System message.",
-        # A message must be one of
-        # - an empty message (i.e., a completely empty object), which is the
-        #   equivalent of an experiment branch not providing a message; or
-        # - An object that contains a template field
-        "oneOf": [
-            {
-                "description": "An empty FxMS message.",
-                "type": "object",
-                "additionalProperties": False,
-            },
-            {
-                "allOf": [
-                    # Ensure each message has all the fields defined in the base
-                    # Message type.
-                    #
-                    # This is slightly redundant because each message should
-                    # already inherit from this message type, but it is easier
-                    # to add this requirement here than to verify that each
-                    # message's schema is properly inheriting.
-                    {"$ref": f"{schema_def.schema_id}#/$defs/Message"},
-                    # For each message type, create a subschema that says if the
-                    # template field matches a value for a message type defined
-                    # in MESSAGE_TYPES, then the message must also match the
-                    # schema for that message type.
-                    #
-                    # This is done using `allOf: [{ if, then }]` instead of `oneOf: []`
-                    # because it provides better error messages. Using `if-then`
-                    # will only show validation errors for the sub-schema that
-                    # matches template, whereas using `oneOf` will show
-                    # validation errors for *all* sub-schemas, which makes
-                    # debugging messages much harder.
-                    *(
-                        {
-                            "if": {
-                                "type": "object",
-                                "properties": {
-                                    "template": {
-                                        "type": "string",
-                                        "enum": templates[message_type],
-                                    },
-                                },
-                                "required": ["template"],
+        "allOf": [
+            # Ensure each message has all the fields defined in the base
+            # Message type.
+            #
+            # This is slightly redundant because each message should
+            # already inherit from this message type, but it is easier
+            # to add this requirement here than to verify that each
+            # message's schema is properly inheriting.
+            {"$ref": f"{schema_def.schema_id}#/$defs/Message"},
+            # For each message type, create a subschema that says if the
+            # template field matches a value for a message type defined
+            # in MESSAGE_TYPES, then the message must also match the
+            # schema for that message type.
+            #
+            # This is done using `allOf: [{ if, then }]` instead of `oneOf: []`
+            # because it provides better error messages. Using `if-then`
+            # will only show validation errors for the sub-schema that
+            # matches template, whereas using `oneOf` will show
+            # validation errors for *all* sub-schemas, which makes
+            # debugging messages much harder.
+            *(
+                {
+                    "if": {
+                        "type": "object",
+                        "properties": {
+                            "template": {
+                                "type": "string",
+                                "enum": templates[message_type],
                             },
-                            "then": {
-                                "$ref": f"{schema_def.schema_id}#/$defs/{message_type}"
-                            },
-                        }
-                        for message_type in schema_def.message_types
-                    ),
-                ],
-            },
+                        },
+                        "required": ["template"],
+                    },
+                    "then": {"$ref": f"{schema_def.schema_id}#/$defs/{message_type}"},
+                }
+                for message_type in schema_def.message_types
+            ),
         ],
         "$defs": defs,
     }

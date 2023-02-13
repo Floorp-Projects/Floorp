@@ -3,37 +3,28 @@
   "$id": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "oneOf": [
+  "allOf": [
     {
-      "description": "An empty FxMS message.",
-      "type": "object",
-      "additionalProperties": false
+      "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
     },
     {
-      "allOf": [
-        {
-          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "toast_notification"
-                ]
-              }
-            },
-            "required": [
-              "template"
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "toast_notification"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
           }
-        }
-      ]
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
+      }
     }
   ],
   "$defs": {
@@ -240,11 +231,20 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "id",
-        "content",
-        "template"
-      ]
+      "dependentRequired": {
+        "id": [
+          "content",
+          "template"
+        ],
+        "content": [
+          "id",
+          "template"
+        ],
+        "template": [
+          "id",
+          "content"
+        ]
+      }
     },
     "localizedText": {
       "type": "object",

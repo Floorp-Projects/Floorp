@@ -1,0 +1,17 @@
+[
+ {
+    "trigger": {
+      "id": "defaultBrowserCheck"
+    },
+    "targeting": "source == 'startup' && !isMajorUpgrade && !activeNotifications && totalBookmarksCount == 5"
+  },
+  {
+    "groups": [
+      "eco"
+    ],
+    "trigger": {
+      "id": "defaultBrowserCheck"
+    },
+    "targeting": "source == 'startup' && !isMajorUpgrade && !activeNotifications && totalBookmarksCount == 5"
+  }
+]
