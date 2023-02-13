@@ -18,5 +18,4 @@ DIRS += [
     "extensions",
     "locales",
     "themes",
-    "fonts",
 ]
