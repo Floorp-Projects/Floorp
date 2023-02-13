@@ -14,7 +14,7 @@ This project has a few different views explained below.
 
 This is a simplified recording panel that includes a preset dropdown. It's embedded in the DevTools. It's not the preferred way to use the profiler, but is included so that users are comfortable with existing workflows. This is built using React/Redux. The store's code is shared by all the views, but each view initializes it separately. The popup does not use React/Redux (explained later). When editing a custom preset, it takes you to "about:profiling" in a new tab.
 
-This panel works similarly to the other DevTools panels. The `devtools/client/performance-new/initializer.js` is in charge of initializing the page specifically for the DevTools workflow. This script creates a `PerfActor` that is then used for talking to the Gecko Profiler component.
+This panel works similarly to the other DevTools panels. The `devtools/client/performance-new/panel/initializer.js` is in charge of initializing the page specifically for the DevTools workflow. This script creates a `PerfActor` that is then used for talking to the Gecko Profiler component.
 
 ### DevTools Remote
 

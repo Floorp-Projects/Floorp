@@ -12,10 +12,10 @@
  */
 
 /**
- * @typedef {import("./@types/perf").PanelWindow} PanelWindow
- * @typedef {import("./@types/perf").Toolbox} Toolbox
- * @typedef {import("./@types/perf").Target} Target
- * @typedef {import("./@types/perf").Commands} Commands
+ * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("../@types/perf").Toolbox} Toolbox
+ * @typedef {import("../@types/perf").Target} Target
+ * @typedef {import("../@types/perf").Commands} Commands
  */
 
 class PerformancePanel {

@@ -331,7 +331,7 @@ devtools.jar:
     content/debugger/src/utils/editor/source-editor.css (debugger/src/utils/editor/source-editor.css)
 
     # Perfomance
-    content/performance-new/index.xhtml (performance-new/index.xhtml)
+    content/performance-new/panel/index.xhtml (performance-new/panel/index.xhtml)
 
     # Memory
     content/memory/index.xhtml (memory/index.xhtml)
