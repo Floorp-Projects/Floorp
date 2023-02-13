@@ -7768,6 +7768,11 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
           mCachedContentIsValid = false;
           StoreCachedContentIsPartial(1);
 
+          // We are about to perform a different network request.
+          // We must set mRaceCacheWithNetwork to false because otherwise
+          // we would ignore the network response thinking we didn't need it.
+          mRaceCacheWithNetwork = false;
+
           // Perform the range request
           rv = ContinueConnect();
           if (NS_SUCCEEDED(rv)) {
