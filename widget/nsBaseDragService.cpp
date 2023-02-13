@@ -151,6 +151,29 @@ nsBaseDragService::SetSourceWindowContext(WindowContext* aSourceWindowContext) {
 }
 
 //
+// GetSourceTopWindowContext
+//
+// Returns the top-level window context where the drag was initiated. This will
+// be nullptr if the drag began outside of our application.
+//
+NS_IMETHODIMP
+nsBaseDragService::GetSourceTopWindowContext(
+    WindowContext** aSourceTopWindowContext) {
+  *aSourceTopWindowContext = mSourceTopWindowContext.get();
+  NS_IF_ADDREF(*aSourceTopWindowContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseDragService::SetSourceTopWindowContext(
+    WindowContext* aSourceTopWindowContext) {
+  // This should only be called in a child process.
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  mSourceTopWindowContext = aSourceTopWindowContext;
+  return NS_OK;
+}
+
+//
 // GetSourceNode
 //
 // Returns the DOM node where the drag was initiated. This will be
@@ -393,6 +416,8 @@ nsBaseDragService::InvokeDragSessionWithImage(
   mDragStartData = nullptr;
   mSourceWindowContext =
       aDOMNode ? aDOMNode->OwnerDoc()->GetWindowContext() : nullptr;
+  mSourceTopWindowContext =
+      mSourceWindowContext ? mSourceWindowContext->TopWindowContext() : nullptr;
 
   mScreenPosition = aDragEvent->ScreenPoint(CallerType::System);
   mInputSource = aDragEvent->MozInputSource();
@@ -441,6 +466,7 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
   mDragStartData = aDragStartData;
   mImageOffset = CSSIntPoint(0, 0);
   mSourceWindowContext = mDragStartData->GetSourceWindowContext();
+  mSourceTopWindowContext = mDragStartData->GetSourceTopWindowContext();
 
   mScreenPosition = aDragEvent->ScreenPoint(CallerType::System);
   mInputSource = aDragEvent->MozInputSource();
@@ -482,6 +508,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(
   // endpoints of the selection
   nsCOMPtr<nsINode> node = aSelection->GetFocusNode();
   mSourceWindowContext = node ? node->OwnerDoc()->GetWindowContext() : nullptr;
+  mSourceTopWindowContext =
+      mSourceWindowContext ? mSourceWindowContext->TopWindowContext() : nullptr;
 
   return InvokeDragSession(node, aPrincipal, aCsp, aCookieJarSettings,
                            aTransferableArray, aActionType,

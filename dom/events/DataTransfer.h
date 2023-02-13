@@ -255,7 +255,7 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<nsINode> GetMozSourceNode();
 
-  already_AddRefed<WindowContext> GetSourceWindowContext();
+  already_AddRefed<WindowContext> GetSourceTopWindowContext();
 
   /*
    * Integer version of dropEffect, set to one of the constants in
