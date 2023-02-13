@@ -469,7 +469,7 @@ nsWebBrowser::GoForward(bool aRequireUserInteraction, bool aUserActivation) {
   return mDocShell->GoForward(aRequireUserInteraction, aUserActivation);
 }
 
-nsresult nsWebBrowser::LoadURI(const nsAString& aURI,
+nsresult nsWebBrowser::LoadURI(nsIURI* aURI,
                                const dom::LoadURIOptions& aLoadURIOptions) {
 #ifndef ANDROID
   MOZ_ASSERT(aLoadURIOptions.mTriggeringPrincipal,
@@ -481,7 +481,7 @@ nsresult nsWebBrowser::LoadURI(const nsAString& aURI,
 }
 
 NS_IMETHODIMP
-nsWebBrowser::LoadURIFromScript(const nsAString& aURI,
+nsWebBrowser::LoadURIFromScript(nsIURI* aURI,
                                 JS::Handle<JS::Value> aLoadURIOptions,
                                 JSContext* aCx) {
   // generate dictionary for loadURIOptions and forward call
@@ -490,6 +490,30 @@ nsWebBrowser::LoadURIFromScript(const nsAString& aURI,
     return NS_ERROR_INVALID_ARG;
   }
   return LoadURI(aURI, loadURIOptions);
+}
+
+nsresult nsWebBrowser::FixupAndLoadURIString(
+    const nsAString& aURI, const dom::LoadURIOptions& aLoadURIOptions) {
+#ifndef ANDROID
+  MOZ_ASSERT(
+      aLoadURIOptions.mTriggeringPrincipal,
+      "nsWebBrowser::FixupAndLoadURIString - Need a valid triggeringPrincipal");
+#endif
+  NS_ENSURE_STATE(mDocShell);
+
+  return mDocShell->FixupAndLoadURIString(aURI, aLoadURIOptions);
+}
+
+NS_IMETHODIMP
+nsWebBrowser::FixupAndLoadURIStringFromScript(
+    const nsAString& aURI, JS::Handle<JS::Value> aLoadURIOptions,
+    JSContext* aCx) {
+  // generate dictionary for loadURIOptions and forward call
+  dom::LoadURIOptions loadURIOptions;
+  if (!loadURIOptions.Init(aCx, aLoadURIOptions)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return FixupAndLoadURIString(aURI, loadURIOptions);
 }
 
 NS_IMETHODIMP

@@ -917,7 +917,9 @@ void nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure) {
       LoadURIOptions loadURIOptions;
       loadURIOptions.mTriggeringPrincipal =
           nsContentUtils::GetSystemPrincipal();
-      webNav->LoadURI(u"about:blank"_ns, loadURIOptions);
+      nsCOMPtr<nsIURI> uri;
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), "about:blank"_ns));
+      webNav->LoadURI(uri, loadURIOptions);
     }
   }
 }
