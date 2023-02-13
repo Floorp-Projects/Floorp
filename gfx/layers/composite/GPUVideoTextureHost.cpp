@@ -220,5 +220,12 @@ TextureHostType GPUVideoTextureHost::GetTextureHostType() {
   return mWrappedTextureHost->GetTextureHostType();
 }
 
+bool GPUVideoTextureHost::NeedsDeferredDeletion() const {
+  if (!mWrappedTextureHost) {
+    return TextureHost::NeedsDeferredDeletion();
+  }
+  return mWrappedTextureHost->NeedsDeferredDeletion();
+}
+
 }  // namespace layers
 }  // namespace mozilla
