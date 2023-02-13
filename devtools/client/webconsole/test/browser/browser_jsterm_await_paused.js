@@ -34,7 +34,7 @@ add_task(async function() {
 
   const awaitExpression = `await new Promise(res => {
     const result = ["res", ...inPausedExpression];
-    setTimeout(() => res(result), 1000);
+    setTimeout(() => res(result), 2000);
     console.log("awaitExpression executed");
   })`;
 
@@ -42,6 +42,11 @@ add_task(async function() {
     hud,
     `[ "res", "bar" ]`,
     ".result"
+  );
+  const onAwaitExpressionExecuted = waitForMessageByType(
+    hud,
+    "awaitExpression executed",
+    ".console-api"
   );
   execute(hud, awaitExpression);
 
@@ -52,7 +57,7 @@ add_task(async function() {
 
   // Give the engine some time to evaluate the await expression before resuming.
   // Otherwise the awaitExpression may be evaluate while the thread is already resumed!
-  await waitForMessageByType(hud, "awaitExpression executed", ".console-api");
+  await onAwaitExpressionExecuted;
 
   // Click on the resume button to not be paused anymore.
   await resume(dbg);
@@ -73,9 +78,9 @@ add_task(async function() {
     // Result of await
     `Array [ "res", "bar" ]`,
   ];
-  is(
-    JSON.stringify(messagesText, null, 2),
-    JSON.stringify(expectedMessages, null, 2),
+  Assert.deepEqual(
+    messagesText,
+    expectedMessages,
     "The output contains the the expected messages, in the expected order"
   );
 });
