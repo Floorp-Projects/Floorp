@@ -32,6 +32,7 @@
 #include "mozilla/Unused.h"
 #include "nsAppRunner.h"  // for IsWaylandEnabled on IsX11EGLEnabled
 #include "stdint.h"
+#include "nsExceptionHandler.h"
 
 #ifdef __SUNPRO_CC
 #  include <stdio.h>
@@ -1286,6 +1287,12 @@ bool fire_glxtest_process() {
     close(pfd[0]);
     write_end_of_the_pipe = pfd[1];
     close_logging();
+    // This process is expected to be crashy, and we
+    // don't want the user to see its crashes. That's the whole reason for
+    // doing this in a separate process.
+    if (CrashReporter::GetEnabled()) {
+      CrashReporter::UnsetExceptionHandler();
+    }
 #if defined(MOZ_ASAN) || defined(FUZZING)
     // If handle_segv=1 (default), then glxtest crash will print a sanitizer
     // report which can confuse the harness in fuzzing automation.
