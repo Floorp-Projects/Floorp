@@ -44,6 +44,7 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/selectable/browser.ini",
     "tests/browser/states/browser.ini",
     "tests/browser/telemetry/browser.ini",
+    "tests/browser/textleafrange/browser.ini",
     "tests/browser/tree/browser.ini",
 ]
 

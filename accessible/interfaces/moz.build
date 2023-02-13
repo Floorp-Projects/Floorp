@@ -35,6 +35,7 @@ XPIDL_SOURCES += [
     "nsIAccessibleTableChangeEvent.idl",
     "nsIAccessibleText.idl",
     "nsIAccessibleTextChangeEvent.idl",
+    "nsIAccessibleTextLeafRange.idl",
     "nsIAccessibleTextRange.idl",
     "nsIAccessibleTextSelectionChangeEvent.idl",
     "nsIAccessibleTypes.idl",

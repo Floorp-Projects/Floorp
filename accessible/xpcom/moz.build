@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     "xpcAccessibleSelectable.cpp",
     "xpcAccessibleTable.cpp",
     "xpcAccessibleTableCell.cpp",
+    "xpcAccessibleTextLeafRange.cpp",
     "xpcAccessibleTextRange.cpp",
     "xpcAccessibleValue.cpp",
 ]

@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIAccessibleText.idl"
+
+interface nsIAccessible;
+
+[scriptable, builtinclass, uuid(9181e777-8954-4f8f-8cee-32f9771e40d7)]
+interface nsIAccessibleTextLeafPoint : nsISupports
+{
+  attribute nsIAccessible accessible;
+
+  attribute long offset;
+
+  /**
+   * Find a boundary (word start, line start, etc.) in a specific direction.
+   * If no boundary is found, the start/end of the document is returned
+   * (depending on the direction).
+   *
+   * @param aBoundaryType [in] the boundary type to search for
+   * @param aDirection    [in] search next or previous
+   * @param aFlags        [in] optional flags for search
+   */
+  nsIAccessibleTextLeafPoint findBoundary(in AccessibleTextBoundary aBoundaryType,
+                                          in unsigned long aDirection,
+                                          in unsigned long aFlags);
+
+  const long DIRECTION_NEXT     = 0x0;
+  const long DIRECTION_PREVIOUS = 0x1;
+
+  const unsigned long BOUNDARY_FLAG_DEFAULT          = 0x0;
+  // If current point is a matching boundary, return unchanged.
+  const unsigned long BOUNDARY_FLAG_INCLUDE_ORIGIN   = 0x1;
+  // Do not search past end of editables.
+  const unsigned long BOUNDARY_FLAG_STOP_IN_EDITABLE = 0x2;
+};
