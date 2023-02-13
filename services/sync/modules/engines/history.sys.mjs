@@ -15,13 +15,13 @@ const {
   SCORE_INCREMENT_SMALL,
   SCORE_INCREMENT_XLARGE,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import {
+  Store,
+  SyncEngine,
+  LegacyTracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Utils } from "resource://services-sync/util.sys.mjs";
 
 const lazy = {};
 

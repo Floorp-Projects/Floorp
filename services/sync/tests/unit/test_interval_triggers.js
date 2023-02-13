@@ -2,7 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Svc.Prefs.set("registerEngines", "");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 let scheduler;
 let clientsEngine;

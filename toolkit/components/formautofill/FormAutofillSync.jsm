@@ -12,13 +12,15 @@ var EXPORTED_SYMBOLS = [
   "AutofillRecord",
 ];
 
-const { Changeset, Store, SyncEngine, Tracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
+const { Changeset, Store, SyncEngine, Tracker } = ChromeUtils.importESModule(
+  "resource://services-sync/engines.sys.mjs"
 );
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
+const { CryptoWrapper } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
 );
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-sync/util.sys.mjs"
+);
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );

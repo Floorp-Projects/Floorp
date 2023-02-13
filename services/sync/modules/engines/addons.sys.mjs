@@ -37,25 +37,20 @@
 
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
-const { AddonUtils } = ChromeUtils.import(
-  "resource://services-sync/addonutils.js"
-);
-const { AddonsReconciler } = ChromeUtils.import(
-  "resource://services-sync/addonsreconciler.js"
-);
-const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { AddonUtils } from "resource://services-sync/addonutils.sys.mjs";
+import { AddonsReconciler } from "resource://services-sync/addonsreconciler.sys.mjs";
+import {
+  Store,
+  SyncEngine,
+  LegacyTracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-const { CollectionValidator } = ChromeUtils.import(
-  "resource://services-sync/collection_validator.js"
-);
+import { CollectionValidator } from "resource://services-sync/collection_validator.sys.mjs";
 
 const lazy = {};
 

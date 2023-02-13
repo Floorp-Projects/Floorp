@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 function mockState(state) {
   UIState.get = () => ({

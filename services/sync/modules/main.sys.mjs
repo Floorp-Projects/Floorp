@@ -4,13 +4,18 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-export var Weave = ChromeUtils.import("resource://services-sync/constants.js");
+export const Weave = ChromeUtils.import(
+  "resource://services-sync/constants.js"
+);
 
-XPCOMUtils.defineLazyModuleGetters(Weave, {
-  Service: "resource://services-sync/service.js",
-  Status: "resource://services-sync/status.js",
-  Utils: "resource://services-sync/util.js",
-  Svc: "resource://services-sync/util.js",
+// We want these to be lazily loaded, which helps performance and also tests
+// to not have these loaded before they are ready.
+// eslint-disable-next-line mozilla/lazy-getter-object-name
+ChromeUtils.defineESModuleGetters(Weave, {
+  Service: "resource://services-sync/service.sys.mjs",
+  Status: "resource://services-sync/status.sys.mjs",
+  Svc: "resource://services-sync/util.sys.mjs",
+  Utils: "resource://services-sync/util.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(Weave, "Crypto", function() {

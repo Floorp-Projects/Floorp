@@ -1,8 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/engines/passwords.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+ChromeUtils.importESModule(
+  "resource://services-sync/engines/passwords.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 async function checkRecord(
   name,

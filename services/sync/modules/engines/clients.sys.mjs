@@ -27,14 +27,14 @@ const {
   SINGLE_USER_THRESHOLD,
   SYNC_API_VERSION,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import {
+  Store,
+  SyncEngine,
+  LegacyTracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Resource } from "resource://services-sync/resource.sys.mjs";
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

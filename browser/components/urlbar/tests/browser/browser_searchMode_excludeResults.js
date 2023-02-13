@@ -8,8 +8,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
 });
 
 add_setup(async function() {

@@ -4,7 +4,7 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
+import { Svc } from "resource://services-sync/util.sys.mjs";
 
 const lazy = {};
 

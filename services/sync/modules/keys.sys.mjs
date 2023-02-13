@@ -7,7 +7,7 @@ const { CommonUtils } = ChromeUtils.import(
 );
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+import { Weave } from "resource://services-sync/main.sys.mjs";
 
 /**
  * Represents a pair of keys.

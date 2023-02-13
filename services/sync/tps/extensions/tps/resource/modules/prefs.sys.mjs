@@ -9,7 +9,7 @@
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 /**
  * Preference class constructor

@@ -1,4 +1,6 @@
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_task(async function run_test() {
   _("Make sure catch when copied to an object will correctly catch stuff");

@@ -5,7 +5,9 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -17,14 +19,9 @@ ChromeUtils.defineModuleGetter(
   "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Weave",
-  "resource://services-sync/main.js"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
 });
 
 const MIN_STATUS_ANIMATION_DURATION = 1600;
@@ -1748,8 +1745,8 @@ var gSync = {
   },
 
   async _disconnectFxaAndSync(deleteLocalData) {
-    const { SyncDisconnect } = ChromeUtils.import(
-      "resource://services-sync/SyncDisconnect.jsm"
+    const { SyncDisconnect } = ChromeUtils.importESModule(
+      "resource://services-sync/SyncDisconnect.sys.mjs"
     );
     // Record telemetry.
     await fxAccounts.telemetry.recordDisconnection(null, "ui");

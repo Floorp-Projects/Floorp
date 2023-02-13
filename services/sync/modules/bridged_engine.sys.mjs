@@ -14,12 +14,8 @@
  * for your subclass to wrap, and optionally implement and override the tracker.
  */
 
-const { SyncEngine, Tracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { RawCryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
+import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
+import { RawCryptoWrapper } from "resource://services-sync/record.sys.mjs";
 
 const lazy = {};
 

@@ -16,9 +16,7 @@ const {
 } = ChromeUtils.import("resource://services-sync/constants.js");
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
-);
+import { SyncAuthManager } from "resource://services-sync/sync_auth.sys.mjs";
 
 export var Status = {
   _log: Log.repository.getLogger("Sync.Status"),

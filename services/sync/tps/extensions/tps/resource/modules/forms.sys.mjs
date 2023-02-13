@@ -7,7 +7,7 @@
    listed symbols will exposed on import, and only when and where imported.
   */
 
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 import { FormHistory } from "resource://gre/modules/FormHistory.sys.mjs";
 

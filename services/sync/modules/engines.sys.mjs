@@ -19,13 +19,16 @@ const {
   ENGINE_UPLOAD_FAIL,
   VERSION_OUT_OF_DATE,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Collection, CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { SerializableSet, Svc, Utils } = ChromeUtils.import(
-  "resource://services-sync/util.js"
-);
+import {
+  Collection,
+  CryptoWrapper,
+} from "resource://services-sync/record.sys.mjs";
+import { Resource } from "resource://services-sync/resource.sys.mjs";
+import {
+  SerializableSet,
+  Svc,
+  Utils,
+} from "resource://services-sync/util.sys.mjs";
 
 const lazy = {};
 

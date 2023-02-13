@@ -17,7 +17,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );

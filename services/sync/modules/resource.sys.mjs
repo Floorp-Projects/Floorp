@@ -12,7 +12,7 @@ const { Observers } = ChromeUtils.import(
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Utils } from "resource://services-sync/util.sys.mjs";
 import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 /* global AbortController */

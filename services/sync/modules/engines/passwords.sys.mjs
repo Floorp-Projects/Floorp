@@ -2,19 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Collection, CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
+import {
+  Collection,
+  CryptoWrapper,
+} from "resource://services-sync/record.sys.mjs";
+
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-const { CollectionValidator } = ChromeUtils.import(
-  "resource://services-sync/collection_validator.js"
-);
-const { Store, SyncEngine, LegacyTracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { CollectionValidator } from "resource://services-sync/collection_validator.sys.mjs";
+import {
+  Store,
+  SyncEngine,
+  LegacyTracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 
 const SYNCABLE_LOGIN_FIELDS = [

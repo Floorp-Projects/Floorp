@@ -75,7 +75,9 @@ WeaveService.prototype = {
   ]),
 
   get Weave() {
-    const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+    const { Weave } = ChromeUtils.importESModule(
+      "resource://services-sync/main.sys.mjs"
+    );
     return Weave;
   },
 
@@ -112,8 +114,8 @@ WeaveService.prototype = {
             // accordingly. We could potentially copy code performed by
             // this check into this file if our above code is yielding too
             // many false positives.
-            var { Weave } = ChromeUtils.import(
-              "resource://services-sync/main.js"
+            var { Weave } = ChromeUtils.importESModule(
+              "resource://services-sync/main.sys.mjs"
             );
             isConfigured =
               Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;

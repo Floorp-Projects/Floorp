@@ -4,22 +4,24 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { BridgedEngine, BridgeWrapperXPCOM, LogAdapter } = ChromeUtils.import(
-  "resource://services-sync/bridged_engine.js"
-);
-const { SyncEngine } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { Tracker } = ChromeUtils.import("resource://services-sync/engines.js");
+import {
+  BridgedEngine,
+  BridgeWrapperXPCOM,
+  LogAdapter,
+} from "resource://services-sync/bridged_engine.sys.mjs";
+import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Svc: "resource://services-sync/util.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   extensionStorageSyncKinto:
     "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
   Observers: "resource://services-common/observers.js",
-  Svc: "resource://services-sync/util.js",
   SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.js",
   MULTI_DEVICE_THRESHOLD: "resource://services-sync/constants.js",
 });

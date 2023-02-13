@@ -12,7 +12,7 @@ import { PlacesBackups } from "resource://gre/modules/PlacesBackups.sys.mjs";
 import { PlacesSyncUtils } from "resource://gre/modules/PlacesSyncUtils.sys.mjs";
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 export async function DumpBookmarks() {
   let [bookmarks] = await PlacesBackups.getBookmarksTree();

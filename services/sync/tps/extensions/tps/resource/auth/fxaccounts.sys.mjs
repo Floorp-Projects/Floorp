@@ -15,7 +15,7 @@ const { FxAccountsClient } = ChromeUtils.import(
 const { FxAccountsConfig } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsConfig.jsm"
 );
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 /**
  * Helper object for Firefox Accounts authentication

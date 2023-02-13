@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 // This obj will be used in both tests
 // First test makes sure accepting the preferences matches these values

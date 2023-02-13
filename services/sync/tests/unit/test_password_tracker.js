@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PasswordEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/passwords.js"
+const { PasswordEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/passwords.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 let engine;
 let store;

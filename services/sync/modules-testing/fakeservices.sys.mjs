@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { RawCryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Weave } from "resource://services-sync/main.sys.mjs";
+import { RawCryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Utils } from "resource://services-sync/util.sys.mjs";
 
 export function FakeFilesystemService(contents) {
   this.fakeContents = contents;

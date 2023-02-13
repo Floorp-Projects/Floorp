@@ -13,9 +13,12 @@ const lazy = {};
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
 export const FirefoxViewNotificationManager = new (class {

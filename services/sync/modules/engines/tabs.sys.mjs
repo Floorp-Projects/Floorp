@@ -6,10 +6,9 @@ const STORAGE_VERSION = 1; // This needs to be kept in-sync with the rust storag
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { SyncEngine, Tracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { SCORE_INCREMENT_SMALL, STATUS_OK, URI_LENGTH_MAX } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
@@ -18,13 +17,11 @@ const { CommonUtils } = ChromeUtils.import(
 );
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 
-const { SyncRecord, SyncTelemetry } = ChromeUtils.import(
-  "resource://services-sync/telemetry.js"
-);
-
-const { BridgedEngine } = ChromeUtils.import(
-  "resource://services-sync/bridged_engine.js"
-);
+import {
+  SyncRecord,
+  SyncTelemetry,
+} from "resource://services-sync/telemetry.sys.mjs";
+import { BridgedEngine } from "resource://services-sync/bridged_engine.sys.mjs";
 
 const FAR_FUTURE = 4102405200000; // 2100/01/01
 

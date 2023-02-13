@@ -11,12 +11,11 @@ const {
   DEFAULT_DOWNLOAD_BATCH_SIZE,
   DEFAULT_KEYBUNDLE_NAME,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { BulkKeyBundle } = ChromeUtils.import(
-  "resource://services-sync/keys.js"
-);
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { BulkKeyBundle } from "resource://services-sync/keys.sys.mjs";
+import { Weave } from "resource://services-sync/main.sys.mjs";
+import { Resource } from "resource://services-sync/resource.sys.mjs";
+import { Utils } from "resource://services-sync/util.sys.mjs";
+
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"

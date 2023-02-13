@@ -1,11 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { TabProvider } = ChromeUtils.import(
-  "resource://services-sync/engines/tabs.js"
+const { TabProvider } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/tabs.sys.mjs"
 );
-const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { WBORecord } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 let engine;
 // We'll need the clients engine for testing as tabs is closely related

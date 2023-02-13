@@ -5,6 +5,7 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+// Svc.Prefs.set("services.sync.log.appender.dump", "All");
 Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
 
 add_task(async function run_test() {
@@ -16,7 +17,9 @@ add_task(async function run_test() {
   Assert.ok(!xps.enabled);
 
   // Test fixtures
-  let { Service } = ChromeUtils.import("resource://services-sync/service.js");
+  let { Service } = ChromeUtils.importESModule(
+    "resource://services-sync/service.sys.mjs"
+  );
   Services.prefs.setStringPref("services.sync.username", "johndoe");
   Assert.ok(xps.enabled);
 

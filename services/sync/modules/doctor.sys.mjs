@@ -13,10 +13,9 @@ const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-
-const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
+import { Service } from "resource://services-sync/service.sys.mjs";
+import { Resource } from "resource://services-sync/resource.sys.mjs";
+import { Svc } from "resource://services-sync/util.sys.mjs";
 
 const log = Log.repository.getLogger("Sync.Doctor");
 

@@ -7,8 +7,9 @@
    Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Weave } from "resource://services-sync/main.sys.mjs";
+
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
 // BrowserTestUtils.sys.mjs. Moreover, we can't resolve the URI it loads the content

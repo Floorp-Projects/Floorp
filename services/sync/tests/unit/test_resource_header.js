@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
+const { Resource } = ChromeUtils.importESModule(
+  "resource://services-sync/resource.sys.mjs"
+);
 
 var httpServer = new HttpServer();
 httpServer.registerPathHandler("/content", contentHandler);

@@ -12,7 +12,8 @@ const { TokenServerClient } = ChromeUtils.import(
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const {
   LOGIN_FAILED_LOGIN_REJECTED,
   LOGIN_FAILED_NETWORK_ERROR,
@@ -25,17 +26,10 @@ const {
 const lazy = {};
 
 // Lazy imports to prevent unnecessary load on startup.
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Weave",
-  "resource://services-sync/main.js"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BulkKeyBundle",
-  "resource://services-sync/keys.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BulkKeyBundle: "resource://services-sync/keys.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(

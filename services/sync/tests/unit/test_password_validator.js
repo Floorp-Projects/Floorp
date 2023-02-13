@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PasswordValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/passwords.js"
+const { PasswordValidator } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/passwords.sys.mjs"
 );
 
 function getDummyServerAndClient() {

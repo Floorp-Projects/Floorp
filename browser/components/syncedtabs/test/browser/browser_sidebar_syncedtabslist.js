@@ -1,9 +1,11 @@
 "use strict";
 
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+const { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 const FIXTURE = [
   {

@@ -28,13 +28,14 @@ const PREF_SYNC_SEEN_PREFIX = "services.sync.prefs.sync-seen.";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
-const { Store, SyncEngine, Tracker } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
-);
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import {
+  Store,
+  SyncEngine,
+  Tracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );

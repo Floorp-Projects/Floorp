@@ -22,11 +22,9 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
 );
 ChromeUtils.import("resource://services-common/utils.js");
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Weave",
-  "resource://services-sync/main.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Weave: "resource://services-sync/main.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "jwcrypto",

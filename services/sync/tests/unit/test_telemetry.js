@@ -1,11 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { RotaryEngine } = ChromeUtils.import(
-  "resource://testing-common/services/sync/rotaryengine.js"
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { WBORecord } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
+);
+const { Resource } = ChromeUtils.importESModule(
+  "resource://services-sync/resource.sys.mjs"
+);
+const { RotaryEngine } = ChromeUtils.importESModule(
+  "resource://testing-common/services/sync/rotaryengine.sys.mjs"
 );
 const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
@@ -614,8 +620,8 @@ add_task(async function test_clean_urls() {
 
 // Test sanitizing guid-related errors with the pattern of <guid: {guid}>
 add_task(async function test_sanitize_bookmarks_guid() {
-  let { ErrorSanitizer } = ChromeUtils.import(
-    "resource://services-sync/telemetry.js"
+  let { ErrorSanitizer } = ChromeUtils.importESModule(
+    "resource://services-sync/telemetry.sys.mjs"
   );
 
   for (let [original, expected] of [
@@ -635,8 +641,8 @@ add_task(async function test_sanitize_bookmarks_guid() {
 
 // Test sanitization of some hard-coded error strings.
 add_task(async function test_clean_errors() {
-  let { ErrorSanitizer } = ChromeUtils.import(
-    "resource://services-sync/telemetry.js"
+  let { ErrorSanitizer } = ChromeUtils.importESModule(
+    "resource://services-sync/telemetry.sys.mjs"
   );
 
   for (let [original, expected] of [

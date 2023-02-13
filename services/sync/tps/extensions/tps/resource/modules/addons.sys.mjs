@@ -5,10 +5,8 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { AddonUtils } = ChromeUtils.import(
-  "resource://services-sync/addonutils.js"
-);
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { AddonUtils } from "resource://services-sync/addonutils.sys.mjs";
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 export const STATE_ENABLED = 1;
 export const STATE_DISABLED = 2;

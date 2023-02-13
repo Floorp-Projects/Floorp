@@ -1,21 +1,23 @@
 const { FormHistory } = ChromeUtils.importESModule(
   "resource://gre/modules/FormHistory.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Bookmark, BookmarkFolder, BookmarkQuery } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
 );
-const { HistoryRec } = ChromeUtils.import(
-  "resource://services-sync/engines/history.js"
+const { Bookmark, BookmarkFolder, BookmarkQuery } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/bookmarks.sys.mjs"
 );
-const { FormRec } = ChromeUtils.import(
-  "resource://services-sync/engines/forms.js"
+const { HistoryRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/history.sys.mjs"
 );
-const { LoginRec } = ChromeUtils.import(
-  "resource://services-sync/engines/passwords.js"
+const { FormRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/forms.sys.mjs"
 );
-const { PrefRec } = ChromeUtils.import(
-  "resource://services-sync/engines/prefs.js"
+const { LoginRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/passwords.sys.mjs"
+);
+const { PrefRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/prefs.sys.mjs"
 );
 
 const LoginInfo = Components.Constructor(
