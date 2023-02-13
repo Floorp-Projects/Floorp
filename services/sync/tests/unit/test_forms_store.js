@@ -4,10 +4,12 @@
 _(
   "Make sure the form store follows the Store api and correctly accesses the backend form storage"
 );
-const { FormEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/forms.js"
+const { FormEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/forms.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_task(async function run_test() {
   let engine = new FormEngine(Service);

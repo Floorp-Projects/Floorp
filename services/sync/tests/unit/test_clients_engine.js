@@ -1,13 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { ClientEngine, ClientsRec } = ChromeUtils.import(
-  "resource://services-sync/engines/clients.js"
+const { ClientEngine, ClientsRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/clients.sys.mjs"
 );
-const { CryptoWrapper } = ChromeUtils.import(
-  "resource://services-sync/record.js"
+const { CryptoWrapper } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
 const LESS_THAN_CLIENTS_TTL_REFRESH = 86400; // 1 day

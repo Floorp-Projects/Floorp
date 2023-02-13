@@ -4,9 +4,11 @@
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
+const { Resource } = ChromeUtils.importESModule(
+  "resource://services-sync/resource.sys.mjs"
+);
+const { SyncAuthManager } = ChromeUtils.importESModule(
+  "resource://services-sync/sync_auth.sys.mjs"
 );
 
 var fetched = false;

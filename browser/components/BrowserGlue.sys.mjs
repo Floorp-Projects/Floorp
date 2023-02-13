@@ -46,6 +46,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
@@ -104,7 +105,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
-  UIState: "resource://services-sync/UIState.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {

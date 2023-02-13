@@ -8,8 +8,8 @@
 
 "use strict";
 
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+const { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
 
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;

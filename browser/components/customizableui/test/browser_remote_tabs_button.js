@@ -4,8 +4,12 @@
  */
 "use strict";
 
-let { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+let { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 let getState;
 let originalSync;

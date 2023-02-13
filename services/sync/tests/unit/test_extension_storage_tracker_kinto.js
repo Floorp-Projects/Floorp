@@ -5,10 +5,12 @@
 
 Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
-const { ExtensionStorageEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/extension-storage.js"
+const { ExtensionStorageEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/extension-storage.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 const { extensionStorageSyncKinto: extensionStorageSync } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );

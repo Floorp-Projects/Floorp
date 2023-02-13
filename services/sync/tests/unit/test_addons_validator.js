@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { AddonValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/addons.js"
+const { AddonValidator } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/addons.sys.mjs"
 );
 
 function getDummyServerAndClient() {

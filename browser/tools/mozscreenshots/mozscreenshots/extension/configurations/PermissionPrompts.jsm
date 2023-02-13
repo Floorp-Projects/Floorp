@@ -4,6 +4,9 @@
 
 "use strict";
 
+// Various parts here are run in the content process.
+/* global content */
+
 var EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
 const { BrowserTestUtils } = ChromeUtils.importESModule(

@@ -580,6 +580,7 @@ LOCAL_INCLUDES += [
     "/netwerk/url-classifier",
     "/parser/htmlparser",
     "/security/manager/ssl",
+    "/third_party/xsimd/include",
     "/widget",
     "/xpcom/ds",
 ]

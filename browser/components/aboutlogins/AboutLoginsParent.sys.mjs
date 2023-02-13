@@ -14,6 +14,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -21,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginExport: "resource://gre/modules/LoginExport.jsm",
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  UIState: "resource://services-sync/UIState.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

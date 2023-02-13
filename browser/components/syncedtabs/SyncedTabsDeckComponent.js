@@ -26,7 +26,9 @@ const { TabListView } = ChromeUtils.import(
 let { getChromeWindow } = ChromeUtils.import(
   "resource:///modules/syncedtabs/util.js"
 );
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 let log = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"

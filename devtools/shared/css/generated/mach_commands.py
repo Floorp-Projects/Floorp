@@ -51,7 +51,6 @@ def generate_css_db(command_context):
     output_template(
         command_context,
         {
-            "preferences": stringify(db["preferences"]),
             "cssProperties": stringify(db["cssProperties"]),
             "pseudoElements": stringify(db["pseudoElements"]),
         },

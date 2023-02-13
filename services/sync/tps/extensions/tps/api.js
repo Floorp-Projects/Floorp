@@ -18,7 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(
 async function tpsStartup() {
   try {
     var { TPS } = ChromeUtils.import("resource://tps/tps.jsm");
-    let { goQuitApplication } = ChromeUtils.import("resource://tps/quit.js");
+    let { goQuitApplication } = ChromeUtils.importESModule(
+      "resource://tps/quit.sys.mjs"
+    );
     TPS.goQuitApplication = goQuitApplication;
 
     let testFile = Services.prefs.getStringPref("testing.tps.testFile", "");

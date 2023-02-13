@@ -1,14 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { HistoryEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/history.js"
+const { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
 );
-const { CryptoWrapper, WBORecord } = ChromeUtils.import(
-  "resource://services-sync/record.js"
+const { HistoryEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/history.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { CryptoWrapper, WBORecord } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_task(async function test_locally_changed_keys() {
   enableValidationPrefs();

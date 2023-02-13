@@ -90,12 +90,13 @@ ChromeUtils.defineModuleGetter(
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
-  return ChromeUtils.import("resource://services-sync/util.js").Utils.mpLocked;
+  return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
+    .Utils.mpLocked;
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "ensureMPUnlocked", () => {
-  return ChromeUtils.import("resource://services-sync/util.js").Utils
-    .ensureMPUnlocked;
+  return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
+    .Utils.ensureMPUnlocked;
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -765,8 +766,8 @@ FxAccountsInternal.prototype = {
       this.observerPreloads = [
         // Sync
         () => {
-          let { Weave } = ChromeUtils.import(
-            "resource://services-sync/main.js"
+          let { Weave } = ChromeUtils.importESModule(
+            "resource://services-sync/main.sys.mjs"
           );
           return Weave.Service.promiseInitialized;
         },

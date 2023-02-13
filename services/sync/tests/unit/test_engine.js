@@ -7,7 +7,9 @@ const { PromiseUtils } = ChromeUtils.importESModule(
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);

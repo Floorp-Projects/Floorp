@@ -3,18 +3,23 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  Service: "resource://services-sync/service.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
-  Service: "resource://services-sync/service.js",
 });
 
 const {
   ExtensionStorageEngineBridge,
   ExtensionStorageEngineKinto,
-} = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
+} = ChromeUtils.importESModule(
+  "resource://services-sync/engines/extension-storage.sys.mjs"
+);
 
-const { BridgeWrapperXPCOM } = ChromeUtils.import(
-  "resource://services-sync/bridged_engine.js"
+const { BridgeWrapperXPCOM } = ChromeUtils.importESModule(
+  "resource://services-sync/bridged_engine.sys.mjs"
 );
 
 Services.prefs.setStringPref("webextensions.storage.sync.log.level", "debug");

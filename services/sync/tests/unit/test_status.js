@@ -1,4 +1,6 @@
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
+const { Status } = ChromeUtils.importESModule(
+  "resource://services-sync/status.sys.mjs"
+);
 
 function run_test() {
   // Check initial states

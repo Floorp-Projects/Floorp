@@ -1,10 +1,12 @@
 const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { LoginRec } = ChromeUtils.import(
-  "resource://services-sync/engines/passwords.js"
+const { LoginRec } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/passwords.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",

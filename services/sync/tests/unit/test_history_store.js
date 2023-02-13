@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { HistoryEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/history.js"
+const { HistoryEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/history.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
 const TIMESTAMP2 = (Date.now() - 6592903) * 1000;

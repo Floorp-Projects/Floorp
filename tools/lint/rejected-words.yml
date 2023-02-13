@@ -302,7 +302,6 @@ avoid-blacklist-and-whitelist:
         - services/automation/ServicesAutomation.jsm
         - services/fxaccounts/FxAccountsCommon.js
         - services/fxaccounts/FxAccounts.jsm
-        - services/sync/modules/engines/addons.js
         - taskcluster/ci/docker-image/kind.yml
         - taskcluster/gecko_taskgraph/actions/create_interactive.py
         - taskcluster/gecko_taskgraph/target_tasks.py

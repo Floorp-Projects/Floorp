@@ -6,8 +6,8 @@
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { AddonUtils } = ChromeUtils.import(
-  "resource://services-sync/addonutils.js"
+const { AddonUtils } = ChromeUtils.importESModule(
+  "resource://services-sync/addonutils.sys.mjs"
 );
 
 const HTTP_PORT = 8888;
