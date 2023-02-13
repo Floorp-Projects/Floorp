@@ -314,7 +314,8 @@ void CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
     // If the parent side runs into a problem then the actor will be destroyed.
     // There is nothing we can do in the child side, here sets mCanSend as
     // false.
-    gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
+    gfxCriticalNote << "CompositorBridgeChild receives IPC close with "
+                       "reason=AbnormalShutdown";
   }
 
   mCanSend = false;
