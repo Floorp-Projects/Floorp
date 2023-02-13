@@ -14,7 +14,7 @@
 namespace mozilla::dom {
 
 #define BR_ELEMENT_FLAG_BIT(n_) \
-  HTML_ELEMENT_FLAG_BIT(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+  NODE_FLAG_BIT(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
 // BR element specific bits
 enum {
