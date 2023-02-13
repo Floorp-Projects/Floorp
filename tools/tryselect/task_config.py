@@ -78,14 +78,14 @@ class Artifact(TryConfig):
 
     def try_config(self, artifact, no_artifact, **kwargs):
         if artifact:
-            return {"use-artifact-builds": True, "disable-pgo": True}
+            return {"use-artifact-builds": True}
 
         if no_artifact:
             return
 
         if self.is_artifact_build():
             print("Artifact builds enabled, pass --no-artifact to disable")
-            return {"use-artifact-builds": True, "disable-pgo": True}
+            return {"use-artifact-builds": True}
 
 
 class Pernosco(TryConfig):
