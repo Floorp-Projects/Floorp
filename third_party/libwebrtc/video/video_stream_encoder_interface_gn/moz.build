@@ -28,20 +28,6 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/video_codecs/av1_profile.cc",
-    "/third_party/libwebrtc/api/video_codecs/h264_profile_level_id.cc",
-    "/third_party/libwebrtc/api/video_codecs/sdp_video_format.cc",
-    "/third_party/libwebrtc/api/video_codecs/simulcast_stream.cc",
-    "/third_party/libwebrtc/api/video_codecs/spatial_layer.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_codec.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_decoder.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_encoder.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_frame_config.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp9_profile.cc"
-]
-
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
@@ -147,10 +133,6 @@ if CONFIG["CPU_ARCH"] == "aarch64":
 
 if CONFIG["CPU_ARCH"] == "arm":
 
-    CXXFLAGS += [
-        "-mfpu=neon"
-    ]
-
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
@@ -188,10 +170,6 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
     ]
@@ -208,10 +186,6 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
@@ -220,4 +194,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("video_codecs_api_gn")
+Library("video_stream_encoder_interface_gn")

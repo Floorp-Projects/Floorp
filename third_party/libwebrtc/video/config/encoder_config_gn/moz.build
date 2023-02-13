@@ -29,17 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/video_codecs/av1_profile.cc",
-    "/third_party/libwebrtc/api/video_codecs/h264_profile_level_id.cc",
-    "/third_party/libwebrtc/api/video_codecs/sdp_video_format.cc",
-    "/third_party/libwebrtc/api/video_codecs/simulcast_stream.cc",
-    "/third_party/libwebrtc/api/video_codecs/spatial_layer.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_codec.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_decoder.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_encoder.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_frame_config.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp9_profile.cc"
+    "/third_party/libwebrtc/video/config/video_encoder_config.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -220,4 +210,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("video_codecs_api_gn")
+Library("encoder_config_gn")
