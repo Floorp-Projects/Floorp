@@ -46,8 +46,12 @@ export function convertTimestamp(
 }
 
 export function createFaviconElement(image, targetURI = "") {
+  const imageUrl = image
+    ? lazy.PlacesUIUtils.getImageURL(image)
+    : `page-icon:${targetURI}`;
   let favicon = document.createElement("div");
-  favicon.style.backgroundImage = `url('${getImageUrl(image, targetURI)}')`;
+
+  favicon.style.backgroundImage = `url('${imageUrl}')`;
   favicon.classList.add("favicon");
   return favicon;
 }
