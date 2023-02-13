@@ -214,6 +214,28 @@ window.addEventListener("AboutLoginsExportPasswordsDialog", async event => {
   }
 });
 
+async function interceptFocusKey() {
+  // Intercept Ctrl+F on the page to focus login filter box
+  const [findKey] = await document.l10n.formatMessages([
+    { id: "about-logins-login-filter" },
+  ]);
+  const focusKey = findKey.attributes
+    .find(a => a.name == "key")
+    .value.toLowerCase();
+  document.addEventListener("keydown", event => {
+    if (event.key == focusKey && event.getModifierState("Accel")) {
+      event.preventDefault();
+      document
+        .querySelector("login-list")
+        .shadowRoot.querySelector("login-filter")
+        .shadowRoot.querySelector("input")
+        .focus();
+    }
+  });
+}
+
+await interceptFocusKey();
+
 // Begin code that executes on page load.
 
 let searchParamsChanged = false;
