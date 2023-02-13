@@ -3,11 +3,17 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-# 111.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v110.0.0...main)
+# 112.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v111.0.0...main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 111.0.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v110.0.0...v111.0.0)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/.config.yml)
 
 * **compose-cfr**
   * 🚒 Bug fixed [bug #1809592](https://bugzilla.mozilla.org/show_bug.cgi?id=1809592). Improve screen alignment for Contextual Feature Recommendation popups.
