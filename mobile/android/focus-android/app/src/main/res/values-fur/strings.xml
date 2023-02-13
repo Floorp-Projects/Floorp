@@ -977,11 +977,37 @@
     <string name="preference_follow_device_theme">Va daûr dal teme dal dispositîf</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Il sît domandât nol supuarte HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Come impostazion predefinide, %1$s al cîr di conetisi doprant il protocol HTTPS par vê plui sigurece. Par cambiâ cheste impostazion o vê plui informazions, va su Impostazions &gt; Riservatece e sigurece &gt; Sigurece.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Il sît domandât nol supuarte HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Chest sît nol supuarte HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Come impostazion predefinide, %1$s al cîr di conetisi doprant il protocol HTTPS par vê plui sigurece. Par cambiâ cheste impostazion o vê plui informazions, va su Impostazions &gt; Riservatece e sigurece &gt; Sigurece.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[Cuant che al è pussibil %1$s al cîr di doprâ une conession HTTPS par vê plui sigurece.
+     <a href="%2$s">Plui informazions</a> <br/><br/>
+     Modifiche cheste impostazion in Impostazions > Riservatece e sigurece > Sigurece.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conession no sigure</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Al podarès jessi un probleme cu la configurazion dal servidôr o cualchidun che al cîr di sostituîsi al servidôr stes. <br/><br/>
+    Se in passât al è stât pussibil conetisi a chest servidôr cun sucès, l’erôr al podarès sei temporani.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Al podarès jessi che cualchidun al sta cirint di sostituîsi al sît e continuâ al podarès jessi un risi.</label>
+        <br><br>
+        <label>%1$s nol considere atendibil <b>%2$s</b> parcè che l’emitent dal so certificât nol è cognossût, il certificât al è auto-firmât opûr il servidôr nol sta mandant i certificâts intermedis juscj.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Siere schede</string>
 

@@ -1006,12 +1006,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Pyytämäsi sivusto ei tue HTTPS:ää</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Pyytämäsi sivusto ei tue HTTPS:ää</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Tämä sivusto ei tue HTTPS:ää</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Oletusarvoisesti %1$s yrittää muodostaa yhteyden HTTPS:llä paremman tietoturvan vuoksi. Voit muuttaa tämän asetuksen ja saada lisätietoja siirtymällä kohtaan Asetukset &gt; Tietosuoja ja turvallisuus &gt; Turvallisuus.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Oletusarvoisesti %1$s yrittää muodostaa yhteyden HTTPS:llä paremman tietoturvan vuoksi. Voit muuttaa tämän asetuksen ja saada lisätietoja siirtymällä kohtaan Asetukset &gt; Tietosuoja ja turvallisuus &gt; Turvallisuus.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s yrittää käyttää HTTPS aina kun mahdollista turvallisuuden lisäämiseksi.
+     <a href="%2$s">Lue lisää</a> <br/><br/>
+     Muuta tätä asetusta kohdassa Asetukset > Tietosuoja ja turvallisuus > Turvallisuus.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Yhteys ei ole suojattu</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Ongelma voi johtua palvelimen asetuksista tai jonkin toisen palvelimen vilpillisestä yrityksestä tekeytyä palvelimeksi. <br/><br/>
+    Jos yhteyden muodostaminen palvelimeen on aiemmin onnistunut, vika voi olla väliaikainen.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Jokin toinen osapuoli saattaa tekeytyä sivustoksi, jatkaminen voi olla riskialtista.</label>
+        <br><br>
+        <label>%1$s ei luota sivustoon <b>%2$s</b>, koska sen varmenteen myöntäjä on tuntematon, varmenne on itse allekirjoitettu tai palvelin ei lähetä oikeita välivarmenteita.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Sulje välilehti</string>
 

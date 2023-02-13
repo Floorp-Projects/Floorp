@@ -1014,12 +1014,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">您请求的网站不支持 HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">您请求的网站不支持 HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">此站点不支持 HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">默认情况下，%1$s 会尝试使用 HTTPS 进行连接以增强安全性。可到“设置 &gt; 隐私与安全 &gt; 安全”更改此设置或了解更多信息。</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">默认情况下，%1$s 会尝试使用 HTTPS 进行连接以增强安全性。可到“设置 &gt; 隐私与安全 &gt; 安全”更改此设置或了解更多信息。</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s 尽可能尝试使用 HTTPS 连接以提高安全性。
+     <a href="%2$s">了解更多</a> <br/><br/>
+     通过“设置”>“隐私与安全”>“安全”更改此设置。]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">连接不安全</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    这可能是服务器配置的问题，也可能是有人试图冒充服务器。 <br/><br/>
+    如果您过去曾成功连接到此服务器，则该错误可能是暂时的。
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>可能有人试图冒充该网站，继续访问可能会有风险。</label>
+        <br><br>
+        <label>%1$s 不信任 <b>%2$s</b>，因为其证书颁发者未知、证书为自签名的，或者服务器未发送正确的中间证书。</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">关闭标签页</string>
 

@@ -1007,11 +1007,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Запитаний сайт не підтримує HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Типово, %1$s намагається встановити з’єднання за протоколом HTTPS для підвищення безпеки. Щоб змінити цей параметр чи дізнатися більше, перейдіть в Налаштування &gt; Приватність і безпека &gt; Безпека.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Запитаний сайт не підтримує HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Цей сайт не підтримує HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Типово, %1$s намагається встановити з’єднання за протоколом HTTPS для підвищення безпеки. Щоб змінити цей параметр чи дізнатися більше, перейдіть в Налаштування &gt; Приватність і безпека &gt; Безпека.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s намагається використовувати HTTPS-з’єднання, коли це можливо для підвищення безпеки.
+     <a href="%2$s">Докладніше</a> <br/><br/>
+     Змініть це налаштування перейшовши до Налаштування > Приватність і безпека > Безпека.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Незахищене зʼєднання</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Це може бути проблема з конфігурацією сервера, або, можливо, хтось намагається імітувати той сервер. <br/><br/>
+    Якщо ви раніше отримували доступ до цього сервера, то це може бути тимчасова помилка.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Хтось може намагатися видати себе за сайт. Подальший перехід може бути ризикованим.</label>
+        <br><br>
+        <label>%1$s не довіряє <b>%2$s</b>, тому що видавець його сертифіката невідомий, сертифікат самопідписаний, або сервер не надсилає правильні посередницькі сертифікати</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Закрити вкладку</string>
 

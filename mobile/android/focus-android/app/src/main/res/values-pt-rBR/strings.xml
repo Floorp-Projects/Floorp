@@ -1009,12 +1009,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">O site que você solicitou não é compatível com HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">O site que você solicitou não é compatível com HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Este site não oferece suporte a HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Por padrão, %1$s tenta conectar usando HTTPS para maior segurança. Para alterar esta configuração ou saber mais, vá em Configurações &gt; Privacidade e segurança &gt; Segurança.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Por padrão, %1$s tenta conectar usando HTTPS para maior segurança. Para alterar esta configuração ou saber mais, vá em Configurações &gt; Privacidade e segurança &gt; Segurança.</string>
 
-    <!-- Sessions List -->
+     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[O %1$s tenta usar uma conexão HTTPS sempre que possível para maior segurança.
+     <a href="%2$s">Saiba mais</a> <br/><br/>
+     Altere esta configuração em Configurações > Privacidade e segurança > Segurança.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conexão não segura</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Isto pode ser um problema com a configuração do servidor, ou pode ser alguém tentando se passar pelo servidor. <br/><br/>
+    Se você já se conectou a este servidor com sucesso antes, o erro pode ser temporário.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Alguém pode estar tentando se passar pelo site, continuar pode ser arriscado.</label>
+        <br><br>
+        <label>O %1$s não confia em <b>%2$s</b> porque o emissor do certificado é desconhecido, ou o certificado é autoassinado, ou o servidor não está enviando os certificados intermediários corretos.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Fechar aba</string>
 

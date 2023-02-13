@@ -1010,12 +1010,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Spletno mesto, ki ste ga zahtevali, ne podpira HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Spletno mesto, ki ste ga zahtevali, ne podpira HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">To spletno mesto ne podpira HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Za večjo varnost poskuša %1$s privzeto vzpostaviti povezavo HTTPS. Za spremembo te nastavitve in več podatkov o tej temi pojdite v Nastavitve &gt; Zasebnost in varnost &gt; Varnost.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Za večjo varnost poskuša %1$s privzeto vzpostaviti povezavo HTTPS. Za spremembo te nastavitve in več podatkov o tej temi pojdite v Nastavitve &gt; Zasebnost in varnost &gt; Varnost.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s poskuša za večjo varnost uporabiti povezavo HTTPS, kadarkoli je to mogoče.
+     <a href="%2$s">Več o tem</a> <br/><br/>
+     To lahko spremenite v Nastavitve > Zasebnost in varnost > Varnost.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Povezava ni varna</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Težava je lahko v nastavitvah strežnika ali pa ga kdo poskuša oponašati. <br/><br/>
+    Če ste se v preteklosti že uspešno povezali na ta strežnik, je napaka morda samo začasna.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Nekdo lahko poskuša oponašati to spletno mesto, zato je nadaljevanje lahko tvegano.</label>
+        <br><br>
+        <label>%1$s ne zaupa spletnemu mestu <b>%2$s</b>, ker izdajatelj njegovega digitalnega potrdila ni znan, ker je potrdilo samopodpisano ali pa strežnik ne pošilja pravih vmesnih digitalnih potrdil.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zapri zavihek</string>
 

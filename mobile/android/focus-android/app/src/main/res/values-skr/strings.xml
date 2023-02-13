@@ -994,12 +994,29 @@
     <string name="preference_follow_device_theme">ڈیوائس تھیم تے عمل کرو</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">جہڑی سائٹ دی تساں ارداس کیتی ہے ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">جہڑی سائٹ دی تساں ارداس کیتی ہے ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ایہ سائٹ ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">ڈیفالٹ نال، ایچ ٹی ٹی پی ایس ورتیندے ہوئے ودھائی سلامتی کیتے %1$s کنکٹ کرݨ دی کوشش کریندے۔ ایہ ترتیب وٹاوݨ کیتے یا ٻیا سکھݨ کیتے، ترتیباں &gt; رازداری تے سلامتی &gt; سلامتی تے ون٘ڄو۔ </string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">ڈیفالٹ نال، ایچ ٹی ٹی پی ایس ورتیندے ہوئے ودھائی سلامتی کیتے %1$s کنکٹ کرݨ دی کوشش کریندے۔ ایہ ترتیب وٹاوݨ کیتے یا ٻیا سکھݨ کیتے، ترتیباں &gt; رازداری تے سلامتی &gt; سلامتی تے ون٘ڄو۔ </string>
 
-    <!-- Sessions List -->
+     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ناقابل بھروسا کنکشن</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+   ایہ سرور دی کنفیگریشن وِچ مسئلہ تھی سڳدا ہے، یا ایہ تھی سڳدا ہے جو کوئی سرور دی نقل کرݨ دی کوشش کریندا پیا ہووے۔ <br/><br/>
+    جے تساں پچھوکڑ وِچ ایں سرور نال کامیابی دے نال جڑ چکے او، تاں غلطی عارضی تھی سڳدی ہے، تے تساں بعد اِچ دوبارہ کوشش کر سڳدے او۔ 
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>تھی  سڳدا ہے جو کوئی سائٹ دی نقل بݨاوݨ دی کوشش کریندا پیا ہووے تے  جاری رکھݨ نال خدشہ تھی سڳدے۔</label>
+        <br><br>
+        <label> %1$s، ایں <b>%2$s</b> تے  بھروسہ کائنی کریندا کیوں جو سرٹیفکیٹ جاری کرݨ آلا نامعلوم ہے، سرٹیفکیٹ تے  خود آپ دستخط کیتے ہوئے ہن یا سرور صحیح درمیانی سرٹیفیکیٹ کائنی پٹھیندا پیا۔</label>]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ٹیب بند کرو</string>
 

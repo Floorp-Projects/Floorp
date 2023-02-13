@@ -1005,11 +1005,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">ਤੁਹਾਡੇ ਵਲੋਂ ਮੰਗ ਕੀਤੀ ਸਾਈਟ HTTPS ਲਈ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">ਮੂਲ ਰੂਪ ਵਿੱਚ %1$s ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਵਰਤਕੇ ਕਨੈਕਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ। ਇਹ ਸੈਟਿੰਗ ਨੂੰ ਬਦਲਣ ਜਾਂ ਹੋਰ ਸਿੱਖਣ ਲਈ ਸੈਟਿੰਗ &gt; ਪਰਦੇਦਾਰੀ ਤੇ ਸੁਰੱਖਿਆ &gt;  ਸੁਰੱਖਿਆ ਉੱਤੇ ਜਾਓ।</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਵਲੋਂ ਮੰਗ ਕੀਤੀ ਸਾਈਟ HTTPS ਲਈ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ਇਹ ਸਾਈਟ HTTPS ਲਈ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">ਮੂਲ ਰੂਪ ਵਿੱਚ %1$s ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਵਰਤਕੇ ਕਨੈਕਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ। ਇਹ ਸੈਟਿੰਗ ਨੂੰ ਬਦਲਣ ਜਾਂ ਹੋਰ ਸਿੱਖਣ ਲਈ ਸੈਟਿੰਗ &gt; ਪਰਦੇਦਾਰੀ ਤੇ ਸੁਰੱਖਿਆ &gt;  ਸੁਰੱਖਿਆ ਉੱਤੇ ਜਾਓ।</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋ ਸਕੇ ਜ਼ਿਆਦਾ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਵਰਤਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।
+ <a href="%2$s">ਹੋਰ ਜਾਣੋ</a><br/><br/>
+ ਇਸ ਸੈਟਿੰਗ ਨੂੰ ਸੈਟਿੰਗਾਂ > ਪਰਦੇਦਾਰੀ ਤੇ ਸੁਰੱਖਿਆ > ਸੁਰੱਖਿਆ ਵਿੱਚੋਂ ਬਦਲੋ।]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ਕਨੈਕਸ਼ਨ ਸੁਰੱਖਿਅਤ ਨਹੀਂ ਹੈ</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    ਇਹ ਸਰਵਰ ਦੀ ਸੰਰਚਨਾ ਨਾਲ ਸਮੱਸਿਆ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਕੋਈ ਸਰਵਰ ਦੀ ਨਕਲ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੋ ਸਕਦਾ ਹੈ। <br/><br/>
+    ਜੇ ਤੁਸੀਂ ਇਸ ਸਰਵਰ ਨਾਲ ਪਹਿਲਾਂ ਕਾਮਯਾਬੀ ਨਾਲ ਕਨੈਕਟ ਹੋ ਚੁੱਕੇ ਹੋ ਤਾਂ ਇਹ ਆਰਜ਼ੀ ਗਲਤੀ ਹੋ ਸਕਦੀ ਹੈ।
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>ਕੋਈ ਸਾਈਟ ਦੀ ਨਕਲ ਕਰਦਾ ਹੋ ਸਕਦਾ ਹੈ ਅਤੇ ਜਾਰੀ ਰੱਖਣਾ ਖ਼ਤਰਨਾਕ ਹੋ ਸਕਦਾ ਹੈ।</label>
+        <br><br>
+        <label>%1$s <b>%2$s</b> ਉੱਤੇ ਭਰੋਸਾ ਨਹੀਂ ਕਰਦਾ ਹੈ, ਕਿਉਂਕਿ ਇਹ ਸਰਟੀਫਿਕੇਟ ਨੂੰ ਜਾਰੀ ਕਰਨ ਵਾਲਾ ਅਣਪਛਾਤਾ ਹੈ, ਸਰਟੀਫਿਕੇਟ ਖੁਦ-ਦਸਤਖਤੀ ਹੈ ਜਾਂ ਸਰਵਰ ਠੀਕ ਵਿਚਕਾਰਲੇ ਸਰਟੀਫਿਕੇਟ ਨਹੀਂ ਭੇਜ ਰਿਹਾ ਹੈ।</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ਟੈਬ ਬੰਦ ਕਰੋ</string>
 

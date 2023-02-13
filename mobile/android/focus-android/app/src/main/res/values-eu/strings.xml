@@ -1004,11 +1004,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Eskatu duzun guneak ez du HTTPS onartzen</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Lehenespenez, segurtasuna areagotzeko HTTPS erabiliz konektatzen saiatzen da %1$s. Ezarpen hau aldatu edo argibide gehiago jasotzeko, zoaz Ezarpenak &gt; Pribatutasuna eta segurtasuna &gt; Segurtasuna atalera.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Eskatu duzun guneak ez du HTTPS onartzen</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Gune honek ez du HTTPS onartzen</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Lehenespenez, segurtasuna areagotzeko HTTPS erabiliz konektatzen saiatzen da %1$s. Ezarpen hau aldatu edo argibide gehiago jasotzeko, zoaz Ezarpenak &gt; Pribatutasuna eta segurtasuna &gt; Segurtasuna atalera.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s saiatzen da ahal denean HTTPS konexioa erabiltzen segurtasun hobeagorako.
+     <a href="%2$s">Argibide gehiago</a> <br/><br/>
+     Aldatu ezarpen hau Ezarpenak > Pribatutasuna eta Segurtasuna > Segurtasuna atalean.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Konexio ez-segurua</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Hau zerbitzariaren konfigurazio-errore batengatik edo norbait zerbitzariaren nortasuna hartzen ari delako izan daiteke. <br/><br/>
+    Aurretik zerbitzari honetara behar bezala konektatu bazara, errorea behin-behinekoa izan daiteke.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Baten bat gunea ordezten saiatzen egon liteke eta jarraitzea arriskutsua izan liteke.</label>
+        <br><br>
+        <label>%1$sek ez du <b>%2$s</b> fidagarritzat jotzen ziurtagiriaren jaulkitzailea ezezaguna delako, ziurtagiria guneak berak sinatutakoa delako, edo zerbitzariak ez dituelako tarteko ziurtagiriak egoki bidaltzen.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Itxi fitxa</string>
 

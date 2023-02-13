@@ -1005,11 +1005,37 @@
     <string name="preference_follow_device_theme">Прати тему уређаја</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Страница коју сте тражили не подржава HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Подразумевано, %1$s покушава да се повеже користећи HTTPS ради додатне безбедности. Да бисте променили ово подешавање или сазнали више, идите на Подешавања &gt; Приватност и безбедност &gt; Безбедност.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Страница коју сте тражили не подржава HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Овај сајт не подржава HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Подразумевано, %1$s покушава да се повеже користећи HTTPS ради додатне безбедности. Да бисте променили ово подешавање или сазнали више, идите на Подешавања &gt; Приватност и безбедност &gt; Безбедност.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s покушава да користи HTTPS везу кад год је могуће ради додатне безбедности.
+     <a href="%2$s">Сазнајте више</a> <br/><br/>
+     Промените ову поставку у Подешавања > Приватност и безбедност > Безбедност.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Веза није безбедна</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Можда је проблем у конфигурацији сервера, а можда неко покушава да имитира сервер. <br/><br/>
+   Ако сте се раније успешно повезали са овим сервером, могуће је да проблем привремен.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Неко можда покушава да имитира сајт и настављање на исти је тада ризично.</label>
+        <br><br>
+        <label>%1$s нема поверења у <b>%2$s</b> зато што му је издавач сертификата непознат, сертификат је самопотписан или сервер не шаље исправне посредничке сертификате.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Затвори језичак</string>
 

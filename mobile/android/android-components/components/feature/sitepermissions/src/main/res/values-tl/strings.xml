@@ -35,4 +35,8 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Payagan ang %1$s na mag-imbak ng data sa persistence storage?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">Payagan ang %1$s na magpaandar ng DRM-controlled content?</string>
+    <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
+    <string name="mozac_feature_sitepermissions_storage_access_not_allow">I block</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">Matuto pa</string>
 </resources>

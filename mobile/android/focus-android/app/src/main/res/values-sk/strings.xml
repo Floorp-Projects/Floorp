@@ -1008,12 +1008,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Vami požadovaná stránka nepodporuje HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Vami požadovaná stránka nepodporuje HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Táto stránka nepodporuje HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">V predvolenom nastavení sa %1$s pokúša pripojiť pomocou protokolu HTTPS na zvýšenie bezpečnosti. Ak chcete zmeniť toto nastavenie alebo sa dozvedieť viac, prejdite do časti Nastavenia &gt; Súkromie a bezpečnosť &gt; Zabezpečenie.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">V predvolenom nastavení sa %1$s pokúša pripojiť pomocou protokolu HTTPS na zvýšenie bezpečnosti. Ak chcete zmeniť toto nastavenie alebo sa dozvedieť viac, prejdite do časti Nastavenia &gt; Súkromie a bezpečnosť &gt; Zabezpečenie.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s sa v záujme väčšej bezpečnosti pokúša použiť zabezpečené pripojenie cez protokol HTTPS vždy, keď je to možné.
+     <a href="%2$s">Ďalšie informácie</a> <br/><br/>
+     Toto nastavenie môžete zmeniť v časti Nastavenia > Súkromie a bezpečnosť > Bezpečnosť.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Pripojenie nie je zabezpečené</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Môže to byť problém s konfiguráciou servera alebo sa ho niekto snaží napodobniť. <br/><br/>
+    Ak ste sa k tomuto serveru úspešne pripojili v minulosti, chyba môže byť dočasná.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Niekto sa môže vydávať za tento server, a preto pokračovať by mohlo byť riskantné.</label>
+        <br><br>
+        <label>%1$s nedôveruje serveru <b>%2$s</b>, pretože vydavateľ jeho certifikátu je neznámy, certifikát je podpísaný sám sebou alebo server neposiela správne prechodné certifikáty.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zavrieť kartu</string>
 

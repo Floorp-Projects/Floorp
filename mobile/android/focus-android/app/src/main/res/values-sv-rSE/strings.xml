@@ -1008,12 +1008,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Webbplatsen du begärde stöder inte HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Webbplatsen du begärde stöder inte HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Den här webbplatsen stöder inte HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Som standard försöker %1$s ansluta med HTTPS för ökad säkerhet. För att ändra den här inställningen eller för att lära dig mer, gå till Inställningar &gt; Sekretess &amp; säkerhet &gt; Säkerhet.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Som standard försöker %1$s ansluta med HTTPS för ökad säkerhet. För att ändra den här inställningen eller för att lära dig mer, gå till Inställningar &gt; Sekretess &amp; säkerhet &gt; Säkerhet.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s försöker använda en HTTPS-anslutning när det är möjligt för ökad säkerhet.
+     <a href="%2$s">Läs mer</a> <br/><br/>
+     Ändra den här inställningen i Inställningar > Sekretess &amp; Säkerhet > Säkerhet.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Anslutningen är inte säker</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Detta kan vara ett problem med serverns konfiguration, eller så kan det vara någon som försöker utge sig för att vara servern. <br/><br/>
+    Om du har anslutit till den här servern tidigare kan felet vara tillfälligt.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Någon kan försöka utge sig för webbplatsen och att fortsätta kan vara riskabelt.</label>
+        <br><br>
+        <label>%1$s litar inte på <b>%2$s</b> eftersom dess certifikatutfärdare är okänd, certifikatet är självsignerat eller att servern inte skickar rätt mellanliggande certifikat.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Stäng flik</string>
 

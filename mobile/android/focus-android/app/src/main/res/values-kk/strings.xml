@@ -1003,11 +1003,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Сіз сұраған сайт HTTPS хаттамасын қолдамайды</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Бастапұы баптаулар бойынша, %1$s қауіпсіздікті арттыру үшін HTTPS арқылы байланысуға әрекеттенеді. Бұл параметрді өзгерту немесе қосымша ақпарат алу үшін Параметрлер &gt; Жекелік және қауіпсіздік &gt; Қауіпсіздік тармағына өтіңіз.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Сіз сұраған сайт HTTPS хаттамасын қолдамайды</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Бұл сайт HTTPS хаттамасын қолдамайды</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Бастапұы баптаулар бойынша, %1$s қауіпсіздікті арттыру үшін HTTPS арқылы байланысуға әрекеттенеді. Бұл параметрді өзгерту немесе қосымша ақпарат алу үшін Параметрлер &gt; Жекелік және қауіпсіздік &gt; Қауіпсіздік тармағына өтіңіз.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s көбірек қауіпсіздік үшін мүмкін болған кезде HTTPS байланысын қолдануға тырысады.
+     <a href="%2$s">Көбірек білу</a> <br/><br/>
+     Бұл баптауды Баптаулар > Жекелік және қауіпсіздік > Қауіпсіздік ішінде өзгертуге болады.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Байланыс қауіпсіз емес</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Бұл сервердің қатесі болуы мүмкін, немесе біреу сізге керек серверді басқасымен ауыстырғысы келеді. <br/><br/>
+    Осыған дейін осы серверге сәтті қосылған болсаңыз, осы қате уақытша болуы мүмкін.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Біреу бұл сайтты еліктеу талабын жасап жатқаны мүмкін, сондықтан жалғастыру қауіпті болуы мүмкін.</label>
+        <br><br>
+        <label>%1$s қолданбасы <b>%2$s</b> адресіне сенбейді, өйткені сертификат шығарушысы белгісіз, сертификат қолтаңбасы өздігінен қойылған, немесе сервер жарамды аралық сертификаттарды жібермеген.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Бетті жабу</string>
 
