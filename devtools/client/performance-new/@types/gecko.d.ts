@@ -27,11 +27,11 @@ declare namespace MockedExports {
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/client/performance-new/shared/background.jsm.js": typeof import("resource://devtools/client/performance-new/shared/background.jsm.js");
+    "resource://devtools/client/performance-new/shared/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/shared/symbolication.jsm.js");
     "resource://devtools/shared/loader/browser-loader.js": any;
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
     "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/typescript-lazy-load.jsm.js");
     "resource://devtools/client/performance-new/popup/panel.jsm.js": typeof import("resource://devtools/client/performance-new/popup/panel.jsm.js");
-    "resource://devtools/client/performance-new/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/symbolication.jsm.js");
     "resource:///modules/PanelMultiView.jsm": typeof import("resource:///modules/PanelMultiView.jsm");
   }
 
@@ -46,7 +46,9 @@ declare namespace MockedExports {
      * Then add the file path to the KnownModules above.
      */
     import: <S extends keyof KnownModules>(module: S) => KnownModules[S];
-    importESModule: <S extends keyof KnownModules>(module: S) => KnownModules[S];
+    importESModule: <S extends keyof KnownModules>(
+      module: S
+    ) => KnownModules[S];
     defineModuleGetter: (target: any, variable: string, path: string) => void;
     defineESModuleGetters: (target: any, mappings: any) => void;
   }
@@ -151,7 +153,7 @@ declare namespace MockedExports {
       set: (name: string, value: string) => void;
       get: (name: string) => string;
       exists: (name: string) => boolean;
-    },
+    };
     prefs: nsIPrefBranch;
     profiler: {
       StartProfiler: (
@@ -332,8 +334,8 @@ declare module "resource://devtools/client/performance-new/shared/background.jsm
   export = Background;
 }
 
-declare module "resource://devtools/client/performance-new/symbolication.jsm.js" {
-  import * as PerfSymbolication from "devtools/client/performance-new/symbolication.jsm.js";
+declare module "resource://devtools/client/performance-new/shared/symbolication.jsm.js" {
+  import * as PerfSymbolication from "devtools/client/performance-new/shared/symbolication.jsm.js";
   export = PerfSymbolication;
 }
 

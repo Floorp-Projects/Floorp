@@ -5,6 +5,9 @@
 
 DevToolsModules(
     "background.jsm.js",
+    "profiler_get_symbols.js",
+    "symbolication-worker.js",
+    "symbolication.jsm.js",
 )
 
 with Files("**"):

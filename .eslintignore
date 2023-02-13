@@ -91,7 +91,7 @@ devtools/server/tests/xpcshell/setBreakpoint*
 devtools/server/tests/xpcshell/sourcemapped.js
 
 # Ignore generated code from wasm-bindgen
-devtools/client/performance-new/profiler_get_symbols.js
+devtools/client/performance-new/shared/profiler_get_symbols.js
 
 # Testing syntax error
 devtools/client/webconsole/test/browser/test-syntaxerror-worklet.js

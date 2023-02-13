@@ -8,16 +8,16 @@
 const lazy = {};
 
 /**
- * @typedef {import("./@types/perf").Library} Library
- * @typedef {import("./@types/perf").PerfFront} PerfFront
- * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
- * @typedef {import("./@types/perf").SymbolicationService} SymbolicationService
- * @typedef {import("./@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
+ * @typedef {import("../@types/perf").Library} Library
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("../@types/perf").SymbolicationService} SymbolicationService
+ * @typedef {import("../@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
  */
 
 /**
  * @template R
- * @typedef {import("./@types/perf").SymbolicationWorkerReplyData<R>} SymbolicationWorkerReplyData<R>
+ * @typedef {import("../@types/perf").SymbolicationWorkerReplyData<R>} SymbolicationWorkerReplyData<R>
  */
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -234,7 +234,7 @@ class LocalSymbolicationService {
       module,
     };
     return getResultFromWorker(
-      "resource://devtools/client/performance-new/symbolication-worker.js",
+      "resource://devtools/client/performance-new/shared/symbolication-worker.js",
       initialMessage
     );
   }
@@ -258,7 +258,7 @@ class LocalSymbolicationService {
       module,
     };
     return getResultFromWorker(
-      "resource://devtools/client/performance-new/symbolication-worker.js",
+      "resource://devtools/client/performance-new/shared/symbolication-worker.js",
       initialMessage
     );
   }

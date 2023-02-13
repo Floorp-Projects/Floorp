@@ -15,9 +15,6 @@ DevToolsModules(
     "browser.js",
     "initializer.js",
     "panel.js",
-    "profiler_get_symbols.js",
-    "symbolication-worker.js",
-    "symbolication.jsm.js",
     "typescript-lazy-load.jsm.js",
     "utils.js",
 )

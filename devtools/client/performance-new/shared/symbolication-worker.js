@@ -14,12 +14,12 @@
 
 /* import-globals-from profiler_get_symbols.js */
 importScripts(
-  "resource://devtools/client/performance-new/profiler_get_symbols.js"
+  "resource://devtools/client/performance-new/shared/profiler_get_symbols.js"
 );
 
 /**
- * @typedef {import("./@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
- * @typedef {import("./@types/perf").FileHandle} FileHandle
+ * @typedef {import("../@types/perf").SymbolicationWorkerInitialMessage} SymbolicationWorkerInitialMessage
+ * @typedef {import("../@types/perf").FileHandle} FileHandle
  */
 
 // This worker uses the wasm module that was generated from https://github.com/mstange/profiler-get-symbols.
