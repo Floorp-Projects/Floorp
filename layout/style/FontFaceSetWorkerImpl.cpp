@@ -136,32 +136,31 @@ void FontFaceSetWorkerImpl::InitializeOnMainThread() {
 void FontFaceSetWorkerImpl::Destroy() {
   RecursiveMutexAutoLock lock(mMutex);
 
-  class DestroyRunnable final : public Runnable {
+  class DestroyLoadersRunnable final : public Runnable {
    public:
-    DestroyRunnable(FontFaceSetWorkerImpl* aFontFaceSet,
-                    nsTHashtable<nsPtrHashKey<nsFontFaceLoader>>&& aLoaders)
+    explicit DestroyLoadersRunnable(FontFaceSetWorkerImpl* aFontFaceSet)
         : Runnable("FontFaceSetWorkerImpl::Destroy"),
-          mFontFaceSet(aFontFaceSet),
-          mLoaders(std::move(aLoaders)) {}
+          mFontFaceSet(aFontFaceSet) {}
 
    protected:
-    ~DestroyRunnable() override = default;
+    ~DestroyLoadersRunnable() override = default;
 
     NS_IMETHOD Run() override {
-      for (const auto& key : mLoaders.Keys()) {
+      RecursiveMutexAutoLock lock(mFontFaceSet->mMutex);
+      for (const auto& key : mFontFaceSet->mLoaders.Keys()) {
         key->Cancel();
       }
+      mFontFaceSet->mLoaders.Clear();
       return NS_OK;
     }
 
-    // We save a reference to the FontFaceSetWorkerImpl because the loaders
-    // contain a non-owning reference to it.
+    // We need to save a reference to the FontFaceSetWorkerImpl because the
+    // loaders contain a non-owning reference to it.
     RefPtr<FontFaceSetWorkerImpl> mFontFaceSet;
-    nsTHashtable<nsPtrHashKey<nsFontFaceLoader>> mLoaders;
   };
 
   if (!mLoaders.IsEmpty() && !NS_IsMainThread()) {
-    auto runnable = MakeRefPtr<DestroyRunnable>(this, std::move(mLoaders));
+    auto runnable = MakeRefPtr<DestroyLoadersRunnable>(this);
     NS_DispatchToMainThread(runnable);
   }
 
