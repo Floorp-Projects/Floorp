@@ -735,8 +735,8 @@
     "devtools/client/performance-new/shared/background.jsm.js",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js":
     "devtools/client/performance-new/popup/menu-button.jsm.js",
-  "resource://devtools/client/performance-new/popup/panel.jsm.js":
-    "devtools/client/performance-new/popup/panel.jsm.js",
+  "resource://devtools/client/performance-new/popup/logic.jsm.js":
+    "devtools/client/performance-new/popup/logic.jsm.js",
   "resource://devtools/client/performance-new/shared/symbolication.jsm.js":
     "devtools/client/performance-new/shared/symbolication.jsm.js",
   "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js":
