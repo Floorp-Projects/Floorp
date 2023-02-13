@@ -24,7 +24,6 @@ dump("DEVTOOLS_CSS_DB_DELIMITER");
 dump(
   JSON.stringify({
     cssProperties: cssProperties(),
-    preferences: preferences(),
     pseudoElements: pseudoElements(),
   })
 );
@@ -50,18 +49,6 @@ function cssProperties() {
     }
   }
   return properties;
-}
-
-/**
- * A list of preferences of CSS properties.
- */
-function preferences() {
-  const prefs = InspectorUtils.getCSSPropertyPrefs();
-  const result = [];
-  for (const { name, pref } of prefs) {
-    result.push([name, pref]);
-  }
-  return result;
 }
 
 /**

@@ -1,13 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { DeclinedEngines } = ChromeUtils.import(
-  "resource://services-sync/stages/declined.js"
+const { DeclinedEngines } = ChromeUtils.importESModule(
+  "resource://services-sync/stages/declined.sys.mjs"
 );
-const { EngineSynchronizer } = ChromeUtils.import(
-  "resource://services-sync/stages/enginesync.js"
+const { EngineSynchronizer } = ChromeUtils.importESModule(
+  "resource://services-sync/stages/enginesync.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );

@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-sync/engines/tabs.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+ChromeUtils.importESModule("resource://services-sync/engines/tabs.sys.mjs");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
-const { SyncScheduler } = ChromeUtils.import(
-  "resource://services-sync/policies.js"
+const { SyncScheduler } = ChromeUtils.importESModule(
+  "resource://services-sync/policies.sys.mjs"
 );
 
 const { ExperimentFakes } = ChromeUtils.import(

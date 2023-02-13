@@ -1,12 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { AuthenticationError, SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
+const { AuthenticationError, SyncAuthManager } = ChromeUtils.importESModule(
+  "resource://services-sync/sync_auth.sys.mjs"
 );
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { initializeIdentityWithTokenServerResponse } = ChromeUtils.import(
-  "resource://testing-common/services/sync/fxa_utils.js"
+const { Resource } = ChromeUtils.importESModule(
+  "resource://services-sync/resource.sys.mjs"
+);
+const {
+  initializeIdentityWithTokenServerResponse,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/services/sync/fxa_utils.sys.mjs"
 );
 const { HawkClient } = ChromeUtils.import(
   "resource://services-common/hawkclient.js"
@@ -22,8 +26,12 @@ const {
   ONLOGIN_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { Status } = ChromeUtils.importESModule(
+  "resource://services-sync/status.sys.mjs"
+);
 const { TokenServerClient, TokenServerClientServerError } = ChromeUtils.import(
   "resource://services-common/tokenserverclient.js"
 );

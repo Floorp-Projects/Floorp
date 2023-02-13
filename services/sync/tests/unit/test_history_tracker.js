@@ -4,10 +4,12 @@
 const { PlacesDBUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesDBUtils.sys.mjs"
 );
-const { HistoryEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/history.js"
+const { HistoryEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/history.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 let engine;
 let tracker;

@@ -47,10 +47,14 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BulkKeyBundle: "resource://services-sync/keys.sys.mjs",
+  CollectionKeyManager: "resource://services-sync/record.sys.mjs",
+  Utils: "resource://services-sync/util.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  BulkKeyBundle: "resource://services-sync/keys.js",
-  CollectionKeyManager: "resource://services-sync/record.js",
   CommonUtils: "resource://services-common/utils.js",
   CryptoUtils: "resource://services-crypto/utils.js",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
@@ -58,7 +62,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Kinto: "resource://services-common/kinto-offline-client.js",
   FirefoxAdapter: "resource://services-common/kinto-storage-adapter.js",
   Observers: "resource://services-common/observers.js",
-  Utils: "resource://services-sync/util.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {

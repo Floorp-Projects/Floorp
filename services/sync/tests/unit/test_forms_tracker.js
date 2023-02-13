@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { FormEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/forms.js"
+const { FormEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/forms.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_task(async function run_test() {
   _("Verify we've got an empty tracker to work with.");

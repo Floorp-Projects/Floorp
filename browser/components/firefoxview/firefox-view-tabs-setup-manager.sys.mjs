@@ -13,16 +13,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UIState: "resource://services-sync/UIState.jsm",
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
-  Weave: "resource://services-sync/main.js",
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "syncUtils", () => {
-  return ChromeUtils.import("resource://services-sync/util.js").Utils;
+  return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
+    .Utils;
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {

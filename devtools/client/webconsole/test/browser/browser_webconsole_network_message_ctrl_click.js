@@ -44,7 +44,6 @@ add_task(async function() {
   const newTabHref = newTab.linkedBrowser.currentURI.spec;
 
   is(newTabHref, TEST_URI, "Tab was opened with the expected URL");
-
   info("Remove the new tab and select the previous tab back");
   gBrowser.removeTab(newTab);
   gBrowser.selectedTab = currentTab;

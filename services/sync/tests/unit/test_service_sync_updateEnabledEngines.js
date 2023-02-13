@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
-const { EngineSynchronizer } = ChromeUtils.import(
-  "resource://services-sync/stages/enginesync.js"
+const { EngineSynchronizer } = ChromeUtils.importESModule(
+  "resource://services-sync/stages/enginesync.sys.mjs"
 );
 
 function QuietStore() {

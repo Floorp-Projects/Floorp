@@ -140,26 +140,27 @@ function NetworkEventMessage({
     topLevelClasses.push("network-message-blocked");
   }
 
-  const onToggle = (messageId, e) => {
-    const shouldOpenLink = (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
-    if (shouldOpenLink) {
-      serviceContainer.openLink(url, e);
-      e.stopPropagation();
-    } else if (open) {
-      dispatch(actions.messageClose(messageId));
-    } else {
-      dispatch(actions.messageOpen(messageId));
-    }
-  };
-
   // Message body components.
   const requestMethod = dom.span({ className: "method" }, method);
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
   const unicodeURL = getUnicodeUrl(url);
-  const requestUrl = dom.span(
-    { className: "url", title: unicodeURL },
+  const requestUrl = dom.a(
+    {
+      className: "url",
+      title: unicodeURL,
+      href: url,
+      onClick: e => {
+        const shouldOpenLink =
+          (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
+        if (shouldOpenLink) {
+          e.stopPropagation();
+          e.preventDefault();
+          serviceContainer.openLink(url, e);
+        }
+      },
+    },
     unicodeURL
   );
   const statusBody = statusInfo
@@ -224,7 +225,6 @@ function NetworkEventMessage({
     collapsible: true,
     open,
     disabled,
-    onToggle,
     attachment,
     topLevelClasses,
     timeStamp,

@@ -1,8 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { WBORecord } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_test(function test_toJSON() {
   _("Create a record, for now without a TTL.");

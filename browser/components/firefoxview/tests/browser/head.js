@@ -16,7 +16,9 @@ const {
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { FeatureCalloutMessages } = ChromeUtils.import(
   "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
@@ -25,9 +27,12 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
 const MOBILE_PROMO_DISMISSED_PREF =

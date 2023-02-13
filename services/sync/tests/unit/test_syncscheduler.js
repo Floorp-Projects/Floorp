@@ -4,14 +4,18 @@
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-const { SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
+const { SyncAuthManager } = ChromeUtils.importESModule(
+  "resource://services-sync/sync_auth.sys.mjs"
 );
-const { SyncScheduler } = ChromeUtils.import(
-  "resource://services-sync/policies.js"
+const { SyncScheduler } = ChromeUtils.importESModule(
+  "resource://services-sync/policies.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { Status } = ChromeUtils.importESModule(
+  "resource://services-sync/status.sys.mjs"
+);
 
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);

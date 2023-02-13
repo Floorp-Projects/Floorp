@@ -4,6 +4,11 @@
  */
 "use strict";
 
+// The functions in this file will run in the content process in a test
+// scope.
+/* eslint-env mozilla/simpletest */
+/* global ContentTaskUtils, content */
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const info = console.log;

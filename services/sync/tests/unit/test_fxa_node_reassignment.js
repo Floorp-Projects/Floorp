@@ -10,10 +10,14 @@ _("Test that node reassignment happens correctly using the FxA identity mgr.");
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
-const { SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { Status } = ChromeUtils.importESModule(
+  "resource://services-sync/status.sys.mjs"
+);
+const { SyncAuthManager } = ChromeUtils.importESModule(
+  "resource://services-sync/sync_auth.sys.mjs"
 );
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"

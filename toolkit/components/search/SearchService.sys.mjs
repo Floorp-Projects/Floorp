@@ -1432,10 +1432,7 @@ export class SearchService {
     if (this.#loadPathIgnoreList.includes(engine._loadPath)) {
       return true;
     }
-    let url = engine
-      ._getURLOfType("text/html")
-      .getSubmission("dummy", engine)
-      .uri.spec.toLowerCase();
+    let url = engine.searchURLWithNoTerms.spec.toLowerCase();
     if (
       this.#submissionURLIgnoreList.some(code =>
         url.includes(code.toLowerCase())
@@ -2505,9 +2502,7 @@ export class SearchService {
     for (let elem of this._engines) {
       engine = elem[1];
       if (engine instanceof lazy.OpenSearchEngine) {
-        searchURI = engine
-          ._getURLOfType("text/html")
-          .getSubmission("", engine, "searchbar").uri;
+        searchURI = engine.searchURLWithNoTerms;
         updateURI = engine._updateURI;
 
         if (lazy.SearchUtils.isSecureURIForOpenSearch(searchURI)) {
@@ -2984,17 +2979,13 @@ export class SearchService {
 
     if (!sendSubmissionURL) {
       // ... or engines that are the same domain as a default engine.
-      let engineHost = engine._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH)
-        .templateHost;
+      let engineHost = engine.getResultDomain();
       for (let innerEngine of this._engines.values()) {
         if (!innerEngine.isAppProvided) {
           continue;
         }
 
-        let innerEngineURL = innerEngine._getURLOfType(
-          lazy.SearchUtils.URL_TYPE.SEARCH
-        );
-        if (innerEngineURL.templateHost == engineHost) {
+        if (innerEngine.getResultDomain() == engineHost) {
           sendSubmissionURL = true;
           break;
         }
@@ -3012,9 +3003,7 @@ export class SearchService {
     }
 
     if (sendSubmissionURL) {
-      let uri = engine
-        ._getURLOfType("text/html")
-        .getSubmission("", engine, "searchbar").uri;
+      let uri = engine.searchURLWithNoTerms;
       uri = uri
         .mutate()
         .setUserPass("") // Avoid reporting a username or password.

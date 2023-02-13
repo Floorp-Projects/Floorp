@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { FormValidator } = ChromeUtils.import(
-  "resource://services-sync/engines/forms.js"
+const { FormValidator } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/forms.sys.mjs"
 );
 
 function getDummyServerAndClient() {

@@ -38,7 +38,9 @@ var { PrivateBrowsingUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
-var { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+var { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
+);
 
 var { FxAccounts, getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
@@ -71,6 +73,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickActions:
@@ -93,7 +96,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SelectionChangedMenulist: "resource:///modules/SelectionChangedMenulist.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   TransientPrefs: "resource:///modules/TransientPrefs.jsm",
-  UIState: "resource://services-sync/UIState.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {

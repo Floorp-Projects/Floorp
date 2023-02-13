@@ -12,7 +12,9 @@ const {
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-sync/util.sys.mjs"
+);
 
 /**
  * Like Assert.throws, but for generators.

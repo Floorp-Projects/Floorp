@@ -3,9 +3,11 @@
  */
 "use strict";
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+const { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
+);
+const { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
 
 Log.repository.getLogger("Sync.RemoteTabs").addAppender(new Log.DumpAppender());
