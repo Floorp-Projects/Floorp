@@ -1365,21 +1365,13 @@ export class SearchEngine {
   }
 
   get searchForm() {
-    return this._getSearchFormWithPurpose();
-  }
-
-  get sendAttributionRequest() {
-    return this._sendAttributionRequest;
-  }
-
-  _getSearchFormWithPurpose(purpose) {
     // First look for a <Url rel="searchform">
     var searchFormURL = this._getURLOfType(
       lazy.SearchUtils.URL_TYPE.SEARCH,
       "searchform"
     );
     if (searchFormURL) {
-      let submission = searchFormURL.getSubmission("", this, purpose);
+      let submission = searchFormURL.getSubmission("", this);
 
       // If the rel=searchform URL is not type="get" (i.e. has postData),
       // ignore it, since we can only return a URL.
@@ -1404,6 +1396,10 @@ export class SearchEngine {
     return ParamSubstitution(this._searchForm, "", this);
   }
 
+  get sendAttributionRequest() {
+    return this._sendAttributionRequest;
+  }
+
   get queryCharset() {
     return this._queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
   }
@@ -1424,9 +1420,7 @@ export class SearchEngine {
 
     if (!data) {
       // Return a dummy submission object with our searchForm attribute
-      return new Submission(
-        lazy.SearchUtils.makeURI(this._getSearchFormWithPurpose(purpose))
-      );
+      return new Submission(lazy.SearchUtils.makeURI(this.searchForm));
     }
 
     var submissionData = "";
