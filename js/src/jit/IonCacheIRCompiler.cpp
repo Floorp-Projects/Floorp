@@ -556,7 +556,9 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
 
   CacheIRReader reader(writer_);
   do {
-    switch (reader.readOp()) {
+    CacheOp op = reader.readOp();
+    perfSpewer_.recordInstruction(masm, op);
+    switch (op) {
 #define DEFINE_OP(op, ...)                 \
   case CacheOp::op:                        \
     if (!emit##op(reader)) return nullptr; \
@@ -591,6 +593,9 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
     cx_->recoverFromOutOfMemory();
     return nullptr;
   }
+
+  CacheKind stubKind = stub->stubInfo()->kind();
+  perfSpewer_.saveProfile(newStubCode, CacheKindNames[uint8_t(stubKind)]);
 
   for (CodeOffset offset : nextCodeOffsets_) {
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(newStubCode, offset),
