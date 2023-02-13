@@ -831,7 +831,7 @@ add_test(function test_helpers_open_sync_preferences() {
   let mockBrowser = {
     loadURI(uri) {
       Assert.equal(
-        uri.spec,
+        uri,
         "about:preferences?entrypoint=fxa%3Averification_complete#sync"
       );
       run_next_test();

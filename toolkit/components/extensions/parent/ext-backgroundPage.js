@@ -126,7 +126,7 @@ class BackgroundPage extends HiddenExtensionPage {
       extensions.emit("extension-browser-inserted", this.browser);
 
       let contextPromise = promiseExtensionViewLoaded(this.browser);
-      this.browser.fixupAndLoadURIString(this.url, {
+      this.browser.loadURI(this.url, {
         triggeringPrincipal: extension.principal,
       });
 

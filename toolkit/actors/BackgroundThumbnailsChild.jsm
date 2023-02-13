@@ -79,10 +79,7 @@ class BackgroundThumbnailsChild extends JSWindowActorChild {
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
         };
         try {
-          docShell.loadURI(
-            Services.io.newURI(message.data.url),
-            loadURIOptions
-          );
+          docShell.loadURI(message.data.url, loadURIOptions);
         } catch (ex) {
           return false;
         }

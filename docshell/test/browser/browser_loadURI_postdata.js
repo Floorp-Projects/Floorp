@@ -27,7 +27,7 @@ add_task(async function test_loadURI_persists_postData() {
     Ci.nsIPrincipal
   );
 
-  tab.linkedBrowser.loadURI(Services.io.newURI(gUrl), {
+  tab.linkedBrowser.loadURI(gUrl, {
     triggeringPrincipal: systemPrincipal,
     postData: postStream,
   });

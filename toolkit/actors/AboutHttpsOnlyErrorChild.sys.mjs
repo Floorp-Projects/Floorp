@@ -77,7 +77,7 @@ export class AboutHttpsOnlyErrorChild extends RemotePageChild {
       .setHost("www." + oldURI.host)
       .finalize();
 
-    webNav.loadURI(newWWWURI, {
+    webNav.loadURI(newWWWURI.spec, {
       triggeringPrincipal,
       loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
     });

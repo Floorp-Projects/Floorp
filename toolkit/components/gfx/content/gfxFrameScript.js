@@ -23,7 +23,7 @@ const gfxFrameScript = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
     webNav.loadURI(
-      Services.io.newURI("chrome://gfxsanity/content/sanitytest.html"),
+      "chrome://gfxsanity/content/sanitytest.html",
       loadURIOptions
     );
   },

@@ -1962,7 +1962,7 @@ class InlineOptionsBrowser extends HTMLElement {
       mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
 
       if (browser.isConnectedAndReady) {
-        this.fixupAndLoadURIString(optionsURL);
+        this.loadURI(optionsURL);
       } else {
         // browser custom element does opt-in the delayConnectedCallback
         // behavior (see connectedCallback in the custom element definition
@@ -1972,18 +1972,18 @@ class InlineOptionsBrowser extends HTMLElement {
           promiseEvent("DOMContentLoaded", document),
           this._promiseDisconnected,
         ]).then(() => {
-          this.fixupAndLoadURIString(optionsURL);
+          this.loadURI(optionsURL);
         });
       }
     });
   }
 
-  fixupAndLoadURIString(uriString) {
+  loadURI(uri) {
     if (!this.browser || !this.browser.isConnectedAndReady) {
       throw new Error("Fail to loadURI");
     }
 
-    this.browser.fixupAndLoadURIString(uriString, {
+    this.browser.loadURI(uri, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   }

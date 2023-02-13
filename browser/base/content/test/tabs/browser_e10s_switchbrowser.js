@@ -82,18 +82,15 @@ function clear_history() {
 }
 
 // Waits for a load and updates the known history
-var waitForLoad = async function(uriString) {
-  info("Loading " + uriString);
+var waitForLoad = async function(uri) {
+  info("Loading " + uri);
   // Longwinded but this ensures we don't just shortcut to LoadInNewProcess
   let loadURIOptions = {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   };
-  gBrowser.selectedBrowser.webNavigation.loadURI(
-    Services.io.newURI(uriString),
-    loadURIOptions
-  );
+  gBrowser.selectedBrowser.webNavigation.loadURI(uri, loadURIOptions);
 
-  await BrowserTestUtils.browserStopped(gBrowser, uriString);
+  await BrowserTestUtils.browserStopped(gBrowser, uri);
 
   // Some of the documents we're using in this test use Fluent,
   // and they may finish localization later.
@@ -114,16 +111,16 @@ var waitForLoad = async function(uriString) {
 
 // Waits for a load and updates the known history
 var waitForLoadWithFlags = async function(
-  uriString,
+  uri,
   flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE
 ) {
-  info("Loading " + uriString + " flags = " + flags);
-  gBrowser.selectedBrowser.loadURI(Services.io.newURI(uriString), {
+  info("Loading " + uri + " flags = " + flags);
+  gBrowser.selectedBrowser.loadURI(uri, {
     flags,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 
-  await BrowserTestUtils.browserStopped(gBrowser, uriString);
+  await BrowserTestUtils.browserStopped(gBrowser, uri);
   if (!(flags & Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY)) {
     if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY) {
       gExpectedHistory.entries.pop();

@@ -559,7 +559,7 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
             oa
           ),
         };
-        browser.fixupAndLoadURIString(url, loadURIOptions);
+        browser.loadURI(url, loadURIOptions);
 
         let actor = await promise;
         return await actor.collectPageData();

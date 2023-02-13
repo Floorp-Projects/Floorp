@@ -42,13 +42,13 @@
     }
 
     async function doTest() {
-      const kURL = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#link1";
+      const URL = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#link1";
       let evtProm = waitForEvents([
         [EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument],
         [EVENT_SCROLLING_START, matchesAnchorJumpInTabDocument()],
       ], "Load foreground tab then scroll to anchor");
 
-      tabBrowser().loadURI(Services.io.newURI(kURL), {
+      tabBrowser().loadURI(URL, {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
       // Flush layout, so as to guarantee that the a11y tree is constructed.
@@ -61,7 +61,7 @@
         unexpected: [[EVENT_SCROLLING_START, matchesAnchorJumpInTabDocument(1)]],
       }, "Load background tab, don't dispatch scroll to anchor event");
 
-      tabBrowser().addTab(kURL, {
+      tabBrowser().addTab(URL, {
         referrerURI: null,
         charset: "",
         postData: null,

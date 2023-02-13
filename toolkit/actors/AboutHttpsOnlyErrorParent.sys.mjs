@@ -22,12 +22,9 @@ export class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
     if (!aBrowser.canGoBack) {
       // If the unsafe page is the first or the only one in history, go to the
       // start page.
-      aBrowser.fixupAndLoadURIString(
-        this.getDefaultHomePage(aBrowser.ownerGlobal),
-        {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        }
-      );
+      aBrowser.loadURI(this.getDefaultHomePage(aBrowser.ownerGlobal), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
     } else {
       aBrowser.goBack();
     }

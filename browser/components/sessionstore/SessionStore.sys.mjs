@@ -251,10 +251,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "blankURI", () => {
-  return Services.io.newURI("about:blank");
-});
-
 /**
  * |true| if we are in debug mode, |false| otherwise.
  * Debug mode is controlled by preference browser.sessionstore.debug
@@ -3888,7 +3884,7 @@ var SessionStoreInternal = {
     aTab.removeAttribute("crashed");
     gBrowser.tabContainer.updateTabIndicatorAttr(aTab);
 
-    browser.loadURI(lazy.blankURI, {
+    browser.loadURI("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
         userContextId: aTab.userContextId,
       }),
@@ -6346,32 +6342,24 @@ var SessionStoreInternal = {
    * If neither is possible, just load an empty document.
    */
   _restoreTabEntry(browser, tabData) {
-    let haveUserTypedValue = tabData.userTypedValue && tabData.userTypedClear;
-    // First take care of the common case where we load the history entry.
-    if (!haveUserTypedValue && tabData.entries.length) {
+    let url = "about:blank";
+    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+
+    if (tabData.userTypedValue && tabData.userTypedClear) {
+      url = tabData.userTypedValue;
+      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    } else if (tabData.entries.length) {
       return SessionStoreUtils.initializeRestore(
         browser.browsingContext,
         this.buildRestoreData(tabData.formdata, tabData.scroll)
       );
     }
-    // Here, we need to load user data or about:blank instead.
-    // As it's user-typed (or blank), it gets system triggering principal:
-    let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    // Bypass all the fixup goop for about:blank:
-    if (!haveUserTypedValue) {
-      let blankPromise = this._waitForStateStop(browser, "about:blank");
-      browser.browsingContext.loadURI(lazy.blankURI, {
-        triggeringPrincipal,
-        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-      });
-      return blankPromise;
-    }
 
-    // We have a user typed value, load that with fixup:
-    let loadPromise = this._waitForStateStop(browser, tabData.userTypedValue);
-    browser.browsingContext.fixupAndLoadURIString(tabData.userTypedValue, {
-      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-      triggeringPrincipal,
+    let loadPromise = this._waitForStateStop(browser, url);
+
+    browser.browsingContext.loadURI(url, {
+      loadFlags,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 
     return loadPromise;

@@ -1418,25 +1418,9 @@ void CanonicalBrowsingContext::UpdateMediaControlAction(
   });
 }
 
-void CanonicalBrowsingContext::LoadURI(nsIURI* aURI,
+void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
                                        const LoadURIOptions& aOptions,
                                        ErrorResult& aError) {
-  RefPtr<nsDocShellLoadState> loadState;
-  nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      this, aURI, aOptions, getter_AddRefs(loadState));
-  MOZ_ASSERT(rv != NS_ERROR_MALFORMED_URI);
-
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-
-  LoadURI(loadState, true);
-}
-
-void CanonicalBrowsingContext::FixupAndLoadURIString(
-    const nsAString& aURI, const LoadURIOptions& aOptions,
-    ErrorResult& aError) {
   RefPtr<nsDocShellLoadState> loadState;
   nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
       this, aURI, aOptions, getter_AddRefs(loadState));

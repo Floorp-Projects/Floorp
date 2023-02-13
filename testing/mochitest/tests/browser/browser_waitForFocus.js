@@ -3,7 +3,7 @@ const gBaseURL = "https://example.com/browser/testing/mochitest/tests/browser/";
 function promiseTabLoadEvent(tab, url) {
   let promise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url);
   if (url) {
-    tab.linkedBrowser.loadURI(Services.io.newURI(url));
+    tab.linkedBrowser.loadURI(url);
   }
   return promise;
 }

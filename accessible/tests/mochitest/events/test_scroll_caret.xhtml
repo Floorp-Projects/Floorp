@@ -41,7 +41,7 @@
 
       this.invoke = function loadTab_invoke()
       {
-        tabBrowser().loadURI(Services.io.newURI(aURL), {
+        tabBrowser().loadURI(aURL, {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
       }

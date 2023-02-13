@@ -175,7 +175,7 @@ export class Page extends Domain {
       referrerURI: referrer,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
-    this.session.browsingContext.loadURI(validURL, opts);
+    this.session.browsingContext.loadURI(url, opts);
     // clients expect loaderId == requestId for a document navigation request
     const { navigationRequestId: loaderId, errorCode } = await requestDone;
     const result = {

@@ -10,11 +10,10 @@ add_task(async function() {
   // Open the URL in a private browsing window.
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const tab = win.gBrowser.selectedBrowser;
-  const triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  tab.loadURI(
-    Services.io.newURI(ALT_DOMAIN_SECURED + "storage-cache-error.html"),
-    { triggeringPrincipal }
-  );
+  const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  tab.loadURI(ALT_DOMAIN_SECURED + "storage-cache-error.html", {
+    triggeringPrincipal: systemPrincipal,
+  });
   await BrowserTestUtils.browserLoaded(tab);
 
   // On enumerating cache storages, CacheStorage::Keys would throw a

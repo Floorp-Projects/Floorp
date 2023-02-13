@@ -4,7 +4,7 @@
 
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
-const XUL_PAGE = Services.io.newURI("chrome://global/content/win.xhtml");
+const XUL_PAGE = "chrome://global/content/win.xhtml";
 
 const gAllHiddenFrames = new Set();
 

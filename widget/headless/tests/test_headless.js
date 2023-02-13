@@ -9,8 +9,8 @@ server.registerDirectory("/", do_get_cwd());
 server.start(-1);
 const ROOT = `http://localhost:${server.identity.primaryPort}`;
 const BASE = `${ROOT}/`;
-const HEADLESS_URL = Services.io.newURI(`${BASE}/headless.html`);
-const HEADLESS_BUTTON_URL = Services.io.newURI(`${BASE}/headless_button.html`);
+const HEADLESS_URL = `${BASE}/headless.html`;
+const HEADLESS_BUTTON_URL = `${BASE}/headless_button.html`;
 registerCleanupFunction(() => {
   server.stop(() => {});
 });

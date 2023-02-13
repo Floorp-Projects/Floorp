@@ -146,12 +146,9 @@ export class NetErrorParent extends JSWindowActorParent {
     if (!browser.canGoBack) {
       // If the unsafe page is the first or the only one in history, go to the
       // start page.
-      browser.fixupAndLoadURIString(
-        this.getDefaultHomePage(browser.ownerGlobal),
-        {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        }
-      );
+      browser.loadURI(this.getDefaultHomePage(browser.ownerGlobal), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
     } else {
       browser.goBack();
     }
@@ -247,9 +244,7 @@ export class NetErrorParent extends JSWindowActorParent {
 
     let offlinePagePath = `chrome://global/content/neterror/supportpages/${supportPageSlug}.html`;
     let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    this.browser.loadURI(Services.io.newURI(offlinePagePath), {
-      triggeringPrincipal,
-    });
+    this.browser.loadURI(offlinePagePath, { triggeringPrincipal });
   }
 
   receiveMessage(message) {

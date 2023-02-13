@@ -621,7 +621,7 @@ function openLinkIn(url, where, params) {
         );
       }
 
-      targetBrowser.fixupAndLoadURIString(url, {
+      targetBrowser.loadURI(url, {
         triggeringPrincipal: aTriggeringPrincipal,
         csp: aCsp,
         flags,
