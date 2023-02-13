@@ -85,7 +85,9 @@ class BaseDevToolsPanel {
       }
     );
 
-    this.browser.loadURI(url, { triggeringPrincipal: this.context.principal });
+    this.browser.fixupAndLoadURIString(url, {
+      triggeringPrincipal: this.context.principal,
+    });
   }
 
   destroyBrowserElement() {
@@ -491,7 +493,7 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
       if (this.browser) {
         // Just load the new extension page url in the existing browser, if
         // it already exists.
-        this.browser.loadURI(this.panelOptions.url, {
+        this.browser.fixupAndLoadURIString(this.panelOptions.url, {
           triggeringPrincipal: this.context.extension.principal,
         });
       } else {
