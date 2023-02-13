@@ -5,6 +5,7 @@
 
 DevToolsModules(
     "background.jsm.js",
+    "browser.js",
     "profiler_get_symbols.js",
     "symbolication-worker.js",
     "symbolication.jsm.js",

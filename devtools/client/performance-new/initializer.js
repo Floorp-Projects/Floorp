@@ -68,7 +68,7 @@ const actions = require("resource://devtools/client/performance-new/store/action
 const {
   openProfilerTab,
   sharedLibrariesFromProfile,
-} = require("resource://devtools/client/performance-new/browser.js");
+} = require("resource://devtools/client/performance-new/shared/browser.js");
 const { createLocalSymbolicationService } = ChromeUtils.import(
   "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
 );

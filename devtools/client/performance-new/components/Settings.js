@@ -87,7 +87,7 @@ const actions = require("resource://devtools/client/performance-new/store/action
 const selectors = require("resource://devtools/client/performance-new/store/selectors.js");
 const {
   openFilePickerForObjdir,
-} = require("resource://devtools/client/performance-new/browser.js");
+} = require("resource://devtools/client/performance-new/shared/browser.js");
 const Localized = createFactory(
   require("resource://devtools/client/shared/vendor/fluent-react.js").Localized
 );
