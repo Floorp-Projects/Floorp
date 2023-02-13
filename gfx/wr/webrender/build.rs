@@ -34,7 +34,10 @@ fn escape_include_path(path: &Path) -> String {
     full_name
 }
 
-fn write_unoptimized_shaders(mut glsl_files: Vec<PathBuf>, shader_file: &mut File) -> Result<(), std::io::Error> {
+fn write_unoptimized_shaders(
+    mut glsl_files: Vec<PathBuf>,
+    shader_file: &mut File,
+) -> Result<(), std::io::Error> {
     writeln!(
         shader_file,
         "  pub static ref UNOPTIMIZED_SHADERS: HashMap<&'static str, SourceWithDigest> = {{"
@@ -100,17 +103,23 @@ struct ShaderOptimizationError {
     message: String,
 }
 
-fn print_shader_source(shader_src: &str) {
+/// Prepends the line number to each line of a shader source.
+fn enumerate_shader_source_lines(shader_src: &str) -> String {
     // For some reason the glsl-opt errors are offset by 1 compared
     // to the provided shader source string.
-    println!("0\t|");
+    let mut out = format!("0\t|");
     for (n, line) in shader_src.split('\n').enumerate() {
         let line_number = n + 1;
-        println!("{}\t|{}", line_number, line);
+        out.push_str(&format!("{}\t|{}\n", line_number, line));
     }
+    out
 }
 
-fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &str) -> Result<(), std::io::Error> {
+fn write_optimized_shaders(
+    shader_dir: &Path,
+    shader_file: &mut File,
+    out_dir: &str,
+) -> Result<(), std::io::Error> {
     writeln!(
         shader_file,
         "  pub static ref OPTIMIZED_SHADERS: HashMap<(ShaderVersion, &'static str), OptimizedSourceWithDigest> = {{"
@@ -135,7 +144,10 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             flags.remove(ShaderFeatureFlags::GLES);
             flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL);
         }
-        if !matches!(env::var("CARGO_CFG_TARGET_OS").as_ref().map(|s| &**s), Ok("android")) {
+        if !matches!(
+            env::var("CARGO_CFG_TARGET_OS").as_ref().map(|s| &**s),
+            Ok("android")
+        ) {
             flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1);
         }
         flags.remove(ShaderFeatureFlags::DITHERING);
@@ -151,80 +163,90 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
         }
     }
 
-    let outputs = build_parallel::compile_objects(&|shader: &ShaderOptimizationInput| {
-        println!("Optimizing shader {:?}", shader);
-        let target = match shader.gl_version {
-            ShaderVersion::Gl => glslopt::Target::OpenGl,
-            ShaderVersion::Gles => glslopt::Target::OpenGles30,
-        };
-        let glslopt_ctx = glslopt::Context::new(target);
+    let outputs = build_parallel::compile_objects::<_, _, ShaderOptimizationError, _>(
+        &|shader: &ShaderOptimizationInput| {
+            println!("Optimizing shader {:?}", shader);
+            let target = match shader.gl_version {
+                ShaderVersion::Gl => glslopt::Target::OpenGl,
+                ShaderVersion::Gles => glslopt::Target::OpenGles30,
+            };
+            let glslopt_ctx = glslopt::Context::new(target);
 
-        let features = shader.config.split(",").filter(|f| !f.is_empty()).collect::<Vec<_>>();
+            let features = shader
+                .config
+                .split(",")
+                .filter(|f| !f.is_empty())
+                .collect::<Vec<_>>();
 
-        let (vert_src, frag_src) = build_shader_strings(
-            shader.gl_version,
-            &features,
-            shader.shader_name,
-            &|f| Cow::Owned(shader_source_from_file(&shader_dir.join(&format!("{}.glsl", f)))),
-        );
+            let (vert_src, frag_src) =
+                build_shader_strings(shader.gl_version, &features, shader.shader_name, &|f| {
+                    Cow::Owned(shader_source_from_file(
+                        &shader_dir.join(&format!("{}.glsl", f)),
+                    ))
+                });
 
-        let full_shader_name = if shader.config.is_empty() {
-            shader.shader_name.to_string()
-        } else {
-            format!("{}_{}", shader.shader_name, shader.config.replace(",", "_"))
-        };
+            let full_shader_name = if shader.config.is_empty() {
+                shader.shader_name.to_string()
+            } else {
+                format!("{}_{}", shader.shader_name, shader.config.replace(",", "_"))
+            };
 
-        let vert = glslopt_ctx.optimize(glslopt::ShaderType::Vertex, vert_src.clone());
-        if !vert.get_status() {
-            print_shader_source(&vert_src);
-            return Err(ShaderOptimizationError {
-                shader: shader.clone(),
-                message: vert.get_log().to_string(),
+            // Compute a digest of the optimized shader sources. We store this
+            // as a literal alongside the source string so that we don't need
+            // to hash large strings at runtime.
+            let mut hasher = DefaultHasher::new();
+
+            let [vert_file_path, frag_file_path] = [
+                (glslopt::ShaderType::Vertex, vert_src, "vert"),
+                (glslopt::ShaderType::Fragment, frag_src, "frag"),
+            ]
+            .map(|(shader_type, shader_src, extension)| {
+                let output = glslopt_ctx.optimize(shader_type, shader_src.clone());
+                if !output.get_status() {
+                    let source = enumerate_shader_source_lines(&shader_src);
+                    return Err(ShaderOptimizationError {
+                        shader: shader.clone(),
+                        message: format!("{}\n{}", source, output.get_log()),
+                    });
+                }
+
+                let shader_path = Path::new(out_dir).join(format!(
+                    "{}_{:?}.{}",
+                    full_shader_name, shader.gl_version, extension
+                ));
+                write_optimized_shader_file(
+                    &shader_path,
+                    output.get_output().unwrap(),
+                    &shader.shader_name,
+                    &features,
+                    &mut hasher,
+                );
+                Ok(shader_path)
             });
-        }
-        let frag = glslopt_ctx.optimize(glslopt::ShaderType::Fragment, frag_src.clone());
-        if !frag.get_status() {
-            print_shader_source(&frag_src);
-            return Err(ShaderOptimizationError {
-                shader: shader.clone(),
-                message: frag.get_log().to_string(),
-            });
-        }
 
-        let vert_source = vert.get_output().unwrap();
-        let frag_source = frag.get_output().unwrap();
+            let vert_file_path = vert_file_path?;
+            let frag_file_path = frag_file_path?;
 
-        // Compute a digest of the optimized shader sources. We store this
-        // as a literal alongside the source string so that we don't need
-        // to hash large strings at runtime.
-        let mut hasher = DefaultHasher::new();
+            println!("Finished optimizing shader {:?}", shader);
 
-        let vert_file_path = Path::new(out_dir)
-            .join(format!("{}_{:?}.vert", full_shader_name, shader.gl_version));
-        write_optimized_shader_file(&vert_file_path, vert_source, &shader.shader_name, &features, &mut hasher);
-
-        let frag_file_path = vert_file_path.with_extension("frag");
-        write_optimized_shader_file(&frag_file_path, frag_source, &shader.shader_name, &features, &mut hasher);
-
-        let digest: ProgramSourceDigest = hasher.into();
-
-        println!("Finished optimizing shader {:?}", shader);
-
-        Ok(ShaderOptimizationOutput {
-            full_shader_name,
-            gl_version: shader.gl_version,
-            vert_file_path,
-            frag_file_path,
-            digest,
-        })
-    }, &shaders);
+            Ok(ShaderOptimizationOutput {
+                full_shader_name,
+                gl_version: shader.gl_version,
+                vert_file_path,
+                frag_file_path,
+                digest: hasher.into(),
+            })
+        },
+        &shaders,
+    );
 
     match outputs {
         Ok(mut outputs) => {
             // Sort the shader list so that the shaders.rs file is filled
             // deterministically.
             outputs.sort_by(|a, b| {
-                (a.gl_version, a.full_shader_name.clone()).cmp(&(b.gl_version, b.full_shader_name.clone()))
+                (a.gl_version, a.full_shader_name.clone())
+                    .cmp(&(b.gl_version, b.full_shader_name.clone()))
             });
 
             for shader in outputs {
@@ -253,7 +275,7 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
                 panic!("Error optimizing shader {:?}: {}", err.shader, err.message)
             }
             _ => panic!("Error optimizing shaders."),
-        }
+        },
     }
 
     writeln!(shader_file, "    shaders")?;
@@ -276,10 +298,7 @@ fn write_optimized_shader_file(
         // The #version directive must be on the first line so we insert
         // the extra information on the next line.
         if line_number == 1 {
-            let prelude = format!(
-                "// {}\n// features: {:?}\n\n",
-                shader_name, features
-            );
+            let prelude = format!("// {}\n// features: {:?}\n\n", shader_name, features);
             file.write_all(prelude.as_bytes()).unwrap();
             hasher.write(prelude.as_bytes());
         }
