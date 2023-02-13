@@ -168,7 +168,7 @@ navigate.navigateTo = async function(browsingContext, url) {
     // Fake user activation.
     hasValidUserGestureActivation: true,
   };
-  browsingContext.loadURI(url, opts);
+  browsingContext.fixupAndLoadURIString(url, opts);
 };
 
 /**

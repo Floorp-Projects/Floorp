@@ -3416,7 +3416,10 @@ var BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    browsingContext.loadURI(blockedInfo.uri, {
+    // Note that we have to use the passed URI info and can't just
+    // rely on the document URI, because the latter contains
+    // additional query parameters that should be stripped.
+    browsingContext.fixupAndLoadURIString(blockedInfo.uri, {
       triggeringPrincipal,
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
     });
@@ -3507,7 +3510,7 @@ var BrowserOnClick = {
  * when their own homepage is infected, we can get them somewhere safe.
  */
 function getMeOutOfHere(browsingContext) {
-  browsingContext.top.loadURI(getDefaultHomePage(), {
+  browsingContext.top.fixupAndLoadURIString(getDefaultHomePage(), {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(), // Also needs to load homepage
   });
 }
