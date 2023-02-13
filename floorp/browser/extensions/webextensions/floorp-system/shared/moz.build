@@ -62,10 +62,6 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
     "qr-code/qrcode.min.js",
 ]
 
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
-    "webcompat/fix-youtube-comment.js",
-]
-
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [
     "gesturefy/background.js",
     "gesturefy/gesturefy.js",

@@ -1,4 +1,5 @@
 const WEBCOMPATS = [
+  /*
   {
     "matches": ["*://*.youtube.com/*"],
     "js": [
@@ -6,6 +7,7 @@ const WEBCOMPATS = [
     ],
     "platforms": ["win"], // "mac", "win", "android", "cros", "linux", "openbsd", "fuchsia"
   }
+  */
 ]
 
 let REGISTED_CONTENT_SCRIPTS = [];
