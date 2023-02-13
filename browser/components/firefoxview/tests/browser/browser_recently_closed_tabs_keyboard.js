@@ -218,7 +218,7 @@ add_task(async function test_dismiss_tab_keyboard() {
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
     Assert.equal(
-      tabsList.children[0].dataset.targeturi,
+      tabsList.children[0].dataset.targetURI,
       URLs[1],
       `First recently closed item should be ${URLs[1]}`
     );
@@ -232,7 +232,7 @@ add_task(async function test_dismiss_tab_keyboard() {
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
     Assert.equal(
-      tabsList.children[0].dataset.targeturi,
+      tabsList.children[0].dataset.targetURI,
       URLs[0],
       `First recently closed item should be ${URLs[0]}`
     );
@@ -245,14 +245,11 @@ add_task(async function test_dismiss_tab_keyboard() {
 
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
-    Assert.ok(
-      document.getElementById("recently-closed-tabs-placeholder"),
-      "The empty message is displayed."
-    );
-
-    Assert.ok(
-      !document.querySelector("ol.closed-tabs-list"),
-      "The recently clsoed tabs list is not displayed."
-    );
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": true,
+        "ol.closed-tabs-list": false,
+      },
+    });
   });
 });

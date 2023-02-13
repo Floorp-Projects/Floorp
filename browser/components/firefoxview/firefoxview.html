@@ -159,7 +159,16 @@
           <h2 class="section-description" data-l10n-id="firefoxview-closed-tabs-description2"></h2>
         </summary>
         <div id="collapsible-tabs-container" id="recently-closed-tabs" role="region" aria-labelledby="recently-closed-tabs-header">
-          <recently-closed-tabs-list></recently-closed-tabs-list>
+          <recently-closed-tabs-list>
+            <ol hidden="true" class="closed-tabs-list"></ol>
+          </recently-closed-tabs-list>
+          <div hidden="true" id="recently-closed-tabs-placeholder" class="placeholder-content">
+            <img id="recently-closed-empty-image" src="chrome://browser/content/recently-closed-empty.svg" role="presentation" alt=""/>
+            <div class="placeholder-text">
+              <h4 data-l10n-id="firefoxview-closed-tabs-placeholder-header" class="placeholder-header"></h4>
+              <p data-l10n-id="firefoxview-closed-tabs-placeholder-body" class="placeholder-body"></p>
+            </div>
+          </div>
         </div>
       </details>
     </main>

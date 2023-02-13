@@ -44,7 +44,7 @@ async function close_tab(tab) {
 }
 
 async function dismiss_tab(tab, content) {
-  info(`Dismissing tab ${tab.dataset.targeturi}`);
+  info(`Dismissing tab ${tab.dataset.targetURI}`);
   const closedObjectsChanged = () =>
     TestUtils.topicObserved("sessionstore-closed-objects-changed");
   let dismissButton = tab.querySelector(".closed-tab-li-dismiss");
@@ -63,15 +63,12 @@ add_task(async function test_empty_list() {
       "collapsible container should have correct styling when the list is empty"
     );
 
-    Assert.ok(
-      document.getElementById("recently-closed-tabs-placeholder"),
-      "The empty message is displayed."
-    );
-
-    Assert.ok(
-      !document.querySelector("ol.closed-tabs-list"),
-      "The recently closed tabs list is not displayed."
-    );
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": true,
+        "ol.closed-tabs-list": false,
+      },
+    });
 
     const tab1 = await add_new_tab(URLs[0]);
 
@@ -88,15 +85,12 @@ add_task(async function test_empty_list() {
       "collapsible container should have correct styling when the list is not empty"
     );
 
-    Assert.ok(
-      !document.getElementById("recently-closed-tabs-placeholder"),
-      "The empty message is not displayed."
-    );
-
-    Assert.ok(
-      document.querySelector("ol.closed-tabs-list"),
-      "The recently closed tabs list is displayed."
-    );
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": false,
+        "ol.closed-tabs-list": true,
+      },
+    });
 
     is(
       document.querySelector("ol.closed-tabs-list").children.length,
@@ -152,7 +146,7 @@ add_task(async function test_list_ordering() {
     ok(
       document
         .querySelector("ol.closed-tabs-list")
-        .children[0].textContent.includes("mochi.test"),
+        .firstChild.textContent.includes("mochi.test"),
       "first list item in recently-closed-tabs-list is in the correct order"
     );
 
@@ -164,9 +158,9 @@ add_task(async function test_list_ordering() {
     );
 
     let ele = document.querySelector("ol.closed-tabs-list").firstElementChild;
-    let uri = ele.getAttribute("data-targeturi");
+    let uri = ele.getAttribute("data-target-u-r-i");
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, uri);
-    ele.querySelector(".closed-tab-li-main").click();
+    ele.click();
     await newTabPromise;
 
     await TestUtils.waitForCondition(
@@ -251,18 +245,15 @@ add_task(async function test_max_list_items() {
       "collapsible container should have correct styling when the list is not empty"
     );
 
-    Assert.ok(
-      !document.getElementById("recently-closed-tabs-placeholder"),
-      "The empty message is not displayed."
-    );
-
-    Assert.ok(
-      document.querySelector("ol.closed-tabs-list"),
-      "The recently closed tabs list is displayed."
-    );
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": false,
+        "ol.closed-tabs-list": true,
+      },
+    });
 
     is(
-      document.querySelector("ol.closed-tabs-list").children.length,
+      document.querySelector("ol.closed-tabs-list").childNodes.length,
       mockMaxTabsLength,
       `recently-closed-tabs-list should have ${mockMaxTabsLength} list items`
     );
@@ -274,8 +265,9 @@ add_task(async function test_max_list_items() {
     const tab = await add_new_tab(URLs[3]);
     await close_tab(tab);
     await closedObjectsChanged;
+
     let firstListItem = document.querySelector("ol.closed-tabs-list")
-      .children[0];
+      .firstChild;
     await BrowserTestUtils.waitForMutationCondition(
       firstListItem,
       { characterData: true, childList: true, subtree: true },
@@ -287,7 +279,7 @@ add_task(async function test_max_list_items() {
     );
 
     is(
-      document.querySelector("ol.closed-tabs-list").children.length,
+      document.querySelector("ol.closed-tabs-list").childNodes.length,
       mockMaxTabsLength,
       `recently-closed-tabs-list should still have ${mockMaxTabsLength} list items`
     );
@@ -318,7 +310,6 @@ add_task(async function test_time_updates_correctly() {
             closedId: 0,
             closedAt: Date.now() - TAB_CLOSED_AGO_MS,
             image: null,
-            title: "Example",
           },
         ],
       },
@@ -338,10 +329,9 @@ add_task(async function test_time_updates_correctly() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      const numOfListItems = document.querySelector("ol.closed-tabs-list")
-        .children.length;
+
       const lastListItem = document.querySelector("ol.closed-tabs-list")
-        .children[numOfListItems - 1];
+        .lastChild;
       const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
       let initialTimeText = timeLabel.textContent;
       Assert.stringContains(
@@ -397,12 +387,14 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
     let gBrowser = browser.getTabBrowser();
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
+    let expectedFocusedElement = list[1].querySelector(".closed-tab-li-main");
     list[0].querySelector(".closed-tab-li-main").focus();
     EventUtils.synthesizeKey("KEY_Enter");
     let firefoxViewTab = gBrowser.tabs.find(tab => tab.label == "Firefox View");
     await BrowserTestUtils.switchTab(gBrowser, firefoxViewTab);
-    Assert.ok(
-      document.activeElement.textContent.includes("mochitest index"),
+    is(
+      document.activeElement,
+      expectedFocusedElement,
       "Focus should be on the first item in the recently closed list"
     );
   });
@@ -422,6 +414,7 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
     );
     const list = document.querySelectorAll(".closed-tab-li");
     list[0].querySelector(".closed-tab-li-main").focus();
+
     EventUtils.synthesizeKey("KEY_Enter");
     let firefoxViewTab = gBrowser.tabs.find(tab => tab.label == "Firefox View");
     await BrowserTestUtils.switchTab(gBrowser, firefoxViewTab);
@@ -462,25 +455,27 @@ add_task(async function test_switch_before_closing() {
     );
     BrowserTestUtils.loadURIString(newTab.linkedBrowser, FINAL_URL);
     await loadPromise;
+
     // Close the added tab
     BrowserTestUtils.removeTab(newTab);
 
     const { document } = browser.contentWindow;
-    await BrowserTestUtils.waitForMutationCondition(
-      document.querySelector("recently-closed-tabs-list"),
-      { childList: true, subtree: true },
-      () => document.querySelector("ol.closed-tabs-list")
-    );
     const tabsList = document.querySelector("ol.closed-tabs-list");
+    await BrowserTestUtils.waitForMutationCondition(
+      tabsList,
+      { childList: true },
+      () => !!tabsList.children.length
+    );
     info("A tab appeared in the list, ensure it has the right URL.");
-    let urlBit = tabsList.children[0].querySelector(".closed-tab-li-url");
+    let urlBit = tabsList.firstElementChild.querySelector(".closed-tab-li-url");
     await BrowserTestUtils.waitForMutationCondition(
       urlBit,
       { characterData: true, attributeFilter: ["title"] },
       () => urlBit.textContent.includes(".com")
     );
-    Assert.ok(
-      urlBit.textContent.includes("example.com"),
+    is(
+      urlBit.textContent,
+      "example.com",
       "Item should end up with the correct URL."
     );
   });
@@ -500,7 +495,7 @@ add_task(async function test_alt_click_no_launch() {
     let gBrowser = browser.getTabBrowser();
     let originalTabsLength = gBrowser.tabs.length;
     await BrowserTestUtils.synthesizeMouseAtCenter(
-      ".closed-tab-li .closed-tab-li-main",
+      ".closed-tab-li",
       { altKey: true },
       browser
     );
@@ -559,6 +554,19 @@ add_task(async function test_restore_recently_closed_tabs() {
   await tabRestored;
   ok(true, "Tab was restored by using the Enter key");
 
+  await EventUtils.synthesizeMouseAtCenter(
+    gBrowser.ownerDocument.getElementById("firefox-view-button"),
+    { type: "mousedown" },
+    window
+  );
+
+  tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[0]);
+  document.querySelector(".closed-tab-li .closed-tab-li-main").focus();
+  EventUtils.synthesizeKey(" ", {}, gBrowser.contentWindow);
+
+  await tabRestored;
+  ok(true, "Tab was restored by using the Space bar");
+
   // clean up extra tabs
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
@@ -610,7 +618,7 @@ add_task(async function test_reopen_recently_closed_tabs() {
   );
 
   Assert.equal(
-    tabsList.children[0].dataset.targeturi,
+    tabsList.children[0].dataset.targetURI,
     URLs[1],
     `First recently closed item should be ${URLs[1]}`
   );
@@ -624,7 +632,7 @@ add_task(async function test_reopen_recently_closed_tabs() {
   );
 
   Assert.equal(
-    tabsList.children[0].dataset.targeturi,
+    tabsList.children[0].dataset.targetURI,
     URLs[2],
     `First recently closed item should be ${URLs[2]}`
   );
@@ -638,7 +646,7 @@ add_task(async function test_reopen_recently_closed_tabs() {
   );
 
   Assert.equal(
-    tabsList.children[0].dataset.targeturi,
+    tabsList.children[0].dataset.targetURI,
     URLs[1],
     `First recently closed item should be ${URLs[1]}`
   );
@@ -707,7 +715,7 @@ add_task(async function test_dismiss_tab() {
     );
 
     Assert.equal(
-      tabsList.children[0].dataset.targeturi,
+      tabsList.children[0].dataset.targetURI,
       URLs[1],
       `First recently closed item should be ${URLs[1]}`
     );
@@ -742,7 +750,7 @@ add_task(async function test_dismiss_tab() {
     );
 
     Assert.equal(
-      tabsList.children[0].dataset.targeturi,
+      tabsList.children[0].dataset.targetURI,
       URLs[2],
       `First recently closed item should be ${URLs[2]}`
     );
@@ -776,14 +784,11 @@ add_task(async function test_dismiss_tab() {
       { clear: true, process: "parent" }
     );
 
-    Assert.ok(
-      document.getElementById("recently-closed-tabs-placeholder"),
-      "The empty message is displayed."
-    );
-
-    Assert.ok(
-      !document.querySelector("ol.closed-tabs-list"),
-      "The recently closed tabs list is not displayed."
-    );
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": true,
+        "ol.closed-tabs-list": false,
+      },
+    });
   });
 });
