@@ -37,7 +37,7 @@ add_task(async function test_normal_and_history_loads() {
     await new Promise(r => {
       setTimeout(r, 10);
     });
-    browser.browsingContext.loadURI(testPage + "?newload", {
+    browser.browsingContext.loadURI(Services.io.newURI(testPage + "?newload"), {
       triggeringPrincipal: browser.nodePrincipal,
     });
     let newLoad = BrowserTestUtils.browserLoaded(browser);

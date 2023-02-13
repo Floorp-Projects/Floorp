@@ -481,7 +481,7 @@ class BrowsingContextModule extends Module {
       }
     });
 
-    context.loadURI(targetURI.spec, {
+    context.loadURI(targetURI, {
       loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       hasValidUserGestureActivation: true,
