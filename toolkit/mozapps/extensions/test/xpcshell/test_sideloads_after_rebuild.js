@@ -91,7 +91,9 @@ add_task(async function test_sideloads_after_rebuild() {
   // On AOM startup, addons are restored with help from XPIState.  Existing
   // sideloads should all remain.  One new sideloaded addon should be added from
   // the profile.
-  await saveJSON({ not: "what we expect to find" }, gExtensionsJSON.path);
+  await IOUtils.writeJSON(gExtensionsJSON.path, {
+    not: "what we expect to find",
+  });
   info(`**** restart AOM and rebuild XPI database`);
   await promiseStartupManager();
 
@@ -115,7 +117,9 @@ add_task(async function test_sideloads_after_rebuild() {
   );
 
   // Replace the extensions.json with something bogus so we lose our xpidatabase.
-  await saveJSON({ not: "what we expect to find" }, gExtensionsJSON.path);
+  await IOUtils.writeJSON(gExtensionsJSON.path, {
+    not: "what we expect to find",
+  });
   // Delete our appStartup/XPIState data.  Now we should only be able to
   // restore extensions in the profile.
   gAddonStartup.remove(true);

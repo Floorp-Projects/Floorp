@@ -595,7 +595,7 @@ add_task(async function test_permissions_prompt() {
   notEqual(addon, null, "Extension was installed");
 
   await addon.uninstall();
-  await OS.File.remove(xpi.path);
+  await IOUtils.remove(xpi.path);
 });
 
 // Check permissions prompt cancellation
@@ -626,7 +626,7 @@ add_task(async function test_permissions_prompt_cancel() {
   let addon = await promiseAddonByID(perminfo.addon.id);
   equal(addon, null, "Extension was not installed");
 
-  await OS.File.remove(xpi.path);
+  await IOUtils.remove(xpi.path);
 });
 
 // Test that presence of 'edge' property in 'browser_specific_settings' doesn't prevent installation from completing successfully

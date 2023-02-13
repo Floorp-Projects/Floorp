@@ -172,7 +172,7 @@ add_task(async function test_download_nourl() {
   try {
     let path = await ProductAddonChecker.downloadAddon({});
 
-    await OS.File.remove(path);
+    await IOUtils.remove(path);
     do_throw("Should not have downloaded a file with a missing url");
   } catch (e) {
     Assert.ok(
@@ -188,7 +188,7 @@ add_task(async function test_download_missing() {
       URL: root + "nofile.xpi",
     });
 
-    await OS.File.remove(path);
+    await IOUtils.remove(path);
     do_throw("Should not have downloaded a missing file");
   } catch (e) {
     Assert.ok(true, "Should have thrown when downloading a missing file.");
@@ -200,8 +200,8 @@ add_task(async function test_download_noverify() {
     URL: root + "unsigned.xpi",
   });
 
-  let stat = await OS.File.stat(path);
-  Assert.ok(!stat.isDir);
+  let stat = await IOUtils.stat(path);
+  Assert.ok(!stat.type !== "directory");
   Assert.equal(stat.size, 452);
 
   Assert.ok(
@@ -211,7 +211,7 @@ add_task(async function test_download_noverify() {
     )
   );
 
-  await OS.File.remove(path);
+  await IOUtils.remove(path);
 });
 
 add_task(async function test_download_badsize() {
@@ -221,7 +221,7 @@ add_task(async function test_download_badsize() {
       size: 400,
     });
 
-    await OS.File.remove(path);
+    await IOUtils.remove(path);
     do_throw("Should not have downloaded a file with a bad size");
   } catch (e) {
     Assert.ok(
@@ -240,7 +240,7 @@ add_task(async function test_download_badhashfn() {
         "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
-    await OS.File.remove(path);
+    await IOUtils.remove(path);
     do_throw("Should not have downloaded a file with a bad hash function");
   } catch (e) {
     Assert.ok(
@@ -259,7 +259,7 @@ add_task(async function test_download_badhash() {
         "8b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
-    await OS.File.remove(path);
+    await IOUtils.remove(path);
     do_throw("Should not have downloaded a file with a bad hash");
   } catch (e) {
     Assert.ok(
@@ -278,8 +278,8 @@ add_task(async function test_download_works() {
       "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
   });
 
-  let stat = await OS.File.stat(path);
-  Assert.ok(!stat.isDir);
+  let stat = await IOUtils.stat(path);
+  Assert.ok(stat.type !== "directory");
 
   Assert.ok(
     compareFiles(
@@ -288,5 +288,5 @@ add_task(async function test_download_works() {
     )
   );
 
-  await OS.File.remove(path);
+  await IOUtils.remove(path);
 });

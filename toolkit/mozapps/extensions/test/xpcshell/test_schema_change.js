@@ -44,7 +44,7 @@ add_task(async function run_tests() {
     },
   });
 
-  let xpiPath = OS.Path.join(profileDir.path, `${ID}.xpi`);
+  let xpiPath = PathUtils.join(profileDir.path, `${ID}.xpi`);
 
   const TESTS = [
     {

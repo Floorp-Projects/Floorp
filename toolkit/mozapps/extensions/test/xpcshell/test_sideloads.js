@@ -83,9 +83,9 @@ add_task(async function test_getNewSideload_on_invalid_extension() {
 
   // Create an invalid sideload by creating a file name that doesn't match the
   // actual extension id.
-  await OS.File.copy(
+  await IOUtils.copy(
     xpi.path,
-    OS.Path.join(destDir.path, "@wrong-extension-filename.xpi")
+    PathUtils.join(destDir.path, "@wrong-extension-filename.xpi")
   );
 
   // Verify that getNewSideloads does not reject or throw when one of the sideloaded extensions

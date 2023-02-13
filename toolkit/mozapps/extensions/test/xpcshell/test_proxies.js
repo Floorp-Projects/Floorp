@@ -35,15 +35,25 @@ function createSymlink(aSource, aDest) {
     aDest = aDest.path;
   }
 
-  return OS.File.unixSymLink(aSource, aDest);
+  const ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  ln.initWithPath("/bin/ln");
+
+  const lnProcess = Cc["@mozilla.org/process/util;1"].createInstance(
+    Ci.nsIProcess
+  );
+  lnProcess.init(ln);
+
+  const args = ["-s", aSource, aDest];
+  lnProcess.run(true, args, args.length);
+  Assert.equal(lnProcess.exitValue, 0);
 }
 
-function promiseWriteFile(aFile, aData) {
-  if (!aFile.parent.exists()) {
-    aFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+async function promiseWriteFile(aFile, aData) {
+  if (!(await IOUtils.exists(aFile.parent.path))) {
+    await IOUtils.makeDirectory(aFile.parent.path);
   }
 
-  return OS.File.writeAtomic(aFile.path, new TextEncoder().encode(aData));
+  return IOUtils.writeUTF8(aFile.path, aData);
 }
 
 function checkAddonsExist() {
@@ -91,7 +101,7 @@ async function run_proxy_tests() {
         browser_specific_settings: { gecko: { id: addon.id } },
       },
     });
-    let path = OS.Path.join(gTmpD.path, addon.id);
+    let path = PathUtils.join(gTmpD.path, addon.id);
     await AddonTestUtils.promiseWriteFilesToDir(path, files);
 
     if (addon.type == "proxy") {

@@ -46,7 +46,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 var { AddonRepository } = ChromeUtils.import(
   "resource://gre/modules/addons/AddonRepository.jsm"
 );
-var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
@@ -1211,38 +1210,9 @@ async function mockGfxBlocklistItems(items) {
  * Change the schema version of the JSON extensions database
  */
 async function changeXPIDBVersion(aNewVersion) {
-  let json = await loadJSON(gExtensionsJSON.path);
+  let json = await IOUtils.readJSON(gExtensionsJSON.path);
   json.schemaVersion = aNewVersion;
-  await saveJSON(json, gExtensionsJSON.path);
-}
-
-/**
- * Load a file into a string
- */
-async function loadFile(aFile) {
-  let buffer = await OS.File.read(aFile);
-  return new TextDecoder().decode(buffer);
-}
-
-/**
- * Raw load of a JSON file
- */
-async function loadJSON(aFile) {
-  let data = await loadFile(aFile);
-  info("Loaded JSON file " + aFile);
-  return JSON.parse(data);
-}
-
-/**
- * Raw save of a JSON blob to file
- */
-async function saveJSON(aData, aFile) {
-  info("Starting to save JSON file " + aFile);
-  await OS.File.writeAtomic(
-    aFile,
-    new TextEncoder().encode(JSON.stringify(aData, null, 2))
-  );
-  info("Done saving JSON file " + aFile);
+  await IOUtils.writeJSON(gExtensionsJSON.path, json);
 }
 
 async function setInitialState(addon, initialState) {
