@@ -84,7 +84,7 @@
 
     .customizationmode-checkbox[disabled]:-moz-lwtheme {
       color: inherit;
-      opacity: 0.4;
+      opacity: var(--toolbarbutton-disabled-opacity);
     }
 
     #customization-reset-button,
@@ -143,7 +143,7 @@
     }
 
     .customizationmode-button[disabled="true"] {
-      opacity: .5;
+      opacity: var(--toolbarbutton-disabled-opacity);
     }
   }
 }
@@ -395,12 +395,15 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   margin-bottom: -1px;
 }
 
-/* In customize mode, the overflow button should look both 'disabled' and 'open'.
- * So we make the button fully opaque but fill the icon semi-transparent. */
-#nav-bar[customizing] > .overflow-button > .toolbarbutton-icon {
+/* Special-case the overflow and the hamburger button so they show up disabled
+   in customize mode. */
+:is(#nav-bar-overflow-button, #PanelUI-menu-button)[disabled] {
+  fill-opacity: var(--toolbarbutton-disabled-opacity);
+}
+
+/* The overflow button should look both disabled and open. */
+#nav-bar[customizing] > #nav-bar-overflow-button > .toolbarbutton-icon {
   background-color: var(--toolbarbutton-active-background);
-  opacity: 1;
-  fill-opacity: 0.4;
 }
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {

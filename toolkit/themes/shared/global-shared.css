@@ -34,7 +34,9 @@
   --panel-disabled-color: GrayText;
 
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
+
   --toolbarbutton-icon-fill: currentColor;
+  --toolbarbutton-disabled-opacity: 0.4;
 
   --toolbar-field-background-color: Field;
   --toolbar-field-color: FieldText;
@@ -49,6 +51,12 @@
   --toolbar-field-color: black;
   --toolbar-field-focus-color: black;
   --toolbar-field-border-color: transparent;
+}
+
+@media (prefers-contrast) {
+  :root:not(:-moz-lwtheme) {
+    --toolbarbutton-disabled-opacity: 0.3;
+  }
 }
 
 :is(menupopup, panel)[type=arrow] {
