@@ -261,8 +261,29 @@ add_task(async function() {
   bc.reload(0);
   await AllowJavascriptParent.promiseLoad(bc);
 
-  await assertLoadFired(bc, undefined, "top BC with scripts disabled");
-  await assertScriptsAllowed(bc, false, "top BC with scripts disabled");
+  await assertLoadFired(
+    bc,
+    undefined,
+    "top BC with scripts disabled after reload"
+  );
+  await assertScriptsAllowed(
+    bc,
+    false,
+    "top BC with scripts disabled after reload"
+  );
+
+  await page.loadURL("http://example.org/?other");
+
+  await assertLoadFired(
+    bc,
+    undefined,
+    "top BC with scripts disabled after navigation"
+  );
+  await assertScriptsAllowed(
+    bc,
+    false,
+    "top BC with scripts disabled after navigation"
+  );
 
   await page.close();
   Services.prefs.clearUserPref("dom.security.https_first");

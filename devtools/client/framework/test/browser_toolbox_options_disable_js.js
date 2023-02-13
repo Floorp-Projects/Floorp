@@ -21,6 +21,13 @@ add_task(async function() {
   await testJSDisabled();
   await testJSDisabledIframe();
 
+  // Navigate and check JS is still disabled
+  for (let i = 0; i < 10; i++) {
+    await navigateTo(`${TEST_URI}?nocache=${i}`);
+    await testJSDisabled();
+    await testJSDisabledIframe();
+  }
+
   // Re-enable JS.
   await toggleJS(toolbox);
 
