@@ -13,11 +13,9 @@
  */
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Weave",
-  "resource://services-sync/main.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Weave: "resource://services-sync/main.sys.mjs",
+});
 
 const TOPICS = [
   "weave:connected",

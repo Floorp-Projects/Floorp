@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SyncedTabs",
-  "resource://services-sync/SyncedTabs.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+});
 
 import {
   formatURIForDisplay,

@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { HistoryEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/history.js"
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { HistoryEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/history.sys.mjs"
 );
 
 // Use only for rawAddVisit.

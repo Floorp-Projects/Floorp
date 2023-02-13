@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Collection, WBORecord } = ChromeUtils.import(
-  "resource://services-sync/record.js"
+const { Collection, WBORecord } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 function recordRange(lim, offset, total) {
   let res = [];

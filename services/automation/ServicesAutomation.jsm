@@ -33,13 +33,13 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
+  Svc: "resource://services-sync/util.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Weave: "resource://services-sync/main.js",
-  Svc: "resource://services-sync/util.js",
   FxAccountsClient: "resource://gre/modules/FxAccountsClient.jsm",
   FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
 });

@@ -4,16 +4,13 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { SyncAuthManager } = ChromeUtils.import(
-  "resource://services-sync/sync_auth.js"
-);
+import { Weave } from "resource://services-sync/main.sys.mjs";
+import { SyncAuthManager } from "resource://services-sync/sync_auth.sys.mjs";
+
 const { TokenServerClient } = ChromeUtils.import(
   "resource://services-common/tokenserverclient.js"
 );
-const { configureFxAccountIdentity } = ChromeUtils.import(
-  "resource://testing-common/services/sync/utils.js"
-);
+import { configureFxAccountIdentity } from "resource://testing-common/services/sync/utils.sys.mjs";
 
 // Create a new sync_auth object and initialize it with a
 // mocked TokenServerClient which always receives the specified response.

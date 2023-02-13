@@ -1,7 +1,7 @@
 "use strict";
 
-let { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+let { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
 let { TabListComponent } = ChromeUtils.import(
   "resource:///modules/syncedtabs/TabListComponent.js"

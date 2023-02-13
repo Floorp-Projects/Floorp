@@ -17,7 +17,7 @@ var {
   SyncEngine,
   Tracker,
   LegacyTracker,
-} = ChromeUtils.import("resource://services-sync/engines.js");
+} = ChromeUtils.importESModule("resource://services-sync/engines.sys.mjs");
 var {
   ABORT_SYNC_COMMAND,
   CLIENT_NOT_CONFIGURED,
@@ -83,8 +83,8 @@ var {
   kSyncNotConfigured,
   kSyncWeaveDisabled,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-var { BulkKeyBundle, SyncKeyBundle } = ChromeUtils.import(
-  "resource://services-sync/keys.js"
+var { BulkKeyBundle, SyncKeyBundle } = ChromeUtils.importESModule(
+  "resource://services-sync/keys.sys.mjs"
 );
 
 // Common code for test_errorhandler_{1,2}.js -- pulled out to make it less

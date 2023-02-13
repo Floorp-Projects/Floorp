@@ -11,7 +11,7 @@ import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
 import { PlacesSyncUtils } from "resource://gre/modules/PlacesSyncUtils.sys.mjs";
 
-const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
+import { Logger } from "resource://tps/logger.sys.mjs";
 
 export var DumpHistory = async function TPS_History__DumpHistory() {
   let query = PlacesUtils.history.getNewQuery();

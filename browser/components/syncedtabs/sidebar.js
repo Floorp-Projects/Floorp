@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+const { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
 const { SyncedTabsDeckComponent } = ChromeUtils.import(
   "resource:///modules/syncedtabs/SyncedTabsDeckComponent.js"

@@ -12,12 +12,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
+  Utils: "resource://services-sync/util.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
-  Utils: "resource://services-sync/util.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -37,7 +37,8 @@ export const SyncDisconnectInternal = {
 
   // mocked by tests.
   getWeave() {
-    return ChromeUtils.import("resource://services-sync/main.js").Weave;
+    return ChromeUtils.importESModule("resource://services-sync/main.sys.mjs")
+      .Weave;
   },
 
   // Returns a promise that resolves when we are not syncing, waiting until

@@ -7,11 +7,15 @@ const {
   AddonsReconciler,
   CHANGE_INSTALLED,
   CHANGE_UNINSTALLED,
-} = ChromeUtils.import("resource://services-sync/addonsreconciler.js");
-const { AddonsEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/addons.js"
+} = ChromeUtils.importESModule(
+  "resource://services-sync/addonsreconciler.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { AddonsEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/addons.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.createAppInfo(

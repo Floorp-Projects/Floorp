@@ -23,13 +23,15 @@ const {
     KeyRingEncryptionRemoteTransformer,
   },
 } = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
-const { BulkKeyBundle } = ChromeUtils.import(
-  "resource://services-sync/keys.js"
+const { BulkKeyBundle } = ChromeUtils.importESModule(
+  "resource://services-sync/keys.sys.mjs"
 );
 const { FxAccountsKeys } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsKeys.jsm"
 );
-const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-sync/util.sys.mjs"
+);
 
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 

@@ -3,7 +3,9 @@
  */
 "use strict";
 
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
+);
 
 // A mock "Tabs" engine which autocomplete will use instead of the real
 // engine. We pass a constructor that Sync creates.

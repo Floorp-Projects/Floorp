@@ -43,7 +43,7 @@ class FxAccountsTelemetry {
   // Records an event *in the Fxa/Sync ping*.
   recordEvent(object, method, value, extra = undefined) {
     // We need to ensure the telemetry module is loaded.
-    ChromeUtils.import("resource://services-sync/telemetry.js");
+    ChromeUtils.importESModule("resource://services-sync/telemetry.sys.mjs");
     // Now it will be listening for the notifications...
     lazy.Observers.notify("fxa:telemetry:event", {
       object,

@@ -6,13 +6,15 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { CHANGE_INSTALLED } = ChromeUtils.import(
-  "resource://services-sync/addonsreconciler.js"
+const { CHANGE_INSTALLED } = ChromeUtils.importESModule(
+  "resource://services-sync/addonsreconciler.sys.mjs"
 );
-const { AddonsEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/addons.js"
+const { AddonsEngine } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/addons.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );

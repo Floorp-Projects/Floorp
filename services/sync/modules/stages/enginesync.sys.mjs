@@ -18,14 +18,13 @@ const {
   WEAVE_VERSION,
   kSyncNetworkOffline,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Doctor",
-  "resource://services-sync/doctor.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Doctor: "resource://services-sync/doctor.sys.mjs",
+});
 
 /**
  * Perform synchronization of engines.

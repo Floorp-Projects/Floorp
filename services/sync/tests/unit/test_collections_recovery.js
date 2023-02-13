@@ -2,7 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Verify that we wipe the server if we have to regenerate keys.
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 add_task(async function test_missing_crypto_collection() {
   enableValidationPrefs();

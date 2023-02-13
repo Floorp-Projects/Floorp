@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+const { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",

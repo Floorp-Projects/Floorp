@@ -34,7 +34,8 @@ const {
   kSyncBackoffNotMet,
   kSyncMasterPasswordLocked,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { logManager } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
@@ -45,11 +46,9 @@ const { CommonUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Status",
-  "resource://services-sync/status.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Status: "resource://services-sync/status.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "AddonManager",

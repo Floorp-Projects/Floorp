@@ -11,11 +11,8 @@
 const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
 
 ChromeUtils.defineESModuleGetters(this, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
 function assertSearchTelemetryEmpty(search_hist) {

@@ -1,7 +1,7 @@
 "use strict";
 
-let { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
+let { SyncedTabs } = ChromeUtils.importESModule(
+  "resource://services-sync/SyncedTabs.sys.mjs"
 );
 let { SyncedTabsDeckComponent } = ChromeUtils.import(
   "resource:///modules/syncedtabs/SyncedTabsDeckComponent.js"
@@ -12,7 +12,9 @@ let { SyncedTabsListStore } = ChromeUtils.import(
 let { SyncedTabsDeckStore } = ChromeUtils.import(
   "resource:///modules/syncedtabs/SyncedTabsDeckStore.js"
 );
-const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 add_task(async function testInitUninit() {
   let deckStore = new SyncedTabsDeckStore();

@@ -41,32 +41,27 @@ const {
   kSyncNotConfigured,
   kSyncWeaveDisabled,
 } = ChromeUtils.import("resource://services-sync/constants.js");
-const { EngineManager } = ChromeUtils.import(
-  "resource://services-sync/engines.js"
-);
-const { ClientEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/clients.js"
-);
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { ErrorHandler, SyncScheduler } = ChromeUtils.import(
-  "resource://services-sync/policies.js"
-);
-const {
+import { EngineManager } from "resource://services-sync/engines.sys.mjs";
+import { ClientEngine } from "resource://services-sync/engines/clients.sys.mjs";
+import { Weave } from "resource://services-sync/main.sys.mjs";
+import {
+  ErrorHandler,
+  SyncScheduler,
+} from "resource://services-sync/policies.sys.mjs";
+import {
   CollectionKeyManager,
   CryptoWrapper,
   RecordManager,
   WBORecord,
-} = ChromeUtils.import("resource://services-sync/record.js");
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { EngineSynchronizer } = ChromeUtils.import(
-  "resource://services-sync/stages/enginesync.js"
-);
-const { DeclinedEngines } = ChromeUtils.import(
-  "resource://services-sync/stages/declined.js"
-);
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+} from "resource://services-sync/record.sys.mjs";
+import { Resource } from "resource://services-sync/resource.sys.mjs";
+import { EngineSynchronizer } from "resource://services-sync/stages/enginesync.sys.mjs";
+import { DeclinedEngines } from "resource://services-sync/stages/declined.sys.mjs";
+import { Status } from "resource://services-sync/status.sys.mjs";
+
+ChromeUtils.importESModule("resource://services-sync/telemetry.sys.mjs");
+import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+
 const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );

@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -23,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
-  Weave: "resource://services-sync/main.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {

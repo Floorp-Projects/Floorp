@@ -10,14 +10,13 @@ import { Assert } from "resource://testing-common/Assert.sys.mjs";
 const { initTestLogging } = ChromeUtils.import(
   "resource://testing-common/services/common/logging.js"
 );
-const {
+import {
   FakeCryptoService,
   FakeFilesystemService,
   FakeGUIDService,
   fakeSHA256HMAC,
-} = ChromeUtils.import(
-  "resource://testing-common/services/sync/fakeservices.js"
-);
+} from "resource://testing-common/services/sync/fakeservices.sys.mjs";
+
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
@@ -263,7 +262,9 @@ export var configureFxAccountIdentity = function(
 export var configureIdentity = async function(identityOverrides, server) {
   let config = makeIdentityConfig(identityOverrides, server);
   // Must be imported after the identity configuration is set up.
-  let { Service } = ChromeUtils.import("resource://services-sync/service.js");
+  let { Service } = ChromeUtils.importESModule(
+    "resource://services-sync/service.sys.mjs"
+  );
 
   // If a server was specified, ensure FxA has a correct cluster URL available.
   if (server && !config.fxaccount.token.endpoint) {

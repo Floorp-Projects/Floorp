@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { BridgedEngine, BridgeWrapperXPCOM } = ChromeUtils.import(
-  "resource://services-sync/bridged_engine.js"
+const { BridgedEngine, BridgeWrapperXPCOM } = ChromeUtils.importESModule(
+  "resource://services-sync/bridged_engine.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 // Wraps an `object` in a proxy so that its methods are bound to it. This
 // simulates how XPCOM class instances have all their methods bound.

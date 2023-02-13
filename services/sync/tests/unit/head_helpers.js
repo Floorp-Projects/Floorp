@@ -19,9 +19,12 @@ var { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-var { SerializableSet, Svc, Utils, getChromeWindow } = ChromeUtils.import(
-  "resource://services-sync/util.js"
-);
+var {
+  SerializableSet,
+  Svc,
+  Utils,
+  getChromeWindow,
+} = ChromeUtils.importESModule("resource://services-sync/util.sys.mjs");
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -49,7 +52,9 @@ var {
   sumHistogram,
   syncTestLogging,
   waitForZeroTimer,
-} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/services/sync/utils.sys.mjs"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "AddonManager",
@@ -259,8 +264,8 @@ function mockGetWindowEnumerator(urls) {
 // Helper function to get the sync telemetry and add the typically used test
 // engine names to its list of allowed engines.
 function get_sync_test_telemetry() {
-  let { SyncTelemetry } = ChromeUtils.import(
-    "resource://services-sync/telemetry.js"
+  let { SyncTelemetry } = ChromeUtils.importESModule(
+    "resource://services-sync/telemetry.sys.mjs"
   );
   SyncTelemetry.tryRefreshDevices = function() {};
   let testEngines = ["rotary", "steam", "sterling", "catapult", "nineties"];
@@ -430,7 +435,9 @@ async function sync_engine_and_validate_telem(
   let caughtError = null;
   // Clear out status, so failures from previous syncs won't show up in the
   // telemetry ping.
-  let { Status } = ChromeUtils.import("resource://services-sync/status.js");
+  let { Status } = ChromeUtils.importESModule(
+    "resource://services-sync/status.sys.mjs"
+  );
   Status._engines = {};
   Status.partial = false;
   // Ideally we'd clear these out like we do with engines, (probably via
@@ -533,8 +540,8 @@ function promiseOneObserver(topic, callback) {
 }
 
 async function registerRotaryEngine() {
-  let { RotaryEngine } = ChromeUtils.import(
-    "resource://testing-common/services/sync/rotaryengine.js"
+  let { RotaryEngine } = ChromeUtils.importESModule(
+    "resource://testing-common/services/sync/rotaryengine.sys.mjs"
   );
   await Service.engineManager.clear();
 
@@ -680,8 +687,8 @@ async function assertBookmarksTreeMatches(rootGuid, expected, message) {
 }
 
 function add_bookmark_test(task) {
-  const { BookmarksEngine } = ChromeUtils.import(
-    "resource://services-sync/engines/bookmarks.js"
+  const { BookmarksEngine } = ChromeUtils.importESModule(
+    "resource://services-sync/engines/bookmarks.sys.mjs"
   );
 
   add_task(async function() {

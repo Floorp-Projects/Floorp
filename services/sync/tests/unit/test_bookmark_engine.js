@@ -12,8 +12,12 @@ const {
   BookmarkFolder,
   BookmarksEngine,
   Livemark,
-} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+} = ChromeUtils.importESModule(
+  "resource://services-sync/engines/bookmarks.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 var recordedEvents = [];
 

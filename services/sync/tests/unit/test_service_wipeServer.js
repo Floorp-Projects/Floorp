@@ -1,5 +1,7 @@
 Svc.Prefs.set("registerEngines", "");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 // configure the identity we use for this test.
 const identityConfig = makeIdentityConfig({ username: "johndoe" });

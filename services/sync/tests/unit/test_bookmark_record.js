@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Bookmark, BookmarkQuery, PlacesItem } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
+const { Bookmark, BookmarkQuery, PlacesItem } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/bookmarks.sys.mjs"
 );
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 function prepareBookmarkItem(collection, id) {
   let b = new Bookmark(collection, id);

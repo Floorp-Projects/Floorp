@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { RotaryEngine } = ChromeUtils.import(
-  "resource://testing-common/services/sync/rotaryengine.js"
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
+const { RotaryEngine } = ChromeUtils.importESModule(
+  "resource://testing-common/services/sync/rotaryengine.sys.mjs"
 );
 
 add_task(async function test_412_not_treated_as_failure() {

@@ -4,11 +4,15 @@
 _(
   "Making sure after processing incoming bookmarks, they show up in the right order"
 );
-const { Bookmark, BookmarkFolder } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
+const { Bookmark, BookmarkFolder } = ChromeUtils.importESModule(
+  "resource://services-sync/engines/bookmarks.sys.mjs"
 );
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { Weave } = ChromeUtils.importESModule(
+  "resource://services-sync/main.sys.mjs"
+);
+const { Service } = ChromeUtils.importESModule(
+  "resource://services-sync/service.sys.mjs"
+);
 
 async function serverForFoo(engine) {
   await generateNewKeys(Service.collectionKeys);
