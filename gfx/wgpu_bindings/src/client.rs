@@ -492,7 +492,10 @@ pub extern "C" fn wgpu_client_create_texture(
 
     let view_formats = unsafe { desc.view_formats.as_slice() }.to_vec();
 
-    let action = DeviceAction::CreateTexture(id, desc.map_label_and_view_formats(|_| label, |_| view_formats));
+    let action = DeviceAction::CreateTexture(
+        id,
+        desc.map_label_and_view_formats(|_| label, |_| view_formats),
+    );
     *bb = make_byte_buf(&action);
 
     id
