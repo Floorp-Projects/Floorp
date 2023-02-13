@@ -22,7 +22,7 @@ var { ExtensionError } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "symbolicationService", () => {
   let { createLocalSymbolicationService } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/symbolication.jsm.js"
+    "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
   );
   return createLocalSymbolicationService(Services.profiler.sharedLibraries, []);
 });

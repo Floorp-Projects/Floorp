@@ -737,8 +737,8 @@
     "devtools/client/performance-new/popup/menu-button.jsm.js",
   "resource://devtools/client/performance-new/popup/panel.jsm.js":
     "devtools/client/performance-new/popup/panel.jsm.js",
-  "resource://devtools/client/performance-new/symbolication.jsm.js":
-    "devtools/client/performance-new/symbolication.jsm.js",
+  "resource://devtools/client/performance-new/shared/symbolication.jsm.js":
+    "devtools/client/performance-new/shared/symbolication.jsm.js",
   "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js":
     "devtools/client/performance-new/typescript-lazy-load.jsm.js",
   "resource://devtools/client/storage/VariablesView.jsm":

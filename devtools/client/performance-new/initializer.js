@@ -70,7 +70,7 @@ const {
   sharedLibrariesFromProfile,
 } = require("resource://devtools/client/performance-new/browser.js");
 const { createLocalSymbolicationService } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/symbolication.jsm.js"
+  "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
 );
 const {
   presets,
