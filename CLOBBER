@@ -22,7 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-A recent ANGLE vendoring update from <https://bugzilla.mozilla.org/show_bug.cgi?id=1753349> causes
-a failure like the following:
 
-Modified build files in third_party/libwebrtc - Bug 1806510 - Vendor libwebrtc from c898c82884
+Merge day clobber 2023-02-13
