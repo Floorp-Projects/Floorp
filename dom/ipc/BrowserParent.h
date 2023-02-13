@@ -674,7 +674,8 @@ class BrowserParent final : public PBrowserParent,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
       nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
       const CookieJarSettingsArgs& aCookieJarSettingsArgs,
-      const MaybeDiscarded<WindowContext>& aSourceWindowContext);
+      const MaybeDiscarded<WindowContext>& aSourceWindowContext,
+      const MaybeDiscarded<WindowContext>& aSourceTopWindowContext);
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal);

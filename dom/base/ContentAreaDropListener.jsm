@@ -248,15 +248,15 @@ ContentAreaDropListener.prototype = {
     }
 
     // If this is an external drag, allow drop.
-    let sourceWC = dataTransfer.sourceWindowContext;
-    if (!sourceWC) {
+    let sourceTopWC = dataTransfer.sourceTopWindowContext;
+    if (!sourceTopWC) {
       return true;
     }
 
     // If drag source and drop target are in the same top window, don't allow.
     let eventWC =
       aEvent.originalTarget.ownerGlobal.browsingContext.currentWindowContext;
-    if (eventWC && sourceWC.topWindowContext == eventWC.topWindowContext) {
+    if (eventWC && sourceTopWC == eventWC.topWindowContext) {
       return false;
     }
 

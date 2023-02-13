@@ -3746,7 +3746,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
     const CookieJarSettingsArgs& aCookieJarSettingsArgs,
-    const MaybeDiscarded<WindowContext>& aSourceWindowContext) {
+    const MaybeDiscarded<WindowContext>& aSourceWindowContext,
+    const MaybeDiscarded<WindowContext>& aSourceTopWindowContext) {
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
     Unused << Manager()->SendEndDragSession(
@@ -3764,7 +3765,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
 
   RefPtr<RemoteDragStartData> dragStartData = new RemoteDragStartData(
       this, std::move(aTransfers), aDragRect, aPrincipal, aCsp,
-      cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded());
+      cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded(),
+      aSourceTopWindowContext.GetMaybeDiscarded());
 
   if (aVisualDnDData && aVisualDnDData->Size() >= aDragRect.height * aStride) {
     dragStartData->SetVisualization(gfx::CreateDataSourceSurfaceFromData(

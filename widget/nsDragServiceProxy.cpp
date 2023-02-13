@@ -46,7 +46,12 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   if (mSourceDocument) {
     csp = mSourceDocument->GetCsp();
+    // XXX why do we need this here? Shouldn't they be set properly in
+    // nsBaseDragService already?
     mSourceWindowContext = mSourceDocument->GetWindowContext();
+    mSourceTopWindowContext = mSourceWindowContext
+                                  ? mSourceWindowContext->TopWindowContext()
+                                  : nullptr;
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
@@ -75,7 +80,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         mozilla::Unused << child->SendInvokeDragSession(
             std::move(dataTransfers), aActionType, std::move(surfaceData),
             stride, dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
-            mSourceWindowContext);
+            mSourceWindowContext, mSourceTopWindowContext);
         StartDragSession();
         return NS_OK;
       }
@@ -85,7 +90,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   mozilla::Unused << child->SendInvokeDragSession(
       std::move(dataTransfers), aActionType, Nothing(), 0,
       static_cast<SurfaceFormat>(0), dragRect, principal, csp, csArgs,
-      mSourceWindowContext);
+      mSourceWindowContext, mSourceTopWindowContext);
   StartDragSession();
   return NS_OK;
 }

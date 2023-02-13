@@ -440,15 +440,16 @@ already_AddRefed<nsINode> DataTransfer::GetMozSourceNode() {
   return sourceNode.forget();
 }
 
-already_AddRefed<WindowContext> DataTransfer::GetSourceWindowContext() {
+already_AddRefed<WindowContext> DataTransfer::GetSourceTopWindowContext() {
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (!dragSession) {
     return nullptr;
   }
 
-  RefPtr<WindowContext> sourceWindowContext;
-  dragSession->GetSourceWindowContext(getter_AddRefs(sourceWindowContext));
-  return sourceWindowContext.forget();
+  RefPtr<WindowContext> sourceTopWindowContext;
+  dragSession->GetSourceTopWindowContext(
+      getter_AddRefs(sourceTopWindowContext));
+  return sourceTopWindowContext.forget();
 }
 
 already_AddRefed<DOMStringList> DataTransfer::MozTypesAt(
