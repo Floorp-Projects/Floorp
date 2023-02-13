@@ -54,6 +54,14 @@ interface nsIDragSession : nsISupports
   attribute WindowContext sourceWindowContext;
 
   /**
+    * The top-level window context where the drag was started, which will be
+    * null if the drag originated outside the application. Useful for
+    * determining if a drop originated in the same top-level window context.
+    */
+  [infallible]
+  attribute WindowContext sourceTopWindowContext;
+
+  /**
     * The dom node that was originally dragged to start the session, which will be null if the
     * drag originated outside the application.
     */
