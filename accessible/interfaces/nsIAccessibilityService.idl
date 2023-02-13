@@ -8,6 +8,7 @@
 interface nsIAccessible;
 interface nsIWeakReference;
 interface nsIAccessiblePivot;
+interface nsIAccessibleTextLeafPoint;
 
 webidl Node;
 
@@ -84,6 +85,16 @@ interface nsIAccessibilityService : nsISupports
    * @return a new pivot
    */
   nsIAccessiblePivot createAccessiblePivot(in nsIAccessible aRoot);
+
+  /**
+   * Create a new nsIAccessibleTextLeafPoint.
+   *
+   * @param aAccessible [in] the accessible for the point
+   * @param aOffset     [in] the offset of the point
+   * @return a new point
+   */
+  nsIAccessibleTextLeafPoint createTextLeafPoint(in nsIAccessible aAccessible,
+                                                 in long aOffset);
 
   /**
    * Enable logging for the given modules, all other modules aren't logged.
