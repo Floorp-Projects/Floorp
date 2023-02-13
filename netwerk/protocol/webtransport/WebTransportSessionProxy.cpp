@@ -463,7 +463,7 @@ WebTransportSessionProxy::OnStartRequest(nsIRequest* aRequest) {
         nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
         if (!httpChannel ||
             NS_FAILED(httpChannel->GetResponseStatus(&status)) ||
-            status != 200) {
+            !(status >= 200 && status < 300)) {
           listener = mListener;
           mListener = nullptr;
           mChannel = nullptr;
