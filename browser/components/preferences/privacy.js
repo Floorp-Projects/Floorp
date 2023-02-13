@@ -1992,9 +1992,17 @@ var gPrivacyPane = {
    */
   writeCookieBannerMode() {
     let checkbox = document.getElementById("handleCookieBanners");
-    let mode = checkbox.checked
-      ? Ci.nsICookieBannerService.MODE_REJECT
-      : Ci.nsICookieBannerService.MODE_DISABLED;
+    let mode;
+    if (checkbox.checked) {
+      mode = Ci.nsICookieBannerService.MODE_REJECT;
+
+      // Also unset the detect-only mode pref, just in case the user enabled
+      // the feature via about:preferences, not the onboarding doorhanger.
+      Services.prefs.setBoolPref("cookiebanners.service.detectOnly", false);
+    } else {
+      mode = Ci.nsICookieBannerService.MODE_DISABLED;
+    }
+
     return mode;
   },
 
