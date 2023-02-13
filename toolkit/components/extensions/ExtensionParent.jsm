@@ -65,6 +65,10 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
+const DUMMY_PAGE_URI = Services.io.newURI(
+  "chrome://extensions/content/dummy.xhtml"
+);
+
 var {
   BaseContext,
   CanOfAPIs,
@@ -1367,7 +1371,7 @@ class HiddenXULWindow {
     }
 
     windowlessBrowser.browsingContext.useGlobalHistory = false;
-    chromeShell.loadURI("chrome://extensions/content/dummy.xhtml", {
+    chromeShell.loadURI(DUMMY_PAGE_URI, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 

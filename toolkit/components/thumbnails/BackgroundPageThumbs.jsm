@@ -243,7 +243,7 @@ const BackgroundPageThumbs = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
     wlBrowser.loadURI(
-      "chrome://global/content/backgroundPageThumbs.xhtml",
+      Services.io.newURI("chrome://global/content/backgroundPageThumbs.xhtml"),
       loadURIOptions
     );
     this._windowlessContainer = wlBrowser;
@@ -444,7 +444,10 @@ const BackgroundPageThumbs = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
     };
-    this._thumbBrowser.loadURI("about:blank", loadURIOptions);
+    this._thumbBrowser.loadURI(
+      Services.io.newURI("about:blank"),
+      loadURIOptions
+    );
   },
 
   /**

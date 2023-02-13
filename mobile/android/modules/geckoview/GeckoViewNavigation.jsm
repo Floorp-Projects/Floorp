@@ -505,7 +505,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     }
 
     // 3) We have a new session and a browser element, load the requested URI.
-    browser.loadURI(uri.spec, {
+    browser.loadURI(uri, {
       triggeringPrincipal,
       csp,
       referrerInfo,
