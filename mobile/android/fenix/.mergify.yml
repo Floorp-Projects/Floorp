@@ -32,7 +32,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
   - name: L10N - Auto Merge
     conditions:
       - and:
@@ -63,7 +62,6 @@ pull_request_rules:
       queue:
         method: squash
         name: default
-        rebase_fallback: none
   - name: Needs landing - Rebase
     conditions:
       - or:
@@ -78,7 +76,6 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
-        rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
       - or:
@@ -93,4 +90,3 @@ pull_request_rules:
       queue:
         method: squash
         name: default
-        rebase_fallback: none
