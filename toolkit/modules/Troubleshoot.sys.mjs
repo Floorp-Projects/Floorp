@@ -913,10 +913,10 @@ var dataProviders = {
         NormandyPreferenceStudies.getAllActive(),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllActive()),
+          .then(() => ExperimentManager.store.getAllActiveExperiments()),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllRollouts()),
+          .then(() => ExperimentManager.store.getAllActiveRollouts()),
       ].map(promise =>
         promise
           .catch(error => {
