@@ -80,7 +80,8 @@ already_AddRefed<TransformStream> TransformStream::CreateGeneric(
   // Step 8. Perform ! InitializeTransformStream(stream, startPromise,
   // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,
   // readableSizeAlgorithm).
-  auto stream = MakeRefPtr<TransformStream>(global, nullptr, nullptr);
+  RefPtr<TransformStream> stream =
+      new TransformStream(global, nullptr, nullptr);
   stream->Initialize(aGlobal.Context(), startPromise, writableHighWaterMark,
                      writableSizeAlgorithm, readableHighWaterMark,
                      readableSizeAlgorithm, aRv);
@@ -544,9 +545,9 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   // Step 5. Set stream.[[writable]] to ! CreateWritableStream(startAlgorithm,
   // writeAlgorithm, closeAlgorithm, abortAlgorithm, writableHighWaterMark,
   // writableSizeAlgorithm).
-  mWritable =
-      CreateWritableStream(aCx, MOZ_KnownLive(mGlobal), sinkAlgorithms,
-                           aWritableHighWaterMark, aWritableSizeAlgorithm, aRv);
+  mWritable = WritableStream::CreateAbstract(
+      aCx, MOZ_KnownLive(mGlobal), sinkAlgorithms, aWritableHighWaterMark,
+      aWritableSizeAlgorithm, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -558,7 +559,7 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   // Step 8. Set stream.[[readable]] to ! CreateReadableStream(startAlgorithm,
   // pullAlgorithm, cancelAlgorithm, readableHighWaterMark,
   // readableSizeAlgorithm).
-  mReadable = CreateReadableStream(
+  mReadable = ReadableStream::CreateAbstract(
       aCx, MOZ_KnownLive(mGlobal), sourceAlgorithms,
       Some(aReadableHighWaterMark), aReadableSizeAlgorithm, aRv);
   if (aRv.Failed()) {

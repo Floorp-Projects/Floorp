@@ -46,19 +46,28 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReadableStream)
 
+  friend class WritableStream;
+
  protected:
   virtual ~ReadableStream();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
- public:
   explicit ReadableStream(const GlobalObject& aGlobal);
   explicit ReadableStream(nsIGlobalObject* aGlobal);
 
-  enum class ReaderState { Readable, Closed, Errored };
+ public:
+  // Abstract algorithms
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateAbstract(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      UnderlyingSourceAlgorithmsBase* aAlgorithms,
+      mozilla::Maybe<double> aHighWaterMark,
+      QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateByteAbstract(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      UnderlyingSourceAlgorithmsBase* aAlgorithms, ErrorResult& aRv);
 
   // Slot Getter/Setters:
- public:
   MOZ_KNOWN_LIVE ReadableStreamController* Controller() { return mController; }
   ReadableStreamDefaultController* DefaultController() {
     MOZ_ASSERT(mController && mController->IsDefault());
@@ -76,6 +85,8 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   void SetReader(ReadableStreamGenericReader* aReader);
 
   ReadableStreamDefaultReader* GetDefaultReader();
+
+  enum class ReaderState { Readable, Closed, Errored };
 
   ReaderState State() const { return mState; }
   void SetState(const ReaderState& aState) { mState = aState; }
@@ -97,8 +108,11 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
   MOZ_CAN_RUN_SCRIPT bool Transfer(JSContext* aCx,
                                    UniqueMessagePortId& aPortId);
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream>
+  ReceiveTransferImpl(JSContext* aCx, nsIGlobalObject* aGlobal,
+                      MessagePort& aPort);
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-receiving-steps
-  static MOZ_CAN_RUN_SCRIPT bool ReceiveTransfer(
+  MOZ_CAN_RUN_SCRIPT static bool ReceiveTransfer(
       JSContext* aCx, nsIGlobalObject* aGlobal, MessagePort& aPort,
       JS::MutableHandle<JSObject*> aReturnObject);
 
@@ -113,6 +127,17 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
       QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
   // https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+
+ protected:
+  // Sets up the ReadableStream with byte reading support. Intended for
+  // subclasses.
+  MOZ_CAN_RUN_SCRIPT void SetUpByteNative(
+      JSContext* aCx, UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
+      mozilla::Maybe<double> aHighWaterMark, ErrorResult& aRv);
+
+ public:
+  // Creates and sets up a ReadableStream with byte reading support. Use
+  // SetUpByteNative for this purpose in subclasses.
   MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateByteNative(
       JSContext* aCx, nsIGlobalObject* aGlobal,
       UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
@@ -235,18 +260,8 @@ MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> ReadableStreamCancel(
 already_AddRefed<ReadableStreamDefaultReader>
 AcquireReadableStreamDefaultReader(ReadableStream* aStream, ErrorResult& aRv);
 
-MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> CreateReadableStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSourceAlgorithmsBase* aAlgorithms,
-    mozilla::Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
-    ErrorResult& aRv);
-
 bool ReadableStreamHasBYOBReader(ReadableStream* aStream);
 bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
-
-MOZ_CAN_RUN_SCRIPT already_AddRefed<ReadableStream> CreateReadableByteStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSourceAlgorithmsBase* aAlgorithms, ErrorResult& aRv);
 
 }  // namespace streams_abstract
 
