@@ -3949,17 +3949,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
 
   mozilla::startup::IncreaseDescriptorLimits();
 
-#ifdef USE_GLX_TEST
-  // bug 639842 - it's very important to fire this process BEFORE we set up
-  // error handling. indeed, this process is expected to be crashy, and we
-  // don't want the user to see its crashes. That's the whole reason for
-  // doing this in a separate process.
-  //
-  // This call will cause a fork and the fork will terminate itself separately
-  // from the usual shutdown sequence
-  fire_glxtest_process();
-#endif
-
   SetupErrorHandling(gArgv[0]);
 
 #ifdef CAIRO_HAS_DWRITE_FONT
@@ -5120,6 +5109,10 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
   // Flush any pending page load events.
   mozilla::glean_pings::Pageload.Submit("startup"_ns);
+
+#ifdef USE_GLX_TEST
+  fire_glxtest_process();
+#endif
 
   return 0;
 }
