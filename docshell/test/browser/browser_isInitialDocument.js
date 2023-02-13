@@ -311,9 +311,7 @@ add_task(async function windowless_browser() {
       Ci.nsIWebProgress.NOTIFY_ALL
     );
   });
-  browser.loadURI(Services.io.newURI("about:blank"), {
-    triggeringPrincipal: principal,
-  });
+  browser.loadURI("about:blank", { triggeringPrincipal: principal });
   info("Wait for the location change");
   await onLocationChange;
   is(

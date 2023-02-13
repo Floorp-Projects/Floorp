@@ -966,7 +966,7 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
               nsCOMPtr<nsIContentSecurityPolicy> csp;
               handler->GetCsp(dragEvent, getter_AddRefs(csp));
               loadURIOptions.mCsp = csp;
-              webnav->FixupAndLoadURIString(url, loadURIOptions);
+              webnav->LoadURI(url, loadURIOptions);
             }
           }
         }

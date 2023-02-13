@@ -81,12 +81,9 @@ async function createWindowlessBrowser({ isPrivate = false } = {}) {
   const system = Services.scriptSecurityManager.getSystemPrincipal();
   chromeShell.createAboutBlankContentViewer(system, system);
   windowlessBrowser.browsingContext.useGlobalHistory = false;
-  chromeShell.loadURI(
-    Services.io.newURI("chrome://extensions/content/dummy.xhtml"),
-    {
-      triggeringPrincipal: system,
-    }
-  );
+  chromeShell.loadURI("chrome://extensions/content/dummy.xhtml", {
+    triggeringPrincipal: system,
+  });
 
   await promiseObserved(
     "chrome-document-global-created",

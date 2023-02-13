@@ -144,7 +144,7 @@ function testOnWindow(aIsPrivate, aCallback) {
   whenDelayedStartupFinished(win, function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href != contentPage) {
-        win.gBrowser.loadURI(Services.io.newURI(contentPage), {
+        win.gBrowser.loadURI(contentPage, {
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
         return;
@@ -156,7 +156,7 @@ function testOnWindow(aIsPrivate, aCallback) {
     }, true);
     SimpleTest.info("load's window: " + win.location + " vs. " + window.location);
     win.setTimeout(function() {
-      win.gBrowser.loadURI(Services.io.newURI(contentPage), {
+      win.gBrowser.loadURI(contentPage, {
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
       });
     }, 0);

@@ -76,9 +76,8 @@ nsWebHandlerApp.prototype = {
     var escapedUriSpecToHandle = encodeURIComponent(aURI.spec);
 
     // insert the encoded URI and create the object version.
-    var uriToSend = Services.io.newURI(
-      this.uriTemplate.replace("%s", escapedUriSpecToHandle)
-    );
+    var uriSpecToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
+    var uriToSend = Services.io.newURI(uriSpecToSend);
 
     let policy = WebExtensionPolicy.getByURI(uriToSend);
     let privateAllowed = !policy || policy.privateBrowsingAllowed;
@@ -105,7 +104,7 @@ nsWebHandlerApp.prototype = {
 
       let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
       Services.tm.dispatchToMainThread(() =>
-        aBrowsingContext.loadURI(uriToSend, { triggeringPrincipal })
+        aBrowsingContext.loadURI(uriSpecToSend, { triggeringPrincipal })
       );
       return;
     }

@@ -147,7 +147,7 @@ let NewTabPagePreloading = {
     }
 
     let browser = this._createBrowser(window);
-    browser.loadURI(Services.io.newURI(window.BROWSER_NEW_TAB_URL), {
+    browser.loadURI(window.BROWSER_NEW_TAB_URL, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     browser.docShellIsActive = false;

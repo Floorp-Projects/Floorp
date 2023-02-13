@@ -48,7 +48,7 @@ add_task(async function() {
     true,
     Services.io.newURI(REFERRER1)
   );
-  browser.loadURI(Services.io.newURI("http://example.org"), {
+  browser.loadURI("http://example.org", {
     referrerInfo: referrerInfo1,
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
   });

@@ -1427,6 +1427,57 @@ var gKeywordURIFixup = {
   },
 };
 
+function serializeInputStream(aStream) {
+  let data = {
+    content: NetUtil.readInputStreamToString(aStream, aStream.available()),
+  };
+
+  if (aStream instanceof Ci.nsIMIMEInputStream) {
+    data.headers = new Map();
+    aStream.visitHeaders((name, value) => {
+      data.headers.set(name, value);
+    });
+  }
+
+  return data;
+}
+
+/**
+ * Handles URIs when we want to deal with them in chrome code rather than pass
+ * them down to a content browser. This can avoid unnecessary process switching
+ * for the browser.
+ * @param aBrowser the browser that is attempting to load the URI
+ * @param aUri the nsIURI that is being loaded
+ * @returns true if the URI is handled, otherwise false
+ */
+function handleUriInChrome(aBrowser, aUri) {
+  if (aUri.scheme == "file") {
+    try {
+      let mimeType = Cc["@mozilla.org/mime;1"]
+        .getService(Ci.nsIMIMEService)
+        .getTypeFromURI(aUri);
+      if (mimeType == "application/x-xpinstall") {
+        let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+        AddonManager.getInstallForURL(aUri.spec, {
+          telemetryInfo: { source: "file-url" },
+        }).then(install => {
+          AddonManager.installAddonFromWebpage(
+            mimeType,
+            aBrowser,
+            systemPrincipal,
+            install
+          );
+        });
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 /* Creates a null principal using the userContextId
    from the current selected tab or a passed in tab argument */
 function _createNullPrincipalFromTabUserContextId(tab = gBrowser.selectedTab) {
@@ -1437,6 +1488,104 @@ function _createNullPrincipalFromTabUserContextId(tab = gBrowser.selectedTab) {
   return Services.scriptSecurityManager.createNullPrincipal({
     userContextId,
   });
+}
+
+// A shared function used by both remote and non-remote browser XBL bindings to
+// load a URI or redirect it to the correct process.
+function _loadURI(browser, uri, params = {}) {
+  if (!uri) {
+    uri = "about:blank";
+  }
+
+  let {
+    triggeringPrincipal,
+    referrerInfo,
+    postData,
+    userContextId,
+    csp,
+    remoteTypeOverride,
+    hasValidUserGestureActivation,
+    globalHistoryOptions,
+  } = params || {};
+  let loadFlags =
+    params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+  hasValidUserGestureActivation ??=
+    document.hasValidTransientUserGestureActivation;
+
+  if (!triggeringPrincipal) {
+    throw new Error("Must load with a triggering Principal");
+  }
+
+  if (userContextId && userContextId != browser.getAttribute("usercontextid")) {
+    throw new Error("Cannot load with mismatched userContextId");
+  }
+
+  // Attempt to perform URI fixup to see if we can handle this URI in chrome.
+  let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+  if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+  }
+  if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+    fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+  }
+  if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+    fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+  }
+
+  try {
+    let uriObject = Services.uriFixup.getFixupURIInfo(uri, fixupFlags)
+      .preferredURI;
+    if (uriObject && handleUriInChrome(browser, uriObject)) {
+      // If we've handled the URI in Chrome, then just return here.
+      return;
+    }
+  } catch (e) {
+    // getFixupURIInfo may throw. Gracefully recover and try to load the URI normally.
+  }
+
+  // XXX(nika): Is `browser.isNavigating` necessary anymore?
+  browser.isNavigating = true;
+
+  if (globalHistoryOptions?.triggeringSearchEngine) {
+    browser.setAttribute(
+      "triggeringSearchEngine",
+      globalHistoryOptions.triggeringSearchEngine
+    );
+    browser.setAttribute("triggeringSearchEngineURL", uri);
+  } else {
+    browser.removeAttribute("triggeringSearchEngine");
+    browser.removeAttribute("triggeringSearchEngineURL");
+  }
+
+  if (globalHistoryOptions?.triggeringSponsoredURL) {
+    try {
+      // Browser may access URL after fixing it up, then store the URL into DB.
+      // To match with it, fix the link up explicitly.
+      const triggeringSponsoredURL = Services.uriFixup.getFixupURIInfo(
+        globalHistoryOptions.triggeringSponsoredURL,
+        fixupFlags
+      ).fixedURI.spec;
+      browser.setAttribute("triggeringSponsoredURL", triggeringSponsoredURL);
+      const time =
+        globalHistoryOptions.triggeringSponsoredURLVisitTimeMS || Date.now();
+      browser.setAttribute("triggeringSponsoredURLVisitTimeMS", time);
+    } catch (e) {}
+  }
+
+  let loadURIOptions = {
+    triggeringPrincipal,
+    csp,
+    loadFlags,
+    referrerInfo,
+    postData,
+    hasValidUserGestureActivation,
+    remoteTypeOverride,
+  };
+  try {
+    browser.webNavigation.loadURI(uri, loadURIOptions);
+  } finally {
+    browser.isNavigating = false;
+  }
 }
 
 let _resolveDelayedStartup;
@@ -3267,10 +3416,7 @@ var BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    // Note that we have to use the passed URI info and can't just
-    // rely on the document URI, because the latter contains
-    // additional query parameters that should be stripped.
-    browsingContext.fixupAndLoadURIString(blockedInfo.uri, {
+    browsingContext.loadURI(blockedInfo.uri, {
       triggeringPrincipal,
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
     });
@@ -3361,7 +3507,7 @@ var BrowserOnClick = {
  * when their own homepage is infected, we can get them somewhere safe.
  */
 function getMeOutOfHere(browsingContext) {
-  browsingContext.top.fixupAndLoadURIString(getDefaultHomePage(), {
+  browsingContext.top.loadURI(getDefaultHomePage(), {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(), // Also needs to load homepage
   });
 }
@@ -3392,13 +3538,12 @@ function BrowserReloadWithFlags(reloadFlags) {
 
   for (let tab of gBrowser.selectedTabs) {
     let browser = tab.linkedBrowser;
-    let url = browser.currentURI;
-    let urlSpec = url.spec;
+    let url = browser.currentURI.spec;
     // We need to cache the content principal here because the browser will be
     // reconstructed when the remoteness changes and the content prinicpal will
     // be cleared after reconstruction.
     let principal = tab.linkedBrowser.contentPrincipal;
-    if (gBrowser.updateBrowserRemotenessByURL(browser, urlSpec)) {
+    if (gBrowser.updateBrowserRemotenessByURL(browser, url)) {
       // If the remoteness has changed, the new browser doesn't have any
       // information of what was loaded before, so we need to load the previous
       // URL again.
@@ -6252,11 +6397,7 @@ nsBrowserAccess.prototype = {
             // lands.
             loadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIRST_LOAD;
           }
-          // This should ideally be able to call loadURI with the actual URI.
-          // However, that would bypass some styles of fixup (notably Windows
-          // paths passed as "URI"s), so this needs some further thought. It
-          // should be addressed in bug 1815509.
-          gBrowser.fixupAndLoadURIString(aURI.spec, {
+          gBrowser.loadURI(aURI.spec, {
             triggeringPrincipal: aTriggeringPrincipal,
             csp: aCsp,
             loadFlags,
@@ -8595,7 +8736,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
         }
 
         if (ignoreFragment == "whenComparingAndReplace" || replaceQueryString) {
-          browser.loadURI(aURI, {
+          browser.loadURI(aURI.spec, {
             triggeringPrincipal:
               aOpenParams.triggeringPrincipal ||
               _createNullPrincipalFromTabUserContextId(),

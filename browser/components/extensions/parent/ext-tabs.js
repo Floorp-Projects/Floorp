@@ -889,13 +889,13 @@ this.tabs = class extends ExtensionAPIPersistent {
 
             let browser = nativeTab.linkedBrowser;
             if (nativeTab.linkedPanel) {
-              browser.fixupAndLoadURIString(url, options);
+              browser.loadURI(url, options);
             } else {
               // Shift to fully loaded browser and make
               // sure load handler is instantiated.
               nativeTab.addEventListener(
                 "SSTabRestoring",
-                () => browser.fixupAndLoadURIString(url, options),
+                () => browser.loadURI(url, options),
                 { once: true }
               );
               tabbrowser._insertBrowser(nativeTab);

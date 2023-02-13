@@ -25,12 +25,9 @@ add_task(async function() {
       );
       resolve();
     });
-    selectedBrowser.loadURI(
-      Services.io.newURI("data:text/html,<h1 id='h1'>Select Me</h1>"),
-      {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      }
-    );
+    selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
   });
 
   await SimpleTest.promiseFocus(newwindow);

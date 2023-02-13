@@ -74,18 +74,29 @@ class RemoteWebNavigation {
     );
     this._browser.browsingContext.goToIndex(aIndex, cancelContentJSEpoch, true);
   }
-
-  _speculativeConnect(uri, loadURIOptions) {
+  loadURI(aURI, aLoadURIOptions) {
+    let uri;
     try {
-      // Let's start a network connection before the content process asks.
-      // Note that we might have already set up the speculative connection in
+      let fixupFlags = Services.uriFixup.webNavigationFlagsToFixupFlags(
+        aURI,
+        aLoadURIOptions.loadFlags
+      );
+      let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
+        this._browser
+      );
+      if (isBrowserPrivate) {
+        fixupFlags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
+
+      uri = Services.uriFixup.getFixupURIInfo(aURI, fixupFlags).preferredURI;
+
+      // We know the url is going to be loaded, let's start requesting network
+      // connection before the content process asks.
+      // Note that we might have already setup the speculative connection in
       // some cases, especially when the url is from location bar or its popup
       // menu.
       if (uri.schemeIs("http") || uri.schemeIs("https")) {
-        let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
-          this._browser
-        );
-        let principal = loadURIOptions.triggeringPrincipal;
+        let principal = aLoadURIOptions.triggeringPrincipal;
         // We usually have a triggeringPrincipal assigned, but in case we
         // don't have one or if it's a SystemPrincipal, let's create it with OA
         // inferred from the current context.
@@ -102,61 +113,19 @@ class RemoteWebNavigation {
         Services.io.speculativeConnect(uri, principal, null);
       }
     } catch (ex) {
-      // Can't setup speculative connection for this uri for some
-      // reason, just ignore it.
+      // Can't setup speculative connection for this uri string for some
+      // reason (such as failing to parse the URI), just ignore it.
     }
-  }
 
-  loadURI(uri, loadURIOptions) {
-    this._speculativeConnect(uri, loadURIOptions);
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_URL,
       { uri }
     );
-    this._browser.browsingContext.loadURI(uri, {
-      ...loadURIOptions,
+    this._browser.browsingContext.loadURI(aURI, {
+      ...aLoadURIOptions,
       cancelContentJSEpoch,
     });
   }
-
-  fixupAndLoadURIString(uriString, loadURIOptions) {
-    let uri;
-    try {
-      let fixupFlags = Services.uriFixup.webNavigationFlagsToFixupFlags(
-        uriString,
-        loadURIOptions.loadFlags
-      );
-      let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
-        this._browser
-      );
-      if (isBrowserPrivate) {
-        fixupFlags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-      }
-
-      uri = Services.uriFixup.getFixupURIInfo(uriString, fixupFlags)
-        .preferredURI;
-    } catch (ex) {
-      // In rare cases `uriFixup` can throw. We ignore this here, but it's
-      // likely that the fixupAndLoadURIString call below will still throw,
-      // hopefully with more details.
-    }
-    if (uri) {
-      this._speculativeConnect(uri, loadURIOptions);
-    }
-
-    // For now, continue to use fixup here, but note that ideally we should be
-    // doing fixup only once and reusing the URI we created above. Addressing
-    // this is bug 1815509.
-    let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_URL,
-      { uri: null }
-    );
-    this._browser.browsingContext.fixupAndLoadURIString(uriString, {
-      ...loadURIOptions,
-      cancelContentJSEpoch,
-    });
-  }
-
   reload(aReloadFlags) {
     this._browser.browsingContext.reload(aReloadFlags);
   }

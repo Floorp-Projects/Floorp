@@ -622,7 +622,7 @@ global.openOptionsPage = async extension => {
     const { browser } = tab;
     const flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
-    browser.fixupAndLoadURIString(options_ui.page, {
+    browser.loadURI(options_ui.page, {
       flags,
       triggeringPrincipal: extension.principal,
     });

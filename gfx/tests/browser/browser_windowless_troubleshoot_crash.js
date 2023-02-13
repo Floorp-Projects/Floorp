@@ -22,7 +22,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   let loadURIOptions = {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
   };
-  webNav.loadURI(Services.io.newURI("about:blank"), loadURIOptions);
+  webNav.loadURI("about:blank", loadURIOptions);
 
   await onLoaded;
 

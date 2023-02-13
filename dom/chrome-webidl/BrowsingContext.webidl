@@ -289,22 +289,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
    * loading.
    *
    * @param aURI
-   *        The URI to load.  No fixup will be performed on this URI.
-   * @param aLoadURIOptions
-   *        A JSObject defined in LoadURIOptions.webidl holding info like e.g.
-   *        the triggeringPrincipal, the referrer info.
-   */
-  [Throws]
-  undefined loadURI(URI aURI, optional LoadURIOptions aOptions = {});
-
-  /**
-   * Like `loadURI` but takes a DOMString instead. This will use nsIURIFixup
-   * to "fix up" the input if it doesn't parse as a string. If an existing
-   * DOM URL or nsIURI object is available to you, prefer using `loadURI`
-   * directly.
-   *
-   * @param aURI
-   *        The URI to load.  For HTTP and FTP URLs and possibly others,
+   *        The URI string to load.  For HTTP and FTP URLs and possibly others,
    *        characters above U+007F will be converted to UTF-8 and then URL-
    *        escaped per the rules of RFC 2396.
    * @param aLoadURIOptions
@@ -312,7 +297,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
    *        the triggeringPrincipal, the referrer info.
    */
   [Throws]
-  undefined fixupAndLoadURIString(DOMString aURI, optional LoadURIOptions aOptions = {});
+  undefined loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
    /**
     * Print the current document.

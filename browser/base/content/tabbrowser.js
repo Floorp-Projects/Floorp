@@ -17,17 +17,6 @@
       "chrome://browser/skin/privatebrowsing/favicon.svg",
   };
 
-  const {
-    LOAD_FLAGS_NONE,
-    LOAD_FLAGS_FROM_EXTERNAL,
-    LOAD_FLAGS_FIRST_LOAD,
-    LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
-    LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-    LOAD_FLAGS_FIXUP_SCHEME_TYPOS,
-    LOAD_FLAGS_FORCE_ALLOW_DATA_URI,
-    LOAD_FLAGS_DISABLE_TRR,
-  } = Ci.nsIWebNavigation;
-
   window._gBrowser = {
     init() {
       ChromeUtils.defineModuleGetter(
@@ -157,7 +146,6 @@
       "reloadWithFlags",
       "stop",
       "loadURI",
-      "fixupAndLoadURIString",
       "gotoIndex",
       "currentURI",
       "documentURI",
@@ -444,14 +432,7 @@
         browser.setAttribute("allowscriptstoclose", "true");
       }
       browser.droppedLinkHandler = handleDroppedLink;
-      browser.loadURI = URILoadingWrapper.loadURI.bind(
-        URILoadingWrapper,
-        browser
-      );
-      browser.fixupAndLoadURIString = URILoadingWrapper.fixupAndLoadURIString.bind(
-        URILoadingWrapper,
-        browser
-      );
+      browser.loadURI = _loadURI.bind(null, browser);
 
       let uniqueId = this._generateUniquePanelID();
       let panel = this.getPanel(browser);
@@ -529,14 +510,8 @@
     /**
      * throws exception for unknown schemes
      */
-    loadURI(uri, params) {
-      return this.selectedBrowser.loadURI(uri, params);
-    },
-    /**
-     * throws exception for unknown schemes
-     */
-    fixupAndLoadURIString(uriString, params) {
-      return this.selectedBrowser.fixupAndLoadURIString(uriString, params);
+    loadURI(aURI, aParams) {
+      return this.selectedBrowser.loadURI(aURI, aParams);
     },
 
     gotoIndex(aIndex) {
@@ -1797,19 +1772,20 @@
           browser = this.selectedBrowser;
           targetTabIndex = this.tabContainer.selectedIndex;
         }
-        let flags = LOAD_FLAGS_NONE;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
         if (allowThirdPartyFixup) {
           flags |=
-            LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP | LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+            Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+            Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
         }
         if (!allowInheritPrincipal) {
-          flags |= LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
         }
         if (fromExternal) {
-          flags |= LOAD_FLAGS_FROM_EXTERNAL;
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
         }
         try {
-          browser.fixupAndLoadURIString(aURIs[0], {
+          browser.loadURI(aURIs[0], {
             flags,
             postData: postDatas && postDatas[0],
             triggeringPrincipal,
@@ -2353,14 +2329,7 @@
       this._tabFilters.set(aTab, filter);
 
       browser.droppedLinkHandler = handleDroppedLink;
-      browser.loadURI = URILoadingWrapper.loadURI.bind(
-        URILoadingWrapper,
-        browser
-      );
-      browser.fixupAndLoadURIString = URILoadingWrapper.fixupAndLoadURIString.bind(
-        URILoadingWrapper,
-        browser
-      );
+      browser.loadURI = _loadURI.bind(null, browser);
 
       // Most of the time, we start our browser's docShells out as inactive,
       // and then maintain activeness in the tab switcher. Preloaded about:newtab's
@@ -2899,30 +2868,29 @@
             b.userTypedValue = aURI;
           }
 
-          let flags = LOAD_FLAGS_NONE;
+          let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           if (allowThirdPartyFixup) {
-            flags |=
-              LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-              LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
           }
           if (fromExternal) {
-            flags |= LOAD_FLAGS_FROM_EXTERNAL;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
           } else if (!triggeringPrincipal.isSystemPrincipal) {
             // XXX this code must be reviewed and changed when bug 1616353
             // lands.
-            flags |= LOAD_FLAGS_FIRST_LOAD;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIRST_LOAD;
           }
           if (!allowInheritPrincipal) {
-            flags |= LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
           }
           if (disableTRR) {
-            flags |= LOAD_FLAGS_DISABLE_TRR;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISABLE_TRR;
           }
           if (forceAllowDataURI) {
-            flags |= LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
           }
           try {
-            b.fixupAndLoadURIString(aURI, {
+            b.loadURI(aURI, {
               flags,
               triggeringPrincipal,
               referrerInfo,
@@ -6878,196 +6846,6 @@
     "nsIWebProgressListener2",
     "nsISupportsWeakReference",
   ]);
-
-  let URILoadingWrapper = {
-    _normalizeLoadURIOptions(browser, loadURIOptions) {
-      if (!loadURIOptions.triggeringPrincipal) {
-        throw new Error("Must load with a triggering Principal");
-      }
-
-      if (
-        loadURIOptions.userContextId &&
-        loadURIOptions.userContextId != browser.getAttribute("usercontextid")
-      ) {
-        throw new Error("Cannot load with mismatched userContextId");
-      }
-
-      loadURIOptions.loadFlags |= loadURIOptions.flags | LOAD_FLAGS_NONE;
-      delete loadURIOptions.flags;
-      loadURIOptions.hasValidUserGestureActivation ??=
-        document.hasValidTransientUserGestureActivation;
-    },
-
-    _loadFlagsToFixupFlags(browser, loadFlags) {
-      // Attempt to perform URI fixup to see if we can handle this URI in chrome.
-      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
-      if (loadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      }
-      if (loadFlags & LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
-        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
-      }
-      if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-      }
-      return fixupFlags;
-    },
-
-    _fixupURIString(browser, uriString, loadURIOptions) {
-      let fixupFlags = this._loadFlagsToFixupFlags(
-        browser,
-        loadURIOptions.loadFlags
-      );
-
-      // XXXgijs: If we switch to loading the URI we return from this method,
-      // rather than redoing fixup in docshell (see bug 1815509), we need to
-      // ensure that the loadURIOptions have the fixup flag removed here for
-      // loads where `uriString` already parses if just passed immediately
-      // to `newURI`.
-      // Right now this happens in nsDocShellLoadState code.
-      try {
-        let fixupInfo = Services.uriFixup.getFixupURIInfo(
-          uriString,
-          fixupFlags
-        );
-        return fixupInfo.preferredURI;
-      } catch (e) {
-        // getFixupURIInfo may throw. Just return null, our caller will deal.
-      }
-      return null;
-    },
-
-    /**
-     * Handles URIs when we want to deal with them in chrome code rather than pass
-     * them down to a content browser. This can avoid unnecessary process switching
-     * for the browser.
-     * @param aBrowser the browser that is attempting to load the URI
-     * @param aUri the nsIURI that is being loaded
-     * @returns true if the URI is handled, otherwise false
-     */
-    _handleUriInChrome(aBrowser, aUri) {
-      if (aUri.scheme == "file") {
-        try {
-          let mimeType = Cc["@mozilla.org/mime;1"]
-            .getService(Ci.nsIMIMEService)
-            .getTypeFromURI(aUri);
-          if (mimeType == "application/x-xpinstall") {
-            let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-            AddonManager.getInstallForURL(aUri.spec, {
-              telemetryInfo: { source: "file-url" },
-            }).then(install => {
-              AddonManager.installAddonFromWebpage(
-                mimeType,
-                aBrowser,
-                systemPrincipal,
-                install
-              );
-            });
-            return true;
-          }
-        } catch (e) {
-          return false;
-        }
-      }
-
-      return false;
-    },
-
-    _updateTriggerMetadataForLoad(
-      browser,
-      uriString,
-      { loadFlags, globalHistoryOptions }
-    ) {
-      if (globalHistoryOptions?.triggeringSponsoredURL) {
-        try {
-          // Browser may access URL after fixing it up, then store the URL into DB.
-          // To match with it, fix the link up explicitly.
-          const triggeringSponsoredURL = Services.uriFixup.getFixupURIInfo(
-            globalHistoryOptions.triggeringSponsoredURL,
-            this._loadFlagsToFixupFlags(browser, loadFlags)
-          ).fixedURI.spec;
-          browser.setAttribute(
-            "triggeringSponsoredURL",
-            triggeringSponsoredURL
-          );
-          const time =
-            globalHistoryOptions.triggeringSponsoredURLVisitTimeMS ||
-            Date.now();
-          browser.setAttribute("triggeringSponsoredURLVisitTimeMS", time);
-        } catch (e) {}
-      }
-
-      if (globalHistoryOptions?.triggeringSearchEngine) {
-        browser.setAttribute(
-          "triggeringSearchEngine",
-          globalHistoryOptions.triggeringSearchEngine
-        );
-        browser.setAttribute("triggeringSearchEngineURL", uriString);
-      } else {
-        browser.removeAttribute("triggeringSearchEngine");
-        browser.removeAttribute("triggeringSearchEngineURL");
-      }
-    },
-
-    // Both of these are used to override functions on browser-custom-element.
-    fixupAndLoadURIString(browser, uriString, loadURIOptions = {}) {
-      this._internalMaybeFixupLoadURI(browser, uriString, null, loadURIOptions);
-    },
-    loadURI(browser, uri, loadURIOptions = {}) {
-      this._internalMaybeFixupLoadURI(browser, "", uri, loadURIOptions);
-    },
-
-    // A shared function used by both remote and non-remote browsers to
-    // load a string URI or redirect it to the correct process.
-    _internalMaybeFixupLoadURI(browser, uriString, uri, loadURIOptions) {
-      this._normalizeLoadURIOptions(browser, loadURIOptions);
-      // Some callers pass undefined/null when calling
-      // loadURI/fixupAndLoadURIString. Just load about:blank instead:
-      if (!uriString && !uri) {
-        uri = Services.io.newURI("about:blank");
-      }
-
-      // We need a URI in frontend code for checking various things. Ideally
-      // we would then also pass that URI to webnav/browsingcontext code
-      // for loading, but we historically haven't. Changing this would alter
-      // fixup scenarios in some non-obvious cases.
-      let startedWithURI = !!uri;
-      if (!uri) {
-        // Note: this may return null if we can't make a URI out of the input.
-        uri = this._fixupURIString(browser, uriString, loadURIOptions);
-      }
-
-      if (uri && this._handleUriInChrome(browser, uri)) {
-        // If we've handled the URI in chrome, then just return here.
-        return;
-      }
-
-      this._updateTriggerMetadataForLoad(
-        browser,
-        uriString || uri.spec,
-        loadURIOptions
-      );
-
-      // XXX(nika): Is `browser.isNavigating` necessary anymore?
-      // XXX(gijs): Unsure. But it mirrors docShell.isNavigating, but in the parent process
-      // (and therefore imperfectly so).
-      browser.isNavigating = true;
-
-      try {
-        // Should more generally prefer loadURI here - see bug 1815509.
-        if (startedWithURI) {
-          browser.webNavigation.loadURI(uri, loadURIOptions);
-        } else {
-          browser.webNavigation.fixupAndLoadURIString(
-            uriString,
-            loadURIOptions
-          );
-        }
-      } finally {
-        browser.isNavigating = false;
-      }
-    },
-  };
 } // end private scope for gBrowser
 
 var StatusPanel = {

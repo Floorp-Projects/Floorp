@@ -163,7 +163,7 @@ function autoCloseIfNeeded(aCrash) {
       //
       // Doesn't seem worth for this particular case.
       document.documentElement.appendChild(browser);
-      browser.loadURI(Services.io.newURI("about:crashparent"), {
+      browser.loadURI("about:crashparent", {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
       return;
@@ -357,7 +357,7 @@ function OnLDBLoad() {
         // Switch to the right kind of content process, and wait a bit so that
         // the profiler has had a chance to attach to it.
         updateBrowserRemotenessByURL(gArgs.url);
-        setTimeout(() => fixupAndLoadURIString(gArgs.url), 3000);
+        setTimeout(() => loadURI(gArgs.url), 3000);
         return;
       }
     } else {
@@ -369,7 +369,7 @@ function OnLDBLoad() {
   gDebugger._pagedMode = gArgs.paged;
 
   if (gArgs.url) {
-    fixupAndLoadURIString(gArgs.url);
+    loadURI(gArgs.url);
   }
 
   // Some command line arguments may toggle menu items. Call this after
@@ -452,7 +452,7 @@ function openFile() {
       fp.fileURL.spec &&
       fp.fileURL.spec.length > 0
     ) {
-      gBrowser.loadURI(fp.fileURL);
+      loadURI(fp.fileURL.spec);
     }
   });
 }
@@ -483,11 +483,11 @@ function updateBrowserRemotenessByURL(aURL) {
   }
 }
 
-function fixupAndLoadURIString(aURL) {
+function loadURI(aURL) {
   // We don't bother trying to handle navigations within the browser to new URLs
   // that should be loaded in a different process.
   updateBrowserRemotenessByURL(aURL);
-  gBrowser.fixupAndLoadURIString(aURL, {
+  gBrowser.loadURI(aURL, {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 }
@@ -498,6 +498,6 @@ function focusURLBar() {
 }
 
 function go() {
-  fixupAndLoadURIString(gURLBar.value);
+  loadURI(gURLBar.value);
   gBrowser.focus();
 }

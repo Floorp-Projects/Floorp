@@ -61,10 +61,6 @@ class nsDocShellLoadState final {
       BrowsingContext* aBrowsingContext, const nsAString& aURI,
       const mozilla::dom::LoadURIOptions& aLoadURIOptions,
       nsDocShellLoadState** aResult);
-  static nsresult CreateFromLoadURIOptions(
-      BrowsingContext* aBrowsingContext, nsIURI* aURI,
-      const mozilla::dom::LoadURIOptions& aLoadURIOptions,
-      nsDocShellLoadState** aResult);
 
   // Getters and Setters
 
@@ -361,12 +357,7 @@ class nsDocShellLoadState final {
   // nullptr if it succeeds.
   const char* ValidateWithOriginalState(nsDocShellLoadState* aOriginalState);
 
-  static nsresult CreateFromLoadURIOptions(
-      BrowsingContext* aBrowsingContext, nsIURI* aURI,
-      const mozilla::dom::LoadURIOptions& aLoadURIOptions,
-      uint32_t aLoadFlagsOverride, nsIInputStream* aPostDataOverride,
-      nsDocShellLoadState** aResult);
-
+ protected:
   // This is the referrer for the load.
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 

@@ -61,7 +61,7 @@ function testBFCache() {
     is(chances > 0, true, "Must have animated a few frames so far");
 
     // Browse elsewhere; push our animating page into the bfcache
-    gBrowser.loadURI(Services.io.newURI("about:blank"));
+    gBrowser.loadURI("about:blank");
 
     // Wait a bit for page to fully load, then wait a while and
     // see that no animation occurs.

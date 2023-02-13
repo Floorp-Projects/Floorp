@@ -3399,50 +3399,22 @@ nsDocShell::GotoIndex(int32_t aIndex, bool aUserActivation) {
   return rv.StealNSResult();
 }
 
-nsresult nsDocShell::LoadURI(nsIURI* aURI,
+nsresult nsDocShell::LoadURI(const nsAString& aURI,
                              const LoadURIOptions& aLoadURIOptions) {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
+
   RefPtr<nsDocShellLoadState> loadState;
   nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
       mBrowsingContext, aURI, aLoadURIOptions, getter_AddRefs(loadState));
-  MOZ_ASSERT(rv != NS_ERROR_MALFORMED_URI);
-  if (NS_FAILED(rv) || !loadState) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return LoadURI(loadState, true);
-}
-
-NS_IMETHODIMP
-nsDocShell::LoadURIFromScript(nsIURI* aURI,
-                              JS::Handle<JS::Value> aLoadURIOptions,
-                              JSContext* aCx) {
-  // generate dictionary for aLoadURIOptions and forward call
-  LoadURIOptions loadURIOptions;
-  if (!loadURIOptions.Init(aCx, aLoadURIOptions)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return LoadURI(aURI, loadURIOptions);
-}
-
-nsresult nsDocShell::FixupAndLoadURIString(
-    const nsAString& aURIString, const LoadURIOptions& aLoadURIOptions) {
-  if (!IsNavigationAllowed()) {
-    return NS_OK;  // JS may not handle returning of an error code
-  }
-
-  RefPtr<nsDocShellLoadState> loadState;
-  nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      mBrowsingContext, aURIString, aLoadURIOptions, getter_AddRefs(loadState));
 
   uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
   if (NS_ERROR_MALFORMED_URI == rv) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("Creating an active entry on nsDocShell %p to %s (because "
              "we're showing an error page)",
-             this, NS_ConvertUTF16toUTF8(aURIString).get()));
+             this, NS_ConvertUTF16toUTF8(aURI).get()));
 
     // We need to store a session history entry. We don't have a valid URI, so
     // we use about:blank instead.
@@ -3462,8 +3434,7 @@ nsresult nsDocShell::FixupAndLoadURIString(
           Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
           /* aUpdatedCacheKey = */ 0);
     }
-    if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURIString).get(),
-                         nullptr) &&
+    if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURI).get(), nullptr) &&
         (loadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
     }
@@ -3477,15 +3448,15 @@ nsresult nsDocShell::FixupAndLoadURIString(
 }
 
 NS_IMETHODIMP
-nsDocShell::FixupAndLoadURIStringFromScript(
-    const nsAString& aURIString, JS::Handle<JS::Value> aLoadURIOptions,
-    JSContext* aCx) {
+nsDocShell::LoadURIFromScript(const nsAString& aURI,
+                              JS::Handle<JS::Value> aLoadURIOptions,
+                              JSContext* aCx) {
   // generate dictionary for aLoadURIOptions and forward call
   LoadURIOptions loadURIOptions;
   if (!loadURIOptions.Init(aCx, aLoadURIOptions)) {
     return NS_ERROR_INVALID_ARG;
   }
-  return FixupAndLoadURIString(aURIString, loadURIOptions);
+  return LoadURI(aURI, loadURIOptions);
 }
 
 void nsDocShell::UnblockEmbedderLoadEventForFailure(bool aFireFrameErrorEvent) {

@@ -58,15 +58,11 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
       //   3. Once the New Tab URL has changed, replace the tab's URL with the new New Tab URL
       let gBrowser = win.gBrowser;
       let tab = gBrowser.selectedTab;
-      await replaceUrlInTab(gBrowser, tab, Services.io.newURI("about:blank"));
+      await replaceUrlInTab(gBrowser, tab, "about:blank");
       Services.obs.addObserver(
         {
           async observe() {
-            await replaceUrlInTab(
-              gBrowser,
-              tab,
-              Services.io.newURI(AboutNewTab.newTabURL)
-            );
+            await replaceUrlInTab(gBrowser, tab, AboutNewTab.newTabURL);
             // Now that the New Tab is loading, try to open the popup again. This
             // will only open the popup if a new extension is controlling the New Tab.
             popup.open();
