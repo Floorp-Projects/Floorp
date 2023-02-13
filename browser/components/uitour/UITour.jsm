@@ -489,7 +489,7 @@ var UITour = {
               return;
             }
             // We want to replace the current tab.
-            browser.loadURI(url.href, {
+            browser.loadURI(url.URI, {
               triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
                 {}
               ),
@@ -512,7 +512,7 @@ var UITour = {
             }
 
             // We want to replace the current tab.
-            browser.loadURI(url.href, {
+            browser.loadURI(url.URI, {
               triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
                 {}
               ),

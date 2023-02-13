@@ -58,7 +58,7 @@ function loadContentWindow(browser, url) {
         oa
       ),
     };
-    browser.loadURI(uri.spec, loadURIOptions);
+    browser.loadURI(uri, loadURIOptions);
     let { webProgress } = browser;
 
     let progressListener = {

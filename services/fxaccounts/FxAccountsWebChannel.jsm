@@ -674,7 +674,7 @@ FxAccountsWebChannelHelpers.prototype = {
     }
     uri += "#sync";
 
-    browser.loadURI(uri, {
+    browser.loadURI(Services.io.newURI(uri), {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
