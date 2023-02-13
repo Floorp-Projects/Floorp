@@ -35,7 +35,10 @@ add_task(async function test_double_feature_enrollment() {
   );
   await ExperimentAPI.ready();
 
-  Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
+  Assert.ok(
+    ExperimentManager.store.getAllActiveExperiments().length === 0,
+    "Clean state"
+  );
 
   let recipe1 = getRecipe("foo" + Math.random());
   let recipe2 = getRecipe("foo" + Math.random());
@@ -49,7 +52,7 @@ add_task(async function test_double_feature_enrollment() {
   ExperimentManager.enroll(recipe2, "test_double_feature_enrollment");
 
   Assert.equal(
-    ExperimentManager.store.getAllActive().length,
+    ExperimentManager.store.getAllActiveExperiments().length,
     1,
     "1 active experiment"
   );

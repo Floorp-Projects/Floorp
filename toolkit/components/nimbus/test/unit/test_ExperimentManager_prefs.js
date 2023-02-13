@@ -192,13 +192,13 @@ function assertExpectedPrefValues(pref, branch, expected, visible, msg) {
  */
 function assertEmptyStore(store) {
   Assert.deepEqual(
-    store.getAllActive(),
+    store.getAllActiveExperiments(),
     [],
     "There should be no experiments active."
   );
 
   Assert.deepEqual(
-    store.getAllRollouts(),
+    store.getAllActiveRollouts(),
     [],
     "There should be no rollouts active"
   );
@@ -1766,8 +1766,8 @@ add_task(async function test_prefChange() {
       );
 
       const enrollments = isRollout
-        ? store.getAllRollouts()
-        : store.getAllActive();
+        ? store.getAllActiveRollouts()
+        : store.getAllActiveExperiments();
 
       Assert.equal(
         enrollments.length,
@@ -2374,8 +2374,8 @@ add_task(async function test_clearUserPref() {
       );
 
       const enrollments = isRollout
-        ? store.getAllRollouts()
-        : store.getAllActive();
+        ? store.getAllActiveRollouts()
+        : store.getAllActiveExperiments();
 
       Assert.equal(
         enrollments.length,
@@ -2823,8 +2823,8 @@ add_task(async function test_restorePrefs_manifestChanged() {
         });
 
         const enrollments = isRollout
-          ? store.getAllRollouts()
-          : store.getAllActive();
+          ? store.getAllActiveRollouts()
+          : store.getAllActiveExperiments();
 
         Assert.equal(
           enrollments.length,
