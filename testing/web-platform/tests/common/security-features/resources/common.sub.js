@@ -929,8 +929,8 @@ const subresourceMap = {
   },
   "sharedworker-import": {
     path: "/common/security-features/subresource/shared-worker.py",
-    invoker: url =>
-        requestViaSharedWorker(workerUrlThatImports(url), {type: "module"}),
+    invoker: (url, additionalAttributes) =>
+        requestViaSharedWorker(workerUrlThatImports(url, additionalAttributes), {type: "module"}),
   },
   "sharedworker-import-data": {
     path: "/common/security-features/subresource/shared-worker.py",
