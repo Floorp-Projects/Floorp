@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1812154 - (fix-3680605caa) Removing api/test/metrics from mozilla builds. r=mjf
+Modified build files in third_party/libwebrtc - Bug 1812154 - Vendor libwebrtc from 0deda15c96

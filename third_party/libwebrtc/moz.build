@@ -89,6 +89,7 @@ DIRS += [
     "/third_party/libwebrtc/api/video/frame_buffer_gn",
     "/third_party/libwebrtc/api/video/recordable_encoded_frame_gn",
     "/third_party/libwebrtc/api/video/render_resolution_gn",
+    "/third_party/libwebrtc/api/video/resolution_gn",
     "/third_party/libwebrtc/api/video/video_adaptation_gn",
     "/third_party/libwebrtc/api/video/video_bitrate_allocation_gn",
     "/third_party/libwebrtc/api/video/video_bitrate_allocator_factory_gn",
