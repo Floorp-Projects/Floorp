@@ -165,5 +165,5 @@ enum AXTextSelectionGranularity {
   AXTextSelectionGranularityDocument,
   AXTextSelectionGranularityAll
 };
-}
-}
+}  // namespace a11y
+}  // namespace mozilla

@@ -103,7 +103,7 @@ void WarpScriptSnapshot::dump(GenericPrinter& out) const {
 
 static const char* OpSnapshotKindString(WarpOpSnapshot::Kind kind) {
   static const char* const names[] = {
-#  define NAME(x) #  x,
+#  define NAME(x) #x,
       WARP_OP_SNAPSHOT_LIST(NAME)
 #  undef NAME
   };

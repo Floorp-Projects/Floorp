@@ -586,5 +586,5 @@ bool GeckoTextMarkerRange::Crop(Accessible* aContainer) {
 
   return true;
 }
-}
-}
+}  // namespace a11y
+}  // namespace mozilla

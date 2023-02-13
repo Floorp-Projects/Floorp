@@ -144,7 +144,7 @@ static_assert(AreAllBytesTiedFields<Eel>());
 
 // -
 
-//#define LETS_USE_BIT_FIELDS
+// #define LETS_USE_BIT_FIELDS
 #ifdef LETS_USE_BIT_FIELDS
 #  undef LETS_USE_BIT_FIELDS
 

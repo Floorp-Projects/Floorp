@@ -11,7 +11,7 @@
 #include "js/Utility.h"
 #include "jsapi-tests/tests.h"
 
-//#define FUZZ
+// #define FUZZ
 
 typedef js::HashMap<uint32_t, uint32_t, js::DefaultHasher<uint32_t>,
                     js::SystemAllocPolicy>

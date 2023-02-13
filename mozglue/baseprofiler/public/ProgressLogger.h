@@ -15,7 +15,7 @@
 #include <atomic>
 
 // Uncomment to printf ProcessLogger updates.
-//#define DEBUG_PROCESSLOGGER
+// #define DEBUG_PROCESSLOGGER
 
 #ifdef DEBUG_PROCESSLOGGER
 #  include "mozilla/BaseProfilerUtils.h"

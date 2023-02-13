@@ -44,6 +44,6 @@ NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
 
   return nil;
 }
-}
-}
-}
+}  // namespace utils
+}  // namespace a11y
+}  // namespace mozilla

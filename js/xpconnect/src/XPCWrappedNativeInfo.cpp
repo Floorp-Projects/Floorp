@@ -345,7 +345,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 // static
 void XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst) {
   inst->~XPCNativeInterface();
-  delete[](char*) inst;
+  delete[] (char*)inst;
 }
 
 size_t XPCNativeInterface::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) {
@@ -703,7 +703,7 @@ already_AddRefed<XPCNativeSet> XPCNativeSet::NewInstanceMutate(
 // static
 void XPCNativeSet::DestroyInstance(XPCNativeSet* inst) {
   inst->~XPCNativeSet();
-  delete[](char*) inst;
+  delete[] (char*)inst;
 }
 
 size_t XPCNativeSet::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) {

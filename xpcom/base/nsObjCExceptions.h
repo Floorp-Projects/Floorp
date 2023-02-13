@@ -24,7 +24,7 @@ namespace mozilla {
 // Called when an exception bubbles up to the native event loop.
 bool ShouldIgnoreObjCException(NSException* aException);
 
-}
+}  // namespace mozilla
 
 // For wrapping blocks of Obj-C calls which are not expected to throw exception.
 // Causes a MOZ_CRASH if an Obj-C exception is encountered.

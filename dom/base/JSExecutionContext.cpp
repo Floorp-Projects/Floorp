@@ -96,8 +96,8 @@ nsresult JSExecutionContext::JoinOffThread(
   MOZ_ASSERT(!mWantsReturnValue);
 
   JS::Rooted<JS::InstantiationStorage> storage(mCx);
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
-      mCx, *aOffThreadToken, storage.address());
+  RefPtr<JS::Stencil> stencil =
+      JS::FinishOffThreadStencil(mCx, *aOffThreadToken, storage.address());
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!stencil) {
     mSkip = true;

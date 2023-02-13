@@ -89,7 +89,7 @@ DEF(times)
 #  include <stdlib.h>
 #  include <stdio.h>
 
-#  define DEF(w) static const char str_##w[] = #  w;
+#  define DEF(w) static const char str_##w[] = #w;
 #  include "test.c"
 #  undef DEF
 

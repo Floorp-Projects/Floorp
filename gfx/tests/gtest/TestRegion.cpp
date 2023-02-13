@@ -13,7 +13,7 @@
 
 using namespace mozilla::gfx;
 
-//#define REGION_RANDOM_STRESS_TESTS
+// #define REGION_RANDOM_STRESS_TESTS
 
 class TestLargestRegion {
  public:

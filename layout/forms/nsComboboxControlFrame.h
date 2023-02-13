@@ -8,15 +8,15 @@
 #define nsComboboxControlFrame_h___
 
 #ifdef DEBUG_evaughan
-//#define DEBUG_rods
+// #define DEBUG_rods
 #endif
 
 #ifdef DEBUG_rods
-//#define DO_REFLOW_DEBUG
-//#define DO_REFLOW_COUNTER
-//#define DO_UNCONSTRAINED_CHECK
-//#define DO_PIXELS
-//#define DO_NEW_REFLOW
+// #define DO_REFLOW_DEBUG
+// #define DO_REFLOW_COUNTER
+// #define DO_UNCONSTRAINED_CHECK
+// #define DO_PIXELS
+// #define DO_NEW_REFLOW
 #endif
 
 // Mark used to indicate when onchange has been fired for current combobox item

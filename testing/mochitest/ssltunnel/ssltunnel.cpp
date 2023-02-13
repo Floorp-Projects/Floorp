@@ -1473,35 +1473,35 @@ int parseConfigFile(const char* filePath) {
 }
 
 int freeHostCertHashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
-  delete[](char*) he->value;
+  delete[] (char*)he->key;
+  delete[] (char*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
 int freeHostRedirHashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
-  delete[](char*) he->value;
+  delete[] (char*)he->key;
+  delete[] (char*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
 int freeClientAuthHashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
+  delete[] (char*)he->key;
   delete (client_auth_option*)he->value;
   return HT_ENUMERATE_REMOVE;
 }
 
 int freeSSL3HashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
+  delete[] (char*)he->key;
   return HT_ENUMERATE_REMOVE;
 }
 
 int freeTLSHashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
+  delete[] (char*)he->key;
   return HT_ENUMERATE_REMOVE;
 }
 
 int free3DESHashItems(PLHashEntry* he, int i, void* arg) {
-  delete[](char*) he->key;
+  delete[] (char*)he->key;
   return HT_ENUMERATE_REMOVE;
 }
 

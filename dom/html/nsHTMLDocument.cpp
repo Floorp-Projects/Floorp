@@ -93,7 +93,7 @@ using namespace mozilla::dom;
 
 #include "prtime.h"
 
-//#define DEBUG_charset
+// #define DEBUG_charset
 
 // ==================================================================
 // =

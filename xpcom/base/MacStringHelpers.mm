@@ -31,4 +31,4 @@ nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-}  // namespace Mozilla
+}  // namespace mozilla

@@ -26,7 +26,7 @@
 #include "pixman.h"
 
 // Uncomment this line to get additional integrity checking.
-//#define DEBUG_REGIONS
+// #define DEBUG_REGIONS
 #ifdef DEBUG_REGIONS
 #  include <sstream>
 #endif

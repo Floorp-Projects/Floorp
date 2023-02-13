@@ -101,7 +101,7 @@
 // and earlier, and probably for Clang 3.1, should we need to use those
 // versions.  Firefox no longer supports compilers that old.
 
-//#define ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
+// #define ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
 
 // Sanity check.
 

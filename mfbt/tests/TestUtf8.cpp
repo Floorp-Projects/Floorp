@@ -378,15 +378,15 @@ static void TestDecodeOneValidUtf8CodePoint() {
   ExpectValidCodePoint(u8"ͼ", 0x37C);  // GREEK SMALL DOTTED LUNATE SIGMA SYMBOL
   ExpectValidCodePoint(u8"Ӝ",
                        0x4DC);  // CYRILLIC CAPITAL LETTER ZHE WITTH DIAERESIS
-  ExpectValidCodePoint(u8"۩", 0x6E9);   // ARABIC PLACE OF SAJDAH
+  ExpectValidCodePoint(u8"۩", 0x6E9);  // ARABIC PLACE OF SAJDAH
   ExpectValidCodePoint(u8"߿", 0x7FF);  // <not assigned>
 
   // Length three.
 
-  ExpectValidCodePoint(u8"ࠀ", 0x800);    // SAMARITAN LETTER ALAF
-  ExpectValidCodePoint(u8"ࡁ", 0x841);    // MANDAIC LETTER AB
+  ExpectValidCodePoint(u8"ࠀ", 0x800);  // SAMARITAN LETTER ALAF
+  ExpectValidCodePoint(u8"ࡁ", 0x841);  // MANDAIC LETTER AB
   ExpectValidCodePoint(u8"ࣿ", 0x8FF);  // ARABIC MARK SIDEWAYS NOON GHUNNA
-  ExpectValidCodePoint(u8"ஆ", 0xB86);    // TAMIL LETTER AA
+  ExpectValidCodePoint(u8"ஆ", 0xB86);  // TAMIL LETTER AA
   ExpectValidCodePoint(u8"༃",
                        0xF03);  // TIBETAN MARK GTER YIG MGO -UM GTER TSHEG MA
   ExpectValidCodePoint(
@@ -404,7 +404,7 @@ static void TestDecodeOneValidUtf8CodePoint() {
   ExpectValidCodePoint(u8"ꔄ", 0xA504);    // VAI SYLLABLE WEEN
   ExpectValidCodePoint(u8"ퟕ", 0xD7D5);   // HANGUL JONGSEONG RIEUL-SSANGKIYEOK
   ExpectValidCodePoint(u8"퟿", 0xD7FF);  // <not assigned>
-  ExpectValidCodePoint(u8"", 0xE000);    // <Private Use>
+  ExpectValidCodePoint(u8"", 0xE000);  // <Private Use>
   ExpectValidCodePoint(u8"鱗", 0xF9F2);   // CJK COMPATIBILITY IDEOGRAPH-F9F
   ExpectValidCodePoint(
       u8"﷽", 0xFDFD);  // ARABIC LIGATURE BISMILLAH AR-RAHMAN AR-RAHHHEEEEM
@@ -412,17 +412,17 @@ static void TestDecodeOneValidUtf8CodePoint() {
 
   // Length four.
   ExpectValidCodePoint(u8"𐀀", 0x10000);      // LINEAR B SYLLABLE B008 A
-  ExpectValidCodePoint(u8"𔑀", 0x14440);   // ANATOLIAN HIEROGLYPH A058
+  ExpectValidCodePoint(u8"𔑀", 0x14440);      // ANATOLIAN HIEROGLYPH A058
   ExpectValidCodePoint(u8"𝛗", 0x1D6D7);      // MATHEMATICAL BOLD SMALL PHI
   ExpectValidCodePoint(u8"💩", 0x1F4A9);      // PILE OF POO
   ExpectValidCodePoint(u8"🔫", 0x1F52B);      // PISTOL
-  ExpectValidCodePoint(u8"🥌", 0x1F94C);   // CURLING STONE
-  ExpectValidCodePoint(u8"🥏", 0x1F94F);   // FLYING DISC
+  ExpectValidCodePoint(u8"🥌", 0x1F94C);      // CURLING STONE
+  ExpectValidCodePoint(u8"🥏", 0x1F94F);      // FLYING DISC
   ExpectValidCodePoint(u8"𠍆", 0x20346);     // CJK UNIFIED IDEOGRAPH-20346
   ExpectValidCodePoint(u8"𡠺", 0x2183A);     // CJK UNIFIED IDEOGRAPH-2183A
   ExpectValidCodePoint(u8"񁟶", 0x417F6);   // <not assigned>
   ExpectValidCodePoint(u8"񾠶", 0x7E836);   // <not assigned>
-  ExpectValidCodePoint(u8"󾽧", 0xFEF67);      // <Plane 15 Private Use>
+  ExpectValidCodePoint(u8"󾽧", 0xFEF67);   // <Plane 15 Private Use>
   ExpectValidCodePoint(u8"􏿿", 0x10FFFF);  //
 }
 

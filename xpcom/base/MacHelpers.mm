@@ -29,4 +29,4 @@ nsresult GetSelectedCityInfo(nsAString& aCountryCode) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-}  // namespace Mozilla
+}  // namespace mozilla

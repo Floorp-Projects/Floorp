@@ -13,7 +13,7 @@
 #include "nsComponentManagerUtils.h"
 
 #define TCP_LOG(...)
-//#define TCP_LOG(...) printf_stderr(__VA_ARGS__);
+// #define TCP_LOG(...) printf_stderr(__VA_ARGS__);
 
 namespace mozilla {
 namespace layers {

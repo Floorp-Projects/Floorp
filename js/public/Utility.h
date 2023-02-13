@@ -642,13 +642,13 @@ typedef mozilla::UniquePtr<JS::Latin1Char[], JS::FreePolicy> UniqueLatin1Chars;
 #ifndef HAVE_STATIC_ANNOTATIONS
 #  define HAVE_STATIC_ANNOTATIONS
 #  ifdef XGILL_PLUGIN
-#    define STATIC_PRECONDITION(COND) __attribute__((precondition(#    COND)))
+#    define STATIC_PRECONDITION(COND) __attribute__((precondition(#COND)))
 #    define STATIC_PRECONDITION_ASSUME(COND) \
       __attribute__((precondition_assume(#COND)))
-#    define STATIC_POSTCONDITION(COND) __attribute__((postcondition(#    COND)))
+#    define STATIC_POSTCONDITION(COND) __attribute__((postcondition(#COND)))
 #    define STATIC_POSTCONDITION_ASSUME(COND) \
       __attribute__((postcondition_assume(#COND)))
-#    define STATIC_INVARIANT(COND) __attribute__((invariant(#    COND)))
+#    define STATIC_INVARIANT(COND) __attribute__((invariant(#COND)))
 #    define STATIC_INVARIANT_ASSUME(COND) \
       __attribute__((invariant_assume(#COND)))
 #    define STATIC_ASSUME(COND)                                          \

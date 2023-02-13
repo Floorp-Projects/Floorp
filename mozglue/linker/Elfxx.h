@@ -72,7 +72,7 @@
 #  define R_RELATIVE R_386_RELATIVE
 #  define RELOC(n) DT_REL##n
 #  define UNSUPPORTED_RELOC(n) DT_RELA##n
-#  define STR_RELOC(n) "DT_REL" #  n
+#  define STR_RELOC(n) "DT_REL" #n
 #  define Reloc Rel
 
 #elif defined(__x86_64__)
@@ -84,7 +84,7 @@
 #  define R_RELATIVE R_X86_64_RELATIVE
 #  define RELOC(n) DT_RELA##n
 #  define UNSUPPORTED_RELOC(n) DT_REL##n
-#  define STR_RELOC(n) "DT_RELA" #  n
+#  define STR_RELOC(n) "DT_RELA" #n
 #  define Reloc Rela
 
 #elif defined(__arm__)
@@ -109,7 +109,7 @@
 #  define R_RELATIVE R_ARM_RELATIVE
 #  define RELOC(n) DT_REL##n
 #  define UNSUPPORTED_RELOC(n) DT_RELA##n
-#  define STR_RELOC(n) "DT_REL" #  n
+#  define STR_RELOC(n) "DT_REL" #n
 #  define Reloc Rel
 
 #elif defined(__aarch64__)
@@ -121,7 +121,7 @@
 #  define R_RELATIVE R_AARCH64_RELATIVE
 #  define RELOC(n) DT_RELA##n
 #  define UNSUPPORTED_RELOC(n) DT_REL##n
-#  define STR_RELOC(n) "DT_RELA" #  n
+#  define STR_RELOC(n) "DT_RELA" #n
 #  define Reloc Rela
 
 #else
