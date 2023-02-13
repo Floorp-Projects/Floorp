@@ -44,9 +44,10 @@ inline bool nsIContent::IsInChromeDocument() const {
 inline void nsIContent::SetPrimaryFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(IsInUncomposedDoc() || IsInShadowTree(), "This will end badly!");
 
-  // FIXME bug 749326
-  NS_ASSERTION(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
-               "Losing track of existing primary frame");
+  // <area> is known to trigger this, see bug 749326 and bug 135040.
+  MOZ_ASSERT(IsHTMLElement(nsGkAtoms::area) || !aFrame || !mPrimaryFrame ||
+                 aFrame == mPrimaryFrame,
+             "Losing track of existing primary frame");
 
   if (aFrame) {
     MOZ_ASSERT(!aFrame->IsPlaceholderFrame());
