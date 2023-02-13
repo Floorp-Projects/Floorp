@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/rtc_base/time/timestamp_extrapolator.cc"
+    "/third_party/libwebrtc/modules/video_coding/timing/timestamp_extrapolator.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
