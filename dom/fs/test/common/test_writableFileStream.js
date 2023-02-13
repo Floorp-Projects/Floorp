@@ -57,10 +57,8 @@ exported_symbols.quotaTest = async function() {
   );
   Assert.ok(!!buffer, "Can we create array buffer?");
 
-  // XXX Can't check the returned value because it causes a crash.
-  // const result = await writable.write(buffer);
-  // Assert.equal(result, 0, "Can we write entire buffer?");
-  await writable.write(buffer);
+  const result = await writable.write(buffer);
+  Assert.equal(result, undefined, "Can we write entire buffer?");
 
   // Try to write one more byte.
   const fileHandle2 = await root.getFileHandle("test2.txt", allowCreate);

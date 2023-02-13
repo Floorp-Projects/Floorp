@@ -6,6 +6,7 @@
 
 #include "FileSystemSyncAccessHandle.h"
 
+#include "fs/FileSystemAsyncCopy.h"
 #include "fs/FileSystemRequestHandler.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ErrorResult.h"
@@ -30,66 +31,14 @@
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/RandomAccessStreamUtils.h"
 #include "nsNetCID.h"
-#include "nsStreamUtils.h"
 #include "nsStringStream.h"
 
 namespace mozilla::dom {
 
 namespace {
 
-const uint32_t kStreamCopyBlockSize = 1024 * 1024;
-
 using SizePromise = Int64Promise;
 const auto CreateAndRejectSizePromise = CreateAndRejectInt64Promise;
-
-nsresult AsyncCopy(nsIInputStream* aSource, nsIOutputStream* aSink,
-                   nsISerialEventTarget* aIOTarget, const nsAsyncCopyMode aMode,
-                   const bool aCloseSource, const bool aCloseSink,
-                   std::function<void(uint32_t)>&& aProgressCallback,
-                   MoveOnlyFunction<void(nsresult)>&& aCompleteCallback) {
-  struct CallbackClosure {
-    CallbackClosure(std::function<void(uint32_t)>&& aProgressCallback,
-                    MoveOnlyFunction<void(nsresult)>&& aCompleteCallback) {
-      mProgressCallbackWrapper = MakeUnique<std::function<void(uint32_t)>>(
-          [progressCallback = std::move(aProgressCallback)](uint32_t count) {
-            progressCallback(count);
-          });
-
-      mCompleteCallbackWrapper = MakeUnique<MoveOnlyFunction<void(nsresult)>>(
-          [completeCallback =
-               std::move(aCompleteCallback)](nsresult rv) mutable {
-            auto callback = std::move(completeCallback);
-            callback(rv);
-          });
-    }
-
-    UniquePtr<std::function<void(uint32_t)>> mProgressCallbackWrapper;
-    UniquePtr<MoveOnlyFunction<void(nsresult)>> mCompleteCallbackWrapper;
-  };
-
-  auto* callbackClosure = new CallbackClosure(std::move(aProgressCallback),
-                                              std::move(aCompleteCallback));
-
-  QM_TRY(
-      MOZ_TO_RESULT(NS_AsyncCopy(
-          aSource, aSink, aIOTarget, aMode, kStreamCopyBlockSize,
-          [](void* aClosure, nsresult aRv) {
-            auto* callbackClosure = static_cast<CallbackClosure*>(aClosure);
-            (*callbackClosure->mCompleteCallbackWrapper)(aRv);
-            delete callbackClosure;
-          },
-          callbackClosure, aCloseSource, aCloseSink, /* aCopierCtx */ nullptr,
-          [](void* aClosure, uint32_t aCount) {
-            auto* callbackClosure = static_cast<CallbackClosure*>(aClosure);
-            (*callbackClosure->mProgressCallbackWrapper)(aCount);
-          })),
-      [callbackClosure](nsresult rv) {
-        delete callbackClosure;
-        return rv;
-      });
-
-  return NS_OK;
-}
 
 }  // namespace
 
@@ -645,7 +594,7 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
         auto promiseHolder = MakeUnique<MozPromiseHolder<BoolPromise>>();
         RefPtr<BoolPromise> promise = promiseHolder->Ensure(__func__);
 
-        QM_TRY(MOZ_TO_RESULT(AsyncCopy(
+        QM_TRY(MOZ_TO_RESULT(fs::AsyncCopy(
                    inputStream, outputStream, GetCurrentSerialEventTarget(),
                    aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
                          : NS_ASYNCCOPY_VIA_READSEGMENTS,
