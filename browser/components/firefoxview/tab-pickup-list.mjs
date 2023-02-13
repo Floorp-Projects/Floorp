@@ -352,7 +352,7 @@ class TabPickupList extends HTMLElement {
     li.classList.add("synced-tab-li");
 
     const a = document.createElement("a");
-    a.classList.add("synced-tab-a");
+    a.classList.add("synced-tab-a", "tab-link");
     a.target = "_blank";
     if (index != 0) {
       a.setAttribute("tabindex", "-1");
