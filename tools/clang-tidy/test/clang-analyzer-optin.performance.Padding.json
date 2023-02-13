@@ -1,0 +1,1 @@
+[["warning", "Excessive padding in 'struct OverlyAlignedChar' (8185 padding bytes, where 4089 is optimal). Optimal fields order: c, c1, c2, x, consider reordering the fields or adding explicit padding members", "clang-analyzer-optin.performance.Padding"], {"reliability": "high"}]

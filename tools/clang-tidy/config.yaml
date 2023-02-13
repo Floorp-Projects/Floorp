@@ -91,6 +91,11 @@ clang_checkers:
     reliability: medium
   - name: clang-analyzer-deadcode.DeadStores
     reliability: high
+  - name: clang-analyzer-optin.performance.Padding
+    reliability: high
+    config:
+      - key: AllowedPad
+        value: 2
   - name: clang-analyzer-security.FloatLoopCounter
     reliability: high
   - name: clang-analyzer-security.insecureAPI.bcmp
