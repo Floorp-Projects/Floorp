@@ -108,24 +108,7 @@ async function runTest(aWindow) {
   // Open a new window with size specified.
   win = openWindow("width=400,height=400");
   await SimpleTest.promiseFocus(win);
-  // TODO(bug 1814834): This fails on Windows/macOS when there's no titlebar.
-  // This is because by the time we size the window there isn't a root element
-  // yet, so we can't see that the sizemode will be zero and we size as-if
-  // there was a titlebar. Maybe we should delay the resizes until the chrome
-  // loads or something?
-  if (gTitlebar || isLinux) {
-    checkWindow("when reopen with size", win, win.STATE_NORMAL, 400, 400);
-  } else {
-    let w = win.innerWidth;
-    let h = win.innerHeight;
-    ok(w >= 400, `Should have enough width ${w}`);
-    ok(h >= 400, `Should have enough height ${h}`);
-    todo(
-      w == 400 && h == 400,
-      `Should have exactly the right size (${w}x${h} != 400x400)`
-    );
-    checkWindow("when reopen with size", win, win.STATE_NORMAL, w, h);
-  }
+  checkWindow("when reopen with size", win, win.STATE_NORMAL, 400, 400);
   await waitForSizeModePersisted();
   win.close();
 

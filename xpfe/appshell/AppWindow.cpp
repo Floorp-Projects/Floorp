@@ -127,6 +127,7 @@ AppWindow::AppWindow(uint32_t aChromeFlags)
       mIgnoreXULSizeMode(false),
       mDestroying(false),
       mRegistered(false),
+      mDominantClientSize(false),
       mChromeFlags(aChromeFlags),
       mWidgetListenerDelegate(this) {}
 
@@ -770,6 +771,7 @@ nsresult AppWindow::MoveResize(const Maybe<DesktopPoint>& aPosition,
   if (aSize) {
     mWindow->SetSizeMode(nsSizeMode_Normal);
     mIntrinsicallySized = false;
+    mDominantClientSize = false;
   }
 
   if (aPosition && aSize) {
@@ -1601,6 +1603,13 @@ void AppWindow::SyncAttributesToWidget() {
 
   nsAutoString attr;
 
+  // Some attributes can change the client size (e.g. chromemargin on Windows
+  // and MacOS). But we might want to keep it.
+  const LayoutDeviceIntSize oldClientSize = mWindow->GetClientSize();
+  // We have to check now whether we want to restore the client size, as any
+  // change in size will reset its state.
+  bool maintainClientSize = mDominantClientSize;
+
   // "hidechrome" attribute
   if (windowElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidechrome,
                                  nsGkAtoms::_true, eCaseMatters)) {
@@ -1657,6 +1666,14 @@ void AppWindow::SyncAttributesToWidget() {
   windowElement->GetAttribute(u"macanimationtype"_ns, attr);
   if (attr.EqualsLiteral("document")) {
     mWindow->SetWindowAnimationType(nsIWidget::eDocumentWindowAnimation);
+  }
+
+  // Check if the client size did change and if we want to restore it.
+  if (maintainClientSize && mWindow->SizeMode() == nsSizeMode_Normal &&
+      oldClientSize != mWindow->GetClientSize()) {
+    mWindow->ResizeClient(oldClientSize / mWindow->GetDesktopToDeviceScale(),
+                          true);
+    mDominantClientSize = true;
   }
 }
 
@@ -2226,6 +2243,7 @@ NS_IMETHODIMP AppWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
     auto newSize =
         LayoutDeviceIntSize(aCX, aCY) + GetOuterToInnerSizeDifference(mWindow);
     SetSize(newSize.width, newSize.height, /* aRepaint = */ true);
+    mDominantClientSize = true;
     return NS_OK;
   }
 
@@ -2771,6 +2789,7 @@ void AppWindow::SizeShellToWithLimit(int32_t aDesiredWidth,
   // has yet to complete can still change the size. We want the latest call to
   // define the final size.
   SetSize(winWidth, winHeight, true);
+  mDominantClientSize = true;
 }
 
 nsresult AppWindow::GetTabCount(uint32_t* aResult) {
@@ -2821,6 +2840,7 @@ bool AppWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
 
 bool AppWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth,
                               int32_t aHeight) {
+  mDominantClientSize = false;
   if (mDocShell) {
     mDocShell->SetPositionAndSize(0, 0, aWidth, aHeight, 0);
   }
