@@ -32,9 +32,14 @@ add_task(async function() {
   // Resume
   clickOnPauseResumeButton(animationInspector, panel);
   const previousContent = labelEl.textContent;
-  await wait(1000);
-  const currentContent = labelEl.textContent;
-  isnot(previousContent, currentContent, "Current time label should change");
+
+  info("Wait until the time label changes");
+  await waitFor(() => labelEl.textContent != previousContent);
+  isnot(
+    previousContent,
+    labelEl.textContent,
+    "Current time label should change"
+  );
 });
 
 function assertLabelContent(labelEl, time) {
