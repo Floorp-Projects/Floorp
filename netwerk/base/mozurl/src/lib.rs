@@ -14,7 +14,7 @@ extern crate nserror;
 use nserror::*;
 
 extern crate xpcom;
-use xpcom::interfaces::{mozIThirdPartyUtil};
+use xpcom::interfaces::mozIThirdPartyUtil;
 use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
 
 extern crate uuid;

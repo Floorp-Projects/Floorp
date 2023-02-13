@@ -1316,7 +1316,13 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn bind(&mut self, _device: &mut Device, id: NativeTileId, dirty_rect: DeviceIntRect, valid_rect: DeviceIntRect) -> NativeSurfaceInfo {
+    fn bind(
+        &mut self,
+        _device: &mut Device,
+        id: NativeTileId,
+        dirty_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
+    ) -> NativeSurfaceInfo {
         let mut surface_info = NativeSurfaceInfo {
             origin: DeviceIntPoint::zero(),
             fbo_id: 0,

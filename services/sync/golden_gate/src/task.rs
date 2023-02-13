@@ -115,7 +115,11 @@ where
         incoming_envelopes_json: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<FerryTask<N>> {
-        Self::with_ferry(engine, Ferry::StoreIncoming(incoming_envelopes_json.to_vec()), callback)
+        Self::with_ferry(
+            engine,
+            Ferry::StoreIncoming(incoming_envelopes_json.to_vec()),
+            callback,
+        )
     }
 
     /// Creates a task to mark a subset of outgoing records as uploaded. This

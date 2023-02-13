@@ -129,9 +129,7 @@ pub unsafe extern "C" fn set_rust_log_level(module: *const c_char, level: u8) {
     };
 
     // This is the name of the rust module that we're trying to log in Gecko.
-    let mut mod_name = CStr::from_ptr(module)
-        .to_string_lossy()
-        .into_owned();
+    let mut mod_name = CStr::from_ptr(module).to_string_lossy().into_owned();
 
     let is_pattern_match = mod_name.ends_with("::*");
 

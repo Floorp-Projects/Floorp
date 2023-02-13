@@ -17,12 +17,11 @@ use marionette_rs::common::{
 use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
-    Command as MarionetteWebDriverCommand, Keys as MarionetteKeys,
-    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow,
-    PrintMargins as MarionettePrintMargins, PrintOrientation as MarionettePrintOrientation,
-    PrintPage as MarionettePrintPage, PrintParameters as MarionettePrintParameters,
-    ScreenshotOptions, Script as MarionetteScript, Selector as MarionetteSelector,
-    Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
+    Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, Locator as MarionetteLocator,
+    NewWindow as MarionetteNewWindow, PrintMargins as MarionettePrintMargins,
+    PrintOrientation as MarionettePrintOrientation, PrintPage as MarionettePrintPage,
+    PrintParameters as MarionettePrintParameters, ScreenshotOptions, Script as MarionetteScript,
+    Selector as MarionetteSelector, Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
 use mozdevice::AndroidStorageInput;
 use serde::de::{self, Deserialize, Deserializer};
@@ -775,12 +774,12 @@ fn try_convert_to_marionette_message(
         ElementClear(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ElementClear {
                 id: e.clone().to_string(),
-            }
+            },
         )),
         ElementClick(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ElementClick {
                 id: e.clone().to_string(),
-            }
+            },
         )),
         ElementSendKeys(ref e, ref x) => {
             let keys = x.to_marionette()?;
@@ -861,17 +860,17 @@ fn try_convert_to_marionette_message(
         GetElementRect(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementRect {
                 id: e.clone().to_string(),
-            }
+            },
         )),
         GetElementTagName(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementTagName {
                 id: e.clone().to_string(),
-            }
+            },
         )),
         GetElementText(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementText {
                 id: e.clone().to_string(),
-            }
+            },
         )),
         GetPageSource => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetPageSource,
@@ -897,18 +896,14 @@ fn try_convert_to_marionette_message(
         IsDisplayed(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::IsDisplayed {
                 id: e.clone().to_string(),
-            }
-        )),
-        IsEnabled(ref e) => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::IsEnabled {
-                id: e.clone().to_string(),
-            }
-        )),
-        IsSelected(ref e) => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::IsSelected {
-                id: e.clone().to_string(),
             },
         )),
+        IsEnabled(ref e) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsEnabled {
+            id: e.clone().to_string(),
+        })),
+        IsSelected(ref e) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsSelected {
+            id: e.clone().to_string(),
+        })),
         MaximizeWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::MaximizeWindow,
         )),

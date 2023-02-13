@@ -432,10 +432,9 @@ impl FirefoxOptions {
             rv.env = FirefoxOptions::load_env(options)?;
             rv.log = FirefoxOptions::load_log(options)?;
             rv.prefs = FirefoxOptions::load_prefs(options)?;
-            if let Some(profile) = FirefoxOptions::load_profile(
-                settings.profile_root.as_deref(),
-                options,
-            )? {
+            if let Some(profile) =
+                FirefoxOptions::load_profile(settings.profile_root.as_deref(), options)?
+            {
                 rv.profile = ProfileType::Path(profile);
             }
         }
