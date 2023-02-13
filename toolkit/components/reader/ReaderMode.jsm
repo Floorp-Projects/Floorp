@@ -162,7 +162,7 @@ var ReaderMode = {
       ),
     };
     // This could possibly move to the parent. See bug 1664982.
-    webNav.loadURI(originalURL, loadURIOptions);
+    webNav.fixupAndLoadURIString(originalURL, loadURIOptions);
   },
 
   /**

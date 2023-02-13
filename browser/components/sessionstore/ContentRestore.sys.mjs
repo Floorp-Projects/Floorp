@@ -193,7 +193,10 @@ ContentRestoreInternal.prototype = {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
         };
-        webNavigation.loadURI(tabData.userTypedValue, loadURIOptions);
+        webNavigation.fixupAndLoadURIString(
+          tabData.userTypedValue,
+          loadURIOptions
+        );
       } else if (tabData.entries.length) {
         // Stash away the data we need for restoreDocument.
         this._restoringDocument = {
