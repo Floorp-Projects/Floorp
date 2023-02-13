@@ -124,12 +124,10 @@ MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
   }
 
 #ifdef MOZ_WMF_CDM
-  if (IsPlayReadyKeySystem(aKeySystem)) {
-    if (!StaticPrefs::media_eme_playready_enabled()) {
-      aOutMessage = "PlayReady EME disabled"_ns;
-      return MediaKeySystemStatus::Cdm_disabled;
-    }
-    return EnsureCDMInstalled(aKeySystem, aOutMessage);
+  if (IsPlayReadyKeySystem(aKeySystem) &&
+      StaticPrefs::media_eme_playready_enabled() &&
+      KeySystemConfig::Supports(aKeySystem)) {
+    return MediaKeySystemStatus::Available;
   }
 #endif
 
