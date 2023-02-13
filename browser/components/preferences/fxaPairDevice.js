@@ -121,7 +121,7 @@ var gFxaPairDeviceDialog = {
 
   _switchToUrl(url) {
     const browser = window.docShell.chromeEventHandler;
-    browser.loadURI(url, {
+    browser.fixupAndLoadURIString(url, {
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         {}
       ),

@@ -183,6 +183,6 @@ function loadPanel(extensionId, extensionUrl, browserStyle) {
       uri,
       {}
     );
-    browser.loadURI(extensionUrl, { triggeringPrincipal });
+    browser.fixupAndLoadURIString(extensionUrl, { triggeringPrincipal });
   });
 }

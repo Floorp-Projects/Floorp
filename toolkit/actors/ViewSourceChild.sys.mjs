@@ -86,7 +86,7 @@ export class ViewSourceChild extends JSWindowActorChild {
       loadFlags,
       baseURI: Services.io.newURI(baseURI),
     };
-    webNav.loadURI(uri, loadURIOptions);
+    webNav.fixupAndLoadURIString(uri, loadURIOptions);
   }
 
   /**
@@ -141,7 +141,7 @@ export class ViewSourceChild extends JSWindowActorChild {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       loadFlags,
     };
-    webNav.loadURI(URL, loadURIOptions);
+    webNav.fixupAndLoadURIString(URL, loadURIOptions);
   }
 
   /**
