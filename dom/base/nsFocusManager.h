@@ -853,6 +853,11 @@ class nsFocusManager final : public nsIFocusManager,
 
   static uint64_t GenerateFocusActionId();
 
+  // This function works very similar to
+  // https://html.spec.whatwg.org/#get-the-focusable-area
+  static mozilla::dom::Element* GetTheFocusableArea(
+      mozilla::dom::Element* aTarget, uint32_t aFlags);
+
  private:
   // In the chrome process, the currently active and front-most top-most
   // window. Not supposed to be used in a meaningful way in content
