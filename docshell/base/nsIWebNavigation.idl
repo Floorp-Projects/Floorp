@@ -275,23 +275,52 @@ interface nsIWebNavigation : nsISupports
    * loading.
    *
    * @param aURI
-   *        The URI string to load.  For HTTP and FTP URLs and possibly others,
-   *        characters above U+007F will be converted to UTF-8 and then URL-
-   *        escaped per the rules of RFC 2396.
+   *        The URI to load.
    * @param aLoadURIOptions
    *        A JSObject defined in LoadURIOptions.webidl holding info like e.g.
    *        the triggeringPrincipal, the referrer info.
    */
   [implicit_jscontext, binaryname(LoadURIFromScript)]
-  void loadURI(in AString aURI,
-               in jsval   aLoadURIOptions);
+  void loadURI(in nsIURI aURI,
+               in jsval  aLoadURIOptions);
+
+  /**
+   * Parse / fix up a URI out of the string and load it.
+   * This will give priority to loading the requested URI
+   * in the object implementing this interface.  If it can't be loaded here
+   * however, the URI dispatcher will go through its normal process of content
+   * loading.
+   *
+   * @param aURIString
+   *        The URI string to load.  For HTTP and FTP URLs and possibly others,
+   *        characters above U+007F will be converted to UTF-8 and then URL-
+   *        escaped per the rules of RFC 2396.
+   *        This method may use nsIURIFixup to try to fix up typos etc. in the
+   *        input string based on the load flag arguments in aLoadURIOptions.
+   *        It can even convert the input to a search results page using the
+   *        default search service.
+   *        If you have an nsIURI anyway, prefer calling `loadURI`, above.
+   * @param aLoadURIOptions
+   *        A JSObject defined in LoadURIOptions.webidl holding info like e.g.
+   *        the triggeringPrincipal, the referrer info.
+   */
+  [implicit_jscontext, binaryname(FixupAndLoadURIStringFromScript)]
+  void fixupAndLoadURIString(in AString aURIString,
+                             in jsval   aLoadURIOptions);
 
   /**
    * A C++ friendly version of loadURI
    */
   [nostdcall, binaryname(LoadURI)]
-  void binaryLoadURI(in AString           aURI,
+  void binaryLoadURI(in nsIURI            aURI,
                      in LoadURIOptionsRef aLoadURIOptions);
+
+  /**
+   * A C++ friendly version of fixupAndLoadURIString
+   */
+  [nostdcall, binaryname(FixupAndLoadURIString)]
+  void binaryFixupAndLoadURIString(in AString           aURIString,
+                                   in LoadURIOptionsRef aLoadURIOptions);
 
   /**
    * Tells the Object to reload the current page.  There may be cases where the
