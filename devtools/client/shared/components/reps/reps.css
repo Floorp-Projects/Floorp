@@ -59,6 +59,10 @@
   font-style: italic;
 }
 
+.objectBox-string a {
+  word-break: break-all;
+}
+
 .objectBox-string a,
 .objectBox-string a:visited {
   color: currentColor;
@@ -70,6 +74,20 @@
 .objectBox-string a:hover {
   text-decoration: underline;
 }
+
+/* Visually hide the middle of "cropped" url */
+.objectBox-string a .cropped-url-middle {
+  max-width: 0;
+  max-height: 0;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.objectBox-string a .cropped-url-end::before {
+  content: "…";
+}
+
 
 .objectBox-function,
 .objectBox-profile {

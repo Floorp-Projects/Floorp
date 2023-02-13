@@ -33,6 +33,11 @@ add_task(async function() {
     return `${origin}${params}`;
   };
 
+  const getVisibleLinkText = linkEl => {
+    const [firstPart, , lastPart] = linkEl.children;
+    return `${firstPart.innerText}${ELLIPSIS}${lastPart.innerText}`;
+  };
+
   const EXPECTED_MESSAGE = `get more information on this error`;
 
   const msg = await waitFor(() => findErrorMessage(hud, EXPECTED_MESSAGE));
@@ -42,7 +47,7 @@ add_task(async function() {
   is(comLink.getAttribute("href"), url1, "First link has expected url");
   is(comLink.getAttribute("title"), url1, "First link has expected tooltip");
   is(
-    comLink.textContent,
+    getVisibleLinkText(comLink),
     getCroppedUrl("https://example.com"),
     "First link has expected text"
   );
@@ -50,7 +55,7 @@ add_task(async function() {
   is(orgLink.getAttribute("href"), url2, "Second link has expected url");
   is(orgLink.getAttribute("title"), url2, "Second link has expected tooltip");
   is(
-    orgLink.textContent,
+    getVisibleLinkText(orgLink),
     getCroppedUrl("https://example.org"),
     "Second link has expected text"
   );

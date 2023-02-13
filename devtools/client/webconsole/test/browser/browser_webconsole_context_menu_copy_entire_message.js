@@ -21,6 +21,7 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
         console.log(new Error("error object"));
         console.trace();
         for (let i = 0; i < 2; i++) console.log("repeated")
+        console.log(document.location + "?" + "z".repeat(100))
       }
       wrapper();
     };
@@ -122,7 +123,7 @@ async function testMessagesCopy(hud, timestamp) {
   );
   is(
     lines[2],
-    `    logStuff ${TEST_URI}test.js:9`,
+    `    logStuff ${TEST_URI}test.js:10`,
     "Stacktrace second line has the expected text"
   );
 
@@ -151,7 +152,7 @@ async function testMessagesCopy(hud, timestamp) {
   );
   is(
     lines[2],
-    `    logStuff ${TEST_URI}test.js:9`,
+    `    logStuff ${TEST_URI}test.js:10`,
     "Error Stacktrace second line has the expected text"
   );
 
@@ -174,7 +175,7 @@ async function testMessagesCopy(hud, timestamp) {
   }
   is(
     lines[1],
-    `    <anonymous> ${TEST_URI}test.js:11`,
+    `    <anonymous> ${TEST_URI}test.js:12`,
     "ReferenceError second line has expected text"
   );
   ok(
@@ -190,6 +191,15 @@ async function testMessagesCopy(hud, timestamp) {
   message = await waitFor(() => findConsoleAPIMessage(hud, "repeated 2"));
   clipboardText = await copyMessageContent(hud, message);
   ok(true, "Clipboard text was found and saved");
+
+  info("Test copy menu item for the message with the cropped URL");
+  message = await waitFor(() => findConsoleAPIMessage(hud, "z".repeat(100)));
+  ok(!!message.querySelector("a.cropped-url"), "URL is cropped");
+  clipboardText = await copyMessageContent(hud, message);
+  ok(
+    clipboardText.startsWith(TEST_URI) + "?" + "z".repeat(100),
+    "Full URL was copied to clipboard"
+  );
 }
 
 function getTimestampText(messageEl) {

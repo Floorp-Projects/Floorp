@@ -440,10 +440,16 @@ describe("test String with URL", () => {
       urlCropLimit: 20,
     });
 
-    expect(element.text()).toEqual("http://xyz…klmnopqrst is the best");
-    const link = element.find("a").at(0);
+    expect(element.text()).toEqual(text);
+    const link = element.find("a.cropped-url").at(0);
     expect(link.prop("href")).toBe(xyzUrl);
     expect(link.prop("title")).toBe(xyzUrl);
+    const linkParts = link.find("span");
+    expect(linkParts.at(0).hasClass("cropped-url-start")).toBe(true);
+    expect(linkParts.at(0).text()).toEqual("http://xyz");
+    expect(linkParts.at(1).hasClass("cropped-url-middle")).toBe(true);
+    expect(linkParts.at(2).hasClass("cropped-url-end")).toBe(true);
+    expect(linkParts.at(2).text()).toEqual("klmnopqrst");
   });
 
   it("renders multiple cropped URL", () => {
@@ -457,17 +463,28 @@ describe("test String with URL", () => {
       urlCropLimit: 20,
     });
 
-    expect(element.text()).toEqual(
-      "http://xyz…klmnopqrst is lit, not http://abc…klmnopqrst"
-    );
+    expect(element.text()).toEqual(`${xyzUrl} is lit, not ${abcUrl}`);
 
-    const links = element.find("a");
+    const links = element.find("a.cropped-url");
     const xyzLink = links.at(0);
     expect(xyzLink.prop("href")).toBe(xyzUrl);
     expect(xyzLink.prop("title")).toBe(xyzUrl);
+    const xyzLinkParts = xyzLink.find("span");
+    expect(xyzLinkParts.at(0).hasClass("cropped-url-start")).toBe(true);
+    expect(xyzLinkParts.at(0).text()).toEqual("http://xyz");
+    expect(xyzLinkParts.at(1).hasClass("cropped-url-middle")).toBe(true);
+    expect(xyzLinkParts.at(2).hasClass("cropped-url-end")).toBe(true);
+    expect(xyzLinkParts.at(2).text()).toEqual("klmnopqrst");
+
     const abc = links.at(1);
     expect(abc.prop("href")).toBe(abcUrl);
     expect(abc.prop("title")).toBe(abcUrl);
+    const abcLinkParts = abc.find("span");
+    expect(abcLinkParts.at(0).hasClass("cropped-url-start")).toBe(true);
+    expect(abcLinkParts.at(0).text()).toEqual("http://abc");
+    expect(abcLinkParts.at(1).hasClass("cropped-url-middle")).toBe(true);
+    expect(abcLinkParts.at(2).hasClass("cropped-url-end")).toBe(true);
+    expect(abcLinkParts.at(2).text()).toEqual("klmnopqrst");
   });
 
   it("renders full URL if smaller than cropLimit", () => {
@@ -484,6 +501,7 @@ describe("test String with URL", () => {
     const link = element.find("a").at(0);
     expect(link.prop("href")).toBe(xyzUrl);
     expect(link.prop("title")).toBe(xyzUrl);
+    expect(link.find(".cropped-url-start").length).toBe(0);
   });
 
   it("renders cropped URL followed by cropped string with urlCropLimit", () => {
