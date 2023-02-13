@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom += [
     "WorkerDebuggerManager.h",
     "WorkerDocumentListener.h",
     "WorkerError.h",
+    "WorkerIPCUtils.h",
     "WorkerLoadInfo.h",
     "WorkerLocation.h",
     "WorkerNavigator.h",
