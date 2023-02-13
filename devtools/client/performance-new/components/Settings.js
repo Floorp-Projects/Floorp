@@ -79,7 +79,7 @@ const {
   makePowerOf2Scale,
   formatFileSize,
   featureDescriptions,
-} = require("resource://devtools/client/performance-new/utils.js");
+} = require("resource://devtools/client/performance-new/shared/utils.js");
 const {
   connect,
 } = require("resource://devtools/client/shared/vendor/react-redux.js");

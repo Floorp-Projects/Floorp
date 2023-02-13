@@ -14,7 +14,7 @@
 var exports = {};
 
 const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
+  "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
 );
 
 const lazy = createLazyLoaders({

@@ -14,7 +14,7 @@
 // The following are not lazily loaded as they are needed during initialization.
 
 const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
+  "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js"
 );
 // For some reason TypeScript was giving me an error when de-structuring AppConstants. I
 // suspect a bug in TypeScript was at play.
@@ -87,7 +87,8 @@ function require(path) {
 // global state of the profiler, and only are used during specific funcationality like
 // symbolication or capturing a profile.
 const lazy = createLazyLoaders({
-  Utils: () => require("devtools/client/performance-new/utils"),
+  Utils: () =>
+    require("resource://devtools/client/performance-new/shared/utils.js"),
   BrowserModule: () => require("devtools/client/performance-new/browser"),
   RecordingUtils: () =>
     require("resource://devtools/shared/performance-new/recording-utils.js"),

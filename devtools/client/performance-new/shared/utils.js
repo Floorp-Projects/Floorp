@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 /**
- * @typedef {import("./@types/perf").NumberScaler} NumberScaler
- * @typedef {import("./@types/perf").ScaleFunctions} ScaleFunctions
- * @typedef {import("./@types/perf").FeatureDescription} FeatureDescription
+ * @typedef {import("../@types/perf").NumberScaler} NumberScaler
+ * @typedef {import("../@types/perf").ScaleFunctions} ScaleFunctions
+ * @typedef {import("../@types/perf").FeatureDescription} FeatureDescription
  */
 "use strict";
 

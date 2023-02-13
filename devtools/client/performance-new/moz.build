@@ -15,8 +15,6 @@ DevToolsModules(
     "browser.js",
     "initializer.js",
     "panel.js",
-    "typescript-lazy-load.jsm.js",
-    "utils.js",
 )
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
