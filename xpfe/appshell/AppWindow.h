@@ -356,6 +356,9 @@ class AppWindow final : public nsIBaseWindow,
   // otherwise happen due to script running as we tear down various things.
   bool mDestroying;
   bool mRegistered;
+  // Indicator for whether the client size, instead of the window size, should
+  // be maintained in case of a change in their relation.
+  bool mDominantClientSize;
   PersistentAttributes mPersistentAttributesDirty;
   PersistentAttributes mPersistentAttributesMask;
   uint32_t mChromeFlags;
