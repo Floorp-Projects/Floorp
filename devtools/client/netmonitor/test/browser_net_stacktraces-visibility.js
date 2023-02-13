@@ -64,7 +64,7 @@ add_task(async function() {
     "Wait for the network request log to show"
   );
   const fetchRequestUrlNode = hud.ui.outputNode.querySelector(
-    `.webconsole-output .cm-s-mozilla.message.network span[title="${REQUEST}"]`
+    `.webconsole-output .cm-s-mozilla.message.network a[title="${REQUEST}"]`
   );
   fetchRequestUrlNode.click();
 
