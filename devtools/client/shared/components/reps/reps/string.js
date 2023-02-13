@@ -252,7 +252,7 @@ define(function(require, exports, module) {
       }
 
       currentIndex = currentIndex + contentStart;
-      let linkText = getCroppedString(
+      const linkText = getCroppedString(
         useUrl,
         currentIndex,
         startCropIndex,
@@ -260,21 +260,35 @@ define(function(require, exports, module) {
       );
 
       if (linkText) {
-        if (urlCropLimit && useUrl.length > urlCropLimit) {
+        const linkItems = [];
+        const shouldCrop = urlCropLimit && useUrl.length > urlCropLimit;
+        if (shouldCrop) {
           const urlCropHalf = Math.ceil((urlCropLimit - ELLIPSIS.length) / 2);
-          linkText = getCroppedString(
-            useUrl,
-            0,
-            urlCropHalf,
-            useUrl.length - urlCropHalf
+          // We cut the string into 3 elements and we'll visually hide the second one
+          // in CSS. This way people can still copy the full link.
+          linkItems.push(
+            span(
+              { className: "cropped-url-start" },
+              useUrl.substring(0, urlCropHalf)
+            ),
+            span(
+              { className: "cropped-url-middle" },
+              useUrl.substring(urlCropHalf, useUrl.length - urlCropHalf)
+            ),
+            span(
+              { className: "cropped-url-end" },
+              useUrl.substring(useUrl.length - urlCropHalf)
+            )
           );
+        } else {
+          linkItems.push(linkText);
         }
 
         items.push(
           a(
             {
               key: `${useUrl}-${currentIndex}`,
-              className: "url",
+              className: "url" + (shouldCrop ? " cropped-url" : ""),
               title: useUrl,
               draggable: false,
               // Because we don't want the link to be open in the current
@@ -291,7 +305,7 @@ define(function(require, exports, module) {
                   }
                 : null,
             },
-            linkText
+            linkItems
           )
         );
       }
