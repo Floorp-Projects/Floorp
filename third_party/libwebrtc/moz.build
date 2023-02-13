@@ -211,7 +211,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc/level_estimation_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_digital_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/biquad_filter_gn",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/clipping_predictor_evaluator_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/clipping_predictor_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/common_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/cpu_features_gn",
