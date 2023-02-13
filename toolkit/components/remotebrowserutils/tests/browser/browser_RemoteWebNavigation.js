@@ -31,7 +31,10 @@ add_task(async function test_referrer() {
       Services.io.newURI(DUMMY2)
     ),
   };
-  browser.webNavigation.loadURI(DUMMY1, loadURIOptionsWithReferrer);
+  browser.webNavigation.loadURI(
+    Services.io.newURI(DUMMY1),
+    loadURIOptionsWithReferrer
+  );
   await waitForLoad(DUMMY1);
 
   await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function([
@@ -83,10 +86,10 @@ add_task(async function test_history() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
-  browser.webNavigation.loadURI(DUMMY1, LOAD_URI_OPTIONS);
+  browser.webNavigation.loadURI(Services.io.newURI(DUMMY1), LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY1);
 
-  browser.webNavigation.loadURI(DUMMY2, LOAD_URI_OPTIONS);
+  browser.webNavigation.loadURI(Services.io.newURI(DUMMY2), LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY2);
 
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
@@ -162,20 +165,26 @@ add_task(async function test_flags() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.selectedBrowser;
 
-  browser.webNavigation.loadURI(DUMMY1, LOAD_URI_OPTIONS);
+  browser.webNavigation.loadURI(Services.io.newURI(DUMMY1), LOAD_URI_OPTIONS);
   await waitForLoad(DUMMY1);
   let loadURIOptionsReplaceHistory = {
     triggeringPrincipal: SYSTEMPRINCIPAL,
     loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
   };
-  browser.webNavigation.loadURI(DUMMY2, loadURIOptionsReplaceHistory);
+  browser.webNavigation.loadURI(
+    Services.io.newURI(DUMMY2),
+    loadURIOptionsReplaceHistory
+  );
   await waitForLoad(DUMMY2);
   await checkHistory(browser, { count: 1, index: 0 });
   let loadURIOptionsBypassHistory = {
     triggeringPrincipal: SYSTEMPRINCIPAL,
     loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
   };
-  browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBypassHistory);
+  browser.webNavigation.loadURI(
+    Services.io.newURI(DUMMY1),
+    loadURIOptionsBypassHistory
+  );
   await waitForLoad(DUMMY1);
   await checkHistory(browser, { count: 1, index: 0 });
 
@@ -196,7 +205,10 @@ add_task(async function test_badarguments() {
       triggeringPrincipal: SYSTEMPRINCIPAL,
       postData: {},
     };
-    browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBadPostData);
+    browser.webNavigation.loadURI(
+      Services.io.newURI(DUMMY1),
+      loadURIOptionsBadPostData
+    );
     ok(
       false,
       "Should have seen an exception from trying to pass some postdata"
@@ -210,7 +222,10 @@ add_task(async function test_badarguments() {
       triggeringPrincipal: SYSTEMPRINCIPAL,
       headers: {},
     };
-    browser.webNavigation.loadURI(DUMMY1, loadURIOptionsBadHeader);
+    browser.webNavigation.loadURI(
+      Services.io.newURI(DUMMY1),
+      loadURIOptionsBadHeader
+    );
     ok(false, "Should have seen an exception from trying to pass some headers");
   } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some headers");

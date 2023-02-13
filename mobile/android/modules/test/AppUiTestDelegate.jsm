@@ -82,7 +82,7 @@ class Delegate {
       {}
     );
 
-    browser.loadURI(url, {
+    browser.fixupAndLoadURIString(url, {
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
       triggeringPrincipal,
     });

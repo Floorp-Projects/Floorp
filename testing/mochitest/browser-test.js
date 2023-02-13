@@ -110,7 +110,7 @@ function testInit() {
       let loadURIOptions = {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       };
-      webNav.loadURI(url, loadURIOptions);
+      webNav.fixupAndLoadURIString(url, loadURIOptions);
     };
 
     var listener =

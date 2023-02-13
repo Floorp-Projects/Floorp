@@ -163,7 +163,7 @@ class ContentPage {
       triggeringPrincipal: system,
     };
     chromeShell.loadURI(
-      "chrome://extensions/content/dummy.xhtml",
+      Services.io.newURI("chrome://extensions/content/dummy.xhtml"),
       loadURIOptions
     );
 
@@ -255,7 +255,7 @@ class ContentPage {
   async loadURL(url, redirectUrl = undefined) {
     await this.browserReady;
 
-    this.browser.loadURI(url, {
+    this.browser.fixupAndLoadURIString(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     return promiseBrowserLoaded(this.browser, url, redirectUrl);

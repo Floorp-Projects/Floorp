@@ -1,7 +1,8 @@
 "use strict";
 
-const childFrameURL =
-  "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+const childFrameURL = Services.io.newURI(
+  "data:text/html,<!DOCTYPE HTML><html><body></body></html>"
+);
 
 async function runTestsForFrame(browser, isPrivate) {
   let loadContext = Cu.createLoadContext();
