@@ -9082,7 +9082,7 @@
 # Pref to control whether we emulate all -moz-box with modern flexbox.
 - name: layout.css.moz-box-flexbox-emulation.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
