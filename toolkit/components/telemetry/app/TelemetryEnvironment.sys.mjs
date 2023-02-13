@@ -20,8 +20,12 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "AttributionCode",
+  "resource:///modules/AttributionCode.jsm"
+);
 ChromeUtils.defineESModuleGetters(lazy, {
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
@@ -1676,7 +1680,7 @@ EnvironmentCache.prototype = {
     try {
       await lazy.AttributionCode.getAttrDataAsync();
     } catch (e) {
-      // The AttributionCode.sys.mjs module might not be always available
+      // The AttributionCode.jsm module might not be always available
       // (e.g. tests). Gracefully handle this.
       return;
     }
@@ -1691,7 +1695,7 @@ EnvironmentCache.prototype = {
     try {
       data = lazy.AttributionCode.getCachedAttributionData();
     } catch (e) {
-      // The AttributionCode.sys.mjs module might not be always available
+      // The AttributionCode.jsm module might not be always available
       // (e.g. tests). Gracefully handle this.
     }
 

@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { MacAttribution } = ChromeUtils.importESModule(
-  "resource:///modules/MacAttribution.sys.mjs"
+const { MacAttribution } = ChromeUtils.import(
+  "resource:///modules/MacAttribution.jsm"
 );
 
 add_task(async () => {

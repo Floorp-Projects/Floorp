@@ -9,13 +9,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Assert: "resource://testing-common/Assert.sys.mjs",
-  // AttributionCode is only needed for Firefox
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+
+  // AttributionCode is only needed for Firefox
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
 });
 
 const gIsWindows = AppConstants.platform == "win";
