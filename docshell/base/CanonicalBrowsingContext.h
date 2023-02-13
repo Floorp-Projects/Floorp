@@ -206,7 +206,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   // Triggers a load in the process
   using BrowsingContext::LoadURI;
-  void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
+  void FixupAndLoadURIString(const nsAString& aURI,
+                             const LoadURIOptions& aOptions,
+                             ErrorResult& aError);
+  void LoadURI(nsIURI* aURI, const LoadURIOptions& aOptions,
                ErrorResult& aError);
 
   void GoBack(const Optional<int32_t>& aCancelContentJSEpoch,
