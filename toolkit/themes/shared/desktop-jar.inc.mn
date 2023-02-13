@@ -50,7 +50,6 @@
 #endif
   skin/classic/global/in-content/common-shared.css         (../../shared/in-content/common-shared.css)
   skin/classic/global/in-content/info-pages.css            (../../shared/in-content/info-pages.css)
-  skin/classic/global/in-content/toggle-button.css         (../../shared/in-content/toggle-button.css)
   skin/classic/global/in-content/wifi.svg                  (../../shared/in-content/wifi.svg)
   skin/classic/global/icons/arrow-left.svg                 (../../shared/icons/arrow-left.svg)
   skin/classic/global/icons/arrow-right.svg                (../../shared/icons/arrow-right.svg)
