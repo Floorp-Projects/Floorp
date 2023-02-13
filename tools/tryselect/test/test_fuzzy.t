@@ -168,6 +168,7 @@ Test task config
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "disable-pgo": true,
       "env": {
           "TRY_SELECTOR": "fuzzy"
       },
