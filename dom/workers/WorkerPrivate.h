@@ -159,12 +159,12 @@ class WorkerPrivate final
 
   enum LoadGroupBehavior { InheritLoadGroup, OverrideLoadGroup };
 
-  static nsresult GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
-                              WorkerPrivate* aParent,
-                              const nsAString& aScriptURL, bool aIsChromeWorker,
-                              LoadGroupBehavior aLoadGroupBehavior,
-                              WorkerKind aWorkerKind,
-                              WorkerLoadInfo* aLoadInfo);
+  static nsresult GetLoadInfo(
+      JSContext* aCx, nsPIDOMWindowInner* aWindow, WorkerPrivate* aParent,
+      const nsAString& aScriptURL, const enum WorkerType& aWorkerType,
+      const RequestCredentials& aCredentials, bool aIsChromeWorker,
+      LoadGroupBehavior aLoadGroupBehavior, WorkerKind aWorkerKind,
+      WorkerLoadInfo* aLoadInfo);
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb);
 

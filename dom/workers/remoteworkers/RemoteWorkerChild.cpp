@@ -435,7 +435,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     // uri encoding.
     rv = ChannelFromScriptURLMainThread(
         info.mLoadingPrincipal, nullptr /* parent document */, info.mLoadGroup,
-        info.mResolvedScriptURI, clientInfo,
+        info.mResolvedScriptURI, aData.type(), aData.credentials(), clientInfo,
         nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER, info.mCookieJarSettings,
         info.mReferrerInfo, getter_AddRefs(info.mChannel));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -451,8 +451,9 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   ErrorResult error;
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       jsapi.cx(), aData.originalScriptURL(), false,
-      mIsServiceWorker ? WorkerKindService : WorkerKindShared, aData.name(),
-      VoidCString(), &info, error, std::move(workerPrivateId));
+      mIsServiceWorker ? WorkerKindService : WorkerKindShared,
+      aData.credentials(), aData.type(), aData.name(), VoidCString(), &info,
+      error, std::move(workerPrivateId));
 
   if (NS_WARN_IF(error.Failed())) {
     MOZ_ASSERT(!workerPrivate);
