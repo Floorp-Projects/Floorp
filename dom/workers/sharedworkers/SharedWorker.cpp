@@ -107,19 +107,23 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 #endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   nsAutoString name;
+  WorkerType workerType = WorkerType::Classic;
+  RequestCredentials credentials = RequestCredentials::Omit;
   if (aOptions.IsString()) {
     name = aOptions.GetAsString();
   } else {
     MOZ_ASSERT(aOptions.IsWorkerOptions());
     name = aOptions.GetAsWorkerOptions().mName;
+    workerType = aOptions.GetAsWorkerOptions().mType;
+    credentials = aOptions.GetAsWorkerOptions().mCredentials;
   }
 
   JSContext* cx = aGlobal.Context();
 
   WorkerLoadInfo loadInfo;
-  aRv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL, false,
-                                   WorkerPrivate::OverrideLoadGroup,
-                                   WorkerKindShared, &loadInfo);
+  aRv = WorkerPrivate::GetLoadInfo(
+      cx, window, nullptr, aScriptURL, workerType, credentials, false,
+      WorkerPrivate::OverrideLoadGroup, WorkerKindShared, &loadInfo);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -229,9 +233,9 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   }
 
   RemoteWorkerData remoteWorkerData(
-      nsString(aScriptURL), baseURL, resolvedScriptURL, name,
-      loadingPrincipalInfo, principalInfo, partitionedPrincipalInfo,
-      loadInfo.mUseRegularPrincipal,
+      nsString(aScriptURL), baseURL, resolvedScriptURL, name, workerType,
+      credentials, loadingPrincipalInfo, principalInfo,
+      partitionedPrincipalInfo, loadInfo.mUseRegularPrincipal,
       loadInfo.mHasStorageAccessPermissionGranted, cjsData, loadInfo.mDomain,
       isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo, storageAllowed,
       AntiTrackingUtils::IsThirdPartyWindow(window, nullptr),

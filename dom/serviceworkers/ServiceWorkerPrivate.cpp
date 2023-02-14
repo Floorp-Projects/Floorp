@@ -582,6 +582,8 @@ nsresult ServiceWorkerPrivate::Initialize() {
   mRemoteWorkerData = RemoteWorkerData(
       NS_ConvertUTF8toUTF16(mInfo->ScriptSpec()), baseScriptURL, baseScriptURL,
       /* name */ VoidString(),
+      /* workerType */ WorkerType::Classic,
+      /* credentials */ RequestCredentials::Omit,
       /* loading principal */ principalInfo, principalInfo,
       partitionedPrincipalInfo,
       /* useRegularPrincipal */ true,
