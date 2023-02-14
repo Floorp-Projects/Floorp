@@ -7334,6 +7334,7 @@ exports.CSS_PROPERTIES = {
       "revert",
       "revert-layer",
       "row",
+      "subgrid",
       "unset"
     ]
   },
@@ -7562,6 +7563,7 @@ exports.CSS_PROPERTIES = {
       "repeat",
       "revert",
       "revert-layer",
+      "subgrid",
       "unset"
     ]
   },
@@ -7599,6 +7601,7 @@ exports.CSS_PROPERTIES = {
       "repeat",
       "revert",
       "revert-layer",
+      "subgrid",
       "unset"
     ]
   },
@@ -7621,6 +7624,7 @@ exports.CSS_PROPERTIES = {
       "repeat",
       "revert",
       "revert-layer",
+      "subgrid",
       "unset"
     ]
   },
