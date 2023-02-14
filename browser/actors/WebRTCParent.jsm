@@ -351,8 +351,7 @@ class WebRTCParent extends JSWindowActorParent {
         lazy.SitePermissions.ALLOW,
         lazy.SitePermissions.SCOPE_TEMPORARY,
         this.browsingContext.top.embedderElement,
-        gracePeriodMs,
-        aPermissionPrincipal.URI
+        gracePeriodMs
       );
     }
   }
