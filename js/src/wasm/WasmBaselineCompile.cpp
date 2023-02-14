@@ -6051,6 +6051,22 @@ bool BaseCompiler::emitTableFill() {
       });
 }
 
+bool BaseCompiler::emitMemDiscard() {
+  Nothing nothing;
+  if (!iter_.readMemDiscard(&nothing, &nothing)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  pushHeapBase();
+  return emitInstanceCall(
+      usesSharedMemory()
+          ? (isMem32() ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
+          : (isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
+}
+
 bool BaseCompiler::emitTableGet() {
   uint32_t tableIndex;
   Nothing nothing;
@@ -10227,6 +10243,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
           case uint32_t(MiscOp::MemoryFill):
             CHECK_NEXT(emitMemFill());
+          case uint32_t(MiscOp::MemoryDiscard):
+            CHECK_NEXT(emitMemDiscard());
           case uint32_t(MiscOp::MemoryInit):
             CHECK_NEXT(emitMemInit());
           case uint32_t(MiscOp::TableCopy):

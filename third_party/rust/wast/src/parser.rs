@@ -84,7 +84,7 @@ use std::usize;
 /// nested items. It would be great to not return an error here, though!
 pub(crate) const MAX_PARENS_DEPTH: usize = 100;
 
-/// A top-level convenience parseing function that parss a `T` from `buf` and
+/// A top-level convenience parsing function that parses a `T` from `buf` and
 /// requires that all tokens in `buf` are consume.
 ///
 /// This generic parsing function can be used to parse any `T` implementing the
@@ -395,7 +395,7 @@ impl ParseBuffer<'_> {
             state = match (&token.0, state) {
                 // From nothing, a `(` starts the search for an annotation
                 (LParen(_), State::None) => State::LParen,
-                // ... otherwise in nothing we alwyas preserve that state.
+                // ... otherwise in nothing we always preserve that state.
                 (_, State::None) => State::None,
 
                 // If the previous state was an `LParen`, we may have an
@@ -763,10 +763,12 @@ impl<'a> Parser<'a> {
     /// right location in the input stream, and the `msg` here is arbitrary text
     /// used to associate with the error and indicate why it was generated.
     pub fn error(self, msg: impl fmt::Display) -> Error {
-        self.error_at(self.cursor().cur_span(), &msg)
+        self.error_at(self.cursor().cur_span(), msg)
     }
 
-    fn error_at(self, span: Span, msg: &dyn fmt::Display) -> Error {
+    /// Creates an error whose line/column information is pointing at the
+    /// given span.
+    pub fn error_at(self, span: Span, msg: impl fmt::Display) -> Error {
         Error::parse(span, self.buf.input, msg.to_string())
     }
 
@@ -961,7 +963,7 @@ impl<'a> Cursor<'a> {
     /// Same as [`Parser::error`], but works with the current token in this
     /// [`Cursor`] instead.
     pub fn error(&self, msg: impl fmt::Display) -> Error {
-        self.parser.error_at(self.cur_span(), &msg)
+        self.parser.error_at(self.cur_span(), msg)
     }
 
     /// Attempts to advance this cursor if the current token is a `(`.
@@ -1101,7 +1103,7 @@ impl<'a> Cursor<'a> {
     /// the current token is `Reserved` which starts with `@` and has a nonzero
     /// length for the following name.
     ///
-    /// Note that this will skip *unknown* annoations. Only pre-registered
+    /// Note that this will skip *unknown* annotations. Only pre-registered
     /// annotations will be returned here.
     ///
     /// This function will automatically skip over any comments, whitespace, or
@@ -1242,8 +1244,8 @@ impl<'a> Cursor<'a> {
         // figure out how many of them we can skip.
         loop {
             let (token, _) = self.parser.buf.tokens.get(self.cur)?;
-            // and otherwise we skip all comments/whitespace and otherwise
-            // get real intersted once a normal `Token` pops up.
+            // and otherwise we skip all comments/whitespace and only
+            // get interested once a normal `Token` pops up.
             match token {
                 Token::Whitespace(_) | Token::LineComment(_) | Token::BlockComment(_) => {
                     self.cur += 1

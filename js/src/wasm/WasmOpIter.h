@@ -175,6 +175,7 @@ enum class OpKind {
   MemFill,
   MemOrTableInit,
   TableFill,
+  MemDiscard,
   TableGet,
   TableGrow,
   TableSet,
@@ -708,6 +709,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                         Value* src, Value* len);
   [[nodiscard]] bool readTableFill(uint32_t* tableIndex, Value* start,
                                    Value* val, Value* len);
+  [[nodiscard]] bool readMemDiscard(Value* start, Value* len);
   [[nodiscard]] bool readTableGet(uint32_t* tableIndex, Value* index);
   [[nodiscard]] bool readTableGrow(uint32_t* tableIndex, Value* initValue,
                                    Value* delta);
@@ -2866,6 +2868,35 @@ inline bool OpIter<Policy>::readTableFill(uint32_t* tableIndex, Value* start,
     return false;
   }
   if (!popWithType(ValType::I32, start)) {
+    return false;
+  }
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readMemDiscard(Value* start, Value* len) {
+  MOZ_ASSERT(Classify(op_) == OpKind::MemDiscard);
+
+  if (!env_.usesMemory()) {
+    return fail("can't touch memory without memory");
+  }
+
+  uint8_t memoryIndex;
+  if (!readFixedU8(&memoryIndex)) {
+    return fail("failed to read memory index");
+  }
+  if (memoryIndex != 0) {
+    return fail("memory index must be zero");
+  }
+
+  ValType ptrType = ToValType(env_.memory->indexType());
+
+  if (!popWithType(ptrType, len)) {
+    return false;
+  }
+
+  if (!popWithType(ptrType, start)) {
     return false;
   }
 

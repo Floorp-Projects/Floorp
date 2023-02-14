@@ -98,7 +98,7 @@ impl Encode for ComponentTypeRef {
 ///
 /// // This imports a function named `f` with the type defined above
 /// let mut imports = ComponentImportSection::new();
-/// imports.import("f", ComponentTypeRef::Func(0));
+/// imports.import("f", "", ComponentTypeRef::Func(0));
 ///
 /// let mut component = Component::new();
 /// component.section(&types);
@@ -129,8 +129,9 @@ impl ComponentImportSection {
     }
 
     /// Define an import in the component import section.
-    pub fn import(&mut self, name: &str, ty: ComponentTypeRef) -> &mut Self {
+    pub fn import(&mut self, name: &str, url: &str, ty: ComponentTypeRef) -> &mut Self {
         name.encode(&mut self.bytes);
+        url.encode(&mut self.bytes);
         ty.encode(&mut self.bytes);
         self.num_added += 1;
         self

@@ -1635,6 +1635,12 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native table.copy function";
     case SymbolicAddress::TableFill:
       return "call to native table.fill function";
+    case SymbolicAddress::MemDiscardM32:
+    case SymbolicAddress::MemDiscardSharedM32:
+      return "call to native memory.discard m32 function";
+    case SymbolicAddress::MemDiscardM64:
+    case SymbolicAddress::MemDiscardSharedM64:
+      return "call to native memory.discard m64 function";
     case SymbolicAddress::ElemDrop:
       return "call to native elem.drop function";
     case SymbolicAddress::TableGet:

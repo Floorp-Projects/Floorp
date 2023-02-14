@@ -1,5 +1,5 @@
-use crate::{BinaryReader, Result, SectionReader};
-use std::ops::Range;
+use crate::limits::{MAX_WASM_FUNCTION_RETURNS, MAX_WASM_START_ARGS};
+use crate::{BinaryReader, FromReader, Result};
 
 /// Represents the start function in a WebAssembly component.
 #[derive(Debug, Clone)]
@@ -14,53 +14,17 @@ pub struct ComponentStartFunction {
     pub results: u32,
 }
 
-/// A reader for the start section of a WebAssembly component.
-#[derive(Clone)]
-pub struct ComponentStartSectionReader<'a>(BinaryReader<'a>);
-
-impl<'a> ComponentStartSectionReader<'a> {
-    /// Constructs a new `ComponentStartSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        Ok(Self(BinaryReader::new_with_offset(data, offset)))
-    }
-
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.0.original_position()
-    }
-
-    /// Reads the start function from the section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::ComponentStartSectionReader;
-    ///
-    /// # let data: &[u8] = &[0x00, 0x03, 0x01, 0x02, 0x03, 0x01];
-    /// let mut reader = ComponentStartSectionReader::new(data, 0).unwrap();
-    /// let start = reader.read().expect("start");
-    /// println!("Start: {:?}", start);
-    /// ```
-    pub fn read(&mut self) -> Result<ComponentStartFunction> {
-        self.0.read_component_start()
-    }
-}
-
-impl<'a> SectionReader for ComponentStartSectionReader<'a> {
-    type Item = ComponentStartFunction;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.0.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.0.range()
+impl<'a> FromReader<'a> for ComponentStartFunction {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let func_index = reader.read_var_u32()?;
+        let arguments = reader
+            .read_iter(MAX_WASM_START_ARGS, "start function arguments")?
+            .collect::<Result<_>>()?;
+        let results = reader.read_size(MAX_WASM_FUNCTION_RETURNS, "start function results")? as u32;
+        Ok(ComponentStartFunction {
+            func_index,
+            arguments,
+            results,
+        })
     }
 }

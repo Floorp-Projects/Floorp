@@ -48,6 +48,7 @@
 #include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmLog.h"
+#include "wasm/WasmMemory.h"
 #include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmProcess.h"
 
@@ -681,6 +682,51 @@ void WasmArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {
   clampedMaxPages_ = newMaxPages;
 }
 
+void WasmArrayRawBuffer::discard(size_t byteOffset, size_t byteLen) {
+  uint8_t* memBase = dataPointer();
+
+  // The caller is responsible for ensuring these conditions are met; see this
+  // function's comment in ArrayBufferObject.h.
+  MOZ_ASSERT(byteOffset % wasm::PageSize == 0);
+  MOZ_ASSERT(byteLen % wasm::PageSize == 0);
+  MOZ_ASSERT(wasm::MemoryBoundsCheck(uint64_t(byteOffset), uint64_t(byteLen),
+                                     byteLength()));
+
+  // Discarding zero bytes "succeeds" with no effect.
+  if (byteLen == 0) {
+    return;
+  }
+
+  void* addr = memBase + uintptr_t(byteOffset);
+
+  // On POSIX-ish platforms, we discard memory by overwriting previously-mapped
+  // pages with freshly-mapped pages (which are all zeroed). The operating
+  // system recognizes this and decreases the process RSS, and eventually
+  // collects the abandoned physical pages.
+  //
+  // On Windows, committing over previously-committed pages has no effect, and
+  // the memory must be explicitly decommitted first. This is not the same as an
+  // munmap; the address space is still reserved.
+
+#ifdef XP_WIN
+  if (!VirtualFree(addr, byteLen, MEM_DECOMMIT)) {
+    MOZ_CRASH("wasm discard: failed to decommit memory");
+  }
+  if (!VirtualAlloc(addr, byteLen, MEM_COMMIT, PAGE_READWRITE)) {
+    MOZ_CRASH("wasm discard: decommitted memory but failed to recommit");
+  };
+#elif defined(__wasi__)
+  memset(addr, 0, byteLen);
+#else  // !XP_WIN
+  void* data = MozTaggedAnonymousMmap(addr, byteLen, PROT_READ | PROT_WRITE,
+                                      MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0,
+                                      "wasm-reserved");
+  if (data == MAP_FAILED) {
+    MOZ_CRASH("failed to discard wasm memory; memory mappings may be broken");
+  }
+#endif
+}
+
 /* static */
 WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
     IndexType indexType, Pages initialPages, Pages clampedMaxPages,
@@ -1204,6 +1250,13 @@ bool ArrayBufferObject::wasmMovingGrowToPages(
   memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
   ArrayBufferObject::detach(cx, oldBuf);
   return true;
+}
+
+/* static */
+void ArrayBufferObject::wasmDiscard(HandleArrayBufferObject buf,
+                                    uint64_t byteOffset, uint64_t byteLen) {
+  MOZ_ASSERT(buf->isWasm());
+  buf->contents().wasmBuffer()->discard(byteOffset, byteLen);
 }
 
 uint32_t ArrayBufferObject::flags() const {

@@ -239,7 +239,7 @@ pub(crate) enum Type {
 }
 
 /// A function signature.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct FuncType {
     /// Types of the parameter values.
     pub(crate) params: Vec<ValType>,
@@ -551,15 +551,15 @@ impl Module {
         let mut available_imports = Vec::<wasmparser::Import>::new();
         for payload in wasmparser::Parser::new(0).parse_all(&example_module) {
             match payload.expect("could not parse the available import payload") {
-                wasmparser::Payload::TypeSection(mut type_reader) => {
-                    for _ in 0..type_reader.get_count() {
-                        let ty = type_reader.read().expect("could not parse type section");
+                wasmparser::Payload::TypeSection(type_reader) => {
+                    for ty in type_reader {
+                        let ty = ty.expect("could not parse type section");
                         available_types.push((ty, None));
                     }
                 }
-                wasmparser::Payload::ImportSection(mut import_reader) => {
-                    for _ in 0..import_reader.get_count() {
-                        let im = import_reader.read().expect("could not read import");
+                wasmparser::Payload::ImportSection(import_reader) => {
+                    for im in import_reader {
+                        let im = im.expect("could not read import");
                         // We can immediately filter whether this is an import we want to
                         // use.
                         let use_import = u.arbitrary().unwrap_or(false);
@@ -1274,7 +1274,7 @@ impl Module {
             self.config.min_data_segments(),
             self.config.max_data_segments(),
             |u| {
-                let init: Vec<u8> = u.arbitrary()?;
+                let mut init: Vec<u8> = u.arbitrary()?;
 
                 // Passive data can only be generated if bulk memory is enabled.
                 // Otherwise if there are no memories we *only* generate passive
@@ -1293,19 +1293,21 @@ impl Module {
                         u.choose(&choices32)?
                     };
                     let mut offset = f(u, mem.minimum, init.len())?;
+
+                    // If traps are disallowed then truncate the size of the
+                    // data segment to the minimum size of memory to guarantee
+                    // it will fit. Afterwards ensure that the offset of the
+                    // data segment is in-bounds by clamping it to the
                     if self.config.disallow_traps() {
+                        let max_size = (u64::MAX / 64 / 1024).min(mem.minimum) * 64 * 1024;
+                        init.truncate(max_size as usize);
+                        let max_offset = max_size - init.len() as u64;
                         match &mut offset {
                             Offset::Const32(x) => {
-                                let m = (mem.minimum * 64 * 1024) - init.len() as u64;
-                                if m < i32::MAX as u64 {
-                                    *x = (*x).min(m as i32);
-                                }
+                                *x = (*x as u64).min(max_offset) as i32;
                             }
                             Offset::Const64(x) => {
-                                let m = (mem.minimum * 64 * 1024) - init.len() as u64;
-                                if m < i64::MAX as u64 {
-                                    *x = (*x).min(m as i64);
-                                }
+                                *x = (*x as u64).min(max_offset) as i64;
                             }
                             Offset::Global(_) => unreachable!(),
                         }

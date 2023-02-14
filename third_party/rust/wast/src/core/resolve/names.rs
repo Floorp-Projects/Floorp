@@ -262,8 +262,11 @@ impl<'a> Resolver<'a> {
             }
 
             ModuleField::Table(t) => {
-                if let TableKind::Normal(t) = &mut t.kind {
-                    self.resolve_heaptype(&mut t.elem.heap)?;
+                if let TableKind::Normal { ty, init_expr } = &mut t.kind {
+                    self.resolve_heaptype(&mut ty.elem.heap)?;
+                    if let Some(init_expr) = init_expr {
+                        self.resolve_expr(init_expr)?;
+                    }
                 }
                 Ok(())
             }
@@ -410,7 +413,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
         }
 
         match instr {
-            MemorySize(i) | MemoryGrow(i) | MemoryFill(i) => {
+            MemorySize(i) | MemoryGrow(i) | MemoryFill(i) | MemoryDiscard(i) => {
                 self.resolver.resolve(&mut i.mem, Ns::Memory)?;
             }
             MemoryInit(i) => {

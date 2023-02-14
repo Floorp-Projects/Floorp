@@ -1,25 +1,49 @@
-use super::ItemRef;
+use super::{ItemRef, ItemSigNoName};
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
-use crate::token::{Id, Index, Span};
+use crate::token::{Id, Index, NameAnnotation, Span};
 
 /// An entry in a WebAssembly component's export section.
 #[derive(Debug)]
 pub struct ComponentExport<'a> {
     /// Where this export was defined.
     pub span: Span,
+    /// Optional identifier bound to this export.
+    pub id: Option<Id<'a>>,
+    /// An optional name for this instance stored in the custom `name` section.
+    pub debug_name: Option<NameAnnotation<'a>>,
     /// The name of this export from the component.
     pub name: &'a str,
+    /// The URL of the export.
+    pub url: Option<&'a str>,
     /// The kind of export.
     pub kind: ComponentExportKind<'a>,
+    /// The kind of export.
+    pub ty: Option<ItemSigNoName<'a>>,
 }
 
 impl<'a> Parse<'a> for ComponentExport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::export>()?.0;
+        let id = parser.parse()?;
+        let debug_name = parser.parse()?;
         let name = parser.parse()?;
+        let url = parser.parse()?;
         let kind = parser.parse()?;
-        Ok(ComponentExport { span, name, kind })
+        let ty = if !parser.is_empty() {
+            Some(parser.parens(|p| p.parse())?)
+        } else {
+            None
+        };
+        Ok(ComponentExport {
+            span,
+            id,
+            debug_name,
+            name,
+            url,
+            kind,
+            ty,
+        })
     }
 }
 
@@ -85,6 +109,14 @@ impl<'a> ComponentExportKind<'a> {
             export_names: Default::default(),
         })
     }
+
+    pub(crate) fn ty(span: Span, id: Id<'a>) -> Self {
+        Self::Type(ItemRef {
+            kind: kw::r#type(span),
+            idx: Index::Id(id),
+            export_names: Default::default(),
+        })
+    }
 }
 
 impl<'a> Parse<'a> for ComponentExportKind<'a> {
@@ -137,5 +169,53 @@ impl Peek for ComponentExportKind<'_> {
 
     fn display() -> &'static str {
         "component export"
+    }
+}
+
+/// A listing of inline `(export "foo" <url>)` statements on a WebAssembly
+/// component item in its textual format.
+#[derive(Debug, Default)]
+pub struct InlineExport<'a> {
+    /// The extra names to export an item as, if any.
+    pub names: Vec<(&'a str, Option<&'a str>)>,
+}
+
+impl<'a> Parse<'a> for InlineExport<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let mut names = Vec::new();
+        while parser.peek::<Self>() {
+            names.push(parser.parens(|p| {
+                p.parse::<kw::export>()?;
+                Ok((p.parse()?, p.parse()?))
+            })?);
+        }
+        Ok(InlineExport { names })
+    }
+}
+
+impl Peek for InlineExport<'_> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = match cursor.lparen() {
+            Some(cursor) => cursor,
+            None => return false,
+        };
+        let cursor = match cursor.keyword() {
+            Some(("export", cursor)) => cursor,
+            _ => return false,
+        };
+        // Name
+        let mut cursor = match cursor.string() {
+            Some((_, cursor)) => cursor,
+            None => return false,
+        };
+        // Optional URL
+        if let Some((_, c)) = cursor.string() {
+            cursor = c;
+        }
+        cursor.rparen().is_some()
+    }
+
+    fn display() -> &'static str {
+        "inline export"
     }
 }

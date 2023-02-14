@@ -655,6 +655,8 @@ OpKind wasm::Classify(OpBytes op) {
           return OpKind::MemOrTableInit;
         case MiscOp::TableFill:
           return OpKind::TableFill;
+        case MiscOp::MemoryDiscard:
+          return OpKind::MemDiscard;
         case MiscOp::TableGrow:
           return OpKind::TableGrow;
         case MiscOp::TableSize:

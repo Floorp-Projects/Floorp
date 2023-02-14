@@ -6095,6 +6095,27 @@ static bool EmitTableFill(FunctionCompiler& f) {
                              tableIndexArg);
 }
 
+static bool EmitMemDiscard(FunctionCompiler& f) {
+  MDefinition *start, *len;
+  if (!f.iter().readMemDiscard(&start, &len)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  uint32_t bytecodeOffset = f.readBytecodeOffset();
+
+  MDefinition* memoryBase = f.memoryBase();
+
+  const SymbolicAddressSignature& callee =
+      (f.moduleEnv().usesSharedMemory()
+           ? (f.isMem32() ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
+           : (f.isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
+  return f.emitInstanceCall3(bytecodeOffset, callee, start, len, memoryBase);
+}
+
 static bool EmitTableGet(FunctionCompiler& f) {
   uint32_t tableIndex;
   MDefinition* index;
@@ -8087,6 +8108,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
           case uint32_t(MiscOp::TableFill):
             CHECK(EmitTableFill(f));
+          case uint32_t(MiscOp::MemoryDiscard):
+            CHECK(EmitMemDiscard(f));
           case uint32_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
           case uint32_t(MiscOp::TableSize):

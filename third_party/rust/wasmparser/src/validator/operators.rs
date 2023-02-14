@@ -559,10 +559,9 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
         Ok(index_ty)
     }
 
-    #[cfg_attr(not(feature = "deterministic"), inline(always))]
-    fn check_non_deterministic_enabled(&self) -> Result<()> {
-        if cfg!(feature = "deterministic") && !self.features.deterministic_only {
-            bail!(self.offset, "deterministic_only support is not enabled");
+    fn check_floats_enabled(&self) -> Result<()> {
+        if !self.features.floats {
+            bail!(self.offset, "floating-point instruction disallowed");
         }
         Ok(())
     }
@@ -678,7 +677,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
     /// Checks the validity of a common float comparison operator.
     fn check_fcmp_op(&mut self, ty: ValType) -> Result<()> {
         debug_assert!(matches!(ty, ValType::F32 | ValType::F64));
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_cmp_op(ty)
     }
 
@@ -692,7 +691,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
     /// Checks the validity of a common unary float operator.
     fn check_funary_op(&mut self, ty: ValType) -> Result<()> {
         debug_assert!(matches!(ty, ValType::F32 | ValType::F64));
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_unary_op(ty)
     }
 
@@ -706,7 +705,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
     /// Checks the validity of a common conversion operator.
     fn check_fconversion_op(&mut self, into: ValType, from: ValType) -> Result<()> {
         debug_assert!(matches!(into, ValType::F32 | ValType::F64));
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_conversion_op(into, from)
     }
 
@@ -721,7 +720,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
     /// Checks the validity of a common binary float operator.
     fn check_fbinary_op(&mut self, ty: ValType) -> Result<()> {
         debug_assert!(matches!(ty, ValType::F32 | ValType::F64));
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_binary_op(ty)
     }
 
@@ -777,7 +776,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
 
     /// Checks a [`V128`] binary float operator.
     fn check_v128_fbinary_op(&mut self) -> Result<()> {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_v128_binary_op()
     }
 
@@ -798,7 +797,7 @@ impl<'resources, R: WasmModuleResources> OperatorValidatorTemp<'_, 'resources, R
 
     /// Checks a [`V128`] binary operator.
     fn check_v128_funary_op(&mut self) -> Result<()> {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_v128_unary_op()
     }
 
@@ -937,6 +936,7 @@ macro_rules! validate_proposal {
     (desc sign_extension) => ("sign extension operations");
     (desc exceptions) => ("exceptions");
     (desc tail_call) => ("tail calls");
+    (desc memory_control) => ("memory control");
 }
 
 impl<'a, T> VisitOperator<'a> for WasmProposalValidator<'_, '_, T>
@@ -1207,7 +1207,7 @@ where
                 "type mismatch: select only takes integral types"
             )
         }
-        if ty1 != ty2 && ty1 != None && ty2 != None {
+        if ty1 != ty2 && ty1.is_some() && ty2.is_some() {
             bail!(
                 self.offset,
                 "type mismatch: select operands have different types"
@@ -1277,14 +1277,14 @@ where
         Ok(())
     }
     fn visit_f32_load(&mut self, memarg: MemArg) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         let ty = self.check_memarg(memarg)?;
         self.pop_operand(Some(ty))?;
         self.push_operand(ValType::F32)?;
         Ok(())
     }
     fn visit_f64_load(&mut self, memarg: MemArg) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         let ty = self.check_memarg(memarg)?;
         self.pop_operand(Some(ty))?;
         self.push_operand(ValType::F64)?;
@@ -1348,14 +1348,14 @@ where
         Ok(())
     }
     fn visit_f32_store(&mut self, memarg: MemArg) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         let ty = self.check_memarg(memarg)?;
         self.pop_operand(Some(ValType::F32))?;
         self.pop_operand(Some(ty))?;
         Ok(())
     }
     fn visit_f64_store(&mut self, memarg: MemArg) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         let ty = self.check_memarg(memarg)?;
         self.pop_operand(Some(ValType::F64))?;
         self.pop_operand(Some(ty))?;
@@ -1417,12 +1417,12 @@ where
         Ok(())
     }
     fn visit_f32_const(&mut self, _value: Ieee32) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.push_operand(ValType::F32)?;
         Ok(())
     }
     fn visit_f64_const(&mut self, _value: Ieee64) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.push_operand(ValType::F64)?;
         Ok(())
     }
@@ -2117,11 +2117,11 @@ where
         self.check_v128_splat(ValType::I64)
     }
     fn visit_f32x4_splat(&mut self) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_v128_splat(ValType::F32)
     }
     fn visit_f64x2_splat(&mut self) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_v128_splat(ValType::F64)
     }
     fn visit_i8x16_extract_lane_s(&mut self, lane: u8) -> Self::Output {
@@ -2183,14 +2183,14 @@ where
         Ok(())
     }
     fn visit_f32x4_extract_lane(&mut self, lane: u8) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_simd_lane_index(lane, 4)?;
         self.pop_operand(Some(ValType::V128))?;
         self.push_operand(ValType::F32)?;
         Ok(())
     }
     fn visit_f32x4_replace_lane(&mut self, lane: u8) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_simd_lane_index(lane, 4)?;
         self.pop_operand(Some(ValType::F32))?;
         self.pop_operand(Some(ValType::V128))?;
@@ -2198,14 +2198,14 @@ where
         Ok(())
     }
     fn visit_f64x2_extract_lane(&mut self, lane: u8) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_simd_lane_index(lane, 2)?;
         self.pop_operand(Some(ValType::V128))?;
         self.push_operand(ValType::F64)?;
         Ok(())
     }
     fn visit_f64x2_replace_lane(&mut self, lane: u8) -> Self::Output {
-        self.check_non_deterministic_enabled()?;
+        self.check_floats_enabled()?;
         self.check_simd_lane_index(lane, 2)?;
         self.pop_operand(Some(ValType::F64))?;
         self.pop_operand(Some(ValType::V128))?;
@@ -3016,6 +3016,12 @@ where
         let ty = self.check_memory_index(mem)?;
         self.pop_operand(Some(ty))?;
         self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ty))?;
+        Ok(())
+    }
+    fn visit_memory_discard(&mut self, mem: u32) -> Self::Output {
+        let ty = self.check_memory_index(mem)?;
+        self.pop_operand(Some(ty))?;
         self.pop_operand(Some(ty))?;
         Ok(())
     }

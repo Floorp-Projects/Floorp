@@ -5,6 +5,7 @@ use super::{
 use arbitrary::{Result, Unstructured};
 use std::collections::{BTreeMap, BTreeSet};
 use std::convert::TryFrom;
+use std::rc::Rc;
 use wasm_encoder::{BlockType, MemArg};
 mod no_traps;
 
@@ -105,6 +106,8 @@ instructions! {
     (Some(return_valid), r#return, Control, 900),
     (Some(call_valid), call, Control),
     (Some(call_indirect_valid), call_indirect, Control),
+    (Some(return_call_valid), return_call, Control),
+    (Some(return_call_indirect_valid), return_call_indirect, Control),
     (Some(throw_valid), throw, Control, 850),
     (Some(rethrow_valid), rethrow, Control),
     // Parametric instructions.
@@ -581,7 +584,7 @@ pub(crate) struct CodeBuilderAllocations {
 
     // Like mutable globals above this is a map from function types to the list
     // of functions that have that function type.
-    functions: BTreeMap<Vec<ValType>, Vec<u32>>,
+    functions: BTreeMap<Rc<FuncType>, Vec<u32>>,
 
     // Like functions above this is a map from tag types to the list of tags
     // have that tag type.
@@ -682,7 +685,7 @@ impl CodeBuilderAllocations {
         let mut functions = BTreeMap::new();
         for (idx, func) in module.funcs() {
             functions
-                .entry(func.params.to_vec())
+                .entry(func.clone())
                 .or_insert(Vec::new())
                 .push(idx);
         }
@@ -1523,7 +1526,7 @@ fn call_valid(_: &Module, builder: &mut CodeBuilder) -> bool {
         .allocs
         .functions
         .keys()
-        .any(|k| builder.types_on_stack(k))
+        .any(|func_ty| builder.types_on_stack(&func_ty.params))
 }
 
 fn call(
@@ -1536,7 +1539,7 @@ fn call(
         .allocs
         .functions
         .iter()
-        .filter(|(k, _)| builder.types_on_stack(k))
+        .filter(|(func_ty, _)| builder.types_on_stack(&func_ty.params))
         .flat_map(|(_, v)| v.iter().copied())
         .collect::<Vec<_>>();
     assert!(candidates.len() > 0);
@@ -1585,6 +1588,92 @@ fn call_indirect(
     builder.push_operands(&ty.results);
     let table = *u.choose(&builder.allocs.funcref_tables)?;
     instructions.push(Instruction::CallIndirect {
+        ty: *type_idx as u32,
+        table,
+    });
+    Ok(())
+}
+
+#[inline]
+fn return_call_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    if !module.config.tail_call_enabled() {
+        return false;
+    }
+
+    builder.allocs.functions.keys().any(|func_ty| {
+        builder.types_on_stack(&func_ty.params)
+            && builder.allocs.controls[0].label_types() == &func_ty.results
+    })
+}
+
+fn return_call(
+    u: &mut Unstructured,
+    module: &Module,
+    builder: &mut CodeBuilder,
+    instructions: &mut Vec<Instruction>,
+) -> Result<()> {
+    let candidates = builder
+        .allocs
+        .functions
+        .iter()
+        .filter(|(func_ty, _)| {
+            builder.types_on_stack(&func_ty.params)
+                && builder.allocs.controls[0].label_types() == &func_ty.results
+        })
+        .flat_map(|(_, v)| v.iter().copied())
+        .collect::<Vec<_>>();
+    assert!(candidates.len() > 0);
+    let i = u.int_in_range(0..=candidates.len() - 1)?;
+    let (func_idx, ty) = module.funcs().nth(candidates[i] as usize).unwrap();
+    builder.pop_operands(&ty.params);
+    builder.push_operands(&ty.results);
+    instructions.push(Instruction::ReturnCall(func_idx as u32));
+    Ok(())
+}
+
+#[inline]
+fn return_call_indirect_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    if !module.config.tail_call_enabled()
+        || builder.allocs.funcref_tables.is_empty()
+        || !builder.type_on_stack(ValType::I32)
+    {
+        return false;
+    }
+
+    if module.config.disallow_traps() {
+        // See comment in `call_indirect_valid`; same applies here.
+        return false;
+    }
+
+    let ty = builder.allocs.operands.pop().unwrap();
+    let is_valid = module.func_types().any(|(_, ty)| {
+        builder.types_on_stack(&ty.params)
+            && builder.allocs.controls[0].label_types() == &ty.results
+    });
+    builder.allocs.operands.push(ty);
+    is_valid
+}
+
+fn return_call_indirect(
+    u: &mut Unstructured,
+    module: &Module,
+    builder: &mut CodeBuilder,
+    instructions: &mut Vec<Instruction>,
+) -> Result<()> {
+    builder.pop_operands(&[ValType::I32]);
+
+    let choices = module
+        .func_types()
+        .filter(|(_, ty)| {
+            builder.types_on_stack(&ty.params)
+                && builder.allocs.controls[0].label_types() == &ty.results
+        })
+        .collect::<Vec<_>>();
+    let (type_idx, ty) = u.choose(&choices)?;
+    builder.pop_operands(&ty.params);
+    builder.push_operands(&ty.results);
+    let table = *u.choose(&builder.allocs.funcref_tables)?;
+    instructions.push(Instruction::ReturnCallIndirect {
         ty: *type_idx as u32,
         table,
     });
@@ -4352,11 +4441,11 @@ fn memory_offset(u: &mut Unstructured, module: &Module, memory_index: u32) -> Re
         // work. 16 is the number of bytes of the largest load type (V128).
         (true, true) => {
             let no_trap_max = (i64::MAX - 16) as u64;
-            (min, no_trap_max, no_trap_max)
+            (min.min(no_trap_max), no_trap_max, no_trap_max)
         }
         (false, true) => {
             let no_trap_max = (i32::MAX - 16) as u64;
-            (min, no_trap_max, no_trap_max)
+            (min.min(no_trap_max), no_trap_max, no_trap_max)
         }
     };
 

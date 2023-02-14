@@ -1,8 +1,4 @@
-use crate::{
-    BinaryReader, ComponentExternalKind, ExternalKind, Result, SectionIteratorLimited,
-    SectionReader, SectionWithLimitedItems,
-};
-use std::ops::Range;
+use crate::{BinaryReader, ComponentExternalKind, ExternalKind, FromReader, Result};
 
 /// Represents the kind of an outer alias in a WebAssembly component.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -49,79 +45,75 @@ pub enum ComponentAlias<'a> {
     },
 }
 
-/// A reader for the alias section of a WebAssembly component.
-#[derive(Clone)]
-pub struct ComponentAliasSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
+/// Section reader for the component alias section
+pub type ComponentAliasSectionReader<'a> = crate::SectionLimited<'a, ComponentAlias<'a>>;
 
-impl<'a> ComponentAliasSectionReader<'a> {
-    /// Constructs a new `ComponentAliasSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(Self { reader, count })
-    }
+impl<'a> FromReader<'a> for ComponentAlias<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        // We don't know what type of alias it is yet, so just read the sort bytes
+        let offset = reader.original_position();
+        let byte1 = reader.read_u8()?;
+        let byte2 = if byte1 == 0x00 {
+            Some(reader.read_u8()?)
+        } else {
+            None
+        };
 
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets the count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the alias section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::ComponentAliasSectionReader;
-    /// let data: &[u8] = &[0x01, 0x01, 0x00, 0x00, 0x03, b'f', b'o', b'o'];
-    /// let mut reader = ComponentAliasSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let alias = reader.read().expect("alias");
-    ///     println!("Alias: {:?}", alias);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<ComponentAlias<'a>> {
-        self.reader.read_component_alias()
-    }
-}
-
-impl<'a> SectionReader for ComponentAliasSectionReader<'a> {
-    type Item = ComponentAlias<'a>;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
+        Ok(match reader.read_u8()? {
+            0x00 => ComponentAlias::InstanceExport {
+                kind: ComponentExternalKind::from_bytes(byte1, byte2, offset)?,
+                instance_index: reader.read_var_u32()?,
+                name: reader.read_string()?,
+            },
+            0x01 => ComponentAlias::CoreInstanceExport {
+                kind: BinaryReader::external_kind_from_byte(
+                    byte2.ok_or_else(|| {
+                        BinaryReader::invalid_leading_byte_error(
+                            byte1,
+                            "core instance export kind",
+                            offset,
+                        )
+                    })?,
+                    offset,
+                )?,
+                instance_index: reader.read_var_u32()?,
+                name: reader.read_string()?,
+            },
+            0x02 => ComponentAlias::Outer {
+                kind: component_outer_alias_kind_from_bytes(byte1, byte2, offset)?,
+                count: reader.read_var_u32()?,
+                index: reader.read_var_u32()?,
+            },
+            x => reader.invalid_leading_byte(x, "alias")?,
+        })
     }
 }
 
-impl<'a> SectionWithLimitedItems for ComponentAliasSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        Self::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for ComponentAliasSectionReader<'a> {
-    type Item = Result<ComponentAlias<'a>>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
-    }
+fn component_outer_alias_kind_from_bytes(
+    byte1: u8,
+    byte2: Option<u8>,
+    offset: usize,
+) -> Result<ComponentOuterAliasKind> {
+    Ok(match byte1 {
+        0x00 => match byte2.unwrap() {
+            0x10 => ComponentOuterAliasKind::CoreType,
+            0x11 => ComponentOuterAliasKind::CoreModule,
+            x => {
+                return Err(BinaryReader::invalid_leading_byte_error(
+                    x,
+                    "component outer alias kind",
+                    offset + 1,
+                ))
+            }
+        },
+        0x03 => ComponentOuterAliasKind::Type,
+        0x04 => ComponentOuterAliasKind::Component,
+        x => {
+            return Err(BinaryReader::invalid_leading_byte_error(
+                x,
+                "component outer alias kind",
+                offset,
+            ))
+        }
+    })
 }

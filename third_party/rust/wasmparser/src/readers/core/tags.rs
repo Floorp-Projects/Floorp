@@ -13,80 +13,20 @@
  * limitations under the License.
  */
 
-use crate::{
-    BinaryReader, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems, TagType,
-};
-use std::ops::Range;
+use crate::{BinaryReader, FromReader, Result, SectionLimited, TagKind, TagType};
 
 /// A reader for the tags section of a WebAssembly module.
-#[derive(Clone)]
-pub struct TagSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
+pub type TagSectionReader<'a> = SectionLimited<'a, TagType>;
 
-impl<'a> TagSectionReader<'a> {
-    /// Constructs a new `TagSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<TagSectionReader<'a>> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(TagSectionReader { reader, count })
-    }
-
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets the count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the tag section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::TagSectionReader;
-    /// # let data: &[u8] = &[0x01, 0x00, 0x01];
-    /// let mut reader = TagSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let ty = reader.read().expect("tag type");
-    ///     println!("Tag type: {:?}", ty);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<TagType> {
-        self.reader.read_tag_type()
-    }
-}
-
-impl<'a> SectionReader for TagSectionReader<'a> {
-    type Item = TagType;
-    fn read(&mut self) -> Result<Self::Item> {
-        TagSectionReader::read(self)
-    }
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-    fn original_position(&self) -> usize {
-        TagSectionReader::original_position(self)
-    }
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for TagSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        TagSectionReader::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for TagSectionReader<'a> {
-    type Item = Result<TagType>;
-    type IntoIter = SectionIteratorLimited<TagSectionReader<'a>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
+impl<'a> FromReader<'a> for TagType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let attribute = reader.read_u8()?;
+        if attribute != 0 {
+            bail!(reader.original_position() - 1, "invalid tag attributes");
+        }
+        Ok(TagType {
+            kind: TagKind::Exception,
+            func_type_idx: reader.read_var_u32()?,
+        })
     }
 }

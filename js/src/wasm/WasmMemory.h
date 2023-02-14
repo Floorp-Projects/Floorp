@@ -201,6 +201,25 @@ static const size_t GuardSize = PageSize;
 // for a structure fields operations.
 static const size_t NullPtrGuardSize = 4096;
 
+// Check if a range of wasm memory is within bounds, specified as byte offset
+// and length (using 32-bit indices). Omits one check by converting from
+// uint32_t to uint64_t, at which point overflow cannot occur.
+static inline bool MemoryBoundsCheck(uint32_t offset, uint32_t len,
+                                     size_t memLen) {
+  uint64_t offsetLimit = uint64_t(offset) + uint64_t(len);
+  return offsetLimit <= memLen;
+}
+
+// Check if a range of wasm memory is within bounds, specified as byte offset
+// and length (using 64-bit indices).
+static inline bool MemoryBoundsCheck(uint64_t offset, uint64_t len,
+                                     size_t memLen) {
+  uint64_t offsetLimit = offset + len;
+  bool didOverflow = offsetLimit < offset;
+  bool tooLong = memLen < offsetLimit;
+  return !didOverflow && !tooLong;
+}
+
 }  // namespace wasm
 }  // namespace js
 

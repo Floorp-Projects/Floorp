@@ -1,8 +1,8 @@
+use crate::limits::*;
 use crate::{
-    BinaryReader, ComponentAlias, ComponentImport, ComponentTypeRef, FuncType, Import, Result,
-    SectionIteratorLimited, SectionReader, SectionWithLimitedItems, Type, TypeRef,
+    BinaryReader, ComponentAlias, ComponentImport, ComponentTypeRef, FromReader, FuncType, Import,
+    Result, SectionLimited, Type, TypeRef,
 };
-use std::ops::Range;
 
 /// Represents the kind of an outer core alias in a WebAssembly component.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -18,6 +18,20 @@ pub enum CoreType<'a> {
     Func(FuncType),
     /// The type is for a core module.
     Module(Box<[ModuleTypeDeclaration<'a>]>),
+}
+
+impl<'a> FromReader<'a> for CoreType<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x60 => CoreType::Func(reader.read()?),
+            0x50 => CoreType::Module(
+                reader
+                    .read_iter(MAX_WASM_MODULE_TYPE_DECLS, "module type declaration")?
+                    .collect::<Result<_>>()?,
+            ),
+            x => return reader.invalid_leading_byte(x, "core type"),
+        })
+    }
 }
 
 /// Represents a module type declaration in a WebAssembly component.
@@ -45,93 +59,50 @@ pub enum ModuleTypeDeclaration<'a> {
     Import(Import<'a>),
 }
 
+impl<'a> FromReader<'a> for ModuleTypeDeclaration<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x00 => ModuleTypeDeclaration::Import(reader.read()?),
+            0x01 => ModuleTypeDeclaration::Type(reader.read()?),
+            0x02 => {
+                let kind = match reader.read_u8()? {
+                    0x10 => OuterAliasKind::Type,
+                    x => {
+                        return reader.invalid_leading_byte(x, "outer alias kind");
+                    }
+                };
+                match reader.read_u8()? {
+                    0x01 => ModuleTypeDeclaration::OuterAlias {
+                        kind,
+                        count: reader.read()?,
+                        index: reader.read()?,
+                    },
+                    x => {
+                        return reader.invalid_leading_byte(x, "outer alias target");
+                    }
+                }
+            }
+            0x03 => ModuleTypeDeclaration::Export {
+                name: reader.read()?,
+                ty: reader.read()?,
+            },
+            x => return reader.invalid_leading_byte(x, "type definition"),
+        })
+    }
+}
+
 /// A reader for the core type section of a WebAssembly component.
-#[derive(Clone)]
-pub struct CoreTypeSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
-
-impl<'a> CoreTypeSectionReader<'a> {
-    /// Constructs a new `CoreTypeSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(Self { reader, count })
-    }
-
-    /// Gets the original position of the reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets a count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::CoreTypeSectionReader;
-    /// let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
-    /// let mut reader = CoreTypeSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let ty = reader.read().expect("type");
-    ///     println!("Type {:?}", ty);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<CoreType<'a>> {
-        self.reader.read_core_type()
-    }
-}
-
-impl<'a> SectionReader for CoreTypeSectionReader<'a> {
-    type Item = CoreType<'a>;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for CoreTypeSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        Self::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for CoreTypeSectionReader<'a> {
-    type Item = Result<CoreType<'a>>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    /// Implements iterator over the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::CoreTypeSectionReader;
-    /// # let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
-    /// let mut reader = CoreTypeSectionReader::new(data, 0).unwrap();
-    /// for ty in reader {
-    ///     println!("Type {:?}", ty.expect("type"));
-    /// }
-    /// ```
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
-    }
-}
+///
+/// # Examples
+/// ```
+/// use wasmparser::CoreTypeSectionReader;
+/// # let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
+/// let mut reader = CoreTypeSectionReader::new(data, 0).unwrap();
+/// for ty in reader {
+///     println!("Type {:?}", ty.expect("type"));
+/// }
+/// ```
+pub type CoreTypeSectionReader<'a> = SectionLimited<'a, CoreType<'a>>;
 
 /// Represents a value type in a WebAssembly component.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,6 +111,27 @@ pub enum ComponentValType {
     Primitive(PrimitiveValType),
     /// The value type is a reference to a defined type.
     Type(u32),
+}
+
+impl<'a> FromReader<'a> for ComponentValType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        if let Some(ty) = PrimitiveValType::from_byte(reader.peek()?) {
+            reader.position += 1;
+            return Ok(ComponentValType::Primitive(ty));
+        }
+
+        Ok(ComponentValType::Type(reader.read_var_s33()? as u32))
+    }
+}
+
+impl<'a> FromReader<'a> for Option<ComponentValType> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        match reader.read_u8()? {
+            0x0 => Ok(None),
+            0x1 => Ok(Some(reader.read()?)),
+            x => reader.invalid_leading_byte(x, "optional component value type"),
+        }
+    }
 }
 
 /// Represents a primitive value type.
@@ -174,37 +166,38 @@ pub enum PrimitiveValType {
 }
 
 impl PrimitiveValType {
+    fn from_byte(byte: u8) -> Option<PrimitiveValType> {
+        Some(match byte {
+            0x7f => PrimitiveValType::Bool,
+            0x7e => PrimitiveValType::S8,
+            0x7d => PrimitiveValType::U8,
+            0x7c => PrimitiveValType::S16,
+            0x7b => PrimitiveValType::U16,
+            0x7a => PrimitiveValType::S32,
+            0x79 => PrimitiveValType::U32,
+            0x78 => PrimitiveValType::S64,
+            0x77 => PrimitiveValType::U64,
+            0x76 => PrimitiveValType::Float32,
+            0x75 => PrimitiveValType::Float64,
+            0x74 => PrimitiveValType::Char,
+            0x73 => PrimitiveValType::String,
+            _ => return None,
+        })
+    }
+
     pub(crate) fn requires_realloc(&self) -> bool {
         matches!(self, Self::String)
     }
 
     /// Determines if primitive value type `a` is a subtype of `b`.
     pub fn is_subtype_of(a: Self, b: Self) -> bool {
-        // Subtyping rules according to
-        // https://github.com/WebAssembly/component-model/blob/17f94ed1270a98218e0e796ca1dad1feb7e5c507/design/mvp/Subtyping.md
+        // Note that this intentionally diverges from the upstream specification
+        // at this time and only considers exact equality for subtyping
+        // relationships.
+        //
+        // More information can be found in the subtyping implementation for
+        // component functions.
         a == b
-            || matches!(
-                (a, b),
-                (Self::S8, Self::S16)
-                    | (Self::S8, Self::S32)
-                    | (Self::S8, Self::S64)
-                    | (Self::U8, Self::U16)
-                    | (Self::U8, Self::U32)
-                    | (Self::U8, Self::U64)
-                    | (Self::U8, Self::S16)
-                    | (Self::U8, Self::S32)
-                    | (Self::U8, Self::S64)
-                    | (Self::S16, Self::S32)
-                    | (Self::S16, Self::S64)
-                    | (Self::U16, Self::U32)
-                    | (Self::U16, Self::U64)
-                    | (Self::U16, Self::S32)
-                    | (Self::U16, Self::S64)
-                    | (Self::S32, Self::S64)
-                    | (Self::U32, Self::U64)
-                    | (Self::U32, Self::S64)
-                    | (Self::Float32, Self::Float64)
-            )
     }
 }
 
@@ -221,6 +214,37 @@ pub enum ComponentType<'a> {
     Instance(Box<[InstanceTypeDeclaration<'a>]>),
 }
 
+impl<'a> FromReader<'a> for ComponentType<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x40 => {
+                let params = reader
+                    .read_iter(MAX_WASM_FUNCTION_PARAMS, "component function parameters")?
+                    .collect::<Result<_>>()?;
+                let results = reader.read()?;
+                ComponentType::Func(ComponentFuncType { params, results })
+            }
+            0x41 => ComponentType::Component(
+                reader
+                    .read_iter(MAX_WASM_COMPONENT_TYPE_DECLS, "component type declaration")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x42 => ComponentType::Instance(
+                reader
+                    .read_iter(MAX_WASM_INSTANCE_TYPE_DECLS, "instance type declaration")?
+                    .collect::<Result<_>>()?,
+            ),
+            x => {
+                if let Some(ty) = PrimitiveValType::from_byte(x) {
+                    ComponentType::Defined(ComponentDefinedType::Primitive(ty))
+                } else {
+                    ComponentType::Defined(ComponentDefinedType::read(reader, x)?)
+                }
+            }
+        })
+    }
+}
+
 /// Represents part of a component type declaration in a WebAssembly component.
 #[derive(Debug, Clone)]
 pub enum ComponentTypeDeclaration<'a> {
@@ -234,11 +258,34 @@ pub enum ComponentTypeDeclaration<'a> {
     Export {
         /// The name of the export.
         name: &'a str,
+        /// The optional URL of the export.
+        url: &'a str,
         /// The type reference for the export.
         ty: ComponentTypeRef,
     },
     /// The component type declaration is for an import.
     Import(ComponentImport<'a>),
+}
+
+impl<'a> FromReader<'a> for ComponentTypeDeclaration<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        // Component types are effectively instance types with the additional
+        // variant of imports; check for imports here or delegate to
+        // `InstanceTypeDeclaration` with the appropriate conversions.
+        if reader.peek()? == 0x03 {
+            reader.position += 1;
+            return Ok(ComponentTypeDeclaration::Import(reader.read()?));
+        }
+
+        Ok(match reader.read()? {
+            InstanceTypeDeclaration::CoreType(t) => ComponentTypeDeclaration::CoreType(t),
+            InstanceTypeDeclaration::Type(t) => ComponentTypeDeclaration::Type(t),
+            InstanceTypeDeclaration::Alias(a) => ComponentTypeDeclaration::Alias(a),
+            InstanceTypeDeclaration::Export { name, url, ty } => {
+                ComponentTypeDeclaration::Export { name, url, ty }
+            }
+        })
+    }
 }
 
 /// Represents an instance type declaration in a WebAssembly component.
@@ -254,9 +301,27 @@ pub enum InstanceTypeDeclaration<'a> {
     Export {
         /// The name of the export.
         name: &'a str,
+        /// The URL for the export.
+        url: &'a str,
         /// The type reference for the export.
         ty: ComponentTypeRef,
     },
+}
+
+impl<'a> FromReader<'a> for InstanceTypeDeclaration<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x00 => InstanceTypeDeclaration::CoreType(reader.read()?),
+            0x01 => InstanceTypeDeclaration::Type(reader.read()?),
+            0x02 => InstanceTypeDeclaration::Alias(reader.read()?),
+            0x04 => InstanceTypeDeclaration::Export {
+                name: reader.read()?,
+                url: reader.read()?,
+                ty: reader.read()?,
+            },
+            x => return reader.invalid_leading_byte(x, "component or instance type declaration"),
+        })
+    }
 }
 
 /// Represents the result type of a component function.
@@ -266,6 +331,20 @@ pub enum ComponentFuncResult<'a> {
     Unnamed(ComponentValType),
     /// The function returns zero or more named types.
     Named(Box<[(&'a str, ComponentValType)]>),
+}
+
+impl<'a> FromReader<'a> for ComponentFuncResult<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x00 => ComponentFuncResult::Unnamed(reader.read()?),
+            0x01 => ComponentFuncResult::Named(
+                reader
+                    .read_iter(MAX_WASM_FUNCTION_RETURNS, "component function results")?
+                    .collect::<Result<_>>()?,
+            ),
+            x => return reader.invalid_leading_byte(x, "component function results"),
+        })
+    }
 }
 
 impl ComponentFuncResult<'_> {
@@ -326,6 +405,20 @@ pub struct VariantCase<'a> {
     pub refines: Option<u32>,
 }
 
+impl<'a> FromReader<'a> for VariantCase<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(VariantCase {
+            name: reader.read()?,
+            ty: reader.read()?,
+            refines: match reader.read_u8()? {
+                0x0 => None,
+                0x1 => Some(reader.read_var_u32()?),
+                x => return reader.invalid_leading_byte(x, "variant case refines"),
+            },
+        })
+    }
+}
+
 /// Represents a defined type in a WebAssembly component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ComponentDefinedType<'a> {
@@ -356,90 +449,60 @@ pub enum ComponentDefinedType<'a> {
     },
 }
 
+impl<'a> ComponentDefinedType<'a> {
+    fn read(reader: &mut BinaryReader<'a>, byte: u8) -> Result<ComponentDefinedType<'a>> {
+        Ok(match byte {
+            0x72 => ComponentDefinedType::Record(
+                reader
+                    .read_iter(MAX_WASM_RECORD_FIELDS, "record field")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x71 => ComponentDefinedType::Variant(
+                reader
+                    .read_iter(MAX_WASM_VARIANT_CASES, "variant cases")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x70 => ComponentDefinedType::List(reader.read()?),
+            0x6f => ComponentDefinedType::Tuple(
+                reader
+                    .read_iter(MAX_WASM_TUPLE_TYPES, "tuple types")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x6e => ComponentDefinedType::Flags(
+                reader
+                    .read_iter(MAX_WASM_FLAG_NAMES, "flag names")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x6d => ComponentDefinedType::Enum(
+                reader
+                    .read_iter(MAX_WASM_ENUM_CASES, "enum cases")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x6c => ComponentDefinedType::Union(
+                reader
+                    .read_iter(MAX_WASM_UNION_TYPES, "union types")?
+                    .collect::<Result<_>>()?,
+            ),
+            0x6b => ComponentDefinedType::Option(reader.read()?),
+            0x6a => ComponentDefinedType::Result {
+                ok: reader.read()?,
+                err: reader.read()?,
+            },
+            x => return reader.invalid_leading_byte(x, "component defined type"),
+        })
+    }
+}
+
 /// A reader for the type section of a WebAssembly component.
-#[derive(Clone)]
-pub struct ComponentTypeSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
-
-impl<'a> ComponentTypeSectionReader<'a> {
-    /// Constructs a new `ComponentTypeSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(Self { reader, count })
-    }
-
-    /// Gets the original position of the reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets a count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::ComponentTypeSectionReader;
-    /// let data: &[u8] = &[0x01, 0x40, 0x01, 0x03, b'f', b'o', b'o', 0x73, 0x00, 0x73];
-    /// let mut reader = ComponentTypeSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let ty = reader.read().expect("type");
-    ///     println!("Type {:?}", ty);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<ComponentType<'a>> {
-        self.reader.read_component_type()
-    }
-}
-
-impl<'a> SectionReader for ComponentTypeSectionReader<'a> {
-    type Item = ComponentType<'a>;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for ComponentTypeSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        Self::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for ComponentTypeSectionReader<'a> {
-    type Item = Result<ComponentType<'a>>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    /// Implements iterator over the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::ComponentTypeSectionReader;
-    /// let data: &[u8] = &[0x01, 0x40, 0x01, 0x03, b'f', b'o', b'o', 0x73, 0x00, 0x73];
-    /// let mut reader = ComponentTypeSectionReader::new(data, 0).unwrap();
-    /// for ty in reader {
-    ///     println!("Type {:?}", ty.expect("type"));
-    /// }
-    /// ```
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
-    }
-}
+///
+/// # Examples
+///
+/// ```
+/// use wasmparser::ComponentTypeSectionReader;
+/// let data: &[u8] = &[0x01, 0x40, 0x01, 0x03, b'f', b'o', b'o', 0x73, 0x00, 0x73];
+/// let mut reader = ComponentTypeSectionReader::new(data, 0).unwrap();
+/// for ty in reader {
+///     println!("Type {:?}", ty.expect("type"));
+/// }
+/// ```
+pub type ComponentTypeSectionReader<'a> = SectionLimited<'a, ComponentType<'a>>;

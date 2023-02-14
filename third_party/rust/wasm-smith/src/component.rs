@@ -13,6 +13,7 @@ use std::{
     rc::Rc,
 };
 use wasm_encoder::{ComponentTypeRef, ComponentValType, PrimitiveValType, TypeBounds, ValType};
+use wasmparser::types::KebabString;
 
 mod encode;
 
@@ -122,7 +123,10 @@ struct ComponentContext {
     num_imports: usize,
 
     // The set of names of imports we've generated thus far.
-    import_names: HashSet<String>,
+    import_names: HashSet<KebabString>,
+
+    // The set of URLs of imports we've generated thus far.
+    import_urls: HashSet<KebabString>,
 
     // This component's function index space.
     funcs: Vec<ComponentOrCoreFuncType>,
@@ -185,6 +189,7 @@ impl ComponentContext {
             component: Component::empty(),
             num_imports: 0,
             import_names: HashSet::default(),
+            import_urls: HashSet::default(),
             funcs: vec![],
             component_funcs: vec![],
             scalar_component_funcs: vec![],
@@ -1022,7 +1027,9 @@ impl ComponentBuilder {
     ) -> Result<Rc<ComponentType>> {
         let mut defs = vec![];
         let mut imports = HashSet::new();
+        let mut import_urls = HashSet::new();
         let mut exports = HashSet::new();
+        let mut export_urls = HashSet::new();
 
         self.with_types_scope(|me| {
             arbitrary_loop(u, 0, 100, |u| {
@@ -1034,8 +1041,13 @@ impl ComponentBuilder {
                 if me.current_type_scope().can_ref_type() && u.int_in_range::<u8>(0..=3)? == 0 {
                     if let Some(ty) = me.arbitrary_type_ref(u, true, true)? {
                         // Imports.
-                        let name = crate::unique_string(100, &mut imports, u)?;
-                        defs.push(ComponentTypeDef::Import(Import { name, ty }));
+                        let name = crate::unique_kebab_string(100, &mut imports, u)?;
+                        let url = if u.arbitrary()? {
+                            Some(crate::unique_url(100, &mut import_urls, u)?)
+                        } else {
+                            None
+                        };
+                        defs.push(ComponentTypeDef::Import(Import { name, url, ty }));
                         return Ok(true);
                     }
 
@@ -1043,7 +1055,8 @@ impl ComponentBuilder {
                 }
 
                 // Type definitions, exports, and aliases.
-                let def = me.arbitrary_instance_type_def(u, &mut exports, type_fuel)?;
+                let def =
+                    me.arbitrary_instance_type_def(u, &mut exports, &mut export_urls, type_fuel)?;
                 defs.push(def.into());
                 Ok(true)
             })
@@ -1059,6 +1072,7 @@ impl ComponentBuilder {
     ) -> Result<Rc<InstanceType>> {
         let mut defs = vec![];
         let mut exports = HashSet::new();
+        let mut export_urls = HashSet::new();
 
         self.with_types_scope(|me| {
             arbitrary_loop(u, 0, 100, |u| {
@@ -1067,7 +1081,12 @@ impl ComponentBuilder {
                     return Ok(false);
                 }
 
-                defs.push(me.arbitrary_instance_type_def(u, &mut exports, type_fuel)?);
+                defs.push(me.arbitrary_instance_type_def(
+                    u,
+                    &mut exports,
+                    &mut export_urls,
+                    type_fuel,
+                )?);
                 Ok(true)
             })
         })?;
@@ -1078,13 +1097,15 @@ impl ComponentBuilder {
     fn arbitrary_instance_type_def(
         &mut self,
         u: &mut Unstructured,
-        exports: &mut HashSet<String>,
+        exports: &mut HashSet<KebabString>,
+        export_urls: &mut HashSet<KebabString>,
         type_fuel: &mut u32,
     ) -> Result<InstanceTypeDecl> {
         let mut choices: Vec<
             fn(
                 &mut ComponentBuilder,
-                &mut HashSet<String>,
+                &mut HashSet<KebabString>,
+                &mut HashSet<KebabString>,
                 &mut Unstructured,
                 &mut u32,
             ) -> Result<InstanceTypeDecl>,
@@ -1092,10 +1113,20 @@ impl ComponentBuilder {
 
         // Export.
         if self.current_type_scope().can_ref_type() {
-            choices.push(|me, exports, u, _type_fuel| {
+            choices.push(|me, exports, export_urls, u, _type_fuel| {
+                let ty = me.arbitrary_type_ref(u, false, true)?.unwrap();
+                if let ComponentTypeRef::Type(_, idx) = ty {
+                    let ty = me.current_type_scope().get(idx).clone();
+                    me.current_type_scope_mut().push(ty);
+                }
                 Ok(InstanceTypeDecl::Export {
-                    name: crate::unique_string(100, exports, u)?,
-                    ty: me.arbitrary_type_ref(u, false, true)?.unwrap(),
+                    name: crate::unique_kebab_string(100, exports, u)?,
+                    url: if u.arbitrary()? {
+                        Some(crate::unique_url(100, export_urls, u)?)
+                    } else {
+                        None
+                    },
+                    ty,
                 })
             });
         }
@@ -1106,7 +1137,7 @@ impl ComponentBuilder {
             .iter()
             .any(|scope| !scope.types.is_empty() || !scope.core_types.is_empty())
         {
-            choices.push(|me, _exports, u, _type_fuel| {
+            choices.push(|me, _exports, _export_urls, u, _type_fuel| {
                 let alias = me.arbitrary_outer_type_alias(u)?;
                 match &alias {
                     Alias::Outer {
@@ -1124,7 +1155,7 @@ impl ComponentBuilder {
         }
 
         // Core type definition.
-        choices.push(|me, _exports, u, type_fuel| {
+        choices.push(|me, _exports, _export_urls, u, type_fuel| {
             let ty = me.arbitrary_core_type(u, type_fuel)?;
             me.current_type_scope_mut().push_core(ty.clone());
             Ok(InstanceTypeDecl::CoreType(ty))
@@ -1132,7 +1163,7 @@ impl ComponentBuilder {
 
         // Type definition.
         if self.types.len() < self.config.max_nesting_depth() {
-            choices.push(|me, _exports, u, type_fuel| {
+            choices.push(|me, _exports, _export_urls, u, type_fuel| {
                 let ty = me.arbitrary_type(u, type_fuel)?;
                 me.current_type_scope_mut().push(ty.clone());
                 Ok(InstanceTypeDecl::Type(ty))
@@ -1140,7 +1171,7 @@ impl ComponentBuilder {
         }
 
         let f = u.choose(&choices)?;
-        f(self, exports, u, type_fuel)
+        f(self, exports, export_urls, u, type_fuel)
     }
 
     fn arbitrary_outer_core_type_alias(
@@ -1236,7 +1267,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            let name = crate::unique_non_empty_string(100, &mut names, u)?;
+            let name = crate::unique_kebab_string(100, &mut names, u)?;
             let ty = self.arbitrary_component_val_type(u)?;
 
             params.push((name, ty));
@@ -1260,10 +1291,10 @@ impl ComponentBuilder {
             let name = if results.is_empty() {
                 // Most of the time we should have a single, unnamed result.
                 u.ratio::<u8>(10, 100)?
-                    .then(|| crate::unique_non_empty_string(100, &mut names, u))
+                    .then(|| crate::unique_kebab_string(100, &mut names, u))
                     .transpose()?
             } else {
-                Some(crate::unique_non_empty_string(100, &mut names, u)?)
+                Some(crate::unique_kebab_string(100, &mut names, u)?)
             };
 
             let ty = self.arbitrary_component_val_type(u)?;
@@ -1332,7 +1363,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            let name = crate::unique_non_empty_string(100, &mut field_names, u)?;
+            let name = crate::unique_kebab_string(100, &mut field_names, u)?;
             let ty = self.arbitrary_component_val_type(u)?;
 
             fields.push((name, ty));
@@ -1354,7 +1385,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            let name = crate::unique_non_empty_string(100, &mut case_names, u)?;
+            let name = crate::unique_kebab_string(100, &mut case_names, u)?;
 
             let ty = u
                 .arbitrary::<bool>()?
@@ -1404,7 +1435,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            fields.push(crate::unique_non_empty_string(100, &mut field_names, u)?);
+            fields.push(crate::unique_kebab_string(100, &mut field_names, u)?);
             Ok(true)
         })?;
         Ok(FlagsType { fields })
@@ -1419,7 +1450,7 @@ impl ComponentBuilder {
                 return Ok(false);
             }
 
-            variants.push(crate::unique_non_empty_string(100, &mut variant_names, u)?);
+            variants.push(crate::unique_kebab_string(100, &mut variant_names, u)?);
             Ok(true)
         })?;
         Ok(EnumType { variants })
@@ -1484,13 +1515,13 @@ impl ComponentBuilder {
         }
     }
 
-    fn push_import(&mut self, name: String, ty: ComponentTypeRef) {
+    fn push_import(&mut self, name: KebabString, url: Option<String>, ty: ComponentTypeRef) {
         let nth = match self.ensure_section(
             |sec| matches!(sec, Section::Import(_)),
             || Section::Import(ImportSection { imports: vec![] }),
         ) {
             Section::Import(sec) => {
-                sec.imports.push(Import { name, ty });
+                sec.imports.push(Import { name, url, ty });
                 sec.imports.len() - 1
             }
             _ => unreachable!(),
@@ -1615,8 +1646,17 @@ impl ComponentBuilder {
             match self.arbitrary_type_ref(u, true, false)? {
                 Some(ty) => {
                     let name =
-                        crate::unique_string(100, &mut self.component_mut().import_names, u)?;
-                    self.push_import(name, ty);
+                        crate::unique_kebab_string(100, &mut self.component_mut().import_names, u)?;
+                    let url = if u.arbitrary()? {
+                        Some(crate::unique_url(
+                            100,
+                            &mut self.component_mut().import_urls,
+                            u,
+                        )?)
+                    } else {
+                        None
+                    };
+                    self.push_import(name, url, ty);
                     Ok(true)
                 }
                 None => Ok(false),
@@ -1838,7 +1878,7 @@ fn inverse_scalar_canonical_abi_for(
 
     for core_ty in &core_func_ty.params {
         params.push((
-            crate::unique_non_empty_string(100, &mut names, u)?,
+            crate::unique_kebab_string(100, &mut names, u)?,
             from_core_ty(u, *core_ty)?,
         ));
     }
@@ -1849,7 +1889,7 @@ fn inverse_scalar_canonical_abi_for(
         0 => Vec::new(),
         1 => vec![(
             if u.arbitrary()? {
-                Some(crate::unique_non_empty_string(100, &mut names, u)?)
+                Some(crate::unique_kebab_string(100, &mut names, u)?)
             } else {
                 None
             },
@@ -1970,9 +2010,6 @@ enum InstanceExportAliasKind {
     Instance,
     Func,
     Value,
-    Table,
-    Memory,
-    Global,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -1994,7 +2031,11 @@ enum ComponentTypeDef {
     Type(Rc<Type>),
     Alias(Alias),
     Import(Import),
-    Export { name: String, ty: ComponentTypeRef },
+    Export {
+        name: KebabString,
+        url: Option<String>,
+        ty: ComponentTypeRef,
+    },
 }
 
 impl From<InstanceTypeDecl> for ComponentTypeDef {
@@ -2002,7 +2043,7 @@ impl From<InstanceTypeDecl> for ComponentTypeDef {
         match def {
             InstanceTypeDecl::CoreType(t) => Self::CoreType(t),
             InstanceTypeDecl::Type(t) => Self::Type(t),
-            InstanceTypeDecl::Export { name, ty } => Self::Export { name, ty },
+            InstanceTypeDecl::Export { name, url, ty } => Self::Export { name, url, ty },
             InstanceTypeDecl::Alias(a) => Self::Alias(a),
         }
     }
@@ -2018,13 +2059,17 @@ enum InstanceTypeDecl {
     CoreType(Rc<CoreType>),
     Type(Rc<Type>),
     Alias(Alias),
-    Export { name: String, ty: ComponentTypeRef },
+    Export {
+        name: KebabString,
+        url: Option<String>,
+        ty: ComponentTypeRef,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct FuncType {
-    params: Vec<(String, ComponentValType)>,
-    results: Vec<(Option<String>, ComponentValType)>,
+    params: Vec<(KebabString, ComponentValType)>,
+    results: Vec<(Option<KebabString>, ComponentValType)>,
 }
 
 impl FuncType {
@@ -2082,12 +2127,12 @@ enum DefinedType {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct RecordType {
-    fields: Vec<(String, ComponentValType)>,
+    fields: Vec<(KebabString, ComponentValType)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct VariantType {
-    cases: Vec<(String, Option<ComponentValType>, Option<u32>)>,
+    cases: Vec<(KebabString, Option<ComponentValType>, Option<u32>)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2102,12 +2147,12 @@ struct TupleType {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct FlagsType {
-    fields: Vec<String>,
+    fields: Vec<KebabString>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct EnumType {
-    variants: Vec<String>,
+    variants: Vec<KebabString>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2133,7 +2178,8 @@ struct ImportSection {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct Import {
-    name: String,
+    name: KebabString,
+    url: Option<String>,
     ty: ComponentTypeRef,
 }
 

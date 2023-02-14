@@ -427,7 +427,13 @@ impl Encode for Table<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         assert!(self.exports.names.is_empty());
         match &self.kind {
-            TableKind::Normal(t) => t.encode(e),
+            TableKind::Normal { ty, init_expr: None } => ty.encode(e),
+            TableKind::Normal { ty, init_expr: Some(init_expr) } => {
+                e.push(0x40);
+                e.push(0x00);
+                ty.encode(e);
+                init_expr.encode(e);
+            }
             _ => panic!("TableKind should be normal during encoding"),
         }
     }

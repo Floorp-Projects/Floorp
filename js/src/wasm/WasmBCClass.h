@@ -1613,6 +1613,7 @@ struct BaseCompiler final {
   void memFillInlineM32();
   [[nodiscard]] bool emitTableInit();
   [[nodiscard]] bool emitTableFill();
+  [[nodiscard]] bool emitMemDiscard();
   [[nodiscard]] bool emitTableGet();
   [[nodiscard]] bool emitTableGrow();
   [[nodiscard]] bool emitTableSet();

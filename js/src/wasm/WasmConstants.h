@@ -827,6 +827,8 @@ enum class MiscOp {
   TableSize = 0x10,
   TableFill = 0x11,
 
+  MemoryDiscard = 0x12,
+
   Limit
 };
 

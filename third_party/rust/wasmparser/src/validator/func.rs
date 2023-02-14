@@ -107,8 +107,8 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     pub fn read_locals(&mut self, reader: &mut BinaryReader<'_>) -> Result<()> {
         for _ in 0..reader.read_var_u32()? {
             let offset = reader.original_position();
-            let cnt = reader.read_var_u32()?;
-            let ty = reader.read_val_type()?;
+            let cnt = reader.read()?;
+            let ty = reader.read()?;
             self.define_locals(offset, cnt, ty)?;
         }
         Ok(())

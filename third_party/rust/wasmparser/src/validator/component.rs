@@ -5,22 +5,46 @@ use super::{
     core::Module,
     types::{
         ComponentFuncType, ComponentInstanceType, ComponentInstanceTypeKind, ComponentType,
-        ComponentValType, EntityType, InstanceType, ModuleType, RecordType, Type, TypeId, TypeList,
-        VariantCase,
+        ComponentValType, EntityType, InstanceType, KebabString, ModuleType, RecordType, Type,
+        TypeAlloc, TypeId, TypeList, VariantCase,
     },
 };
 use crate::{
     limits::*,
     types::{
-        ComponentDefinedType, ComponentEntityType, InstanceTypeKind, LoweringInfo, TupleType,
-        UnionType, VariantType,
+        ComponentDefinedType, ComponentEntityType, InstanceTypeKind, KebabStr, LoweringInfo,
+        TupleType, UnionType, VariantType,
     },
     BinaryReaderError, CanonicalOption, ComponentExternalKind, ComponentOuterAliasKind,
     ComponentTypeRef, ExternalKind, FuncType, GlobalType, InstantiationArgKind, MemoryType, Result,
     TableType, TypeBounds, ValType, WasmFeatures,
 };
-use indexmap::{IndexMap, IndexSet};
+use indexmap::{map::Entry, IndexMap, IndexSet};
 use std::{collections::HashSet, mem};
+use url::Url;
+
+fn to_kebab_str<'a>(s: &'a str, desc: &str, offset: usize) -> Result<&'a KebabStr> {
+    match KebabStr::new(s) {
+        Some(s) => Ok(s),
+        None => {
+            if s.is_empty() {
+                bail!(offset, "{desc} name cannot be empty");
+            }
+
+            bail!(offset, "{desc} name `{s}` is not in kebab case");
+        }
+    }
+}
+
+fn parse_url(url: &str, offset: usize) -> Result<Option<Url>> {
+    if url.is_empty() {
+        return Ok(None);
+    }
+
+    Url::parse(url)
+        .map(Some)
+        .map_err(|e| BinaryReaderError::new(e.to_string(), offset))
+}
 
 pub(crate) struct ComponentState {
     // Core index spaces
@@ -40,10 +64,16 @@ pub(crate) struct ComponentState {
     pub instances: Vec<TypeId>,
     pub components: Vec<TypeId>,
 
-    pub imports: IndexMap<String, ComponentEntityType>,
-    pub exports: IndexMap<String, ComponentEntityType>,
+    pub imports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
+    pub exports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
+
+    // Note: URL validation requires unique URLs by byte comparison, so
+    // strings are used here and the URLs are not normalized.
+    import_urls: HashSet<String>,
+    export_urls: HashSet<String>,
+
     has_start: bool,
-    type_size: usize,
+    type_size: u32,
 }
 
 impl ComponentState {
@@ -63,7 +93,7 @@ impl ComponentState {
         components: &mut [Self],
         ty: crate::CoreType,
         features: &WasmFeatures,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
         check_limit: bool,
     ) -> Result<()> {
@@ -84,13 +114,8 @@ impl ComponentState {
             check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
         }
 
-        current.core_types.push(TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: Some(current.core_types.len()),
-            is_core: true,
-        });
-        types.push(ty);
+        let id = types.push_defined(ty);
+        current.core_types.push(id);
 
         Ok(())
     }
@@ -98,7 +123,7 @@ impl ComponentState {
     pub fn add_core_module(
         &mut self,
         module: &Module,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let imports = module.imports_for_module_type(offset)?;
@@ -112,14 +137,8 @@ impl ComponentState {
             exports: module.exports.clone(),
         });
 
-        self.core_modules.push(TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: true,
-        });
-
-        types.push(ty);
+        let id = types.push_anon(ty);
+        self.core_modules.push(id);
 
         Ok(())
     }
@@ -127,7 +146,7 @@ impl ComponentState {
     pub fn add_core_instance(
         &mut self,
         instance: crate::Instance,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let instance = match instance {
@@ -148,7 +167,7 @@ impl ComponentState {
         components: &mut Vec<Self>,
         ty: crate::ComponentType,
         features: &WasmFeatures,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
         check_limit: bool,
     ) -> Result<()> {
@@ -183,13 +202,8 @@ impl ComponentState {
             check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
         }
 
-        current.types.push(TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: Some(current.types.len()),
-            is_core: false,
-        });
-        types.push(ty);
+        let id = types.push_defined(ty);
+        current.types.push(id);
 
         Ok(())
     }
@@ -197,12 +211,45 @@ impl ComponentState {
     pub fn add_import(
         &mut self,
         import: crate::ComponentImport,
-        types: &TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let entity = self.check_type_ref(&import.ty, types, offset)?;
+        self.add_entity(entity, false, offset)?;
+        let name = to_kebab_str(import.name, "import", offset)?;
 
-        let (len, max, desc) = match entity {
+        match self.imports.entry(name.to_owned()) {
+            Entry::Occupied(e) => {
+                bail!(
+                    offset,
+                    "import name `{name}` conflicts with previous import name `{prev}`",
+                    name = import.name,
+                    prev = e.key()
+                );
+            }
+            Entry::Vacant(e) => {
+                let url = parse_url(import.url, offset)?;
+                if let Some(url) = url.as_ref() {
+                    if !self.import_urls.insert(url.to_string()) {
+                        bail!(offset, "duplicate import URL `{url}`");
+                    }
+                }
+
+                self.type_size = combine_type_sizes(self.type_size, entity.type_size(), offset)?;
+                e.insert((url, entity));
+            }
+        }
+
+        Ok(())
+    }
+
+    fn add_entity(
+        &mut self,
+        ty: ComponentEntityType,
+        value_used: bool,
+        offset: usize,
+    ) -> Result<()> {
+        let (len, max, desc) = match ty {
             ComponentEntityType::Module(id) => {
                 self.core_modules.push(id);
                 (self.core_modules.len(), MAX_WASM_MODULES, "modules")
@@ -220,37 +267,23 @@ impl ComponentState {
                 (self.function_count(), MAX_WASM_FUNCTIONS, "functions")
             }
             ComponentEntityType::Value(ty) => {
-                self.values.push((ty, false));
+                self.values.push((ty, value_used));
                 (self.values.len(), MAX_WASM_VALUES, "values")
             }
-            ComponentEntityType::Type(id) => {
-                self.types.push(id);
+            ComponentEntityType::Type { created, .. } => {
+                self.types.push(created);
                 (self.types.len(), MAX_WASM_TYPES, "types")
             }
         };
 
         check_max(len, 0, max, desc, offset)?;
-
-        self.type_size = combine_type_sizes(self.type_size, entity.type_size(), offset)?;
-
-        if self
-            .imports
-            .insert(import.name.to_string(), entity)
-            .is_some()
-        {
-            bail!(
-                offset,
-                "duplicate import name `{}` already defined",
-                import.name,
-            );
-        }
-
         Ok(())
     }
 
     pub fn add_export(
         &mut self,
         name: &str,
+        url: &str,
         ty: ComponentEntityType,
         offset: usize,
         check_limit: bool,
@@ -258,11 +291,29 @@ impl ComponentState {
         if check_limit {
             check_max(self.exports.len(), 1, MAX_WASM_EXPORTS, "exports", offset)?;
         }
+        self.add_entity(ty, true, offset)?;
 
-        self.type_size = combine_type_sizes(self.type_size, ty.type_size(), offset)?;
+        let name = to_kebab_str(name, "export", offset)?;
 
-        if self.exports.insert(name.to_string(), ty).is_some() {
-            bail!(offset, "duplicate export name `{name}` already defined");
+        match self.exports.entry(name.to_owned()) {
+            Entry::Occupied(e) => {
+                bail!(
+                    offset,
+                    "export name `{name}` conflicts with previous export name `{prev}`",
+                    prev = e.key()
+                );
+            }
+            Entry::Vacant(e) => {
+                let url = parse_url(url, offset)?;
+                if let Some(url) = url.as_ref() {
+                    if !self.export_urls.insert(url.to_string()) {
+                        bail!(offset, "duplicate export URL `{url}`");
+                    }
+                }
+
+                self.type_size = combine_type_sizes(self.type_size, ty.type_size(), offset)?;
+                e.insert((url, ty));
+            }
         }
 
         Ok(())
@@ -315,7 +366,7 @@ impl ComponentState {
         &mut self,
         func_index: u32,
         options: Vec<CanonicalOption>,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let ty = types[self.function_at(func_index, offset)?]
@@ -330,39 +381,27 @@ impl ComponentState {
 
         let lowered_ty = Type::Func(info.into_func_type());
 
-        self.core_funcs.push(TypeId {
-            type_size: lowered_ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: true,
-        });
-
-        types.push(lowered_ty);
+        let id = types.push_anon(lowered_ty);
+        self.core_funcs.push(id);
 
         Ok(())
     }
 
-    pub fn add_component(&mut self, component: &mut Self, types: &mut TypeList) {
+    pub fn add_component(&mut self, component: &mut Self, types: &mut TypeAlloc) {
         let ty = Type::Component(ComponentType {
             type_size: component.type_size,
             imports: mem::take(&mut component.imports),
             exports: mem::take(&mut component.exports),
         });
 
-        self.components.push(TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: false,
-        });
-
-        types.push(ty);
+        let id = types.push_anon(ty);
+        self.components.push(id);
     }
 
     pub fn add_instance(
         &mut self,
         instance: crate::ComponentInstance,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let instance = match instance {
@@ -383,7 +422,7 @@ impl ComponentState {
     pub fn add_alias(
         components: &mut [Self],
         alias: crate::ComponentAlias,
-        types: &TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         match alias {
@@ -414,9 +453,11 @@ impl ComponentState {
                     Self::alias_module(components, count, index, offset)
                 }
                 ComponentOuterAliasKind::CoreType => {
-                    Self::alias_core_type(components, count, index, offset)
+                    Self::alias_core_type(components, count, index, types, offset)
                 }
-                ComponentOuterAliasKind::Type => Self::alias_type(components, count, index, offset),
+                ComponentOuterAliasKind::Type => {
+                    Self::alias_type(components, count, index, types, offset)
+                }
                 ComponentOuterAliasKind::Component => {
                     Self::alias_component(components, count, index, offset)
                 }
@@ -613,10 +654,10 @@ impl ComponentState {
         Ok(())
     }
 
-    pub fn check_type_ref(
+    fn check_type_ref(
         &self,
         ty: &ComponentTypeRef,
-        types: &TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<ComponentEntityType> {
         Ok(match ty {
@@ -644,7 +685,12 @@ impl ComponentState {
                 ComponentEntityType::Value(ty)
             }
             ComponentTypeRef::Type(TypeBounds::Eq, index) => {
-                ComponentEntityType::Type(self.type_at(*index, false, offset)?)
+                let referenced = self.type_at(*index, false, offset)?;
+                let created = types.with_unique(referenced);
+                ComponentEntityType::Type {
+                    referenced,
+                    created,
+                }
             }
             ComponentTypeRef::Instance(index) => {
                 let id = self.type_at(*index, false, offset)?;
@@ -666,9 +712,10 @@ impl ComponentState {
     pub fn export_to_entity_type(
         &mut self,
         export: &crate::ComponentExport,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<ComponentEntityType> {
-        Ok(match export.kind {
+        let actual = match export.kind {
             ComponentExternalKind::Module => {
                 ComponentEntityType::Module(self.module_at(export.index, offset)?)
             }
@@ -679,7 +726,12 @@ impl ComponentState {
                 ComponentEntityType::Value(*self.value_at(export.index, offset)?)
             }
             ComponentExternalKind::Type => {
-                ComponentEntityType::Type(self.type_at(export.index, false, offset)?)
+                let referenced = self.type_at(export.index, false, offset)?;
+                let created = types.with_unique(referenced);
+                ComponentEntityType::Type {
+                    referenced,
+                    created,
+                }
             }
             ComponentExternalKind::Instance => {
                 ComponentEntityType::Instance(self.instance_at(export.index, offset)?)
@@ -687,14 +739,28 @@ impl ComponentState {
             ComponentExternalKind::Component => {
                 ComponentEntityType::Component(self.component_at(export.index, offset)?)
             }
-        })
+        };
+
+        let ascribed = match &export.ty {
+            Some(ty) => self.check_type_ref(ty, types, offset)?,
+            None => return Ok(actual),
+        };
+
+        if !ComponentEntityType::internal_is_subtype_of(&actual, types, &ascribed, types) {
+            bail!(
+                offset,
+                "ascribed type of export is not compatible with item's type"
+            );
+        }
+
+        Ok(ascribed)
     }
 
     fn create_module_type(
         components: &[Self],
         decls: Vec<crate::ModuleTypeDeclaration>,
         features: &WasmFeatures,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<ModuleType> {
         let mut state = Module::default();
@@ -752,7 +818,7 @@ impl ComponentState {
         components: &mut Vec<Self>,
         decls: Vec<crate::ComponentTypeDeclaration>,
         features: &WasmFeatures,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<ComponentType> {
         components.push(ComponentState::default());
@@ -765,10 +831,10 @@ impl ComponentState {
                 crate::ComponentTypeDeclaration::Type(ty) => {
                     Self::add_type(components, ty, features, types, offset, true)?;
                 }
-                crate::ComponentTypeDeclaration::Export { name, ty } => {
+                crate::ComponentTypeDeclaration::Export { name, url, ty } => {
                     let current = components.last_mut().unwrap();
                     let ty = current.check_type_ref(&ty, types, offset)?;
-                    current.add_export(name, ty, offset, true)?;
+                    current.add_export(name, url, ty, offset, true)?;
                 }
                 crate::ComponentTypeDeclaration::Import(import) => {
                     components
@@ -777,26 +843,7 @@ impl ComponentState {
                         .add_import(import, types, offset)?;
                 }
                 crate::ComponentTypeDeclaration::Alias(alias) => {
-                    match alias {
-                        crate::ComponentAlias::Outer { kind, count, index }
-                            if kind == ComponentOuterAliasKind::CoreType
-                                || kind == ComponentOuterAliasKind::Type =>
-                        {
-                            match kind {
-                                ComponentOuterAliasKind::CoreType => {
-                                    Self::alias_core_type(components, count, index, offset)?
-                                }
-                                ComponentOuterAliasKind::Type => {
-                                    Self::alias_type(components, count, index, offset)?
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => return Err(BinaryReaderError::new(
-                            "only outer type aliases are allowed in component type declarations",
-                            offset,
-                        )),
-                    }
+                    Self::add_alias(components, alias, types, offset)?;
                 }
             };
         }
@@ -814,7 +861,7 @@ impl ComponentState {
         components: &mut Vec<Self>,
         decls: Vec<crate::InstanceTypeDeclaration>,
         features: &WasmFeatures,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<ComponentInstanceType> {
         components.push(ComponentState::default());
@@ -827,33 +874,14 @@ impl ComponentState {
                 crate::InstanceTypeDeclaration::Type(ty) => {
                     Self::add_type(components, ty, features, types, offset, true)?;
                 }
-                crate::InstanceTypeDeclaration::Export { name, ty } => {
+                crate::InstanceTypeDeclaration::Export { name, url, ty } => {
                     let current = components.last_mut().unwrap();
                     let ty = current.check_type_ref(&ty, types, offset)?;
-                    current.add_export(name, ty, offset, true)?;
+                    current.add_export(name, url, ty, offset, true)?;
                 }
-                crate::InstanceTypeDeclaration::Alias(alias) => match alias {
-                    crate::ComponentAlias::Outer { kind, count, index }
-                        if kind == ComponentOuterAliasKind::CoreType
-                            || kind == ComponentOuterAliasKind::Type =>
-                    {
-                        match kind {
-                            ComponentOuterAliasKind::CoreType => {
-                                Self::alias_core_type(components, count, index, offset)?
-                            }
-                            ComponentOuterAliasKind::Type => {
-                                Self::alias_type(components, count, index, offset)?
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-                    _ => {
-                        return Err(BinaryReaderError::new(
-                            "only outer type aliases are allowed in instance type declarations",
-                            offset,
-                        ))
-                    }
-                },
+                crate::InstanceTypeDeclaration::Alias(alias) => {
+                    Self::add_alias(components, alias, types, offset)?;
+                }
             };
         }
 
@@ -880,13 +908,18 @@ impl ComponentState {
             .params
             .iter()
             .map(|(name, ty)| {
-                Self::check_name(name, "function parameter", offset)?;
-                if !set.insert(*name) {
-                    return Err(BinaryReaderError::new("duplicate parameter name", offset));
+                let name = to_kebab_str(name, "function parameter", offset)?;
+                if !set.insert(name) {
+                    bail!(
+                        offset,
+                        "function parameter name `{name}` conflicts with previous parameter name `{prev}`",
+                        prev = set.get(&name).unwrap(),
+                    );
                 }
+
                 let ty = self.create_component_val_type(*ty, types, offset)?;
                 type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
-                Ok((name.to_string(), ty))
+                Ok((name.to_owned(), ty))
             })
             .collect::<Result<_>>()?;
 
@@ -896,15 +929,24 @@ impl ComponentState {
             .results
             .iter()
             .map(|(name, ty)| {
-                if let Some(name) = name {
-                    Self::check_name(name, "function result", offset)?;
-                    if !set.insert(name) {
-                        return Err(BinaryReaderError::new("duplicate result name", offset));
-                    }
-                }
+                let name = name
+                    .map(|name| {
+                        let name = to_kebab_str(name, "function result", offset)?;
+                        if !set.insert(name) {
+                            bail!(
+                                offset,
+                                "function result name `{name}` conflicts with previous result name `{prev}`",
+                                prev = set.get(name).unwrap(),
+                            );
+                        }
+
+                        Ok(name.to_owned())
+                    })
+                    .transpose()?;
+
                 let ty = self.create_component_val_type(*ty, types, offset)?;
                 type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
-                Ok((name.map(ToOwned::to_owned), ty))
+                Ok((name, ty))
             })
             .collect::<Result<_>>()?;
 
@@ -915,19 +957,11 @@ impl ComponentState {
         })
     }
 
-    fn check_name(name: &str, desc: &str, offset: usize) -> Result<()> {
-        if name.is_empty() {
-            bail!(offset, "{desc} name cannot be empty");
-        }
-
-        Ok(())
-    }
-
     fn instantiate_module(
         &self,
         module_index: u32,
         module_args: Vec<crate::InstantiationArg>,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<TypeId> {
         fn insert_arg<'a>(
@@ -1016,36 +1050,34 @@ impl ComponentState {
             kind: InstanceTypeKind::Instantiated(module_type_id),
         });
 
-        let id = TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: true,
-        };
-
-        types.push(ty);
-
-        Ok(id)
+        Ok(types.push_anon(ty))
     }
 
     fn instantiate_component(
         &mut self,
         component_index: u32,
         component_args: Vec<crate::ComponentInstantiationArg>,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<TypeId> {
         fn insert_arg<'a>(
             name: &'a str,
             arg: ComponentEntityType,
-            args: &mut IndexMap<&'a str, ComponentEntityType>,
+            args: &mut IndexMap<&'a KebabStr, ComponentEntityType>,
             offset: usize,
         ) -> Result<()> {
-            if args.insert(name, arg).is_some() {
-                bail!(
-                    offset,
-                    "duplicate component instantiation argument named `{name}`"
-                );
+            let name = to_kebab_str(name, "instantiation argument", offset)?;
+            match args.entry(name) {
+                Entry::Occupied(e) => {
+                    bail!(
+                        offset,
+                        "instantiation argument `{name}` conflicts with previous argument `{prev}`",
+                        prev = e.key()
+                    );
+                }
+                Entry::Vacant(e) => {
+                    e.insert(arg);
+                }
             }
 
             Ok(())
@@ -1109,8 +1141,8 @@ impl ComponentState {
 
         // Validate the arguments
         let component_type = types[component_type_id].as_component_type().unwrap();
-        for (name, expected) in component_type.imports.iter() {
-            match args.get(name.as_str()) {
+        for (name, (_, expected)) in component_type.imports.iter() {
+            match args.get(&name.as_kebab_str()) {
                 Some(arg) => {
                     match (arg, expected) {
                         (ComponentEntityType::Module(_), ComponentEntityType::Module(_))
@@ -1149,42 +1181,37 @@ impl ComponentState {
             type_size: component_type
                 .exports
                 .iter()
-                .fold(1, |acc, (_, ty)| acc + ty.type_size()),
+                .fold(1, |acc, (_, (_, ty))| acc + ty.type_size()),
             kind: ComponentInstanceTypeKind::Instantiated(component_type_id),
         });
 
-        let id = TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: false,
-        };
-
-        types.push(ty);
-
-        Ok(id)
+        Ok(types.push_anon(ty))
     }
 
     fn instantiate_exports(
         &mut self,
         exports: Vec<crate::ComponentExport>,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<TypeId> {
         fn insert_export(
             name: &str,
             export: ComponentEntityType,
-            exports: &mut IndexMap<String, ComponentEntityType>,
-            type_size: &mut usize,
+            exports: &mut IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
+            type_size: &mut u32,
             offset: usize,
         ) -> Result<()> {
-            *type_size = combine_type_sizes(*type_size, export.type_size(), offset)?;
-
-            if exports.insert(name.to_string(), export).is_some() {
-                bail!(
+            let name = to_kebab_str(name, "instance export", offset)?;
+            match exports.entry(name.to_owned()) {
+                Entry::Occupied(e) => bail!(
                     offset,
-                    "duplicate instantiation export name `{name}` already defined",
-                )
+                    "instance export name `{name}` conflicts with previous export name `{prev}`",
+                    prev = e.key()
+                ),
+                Entry::Vacant(e) => {
+                    *type_size = combine_type_sizes(*type_size, export.type_size(), offset)?;
+                    e.insert((None, export));
+                }
             }
 
             Ok(())
@@ -1193,6 +1220,7 @@ impl ComponentState {
         let mut type_size = 1;
         let mut inst_exports = IndexMap::new();
         for export in exports {
+            assert!(export.ty.is_none());
             match export.kind {
                 ComponentExternalKind::Module => {
                     insert_export(
@@ -1240,9 +1268,18 @@ impl ComponentState {
                     )?;
                 }
                 ComponentExternalKind::Type => {
+                    let ty = self.type_at(export.index, false, offset)?;
                     insert_export(
                         export.name,
-                        ComponentEntityType::Type(self.type_at(export.index, false, offset)?),
+                        ComponentEntityType::Type {
+                            referenced: ty,
+                            // The created type index here isn't used anywhere
+                            // in index spaces because a "bag of exports"
+                            // doesn't build up its own index spaces. Just fill
+                            // in the same index here in this case as what's
+                            // referenced.
+                            created: ty,
+                        },
                         &mut inst_exports,
                         &mut type_size,
                         offset,
@@ -1256,29 +1293,20 @@ impl ComponentState {
             kind: ComponentInstanceTypeKind::Exports(inst_exports),
         });
 
-        let id = TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: false,
-        };
-
-        types.push(ty);
-
-        Ok(id)
+        Ok(types.push_anon(ty))
     }
 
     fn instantiate_core_exports(
         &mut self,
         exports: Vec<crate::Export>,
-        types: &mut TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<TypeId> {
         fn insert_export(
             name: &str,
             export: EntityType,
             exports: &mut IndexMap<String, EntityType>,
-            type_size: &mut usize,
+            type_size: &mut u32,
             offset: usize,
         ) -> Result<()> {
             *type_size = combine_type_sizes(*type_size, export.type_size(), offset)?;
@@ -1344,16 +1372,7 @@ impl ComponentState {
             kind: InstanceTypeKind::Exports(inst_exports),
         });
 
-        let id = TypeId {
-            type_size: ty.type_size(),
-            index: types.len(),
-            type_index: None,
-            is_core: true,
-        };
-
-        types.push(ty);
-
-        Ok(id)
+        Ok(types.push_anon(ty))
     }
 
     fn alias_core_instance_export(
@@ -1429,9 +1448,11 @@ impl ComponentState {
         instance_index: u32,
         kind: ComponentExternalKind,
         name: &str,
-        types: &TypeList,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
+        let name = to_kebab_str(name, "alias export", offset)?;
+
         macro_rules! push_component_export {
             ($expected:path, $collection:ident, $ty:literal) => {{
                 match self.instance_export(instance_index, name, types, offset)? {
@@ -1506,7 +1527,19 @@ impl ComponentState {
             }
             ComponentExternalKind::Type => {
                 check_max(self.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
-                push_component_export!(ComponentEntityType::Type, types, "type")
+                match *self.instance_export(instance_index, name, types, offset)? {
+                    ComponentEntityType::Type { created, .. } => {
+                        let id = types.with_unique(created);
+                        self.types.push(id);
+                        Ok(())
+                    }
+                    _ => {
+                        bail!(
+                            offset,
+                            "export `{name}` for instance {instance_index} is not a type",
+                        )
+                    }
+                }
             }
         }
     }
@@ -1554,6 +1587,7 @@ impl ComponentState {
         components: &mut [Self],
         count: u32,
         index: u32,
+        types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<()> {
         let component = Self::check_alias_count(components, count, offset)?;
@@ -1562,29 +1596,27 @@ impl ComponentState {
         let current = components.last_mut().unwrap();
         check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
 
-        current.core_types.push(TypeId {
-            type_size: ty.type_size,
-            index: ty.index,
-            type_index: Some(current.core_types.len()),
-            is_core: true,
-        });
+        let id = types.with_unique(ty);
+        current.core_types.push(id);
 
         Ok(())
     }
 
-    fn alias_type(components: &mut [Self], count: u32, index: u32, offset: usize) -> Result<()> {
+    fn alias_type(
+        components: &mut [Self],
+        count: u32,
+        index: u32,
+        types: &mut TypeAlloc,
+        offset: usize,
+    ) -> Result<()> {
         let component = Self::check_alias_count(components, count, offset)?;
         let ty = component.type_at(index, false, offset)?;
 
         let current = components.last_mut().unwrap();
         check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
 
-        current.types.push(TypeId {
-            type_size: ty.type_size,
-            index: ty.index,
-            type_index: Some(current.types.len()),
-            is_core: false,
-        });
+        let id = types.with_unique(ty);
+        current.types.push(id);
 
         Ok(())
     }
@@ -1651,12 +1683,19 @@ impl ComponentState {
         let mut field_map = IndexMap::with_capacity(fields.len());
 
         for (name, ty) in fields {
-            Self::check_name(name, "record field", offset)?;
+            let name = to_kebab_str(name, "record field", offset)?;
             let ty = self.create_component_val_type(*ty, types, offset)?;
-            type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
 
-            if field_map.insert(name.to_string(), ty).is_some() {
-                bail!(offset, "duplicate field named `{name}` in record type");
+            match field_map.entry(name.to_owned()) {
+                Entry::Occupied(e) => bail!(
+                    offset,
+                    "record field name `{name}` conflicts with previous field name `{prev}`",
+                    prev = e.key()
+                ),
+                Entry::Vacant(e) => {
+                    type_size = combine_type_sizes(type_size, ty.type_size(), offset)?;
+                    e.insert(ty);
+                }
             }
         }
 
@@ -1673,7 +1712,7 @@ impl ComponentState {
         offset: usize,
     ) -> Result<ComponentDefinedType> {
         let mut type_size = 1;
-        let mut case_map = IndexMap::with_capacity(cases.len());
+        let mut case_map: IndexMap<KebabString, VariantCase> = IndexMap::with_capacity(cases.len());
 
         if cases.is_empty() {
             return Err(BinaryReaderError::new(
@@ -1690,7 +1729,6 @@ impl ComponentState {
         }
 
         for (i, case) in cases.iter().enumerate() {
-            Self::check_name(case.name, "variant case", offset)?;
             if let Some(refines) = case.refines {
                 if refines >= i as u32 {
                     return Err(BinaryReaderError::new(
@@ -1699,29 +1737,37 @@ impl ComponentState {
                     ));
                 }
             }
+
+            let name = to_kebab_str(case.name, "variant case", offset)?;
+
             let ty = case
                 .ty
                 .map(|ty| self.create_component_val_type(ty, types, offset))
                 .transpose()?;
 
-            type_size =
-                combine_type_sizes(type_size, ty.map(|ty| ty.type_size()).unwrap_or(1), offset)?;
-
-            if case_map
-                .insert(
-                    case.name.to_string(),
-                    VariantCase {
-                        ty,
-                        refines: case.refines.map(|i| cases[i as usize].name.to_string()),
-                    },
-                )
-                .is_some()
-            {
-                bail!(
+            match case_map.entry(name.to_owned()) {
+                Entry::Occupied(e) => bail!(
                     offset,
-                    "duplicate case named `{}` in variant type",
-                    case.name,
-                );
+                    "variant case name `{name}` conflicts with previous case name `{prev}`",
+                    name = case.name,
+                    prev = e.key()
+                ),
+                Entry::Vacant(e) => {
+                    type_size = combine_type_sizes(
+                        type_size,
+                        ty.map(|ty| ty.type_size()).unwrap_or(1),
+                        offset,
+                    )?;
+
+                    // Safety: the use of `KebabStr::new_unchecked` here is safe because the string
+                    // was already verified to be kebab case.
+                    e.insert(VariantCase {
+                        ty,
+                        refines: case
+                            .refines
+                            .map(|i| KebabStr::new_unchecked(cases[i as usize].name).to_owned()),
+                    });
+                }
             }
         }
 
@@ -1754,9 +1800,13 @@ impl ComponentState {
         let mut names_set = IndexSet::with_capacity(names.len());
 
         for name in names {
-            Self::check_name(name, "flag", offset)?;
-            if !names_set.insert(name.to_string()) {
-                bail!(offset, "duplicate flag named `{name}`");
+            let name = to_kebab_str(name, "flag", offset)?;
+            if !names_set.insert(name.to_owned()) {
+                bail!(
+                    offset,
+                    "flag name `{name}` conflicts with previous flag name `{prev}`",
+                    prev = names_set.get(name).unwrap()
+                );
             }
         }
 
@@ -1774,9 +1824,13 @@ impl ComponentState {
         let mut tags = IndexSet::with_capacity(cases.len());
 
         for tag in cases {
-            Self::check_name(tag, "enum tag", offset)?;
-            if !tags.insert(tag.to_string()) {
-                bail!(offset, "duplicate enum tag named `{tag}`");
+            let tag = to_kebab_str(tag, "enum tag", offset)?;
+            if !tags.insert(tag.to_owned()) {
+                bail!(
+                    offset,
+                    "enum tag name `{tag}` conflicts with previous tag name `{prev}`",
+                    prev = tags.get(tag).unwrap()
+                );
             }
         }
 
@@ -1865,7 +1919,7 @@ impl ComponentState {
     fn instance_export<'a>(
         &self,
         instance_index: u32,
-        name: &str,
+        name: &KebabStr,
         types: &'a TypeList,
         offset: usize,
     ) -> Result<&'a ComponentEntityType> {
@@ -1875,7 +1929,7 @@ impl ComponentState {
             .internal_exports(types)
             .get(name)
         {
-            Some(export) => Ok(export),
+            Some((_, ty)) => Ok(ty),
             None => bail!(
                 offset,
                 "instance {instance_index} has no export named `{name}`"
@@ -1990,6 +2044,8 @@ impl Default for ComponentState {
             components: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
+            import_urls: Default::default(),
+            export_urls: Default::default(),
             has_start: Default::default(),
             type_size: 1,
         }

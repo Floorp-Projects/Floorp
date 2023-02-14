@@ -202,6 +202,30 @@ const SymbolicAddressSignature SASigMemFillSharedM64 = {
     _FailOnNegI32,
     5,
     {_PTR, _I64, _I32, _I64, _PTR, _END}};
+const SymbolicAddressSignature SASigMemDiscardM32 = {
+    SymbolicAddress::MemDiscardM32,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I32, _PTR, _END}};
+const SymbolicAddressSignature SASigMemDiscardSharedM32 = {
+    SymbolicAddress::MemDiscardSharedM32,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I32, _PTR, _END}};
+const SymbolicAddressSignature SASigMemDiscardM64 = {
+    SymbolicAddress::MemDiscardM64,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I64, _I64, _PTR, _END}};
+const SymbolicAddressSignature SASigMemDiscardSharedM64 = {
+    SymbolicAddress::MemDiscardSharedM64,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I64, _I64, _PTR, _END}};
 const SymbolicAddressSignature SASigMemInitM32 = {
     SymbolicAddress::MemInitM32,
     _VOID,
@@ -1212,6 +1236,22 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralInt64Int32Int64General;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemFillSharedM64));
       return FuncCast(Instance::memFillShared_m64, *abiType);
+    case SymbolicAddress::MemDiscardM32:
+      *abiType = Args_Int32_GeneralInt32Int32General;
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemDiscardM32));
+      return FuncCast(Instance::memDiscard_m32, *abiType);
+    case SymbolicAddress::MemDiscardSharedM32:
+      *abiType = Args_Int32_GeneralInt32Int32General;
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemDiscardSharedM32));
+      return FuncCast(Instance::memDiscardShared_m32, *abiType);
+    case SymbolicAddress::MemDiscardM64:
+      *abiType = Args_Int32_GeneralInt64Int64General;
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemDiscardM64));
+      return FuncCast(Instance::memDiscard_m64, *abiType);
+    case SymbolicAddress::MemDiscardSharedM64:
+      *abiType = Args_Int32_GeneralInt64Int64General;
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemDiscardSharedM64));
+      return FuncCast(Instance::memDiscardShared_m64, *abiType);
     case SymbolicAddress::MemInitM32:
       *abiType = Args_Int32_GeneralInt32Int32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemInitM32));
@@ -1456,6 +1496,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::MemFillSharedM32:
     case SymbolicAddress::MemFillM64:
     case SymbolicAddress::MemFillSharedM64:
+    case SymbolicAddress::MemDiscardM32:
+    case SymbolicAddress::MemDiscardSharedM32:
+    case SymbolicAddress::MemDiscardM64:
+    case SymbolicAddress::MemDiscardSharedM64:
     case SymbolicAddress::MemInitM32:
     case SymbolicAddress::MemInitM64:
     case SymbolicAddress::TableCopy:

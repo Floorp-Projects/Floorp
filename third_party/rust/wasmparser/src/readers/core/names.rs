@@ -14,10 +14,12 @@
  */
 
 use crate::{
-    BinaryReader, BinaryReaderError, Result, SectionIterator, SectionIteratorLimited,
-    SectionReader, SectionWithLimitedItems,
+    BinaryReader, BinaryReaderError, FromReader, Result, SectionLimited, Subsection, Subsections,
 };
 use std::ops::Range;
+
+/// Represents a name map from the names custom section.
+pub type NameMap<'a> = SectionLimited<'a, Naming<'a>>;
 
 /// Represents a name for an index from the names section.
 #[derive(Debug, Copy, Clone)]
@@ -28,61 +30,16 @@ pub struct Naming<'a> {
     pub name: &'a str,
 }
 
-/// Represents a name map from the names custom section.
-#[derive(Debug, Clone)]
-pub struct NameMap<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
-
-impl<'a> NameMap<'a> {
-    /// Creates a new "name map" which parses the input data.
-    ///
-    /// This is intended to parse the `namemap` production in the name section
-    /// appending of the wasm spec.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<NameMap<'a>> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(NameMap { reader, count })
-    }
-}
-
-impl<'a> SectionReader for NameMap<'a> {
-    type Item = Naming<'a>;
-
-    fn read(&mut self) -> Result<Naming<'a>> {
-        let index = self.reader.read_var_u32()?;
-        let name = self.reader.read_string()?;
+impl<'a> FromReader<'a> for Naming<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let index = reader.read_var_u32()?;
+        let name = reader.read_string()?;
         Ok(Naming { index, name })
     }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
 }
 
-impl SectionWithLimitedItems for NameMap<'_> {
-    fn get_count(&self) -> u32 {
-        self.count
-    }
-}
-
-impl<'a> IntoIterator for NameMap<'a> {
-    type Item = Result<Naming<'a>>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
-    }
-}
+/// Represents a reader for indirect names from the names custom section.
+pub type IndirectNameMap<'a> = SectionLimited<'a, IndirectNaming<'a>>;
 
 /// Represents an indirect name in the names custom section.
 #[derive(Debug, Clone)]
@@ -93,72 +50,26 @@ pub struct IndirectNaming<'a> {
     pub names: NameMap<'a>,
 }
 
-/// Represents a reader for indirect names from the names custom section.
-#[derive(Clone)]
-pub struct IndirectNameMap<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
-
-impl<'a> IndirectNameMap<'a> {
-    fn new(data: &'a [u8], offset: usize) -> Result<IndirectNameMap<'a>> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(IndirectNameMap { reader, count })
-    }
-}
-
-impl<'a> SectionReader for IndirectNameMap<'a> {
-    type Item = IndirectNaming<'a>;
-
-    fn read(&mut self) -> Result<IndirectNaming<'a>> {
-        let index = self.reader.read_var_u32()?;
-        let start = self.reader.position;
+impl<'a> FromReader<'a> for IndirectNaming<'a> {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let index = reader.read_var_u32()?;
 
         // Skip the `NameMap` manually here.
         //
         // FIXME(#188) shouldn't need to skip here
-        let count = self.reader.read_var_u32()?;
-        for _ in 0..count {
-            self.reader.read_var_u32()?;
-            self.reader.skip_string()?;
-        }
+        let names = reader.skip(|reader| {
+            let count = reader.read_var_u32()?;
+            for _ in 0..count {
+                reader.read_var_u32()?;
+                reader.skip_string()?;
+            }
+            Ok(())
+        })?;
 
-        let end = self.reader.position;
         Ok(IndirectNaming {
-            index: index,
-            names: NameMap::new(
-                &self.reader.buffer[start..end],
-                self.reader.original_offset + start,
-            )?,
+            index,
+            names: NameMap::new(names.remaining_buffer(), names.original_position())?,
         })
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl SectionWithLimitedItems for IndirectNameMap<'_> {
-    fn get_count(&self) -> u32 {
-        self.count
-    }
-}
-
-impl<'a> IntoIterator for IndirectNameMap<'a> {
-    type Item = Result<IndirectNaming<'a>>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
     }
 }
 
@@ -203,55 +114,14 @@ pub enum Name<'a> {
 }
 
 /// A reader for the name custom section of a WebAssembly module.
-pub struct NameSectionReader<'a> {
-    reader: BinaryReader<'a>,
-}
+pub type NameSectionReader<'a> = Subsections<'a, Name<'a>>;
 
-impl<'a> NameSectionReader<'a> {
-    /// Constructs a new `NameSectionReader` from the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<NameSectionReader<'a>> {
-        Ok(NameSectionReader {
-            reader: BinaryReader::new_with_offset(data, offset),
-        })
-    }
-
-    fn verify_section_end(&self, end: usize) -> Result<()> {
-        if self.reader.buffer.len() < end {
-            return Err(BinaryReaderError::new(
-                "name entry extends past end of the code section",
-                self.reader.original_offset + self.reader.buffer.len(),
-            ));
-        }
-        Ok(())
-    }
-
-    /// Determines if the reader is at the end of the section.
-    pub fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Reads a name from the section.
-    pub fn read<'b>(&mut self) -> Result<Name<'b>>
-    where
-        'a: 'b,
-    {
-        let subsection_id = self.reader.read_u7()?;
-        let payload_len = self.reader.read_var_u32()? as usize;
-        let payload_start = self.reader.position;
-        let payload_end = payload_start + payload_len;
-        self.verify_section_end(payload_end)?;
-        let offset = self.reader.original_offset + payload_start;
-        let data = &self.reader.buffer[payload_start..payload_end];
-        self.reader.skip_to(payload_end);
-
-        Ok(match subsection_id {
+impl<'a> Subsection<'a> for Name<'a> {
+    fn from_reader(id: u8, mut reader: BinaryReader<'a>) -> Result<Self> {
+        let data = reader.remaining_buffer();
+        let offset = reader.original_position();
+        Ok(match id {
             0 => {
-                let mut reader = BinaryReader::new_with_offset(data, offset);
                 let name = reader.read_string()?;
                 if !reader.eof() {
                     return Err(BinaryReaderError::new(
@@ -276,33 +146,8 @@ impl<'a> NameSectionReader<'a> {
             ty => Name::Unknown {
                 ty,
                 data,
-                range: offset..offset + payload_len,
+                range: offset..offset + data.len(),
             },
         })
-    }
-}
-
-impl<'a> SectionReader for NameSectionReader<'a> {
-    type Item = Name<'a>;
-    fn read(&mut self) -> Result<Self::Item> {
-        NameSectionReader::read(self)
-    }
-    fn eof(&self) -> bool {
-        NameSectionReader::eof(self)
-    }
-    fn original_position(&self) -> usize {
-        NameSectionReader::original_position(self)
-    }
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> IntoIterator for NameSectionReader<'a> {
-    type Item = Result<Name<'a>>;
-    type IntoIter = SectionIterator<NameSectionReader<'a>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIterator::new(self)
     }
 }
