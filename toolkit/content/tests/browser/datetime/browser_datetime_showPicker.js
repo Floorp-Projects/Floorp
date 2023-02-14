@@ -19,7 +19,8 @@ add_task(async function test_datepicker_showPicker() {
   if (date.getMonth() === new Date().getMonth()) {
     Assert.equal(
       helper.getElement(MONTH_YEAR).textContent,
-      DATE_FORMAT_LOCAL(date)
+      DATE_FORMAT_LOCAL(date),
+      "Date picker opens when a showPicker method is called"
     );
   } else {
     Assert.ok(

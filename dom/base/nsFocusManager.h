@@ -410,8 +410,8 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT bool Blur(
       mozilla::dom::BrowsingContext* aBrowsingContextToClear,
       mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
-      bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId,
-      mozilla::dom::Element* aElementToFocus = nullptr);
+      bool aIsLeavingDocument, bool aAdjustWidget, bool aRemainActive,
+      uint64_t aActionId, mozilla::dom::Element* aElementToFocus = nullptr);
   MOZ_CAN_RUN_SCRIPT void BlurFromOtherProcess(
       mozilla::dom::BrowsingContext* aFocusedBrowsingContext,
       mozilla::dom::BrowsingContext* aBrowsingContextToClear,
@@ -420,7 +420,7 @@ class nsFocusManager final : public nsIFocusManager,
   MOZ_CAN_RUN_SCRIPT bool BlurImpl(
       mozilla::dom::BrowsingContext* aBrowsingContextToClear,
       mozilla::dom::BrowsingContext* aAncestorBrowsingContextToFocus,
-      bool aIsLeavingDocument, bool aAdjustWidget,
+      bool aIsLeavingDocument, bool aAdjustWidget, bool aRemainActive,
       mozilla::dom::Element* aElementToFocus, uint64_t aActionId);
 
   /**

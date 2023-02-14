@@ -401,7 +401,7 @@ this.DateTimeBoxWidget = class {
   advanceToNextField(aReverse) {
     this.log("advanceToNextField");
 
-    let focusedInput = this.mLastFocusedField;
+    let focusedInput = this.mLastFocusedElement;
     let next = aReverse
       ? focusedInput.previousElementSibling
       : focusedInput.nextElementSibling;
@@ -545,8 +545,6 @@ this.DateTimeBoxWidget = class {
         break;
       }
       case "MozSetDateTimePickerState": {
-        // To handle cases when an input is within a shadow DOM:
-        this.oldFocus = this.window.document.activeElement;
         this.setPickerState(aEvent.detail);
         break;
       }
@@ -585,11 +583,11 @@ this.DateTimeBoxWidget = class {
     }
 
     let target = aEvent.originalTarget;
-    if (target.matches("span.datetime-edit-field")) {
+    if (target.matches(".datetime-edit-field,.datetime-calendar-button")) {
       if (target.disabled) {
         return;
       }
-      this.mLastFocusedField = target;
+      this.mLastFocusedElement = target;
       this.mInputElement.setFocusState(true);
     }
     if (this.mIsPickerOpen && this.isPickerIrrelevantField(target)) {
@@ -606,13 +604,6 @@ this.DateTimeBoxWidget = class {
         " rt: " +
         aEvent.relatedTarget
     );
-
-    // Ignore when the focus moves to the datepicker panel
-    // while the input remains focused (even in another shadow DOM)
-    if (this.document.activeElement === this.oldFocus) {
-      return;
-    }
-    this.oldFocus = null;
 
     let target = aEvent.originalTarget;
     target.setAttribute("typeBuffer", "");
@@ -637,10 +628,10 @@ this.DateTimeBoxWidget = class {
   }
 
   shouldOpenDateTimePickerOnKeyDown() {
-    if (!this.mLastFocusedField) {
+    if (!this.mLastFocusedElement) {
       return true;
     }
-    return !this.isPickerIrrelevantField(this.mLastFocusedField);
+    return !this.isPickerIrrelevantField(this.mLastFocusedElement);
   }
 
   shouldOpenDateTimePickerOnClick(target) {
