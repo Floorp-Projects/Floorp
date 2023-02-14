@@ -14,6 +14,7 @@ async protocol PJSValidator {
   manager PJSOracle;
 
 child:
+  [ReplyPriority=control]
   async IsOpaqueResponseAllowed() returns (Shmem? aMem, ValidatorResult aResult);
 
   async OnDataAvailable(Shmem aData);
