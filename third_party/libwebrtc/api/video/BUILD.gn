@@ -193,7 +193,6 @@ rtc_library("rtp_video_frame_assembler") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("rtp_video_frame_assembler_unittests") {
   testonly = true
   sources = [ "rtp_video_frame_assembler_unittests.cc" ]
@@ -206,7 +205,6 @@ rtc_library("rtp_video_frame_assembler_unittests") {
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../test:test_support",
   ]
-}
 }
 
 rtc_source_set("video_codec_constants") {
@@ -396,14 +394,6 @@ rtc_library("frame_buffer_unittest") {
     "../../test:scoped_key_value_config",
     "../../test:test_support",
   ]
-  if (build_with_mozilla) {
-    deps -= [
-      "../../test:fake_encoded_frame",
-      "../../test:field_trial",
-      "../../test:scoped_key_value_config",
-      "../../test:test_support",
-    ]
-  }
 }
 
 if (rtc_include_tests) {

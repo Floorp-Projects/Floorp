@@ -28,7 +28,6 @@ rtc_library("capture_levels_adjuster") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("capture_levels_adjuster_unittests") {
   testonly = true
 
@@ -43,5 +42,4 @@ rtc_library("capture_levels_adjuster_unittests") {
     "../../../rtc_base:stringutils",
     "../../../test:test_support",
   ]
-}
 }

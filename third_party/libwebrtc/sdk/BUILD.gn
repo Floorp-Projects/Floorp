@@ -16,7 +16,6 @@ if (is_mac) {
   import("//build/config/mac/rules.gni")
 }
 
-if (!build_with_mozilla) {
 group("sdk") {
   public_deps = []
   if (!build_with_chromium) {
@@ -48,7 +47,6 @@ rtc_library("sdk_tests") {
     ":media_constraints",
     "../test:test_support",
   ]
-}
 }
 
 if (is_ios || is_mac) {
@@ -178,7 +176,7 @@ if (is_ios || is_mac) {
     }
   }
 
-  if (!build_with_chromium && !build_with_mozilla) {
+  if (!build_with_chromium) {
     rtc_library("callback_logger_objc") {
       sources = [
         "objc/api/logging/RTCCallbackLogger.h",
