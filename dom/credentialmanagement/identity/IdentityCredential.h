@@ -39,7 +39,8 @@ class IdentityCredential final : public Credential {
   typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccountList>,
                      nsresult, true>
       GetAccountListPromise;
-  typedef MozPromise<Tuple<IdentityToken, IdentityAccount>, nsresult, true>
+  typedef MozPromise<Tuple<IdentityProviderToken, IdentityAccount>, nsresult,
+                     true>
       GetTokenPromise;
   typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccount>, nsresult,
                      true>

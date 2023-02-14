@@ -36,7 +36,7 @@ function handleRequest(request, response) {
       "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_TESTNAME_accounts.sjs",
     client_metadata_endpoint:
       "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_metadata.json",
-    id_token_endpoint:
+    id_assertion_endpoint:
       "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_TESTNAME_idtoken.sjs",
   };
   let bodyFormat = JSON.stringify(content);

@@ -1,5 +1,5 @@
 {
   "accounts_endpoint": "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_accounts.json",
   "client_metadata_endpoint": "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_metadata.json",
-  "id_token_endpoint": "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_idtoken.json"
+  "id_assertion_endpoint": "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_idtoken.json"
 }
