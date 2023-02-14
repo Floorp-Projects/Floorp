@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLEditor.h"
+#include "HTMLEditHelpers.h"
 #include "HTMLEditorInlines.h"
 
 #include "AutoRangeArray.h"
@@ -52,12 +53,14 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/Selection.h"
 
 #include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
+#include "nsDOMAttributeMap.h"
 #include "nsElementTable.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
@@ -214,6 +217,30 @@ HTMLEditor::AppendNewElementWithBRToInsertingElement(
       "HTMLEditor::AppendNewElementToInsertingElement() failed");
   return createNewElementWithBRResult;
 }
+
+HTMLEditor::AttributeFilter HTMLEditor::CopyAllAttributes =
+    [](HTMLEditor&, const Element&, const Element&, const Attr&, nsString&) {
+      return true;
+    };
+HTMLEditor::AttributeFilter HTMLEditor::CopyAllAttributesExceptId =
+    [](HTMLEditor&, const Element&, const Element&, const Attr& aAttr,
+       nsString&) {
+      return aAttr.NodeInfo()->NamespaceID() != kNameSpaceID_None ||
+             aAttr.NodeInfo()->NameAtom() != nsGkAtoms::id;
+    };
+HTMLEditor::AttributeFilter HTMLEditor::CopyAllAttributesExceptDir =
+    [](HTMLEditor&, const Element&, const Element&, const Attr& aAttr,
+       nsString&) {
+      return aAttr.NodeInfo()->NamespaceID() != kNameSpaceID_None ||
+             aAttr.NodeInfo()->NameAtom() != nsGkAtoms::dir;
+    };
+HTMLEditor::AttributeFilter HTMLEditor::CopyAllAttributesExceptIdAndDir =
+    [](HTMLEditor&, const Element&, const Element&, const Attr& aAttr,
+       nsString&) {
+      return !(aAttr.NodeInfo()->NamespaceID() == kNameSpaceID_None &&
+               (aAttr.NodeInfo()->NameAtom() == nsGkAtoms::id ||
+                aAttr.NodeInfo()->NameAtom() == nsGkAtoms::dir));
+    };
 
 static bool ShouldUseTraditionalJoinSplitDirection(const Document& aDocument) {
   if (nsIPrincipal* principal = aDocument.GetPrincipalForPrefBasedHacks()) {
@@ -3398,6 +3425,44 @@ Result<CreateElementResult, nsresult> HTMLEditor::CreateAndInsertElement(
   return createNewElementResult;
 }
 
+nsresult HTMLEditor::CopyAttributes(WithTransaction aWithTransaction,
+                                    Element& aDestElement, Element& aSrcElement,
+                                    const AttributeFilter& aFilterFunc) {
+  RefPtr<nsDOMAttributeMap> srcAttributes = aSrcElement.Attributes();
+  if (!srcAttributes->Length()) {
+    return NS_OK;
+  }
+  AutoTArray<OwningNonNull<Attr>, 16> srcAttrs;
+  srcAttrs.SetCapacity(srcAttributes->Length());
+  for (uint32_t i = 0; i < srcAttributes->Length(); i++) {
+    RefPtr<Attr> attr = srcAttributes->Item(i);
+    if (!attr) {
+      break;
+    }
+    srcAttrs.AppendElement(std::move(attr));
+  }
+  if (aWithTransaction == WithTransaction::No) {
+    for (const OwningNonNull<Attr>& attr : srcAttrs) {
+      nsString value;
+      attr->GetValue(value);
+      if (!aFilterFunc(*this, aSrcElement, aDestElement, attr, value)) {
+        continue;
+      }
+      DebugOnly<nsresult> rvIgnored =
+          aDestElement.SetAttr(attr->NodeInfo()->NamespaceID(),
+                               attr->NodeInfo()->NameAtom(), value, false);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Element::SetAttr() failed, but ignored");
+    }
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    return NS_OK;
+  }
+  MOZ_ASSERT_UNREACHABLE("Not implemented yet, but you try to use this");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 already_AddRefed<Element> HTMLEditor::CreateElementWithDefaults(
     const nsAtom& aTagName) {
   // NOTE: Despite of public method, this can be called for internal use.
@@ -4017,9 +4082,9 @@ Result<CreateElementResult, nsresult> HTMLEditor::InsertBRElement(
 }
 
 Result<CreateElementResult, nsresult>
-HTMLEditor::InsertContainerWithTransactionInternal(
+HTMLEditor::InsertContainerWithTransaction(
     nsIContent& aContentToBeWrapped, const nsAtom& aWrapperTagName,
-    const nsAtom& aAttribute, const nsAString& aAttributeValue) {
+    const InitializeInsertingElement& aInitializer) {
   EditorDOMPoint pointToInsertNewContainer(&aContentToBeWrapped);
   if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
     return Err(NS_ERROR_FAILURE);
@@ -4038,16 +4103,14 @@ HTMLEditor::InsertContainerWithTransactionInternal(
     return Err(NS_ERROR_FAILURE);
   }
 
-  // Set attribute if needed.
-  if (&aAttribute != nsGkAtoms::_empty) {
-    nsresult rv = newContainer->SetAttr(kNameSpaceID_None,
-                                        const_cast<nsAtom*>(&aAttribute),
-                                        aAttributeValue, true);
+  if (&aInitializer != &HTMLEditor::DoNothingForNewElement) {
+    nsresult rv = aInitializer(*this, *newContainer,
+                               EditorDOMPoint(&aContentToBeWrapped));
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("Element::SetAttr() failed");
+      NS_WARNING("aInitializer() failed");
       return Err(rv);
     }
   }

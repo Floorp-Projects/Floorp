@@ -455,6 +455,12 @@ class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
     // List or list item element which should have caret after handling all
     // contents.
     RefPtr<Element> mListOrListItemElementToPutCaret;
+    // Replacing block element.  This is typically already removed from the DOM
+    // tree.
+    RefPtr<Element> mReplacingBlockElement;
+    // Once id attribute of mReplacingBlockElement copied, the id attribute
+    // shouldn't be copied again.
+    bool mMaybeCopiedReplacingBlockElementId = false;
   };
 
   /**
@@ -485,6 +491,13 @@ class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
       EmptyListItem aEmptyListItem, AutoHandlingState& aState,
       const Element& aEditingHost) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  AppendListItemElement(HTMLEditor& aHTMLEditor, const Element& aListElement,
+                        AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  MaybeCloneAttributesToNewListItem(HTMLEditor& aHTMLEditor,
+                                    Element& aListItemElement,
+                                    AutoHandlingState& aState);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildInlineContent(
       HTMLEditor& aHTMLEditor, nsIContent& aHandlingInlineContent,
       AutoHandlingState& aState) const;

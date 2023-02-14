@@ -812,4 +812,48 @@ var browserTests = [
      "<ul><li>[abc</li><li>def]</li></ul><div>ghi</div>"],
     [true],
     {}],
+
+// "dir" attribute should be preserved for the list element to make the
+// bullets aligned correctly.
+["<div dir=\"rtl\">a[]bc</div><div dir=\"rtl\">def</div>",
+    [["insertunorderedlist",""]],
+    ["<div dir=\"rtl\"><ul><li>abc</li></ul></div><div dir=\"rtl\">def</div>",
+     "<ul dir=\"rtl\"><li>abc</li></ul><div dir=\"rtl\">def</div>"],
+    [true],
+    {}],
+["<div dir=\"rtl\">a[bc</div><div dir=\"rtl\">de]f</div>",
+    [["insertunorderedlist",""]],
+    ["<div dir=\"rtl\"><ul><li>abc</li><li>def</li></ul></div>",
+     "<ul dir=\"rtl\"><li>abc</li><li>def</li></ul>"],
+    [true],
+    {}],
+// but do not copy `dir` attributes to corresponding <li>s because different
+// one from the value of the parent list element causes odd looks and anyway
+// the `dir` attribute does not affect the text direction.
+["<div dir=\"rtl\">a[bc</div><div dir=\"ltr\">de]f</div>",
+    [["insertunorderedlist",""]],
+    ["<div dir=\"rtl\"><ul><li>abc</li><li>def</li></ul></div>",
+     "<ul dir=\"rtl\"><li>abc</li><li>def</li></ul>"],
+    [true],
+    {}],
+
+// The other attributes should be clonsed to each list item.
+["<div id=\"a\">a[bc</div><div id=\"b\">de]f</div>",
+    [["insertunorderedlist",""]],
+    ["<div><ul><li id=\"a\">abc</li><li id=\"b\">def</li></ul></div>",
+     "<ul><li id=\"a\">abc</li><li id=\"b\">def</li></ul>"],
+    [true],
+    {}],
+["<div class=\"a\">a[bc</div><div class=\"b\">de]f</div>",
+    [["insertunorderedlist",""]],
+    ["<div><ul><li class=\"a\">abc</li><li class=\"b\">def</li></ul></div>",
+     "<ul><li class=\"a\">abc</li><li class=\"b\">def</li></ul>"],
+    [true],
+    {}],
+["<div title=\"a\">a[bc</div><div title=\"b\">de]f</div>",
+    [["insertunorderedlist",""]],
+    ["<div><ul><li title=\"a\">abc</li><li title=\"b\">def</li></ul></div>",
+     "<ul><li title=\"a\">abc</li><li title=\"b\">def</li></ul>"],
+    [true],
+    {}],
 ]

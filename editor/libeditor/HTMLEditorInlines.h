@@ -67,22 +67,6 @@ HTMLEditor::ReplaceContainerWithTransaction(Element& aOldContainer,
       aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, false);
 }
 
-Result<CreateElementResult, nsresult>
-HTMLEditor::InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
-                                           const nsAtom& aWrapperTagName) {
-  return InsertContainerWithTransactionInternal(
-      aContentToBeWrapped, aWrapperTagName, *nsGkAtoms::_empty, u""_ns);
-}
-
-Result<CreateElementResult, nsresult>
-HTMLEditor::InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
-                                           const nsAtom& aWrapperTagName,
-                                           const nsAtom& aAttribute,
-                                           const nsAString& aAttributeValue) {
-  return InsertContainerWithTransactionInternal(
-      aContentToBeWrapped, aWrapperTagName, aAttribute, aAttributeValue);
-}
-
 Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeToEndWithTransaction(
     nsIContent& aContentToMove, nsINode& aNewContainer) {
   return MoveNodeWithTransaction(aContentToMove,
