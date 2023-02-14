@@ -1,0 +1,6 @@
+//error: non-async message `NormalPrio' cannot specify [ReplyPriority]
+sync protocol SyncPrio
+{
+child:
+  [ReplyPriority=normal] sync NormalPrio() returns (bool aValue);
+};

@@ -1796,14 +1796,14 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         clsname = md.replyCtorFunc()
         msgid = md.replyId()
         replyEnum = "REPLY"
+        prioEnum = cppPriorityList[md.decl.type.replyPrio]
     else:
         clsname = md.msgCtorFunc()
         msgid = md.msgId()
         replyEnum = "NOT_REPLY"
+        prioEnum = cppPriorityList[md.decl.type.prio]
 
     nested = md.decl.type.nested
-    prioEnum = cppPriorityList[md.decl.type.prio]
-
     compress = md.decl.type.compress
     lazySend = md.decl.type.lazySend
 

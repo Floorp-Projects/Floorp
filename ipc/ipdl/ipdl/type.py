@@ -298,6 +298,7 @@ class MessageType(SendSemanticsType):
         self,
         nested,
         prio,
+        replyPrio,
         sendSemantics,
         direction,
         ctor=False,
@@ -313,6 +314,7 @@ class MessageType(SendSemanticsType):
         SendSemanticsType.__init__(self, (nested, nested), sendSemantics)
         self.nested = nested
         self.prio = prio
+        self.replyPrio = replyPrio
         self.direction = direction
         self.params = []
         self.returns = []
@@ -1290,6 +1292,7 @@ class GatherDecls(TcheckVisitor):
                 "Tainted": None,
                 "Compress": (None, "all"),
                 "Priority": priorityList,
+                "ReplyPriority": priorityList,
                 "Nested": ("not", "inside_sync", "inside_cpow"),
                 "LegacyIntr": None,
                 "VirtualSendImpl": None,
@@ -1312,6 +1315,16 @@ class GatherDecls(TcheckVisitor):
 
         if md.sendSemantics is not ASYNC and "LazySend" in md.attributes:
             self.error(loc, "non-async message `%s' cannot specify [LazySend]", msgname)
+
+        if md.sendSemantics is not ASYNC and "ReplyPriority" in md.attributes:
+            self.error(
+                loc, "non-async message `%s' cannot specify [ReplyPriority]", msgname
+            )
+
+        if not md.outParams and "ReplyPriority" in md.attributes:
+            self.error(
+                loc, "non-returns message `%s' cannot specify [ReplyPriority]", msgname
+            )
 
         isctor = False
         isdtor = False
@@ -1340,10 +1353,11 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope()
 
         msgtype = MessageType(
-            md.nested(),
-            md.priority(),
-            md.sendSemantics,
-            md.direction,
+            nested=md.nested(),
+            prio=md.priority(),
+            replyPrio=md.replyPriority(),
+            sendSemantics=md.sendSemantics,
+            direction=md.direction,
             ctor=isctor,
             dtor=isdtor,
             cdtype=cdtype,
