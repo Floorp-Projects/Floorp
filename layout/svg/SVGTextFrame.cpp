@@ -2629,9 +2629,7 @@ void SVGTextDrawPathCallbacks::FillGeometry() {
   MakeFillPattern(&fillPattern);
   if (fillPattern.GetPattern()) {
     RefPtr<Path> path = mContext.GetPath();
-    FillRule fillRule =
-        SVGUtils::ToFillRule(IsClipPathChild() ? mFrame->StyleSVG()->mClipRule
-                                               : mFrame->StyleSVG()->mFillRule);
+    FillRule fillRule = SVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule);
     if (fillRule != path->GetFillRule()) {
       RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
       path = builder->Finish();
@@ -3212,8 +3210,13 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       params.dirtyRect =
           LayoutDevicePixel::FromAppUnits(frame->InkOverflowRect(), auPerDevPx);
       params.contextPaint = contextPaint;
-
-      const bool isSelected = frame->IsSelected();
+      bool isSelected;
+      if (HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD)) {
+        params.state = nsTextFrame::PaintTextParams::GenerateTextMask;
+        isSelected = false;
+      } else {
+        isSelected = frame->IsSelected();
+      }
 
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
         SVGTextDrawPathCallbacks callbacks(this, aContext, frame,
@@ -3314,12 +3317,16 @@ void SVGTextFrame::ReflowSVG() {
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     uint32_t runFlags = 0;
     if (!run.mFrame->StyleSVG()->mFill.kind.IsNone()) {
-      runFlags |=
-          TextRenderedRun::eIncludeFill | TextRenderedRun::eIncludeTextShadow;
+      runFlags |= TextRenderedRun::eIncludeFill;
+      if (run.mFrame->StyleText()->HasTextShadow()) {
+        runFlags |= TextRenderedRun::eIncludeTextShadow;
+      }
     }
     if (SVGUtils::HasStroke(run.mFrame)) {
-      runFlags |=
-          TextRenderedRun::eIncludeStroke | TextRenderedRun::eIncludeTextShadow;
+      runFlags |= TextRenderedRun::eIncludeStroke;
+      if (run.mFrame->StyleText()->HasTextShadow()) {
+        runFlags |= TextRenderedRun::eIncludeTextShadow;
+      }
     }
     // Our "visual" overflow rect needs to be valid for building display lists
     // for hit testing, which means that for certain values of 'pointer-events'

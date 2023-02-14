@@ -751,7 +751,7 @@ static void InvalidateFrameDueToGlyphsChanged(nsIFrame* aFrame) {
     // SVGTextFrame::DidSetComputedStyle.)
     if (SVGUtils::IsInSVGTextSubtree(f) &&
         f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-      auto svgTextFrame = static_cast<SVGTextFrame*>(
+      auto* svgTextFrame = static_cast<SVGTextFrame*>(
           nsLayoutUtils::GetClosestFrameOfType(f, LayoutFrameType::SVGText));
       svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::None);
     } else {
@@ -1892,7 +1892,7 @@ static float GetSVGFontSizeScaleFactor(nsIFrame* aFrame) {
   if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
     return 1.0f;
   }
-  auto container =
+  auto* container =
       nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::SVGText);
   MOZ_ASSERT(container);
   return static_cast<SVGTextFrame*>(container)->GetFontSizeScaleFactor();
@@ -5449,7 +5449,7 @@ void nsTextFrame::GetTextDecorations(
 static float GetInflationForTextDecorations(nsIFrame* aFrame,
                                             nscoord aInflationMinFontSize) {
   if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
-    auto container =
+    auto* container =
         nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::SVGText);
     MOZ_ASSERT(container);
     return static_cast<SVGTextFrame*>(container)->GetFontSizeScaleFactor();
@@ -7043,6 +7043,17 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
                             const nsPoint& aToReferenceFrame,
                             const bool aIsSelected,
                             float aOpacity /* = 1.0f */) {
+#ifdef DEBUG
+  if (SVGUtils::IsInSVGTextSubtree(this)) {
+    auto* container =
+        nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::SVGText);
+    MOZ_ASSERT(container);
+    MOZ_ASSERT(!container->HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD) ||
+                   !aParams.IsPaintText(),
+               "Expecting IsPaintText to be false for a clipPath");
+  }
+#endif
+
   // Don't pass in the rendering context here, because we need a
   // *reference* context and rendering context might have some transform
   // in it
@@ -7138,7 +7149,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   }
 
   range = Range(startOffset, startOffset + maxLength);
-  if (!aParams.callbacks && aParams.IsPaintText()) {
+  if (aParams.IsPaintText()) {
     const nsStyleText* textStyle = StyleText();
     PaintShadowParams shadowParams(aParams);
     shadowParams.range = range;
