@@ -140,7 +140,7 @@ class Core(
             cookieBannerHandlingModePrivateBrowsing = context.settings().getCookieBannerHandling(),
             cookieBannerHandlingMode = context.settings().getCookieBannerHandling(),
             cookieBannerHandlingDetectOnlyMode = context.settings()
-                .shouldEnabledCookieBannerDetectOnlyMode(),
+                .shouldShowCookieBannerReEngagementDialog(),
         )
 
         GeckoEngine(

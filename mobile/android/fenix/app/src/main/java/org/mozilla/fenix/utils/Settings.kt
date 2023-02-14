@@ -586,10 +586,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Indicates if we should should show the cookie banner dialog that invites the user to turn-on
      * the setting.
      */
-    fun shouldCookieBannerReEngagementDialog(): Boolean {
+    fun shouldShowCookieBannerReEngagementDialog(): Boolean {
         val shouldShowDialog =
             shouldShowCookieBannerUI && !userOptOutOfReEngageCookieBannerDialog && !shouldUseCookieBanner
-        return if (!shouldShowTotalCookieProtectionCFR && shouldShowDialog) {
+        return if (shouldShowDialog) {
             !cookieBannerDetectedPreviously ||
                 timeNowInMillis() - lastInteractionWithReEngageCookieBannerDialogInMs >= timerForCookieBannerDialog
         } else {
@@ -704,7 +704,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val enabledTotalCookieProtection: Boolean
         get() = Config.channel.isNightlyOrDebug || mr2022Sections[Mr2022Section.TCP_FEATURE] == true
 
-    private val enabledTotalCookieProtectionCFR: Boolean
+    /**
+     * Indicates if the total cookie protection CRF feature is enabled.
+     */
+    val enabledTotalCookieProtectionCFR: Boolean
         get() = Config.channel.isNightlyOrDebug || mr2022Sections[Mr2022Section.TCP_CFR] == true
 
     /**
@@ -1557,24 +1560,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     fun getCookieBannerHandling(): CookieBannerHandlingMode {
         return when (shouldUseCookieBanner) {
             true -> CookieBannerHandlingMode.REJECT_ALL
-            false -> if (shouldEnabledCookieBannerDetectOnlyMode()) {
+            false -> if (shouldShowCookieBannerReEngagementDialog()) {
                 CookieBannerHandlingMode.REJECT_ALL
             } else {
                 CookieBannerHandlingMode.DISABLED
             }
         }
-    }
-
-    /**
-     * Indicates if the cookie banner detect only mode should be enabled.
-     */
-    fun shouldEnabledCookieBannerDetectOnlyMode(): Boolean {
-        val tcpCFRAlreadyShown = if (enabledTotalCookieProtectionCFR) {
-            !userOptOutOfReEngageCookieBannerDialog
-        } else {
-            true
-        }
-        return shouldShowCookieBannerUI && tcpCFRAlreadyShown && !shouldUseCookieBanner
     }
 
     var setAsDefaultGrowthSent by booleanPreference(

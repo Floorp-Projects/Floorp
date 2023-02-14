@@ -53,7 +53,7 @@ class CookieBannersFragment : PreferenceFragmentCompat() {
                     getEngineSettings().cookieBannerHandlingModePrivateBrowsing = mode
                     getEngineSettings().cookieBannerHandlingMode = mode
                     getEngineSettings().cookieBannerHandlingDetectOnlyMode =
-                        requireContext().settings().shouldEnabledCookieBannerDetectOnlyMode()
+                        requireContext().settings().shouldShowCookieBannerReEngagementDialog()
                     CookieBanners.settingChanged.record(CookieBanners.SettingChangedExtra(metricTag))
                     requireContext().components.useCases.sessionUseCases.reload()
                     return super.onPreferenceChange(preference, newValue)

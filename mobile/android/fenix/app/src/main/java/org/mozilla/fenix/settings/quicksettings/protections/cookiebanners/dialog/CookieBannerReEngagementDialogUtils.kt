@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialo
 
 import android.content.Context
 import androidx.navigation.NavController
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode.REJECT_ALL
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatus
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -13,6 +14,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.concept.engine.Settings as EngineSettings
 
 private const val CONTROL_VARIANT = 0
 private const val VARIANT_ONE = 1
@@ -87,14 +89,34 @@ object CookieBannerReEngagementDialogUtils {
         status: CookieBannerHandlingStatus,
         navController: NavController,
     ) {
-        if (status == CookieBannerHandlingStatus.DETECTED &&
-            settings.shouldCookieBannerReEngagementDialog()
+        val tcpCFRAlreadyShown = if (settings.enabledTotalCookieProtectionCFR) {
+            !settings.shouldShowTotalCookieProtectionCFR
+        } else {
+            true
+        }
+        if (tcpCFRAlreadyShown && status == CookieBannerHandlingStatus.DETECTED &&
+            settings.shouldShowCookieBannerReEngagementDialog()
         ) {
             settings.lastInteractionWithReEngageCookieBannerDialogInMs = System.currentTimeMillis()
             settings.cookieBannerDetectedPreviously = true
             val directions =
                 BrowserFragmentDirections.actionBrowserFragmentToCookieBannerDialogFragment()
             navController.nav(R.id.browserFragment, directions)
+        }
+    }
+
+    /**
+     *  Tries to enable the detect only mode after the time limit for the cookie banner has been
+     *  expired.
+     */
+    fun tryToEnableDetectOnlyModeIfNeeded(
+        settings: Settings,
+        engineSettings: EngineSettings,
+    ) {
+        if (settings.shouldShowCookieBannerReEngagementDialog()) {
+            engineSettings.cookieBannerHandlingDetectOnlyMode = true
+            engineSettings.cookieBannerHandlingModePrivateBrowsing = REJECT_ALL
+            engineSettings.cookieBannerHandlingMode = REJECT_ALL
         }
     }
 

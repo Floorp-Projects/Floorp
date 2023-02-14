@@ -62,13 +62,12 @@ class CookieBannerReEngagementDialog : DialogFragment() {
                         dismiss()
                     },
                     onNotNowButtonClicked = {
+                        disabledCookieBannerHandlingDetectOnlyMode()
                         CookieBanners.notNowReEngagementDialog.record(NoExtras())
                         dismiss()
                     },
                     onCloseButtonClicked = {
-                        getEngineSettings().cookieBannerHandlingDetectOnlyMode = false
-                        getEngineSettings().cookieBannerHandlingModePrivateBrowsing = DISABLED
-                        getEngineSettings().cookieBannerHandlingMode = DISABLED
+                        disabledCookieBannerHandlingDetectOnlyMode()
                         requireContext().settings().userOptOutOfReEngageCookieBannerDialog = true
                         CookieBanners.optOutReEngagementDialog.record(NoExtras())
                         dismiss()
@@ -76,6 +75,12 @@ class CookieBannerReEngagementDialog : DialogFragment() {
                 )
             }
         }
+    }
+
+    private fun disabledCookieBannerHandlingDetectOnlyMode() {
+        getEngineSettings().cookieBannerHandlingDetectOnlyMode = false
+        getEngineSettings().cookieBannerHandlingModePrivateBrowsing = DISABLED
+        getEngineSettings().cookieBannerHandlingMode = DISABLED
     }
 
     private fun getEngineSettings(): Settings {
