@@ -464,8 +464,9 @@ tasks:
         attributes:
             legacy: true
             shipping-product: fenix
-        description: Run select UI tests on older Android API on cron
-        run-on-tasks-for: []
+            code-review: false
+        description: Run select UI tests on legacy Android devices and API levels
+        run-on-tasks-for: [github-push]
         run-on-git-branches: [main]
         dependencies:
             signed-apk-debug-apk: signing-apk-fenix-debug
