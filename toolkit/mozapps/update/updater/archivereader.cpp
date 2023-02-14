@@ -203,15 +203,12 @@ int ArchiveReader::Open(const NS_tchar* path) {
     }
   }
 
-  MarReadResult result =
 #ifdef XP_WIN
-      mar_wopen(path, &mArchive);
+  mArchive = mar_wopen(path);
 #else
-      mar_open(path, &mArchive);
+  mArchive = mar_open(path);
 #endif
-  if (result == MAR_MEM_ERROR) {
-    return ARCHIVE_READER_MEM_ERROR;
-  } else if (result != MAR_READ_SUCCESS) {
+  if (!mArchive) {
     return READ_ERROR;
   }
 

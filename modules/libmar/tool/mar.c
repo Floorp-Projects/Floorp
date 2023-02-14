@@ -111,8 +111,8 @@ static int mar_test_callback(MarFile* mar, const MarItem* item, void* unused) {
 static int mar_test(const char* path) {
   MarFile* mar;
 
-  MarReadResult result = mar_open(path, &mar);
-  if (result != MAR_READ_SUCCESS) {
+  mar = mar_open(path);
+  if (!mar) {
     return -1;
   }
 
@@ -393,9 +393,8 @@ int main(int argc, char** argv) {
       }
 
       if (!rv) {
-        MarFile* mar;
-        MarReadResult result = mar_open(argv[2], &mar);
-        if (result == MAR_READ_SUCCESS) {
+        MarFile* mar = mar_open(argv[2]);
+        if (mar) {
           rv = mar_verify_signatures(mar, certBuffers, fileSizes, certCount);
           mar_close(mar);
         } else {
