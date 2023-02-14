@@ -5,6 +5,7 @@ import argparse
 import datetime
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -111,6 +112,29 @@ def fetch_local(target, path, commit):
     shutil.move(os.path.join(path, target_archive), target_archive)
 
 
+def validate_tar_member(member, path):
+    def _is_within_directory(directory, target):
+        abs_directory = os.path.abspath(directory)
+        abs_target = os.path.abspath(target)
+        prefix = os.path.commonprefix([abs_directory, abs_target])
+        return prefix == abs_directory
+
+    member_path = os.path.join(path, member.name)
+    if not _is_within_directory(path, member_path):
+        raise Exception("Attempted path traversal in tar file: " + member.name)
+    if member.mode & (stat.S_ISUID | stat.S_ISGID):
+        raise Exception("Attempted setuid or setgid in tar file: " + member.name)
+
+
+def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+    def _files(tar, path):
+        for member in tar:
+            validate_tar_member(member, path)
+            yield member
+
+    tar.extractall(path, members=_files(tar, path), numeric_owner=numeric_owner)
+
+
 def unpack(target):
     target_archive = target + ".tar.gz"
     target_path = "tmp-" + target
@@ -118,7 +142,8 @@ def unpack(target):
         shutil.rmtree(target_path)
     except FileNotFoundError:
         pass
-    tarfile.open(target_archive).extractall(path=target_path)
+    with tarfile.open(target_archive) as t:
+        safe_extract(t, path=target_path)
     libwebrtc_used_in_firefox = os.listdir(target_path)
 
     if target == "libwebrtc":
