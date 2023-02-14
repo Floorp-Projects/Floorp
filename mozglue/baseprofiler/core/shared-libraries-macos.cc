@@ -145,7 +145,7 @@ static void addSharedLibrary(const platform_mach_header* header,
   if (uuid_bytes != nullptr) {
     static constexpr char digits[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    for (int i = 0; i < 15; ++i) {
+    for (int i = 0; i < 16; ++i) {
       uint8_t byte = uuid_bytes[i];
       uuid += digits[byte >> 4];
       uuid += digits[byte & 0xFu];
