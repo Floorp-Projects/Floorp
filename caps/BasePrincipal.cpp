@@ -376,15 +376,18 @@ nsresult BasePrincipal::ToJSON(nsACString& aJSON) {
   MOZ_ASSERT(aJSON.IsEmpty(), "ToJSON only supports an empty result input");
   aJSON.Truncate();
 
-  Json::StreamWriterBuilder builder;
-  builder["indentation"] = "";
-  builder["emitUTF8"] = true;
-
   Json::Value root = Json::objectValue;
   nsresult rv = ToJSON(root);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  std::string result = Json::writeString(builder, root);
+  static StaticAutoPtr<Json::StreamWriterBuilder> sJSONBuilderForPrincipals;
+  if (!sJSONBuilderForPrincipals) {
+    sJSONBuilderForPrincipals = new Json::StreamWriterBuilder();
+    (*sJSONBuilderForPrincipals)["indentation"] = "";
+    (*sJSONBuilderForPrincipals)["emitUTF8"] = true;
+    ClearOnShutdown(&sJSONBuilderForPrincipals);
+  }
+  std::string result = Json::writeString(*sJSONBuilderForPrincipals, root);
   aJSON.Append(result);
   if (aJSON.Length() == 0) {
     MOZ_ASSERT(false, "JSON writer failed to output a principal serialization");
