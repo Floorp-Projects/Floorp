@@ -775,10 +775,6 @@ rtc_library("webrtc_opus") {
   public_deps =  # no-presubmit-check TODO(webrtc:8603)
       [ ":webrtc_opus_wrapper" ]
 
-  if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
-  }
-
   defines = audio_codec_defines
 }
 
@@ -813,10 +809,6 @@ rtc_library("webrtc_multiopus") {
   public_deps =  # no-presubmit-check TODO(webrtc:8603)
       [ ":webrtc_opus_wrapper" ]
 
-  if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
-  }
-
   defines = audio_codec_defines
 }
 
@@ -841,7 +833,7 @@ rtc_library("webrtc_opus_wrapper") {
     deps += [ rtc_opus_dir ]
     public_configs = [ "//third_party/opus:opus_config" ]
   } else if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
+    public_configs = [ "//third_party/opus:opus_config" ]
   }
 }
 
