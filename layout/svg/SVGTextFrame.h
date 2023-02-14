@@ -188,7 +188,8 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
         mFontSizeScaleFactor(1.0f),
         mLastContextScale(1.0f),
         mLengthAdjustScaleFactor(1.0f) {
-    AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
+    AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_SVG_TEXT |
+                 NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
                  NS_STATE_SVG_POSITIONING_DIRTY);
   }
 

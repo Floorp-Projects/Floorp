@@ -394,15 +394,15 @@ nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
                                              aModType);
 }
 
+#ifdef DEBUG
 void SVGClipPathFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::clipPath),
                "Content is not an SVG clipPath!");
 
-  AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
-  AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   SVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
+#endif
 
 gfxMatrix SVGClipPathFrame::GetCanvasTM() { return mMatrixForChildren; }
 
