@@ -38,7 +38,7 @@ SIGNING_BUILD_TYPES = PRODUCTION_SIGNING_BUILD_TYPES + [
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run-on-tasks-for", "signing-format", "notify"):
+        for key in ("run-on-tasks-for", "signing-format", "notify", "treeherder.platform"):
             resolve_keyed_by(
                 task,
                 key,

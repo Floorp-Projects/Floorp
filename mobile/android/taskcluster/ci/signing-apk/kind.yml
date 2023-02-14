@@ -59,8 +59,10 @@ task-template:
                 fenix-beta-mozillaonline: Bmos
                 fenix-release-mozillaonline: Bmos
         kind: build
-        # TODO: split focus/fenix platform by build type
-        platform: focus-android-all/opt
+        platform:
+            by-build-type:
+                (fenix.*): fenix-android-all/opt
+                default: focus-android-all/opt
         tier: 1
     notify:
         by-build-type:
