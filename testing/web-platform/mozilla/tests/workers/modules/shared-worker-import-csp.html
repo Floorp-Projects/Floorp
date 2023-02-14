@@ -20,16 +20,11 @@ function import_csp_test(
     cspHeader, importType, expectedImportedModules, description) {
   // Append CSP header to windowURL for static import tests since static import
   // scripts should obey Window's CSP.
-  const windowURL = `resources/new-shared-worker-window.html` +
-      `${importType === 'static'
-          ? '?pipe=header(Content-Security-Policy, ' + cspHeader + ')'
-          : ''}`;
-  // Append CSP header to scriptURL for dynamic import tests since dynamic
-  // import scripts should obey SharedWorker script's responce's CSP.
+  const windowURL = "resources/new-shared-worker-window.html"
+  // Append CSP header to scriptURL as scripts should obey SharedWorker
+  // script's responce's CSP.
   const scriptURL = `${importType}-import-remote-origin-script-worker.sub.js` +
-      `${importType === 'dynamic'
-          ? '?pipe=header(Content-Security-Policy, ' + cspHeader + ')'
-          : ''}`;
+    `?pipe=header(Content-Security-Policy, ${cspHeader})`;
   promise_test(async () => {
     // Open a window that has the given CSP header.
     const win = await openWindow(windowURL);
