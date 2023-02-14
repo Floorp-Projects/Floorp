@@ -11,14 +11,6 @@
 var protocol = require("resource://devtools/shared/protocol.js");
 var { RetVal } = protocol;
 
-function simpleHello() {
-  return {
-    from: "root",
-    applicationType: "xpcshell-tests",
-    traits: [],
-  };
-}
-
 const rootSpec = protocol.generateActorSpec({
   typeName: "root",
 
@@ -29,22 +21,28 @@ const rootSpec = protocol.generateActorSpec({
   },
 });
 
-var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  typeName: "root",
-  initialize(conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class RootActor extends protocol.Actor {
+  constructor(conn) {
+    super(conn, rootSpec);
+
     // Root actor owns itself.
     this.manage(this);
     this.actorID = "root";
     this.sequence = 0;
-  },
+  }
 
-  sayHello: simpleHello,
+  sayHello() {
+    return {
+      from: "root",
+      applicationType: "xpcshell-tests",
+      traits: [],
+    };
+  }
 
   simpleReturn() {
     return this.sequence++;
-  },
-});
+  }
+}
 
 class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
   constructor(client) {
@@ -57,7 +55,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 protocol.registerFront(RootFront);
 
 add_task(async function() {
-  DevToolsServer.createRootActor = RootActor;
+  DevToolsServer.createRootActor = conn => new RootActor(conn);
   DevToolsServer.init();
 
   const trace = connectPipeTracing();

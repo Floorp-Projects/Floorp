@@ -14,6 +14,10 @@ const helloSpec = protocol.generateActorSpec({
   },
 });
 
-var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
-  hello() {},
-});
+class HelloActor extends protocol.Actor {
+  constructor(conn) {
+    super(conn, helloSpec);
+  }
+
+  hello() {}
+}

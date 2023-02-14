@@ -29,9 +29,8 @@ function run_test() {
 const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 class TestBulkActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "testBulk", methods: [] });
 
-    this.typeName = "testBulk";
     this.requestTypes = {
       bulkEcho: this.bulkEcho,
       bulkReply: this.bulkReply,

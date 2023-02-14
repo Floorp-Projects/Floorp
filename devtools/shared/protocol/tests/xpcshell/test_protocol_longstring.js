@@ -17,14 +17,6 @@ var {
 // The test implicitly relies on this.
 require("resource://devtools/client/fronts/string.js");
 
-function simpleHello() {
-  return {
-    from: "root",
-    applicationType: "xpcshell-tests",
-    traits: [],
-  };
-}
-
 DevToolsServer.LONG_STRING_LENGTH = DevToolsServer.LONG_STRING_INITIAL_LENGTH = DevToolsServer.LONG_STRING_READ_LENGTH = 5;
 
 var SHORT_STR = "abc";
@@ -57,24 +49,31 @@ const rootSpec = protocol.generateActorSpec({
   },
 });
 
-var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize(conn) {
+class RootActor extends protocol.Actor {
+  constructor(conn) {
+    super(conn, rootSpec);
+
     rootActor = this;
-    protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
     this.actorID = "root";
-  },
+  }
 
-  sayHello: simpleHello,
+  sayHello() {
+    return {
+      from: "root",
+      applicationType: "xpcshell-tests",
+      traits: [],
+    };
+  }
 
   shortString() {
     return new LongStringActor(this.conn, SHORT_STR);
-  },
+  }
 
   longString() {
     return new LongStringActor(this.conn, LONG_STR);
-  },
+  }
 
   emitShortString() {
     EventEmitter.emit(
@@ -82,7 +81,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
       "string-event",
       new LongStringActor(this.conn, SHORT_STR)
     );
-  },
+  }
 
   emitLongString() {
     EventEmitter.emit(
@@ -90,8 +89,8 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
       "string-event",
       new LongStringActor(this.conn, LONG_STR)
     );
-  },
-});
+  }
+}
 
 class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
   constructor(client) {
@@ -106,7 +105,7 @@ protocol.registerFront(RootFront);
 
 function run_test() {
   DevToolsServer.createRootActor = conn => {
-    return RootActor(conn);
+    return new RootActor(conn);
   };
 
   DevToolsServer.init();
