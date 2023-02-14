@@ -425,7 +425,6 @@ rtc_library("rtc_media_engine_defaults") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_source_set("rtc_data_sctp_transport_internal") {
   sources = [ "sctp/sctp_transport_internal.h" ]
   deps = [
@@ -500,7 +499,6 @@ rtc_library("rtc_data_sctp_transport_factory") {
       "../system_wrappers:field_trial",
     ]
   }
-}
 }
 
 rtc_source_set("rtc_media") {
