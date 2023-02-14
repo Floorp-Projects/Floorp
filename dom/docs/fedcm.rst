@@ -42,12 +42,16 @@ A few notes:
     "CredentialsContainer::Get" -> "DiscoverFromExternalSource"
     "DiscoverFromExternalSource" -> "DiscoverFromExternalSourceInMainProcess" [label="IPC via WindowGlobal's DiscoverIdentityCredentialFromExternalSource"]
     "DiscoverFromExternalSourceInMainProcess" -> "anonymous timeout callback" -> "CloseUserInterface" -> "IdentityCredentialPromptService::Close"
-    "DiscoverFromExternalSourceInMainProcess" -> "PromptUserToSelectProvider"
+    "DiscoverFromExternalSourceInMainProcess" -> "CheckRootManifest A"
+    "CheckRootManifest A" -> "FetchInternalManifest A" [label="via promise chain in DiscoverFromExternalSourceInMainProcess"]
+    "FetchInternalManifest A" -> "DiscoverFromExternalSourceInMainProcess inline anonymous callback (Promise::All)"
+    "DiscoverFromExternalSourceInMainProcess" -> "CheckRootManifest N"
+    "CheckRootManifest N" -> "FetchInternalManifest N" [label="via promise chain in DiscoverFromExternalSourceInMainProcess"]
+    "FetchInternalManifest N" -> "DiscoverFromExternalSourceInMainProcess inline anonymous callback (Promise::All)"
+    "DiscoverFromExternalSourceInMainProcess inline anonymous callback (Promise::All)" -> "PromptUserToSelectProvider"
     "PromptUserToSelectProvider" -> "IdentityCredentialPromptService::ShowProviderPrompt"
     "IdentityCredentialPromptService::ShowProviderPrompt" -> "CreateCredential" [label="via promise chain in DiscoverFromExternalSourceInMainProcess"]
-    "CreateCredential" -> "CheckRootManifest"
-    "CheckRootManifest" -> "FetchInternalManifest" [label="via promise chain in CreateCredential"]
-    "FetchInternalManifest" -> "FetchAccountList" [label="via promise chain in CreateCredential"]
+    "CreateCredential" -> "FetchAccountList" [label="via promise chain in CreateCredential"]
     "FetchAccountList" -> "PromptUserToSelectAccount" [label="via promise chain in CreateCredential"]
     "PromptUserToSelectAccount" -> "IdentityCredentialPromptService::ShowAccountListPrompt"
     "IdentityCredentialPromptService::ShowAccountListPrompt" -> "PromptUserWithPolicy" [label="via promise chain in CreateCredential"]
