@@ -2937,7 +2937,6 @@ static StyleRGBA DefaultColor(const Document& aDocument) {
 
 nsStyleText::nsStyleText(const Document& aDocument)
     : mColor(DefaultColor(aDocument)),
-      mForcedColorAdjust(StyleForcedColorAdjust::Auto),
       mTextTransform(StyleTextTransform::None()),
       mTextAlign(StyleTextAlign::Start),
       mTextAlignLast(StyleTextAlignLast::Auto),
@@ -2976,7 +2975,6 @@ nsStyleText::nsStyleText(const Document& aDocument)
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
     : mColor(aSource.mColor),
-      mForcedColorAdjust(aSource.mForcedColorAdjust),
       mTextTransform(aSource.mTextTransform),
       mTextAlign(aSource.mTextAlign),
       mTextAlignLast(aSource.mTextAlignLast),
@@ -3088,8 +3086,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
     return hint;
   }
 
-  if (mTextEmphasisPosition != aNewData.mTextEmphasisPosition ||
-      mForcedColorAdjust != aNewData.mForcedColorAdjust) {
+  if (mTextEmphasisPosition != aNewData.mTextEmphasisPosition) {
     return nsChangeHint_NeutralChange;
   }
 

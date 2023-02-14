@@ -8714,13 +8714,6 @@
   mirror: always
   rust: true
 
-# Is support for forced-color-adjust properties enabled?
-- name: layout.css.forced-color-adjust.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is support for -moz-prefixed animation properties enabled?
 - name: layout.css.prefixes.animations
   type: bool
