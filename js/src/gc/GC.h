@@ -205,7 +205,7 @@ static inline void MaybeVerifyBarriers(JSContext* cx, bool always = false) {}
  * This works by updating the |JSContext::suppressGC| counter which is checked
  * at the start of GC.
  */
-class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC {
+class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC : public JS::AutoRequireNoGC {
   int32_t& suppressGC_;
 
  public:

@@ -934,11 +934,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
       IsObserving observing);
 
   template <typename FrameFn /* void (Debugger*, DebuggerFrame*) */>
-  static void forEachOnStackDebuggerFrame(AbstractFramePtr frame, FrameFn fn);
+  static void forEachOnStackDebuggerFrame(AbstractFramePtr frame,
+                                          const JS::AutoRequireNoGC& nogc,
+                                          FrameFn fn);
   template <typename FrameFn /* void (Debugger*, DebuggerFrame*) */>
-  static void forEachOnStackOrSuspendedDebuggerFrame(JSContext* cx,
-                                                     AbstractFramePtr frame,
-                                                     FrameFn fn);
+  static void forEachOnStackOrSuspendedDebuggerFrame(
+      JSContext* cx, AbstractFramePtr frame, const JS::AutoRequireNoGC& nogc,
+      FrameFn fn);
 
   /*
    * Return a vector containing all Debugger.Frame instances referring to

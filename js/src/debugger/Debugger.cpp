@@ -1258,8 +1258,9 @@ bool DebugAPI::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
       MakeScopeExit([&] { Debugger::terminateDebuggerFrames(cx, frame); });
 
   bool ok = true;
+  gc::AutoSuppressGC nogc(cx);
   Debugger::forEachOnStackDebuggerFrame(
-      frame, [&](Debugger* dbg, DebuggerFrame* frameObjPtr) {
+      frame, nogc, [&](Debugger* dbg, DebuggerFrame* frameObjPtr) {
         if (!ok) {
           return;
         }
@@ -3279,7 +3280,10 @@ bool Debugger::updateExecutionObservabilityOfScripts(
 
 template <typename FrameFn>
 /* static */
-void Debugger::forEachOnStackDebuggerFrame(AbstractFramePtr frame, FrameFn fn) {
+void Debugger::forEachOnStackDebuggerFrame(AbstractFramePtr frame,
+                                           const JS::AutoRequireNoGC& nogc,
+                                           FrameFn fn) {
+  // GC is disallowed because it may mutate the vector we are iterating.
   for (Realm::DebuggerVectorEntry& entry : frame.global()->getDebuggers()) {
     Debugger* dbg = entry.dbg;
     if (FrameMap::Ptr frameEntry = dbg->frames.lookup(frame)) {
@@ -3290,13 +3294,14 @@ void Debugger::forEachOnStackDebuggerFrame(AbstractFramePtr frame, FrameFn fn) {
 
 template <typename FrameFn>
 /* static */
-void Debugger::forEachOnStackOrSuspendedDebuggerFrame(JSContext* cx,
-                                                      AbstractFramePtr frame,
-                                                      FrameFn fn) {
+void Debugger::forEachOnStackOrSuspendedDebuggerFrame(
+    JSContext* cx, AbstractFramePtr frame, const JS::AutoRequireNoGC& nogc,
+    FrameFn fn) {
   Rooted<AbstractGeneratorObject*> genObj(
       cx, frame.isGeneratorFrame() ? GetGeneratorObjectForFrame(cx, frame)
                                    : nullptr);
 
+  // GC is disallowed because it may mutate the vector we are iterating.
   for (Realm::DebuggerVectorEntry& entry : frame.global()->getDebuggers()) {
     Debugger* dbg = entry.dbg;
 
@@ -3318,11 +3323,13 @@ void Debugger::forEachOnStackOrSuspendedDebuggerFrame(JSContext* cx,
 bool Debugger::getDebuggerFrames(AbstractFramePtr frame,
                                  MutableHandle<DebuggerFrameVector> frames) {
   bool hadOOM = false;
-  forEachOnStackDebuggerFrame(frame, [&](Debugger*, DebuggerFrame* frameobj) {
-    if (!hadOOM && !frames.append(frameobj)) {
-      hadOOM = true;
-    }
-  });
+  JS::AutoAssertNoGC nogc;
+  forEachOnStackDebuggerFrame(frame, nogc,
+                              [&](Debugger*, DebuggerFrame* frameobj) {
+                                if (!hadOOM && !frames.append(frameobj)) {
+                                  hadOOM = true;
+                                }
+                              });
   return !hadOOM;
 }
 
@@ -6567,8 +6574,10 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 /* static */
 bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
   bool foundAny = false;
+  JS::AutoAssertNoGC nogc;
   Debugger::forEachOnStackDebuggerFrame(
-      frame, [&](Debugger*, DebuggerFrame* frameobj) { foundAny = true; });
+      frame, nogc,
+      [&](Debugger*, DebuggerFrame* frameobj) { foundAny = true; });
   return foundAny;
 }
 
@@ -6576,8 +6585,9 @@ bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
 void Debugger::suspendGeneratorDebuggerFrames(JSContext* cx,
                                               AbstractFramePtr frame) {
   JS::GCContext* gcx = cx->gcContext();
+  JS::AutoAssertNoGC nogc;
   forEachOnStackDebuggerFrame(
-      frame, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
+      frame, nogc, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
         dbg->frames.remove(frame);
 
 #if DEBUG
@@ -6596,8 +6606,9 @@ void Debugger::suspendGeneratorDebuggerFrames(JSContext* cx,
 void Debugger::terminateDebuggerFrames(JSContext* cx, AbstractFramePtr frame) {
   JS::GCContext* gcx = cx->gcContext();
 
+  JS::AutoAssertNoGC nogc;
   forEachOnStackOrSuspendedDebuggerFrame(
-      cx, frame, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
+      cx, frame, nogc, [&](Debugger* dbg, DebuggerFrame* dbgFrame) {
         Debugger::terminateDebuggerFrame(gcx, dbg, dbgFrame, frame);
       });
 
