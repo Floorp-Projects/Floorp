@@ -133,6 +133,8 @@ inline uintptr_t GetCurrentStackPosition() {
   return reinterpret_cast<uintptr_t>(__builtin_frame_address(0));
 }
 
+using Isolate = internal::Isolate;
+
 namespace base {
 
 // Latin1/UTF-16 constants
@@ -1104,6 +1106,11 @@ class Isolate {
   void IncreaseTotalRegexpCodeGenerated(Handle<HeapObject> code) {}
 
   Counters* counters() { return &counters_; }
+
+  enum UseCounterFeature {
+    kRegExpUnicodeSetIncompatibilitiesWithUnicodeMode,
+  };
+  void CountUsage(UseCounterFeature counter) {}
 
   //********** Factory code **********//
   inline Factory* factory() { return this; }
