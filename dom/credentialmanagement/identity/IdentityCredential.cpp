@@ -132,6 +132,9 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
       new IdentityCredential::GetIPCIdentityCredentialPromise::Private(
           __func__);
 
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  RefPtr<CanonicalBrowsingContext> browsingContext(aBrowsingContext);
+
   RefPtr<nsITimer> timeout;
   if (StaticPrefs::
           dom_security_credentialmanagement_identity_reject_delay_enabled()) {
@@ -141,6 +144,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
           if (!result->IsResolved()) {
             result->Reject(NS_ERROR_DOM_NETWORK_ERR, __func__);
           }
+          IdentityCredential::CloseUserInterface(browsingContext);
         },
         StaticPrefs::
             dom_security_credentialmanagement_identity_reject_delay_duration_ms(),
@@ -150,9 +154,6 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
       return result.forget();
     }
   }
-
-  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
-  RefPtr<CanonicalBrowsingContext> browsingContext(aBrowsingContext);
 
   // Construct an array of requests to fetch manifests for every provider.
   // We need this to show their branding information
@@ -234,20 +235,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
             }
           });
 
-  return result->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [browsingContext](
-          const IdentityCredential::GetIPCIdentityCredentialPromise::
-              ResolveOrRejectValue&& value) {
-        if (value.IsReject()) {
-          // We force the close to occur here. It may have already closed, in
-          // which case this will be a no-op. This forces a close in the event
-          // of a user not acting before the timeout.
-          IdentityCredential::CloseUserInterface(browsingContext);
-        }
-        return IdentityCredential::GetIPCIdentityCredentialPromise::
-            CreateAndResolveOrReject(value, __func__);
-      });
+  return result;
 }
 
 // static

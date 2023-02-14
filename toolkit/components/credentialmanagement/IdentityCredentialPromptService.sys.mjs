@@ -57,6 +57,10 @@ export class IdentityCredentialPromptService {
         return;
       }
 
+      if (identityProviders.length != identityManifests.length) {
+        reject();
+      }
+
       // Localize all strings to be used
       // Bug 1797154 - Convert localization calls to use the async formatValues.
       let localization = new Localization(
@@ -86,8 +90,7 @@ export class IdentityCredentialPromptService {
       let itemTemplate = browser.ownerDocument.getElementById(
         "template-credential-provider-list-item"
       );
-      for (let providerIndex in identityProviders) {
-        let provider = identityProviders[providerIndex];
+      for (const [providerIndex, provider] of identityProviders.entries()) {
         let providerURI = new URL(provider.configURL);
         let displayDomain = lazy.IDNService.convertToDisplayIDN(
           providerURI.host,
@@ -113,11 +116,6 @@ export class IdentityCredentialPromptService {
         browsingContext.currentWindowContext.documentPrincipal.originNoSuffix;
       let options = {
         name: currentOrigin,
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
       };
       let mainAction = {
         label: cancelLabel,
@@ -239,13 +237,7 @@ export class IdentityCredentialPromptService {
       }
 
       // Construct the necessary arguments for notification behavior
-      let options = {
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
-      };
+      let options = {};
       let mainAction = {
         label: acceptLabel,
         accessKey: acceptKey,
@@ -349,8 +341,7 @@ export class IdentityCredentialPromptService {
       let itemTemplate = browser.ownerDocument.getElementById(
         "template-credential-account-list-item"
       );
-      for (let accountIndex in accountList.accounts) {
-        let account = accountList.accounts[accountIndex];
+      for (const [accountIndex, account] of accountList.accounts.entries()) {
         let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
         newItem.firstElementChild.textContent = account.email;
         newItem.setAttribute("oncommand", "this.callback()");
@@ -368,11 +359,6 @@ export class IdentityCredentialPromptService {
       // Construct the necessary arguments for notification behavior
       let options = {
         name: currentOrigin,
-        eventCallback(event) {
-          if (event === "removed") {
-            reject();
-          }
-        },
       };
       let mainAction = {
         label: cancelLabel,
