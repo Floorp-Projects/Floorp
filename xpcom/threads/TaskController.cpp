@@ -409,7 +409,9 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
     task->mPriorityModifier = manager->mCurrentPriorityModifier;
   }
 
-  task->mInsertionTime = TimeStamp::Now();
+  if (profiler_is_active_and_unpaused()) {
+    task->mInsertionTime = TimeStamp::Now();
+  }
 
 #ifdef DEBUG
   task->mIsInGraph = true;
@@ -834,7 +836,8 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
         TimeStamp now = TimeStamp::Now();
 
         if (mainThread) {
-          if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh)) {
+          if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh) ||
+              task->mInsertionTime.IsNull()) {
             mainThread->SetRunningEventDelay(TimeDuration(), now);
           } else {
             mainThread->SetRunningEventDelay(now - task->mInsertionTime, now);
