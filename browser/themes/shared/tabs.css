@@ -78,11 +78,10 @@
   padding-inline: var(--tab-shadow-max-size);
 }
 
-/* Allow big tab lists to shrink */
-#tabbrowser-tabs,
-#TabsToolbar > .toolbar-items,
-#TabsToolbar-customization-target {
-  min-width: 0;
+#tabbrowser-arrowscrollbox::part(scrollbox-clip) {
+  /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
+     page-title widths when emulating XUL with modern flexbox. */
+  contain: inline-size;
 }
 
 .tabbrowser-tab {
