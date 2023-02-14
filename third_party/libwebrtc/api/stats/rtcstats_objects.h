@@ -579,7 +579,6 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
   RTCRemoteInboundRtpStreamStats(const RTCRemoteInboundRtpStreamStats& other);
   ~RTCRemoteInboundRtpStreamStats() override;
 
-  RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<std::string> local_id;
   RTCStatsMember<double> round_trip_time;
   RTCStatsMember<double> fraction_lost;
