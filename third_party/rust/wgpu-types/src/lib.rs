@@ -304,11 +304,9 @@ bitflags::bitflags! {
         /// to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
         /// time for operations between them to finish.
         ///
-        /// Due to wgpu-hal limitations, this is only supported on vulkan for now.
-        ///
         /// Supported Platforms:
-        /// - Vulkan (works)
-        /// - DX12 (works)
+        /// - Vulkan
+        /// - DX12
         ///
         /// This is a web and native feature.
         const TIMESTAMP_QUERY = 1 << 7;
@@ -319,11 +317,9 @@ bitflags::bitflags! {
         /// They must be resolved using [`CommandEncoder::resolve_query_sets`] into a buffer.
         /// The rules on how these resolve into buffers are detailed in the documentation for [`PipelineStatisticsTypes`].
         ///
-        /// Due to wgpu-hal limitations, this is only supported on vulkan for now.
-        ///
         /// Supported Platforms:
-        /// - Vulkan (works)
-        /// - DX12 (works)
+        /// - Vulkan
+        /// - DX12
         ///
         /// This is a web and native feature.
         const PIPELINE_STATISTICS_QUERY = 1 << 8;
@@ -617,6 +613,10 @@ bitflags::bitflags! {
         ///
         /// Supported platforms:
         /// - Vulkan
+        /// - DX11 (feature level 10+)
+        /// - DX12
+        /// - Metal (some)
+        /// - OpenGL (some)
         ///
         /// This is a native only feature.
         const SHADER_PRIMITIVE_INDEX = 1 << 36;
@@ -1716,17 +1716,19 @@ bitflags::bitflags! {
         const MULTISAMPLE_X4 = 1 << 2 ;
           /// Allows [`TextureDescriptor::sample_count`] to be `8`.
         const MULTISAMPLE_X8 = 1 << 3 ;
+          /// Allows [`TextureDescriptor::sample_count`] to be `16`.
+        const MULTISAMPLE_X16 = 1 << 4;
         /// Allows a texture of this format to back a view passed as `resolve_target`
         /// to a render pass for an automatic driver-implemented resolve.
-        const MULTISAMPLE_RESOLVE = 1 << 4;
+        const MULTISAMPLE_RESOLVE = 1 << 5;
         /// When used as a STORAGE texture, then a texture with this format can be bound with
         /// [`StorageTextureAccess::ReadOnly`] or [`StorageTextureAccess::ReadWrite`].
-        const STORAGE_READ_WRITE = 1 << 5;
+        const STORAGE_READ_WRITE = 1 << 6;
         /// When used as a STORAGE texture, then a texture with this format can be written to with atomics.
         // TODO: No access flag exposed as of writing
-        const STORAGE_ATOMICS = 1 << 6;
+        const STORAGE_ATOMICS = 1 << 7;
         /// If not present, the texture can't be blended into the render target.
-        const BLENDABLE = 1 << 7;
+        const BLENDABLE = 1 << 8;
     }
 }
 
@@ -1742,6 +1744,7 @@ impl TextureFormatFeatureFlags {
             2 => self.contains(tfsc::MULTISAMPLE_X2),
             4 => self.contains(tfsc::MULTISAMPLE_X4),
             8 => self.contains(tfsc::MULTISAMPLE_X8),
+            16 => self.contains(tfsc::MULTISAMPLE_X16),
             _ => false,
         }
     }
