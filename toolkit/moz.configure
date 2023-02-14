@@ -645,8 +645,8 @@ set_define("MOZ_APPLEMEDIA", applemedia)
 option("--disable-wmf", help="Disable support for Windows Media Foundation")
 
 
-@depends("--disable-wmf", target)
-def wmf(value, target):
+@depends("--disable-wmf", target, "--help")
+def wmf(value, target, _):
     enabled = bool(value)
     if value.origin == "default":
         # Enable Windows Media Foundation support by default.
@@ -669,20 +669,6 @@ set_define("MOZ_WMF", wmf)
 
 set_config("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
 set_define("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
-
-# Media Foundation CDM support
-# ==============================================================
-option("--disable-wmf-cdm", help="Disable support for Media Foundation CDM")
-
-
-@depends("--enable-wmf-cdm", when=wmfmediaengine)
-def wmfcdm(value):
-    if value:
-        return True
-
-
-set_config("MOZ_WMF_CDM", True, when=wmfcdm)
-set_define("MOZ_WMF_CDM", True, when=wmfcdm)
 
 # FFmpeg H264/AAC Decoding Support
 # ==============================================================
@@ -818,13 +804,15 @@ set_define("MOZ_OMX", openmax)
 
 # EME Support
 # ==============================================================
-@depends(target)
-def eme_choices(target):
+@depends(target, wmf)
+def eme_choices(target, wmf):
     if (
         target.kernel in ("WINNT", "Linux")
         and target.os != "Android"
         and target.cpu in ("x86", "x86_64")
     ):
+        if wmf:
+            return ("widevine", "wmfcdm")
         return ("widevine",)
     if target.kernel == "WINNT" and target.cpu == "aarch64":
         return ("widevine",)
@@ -874,6 +862,19 @@ def eme_win32_artifact(modules, target):
 
 
 set_config("MOZ_EME_WIN32_ARTIFACT", eme_win32_artifact)
+
+
+# Media Foundation CDM support
+# ==============================================================
+@depends(eme_modules, when=wmfmediaengine)
+def wmfcdm(modules):
+    if "wmfcdm" in modules:
+        return True
+
+
+set_config("MOZ_WMF_CDM", True, when=wmfcdm)
+set_define("MOZ_WMF_CDM", True, when=wmfcdm)
+
 
 option(
     name="--enable-chrome-format",
