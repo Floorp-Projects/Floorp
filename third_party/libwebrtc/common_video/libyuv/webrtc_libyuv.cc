@@ -22,7 +22,6 @@ namespace webrtc {
 size_t CalcBufferSize(VideoType type, int width, int height) {
   RTC_DCHECK_GE(width, 0);
   RTC_DCHECK_GE(height, 0);
-
   size_t buffer_size = 0;
   switch (type) {
     case VideoType::kI420:
