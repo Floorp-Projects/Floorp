@@ -21,18 +21,12 @@ function closeEnough(actual, expected) {
 }
 
 async function resizeWindow(x, y) {
-  // For Linux we have to change only one dimension at a time. (Bug 1803611)
-  if (window.innerWidth != x) {
-    let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
-    window.innerWidth = x;
-    await resizePromise;
-  }
-
-  if (window.innerHeight != y) {
-    let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
-    window.innerHeight = y;
-    await resizePromise;
-  }
+  let resizePromise = BrowserTestUtils.waitForEvent(window, "resize");
+  window.resizeTo(
+    x + window.outerWidth - window.innerWidth,
+    y + window.outerHeight - window.innerHeight
+  );
+  await resizePromise;
 
   await waitForAnimationFrames();
 

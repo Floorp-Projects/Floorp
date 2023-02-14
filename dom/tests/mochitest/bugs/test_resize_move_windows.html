@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
   
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 /** Test for Bug 565541 **/
 
@@ -32,16 +32,14 @@ function backValues()
 {
   previousX = window.screenX;
   previousY = window.screenY;
-  previousWidth = window.innerWidth;
-  previousHeight = window.innerHeight;
+  previousWidth = window.outerWidth;
+  previousHeight = window.outerHeight;
 }
 
 function restoreValues()
 {
-  window.screenX = previousX;
-  window.screenY = previousY;
-  window.innerWidth = previousWidth;
-  window.innerHeight = previousHeight;
+  window.moveTo(previousX, previousY);
+  window.resizeTo(previousWidth, previousHeight);
 }
 
 function getNewWidth(aWindow)
@@ -70,8 +68,8 @@ function getNewY(aWindow)
  * hitEventLoop is called when we want to check something but we can't rely on
  * an event or a specific number of event loop hiting.
  * This method can be called by specifying a condition, a test (using SimpleTest
- * API), how many times the event loop has to be hitten and what to call next.
- * If times < 0, the event loop will be hitten as long as the condition isn't
+ * API), how many times the event loop has to be hit and what to call next.
+ * If times < 0, the event loop will be hit as long as the condition isn't
  * true or the test doesn't time out.
  */
 function hitEventLoop(condition, test, times) {
@@ -83,7 +81,8 @@ function hitEventLoop(condition, test, times) {
         return;
       }
 
-      setTimeout(doMagic, 0, condition, test, times - 1);
+      times--;
+      setTimeout(doMagic, 0);
     }
 
     doMagic();
@@ -136,9 +135,6 @@ function checkChangeIsDisabled(aWindow) {
   var newWidth = getNewWidth(aWindow);
   var newHeight = getNewHeight(aWindow);
 
-  aWindow.innerWidth = newWidth;
-  aWindow.innerHeight = newHeight;
-
   aWindow.resizeTo(newWidth, newHeight);
 
   aWindow.resizeBy(newWidth - aWindow.innerWidth,
@@ -152,9 +148,6 @@ function checkChangeIsDisabled(aWindow) {
   var newX = getNewX(aWindow);
   var newY = getNewY(aWindow);
 
-  aWindow.screenX = newX;
-  aWindow.screenY = newY;
-
   aWindow.moveTo(newX, newY);
 
   aWindow.moveBy(newX - aWindow.screenX,
@@ -163,8 +156,7 @@ function checkChangeIsDisabled(aWindow) {
   /**
    * Outer width/height checks.
    */
-  aWindow.outerWidth *= 2;
-  aWindow.outerHeight *= 2;
+  aWindow.resizeTo(aWindow.outerWidth * 2, aWindow.outerHeight * 2);
 
   // We did a lot of changes. Now, we are going to wait and see if something
   // happens.
@@ -175,6 +167,7 @@ function checkChangeIsDisabled(aWindow) {
 
 function checkChangeIsEnabled(aWindow, aNext)
 {
+  info(`checkChangeIsEnabled start`);
   // Something should happen. We are not going to go to the next test until
   // it does.
   var hits = -1;
@@ -189,15 +182,15 @@ function checkChangeIsEnabled(aWindow, aNext)
   var oHeight;
 
   function sizeChangeCondition() {
-    return aWindow.innerWidth != prevWidth && aWindow.innerHeight != prevHeight;
+    return aWindow.outerWidth != prevWidth && aWindow.outerHeight != prevHeight;
   }
 
   function sizeChangeTest() {
-    isnot(aWindow.innerWidth, prevWidth, "Window width should have changed");
-    isnot(aWindow.innerHeight, prevHeight, "Window height should have changed");
+    isnot(aWindow.outerWidth, prevWidth, "Window width should have changed");
+    isnot(aWindow.outerHeight, prevHeight, "Window height should have changed");
 
-    prevWidth = aWindow.innerWidth;
-    prevHeight = aWindow.innerHeight;
+    prevWidth = aWindow.outerWidth;
+    prevHeight = aWindow.outerHeight;
   }
 
   function posChangeCondition() {
@@ -242,11 +235,10 @@ function checkChangeIsEnabled(aWindow, aNext)
   /**
    * Size checks.
    */
-  prevWidth = aWindow.innerWidth;
-  prevHeight = aWindow.innerHeight;
-  aWindow.innerWidth = getNewWidth(aWindow);
-  aWindow.innerHeight = getNewHeight(aWindow);
+  prevWidth = aWindow.outerWidth;
+  prevHeight = aWindow.outerHeight;
 
+  aWindow.resizeTo(getNewWidth(aWindow), getNewHeight(aWindow));
   hitEventLoop(sizeChangeCondition, sizeChangeTest, hits)
   .then(function() {
     aWindow.resizeTo(getNewWidth(aWindow), getNewHeight(aWindow));
@@ -268,14 +260,6 @@ function checkChangeIsEnabled(aWindow, aNext)
     prevX = aWindow.screenX;
     prevY = aWindow.screenY;
 
-    aWindow.screenX = getNewX(aWindow);
-    aWindow.screenY = getNewY(aWindow);
-    return hitEventLoop(posChangeCondition, posChangeTest, hits);
-  })
-  .then(function() {
-    prevX = aWindow.screenX;
-    prevY = aWindow.screenY;
-
     aWindow.moveTo(getNewX(aWindow), getNewY(aWindow));
     return hitEventLoop(posChangeCondition, posChangeTest, hits);
   })
@@ -294,8 +278,7 @@ function checkChangeIsEnabled(aWindow, aNext)
     oWidth = aWindow.outerWidth;
     oHeight = aWindow.outerHeight;
 
-    aWindow.outerWidth = oWidth * 2;
-    aWindow.outerHeight = oHeight * 2;
+    aWindow.resizeTo(oWidth * 2, oHeight * 2);
     return hitEventLoop(outerChangeCondition, outerChangeTest, hits);
   })
   .then(function() {
@@ -305,8 +288,7 @@ function checkChangeIsEnabled(aWindow, aNext)
     oWidth = aWindow.outerWidth;
     oHeight = aWindow.outerHeight;
 
-    aWindow.outerWidth = origWidth;
-    aWindow.outerHeight = origHeight;
+    aWindow.resizeTo(origWidth, origHeight);
     return hitEventLoop(outerChangeCondition, outerChangeTest, hits);
   })
   .then(aNext);
@@ -326,6 +308,7 @@ SimpleTest.waitForFocus(function() {
 
   // The current window can't change it's own size and position.
   checkChangeIsDisabled(window).then(function() {
+    info(`Change was disabled`);
     // We create a window and check that it can change its own size and position.
     // However, passing size/position parameters to window.open should work.
     var w = window.open("file_resize_move_windows_1.html", '',
