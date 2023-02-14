@@ -217,10 +217,14 @@ impl Http3Server {
                         );
                     }
                     Http3ServerConnEvent::ExtendedConnectClosed {
-                        stream_id, reason, ..
+                        stream_id,
+                        reason,
+                        headers,
+                        ..
                     } => self.events.webtransport_session_closed(
                         WebTransportRequest::new(conn.clone(), handler.clone(), stream_id),
                         reason,
+                        headers,
                     ),
                     Http3ServerConnEvent::ExtendedConnectNewStream(stream_info) => self
                         .events
@@ -1290,7 +1294,7 @@ mod tests {
             anti_replay(),
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             http3params(DEFAULT_SETTINGS),
-            Some(Box::new(RejectZeroRtt::default())),
+            Some(Box::<RejectZeroRtt>::default()),
         )
         .expect("create a server");
         let mut client = connect_to(&mut server);

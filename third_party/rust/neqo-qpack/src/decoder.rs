@@ -178,7 +178,7 @@ impl QPackDecoder {
                 .stream_send(self.local_stream_id.unwrap(), &self.send_buf[..])
                 .map_err(|_| Error::DecoderStream)?;
             qdebug!([self], "{} bytes sent.", r);
-            self.send_buf.read(r as usize);
+            self.send_buf.read(r);
         }
         Ok(())
     }

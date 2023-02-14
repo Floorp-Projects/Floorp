@@ -1,6 +1,6 @@
 [package]
 name = "neqo-common"
-version = "0.6.3"
+version = "0.6.4"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 edition = "2018"
 rust-version = "1.57.0"

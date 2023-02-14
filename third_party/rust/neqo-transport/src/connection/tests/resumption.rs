@@ -145,8 +145,8 @@ fn two_tickets_on_timer() {
     assert_eq!(get_tokens(&mut client).len(), 0);
     assert_ne!(token1.as_ref(), token2.as_ref());
 
-    can_resume(&token1, false);
-    can_resume(&token2, false);
+    can_resume(token1, false);
+    can_resume(token2, false);
 }
 
 #[test]
@@ -170,8 +170,8 @@ fn two_tickets_with_new_token() {
     let token2 = all_tokens.pop().unwrap();
     assert_ne!(token1.as_ref(), token2.as_ref());
 
-    can_resume(&token1, true);
-    can_resume(&token2, true);
+    can_resume(token1, true);
+    can_resume(token2, true);
 }
 
 /// By disabling address validation, the server won't send `NEW_TOKEN`, but
@@ -192,7 +192,7 @@ fn take_token() {
 
     // But we should be able to get the token directly, and use it.
     let token = client.take_resumption_token(now()).unwrap();
-    can_resume(&token, false);
+    can_resume(token, false);
 }
 
 /// If a version is selected and subsequently disabled, resumption fails.

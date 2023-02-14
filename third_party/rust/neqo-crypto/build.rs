@@ -324,8 +324,6 @@ fn setup_standalone() -> Vec<String> {
 fn setup_for_gecko() -> Vec<String> {
     use mozbuild::TOPOBJDIR;
 
-    let mut flags: Vec<String> = Vec::new();
-
     let fold_libs = mozbuild::config::MOZ_FOLD_LIBS;
     let libs = if fold_libs {
         vec!["nss3"]
@@ -371,11 +369,11 @@ fn setup_for_gecko() -> Vec<String> {
     let flags_path = TOPOBJDIR.join("netwerk/socket/neqo/extra-bindgen-flags");
 
     println!("cargo:rerun-if-changed={}", flags_path.to_str().unwrap());
-    flags = fs::read_to_string(flags_path)
+    let mut flags = fs::read_to_string(flags_path)
         .expect("Failed to read extra-bindgen-flags file")
         .split_whitespace()
-        .map(std::borrow::ToOwned::to_owned)
-        .collect();
+        .map(String::from)
+        .collect::<Vec<_>>();
 
     flags.push(String::from("-include"));
     flags.push(

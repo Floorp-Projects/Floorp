@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::cell::RefCell;
-use std::cmp::{max, min};
 use std::convert::TryFrom;
 use std::rc::{Rc, Weak};
 use std::time::Duration;
@@ -39,7 +38,7 @@ impl Period {
 impl From<Duration> for Period {
     fn from(p: Duration) -> Self {
         let rounded = u8::try_from(p.as_millis()).unwrap_or(Self::MAX.0);
-        Self(max(Self::MIN.0, min(rounded, Self::MAX.0)))
+        Self(rounded.clamp(Self::MIN.0, Self::MAX.0))
     }
 }
 

@@ -21,6 +21,12 @@ const SETTINGS_MAX_HEADER_LIST_SIZE: SettingsType = 0x6;
 const SETTINGS_QPACK_MAX_TABLE_CAPACITY: SettingsType = 0x1;
 const SETTINGS_QPACK_BLOCKED_STREAMS: SettingsType = 0x7;
 const SETTINGS_ENABLE_WEB_TRANSPORT: SettingsType = 0x2b60_3742;
+// draft-ietf-masque-h3-datagram-04.
+// We also use this old value because the current web-platform test only supports
+// this value.
+const SETTINGS_H3_DATAGRAM_DRAFT04: SettingsType = 0x00ff_d277;
+
+const SETTINGS_H3_DATAGRAM: SettingsType = 0x33;
 
 pub const H3_RESERVED_SETTINGS: &[SettingsType] = &[0x2, 0x3, 0x4, 0x5];
 
@@ -30,6 +36,7 @@ pub enum HSettingType {
     MaxTableCapacity,
     BlockedStreams,
     EnableWebTransport,
+    EnableH3Datagram,
 }
 
 fn hsetting_default(setting_type: HSettingType) -> u64 {
@@ -37,7 +44,8 @@ fn hsetting_default(setting_type: HSettingType) -> u64 {
         HSettingType::MaxHeaderListSize => 1 << 62,
         HSettingType::MaxTableCapacity
         | HSettingType::BlockedStreams
-        | HSettingType::EnableWebTransport => 0,
+        | HSettingType::EnableWebTransport
+        | HSettingType::EnableH3Datagram => 0,
     }
 }
 
@@ -83,20 +91,28 @@ impl HSettings {
             for iter in &self.settings {
                 match iter.setting_type {
                     HSettingType::MaxHeaderListSize => {
-                        enc_inner.encode_varint(SETTINGS_MAX_HEADER_LIST_SIZE as u64);
+                        enc_inner.encode_varint(SETTINGS_MAX_HEADER_LIST_SIZE);
                         enc_inner.encode_varint(iter.value);
                     }
                     HSettingType::MaxTableCapacity => {
-                        enc_inner.encode_varint(SETTINGS_QPACK_MAX_TABLE_CAPACITY as u64);
+                        enc_inner.encode_varint(SETTINGS_QPACK_MAX_TABLE_CAPACITY);
                         enc_inner.encode_varint(iter.value);
                     }
                     HSettingType::BlockedStreams => {
-                        enc_inner.encode_varint(SETTINGS_QPACK_BLOCKED_STREAMS as u64);
+                        enc_inner.encode_varint(SETTINGS_QPACK_BLOCKED_STREAMS);
                         enc_inner.encode_varint(iter.value);
                     }
                     HSettingType::EnableWebTransport => {
-                        enc_inner.encode_varint(SETTINGS_ENABLE_WEB_TRANSPORT as u64);
+                        enc_inner.encode_varint(SETTINGS_ENABLE_WEB_TRANSPORT);
                         enc_inner.encode_varint(iter.value);
+                    }
+                    HSettingType::EnableH3Datagram => {
+                        if iter.value == 1 {
+                            enc_inner.encode_varint(SETTINGS_H3_DATAGRAM_DRAFT04);
+                            enc_inner.encode_varint(iter.value);
+                            enc_inner.encode_varint(SETTINGS_H3_DATAGRAM);
+                            enc_inner.encode_varint(iter.value);
+                        }
                     }
                 }
             }
@@ -132,6 +148,32 @@ impl HSettings {
                     self.settings
                         .push(HSetting::new(HSettingType::EnableWebTransport, value));
                 }
+                (Some(SETTINGS_H3_DATAGRAM_DRAFT04), Some(value)) => {
+                    if value > 1 {
+                        return Err(Error::HttpSettings);
+                    }
+                    if !self
+                        .settings
+                        .iter()
+                        .any(|s| s.setting_type == HSettingType::EnableH3Datagram)
+                    {
+                        self.settings
+                            .push(HSetting::new(HSettingType::EnableH3Datagram, value));
+                    }
+                }
+                (Some(SETTINGS_H3_DATAGRAM), Some(value)) => {
+                    if value > 1 {
+                        return Err(Error::HttpSettings);
+                    }
+                    if !self
+                        .settings
+                        .iter()
+                        .any(|s| s.setting_type == HSettingType::EnableH3Datagram)
+                    {
+                        self.settings
+                            .push(HSetting::new(HSettingType::EnableH3Datagram, value));
+                    }
+                }
                 // other supported settings here
                 (Some(_), Some(_)) => {} // ignore unknown setting, it is fine.
                 _ => return Err(Error::NotEnoughData),
@@ -164,6 +206,10 @@ impl From<&Http3Parameters> for HSettings {
                     setting_type: HSettingType::EnableWebTransport,
                     value: u64::from(conn_param.get_webtransport()),
                 },
+                HSetting {
+                    setting_type: HSettingType::EnableH3Datagram,
+                    value: u64::from(conn_param.get_http3_datagram()),
+                },
             ],
         }
     }
@@ -189,9 +235,14 @@ impl HttpZeroRttChecker {
             .encode_varint(SETTINGS_QPACK_MAX_TABLE_CAPACITY)
             .encode_varint(settings.get_max_table_size_decoder())
             .encode_varint(SETTINGS_QPACK_BLOCKED_STREAMS)
-            .encode_varint(settings.get_max_blocked_streams())
-            .encode_varint(SETTINGS_ENABLE_WEB_TRANSPORT)
-            .encode_varint(settings.get_webtransport());
+            .encode_varint(settings.get_max_blocked_streams());
+        if settings.get_webtransport() {
+            enc.encode_varint(SETTINGS_ENABLE_WEB_TRANSPORT)
+                .encode_varint(true);
+        }
+        if settings.get_http3_datagram() {
+            enc.encode_varint(SETTINGS_H3_DATAGRAM).encode_varint(true);
+        }
         enc.into()
     }
 }
@@ -222,11 +273,18 @@ impl ZeroRttChecker for HttpZeroRttChecker {
                 self.settings.get_max_table_size_decoder() >= setting.value
             }
             HSettingType::EnableWebTransport => {
-                if setting.value > 0 {
+                if setting.value > 1 {
                     return false;
                 }
                 let value = setting.value == 1;
                 self.settings.get_webtransport() || !value
+            }
+            HSettingType::EnableH3Datagram => {
+                if setting.value > 1 {
+                    return false;
+                }
+                let value = setting.value == 1;
+                self.settings.get_http3_datagram() || !value
             }
             HSettingType::MaxHeaderListSize => true,
         }) {

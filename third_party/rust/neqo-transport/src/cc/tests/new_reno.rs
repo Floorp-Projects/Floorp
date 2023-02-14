@@ -31,7 +31,7 @@ fn cwnd_is_halved(cc: &ClassicCongestionControl<NewReno>) {
 fn issue_876() {
     let mut cc = ClassicCongestionControl::new(NewReno::default());
     let time_now = now();
-    let time_before = time_now - Duration::from_millis(100);
+    let time_before = time_now.checked_sub(Duration::from_millis(100)).unwrap();
     let time_after = time_now + Duration::from_millis(150);
 
     let sent_packets = &[

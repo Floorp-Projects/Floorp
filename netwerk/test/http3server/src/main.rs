@@ -487,6 +487,7 @@ impl HttpServer for Http3TestServer {
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::SessionClosed {
                     session,
                     reason,
+                    headers: _
                 }) => {
                     qdebug!(
                         "WebTransportServerEvent::SessionClosed {:?} {:?}",

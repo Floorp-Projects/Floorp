@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use neqo_common::event::Provider;
+use neqo_common::{event::Provider, Header};
 use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{
     Http3Client, Http3ClientEvent, Http3OrWebTransportStream, Http3Parameters, Http3Server,
@@ -122,8 +122,13 @@ fn create_wt_session(client: &mut Http3Client, server: &mut Http3Server) -> WebT
             e,
             Http3ClientEvent::WebTransport(WebTransportEvent::Session{
                 stream_id,
-                status
-            }) if stream_id == wt_session_id && status == 200
+                status,
+                headers,
+            }) if (
+                stream_id == wt_session_id &&
+                status == 200 &&
+                headers.contains(&Header::new(":status", "200"))
+            )
         )
     };
     assert!(client.events().any(wt_session_negotiated_event));

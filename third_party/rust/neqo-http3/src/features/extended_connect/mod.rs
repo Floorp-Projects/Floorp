@@ -13,6 +13,7 @@ use crate::client_events::Http3ClientEvents;
 use crate::features::NegotiationState;
 use crate::settings::{HSettingType, HSettings};
 use crate::{CloseType, Http3StreamInfo, Http3StreamType};
+use neqo_common::Header;
 use neqo_transport::{AppError, StreamId};
 use std::fmt::Debug;
 pub(crate) use webtransport_session::WebTransportSession;
@@ -39,12 +40,19 @@ impl From<CloseType> for SessionCloseReason {
 }
 
 pub(crate) trait ExtendedConnectEvents: Debug {
-    fn session_start(&self, connect_type: ExtendedConnectType, stream_id: StreamId, status: u16);
+    fn session_start(
+        &self,
+        connect_type: ExtendedConnectType,
+        stream_id: StreamId,
+        status: u16,
+        headers: Vec<Header>,
+    );
     fn session_end(
         &self,
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     );
     fn extended_connect_new_stream(&self, stream_info: Http3StreamInfo);
     fn new_datagram(&self, session_id: StreamId, datagram: Vec<u8>);

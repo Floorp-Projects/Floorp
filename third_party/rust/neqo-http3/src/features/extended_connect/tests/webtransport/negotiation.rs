@@ -64,39 +64,26 @@ enum ClientState {
 }
 
 #[derive(PartialEq, Eq)]
-enum ClientResumedState {
-    ClientResumed,
-    ClientSuspended,
-}
-
-#[derive(PartialEq, Eq)]
 enum ServerState {
     ServerEnabled,
     ServerDisabled,
 }
 
-#[derive(PartialEq, Eq)]
-enum ServerResumedState {
-    ServerResumed,
-    ServerSuspended,
-}
-
 fn zero_rtt(
     client_state: &ClientState,
     server_state: &ServerState,
-    client_resumed: &ClientResumedState,
-    server_resumed: &ServerResumedState,
+    client_resumed_state: &ClientState,
+    server_resumed_state: &ServerState,
 ) {
-    let (mut client, mut server) = connect_wt(
-        ClientState::ClientEnabled.eq(client_state),
-        ServerState::ServerEnabled.eq(server_state),
-    );
-    assert_eq!(
-        client.webtransport_enabled(),
-        ClientState::ClientEnabled.eq(client_state) && ServerState::ServerEnabled.eq(server_state)
-    );
+    let client_org = ClientState::ClientEnabled.eq(client_state);
+    let server_org = ServerState::ServerEnabled.eq(server_state);
+    let client_resumed = ClientState::ClientEnabled.eq(client_resumed_state);
+    let server_resumed = ServerState::ServerEnabled.eq(server_resumed_state);
 
-    // exchane token
+    let (mut client, mut server) = connect_wt(client_org, server_org);
+    assert_eq!(client.webtransport_enabled(), client_org && server_org);
+
+    // exchange token
     let out = server.process(None, now());
     // We do not have a token so we need to wait for a resumption token timer to trigger.
     std::mem::drop(client.process(out.dgram(), now() + Duration::from_millis(250)));
@@ -112,14 +99,8 @@ fn zero_rtt(
         })
         .unwrap();
 
-    let mut client = default_http3_client(
-        Http3Parameters::default()
-            .webtransport(ClientResumedState::ClientResumed.eq(client_resumed)),
-    );
-    let mut server = default_http3_server(
-        Http3Parameters::default()
-            .webtransport(ServerResumedState::ServerResumed.eq(server_resumed)),
-    );
+    let mut client = default_http3_client(Http3Parameters::default().webtransport(client_resumed));
+    let mut server = default_http3_server(Http3Parameters::default().webtransport(server_resumed));
     client
         .enable_resumption(now(), &token)
         .expect("Set resumption token.");
@@ -130,14 +111,21 @@ fn zero_rtt(
     assert_eq!(&client.state(), &Http3State::Connected);
     assert_eq!(
         client.webtransport_enabled(),
-        ClientResumedState::ClientResumed.eq(client_resumed)
-            && ServerResumedState::ServerResumed.eq(server_resumed)
+        client_resumed && server_resumed
     );
-    check_wt_event(
-        &mut client,
-        ClientResumedState::ClientResumed.eq(client_resumed),
-        ServerResumedState::ServerResumed.eq(server_resumed),
+
+    let mut early_data_accepted = true;
+    // The only case we should not do 0-RTT is when webtransport was enabled
+    // originally and is disabled afterwards.
+    if server_org && !server_resumed {
+        early_data_accepted = false;
+    }
+    assert_eq!(
+        client.tls_info().unwrap().early_data_accepted(),
+        early_data_accepted
     );
+
+    check_wt_event(&mut client, client_resumed, server_resumed);
 }
 
 #[test]
@@ -145,101 +133,101 @@ fn zero_rtt_wt_settings() {
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerEnabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerEnabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerDisabled,
     );
 
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerEnabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientEnabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerEnabled,
     );
 
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerEnabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerDisabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerEnabled,
     );
 
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerEnabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientSuspended,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientDisabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerSuspended,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerDisabled,
     );
     zero_rtt(
         &ClientState::ClientDisabled,
         &ServerState::ServerEnabled,
-        &ClientResumedState::ClientResumed,
-        &ServerResumedState::ServerResumed,
+        &ClientState::ClientEnabled,
+        &ServerState::ServerEnabled,
     );
 }
 

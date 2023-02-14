@@ -654,7 +654,7 @@ impl Http3Connection {
         let mut decoder = Decoder::new(datagram);
         let session = decoder
             .decode_varint()
-            .and_then(|id| self.recv_streams.get_mut(&StreamId::from(id)))
+            .and_then(|id| self.recv_streams.get_mut(&StreamId::from(id * 4)))
             .and_then(|stream| stream.webtransport());
         if let Some(s) = session {
             s.borrow_mut().datagram(decoder.decode_remainder().to_vec());
@@ -1426,7 +1426,9 @@ impl Http3Connection {
                             qpack_changed = true;
                         }
                         HSettingType::BlockedStreams => qpack_changed = true,
-                        HSettingType::MaxHeaderListSize | HSettingType::EnableWebTransport => (),
+                        HSettingType::MaxHeaderListSize
+                        | HSettingType::EnableWebTransport
+                        | HSettingType::EnableH3Datagram => (),
                     }
                 }
                 if qpack_changed {

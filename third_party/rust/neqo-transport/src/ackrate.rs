@@ -14,7 +14,7 @@ use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
 
 use neqo_common::qtrace;
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::convert::TryFrom;
 use std::time::Duration;
 
@@ -37,9 +37,9 @@ impl AckRate {
         const MAX_DELAY: Duration = Duration::from_millis(50);
 
         let packets = cwnd * PACKET_RATIO / mtu / usize::from(ratio);
-        let packets = max(MIN_PACKETS, min(packets, MAX_PACKETS)) - 1;
+        let packets = packets.clamp(MIN_PACKETS, MAX_PACKETS) - 1;
         let delay = rtt * RTT_RATIO / u32::from(ratio);
-        let delay = max(minimum, min(delay, MAX_DELAY));
+        let delay = delay.clamp(minimum, MAX_DELAY);
         qtrace!("AckRate inputs: {}/{}/{}, {:?}", cwnd, mtu, ratio, rtt);
         Self { packets, delay }
     }

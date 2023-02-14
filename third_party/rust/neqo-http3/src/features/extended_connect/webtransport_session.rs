@@ -214,6 +214,7 @@ impl WebTransportSession {
                 ExtendedConnectType::WebTransport,
                 self.session_id,
                 SessionCloseReason::from(close_type),
+                None,
             );
         }
     }
@@ -242,6 +243,7 @@ impl WebTransportSession {
                             error: 0,
                             message: String::new(),
                         },
+                        Some(headers),
                     );
                     self.state = SessionState::Done;
                 }
@@ -266,6 +268,7 @@ impl WebTransportSession {
                                 error: 0,
                                 message: String::new(),
                             },
+                            Some(headers),
                         );
                         SessionState::Done
                     } else {
@@ -273,6 +276,7 @@ impl WebTransportSession {
                             ExtendedConnectType::WebTransport,
                             self.session_id,
                             status,
+                            headers,
                         );
                         SessionState::Active
                     }
@@ -281,6 +285,7 @@ impl WebTransportSession {
                         ExtendedConnectType::WebTransport,
                         self.session_id,
                         SessionCloseReason::Status(status),
+                        Some(headers),
                     );
                     SessionState::Done
                 };
@@ -345,6 +350,7 @@ impl WebTransportSession {
                 ExtendedConnectType::WebTransport,
                 self.session_id,
                 SessionCloseReason::Clean { error, message },
+                None,
             );
             self.state = if fin {
                 SessionState::Done
@@ -359,6 +365,7 @@ impl WebTransportSession {
                     error: 0,
                     message: String::new(),
                 },
+                None,
             );
             self.state = SessionState::Done;
         }
