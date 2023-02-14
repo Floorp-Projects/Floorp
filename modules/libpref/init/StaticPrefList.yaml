@@ -2263,6 +2263,13 @@
   value: 20
   mirror: always
 
+# Whether Window.{inner,outer}{Width,Height} and screen{X,Y}
+# behave as replaceable properties unconditionally.
+- name: dom.window_position_size_properties_replaceable.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether window.location.reload() and window.history.go(0) should be blocked
 # if called directly from a window resize event handler.
 #

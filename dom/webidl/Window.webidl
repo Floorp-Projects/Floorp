@@ -344,6 +344,8 @@ partial interface Window {
   // These are writable because we allow chrome to write them.  And they need
   // to use 'any' as the type, because non-chrome writing them needs to act
   // like a [Replaceable] attribute would, which needs the original JS value.
+  // TODO: These can be updated to follow the spec exactly a while after we
+  // enable dom.window_position_size_properties_replaceable.enabled=true
   //[Replaceable, Throws] readonly attribute double innerWidth;
   //[Replaceable, Throws] readonly attribute double innerHeight;
   [Throws, NeedsCallerType] attribute any innerWidth;
@@ -376,6 +378,8 @@ partial interface Window {
   // These are writable because we allow chrome to write them.  And they need
   // to use 'any' as the type, because non-chrome writing them needs to act
   // like a [Replaceable] attribute would, which needs the original JS value.
+  // TODO: These can be updated to follow the spec exactly a while after we
+  // enable dom.window_position_size_properties_replaceable.enabled=true
   //[Replaceable, Throws] readonly attribute double screenX;
   //[Replaceable, Throws] readonly attribute double screenY;
   //[Replaceable, Throws] readonly attribute double outerWidth;

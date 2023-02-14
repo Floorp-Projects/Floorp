@@ -7592,8 +7592,12 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
    * just treat this the way we would an IDL replaceable property.
    */
   nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer || !outer->CanMoveResizeWindows(aCallerType) ||
+  if (StaticPrefs::dom_window_position_size_properties_replaceable_enabled() ||
+      !outer || !outer->CanMoveResizeWindows(aCallerType) ||
       mBrowsingContext->IsSubframe()) {
+    MOZ_DIAGNOSTIC_ASSERT(aCallerType != CallerType::System,
+                          "Setting this property in chrome code does nothing "
+                          "anymore, use resizeTo/moveTo as needed");
     RedefineProperty(aCx, aPropName, aValue, aError);
     return;
   }
