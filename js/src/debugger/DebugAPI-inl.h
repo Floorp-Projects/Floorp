@@ -9,6 +9,7 @@
 
 #include "debugger/DebugAPI.h"
 
+#include "gc/GC.h"
 #include "vm/GeneratorObject.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
@@ -45,9 +46,10 @@ void DebugAPI::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global) {
 /* static */
 void DebugAPI::notifyParticipatesInGC(GlobalObject* global,
                                       uint64_t majorGCNumber) {
-  Realm::DebuggerVector& dbgs = global->getDebuggers();
+  JS::AutoAssertNoGC nogc;
+  Realm::DebuggerVector& dbgs = global->getDebuggers(nogc);
   if (!dbgs.empty()) {
-    slowPathNotifyParticipatesInGC(majorGCNumber, dbgs);
+    slowPathNotifyParticipatesInGC(majorGCNumber, dbgs, nogc);
   }
 }
 
@@ -55,12 +57,15 @@ void DebugAPI::notifyParticipatesInGC(GlobalObject* global,
 bool DebugAPI::onLogAllocationSite(JSContext* cx, JSObject* obj,
                                    Handle<SavedFrame*> frame,
                                    mozilla::TimeStamp when) {
-  Realm::DebuggerVector& dbgs = cx->global()->getDebuggers();
+  // slowPathOnLogAllocationSite creates GC things so we must suppress GC here.
+  gc::AutoSuppressGC nogc(cx);
+
+  Realm::DebuggerVector& dbgs = cx->global()->getDebuggers(nogc);
   if (dbgs.empty()) {
     return true;
   }
   RootedObject hobj(cx, obj);
-  return slowPathOnLogAllocationSite(cx, hobj, frame, when, dbgs);
+  return slowPathOnLogAllocationSite(cx, hobj, frame, when, dbgs, nogc);
 }
 
 /* static */
