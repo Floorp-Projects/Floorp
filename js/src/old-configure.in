@@ -169,12 +169,6 @@ dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 MOZ_ARCH_OPTS
 
-dnl ========================================================
-dnl Android libstdc++
-dnl ========================================================
-
-MOZ_ANDROID_STLPORT
-
 MOZ_CONFIG_SANITIZE
 
 dnl ========================================================
