@@ -22,6 +22,7 @@
 #include "nsIXPConnect.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
+#include "nsTArray.h"
 #include "nsURLHelper.h"
 
 namespace mozilla::dom {
@@ -153,13 +154,64 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   RefPtr<CanonicalBrowsingContext> browsingContext(aBrowsingContext);
 
-  // Have the user choose a provider then create a credential for that provider.
-  PromptUserToSelectProvider(aBrowsingContext, aOptions.mProviders.Value())
+  // Construct an array of requests to fetch manifests for every provider.
+  // We need this to show their branding information
+  nsTArray<RefPtr<GetManifestPromise>> manifestPromises;
+  for (const IdentityProvider& provider : aOptions.mProviders.Value()) {
+    RefPtr<GetManifestPromise> manifest =
+        IdentityCredential::CheckRootManifest(aPrincipal, provider)
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [provider, principal](bool valid) {
+                  if (valid) {
+                    return IdentityCredential::FetchInternalManifest(principal,
+                                                                     provider);
+                  }
+                  return IdentityCredential::GetManifestPromise::
+                      CreateAndReject(NS_ERROR_FAILURE, __func__);
+                },
+                [](nsresult error) {
+                  return IdentityCredential::GetManifestPromise::
+                      CreateAndReject(error, __func__);
+                });
+    manifestPromises.AppendElement(manifest);
+  }
+
+  // We use AllSettled here so that failures will be included- we use default
+  // values there.
+  GetManifestPromise::AllSettled(GetCurrentSerialEventTarget(),
+                                 manifestPromises)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [principal, browsingContext](const IdentityProvider& provider) {
+          [browsingContext, aOptions](
+              const GetManifestPromise::AllSettledPromiseType::ResolveValueType&
+                  aResults) {
+            // Convert the
+            // GetManifestPromise::AllSettledPromiseType::ResolveValueType to a
+            // Sequence<MozPromise>
+            CopyableTArray<MozPromise<IdentityInternalManifest, nsresult,
+                                      true>::ResolveOrRejectValue>
+                results = aResults;
+            const Sequence<MozPromise<IdentityInternalManifest, nsresult,
+                                      true>::ResolveOrRejectValue>
+                resultsSequence(std::move(results));
+            // The user picks from the providers
+            return PromptUserToSelectProvider(
+                browsingContext, aOptions.mProviders.Value(), resultsSequence);
+          },
+          [](bool error) {
+            return IdentityCredential::GetIdentityProviderWithManifestPromise::
+                CreateAndReject(NS_ERROR_FAILURE, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [principal, browsingContext](
+              const IdentityProviderWithManifest& providerAndManifest) {
+            IdentityInternalManifest manifest;
+            IdentityProvider provider;
+            Tie(provider, manifest) = providerAndManifest;
             return IdentityCredential::CreateCredential(
-                principal, browsingContext, provider);
+                principal, browsingContext, provider, manifest);
           },
           [](nsresult error) {
             return IdentityCredential::GetIPCIdentityCredentialPromise::
@@ -200,9 +252,10 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
 
 // static
 RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise>
-IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
-                                     BrowsingContext* aBrowsingContext,
-                                     const IdentityProvider& aProvider) {
+IdentityCredential::CreateCredential(
+    nsIPrincipal* aPrincipal, BrowsingContext* aBrowsingContext,
+    const IdentityProvider& aProvider,
+    const IdentityInternalManifest& aManifest) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aBrowsingContext);
@@ -210,32 +263,8 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsIPrincipal> argumentPrincipal = aPrincipal;
   RefPtr<BrowsingContext> browsingContext(aBrowsingContext);
 
-  return IdentityCredential::CheckRootManifest(aPrincipal, aProvider)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aProvider, argumentPrincipal](bool valid) {
-            if (valid) {
-              return IdentityCredential::FetchInternalManifest(
-                  argumentPrincipal, aProvider);
-            }
-            return IdentityCredential::GetManifestPromise::CreateAndReject(
-                NS_ERROR_FAILURE, __func__);
-          },
-          [](nsresult error) {
-            return IdentityCredential::GetManifestPromise::CreateAndReject(
-                error, __func__);
-          })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [argumentPrincipal,
-           aProvider](const IdentityInternalManifest& manifest) {
-            return IdentityCredential::FetchAccountList(argumentPrincipal,
-                                                        aProvider, manifest);
-          },
-          [](nsresult error) {
-            return IdentityCredential::GetAccountListPromise::CreateAndReject(
-                error, __func__);
-          })
+  return IdentityCredential::FetchAccountList(argumentPrincipal, aProvider,
+                                              aManifest)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal, browsingContext, aProvider](
@@ -250,7 +279,7 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
                   NS_ERROR_FAILURE, __func__);
             }
             return PromptUserToSelectAccount(browsingContext, accountList,
-                                             currentManifest);
+                                             aProvider, currentManifest);
           },
           [](nsresult error) {
             return IdentityCredential::GetAccountPromise::CreateAndReject(
@@ -698,14 +727,15 @@ IdentityCredential::FetchMetadata(nsIPrincipal* aPrincipal,
 }
 
 // static
-RefPtr<IdentityCredential::GetIdentityProviderPromise>
+RefPtr<IdentityCredential::GetIdentityProviderWithManifestPromise>
 IdentityCredential::PromptUserToSelectProvider(
     BrowsingContext* aBrowsingContext,
-    const Sequence<IdentityProvider>& aProviders) {
+    const Sequence<IdentityProvider>& aProviders,
+    const Sequence<GetManifestPromise::ResolveOrRejectValue>& aManifests) {
   MOZ_ASSERT(aBrowsingContext);
-  RefPtr<IdentityCredential::GetIdentityProviderPromise::Private>
-      resultPromise =
-          new IdentityCredential::GetIdentityProviderPromise::Private(__func__);
+  RefPtr<IdentityCredential::GetIdentityProviderWithManifestPromise::Private>
+      resultPromise = new IdentityCredential::
+          GetIdentityProviderWithManifestPromise::Private(__func__);
 
   if (NS_WARN_IF(!aBrowsingContext)) {
     resultPromise->Reject(NS_ERROR_FAILURE, __func__);
@@ -734,19 +764,53 @@ IdentityCredential::PromptUserToSelectProvider(
     return resultPromise;
   }
 
+  // Convert each settled MozPromise into a Nullable<ResolveValue>
+  Sequence<Nullable<IdentityInternalManifest>> manifests;
+  for (GetManifestPromise::ResolveOrRejectValue manifest : aManifests) {
+    if (manifest.IsResolve()) {
+      if (NS_WARN_IF(
+              !manifests.AppendElement(manifest.ResolveValue(), fallible))) {
+        resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+        return resultPromise;
+      }
+    } else {
+      if (NS_WARN_IF(!manifests.AppendElement(
+              Nullable<IdentityInternalManifest>(), fallible))) {
+        resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+        return resultPromise;
+      }
+    }
+  }
+  JS::Rooted<JS::Value> manifestsJS(jsapi.cx());
+  success = ToJSValue(jsapi.cx(), manifests, &manifestsJS);
+  if (NS_WARN_IF(!success)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
   RefPtr<Promise> showPromptPromise;
   icPromptService->ShowProviderPrompt(aBrowsingContext, providersJS,
+                                      manifestsJS,
                                       getter_AddRefs(showPromptPromise));
 
   RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-      [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue) {
-        IdentityProvider result;
-        bool success = result.Init(aCx, aValue);
-        if (!success) {
+      [aProviders, aManifests, resultPromise](JSContext* aCx,
+                                              JS::Handle<JS::Value> aValue) {
+        int32_t result = aValue.toInt32();
+        if (result < 0 || (uint32_t)result > aProviders.Length() ||
+            (uint32_t)result > aManifests.Length()) {
           resultPromise->Reject(NS_ERROR_FAILURE, __func__);
           return;
         }
-        resultPromise->Resolve(result, __func__);
+        const IdentityProvider& resolvedProvider = aProviders.ElementAt(result);
+        if (!aManifests.ElementAt(result).IsResolve()) {
+          resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+          return;
+        }
+        const IdentityInternalManifest& resolvedManifest =
+            aManifests.ElementAt(result).ResolveValue();
+        resultPromise->Resolve(MakeTuple(resolvedProvider, resolvedManifest),
+                               __func__);
       },
       [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
   showPromptPromise->AppendNativeHandler(listener);
@@ -758,6 +822,7 @@ IdentityCredential::PromptUserToSelectProvider(
 RefPtr<IdentityCredential::GetAccountPromise>
 IdentityCredential::PromptUserToSelectAccount(
     BrowsingContext* aBrowsingContext, const IdentityAccountList& aAccounts,
+    const IdentityProvider& aProvider,
     const IdentityInternalManifest& aManifest) {
   MOZ_ASSERT(aBrowsingContext);
   RefPtr<IdentityCredential::GetAccountPromise::Private> resultPromise =
@@ -790,19 +855,37 @@ IdentityCredential::PromptUserToSelectAccount(
     return resultPromise;
   }
 
+  JS::Rooted<JS::Value> providerJS(jsapi.cx());
+  success = ToJSValue(jsapi.cx(), aProvider, &providerJS);
+  if (NS_WARN_IF(!success)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
+  JS::Rooted<JS::Value> manifestJS(jsapi.cx());
+  success = ToJSValue(jsapi.cx(), aManifest, &manifestJS);
+  if (NS_WARN_IF(!success)) {
+    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return resultPromise;
+  }
+
   RefPtr<Promise> showPromptPromise;
   icPromptService->ShowAccountListPrompt(aBrowsingContext, accountsJS,
+                                         providerJS, manifestJS,
                                          getter_AddRefs(showPromptPromise));
 
   RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-      [resultPromise, aManifest](JSContext* aCx, JS::Handle<JS::Value> aValue) {
-        IdentityAccount result;
-        bool success = result.Init(aCx, aValue);
-        if (!success) {
+      [aAccounts, resultPromise, aManifest](JSContext* aCx,
+                                            JS::Handle<JS::Value> aValue) {
+        int32_t result = aValue.toInt32();
+        if (!aAccounts.mAccounts.WasPassed() || result < 0 ||
+            (uint32_t)result > aAccounts.mAccounts.Value().Length()) {
           resultPromise->Reject(NS_ERROR_FAILURE, __func__);
           return;
         }
-        resultPromise->Resolve(MakeTuple(aManifest, result), __func__);
+        const IdentityAccount& resolved =
+            aAccounts.mAccounts.Value().ElementAt(result);
+        resultPromise->Resolve(MakeTuple(aManifest, resolved), __func__);
       },
       [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
   showPromptPromise->AppendNativeHandler(listener);
@@ -861,7 +944,7 @@ IdentityCredential::PromptUserWithPolicy(
   return FetchMetadata(aPrincipal, aProvider, aManifest)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aAccount, aProvider, argumentPrincipal, browsingContext,
+          [aAccount, aManifest, aProvider, argumentPrincipal, browsingContext,
            icStorageService,
            idpPrincipal](const IdentityClientMetadata& metadata)
               -> RefPtr<GenericPromise> {
@@ -892,10 +975,16 @@ IdentityCredential::PromptUserWithPolicy(
               return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                      __func__);
             }
+            JS::Rooted<JS::Value> manifestJS(jsapi.cx());
+            success = ToJSValue(jsapi.cx(), aManifest, &manifestJS);
+            if (NS_WARN_IF(!success)) {
+              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+            }
 
             RefPtr<Promise> showPromptPromise;
             icPromptService->ShowPolicyPrompt(
-                browsingContext, providerJS, metadataJS,
+                browsingContext, providerJS, manifestJS, metadataJS,
                 getter_AddRefs(showPromptPromise));
 
             RefPtr<GenericPromise::Private> resultPromise =

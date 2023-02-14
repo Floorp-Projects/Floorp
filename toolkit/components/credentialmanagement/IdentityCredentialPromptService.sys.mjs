@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 function fulfilledPromiseFromFirstListElement(list) {
   if (list.length) {
-    return Promise.resolve(list[0]);
+    return Promise.resolve(0);
   }
   return Promise.reject();
 }
@@ -42,9 +42,10 @@ export class IdentityCredentialPromptService {
    * Ask the user, using a PopupNotification, to select an Identity Provider from a provided list.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
    * @param {IdentityProvider[]} identityProviders - The list of identity providers the user selects from
-   * @returns {Promise<IdentityProvider>} The user-selected identity provider
+   * @param {IdentityInternalManifest[]} identityManifests - The manifests corresponding 1-to-1 with identityProviders
+   * @returns {Promise<number>} The user-selected identity provider
    */
-  showProviderPrompt(browsingContext, identityProviders) {
+  showProviderPrompt(browsingContext, identityProviders, identityManifests) {
     // For testing only.
     if (lazy.SELECT_FIRST_IN_UI_LISTS) {
       return fulfilledPromiseFromFirstListElement(identityProviders);
@@ -101,7 +102,7 @@ export class IdentityCredentialPromptService {
             browser
           );
           browser.ownerGlobal.PopupNotifications.remove(notification);
-          resolve(provider);
+          resolve(providerIndex);
           event.stopPropagation();
         };
         listBox.append(newItem);
@@ -152,12 +153,14 @@ export class IdentityCredentialPromptService {
    * Ask the user, using a PopupNotification, to approve or disapprove of the policies of the Identity Provider.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
    * @param {IdentityProvider} identityProvider - The Identity Provider that the user has selected to use
+   * @param {IdentityInternalManifest} identityManifest - The Identity Provider that the user has selected to use's manifest
    * @param {IdentityCredentialMetadata} identityCredentialMetadata - The metadata displayed to the user
    * @returns {Promise<bool>} A boolean representing the user's acceptance of the metadata.
    */
   showPolicyPrompt(
     browsingContext,
     identityProvider,
+    identityManifest,
     identityCredentialMetadata
   ) {
     // For testing only.
@@ -283,9 +286,16 @@ export class IdentityCredentialPromptService {
    * Ask the user, using a PopupNotification, to select an account from a provided list.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
    * @param {IdentityAccountList} accountList - The list of accounts the user selects from
+   * @param {IdentityProvider} provider - The selected identity provider
+   * @param {IdentityInternalManifest} providerManifest - The manifest of the selected identity provider
    * @returns {Promise<IdentityAccount>} The user-selected account
    */
-  showAccountListPrompt(browsingContext, accountList) {
+  showAccountListPrompt(
+    browsingContext,
+    accountList,
+    provider,
+    providerManifest
+  ) {
     // For testing only.
     if (lazy.SELECT_FIRST_IN_UI_LISTS) {
       return fulfilledPromiseFromFirstListElement(accountList.accounts);
@@ -350,7 +360,7 @@ export class IdentityCredentialPromptService {
             browser
           );
           browser.ownerGlobal.PopupNotifications.remove(notification);
-          resolve(account);
+          resolve(accountIndex);
         };
         listBox.append(newItem);
       }

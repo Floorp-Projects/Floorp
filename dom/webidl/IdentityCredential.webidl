@@ -47,7 +47,7 @@ dictionary IdentityBranding {
 };
 
 // https://fedidcg.github.io/FedCM/#manifest
-[GenerateInit]
+[GenerateInit, GenerateConversionToJS]
 dictionary IdentityInternalManifest {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;

@@ -36,6 +36,10 @@ class IdentityCredential final : public Credential {
   typedef MozPromise<bool, nsresult, true> ValidationPromise;
   typedef MozPromise<IdentityInternalManifest, nsresult, true>
       GetManifestPromise;
+  typedef Tuple<IdentityProvider, IdentityInternalManifest>
+      IdentityProviderWithManifest;
+  typedef MozPromise<IdentityProviderWithManifest, nsresult, true>
+      GetIdentityProviderWithManifestPromise;
   typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccountList>,
                      nsresult, true>
       GetAccountListPromise;
@@ -124,6 +128,7 @@ class IdentityCredential final : public Credential {
   //    aPrincipal: the caller of navigator.credentials.get()'s principal
   //    aBrowsingContext: the BC of the caller of navigator.credentials.get()
   //    aProvider: the provider to validate the root manifest of
+  //    aManifest: the internal manifest of the identity provider
   //  Return value:
   //    a promise resolving to an IPC credential with type "identity", id
   //    constructed to identify it, and token corresponding to the token
@@ -133,7 +138,8 @@ class IdentityCredential final : public Credential {
   //    other static methods here.
   static RefPtr<GetIPCIdentityCredentialPromise> CreateCredential(
       nsIPrincipal* aPrincipal, BrowsingContext* aBrowsingContext,
-      const IdentityProvider& aProvider);
+      const IdentityProvider& aProvider,
+      const IdentityInternalManifest& aManifest);
 
   // Performs a Fetch for the root manifest of the provided identity provider
   // and validates it as correct. The returned promise resolves with a bool
@@ -235,14 +241,17 @@ class IdentityCredential final : public Credential {
   //   Arguments:
   //    aBrowsingContext: the BC of the caller of navigator.credentials.get()
   //    aProviders: the providers to let the user select from
+  //    aManifests: the manifests
   //  Return value:
   //    a promise resolving to an identity provider that the user took action
   //    to select. This promise may reject with nsresult errors.
   //  Side effects:
   //    Will show a dialog to the user.
-  static RefPtr<GetIdentityProviderPromise> PromptUserToSelectProvider(
+  static RefPtr<GetIdentityProviderWithManifestPromise>
+  PromptUserToSelectProvider(
       BrowsingContext* aBrowsingContext,
-      const Sequence<IdentityProvider>& aProviders);
+      const Sequence<IdentityProvider>& aProviders,
+      const Sequence<GetManifestPromise::ResolveOrRejectValue>& aManifests);
 
   // Show the user a dialog to select what account they would like
   // to try to log in with.
@@ -250,6 +259,7 @@ class IdentityCredential final : public Credential {
   //   Arguments:
   //    aBrowsingContext: the BC of the caller of navigator.credentials.get()
   //    aAccounts: the accounts to let the user select from
+  //    aProvider: the provider that was chosen
   //    aManifest: the identity provider that was chosen's manifest
   //  Return value:
   //    a promise resolving to an account that the user took action
@@ -258,6 +268,7 @@ class IdentityCredential final : public Credential {
   //    Will show a dialog to the user.
   static RefPtr<GetAccountPromise> PromptUserToSelectAccount(
       BrowsingContext* aBrowsingContext, const IdentityAccountList& aAccounts,
+      const IdentityProvider& aProvider,
       const IdentityInternalManifest& aManifest);
 
   // Show the user a dialog to select what account they would like
