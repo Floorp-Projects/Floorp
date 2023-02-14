@@ -768,7 +768,6 @@ if (rtc_include_tests && !build_with_chromium) {
   }
 }
 
-if (!build_with_mozilla) {
 # Build target for standalone dcsctp
 rtc_static_library("dcsctp") {
   # Only the root target should depend on this.
@@ -784,7 +783,6 @@ rtc_static_library("dcsctp") {
     "net/dcsctp/socket:dcsctp_socket",
     "net/dcsctp/timer:task_queue_timeout",
   ]
-}
 }
 
 # ---- Poisons ----
