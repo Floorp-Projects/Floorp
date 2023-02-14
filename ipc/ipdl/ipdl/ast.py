@@ -384,6 +384,13 @@ class MessageDecl(Node):
             sourcePriority = "normal"
         return priorityAttrMap.get(sourcePriority, NORMAL_PRIORITY)
 
+    def replyPriority(self):
+        if "ReplyPriority" in self.attributes:
+            sourcePriority = self.attributes["ReplyPriority"].value
+            if sourcePriority in priorityAttrMap:
+                return priorityAttrMap[sourcePriority]
+        return self.priority()
+
 
 class Param(Node):
     def __init__(self, loc, typespec, name, attributes={}):
