@@ -392,7 +392,6 @@ rtc_library("desktop_capture") {
     deps += [ ":desktop_capture_objc" ]
   }
   if (rtc_use_x11_extensions || rtc_use_pipewire) {
-    include_dirs += [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
       "mouse_cursor_monitor_linux.cc",
       "screen_capturer_linux.cc",
