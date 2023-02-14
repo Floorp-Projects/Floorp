@@ -55,8 +55,6 @@ class NetworkEventWatcher {
     this.networkEvents = new Map();
 
     this.watcherActor = watcherActor;
-    this.pool = new Pool(watcherActor.conn, "network-events");
-    this.watcherActor.manage(this.pool);
     this.onNetworkEventAvailable = onAvailable;
     this.onNetworkEventUpdated = onUpdated;
     // Boolean to know if we keep previous document network events or not.
@@ -71,11 +69,28 @@ class NetworkEventWatcher {
 
   /**
    * Clear all the network events and the related actors.
+   *
+   * This is called on actor destroy, but also from WatcherActor.clearResources(NETWORK_EVENT)
    */
   clear() {
     this.networkEvents.clear();
     this.listener.clear();
-    this.pool.destroy();
+    if (this._pool) {
+      this._pool.destroy();
+      this._pool = null;
+    }
+  }
+
+  /**
+   * A protocol.js Pool to store all NetworkEventActor's which may be destroyed on navigations.
+   */
+  get pool() {
+    if (this._pool) {
+      return this._pool;
+    }
+    this._pool = new Pool(this.watcherActor.conn, "network-events");
+    this.watcherActor.manage(this._pool);
+    return this._pool;
   }
 
   /**
