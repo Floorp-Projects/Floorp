@@ -1202,6 +1202,7 @@ html {
   min-width: 32px;
   -moz-context-properties: fill;
   fill: currentColor;
+  transition: var(--transition);
 }
 .onboardingContainer .dismiss-button:dir(rtl) {
   left: 0;
@@ -1565,10 +1566,12 @@ html {
   translate: 0 var(--translate);
 }
 .onboardingContainer.transition-in [pos=corner] .attrib-text,
-.onboardingContainer.transition-in [pos=corner] .secondary-cta.top {
+.onboardingContainer.transition-in [pos=corner] .secondary-cta.top,
+.onboardingContainer.transition-in [pos=corner] .dismiss-button {
   opacity: 0;
 }
-.onboardingContainer.transition-in .dialog-initial .main-content {
+.onboardingContainer.transition-in .dialog-initial .main-content,
+.onboardingContainer.transition-in .dialog-initial .dismiss-button {
   translate: 0 calc(-2 * var(--translate));
 }
 .onboardingContainer.transition-in .dialog-initial .brand-logo,
@@ -1578,6 +1581,10 @@ html {
 }
 .onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps:not(.progress-bar) {
   opacity: 0.2;
+}
+.onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .dismiss-button {
+  opacity: 0;
+  translate: 0 calc(-1 * var(--translate));
 }
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
@@ -1600,7 +1607,8 @@ html {
   opacity: 0;
   translate: 0 var(--translate);
 }
-.onboardingContainer.transition-out [pos=corner] .main-content {
+.onboardingContainer.transition-out [pos=corner] .main-content,
+.onboardingContainer.transition-out [pos=corner] .dismiss-button {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
@@ -1632,7 +1640,8 @@ html {
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .checkbox-container,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top),
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .cta-link {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .cta-link,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .dismiss-button {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.3s;
@@ -1644,7 +1653,8 @@ html {
 .onboardingContainer.transition-out .dialog-last .noodle {
   transition-delay: 0s;
 }
-.onboardingContainer.transition-out .dialog-last .main-content {
+.onboardingContainer.transition-out .dialog-last .main-content,
+.onboardingContainer.transition-out .dialog-last .dismiss-button {
   opacity: 0;
   translate: 0 calc(2 * var(--translate));
   transition-delay: 0.4s;

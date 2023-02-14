@@ -1200,6 +1200,7 @@ html {
     min-width: 32px;
     -moz-context-properties: fill;
     fill: currentColor;
+    transition: var(--transition);
 
     &:dir(rtl) {
       left: 0;
@@ -1645,13 +1646,15 @@ html {
       }
 
       .attrib-text,
-      .secondary-cta.top {
+      .secondary-cta.top,
+      .dismiss-button {
         opacity: 0;
       }
     }
 
     .dialog-initial {
-      .main-content {
+      .main-content,
+      .dismiss-button {
         translate: 0 calc(-2 * var(--translate));
       }
 
@@ -1665,6 +1668,11 @@ html {
     .screen:not(.dialog-initial):not([pos='corner']) {
       .steps:not(.progress-bar) {
         opacity: 0.2;
+      }
+
+      .dismiss-button {
+        opacity: 0;
+        translate: 0 calc(-1 * var(--translate));
       }
     }
 
@@ -1697,7 +1705,8 @@ html {
         translate: 0 var(--translate);
       }
 
-      .main-content {
+      .main-content,
+      .dismiss-button {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.2s;
@@ -1738,7 +1747,8 @@ html {
       .checkbox-container,
       .secondary,
       .secondary-cta:not(.top),
-      .cta-link {
+      .cta-link,
+      .dismiss-button {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.3s;
@@ -1755,7 +1765,8 @@ html {
         transition-delay: 0s;
       }
 
-      .main-content {
+      .main-content,
+      .dismiss-button {
         opacity: 0;
         translate: 0 calc(2 * var(--translate));
         transition-delay: 0.4s;
