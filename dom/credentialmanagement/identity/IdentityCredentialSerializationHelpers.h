@@ -13,8 +13,8 @@
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::IdentityProvider> {
-  typedef mozilla::dom::IdentityProvider paramType;
+struct ParamTraits<mozilla::dom::IdentityProviderConfig> {
+  typedef mozilla::dom::IdentityProviderConfig paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mConfigURL);
