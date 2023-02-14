@@ -213,12 +213,9 @@ void SVGImageFrame::OnVisibilityChange(
     Visibility aNewVisibility, const Maybe<OnNonvisible>& aNonvisibleAction) {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
       do_QueryInterface(GetContent());
-  if (!imageLoader) {
-    SVGGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
-    return;
+  if (imageLoader) {
+    imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
   }
-
-  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
   SVGGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
@@ -380,8 +377,7 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       // the <image>. But that seems to be a quite obscure usecase, we can
       // add a dedicated utility for that purpose to replace the GetCTM
       // here if necessary.
-      auto mat = SVGContentUtils::GetCTM(
-          static_cast<SVGImageElement*>(GetContent()), false);
+      auto mat = SVGContentUtils::GetCTM(imgElem, false);
       if (mat.IsSingular()) {
         return;
       }
