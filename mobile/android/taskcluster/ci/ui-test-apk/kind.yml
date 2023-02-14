@@ -44,6 +44,8 @@ task-defaults:
 
 tasks:
     focus-arm-debug:
+        attributes:
+            shipping-product: focus
         description: 'Focus UI tests with firebase'
         run-on-tasks-for: [github-pull-request, github-push]
         run:
@@ -72,6 +74,7 @@ tasks:
     focus-arm-nightly:
         attributes:
             build-type: nightly-firebase
+            shipping-product: focus
         description: 'UI tests on Nightly with firebase'
         run-on-tasks-for: [github-push]
         run-on-git-branches: [main]
@@ -100,6 +103,7 @@ tasks:
     focus-arm-beta:
         attributes:
             build-type: nightly-firebase
+            shipping-product: focus
         description: 'UI tests on Beta with firebase'
         run-on-tasks-for: [github-push]
         run-on-git-branches: [main, releases_v]
@@ -126,6 +130,8 @@ tasks:
             env:
                 GOOGLE_PROJECT: 'moz-focus-android'
     fenix-arm-debug:
+        attributes:
+            shipping-product: fenix
         description: Test Fenix
         run-on-tasks-for: [github-pull-request, github-push]
         run-on-git-branches: ["^((?!releases[_/]).+)$"]
@@ -206,6 +212,8 @@ tasks:
                       }
                     ]
     screenshots-arm:
+        attributes:
+            shipping-product: fenix
         attributes:
             screenshots: true
         description: Run UI screenshots tests to keep them up to date
@@ -290,6 +298,7 @@ tasks:
     fenix-arm-beta:
         attributes:
             build-type: beta-firebase
+            shipping-product: fenix
         description: Test Fenix
         run-on-tasks-for: [github-push]
         run-on-git-branches: ["^releases[/_].+$"]
@@ -372,6 +381,7 @@ tasks:
     fenix-arm-nightly:
         attributes:
             build-type: nightly-firebase
+            shipping-product: fenix
         description: Test Fenix
         run-on-tasks-for: [github-push]
         dependencies:
@@ -453,6 +463,7 @@ tasks:
     fenix-legacy-arm:
         attributes:
             legacy: true
+            shipping-product: fenix
         description: Run select UI tests on older Android API on cron
         run-on-tasks-for: []
         run-on-git-branches: [main]
