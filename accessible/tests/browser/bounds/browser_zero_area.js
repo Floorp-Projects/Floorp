@@ -99,3 +99,20 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, remoteIframe: true }
 );
+
+/**
+ * Test a div (block) inside a span (inline). This causes the span's primary
+ * frame to have an empty rect offset from its visible content.
+ */
+addAccessibleTask(
+  `
+<span id="span" tabindex="-1">
+  <div id="div">Testing</div>
+</span>
+  `,
+  async function(browser, docAcc) {
+    await testBoundsWithContent(docAcc, "span", browser);
+    await testBoundsWithContent(docAcc, "div", browser);
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);

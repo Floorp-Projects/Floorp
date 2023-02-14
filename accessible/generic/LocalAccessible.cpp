@@ -658,17 +658,31 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       // example) employ things like 0x0 buttons with visual overflow. Without
       // this, such frames aren't navigable by screen readers.
       result = frame->InkOverflowRectRelativeToSelf();
-      nsLayoutUtils::TransformRect(frame, boundingFrame, result);
+      result.MoveBy(frame->GetOffsetTo(boundingFrame));
     }
 
     if (boundingFrame->GetRect().IsEmpty()) {
-      // We would have used the ink overflow rect for our parent Accessible.
-      // However, GetAllInFlowRectsUnion calculates relative to the bounding
-      // frame's main rect, not its ink overflow rect. We need to adjust for
-      // the ink overflow offset to make our result parent relative.
-      nsRect boundingOverflow = boundingFrame->InkOverflowRectRelativeToSelf();
-      if (boundingOverflow.x < 0 || boundingOverflow.y < 0) {
-        result.MoveBy(-boundingOverflow.x, -boundingOverflow.y);
+      // boundingFrame might be the first in an ib-split-sibling chain. If its
+      // rect is empty, GetAllInFlowRectsUnion might exclude its origin. For
+      // example, if boundingFrame is empty with an origin of (0, -840) but
+      // has a non-empty ib-split-sibling with (0, 0), the union rect will
+      // originate at (0, 0). This means the bounds returned for our parent
+      // Accessible might be offset from boundingFrame's rect. Since result is
+      // currently relative to boundingFrame's rect, we might need to adjust it
+      // to make it parent relative.
+      nsRect boundingUnion =
+          nsLayoutUtils::GetAllInFlowRectsUnion(boundingFrame, boundingFrame);
+      if (!boundingUnion.IsEmpty()) {
+        result.MoveBy(-boundingUnion.TopLeft());
+      } else {
+        // Since GetAllInFlowRectsUnion returned an empty rect on our parent
+        // Accessible, we would have used the ink overflow rect. However,
+        // GetAllInFlowRectsUnion calculates relative to the bounding frame's
+        // main rect, not its ink overflow rect. We need to adjust for the ink
+        // overflow offset to make our result parent relative.
+        nsRect boundingOverflow =
+            boundingFrame->InkOverflowRectRelativeToSelf();
+        result.MoveBy(-boundingOverflow.TopLeft());
       }
     }
 
