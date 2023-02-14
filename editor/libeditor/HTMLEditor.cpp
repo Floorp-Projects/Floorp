@@ -2256,9 +2256,12 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
   MOZ_ASSERT(tagName);
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
+    // MOZ_KnownLive(tagName->AsStatic()) because nsStaticAtom instances live
+    // while the process is running.
     Result<EditActionResult, nsresult> result =
-        MakeOrChangeListAndListItemAsSubAction(*tagName, u""_ns,
-                                               SelectAllOfCurrentList::No);
+        MakeOrChangeListAndListItemAsSubAction(
+            MOZ_KnownLive(*tagName->AsStatic()), u""_ns,
+            SelectAllOfCurrentList::No);
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING(
           "HTMLEditor::MakeOrChangeListAndListItemAsSubAction("
@@ -2607,11 +2610,13 @@ NS_IMETHODIMP HTMLEditor::MakeOrChangeList(const nsAString& aListType,
                                            bool aEntireList,
                                            const nsAString& aBulletType) {
   RefPtr<nsAtom> listTagName = NS_Atomize(aListType);
-  if (NS_WARN_IF(!listTagName)) {
+  if (NS_WARN_IF(!listTagName) || NS_WARN_IF(!listTagName->IsStatic())) {
     return NS_ERROR_INVALID_ARG;
   }
+  // MOZ_KnownLive(listTagName->AsStatic()) because nsStaticAtom instances live
+  // while the process is running.
   nsresult rv = MakeOrChangeListAsAction(
-      *listTagName, aBulletType,
+      MOZ_KnownLive(*listTagName->AsStatic()), aBulletType,
       aEntireList ? SelectAllOfCurrentList::Yes : SelectAllOfCurrentList::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::MakeOrChangeListAsAction() failed");
@@ -2619,14 +2624,15 @@ NS_IMETHODIMP HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 }
 
 nsresult HTMLEditor::MakeOrChangeListAsAction(
-    nsAtom& aListTagName, const nsAString& aBulletType,
+    const nsStaticAtom& aListElementTagName, const nsAString& aBulletType,
     SelectAllOfCurrentList aSelectAllOfCurrentList, nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForInsert(aListTagName), aPrincipal);
+      *this, HTMLEditUtils::GetEditActionForInsert(aListElementTagName),
+      aPrincipal);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
@@ -2635,7 +2641,7 @@ nsresult HTMLEditor::MakeOrChangeListAsAction(
   }
 
   Result<EditActionResult, nsresult> result =
-      MakeOrChangeListAndListItemAsSubAction(aListTagName, aBulletType,
+      MakeOrChangeListAndListItemAsSubAction(aListElementTagName, aBulletType,
                                              aSelectAllOfCurrentList);
   if (MOZ_UNLIKELY(result.isErr())) {
     NS_WARNING("HTMLEditor::MakeOrChangeListAndListItemAsSubAction() failed");

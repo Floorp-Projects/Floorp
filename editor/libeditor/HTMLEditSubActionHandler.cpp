@@ -3112,7 +3112,8 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
 
 Result<EditActionResult, nsresult>
 HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
-    nsAtom& aListElementOrListItemElementTagName, const nsAString& aBulletType,
+    const nsStaticAtom& aListElementOrListItemElementTagName,
+    const nsAString& aBulletType,
     SelectAllOfCurrentList aSelectAllOfCurrentList) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(&aListElementOrListItemElementTagName == nsGkAtoms::ul ||
@@ -3194,8 +3195,8 @@ HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
     }
   }
 
-  nsAtom* listTagName = nullptr;
-  nsAtom* listItemTagName = nullptr;
+  const nsStaticAtom* listTagName = nullptr;
+  const nsStaticAtom* listItemTagName = nullptr;
   if (&aListElementOrListItemElementTagName == nsGkAtoms::ul ||
       &aListElementOrListItemElementTagName == nsGkAtoms::ol) {
     listTagName = &aListElementOrListItemElementTagName;
@@ -3249,11 +3250,11 @@ HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
     }
   }
 
+  AutoListElementCreator listCreator(*listTagName, *listItemTagName,
+                                     aBulletType);
   AutoRangeArray selectionRanges(SelectionRef());
-  Result<EditActionResult, nsresult> result = ConvertContentAroundRangesToList(
-      selectionRanges, MOZ_KnownLive(*listTagName),
-      MOZ_KnownLive(*listItemTagName), aBulletType, aSelectAllOfCurrentList,
-      *editingHost);
+  Result<EditActionResult, nsresult> result = listCreator.Run(
+      *this, selectionRanges, aSelectAllOfCurrentList, *editingHost);
   if (MOZ_UNLIKELY(result.isErr())) {
     NS_WARNING("HTMLEditor::ConvertContentAroundRangesToList() failed");
     // XXX Should we try to restore selection ranges in this case?
@@ -3272,15 +3273,14 @@ HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
                                     : EditActionResult::HandledResult();
 }
 
-Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
-    AutoRangeArray& aRanges, nsAtom& aListElementTagName,
-    nsAtom& aListItemElementTagName, const nsAString& aBulletType,
+Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
+    HTMLEditor& aHTMLEditor, AutoRangeArray& aRanges,
     SelectAllOfCurrentList aSelectAllOfCurrentList,
-    const Element& aEditingHost) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
+    const Element& aEditingHost) const {
+  MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!aHTMLEditor.IsSelectionRangeContainerNotContent());
 
-  if (NS_WARN_IF(!aRanges.SaveAndTrackRanges(*this))) {
+  if (NS_WARN_IF(!aRanges.SaveAndTrackRanges(aHTMLEditor))) {
     return Err(NS_ERROR_FAILURE);
   }
 
@@ -3299,14 +3299,14 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     //       normal cases, but removing this may cause the behavior with the
     //       legacy mutation event listeners.  We should try to delete this in
     //       a bug.
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
+    AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
 
     extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
         EditSubAction::eCreateOrChangeList, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
             .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
-                *this, aEditingHost);
+                aHTMLEditor, aEditingHost);
     if (MOZ_UNLIKELY(splitResult.isErr())) {
       NS_WARNING(
           "AutoRangeArray::"
@@ -3315,7 +3315,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       return splitResult.propagateErr();
     }
     nsresult rv = extendedRanges.CollectEditTargetNodes(
-        *this, arrayOfContents, EditSubAction::eCreateOrChangeList,
+        aHTMLEditor, arrayOfContents, EditSubAction::eCreateOrChangeList,
         AutoRangeArray::CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -3325,8 +3325,8 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     }
 
     Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
-        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
-                                           EditSubAction::eCreateOrChangeList);
+        aHTMLEditor.MaybeSplitElementsAtEveryBRElement(
+            arrayOfContents, EditSubAction::eCreateOrChangeList);
     if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
@@ -3338,7 +3338,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
   // check if all our nodes are <br>s, or empty inlines
   auto IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements =
       [](const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
-        for (auto& content : aArrayOfContents) {
+        for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
           // if content is not a Break or empty inline, we're done
           if (!content->IsHTMLElement(nsGkAtoms::br) &&
               !HTMLEditUtils::IsEmptyInlineContainer(
@@ -3356,7 +3356,8 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     for (auto& content : arrayOfContents) {
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
-      nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
+      nsresult rv =
+          aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(*content));
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return Err(rv);
@@ -3371,19 +3372,18 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
 
     // Make sure we can put a list here.
     if (!HTMLEditUtils::CanNodeContain(*firstRangeStartPoint.GetContainer(),
-                                       aListElementTagName)) {
+                                       mListTagName)) {
       aRanges.RestoreFromSavedRanges();
       return EditActionResult::CanceledResult();
     }
 
     RefPtr<Element> newListItemElement;
     Result<CreateElementResult, nsresult> createNewListElementResult =
-        InsertElementWithSplittingAncestorsWithTransaction(
-            aListElementTagName, firstRangeStartPoint,
-            BRElementNextToSplitPoint::Keep, aEditingHost,
+        aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
+            mListTagName, firstRangeStartPoint, BRElementNextToSplitPoint::Keep,
+            aEditingHost,
             // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-            [&newListItemElement, &aListItemElementTagName](
-                HTMLEditor& aHTMLEditor, Element& aListElement,
+            [&](HTMLEditor& aHTMLEditor, Element& aListElement,
                 const EditorDOMPoint& aPointToInsert)
                 MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                   const auto withTransaction = aListElement.IsInComposedDoc()
@@ -3392,7 +3392,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
                   Result<CreateElementResult, nsresult>
                       createNewListItemElementResult =
                           aHTMLEditor.CreateAndInsertElement(
-                              withTransaction, aListItemElementTagName,
+                              withTransaction, mListItemTagName,
                               EditorDOMPoint(&aListElement, 0u));
                   if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
                     NS_WARNING(
@@ -3422,7 +3422,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
           nsPrintfCString(
               "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
               "%s) failed",
-              nsAtomCString(&aListElementTagName).get())
+              nsAtomCString(&mListTagName).get())
               .get());
       return createNewListElementResult.propagateErr();
     }
@@ -3484,7 +3484,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         (content->IsHTMLElement(nsGkAtoms::br) ||
          HTMLEditUtils::IsEmptyInlineContainer(
              content, {EmptyCheckOption::TreatSingleBRElementAsVisible}))) {
-      nsresult rv = DeleteNodeWithTransaction(*content);
+      nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(*content);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return Err(rv);
@@ -3501,7 +3501,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       // Then, wrap it with list item element and delete the old container.
       if (curList && !EditorUtils::IsDescendantOf(*content, *curList)) {
         Result<MoveNodeResult, nsresult> moveNodeResult =
-            MoveNodeToEndWithTransaction(*content, *curList);
+            aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
         if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
           return moveNodeResult.propagateErr();
@@ -3510,8 +3510,9 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         moveNodeResult.inspect().IgnoreCaretPointSuggestion();
 
         Result<CreateElementResult, nsresult> convertListTypeResult =
-            ChangeListElementType(MOZ_KnownLive(*content->AsElement()),
-                                  aListElementTagName, aListItemElementTagName);
+            aHTMLEditor.ChangeListElementType(
+                MOZ_KnownLive(*content->AsElement()), mListTagName,
+                mListItemTagName);
         if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
           NS_WARNING("HTMLEditor::ChangeListElementType() failed");
           return convertListTypeResult.propagateErr();
@@ -3520,7 +3521,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
 
         Result<EditorDOMPoint, nsresult> unwrapNewListElementResult =
-            RemoveBlockContainerWithTransaction(
+            aHTMLEditor.RemoveBlockContainerWithTransaction(
                 MOZ_KnownLive(*convertListTypeResult.inspect().GetNewNode()));
         if (MOZ_UNLIKELY(unwrapNewListElementResult.isErr())) {
           NS_WARNING(
@@ -3536,8 +3537,9 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       // If current list element is in found list element or we've not met a
       // list element, convert current list element to proper type.
       Result<CreateElementResult, nsresult> convertListTypeResult =
-          ChangeListElementType(MOZ_KnownLive(*content->AsElement()),
-                                aListElementTagName, aListItemElementTagName);
+          aHTMLEditor.ChangeListElementType(
+              MOZ_KnownLive(*content->AsElement()), mListTagName,
+              mListItemTagName);
       if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
         NS_WARNING("HTMLEditor::ChangeListElementType() failed");
         return convertListTypeResult.propagateErr();
@@ -3560,7 +3562,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     if (HTMLEditUtils::IsListItem(content)) {
       // If current list item element is not in proper list element, we need
       // to convert the list element.
-      if (!atContent.IsContainerHTMLElement(&aListElementTagName)) {
+      if (!atContent.IsContainerHTMLElement(&mListTagName)) {
         // If we've not met a list element or current node is not in current
         // list element, insert a list element at current node and set
         // current list element to the new one.
@@ -3569,7 +3571,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
             return Err(NS_ERROR_FAILURE);
           }
           Result<SplitNodeResult, nsresult> splitListItemParentResult =
-              SplitNodeWithTransaction(atContent);
+              aHTMLEditor.SplitNodeWithTransaction(atContent);
           if (MOZ_UNLIKELY(splitListItemParentResult.isErr())) {
             NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
             return splitListItemParentResult.propagateErr();
@@ -3581,9 +3583,10 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
           unwrappedSplitListItemParentResult.IgnoreCaretPointSuggestion();
 
           Result<CreateElementResult, nsresult> createNewListElementResult =
-              CreateAndInsertElement(WithTransaction::Yes, aListElementTagName,
-                                     unwrappedSplitListItemParentResult
-                                         .AtNextContent<EditorDOMPoint>());
+              aHTMLEditor.CreateAndInsertElement(
+                  WithTransaction::Yes, mListTagName,
+                  unwrappedSplitListItemParentResult
+                      .AtNextContent<EditorDOMPoint>());
           if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
@@ -3599,7 +3602,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         }
         // Then, move current node into current list element.
         Result<MoveNodeResult, nsresult> moveNodeResult =
-            MoveNodeToEndWithTransaction(*content, *curList);
+            aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
         if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
           return moveNodeResult.propagateErr();
@@ -3608,11 +3611,10 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         moveNodeResult.inspect().IgnoreCaretPointSuggestion();
 
         // Convert list item type if current node is different list item type.
-        if (!content->IsHTMLElement(&aListItemElementTagName)) {
+        if (!content->IsHTMLElement(&mListItemTagName)) {
           Result<CreateElementResult, nsresult> newListItemElementOrError =
-              ReplaceContainerWithTransaction(
-                  MOZ_KnownLive(*content->AsElement()),
-                  aListItemElementTagName);
+              aHTMLEditor.ReplaceContainerWithTransaction(
+                  MOZ_KnownLive(*content->AsElement()), mListItemTagName);
           if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
             NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
             return newListItemElementOrError.propagateErr();
@@ -3633,7 +3635,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         // move it into current list item.
         else if (atContent.GetContainer() != curList) {
           Result<MoveNodeResult, nsresult> moveNodeResult =
-              MoveNodeToEndWithTransaction(*content, *curList);
+              aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
           if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
             NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
             return moveNodeResult.propagateErr();
@@ -3643,11 +3645,10 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
         }
         // Then, if current list item element is not proper type for current
         // list element, convert list item element to proper element.
-        if (!content->IsHTMLElement(&aListItemElementTagName)) {
+        if (!content->IsHTMLElement(&mListItemTagName)) {
           Result<CreateElementResult, nsresult> newListItemElementOrError =
-              ReplaceContainerWithTransaction(
-                  MOZ_KnownLive(*content->AsElement()),
-                  aListItemElementTagName);
+              aHTMLEditor.ReplaceContainerWithTransaction(
+                  MOZ_KnownLive(*content->AsElement()), mListItemTagName);
           if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
             NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
             return newListItemElementOrError.propagateErr();
@@ -3663,10 +3664,10 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       // If bullet type is specified, set list type attribute.
       // XXX Cannot we set type attribute before inserting the list item
       //     element into the DOM tree?
-      if (!aBulletType.IsEmpty()) {
-        nsresult rv = SetAttributeWithTransaction(
-            MOZ_KnownLive(*element), *nsGkAtoms::type, aBulletType);
-        if (NS_WARN_IF(Destroyed())) {
+      if (!mBulletType.IsEmpty()) {
+        nsresult rv = aHTMLEditor.SetAttributeWithTransaction(
+            MOZ_KnownLive(*element), *nsGkAtoms::type, mBulletType);
+        if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
           return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
@@ -3682,8 +3683,8 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       if (!element->HasAttr(nsGkAtoms::type)) {
         continue;
       }
-      nsresult rv = RemoveAttributeWithTransaction(MOZ_KnownLive(*element),
-                                                   *nsGkAtoms::type);
+      nsresult rv = aHTMLEditor.RemoveAttributeWithTransaction(
+          MOZ_KnownLive(*element), *nsGkAtoms::type);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::type) "
@@ -3707,7 +3708,8 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
           {CollectChildrenOption::CollectListChildren,
            CollectChildrenOption::CollectTableChildren});
       Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
-          RemoveContainerWithTransaction(MOZ_KnownLive(*content->AsElement()));
+          aHTMLEditor.RemoveContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()));
       if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
         return unwrapDivElementResult.propagateErr();
@@ -3724,15 +3726,15 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     if (!curList) {
       prevListItem = nullptr;
       Result<CreateElementResult, nsresult> createNewListElementResult =
-          InsertElementWithSplittingAncestorsWithTransaction(
-              aListElementTagName, atContent, BRElementNextToSplitPoint::Keep,
+          aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
+              mListTagName, atContent, BRElementNextToSplitPoint::Keep,
               aEditingHost);
       if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
         NS_WARNING(
             nsPrintfCString(
                 "HTMLEditor::"
                 "InsertElementWithSplittingAncestorsWithTransaction(%s) failed",
-                nsAtomCString(&aListElementTagName).get())
+                nsAtomCString(&mListTagName).get())
                 .get());
         return createNewListElementResult.propagateErr();
       }
@@ -3755,7 +3757,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     // is not a block element, move current node into the list item.
     if (HTMLEditUtils::IsInlineElement(content) && prevListItem) {
       Result<MoveNodeResult, nsresult> moveInlineElementResult =
-          MoveNodeToEndWithTransaction(*content, *prevListItem);
+          aHTMLEditor.MoveNodeToEndWithTransaction(*content, *prevListItem);
       if (MOZ_UNLIKELY(moveInlineElementResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return moveInlineElementResult.propagateErr();
@@ -3772,8 +3774,8 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     //     any elements can have block elements as children.
     if (content->IsHTMLElement(nsGkAtoms::p)) {
       Result<CreateElementResult, nsresult> newListItemElementOrError =
-          ReplaceContainerWithTransaction(MOZ_KnownLive(*content->AsElement()),
-                                          aListItemElementTagName);
+          aHTMLEditor.ReplaceContainerWithTransaction(
+              MOZ_KnownLive(*content->AsElement()), mListItemTagName);
       if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
         NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
         return newListItemElementOrError.propagateErr();
@@ -3783,7 +3785,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
       MOZ_ASSERT(newListItemElementOrError.inspect().GetNewNode());
 
       Result<MoveNodeResult, nsresult> moveListItemElementResult =
-          MoveNodeToEndWithTransaction(
+          aHTMLEditor.MoveNodeToEndWithTransaction(
               MOZ_KnownLive(*newListItemElementOrError.inspect().GetNewNode()),
               *curList);
       if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
@@ -3801,7 +3803,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     // If current node is not a paragraph, wrap current node with new list
     // item element and move it into current list element.
     Result<CreateElementResult, nsresult> wrapContentInListItemElementResult =
-        InsertContainerWithTransaction(*content, aListItemElementTagName);
+        aHTMLEditor.InsertContainerWithTransaction(*content, mListItemTagName);
     if (MOZ_UNLIKELY(wrapContentInListItemElementResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
       return wrapContentInListItemElementResult.propagateErr();
@@ -3815,7 +3817,7 @@ Result<EditActionResult, nsresult> HTMLEditor::ConvertContentAroundRangesToList(
     // MOZ_KnownLive(unwrappedWrapContentInListItemElementResult.GetNewNode()):
     // The result is grabbed by unwrappedWrapContentInListItemElementResult.
     Result<MoveNodeResult, nsresult> moveListItemElementResult =
-        MoveNodeToEndWithTransaction(
+        aHTMLEditor.MoveNodeToEndWithTransaction(
             MOZ_KnownLive(
                 *unwrappedWrapContentInListItemElementResult.GetNewNode()),
             *curList);
