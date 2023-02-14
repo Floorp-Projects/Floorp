@@ -589,11 +589,12 @@ class FileID {
 
   // These three functions are not ever called in an unsafe context, so it's OK
   // to allocate memory and use libc.
-  static std::string bytes_to_hex_string(const uint8_t* bytes, size_t count) {
+  static std::string bytes_to_hex_string(const uint8_t* bytes, size_t count,
+                                         bool lowercase = false) {
     std::string result;
     for (unsigned int idx = 0; idx < count; ++idx) {
       char buf[3];
-      SprintfLiteral(buf, "%02X", bytes[idx]);
+      SprintfLiteral(buf, lowercase ? "%02x" : "%02X", bytes[idx]);
       result.append(buf);
     }
     return result;
@@ -619,10 +620,11 @@ class FileID {
     return bytes_to_hex_string(identifier_swapped, kMDGUIDSize);
   }
 
-  // Convert the entire |identifier| data to a hex string.
+  // Convert the entire |identifier| data to a lowercase hex string.
   static std::string ConvertIdentifierToString(
       const std::vector<uint8_t>& identifier) {
-    return bytes_to_hex_string(&identifier[0], identifier.size());
+    return bytes_to_hex_string(&identifier[0], identifier.size(),
+                               /* lowercase */ true);
   }
 
  private:
@@ -655,14 +657,33 @@ static std::string IDtoUUIDString(const std::vector<uint8_t>& aIdentifier) {
   return uuid;
 }
 
+// Return raw Build ID in hex.
+static std::string IDtoString(const std::vector<uint8_t>& aIdentifier) {
+  std::string uuid = FileID::ConvertIdentifierToString(aIdentifier);
+  return uuid;
+}
+
 // Get the breakpad Id for the binary file pointed by bin_name
-static std::string getId(const char* bin_name) {
+static std::string getBreakpadId(const char* bin_name) {
   std::vector<uint8_t> identifier;
   identifier.reserve(kDefaultBuildIdSize);
 
   FileID file_id(bin_name);
   if (file_id.ElfFileIdentifier(identifier)) {
     return IDtoUUIDString(identifier);
+  }
+
+  return {};
+}
+
+// Get the code Id for the binary file pointed by bin_name
+static std::string getCodeId(const char* bin_name) {
+  std::vector<uint8_t> identifier;
+  identifier.reserve(kDefaultBuildIdSize);
+
+  FileID file_id(bin_name);
+  if (file_id.ElfFileIdentifier(identifier)) {
+    return IDtoString(identifier);
   }
 
   return {};
@@ -678,8 +699,9 @@ static SharedLibrary SharedLibraryAtPath(const char* path,
   std::string nameStr =
       (pos != std::string::npos) ? pathStr.substr(pos + 1) : pathStr;
 
-  return SharedLibrary(libStart, libEnd, offset, getId(path), std::string{},
-                       nameStr, pathStr, nameStr, pathStr, std::string{}, "");
+  return SharedLibrary(libStart, libEnd, offset, getBreakpadId(path),
+                       getCodeId(path), nameStr, pathStr, nameStr, pathStr,
+                       std::string{}, "");
 }
 
 static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,
