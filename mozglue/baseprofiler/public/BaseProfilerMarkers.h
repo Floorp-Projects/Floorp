@@ -60,7 +60,10 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
   AUTO_BASE_PROFILER_LABEL("baseprofiler::AddMarkerToBuffer", PROFILER);
   return base_profiler_markers_detail::AddMarkerToBuffer<MarkerType>(
       aBuffer, aName, aCategory, std::move(aOptions),
-      ::mozilla::baseprofiler::profiler_capture_backtrace_into,
+      // Do not capture a stack if the NoMarkerStacks feature is set.
+      profiler_active_without_feature(ProfilerFeature::NoMarkerStacks)
+          ? ::mozilla::baseprofiler::profiler_capture_backtrace_into
+          : nullptr,
       aPayloadArguments...);
 }
 
