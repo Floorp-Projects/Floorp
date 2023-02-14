@@ -72,7 +72,7 @@ promise_test(async () => {
   });
   const worker = new SharedWorker(window.URL.createObjectURL(blob));
   let frame = createVideoFrame(40);
-  worker.port.postMessage({frame: frame, transfer: false});
+  worker.port.postMessage(frame);
   worker.port.postMessage({'id': 40});
   const received = await new Promise(resolve => worker.port.onmessage = e => {
     resolve(e.data);
@@ -126,7 +126,7 @@ promise_test(async () => {
   });
   const worker = new SharedWorker(window.URL.createObjectURL(blob));
   let frame = createVideoFrame(90);
-  worker.port.postMessage({frame: frame, transfer: true});
+  worker.port.postMessage(frame, [frame]);
   worker.port.postMessage({'id': 90});
   const received = await new Promise(resolve => worker.port.onmessage = e => {
     resolve(e.data);
