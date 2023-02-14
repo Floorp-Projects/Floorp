@@ -91,6 +91,13 @@ add_setup(async () => {
   );
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
   Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
+  // test_optional_declarativeNetRequestFeedback calls permission.request().
+  // We don't care about the UI, only about the effect of being granted.
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    false
+  );
 });
 
 // Verifies that DNR is disabled by default (until true in bug 1782685).
@@ -288,6 +295,70 @@ add_task(async function declarativeNetRequestFeedback_without_feature() {
     },
   });
 });
+
+add_task(
+  { pref_set: [["extensions.dnr.feedback", true]] },
+  async function declarativeNetRequestFeedback_is_optional() {
+    async function background() {
+      async function assertTestMatchOutcomeEnabled(expected, description) {
+        let enabled;
+        try {
+          // testAvailability already checks the errors etc, so here we only
+          // care about the method working vs not working.
+          await browser.declarativeNetRequest.testMatchOutcome({
+            url: "https://example.com/",
+            type: "other",
+          });
+          enabled = true;
+        } catch (e) {
+          enabled = false;
+        }
+        browser.test.assertEq(expected, enabled, description);
+      }
+
+      await assertTestMatchOutcomeEnabled(false, "disabled when not granted");
+
+      await new Promise(resolve => {
+        // browser.test.withHandlingUserInput would have been simpler, but due
+        // to bug 1598804 it cannot be used.
+        browser.test.onMessage.addListener(async msg => {
+          browser.test.assertEq("withHandlingUserInput_ok", msg, "Resuming");
+          await browser.permissions.request({
+            permissions: ["declarativeNetRequestFeedback"],
+          });
+          browser.test.sendMessage("withHandlingUserInput_done");
+          resolve();
+        });
+        browser.test.sendMessage("withHandlingUserInput_wanted");
+      });
+
+      await assertTestMatchOutcomeEnabled(true, "enabled by permission");
+
+      await browser.permissions.remove({
+        permissions: ["declarativeNetRequestFeedback"],
+      });
+      await assertTestMatchOutcomeEnabled(false, "disabled after perm removal");
+
+      browser.test.sendMessage("done");
+    }
+    let extension = ExtensionTestUtils.loadExtension({
+      background,
+      manifest: {
+        manifest_version: 3,
+        permissions: ["declarativeNetRequestWithHostAccess"],
+        optional_permissions: ["declarativeNetRequestFeedback"],
+      },
+    });
+    await extension.startup();
+    await extension.awaitMessage("withHandlingUserInput_wanted");
+    await withHandlingUserInput(extension, async () => {
+      extension.sendMessage("withHandlingUserInput_ok");
+      await extension.awaitMessage("withHandlingUserInput_done");
+    });
+    await extension.awaitMessage("done");
+    await extension.unload();
+  }
+);
 
 add_task(async function test_dnr_limits_namespace_properties() {
   let extension = ExtensionTestUtils.loadExtension({

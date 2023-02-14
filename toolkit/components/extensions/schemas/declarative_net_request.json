@@ -10,10 +10,18 @@
         "$extend": "Permission",
         "choices": [{
           "type": "string",
-          "enum": ["declarativeNetRequest", "declarativeNetRequestFeedback"],
+          "enum": ["declarativeNetRequest"],
           "min_manifest_version": 3
         }]
       },
+      {
+        "$extend": "OptionalPermission",
+        "choices": [{
+          "type": "string",
+          "enum": ["declarativeNetRequestFeedback"],
+          "min_manifest_version": 3
+        }]
+      }, 
       {
         "$extend": "PermissionNoPrompt",
         "choices": [{
