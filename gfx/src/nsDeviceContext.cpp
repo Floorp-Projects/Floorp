@@ -188,6 +188,26 @@ dom::ScreenColorGamut nsDeviceContext::GetColorGamut() {
   return colorGamut;
 }
 
+hal::ScreenOrientation nsDeviceContext::GetScreenOrientationType() {
+  RefPtr<widget::Screen> screen = FindScreen();
+  if (!screen) {
+    auto& screenManager = ScreenManager::GetSingleton();
+    screen = screenManager.GetPrimaryScreen();
+    MOZ_ASSERT(screen);
+  }
+  return screen->GetOrientationType();
+}
+
+uint16_t nsDeviceContext::GetScreenOrientationAngle() {
+  RefPtr<widget::Screen> screen = FindScreen();
+  if (!screen) {
+    auto& screenManager = ScreenManager::GetSingleton();
+    screen = screenManager.GetPrimaryScreen();
+    MOZ_ASSERT(screen);
+  }
+  return screen->GetOrientationAngle();
+}
+
 nsresult nsDeviceContext::GetDeviceSurfaceDimensions(nscoord& aWidth,
                                                      nscoord& aHeight) {
   if (IsPrinterContext()) {
