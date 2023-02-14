@@ -47,12 +47,9 @@ rtc_library("dav1d_decoder") {
   if (build_with_mozilla) {
     deps -= [
       "//third_party/dav1d",
-      "//third_party/libyuv",
     ]
     include_dirs = [
       "/media/libdav1d/",
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
       "/third_party/dav1d/include/dav1d",
     ]
   }

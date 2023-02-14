@@ -508,13 +508,6 @@ if (is_ios || is_mac) {
         "//rtc_base:checks",
         "//third_party/libyuv",
       ]
-      if (build_with_mozilla) {
-        deps -= [ "//third_party/libyuv" ]
-        include_dirs = [
-          "/media/libyuv",
-          "/media/libyuv/libyuv/include",
-        ]
-      }
       configs += [
         "..:common_objc",
         ":used_from_extension",

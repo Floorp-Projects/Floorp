@@ -43,13 +43,6 @@ rtc_library("primitives") {
     "../../rtc_base/system:rtc_export",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
-  }
 
   if (!build_with_mozilla) {
     deps += [ "../../rtc_base" ]  # TODO(kjellander): Cleanup in
@@ -334,9 +327,6 @@ rtc_library("desktop_capture") {
   visibility = [ "*" ]
   defines = []
   include_dirs = []
-  if (build_with_mozilla) {
-    include_dirs += [ "/media/libyuv/libyuv/include" ]
-  }
   deps = []
   public_configs = [ ":x11_config" ]
   sources = [
@@ -571,12 +561,9 @@ rtc_library("desktop_capture") {
     deps += [ "../../rtc_base:sanitizer" ]
   }
 
-  if (!build_with_mozilla) {
-    deps += [ "//third_party/libyuv" ]
-  } else {
+  deps += [ "//third_party/libyuv" ]
+  if (build_with_mozilla) {
     include_dirs += [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
       "/third_party/pipewire",
     ]
   }
