@@ -4,10 +4,7 @@
 
 "use strict";
 
-var {
-  Actor,
-  ActorClassWithSpec,
-} = require("resource://devtools/shared/protocol/Actor.js");
+var { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 var { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 var {
   types,
@@ -28,7 +25,6 @@ const {
 exports.Front = Front;
 exports.Pool = Pool;
 exports.Actor = Actor;
-exports.ActorClassWithSpec = ActorClassWithSpec;
 exports.types = types;
 exports.generateActorSpec = generateActorSpec;
 exports.FrontClassWithSpec = FrontClassWithSpec;

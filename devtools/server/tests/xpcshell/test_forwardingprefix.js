@@ -181,9 +181,8 @@ function TestForwardPrefix12OnlyRoot() {
 const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 class EchoActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "EchoActor", methods: [] });
 
-    this.typeName = "EchoActor";
     this.requestTypes = {
       echo: EchoActor.prototype.onEcho,
     };
