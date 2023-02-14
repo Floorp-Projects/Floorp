@@ -11,6 +11,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+import mozfile
 import mozpack.path as mozpath
 
 from mozbuild.repackaging.application_ini import get_application_ini_value
@@ -39,10 +40,7 @@ def repackage_mar(topsrcdir, package, mar, output, arch=None, mar_channel_id=Non
     tmpdir = tempfile.mkdtemp()
     try:
         if tarfile.is_tarfile(package):
-            z = tarfile.open(package)
-            z.extractall(tmpdir)
-            filelist = z.getnames()
-            z.close()
+            filelist = mozfile.extract_tarball(package, tmpdir)
         else:
             z = zipfile.ZipFile(package)
             z.extractall(tmpdir)

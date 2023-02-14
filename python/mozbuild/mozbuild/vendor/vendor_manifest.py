@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import shutil
+import stat
 import sys
 import tarfile
 import tempfile
@@ -331,6 +332,13 @@ class VendorManifest(MozbuildObject):
 
     def fetch_and_unpack(self, revision):
         """Fetch and unpack upstream source"""
+
+        def _is_within_directory(directory, target):
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            return prefix == abs_directory
+
         url = self.source_host.upstream_snapshot(revision)
         self.logInfo({"url": url}, "Fetching code archive from {url}")
 
@@ -344,10 +352,16 @@ class VendorManifest(MozbuildObject):
 
                 tar = tarfile.open(tmptarfile.name)
 
-                for name in tar.getnames():
-                    if name.startswith("/") or ".." in name:
+                for member in tar:
+                    member_path = os.path.join(tmpextractdir.name, member.name)
+                    if not _is_within_directory(tmpextractdir.name, member_path):
                         raise Exception(
-                            "Tar archive contains non-local paths, e.g. '%s'" % name
+                            "Tar archive contains non-local paths, e.g. '%s'"
+                            % member.name
+                        )
+                    if member.mode & (stat.S_ISUID | stat.S_ISGID):
+                        raise Exception(
+                            "Tar archive has setuid or setgid member '%s'" % member.name
                         )
 
                 vendor_dir = mozpath.normsep(

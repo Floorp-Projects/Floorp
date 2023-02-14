@@ -29,8 +29,7 @@ def repackage_pkg(infile, output):
         raise Exception("Could not find cpio.")
 
     with mozfile.TemporaryDirectory() as tmpdir:
-        with tarfile.open(infile) as tar:
-            tar.extractall(path=tmpdir)
+        mozfile.extract_tarball(infile, tmpdir)
 
         app_list = list(Path(tmpdir).glob("*.app"))
         if len(app_list) != 1:

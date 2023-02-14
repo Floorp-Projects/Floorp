@@ -30,8 +30,7 @@ def repackage_dmg(infile, output):
 
     with mozfile.TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)
-        with tarfile.open(infile) as tar:
-            tar.extractall(path=tmpdir)
+        mozfile.extract_tarball(infile, tmpdir)
 
         # Remove the /Applications symlink. If we don't, an rsync command in
         # create_dmg() will break, and create_dmg() re-creates the symlink anyway.
