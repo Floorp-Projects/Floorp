@@ -136,7 +136,7 @@ struct MOZ_CAPABILITY("mutex") Mutex {
 
 #if defined(XP_DARWIN)
   static bool SpinInKernelSpace();
-  static bool gSpinInKernelSpace;
+  static const bool gSpinInKernelSpace;
 #endif  // XP_DARWIN
 };
 
