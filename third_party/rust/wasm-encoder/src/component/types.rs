@@ -1,7 +1,7 @@
 use super::CORE_TYPE_SORT;
 use crate::{
-    encode_section, ComponentOuterAliasKind, ComponentSection, ComponentSectionId,
-    ComponentTypeRef, Encode, EntityType, ValType,
+    encode_section, Alias, ComponentExportKind, ComponentOuterAliasKind, ComponentSection,
+    ComponentSectionId, ComponentTypeRef, Encode, EntityType, ValType,
 };
 
 /// Represents the type of a core module.
@@ -220,45 +220,55 @@ impl ComponentType {
         ComponentTypeEncoder(&mut self.bytes)
     }
 
-    /// Defines an outer core type alias in this component type.
-    pub fn alias_outer_core_type(&mut self, count: u32, index: u32) -> &mut Self {
+    /// Defines an alias for an exported item of a prior instance or an
+    /// outer type.
+    pub fn alias(&mut self, alias: Alias<'_>) -> &mut Self {
         self.bytes.push(0x02);
-        ComponentOuterAliasKind::CoreType.encode(&mut self.bytes);
-        self.bytes.push(0x02);
-        count.encode(&mut self.bytes);
-        index.encode(&mut self.bytes);
+        alias.encode(&mut self.bytes);
         self.num_added += 1;
-        self.core_types_added += 1;
-        self
-    }
-
-    /// Defines an outer type alias in this component type.
-    pub fn alias_outer_type(&mut self, count: u32, index: u32) -> &mut Self {
-        self.bytes.push(0x02);
-        ComponentOuterAliasKind::Type.encode(&mut self.bytes);
-        self.bytes.push(0x02);
-        count.encode(&mut self.bytes);
-        index.encode(&mut self.bytes);
-        self.num_added += 1;
-        self.types_added += 1;
+        match &alias {
+            Alias::InstanceExport {
+                kind: ComponentExportKind::Type,
+                ..
+            }
+            | Alias::Outer {
+                kind: ComponentOuterAliasKind::Type,
+                ..
+            } => self.types_added += 1,
+            Alias::Outer {
+                kind: ComponentOuterAliasKind::CoreType,
+                ..
+            } => self.core_types_added += 1,
+            _ => {}
+        }
         self
     }
 
     /// Defines an import in this component type.
-    pub fn import(&mut self, name: &str, ty: ComponentTypeRef) -> &mut Self {
+    pub fn import(&mut self, name: &str, url: &str, ty: ComponentTypeRef) -> &mut Self {
         self.bytes.push(0x03);
         name.encode(&mut self.bytes);
+        url.encode(&mut self.bytes);
         ty.encode(&mut self.bytes);
         self.num_added += 1;
+        match ty {
+            ComponentTypeRef::Type(..) => self.types_added += 1,
+            _ => {}
+        }
         self
     }
 
     /// Defines an export in this component type.
-    pub fn export(&mut self, name: &str, ty: ComponentTypeRef) -> &mut Self {
+    pub fn export(&mut self, name: &str, url: &str, ty: ComponentTypeRef) -> &mut Self {
         self.bytes.push(0x04);
         name.encode(&mut self.bytes);
+        url.encode(&mut self.bytes);
         ty.encode(&mut self.bytes);
         self.num_added += 1;
+        match ty {
+            ComponentTypeRef::Type(..) => self.types_added += 1,
+            _ => {}
+        }
         self
     }
 
@@ -283,12 +293,7 @@ impl Encode for ComponentType {
 
 /// Represents an instance type.
 #[derive(Debug, Clone, Default)]
-pub struct InstanceType {
-    bytes: Vec<u8>,
-    num_added: u32,
-    core_types_added: u32,
-    types_added: u32,
-}
+pub struct InstanceType(ComponentType);
 
 impl InstanceType {
     /// Creates a new instance type.
@@ -301,10 +306,7 @@ impl InstanceType {
     /// The returned encoder must be used before adding another definition.
     #[must_use = "the encoder must be used to encode the type"]
     pub fn core_type(&mut self) -> CoreTypeEncoder {
-        self.bytes.push(0x00);
-        self.num_added += 1;
-        self.core_types_added += 1;
-        CoreTypeEncoder(&mut self.bytes)
+        self.0.core_type()
     }
 
     /// Define a type in this instance type.
@@ -312,61 +314,47 @@ impl InstanceType {
     /// The returned encoder must be used before adding another definition.
     #[must_use = "the encoder must be used to encode the type"]
     pub fn ty(&mut self) -> ComponentTypeEncoder {
-        self.bytes.push(0x01);
-        self.num_added += 1;
-        self.types_added += 1;
-        ComponentTypeEncoder(&mut self.bytes)
+        self.0.ty()
     }
 
     /// Defines an outer core type alias in this component type.
-    pub fn alias_outer_core_type(&mut self, count: u32, index: u32) -> &mut Self {
-        self.bytes.push(0x02);
-        ComponentOuterAliasKind::CoreType.encode(&mut self.bytes);
-        self.bytes.push(0x02);
-        count.encode(&mut self.bytes);
-        index.encode(&mut self.bytes);
-        self.num_added += 1;
-        self.core_types_added += 1;
-        self
-    }
-
-    /// Defines an alias in this instance type.
-    pub fn alias_outer_type(&mut self, count: u32, index: u32) -> &mut Self {
-        self.bytes.push(0x02);
-        ComponentOuterAliasKind::Type.encode(&mut self.bytes);
-        self.bytes.push(0x02);
-        count.encode(&mut self.bytes);
-        index.encode(&mut self.bytes);
-        self.num_added += 1;
-        self.types_added += 1;
+    pub fn alias(&mut self, alias: Alias<'_>) -> &mut Self {
+        self.0.alias(alias);
         self
     }
 
     /// Defines an export in this instance type.
-    pub fn export(&mut self, name: &str, ty: ComponentTypeRef) -> &mut Self {
-        self.bytes.push(0x04);
-        name.encode(&mut self.bytes);
-        ty.encode(&mut self.bytes);
-        self.num_added += 1;
+    pub fn export(&mut self, name: &str, url: &str, ty: ComponentTypeRef) -> &mut Self {
+        self.0.export(name, url, ty);
         self
     }
 
     /// Gets the number of core types that have been added to this instance type.
     pub fn core_type_count(&self) -> u32 {
-        self.core_types_added
+        self.0.core_types_added
     }
 
     /// Gets the number of types that have been added or aliased in this instance type.
     pub fn type_count(&self) -> u32 {
-        self.types_added
+        self.0.types_added
+    }
+
+    /// Returns whether or not this instance type is empty.
+    pub fn is_empty(&self) -> bool {
+        self.0.num_added == 0
+    }
+
+    /// Returns the number of entries added to this instance types.
+    pub fn len(&self) -> u32 {
+        self.0.num_added
     }
 }
 
 impl Encode for InstanceType {
     fn encode(&self, sink: &mut Vec<u8>) {
         sink.push(0x42);
-        self.num_added.encode(sink);
-        sink.extend(&self.bytes);
+        self.0.num_added.encode(sink);
+        sink.extend(&self.0.bytes);
     }
 }
 

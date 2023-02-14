@@ -103,8 +103,16 @@ impl<'a> Expander<'a> {
                 }
             },
 
-            ModuleField::Table(_)
-            | ModuleField::Memory(_)
+            ModuleField::Table(t) => match &mut t.kind {
+                TableKind::Normal { init_expr, .. } => {
+                    if let Some(expr) = init_expr {
+                        self.expand_expression(expr);
+                    }
+                }
+                TableKind::Import { .. } | TableKind::Inline { .. } => {}
+            },
+
+            ModuleField::Memory(_)
             | ModuleField::Start(_)
             | ModuleField::Export(_)
             | ModuleField::Custom(_) => {}

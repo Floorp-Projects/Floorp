@@ -323,6 +323,14 @@ pub trait Config: 'static + std::fmt::Debug {
         false
     }
 
+    /// Determines whether the tail calls proposal is enabled for generating
+    /// instructions.
+    ///
+    /// Defaults to `false`.
+    fn tail_call_enabled(&self) -> bool {
+        false
+    }
+
     /// Determines whether the SIMD proposal is enabled for
     /// generating instructions.
     ///
@@ -535,6 +543,7 @@ pub struct SwarmConfig {
     pub min_uleb_size: u8,
     pub multi_value_enabled: bool,
     pub reference_types_enabled: bool,
+    pub tail_call_enabled: bool,
     pub relaxed_simd_enabled: bool,
     pub saturating_float_to_int_enabled: bool,
     pub sign_extension_enabled: bool,
@@ -569,6 +578,7 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             min_uleb_size: u.int_in_range(0..=5)?,
             bulk_memory_enabled: reference_types_enabled || u.arbitrary()?,
             reference_types_enabled,
+            tail_call_enabled: u.arbitrary()?,
             simd_enabled: u.arbitrary()?,
             multi_value_enabled: u.arbitrary()?,
             max_aliases: u.int_in_range(0..=MAX_MAXIMUM)?,
@@ -751,6 +761,10 @@ impl Config for SwarmConfig {
 
     fn reference_types_enabled(&self) -> bool {
         self.reference_types_enabled
+    }
+
+    fn tail_call_enabled(&self) -> bool {
+        self.tail_call_enabled
     }
 
     fn simd_enabled(&self) -> bool {

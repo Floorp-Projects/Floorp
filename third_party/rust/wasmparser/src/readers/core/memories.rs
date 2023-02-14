@@ -13,81 +13,44 @@
  * limitations under the License.
  */
 
-use crate::{
-    BinaryReader, MemoryType, Result, SectionIteratorLimited, SectionReader,
-    SectionWithLimitedItems,
-};
-use std::ops::Range;
+use crate::{BinaryReader, FromReader, MemoryType, Result, SectionLimited};
 
 /// A reader for the memory section of a WebAssembly module.
-#[derive(Clone)]
-pub struct MemorySectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
+pub type MemorySectionReader<'a> = SectionLimited<'a, MemoryType>;
 
-impl<'a> MemorySectionReader<'a> {
-    /// Constructs a new `MemorySectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<MemorySectionReader<'a>> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(MemorySectionReader { reader, count })
-    }
+impl<'a> FromReader<'a> for MemoryType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let pos = reader.original_position();
+        let flags = reader.read_u8()?;
+        if (flags & !0b111) != 0 {
+            bail!(pos, "invalid memory limits flags");
+        }
 
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets the count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the memory section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::MemorySectionReader;
-    /// # let data: &[u8] = &[0x01, 0x00, 0x02];
-    /// let mut memory_reader = MemorySectionReader::new(data, 0).unwrap();
-    /// for _ in 0..memory_reader.get_count() {
-    ///     let memory = memory_reader.read().expect("memory");
-    ///     println!("Memory: {:?}", memory);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<MemoryType> {
-        self.reader.read_memory_type()
-    }
-}
-
-impl<'a> SectionReader for MemorySectionReader<'a> {
-    type Item = MemoryType;
-    fn read(&mut self) -> Result<Self::Item> {
-        MemorySectionReader::read(self)
-    }
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-    fn original_position(&self) -> usize {
-        MemorySectionReader::original_position(self)
-    }
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for MemorySectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        MemorySectionReader::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for MemorySectionReader<'a> {
-    type Item = Result<MemoryType>;
-    type IntoIter = SectionIteratorLimited<MemorySectionReader<'a>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
+        let memory64 = flags & 0b100 != 0;
+        let shared = flags & 0b010 != 0;
+        let has_max = flags & 0b001 != 0;
+        Ok(MemoryType {
+            memory64,
+            shared,
+            // FIXME(WebAssembly/memory64#21) as currently specified if the
+            // `shared` flag is set we should be reading a 32-bit limits field
+            // here. That seems a bit odd to me at the time of this writing so
+            // I've taken the liberty of reading a 64-bit limits field in those
+            // situations. I suspect that this is a typo in the spec, but if not
+            // we'll need to update this to read a 32-bit limits field when the
+            // shared flag is set.
+            initial: if memory64 {
+                reader.read_var_u64()?
+            } else {
+                reader.read_var_u32()?.into()
+            },
+            maximum: if !has_max {
+                None
+            } else if memory64 {
+                Some(reader.read_var_u64()?)
+            } else {
+                Some(reader.read_var_u32()?.into())
+            },
+        })
     }
 }

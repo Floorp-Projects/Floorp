@@ -634,6 +634,8 @@ typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int64General)(int64_t, int64_
                                                                  int64_t);
 typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64)(int64_t, int64_t,
                                                                  int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt64Int64General)(int64_t, int64_t,
+                                                                 int64_t, int64_t);
 typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64General)(int64_t, int64_t,
                                                                  int64_t, int64_t,
                                                                  int64_t);
@@ -1016,6 +1018,12 @@ Simulator::VisitCallRedirection(const Instruction* instr)
     }
     case js::jit::Args_Int32_GeneralInt64Int64Int64: {
       int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int64Int64>(
+          nativeFn)(x0, x1, x2, x3);
+      setGPR32Result(ret);
+      break;
+    }
+    case js::jit::Args_Int32_GeneralInt64Int64General: {
+      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int64General>(
           nativeFn)(x0, x1, x2, x3);
       setGPR32Result(ret);
       break;

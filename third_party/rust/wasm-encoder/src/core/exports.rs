@@ -5,28 +5,23 @@ use crate::{encode_section, Encode, Section, SectionId};
 
 /// Represents the kind of an export from a WebAssembly module.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
 pub enum ExportKind {
     /// The export is a function.
-    Func,
+    Func = CORE_FUNCTION_SORT,
     /// The export is a table.
-    Table,
+    Table = CORE_TABLE_SORT,
     /// The export is a memory.
-    Memory,
+    Memory = CORE_MEMORY_SORT,
     /// The export is a global.
-    Global,
+    Global = CORE_GLOBAL_SORT,
     /// The export is a tag.
-    Tag,
+    Tag = CORE_TAG_SORT,
 }
 
 impl Encode for ExportKind {
     fn encode(&self, sink: &mut Vec<u8>) {
-        sink.push(match self {
-            Self::Func => CORE_FUNCTION_SORT,
-            Self::Table => CORE_TABLE_SORT,
-            Self::Memory => CORE_MEMORY_SORT,
-            Self::Global => CORE_GLOBAL_SORT,
-            Self::Tag => CORE_TAG_SORT,
-        });
+        sink.push(*self as u8);
     }
 }
 

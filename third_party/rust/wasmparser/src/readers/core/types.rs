@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-use crate::{BinaryReader, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems};
+use crate::limits::{MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS};
+use crate::{BinaryReader, FromReader, Result, SectionLimited};
 use std::fmt::Debug;
-use std::ops::Range;
 
 /// Represents the types of values in a WebAssembly module.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -43,6 +43,31 @@ impl ValType {
     /// instructions. Current reference types include `funcref` and `externref`.
     pub fn is_reference_type(&self) -> bool {
         matches!(self, ValType::FuncRef | ValType::ExternRef)
+    }
+
+    pub(crate) fn from_byte(byte: u8) -> Option<ValType> {
+        match byte {
+            0x7F => Some(ValType::I32),
+            0x7E => Some(ValType::I64),
+            0x7D => Some(ValType::F32),
+            0x7C => Some(ValType::F64),
+            0x7B => Some(ValType::V128),
+            0x70 => Some(ValType::FuncRef),
+            0x6F => Some(ValType::ExternRef),
+            _ => None,
+        }
+    }
+}
+
+impl<'a> FromReader<'a> for ValType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        match ValType::from_byte(reader.peek()?) {
+            Some(ty) => {
+                reader.position += 1;
+                Ok(ty)
+            }
+            None => bail!(reader.original_position(), "invalid value type"),
+        }
     }
 }
 
@@ -191,89 +216,28 @@ pub struct TagType {
 }
 
 /// A reader for the type section of a WebAssembly module.
-#[derive(Clone)]
-pub struct TypeSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
+pub type TypeSectionReader<'a> = SectionLimited<'a, Type>;
 
-impl<'a> TypeSectionReader<'a> {
-    /// Constructs a new `TypeSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(Self { reader, count })
-    }
-
-    /// Gets the original position of the reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets a count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads content of the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::TypeSectionReader;
-    /// let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
-    /// let mut reader = TypeSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let ty = reader.read().expect("type");
-    ///     println!("Type {:?}", ty);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<Type> {
-        self.reader.read_type()
+impl<'a> FromReader<'a> for Type {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x60 => Type::Func(reader.read()?),
+            x => return reader.invalid_leading_byte(x, "type"),
+        })
     }
 }
 
-impl<'a> SectionReader for TypeSectionReader<'a> {
-    type Item = Type;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for TypeSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        Self::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for TypeSectionReader<'a> {
-    type Item = Result<Type>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    /// Implements iterator over the type section.
-    ///
-    /// # Examples
-    /// ```
-    /// use wasmparser::TypeSectionReader;
-    /// # let data: &[u8] = &[0x01, 0x60, 0x00, 0x00];
-    /// let mut reader = TypeSectionReader::new(data, 0).unwrap();
-    /// for ty in reader {
-    ///     println!("Type {:?}", ty.expect("type"));
-    /// }
-    /// ```
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
+impl<'a> FromReader<'a> for FuncType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let mut params_results = reader
+            .read_iter(MAX_WASM_FUNCTION_PARAMS, "function params")?
+            .collect::<Result<Vec<_>>>()?;
+        let len_params = params_results.len();
+        let results = reader.read_iter(MAX_WASM_FUNCTION_RETURNS, "function returns")?;
+        params_results.reserve(results.size_hint().0);
+        for result in results {
+            params_results.push(result?);
+        }
+        Ok(FuncType::from_raw_parts(params_results.into(), len_params))
     }
 }

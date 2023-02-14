@@ -11,6 +11,8 @@ pub struct ComponentImport<'a> {
     pub span: Span,
     /// The name of the item to import.
     pub name: &'a str,
+    /// The optional URL of the import.
+    pub url: Option<&'a str>,
     /// The item that's being imported.
     pub item: ItemSig<'a>,
 }
@@ -19,8 +21,14 @@ impl<'a> Parse<'a> for ComponentImport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::import>()?.0;
         let name = parser.parse()?;
+        let url = parser.parse()?;
         let item = parser.parens(|p| p.parse())?;
-        Ok(ComponentImport { span, name, item })
+        Ok(ComponentImport {
+            span,
+            name,
+            url,
+            item,
+        })
     }
 }
 
@@ -41,39 +49,52 @@ pub struct ItemSig<'a> {
 
 impl<'a> Parse<'a> for ItemSig<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        let mut l = parser.lookahead1();
-        let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemSigKind>) = if l.peek::<kw::core>()
-        {
-            let span = parser.parse::<kw::core>()?.0;
-            parser.parse::<kw::module>()?;
-            (span, |parser| Ok(ItemSigKind::CoreModule(parser.parse()?)))
-        } else if l.peek::<kw::func>() {
-            let span = parser.parse::<kw::func>()?.0;
-            (span, |parser| Ok(ItemSigKind::Func(parser.parse()?)))
-        } else if l.peek::<kw::component>() {
-            let span = parser.parse::<kw::component>()?.0;
-            (span, |parser| Ok(ItemSigKind::Component(parser.parse()?)))
-        } else if l.peek::<kw::instance>() {
-            let span = parser.parse::<kw::instance>()?.0;
-            (span, |parser| Ok(ItemSigKind::Instance(parser.parse()?)))
-        } else if l.peek::<kw::value>() {
-            let span = parser.parse::<kw::value>()?.0;
-            (span, |parser| Ok(ItemSigKind::Value(parser.parse()?)))
-        } else if l.peek::<kw::r#type>() {
-            let span = parser.parse::<kw::r#type>()?.0;
-            (span, |parser| {
-                Ok(ItemSigKind::Type(parser.parens(|parser| parser.parse())?))
-            })
-        } else {
-            return Err(l.error());
-        };
-        Ok(Self {
-            span,
-            id: parser.parse()?,
-            name: parser.parse()?,
-            kind: parse_kind(parser)?,
-        })
+        parse_item_sig(parser, true)
     }
+}
+
+/// An item signature for imported items.
+#[derive(Debug)]
+pub struct ItemSigNoName<'a>(pub ItemSig<'a>);
+
+impl<'a> Parse<'a> for ItemSigNoName<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(ItemSigNoName(parse_item_sig(parser, false)?))
+    }
+}
+
+fn parse_item_sig<'a>(parser: Parser<'a>, name: bool) -> Result<ItemSig<'a>> {
+    let mut l = parser.lookahead1();
+    let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemSigKind>) = if l.peek::<kw::core>() {
+        let span = parser.parse::<kw::core>()?.0;
+        parser.parse::<kw::module>()?;
+        (span, |parser| Ok(ItemSigKind::CoreModule(parser.parse()?)))
+    } else if l.peek::<kw::func>() {
+        let span = parser.parse::<kw::func>()?.0;
+        (span, |parser| Ok(ItemSigKind::Func(parser.parse()?)))
+    } else if l.peek::<kw::component>() {
+        let span = parser.parse::<kw::component>()?.0;
+        (span, |parser| Ok(ItemSigKind::Component(parser.parse()?)))
+    } else if l.peek::<kw::instance>() {
+        let span = parser.parse::<kw::instance>()?.0;
+        (span, |parser| Ok(ItemSigKind::Instance(parser.parse()?)))
+    } else if l.peek::<kw::value>() {
+        let span = parser.parse::<kw::value>()?.0;
+        (span, |parser| Ok(ItemSigKind::Value(parser.parse()?)))
+    } else if l.peek::<kw::r#type>() {
+        let span = parser.parse::<kw::r#type>()?.0;
+        (span, |parser| {
+            Ok(ItemSigKind::Type(parser.parens(|parser| parser.parse())?))
+        })
+    } else {
+        return Err(l.error());
+    };
+    Ok(ItemSig {
+        span,
+        id: if name { parser.parse()? } else { None },
+        name: if name { parser.parse()? } else { None },
+        kind: parse_kind(parser)?,
+    })
 }
 
 /// The kind of signatures for imported items.
@@ -112,17 +133,22 @@ impl<'a> Parse<'a> for TypeBounds<'a> {
 ///
 /// This is the same as `core::InlineImport` except only one string import is
 /// required.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct InlineImport<'a> {
     /// The name of the item being imported.
     pub name: &'a str,
+    /// The optional URL of the item being imported.
+    pub url: Option<&'a str>,
 }
 
 impl<'a> Parse<'a> for InlineImport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parens(|p| {
             p.parse::<kw::import>()?;
-            Ok(InlineImport { name: p.parse()? })
+            Ok(InlineImport {
+                name: p.parse()?,
+                url: p.parse()?,
+            })
         })
     }
 }

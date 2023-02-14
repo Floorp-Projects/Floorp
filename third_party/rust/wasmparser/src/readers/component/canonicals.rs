@@ -1,5 +1,5 @@
-use crate::{BinaryReader, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems};
-use std::ops::Range;
+use crate::limits::MAX_WASM_CANONICAL_OPTIONS;
+use crate::{BinaryReader, FromReader, Result, SectionLimited};
 
 /// Represents options for component functions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,79 +46,50 @@ pub enum CanonicalFunction {
 }
 
 /// A reader for the canonical section of a WebAssembly component.
-#[derive(Clone)]
-pub struct ComponentCanonicalSectionReader<'a> {
-    reader: BinaryReader<'a>,
-    count: u32,
-}
+pub type ComponentCanonicalSectionReader<'a> = SectionLimited<'a, CanonicalFunction>;
 
-impl<'a> ComponentCanonicalSectionReader<'a> {
-    /// Constructs a new `ComponentFunctionSectionReader` for the given data and offset.
-    pub fn new(data: &'a [u8], offset: usize) -> Result<Self> {
-        let mut reader = BinaryReader::new_with_offset(data, offset);
-        let count = reader.read_var_u32()?;
-        Ok(Self { reader, count })
-    }
-
-    /// Gets the original position of the section reader.
-    pub fn original_position(&self) -> usize {
-        self.reader.original_position()
-    }
-
-    /// Gets the count of items in the section.
-    pub fn get_count(&self) -> u32 {
-        self.count
-    }
-
-    /// Reads function type index from the function section.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use wasmparser::ComponentCanonicalSectionReader;
-    /// # let data: &[u8] = &[0x01, 0x00, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00];
-    /// let mut reader = ComponentCanonicalSectionReader::new(data, 0).unwrap();
-    /// for _ in 0..reader.get_count() {
-    ///     let func = reader.read().expect("func");
-    ///     println!("Function: {:?}", func);
-    /// }
-    /// ```
-    pub fn read(&mut self) -> Result<CanonicalFunction> {
-        self.reader.read_canonical_func()
+impl<'a> FromReader<'a> for CanonicalFunction {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<CanonicalFunction> {
+        Ok(match reader.read_u8()? {
+            0x00 => match reader.read_u8()? {
+                0x00 => {
+                    let core_func_index = reader.read_var_u32()?;
+                    let options = reader
+                        .read_iter(MAX_WASM_CANONICAL_OPTIONS, "canonical options")?
+                        .collect::<Result<_>>()?;
+                    let type_index = reader.read_var_u32()?;
+                    CanonicalFunction::Lift {
+                        core_func_index,
+                        options,
+                        type_index,
+                    }
+                }
+                x => return reader.invalid_leading_byte(x, "canonical function lift"),
+            },
+            0x01 => match reader.read_u8()? {
+                0x00 => CanonicalFunction::Lower {
+                    func_index: reader.read_var_u32()?,
+                    options: reader
+                        .read_iter(MAX_WASM_CANONICAL_OPTIONS, "canonical options")?
+                        .collect::<Result<_>>()?,
+                },
+                x => return reader.invalid_leading_byte(x, "canonical function lower"),
+            },
+            x => return reader.invalid_leading_byte(x, "canonical function"),
+        })
     }
 }
 
-impl<'a> SectionReader for ComponentCanonicalSectionReader<'a> {
-    type Item = CanonicalFunction;
-
-    fn read(&mut self) -> Result<Self::Item> {
-        Self::read(self)
-    }
-
-    fn eof(&self) -> bool {
-        self.reader.eof()
-    }
-
-    fn original_position(&self) -> usize {
-        Self::original_position(self)
-    }
-
-    fn range(&self) -> Range<usize> {
-        self.reader.range()
-    }
-}
-
-impl<'a> SectionWithLimitedItems for ComponentCanonicalSectionReader<'a> {
-    fn get_count(&self) -> u32 {
-        Self::get_count(self)
-    }
-}
-
-impl<'a> IntoIterator for ComponentCanonicalSectionReader<'a> {
-    type Item = Result<CanonicalFunction>;
-    type IntoIter = SectionIteratorLimited<Self>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        SectionIteratorLimited::new(self)
+impl<'a> FromReader<'a> for CanonicalOption {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.read_u8()? {
+            0x00 => CanonicalOption::UTF8,
+            0x01 => CanonicalOption::UTF16,
+            0x02 => CanonicalOption::CompactUTF16,
+            0x03 => CanonicalOption::Memory(reader.read_var_u32()?),
+            0x04 => CanonicalOption::Realloc(reader.read_var_u32()?),
+            0x05 => CanonicalOption::PostReturn(reader.read_var_u32()?),
+            x => return reader.invalid_leading_byte(x, "canonical option"),
+        })
     }
 }

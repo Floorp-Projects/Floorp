@@ -1,6 +1,5 @@
 use crate::annotation;
 use crate::component::*;
-use crate::core;
 use crate::kw;
 use crate::parser::{Parse, Parser, Result};
 use crate::token::Index;
@@ -261,7 +260,7 @@ pub struct NestedComponent<'a> {
     pub name: Option<NameAnnotation<'a>>,
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
-    pub exports: core::InlineExport<'a>,
+    pub exports: InlineExport<'a>,
     /// What kind of component this was parsed as.
     pub kind: NestedComponentKind<'a>,
 }

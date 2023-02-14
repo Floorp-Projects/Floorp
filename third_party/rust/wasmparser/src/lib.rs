@@ -338,6 +338,11 @@ macro_rules! for_each_operator {
             @reference_types TableGrow { table: u32 } => visit_table_grow
             @reference_types TableSize { table: u32 } => visit_table_size
 
+            // OxFC prefixed operators
+            // memory control (experimental)
+            // https://github.com/WebAssembly/design/issues/1439
+            @memory_control MemoryDiscard { mem: u32 } => visit_memory_discard
+
             // 0xFE prefixed operators
             // threads
             // https://github.com/WebAssembly/threads

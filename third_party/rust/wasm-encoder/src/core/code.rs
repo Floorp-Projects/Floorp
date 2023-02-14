@@ -87,8 +87,8 @@ impl CodeSection {
     /// let code_section = [10, 6,    1,         4, 0, 65, 0, 11];
     ///
     /// // Parse the code section.
-    /// let mut reader = wasmparser::CodeSectionReader::new(&code_section, 0).unwrap();
-    /// let body = reader.read().unwrap();
+    /// let reader = wasmparser::CodeSectionReader::new(&code_section, 0).unwrap();
+    /// let body = reader.into_iter().next().unwrap().unwrap();
     /// let body_range = body.range();
     ///
     /// // Add the body to a new code section encoder by copying bytes rather
@@ -367,6 +367,7 @@ pub enum Instruction<'a> {
     DataDrop(u32),
     MemoryCopy { src_mem: u32, dst_mem: u32 },
     MemoryFill(u32),
+    MemoryDiscard(u32),
 
     // Numeric instructions.
     I32Const(i32),
@@ -1090,6 +1091,11 @@ impl Encode for Instruction<'_> {
             Instruction::MemoryFill(mem) => {
                 sink.push(0xfc);
                 sink.push(0x0b);
+                mem.encode(sink);
+            }
+            Instruction::MemoryDiscard(mem) => {
+                sink.push(0xfc);
+                sink.push(0x12);
                 mem.encode(sink);
             }
 

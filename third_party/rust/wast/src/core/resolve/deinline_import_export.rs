@@ -120,13 +120,16 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             ElemPayload::Indices(v) => v.len(),
                             ElemPayload::Exprs { exprs, .. } => exprs.len(),
                         };
-                        let kind = TableKind::Normal(TableType {
-                            limits: Limits {
-                                min: len as u32,
-                                max: Some(len as u32),
+                        let kind = TableKind::Normal {
+                            ty: TableType {
+                                limits: Limits {
+                                    min: len as u32,
+                                    max: Some(len as u32),
+                                },
+                                elem: *elem,
                             },
-                            elem: *elem,
-                        });
+                            init_expr: None,
+                        };
                         let payload = match mem::replace(&mut t.kind, kind) {
                             TableKind::Inline { payload, .. } => payload,
                             _ => unreachable!(),
@@ -146,7 +149,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                         }));
                     }
 
-                    TableKind::Normal(_) => {}
+                    TableKind::Normal { .. } => {}
                 }
             }
 

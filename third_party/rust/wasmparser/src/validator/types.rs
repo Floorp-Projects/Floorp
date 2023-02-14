@@ -2,17 +2,20 @@
 
 use super::{component::ComponentState, core::Module};
 use crate::{
-    ComponentExport, ComponentExternalKind, ComponentImport, ComponentTypeRef, Export,
-    ExternalKind, FuncType, GlobalType, Import, MemoryType, PrimitiveValType, TableType, TypeRef,
-    ValType,
+    ComponentExport, ComponentImport, Export, ExternalKind, FuncType, GlobalType, Import,
+    MemoryType, PrimitiveValType, TableType, TypeRef, ValType,
 };
 use indexmap::{IndexMap, IndexSet};
+use std::collections::HashMap;
 use std::{
     borrow::Borrow,
+    fmt,
     hash::{Hash, Hasher},
     mem,
+    ops::{Deref, DerefMut},
     sync::Arc,
 };
+use url::Url;
 
 /// The maximum number of parameters in the canonical ABI that can be passed by value.
 ///
@@ -27,6 +30,199 @@ const MAX_FLAT_FUNC_RESULTS: usize = 1;
 
 /// The maximum lowered types, including a possible type for a return pointer parameter.
 const MAX_LOWERED_TYPES: usize = MAX_FLAT_FUNC_PARAMS + 1;
+
+/// Represents a kebab string slice used in validation.
+///
+/// This is a wrapper around `str` that ensures the slice is
+/// a valid kebab case string according to the component model
+/// specification.
+///
+/// It also provides an equality and hashing implementation
+/// that ignores ASCII case.
+#[derive(Debug, Eq)]
+#[repr(transparent)]
+pub struct KebabStr(str);
+
+impl KebabStr {
+    /// Creates a new kebab string slice.
+    ///
+    /// Returns `None` if the given string is not a valid kebab string.
+    pub fn new<'a>(s: impl AsRef<str> + 'a) -> Option<&'a Self> {
+        let s = Self::new_unchecked(s);
+        if s.is_kebab_case() {
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn new_unchecked<'a>(s: impl AsRef<str> + 'a) -> &'a Self {
+        // Safety: `KebabStr` is a transparent wrapper around `str`
+        // Therefore transmuting `&str` to `&KebabStr` is safe.
+        unsafe { std::mem::transmute::<_, &Self>(s.as_ref()) }
+    }
+
+    /// Gets the underlying string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Converts the slice to an owned string.
+    pub fn to_kebab_string(&self) -> KebabString {
+        KebabString(self.to_string())
+    }
+
+    fn is_kebab_case(&self) -> bool {
+        let mut lower = false;
+        let mut upper = false;
+        for c in self.chars() {
+            match c {
+                'a'..='z' if !lower && !upper => lower = true,
+                'A'..='Z' if !lower && !upper => upper = true,
+                'a'..='z' if lower => {}
+                'A'..='Z' if upper => {}
+                '0'..='9' if lower || upper => {}
+                '-' if lower || upper => {
+                    lower = false;
+                    upper = false;
+                }
+                _ => return false,
+            }
+        }
+
+        !self.is_empty() && !self.ends_with('-')
+    }
+}
+
+impl Deref for KebabStr {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl PartialEq for KebabStr {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.chars()
+            .zip(other.chars())
+            .all(|(a, b)| a.to_ascii_lowercase() == b.to_ascii_lowercase())
+    }
+}
+
+impl PartialEq<KebabString> for KebabStr {
+    fn eq(&self, other: &KebabString) -> bool {
+        self.eq(other.as_kebab_str())
+    }
+}
+
+impl Hash for KebabStr {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.len().hash(state);
+
+        for b in self.chars() {
+            b.to_ascii_lowercase().hash(state);
+        }
+    }
+}
+
+impl fmt::Display for KebabStr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (self as &str).fmt(f)
+    }
+}
+
+impl ToOwned for KebabStr {
+    type Owned = KebabString;
+
+    fn to_owned(&self) -> Self::Owned {
+        self.to_kebab_string()
+    }
+}
+
+/// Represents an owned kebab string for validation.
+///
+/// This is a wrapper around `String` that ensures the string is
+/// a valid kebab case string according to the component model
+/// specification.
+///
+/// It also provides an equality and hashing implementation
+/// that ignores ASCII case.
+#[derive(Debug, Clone, Eq)]
+pub struct KebabString(String);
+
+impl KebabString {
+    /// Creates a new kebab string.
+    ///
+    /// Returns `None` if the given string is not a valid kebab string.
+    pub fn new(s: impl Into<String>) -> Option<Self> {
+        let s = s.into();
+        if KebabStr::new(&s).is_some() {
+            Some(Self(s))
+        } else {
+            None
+        }
+    }
+
+    /// Gets the underlying string.
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    /// Converts the kebab string to a kebab string slice.
+    pub fn as_kebab_str(&self) -> &KebabStr {
+        // Safety: internal string is always valid kebab-case
+        KebabStr::new_unchecked(self.as_str())
+    }
+}
+
+impl Deref for KebabString {
+    type Target = KebabStr;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_kebab_str()
+    }
+}
+
+impl Borrow<KebabStr> for KebabString {
+    fn borrow(&self) -> &KebabStr {
+        self.as_kebab_str()
+    }
+}
+
+impl PartialEq for KebabString {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_kebab_str().eq(other.as_kebab_str())
+    }
+}
+
+impl PartialEq<KebabStr> for KebabString {
+    fn eq(&self, other: &KebabStr) -> bool {
+        self.as_kebab_str().eq(other)
+    }
+}
+
+impl Hash for KebabString {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_kebab_str().hash(state)
+    }
+}
+
+impl fmt::Display for KebabString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_kebab_str().fmt(f)
+    }
+}
+
+impl From<KebabString> for String {
+    fn from(s: KebabString) -> String {
+        s.0
+    }
+}
 
 /// A simple alloc-free list of types used for calculating lowered function signatures.
 pub(crate) struct LoweredTypes {
@@ -134,22 +330,27 @@ fn push_primitive_wasm_types(ty: &PrimitiveValType, lowered_types: &mut LoweredT
 /// Represents a unique identifier for a type known to a [`crate::Validator`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct TypeId {
+    /// The index into the global list of types.
+    pub(crate) index: usize,
     /// The effective type size for the type.
     ///
     /// This is stored as part of the ID to avoid having to recurse through
     /// the global type list when calculating type sizes.
-    pub(crate) type_size: usize,
-    /// The index into the global list of types.
-    pub(crate) index: usize,
-    /// The original type index.
+    pub(crate) type_size: u32,
+    /// A unique integer assigned to this type.
     ///
-    /// This will be `None` for implicitly defined types, e.g. types for
-    /// modules definitions, component definitions, instantiations, and function
-    /// lowerings.
-    pub(crate) type_index: Option<usize>,
-    /// Whether or not the type is a core type.
-    pub(crate) is_core: bool,
+    /// The purpose of this field is to ensure that two different `TypeId`
+    /// representations can be handed out for two different aliased types within
+    /// a component that actually point to the same underlying type (as pointed
+    /// to by the `index` field).
+    unique_id: u32,
 }
+
+// The size of `TypeId` was seen to have a large-ish impact in #844, so this
+// assert ensures that it stays relatively small.
+const _: () = {
+    assert!(std::mem::size_of::<TypeId>() <= 16);
+};
 
 /// A unified type definition for validating WebAssembly modules and components.
 #[derive(Debug)]
@@ -239,9 +440,9 @@ impl Type {
         }
     }
 
-    pub(crate) fn type_size(&self) -> usize {
+    pub(crate) fn type_size(&self) -> u32 {
         match self {
-            Self::Func(ty) => 1 + ty.params().len() + ty.results().len(),
+            Self::Func(ty) => 1 + (ty.params().len() + ty.results().len()) as u32,
             Self::Module(ty) => ty.type_size,
             Self::Instance(ty) => ty.type_size,
             Self::Component(ty) => ty.type_size,
@@ -269,18 +470,6 @@ impl ComponentValType {
                 .as_defined_type()
                 .unwrap()
                 .requires_realloc(types),
-        }
-    }
-
-    pub(crate) fn is_optional(&self, types: &TypeList) -> bool {
-        match self {
-            ComponentValType::Primitive(_) => false,
-            ComponentValType::Type(ty) => {
-                matches!(
-                    types[*ty].as_defined_type().unwrap(),
-                    ComponentDefinedType::Option(_)
-                )
-            }
         }
     }
 
@@ -327,7 +516,7 @@ impl ComponentValType {
         }
     }
 
-    pub(crate) fn type_size(&self) -> usize {
+    pub(crate) fn type_size(&self) -> u32 {
         match self {
             Self::Primitive(_) => 1,
             Self::Type(id) => id.type_size,
@@ -400,7 +589,7 @@ impl EntityType {
         }
     }
 
-    pub(crate) fn type_size(&self) -> usize {
+    pub(crate) fn type_size(&self) -> u32 {
         match self {
             Self::Func(id) | Self::Tag(id) => id.type_size,
             Self::Table(_) | Self::Memory(_) | Self::Global(_) => 1,
@@ -458,7 +647,7 @@ impl ModuleImportKey for (&str, &str) {
 #[derive(Debug, Clone)]
 pub struct ModuleType {
     /// The effective type size for the module type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The imports of the module type.
     pub imports: IndexMap<(String, String), EntityType>,
     /// The exports of the module type.
@@ -507,7 +696,7 @@ pub enum InstanceTypeKind {
 #[derive(Debug, Clone)]
 pub struct InstanceType {
     /// The effective type size for the module instance type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The kind of module instance type.
     pub kind: InstanceTypeKind,
 }
@@ -539,7 +728,18 @@ pub enum ComponentEntityType {
     /// The entity is a value.
     Value(ComponentValType),
     /// The entity is a type.
-    Type(TypeId),
+    Type {
+        /// This is the identifier of the type that was referenced when this
+        /// entity was created.
+        referenced: TypeId,
+        /// This is the identifier of the type that was created when this type
+        /// was imported or exported from the component.
+        ///
+        /// Note that the underlying type information for the `referenced`
+        /// field and for this `created` field is the same, but these two types
+        /// will hash to different values.
+        created: TypeId,
+    },
     /// The entity is a component instance.
     Instance(TypeId),
     /// The entity is a component.
@@ -569,12 +769,14 @@ impl ComponentEntityType {
             (Self::Value(a), Self::Value(b)) => {
                 ComponentValType::internal_is_subtype_of(a, at, b, bt)
             }
-            (Self::Type(a), Self::Type(b)) => ComponentDefinedType::internal_is_subtype_of(
-                at[*a].as_defined_type().unwrap(),
-                at,
-                bt[*b].as_defined_type().unwrap(),
-                bt,
-            ),
+            (Self::Type { referenced: a, .. }, Self::Type { referenced: b, .. }) => {
+                ComponentDefinedType::internal_is_subtype_of(
+                    at[*a].as_defined_type().unwrap(),
+                    at,
+                    bt[*b].as_defined_type().unwrap(),
+                    bt,
+                )
+            }
             (Self::Instance(a), Self::Instance(b)) => {
                 ComponentInstanceType::internal_is_subtype_of(
                     at[*a].as_component_instance_type().unwrap(),
@@ -598,17 +800,17 @@ impl ComponentEntityType {
             Self::Module(_) => "module",
             Self::Func(_) => "function",
             Self::Value(_) => "value",
-            Self::Type(_) => "type",
+            Self::Type { .. } => "type",
             Self::Instance(_) => "instance",
             Self::Component(_) => "component",
         }
     }
 
-    pub(crate) fn type_size(&self) -> usize {
+    pub(crate) fn type_size(&self) -> u32 {
         match self {
             Self::Module(ty)
             | Self::Func(ty)
-            | Self::Type(ty)
+            | Self::Type { referenced: ty, .. }
             | Self::Instance(ty)
             | Self::Component(ty) => ty.type_size,
             Self::Value(ty) => ty.type_size(),
@@ -620,11 +822,11 @@ impl ComponentEntityType {
 #[derive(Debug, Clone)]
 pub struct ComponentType {
     /// The effective type size for the component type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The imports of the component type.
-    pub imports: IndexMap<String, ComponentEntityType>,
+    pub imports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
     /// The exports of the component type.
-    pub exports: IndexMap<String, ComponentEntityType>,
+    pub exports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
 }
 
 impl ComponentType {
@@ -639,11 +841,11 @@ impl ComponentType {
         // *more* than what this component type needs).
         // However, for imports, the check is reversed (i.e. it is okay
         // to import *less* than what this component type needs).
-        a.imports.iter().all(|(k, a)| match b.imports.get(k) {
-            Some(b) => ComponentEntityType::internal_is_subtype_of(b, bt, a, at),
+        a.imports.iter().all(|(k, (_, a))| match b.imports.get(k) {
+            Some((_, b)) => ComponentEntityType::internal_is_subtype_of(b, bt, a, at),
             None => false,
-        }) && b.exports.iter().all(|(k, b)| match a.exports.get(k) {
-            Some(a) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
+        }) && b.exports.iter().all(|(k, (_, b))| match a.exports.get(k) {
+            Some((_, a)) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
             None => false,
         })
     }
@@ -653,32 +855,38 @@ impl ComponentType {
 #[derive(Debug, Clone)]
 pub enum ComponentInstanceTypeKind {
     /// The instance type is from a definition.
-    Defined(IndexMap<String, ComponentEntityType>),
+    Defined(IndexMap<KebabString, (Option<Url>, ComponentEntityType)>),
     /// The instance type is the result of instantiating a component type.
     Instantiated(TypeId),
     /// The instance type is the result of instantiating from exported items.
-    Exports(IndexMap<String, ComponentEntityType>),
+    Exports(IndexMap<KebabString, (Option<Url>, ComponentEntityType)>),
 }
 
 /// Represents a type of a component instance.
 #[derive(Debug, Clone)]
 pub struct ComponentInstanceType {
     /// The effective type size for the instance type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The kind of instance type.
     pub kind: ComponentInstanceTypeKind,
 }
 
 impl ComponentInstanceType {
     /// Gets the exports of the instance type.
-    pub fn exports<'a>(&'a self, types: TypesRef<'a>) -> &'a IndexMap<String, ComponentEntityType> {
+    pub fn exports<'a>(
+        &'a self,
+        types: TypesRef<'a>,
+    ) -> impl ExactSizeIterator<Item = (&'a KebabStr, &'a Option<Url>, ComponentEntityType)> + Clone
+    {
         self.internal_exports(types.list)
+            .iter()
+            .map(|(n, (u, t))| (n.as_kebab_str(), u, *t))
     }
 
     pub(crate) fn internal_exports<'a>(
         &'a self,
         types: &'a TypeList,
-    ) -> &'a IndexMap<String, ComponentEntityType> {
+    ) -> &'a IndexMap<KebabString, (Option<Url>, ComponentEntityType)> {
         match &self.kind {
             ComponentInstanceTypeKind::Defined(exports)
             | ComponentInstanceTypeKind::Exports(exports) => exports,
@@ -701,8 +909,8 @@ impl ComponentInstanceType {
         // *more* than what this instance type needs).
         b.internal_exports(bt)
             .iter()
-            .all(|(k, b)| match exports.get(k) {
-                Some(a) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
+            .all(|(k, (_, b))| match exports.get(k) {
+                Some((_, a)) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
                 None => false,
             })
     }
@@ -712,11 +920,11 @@ impl ComponentInstanceType {
 #[derive(Debug, Clone)]
 pub struct ComponentFuncType {
     /// The effective type size for the component function type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The function parameters.
-    pub params: Box<[(String, ComponentValType)]>,
+    pub params: Box<[(KebabString, ComponentValType)]>,
     /// The function's results.
-    pub results: Box<[(Option<String>, ComponentValType)]>,
+    pub results: Box<[(Option<KebabString>, ComponentValType)]>,
 }
 
 impl ComponentFuncType {
@@ -726,54 +934,46 @@ impl ComponentFuncType {
     }
 
     pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // Subtyping rules:
-        // https://github.com/WebAssembly/component-model/blob/main/design/mvp/Subtyping.md
-
-        // The subtype cannot have more parameters than the supertype
-        if b.params.len() < a.params.len() {
-            return false;
-        }
-
-        // The supertype cannot have more results than the subtype
-        if a.results.len() < b.results.len() {
-            return false;
-        }
-
-        for ((an, a), (bn, b)) in a.params.iter().zip(b.params.iter()) {
-            // All overlapping parameters must have the same name
-            if an != bn {
-                return false;
-            }
-
-            // Contravariant on parameters
-            if !ComponentValType::internal_is_subtype_of(b, bt, a, at) {
-                return false;
-            }
-        }
-
-        // All remaining parameters in the supertype must be optional
-        if !b
-            .params
-            .iter()
-            .skip(a.params.len())
-            .all(|(_, b)| b.is_optional(bt))
-        {
-            return false;
-        }
-
-        for ((an, a), (bn, b)) in a.results.iter().zip(b.results.iter()) {
-            // All overlapping results must have the same name
-            if an != bn {
-                return false;
-            }
-
-            // Covariant on results
-            if !ComponentValType::internal_is_subtype_of(a, at, b, bt) {
-                return false;
-            }
-        }
-
-        true
+        // Note that this intentionally diverges from the upstream specification
+        // in terms of subtyping. This is a full type-equality check which
+        // ensures that the structure of `a` exactly matches the structure of
+        // `b`. The rationale for this is:
+        //
+        // * Primarily in Wasmtime subtyping based on function types is not
+        //   implemented. This includes both subtyping a host import and
+        //   additionally handling subtyping as functions cross component
+        //   boundaries. The host import subtyping (or component export
+        //   subtyping) is not clear how to handle at all at this time. The
+        //   subtyping of functions between components can more easily be
+        //   handled by extending the `fact` compiler, but that hasn't been done
+        //   yet.
+        //
+        // * The upstream specification is currently pretty intentionally vague
+        //   precisely what subtyping is allowed. Implementing a strict check
+        //   here is intended to be a conservative starting point for the
+        //   component model which can be extended in the future if necessary.
+        //
+        // * The interaction with subtyping on bindings generation, for example,
+        //   is a tricky problem that doesn't have a clear answer at this time.
+        //   Effectively this is more rationale for being conservative in the
+        //   first pass of the component model.
+        //
+        // So, in conclusion, the test here (and other places that reference
+        // this comment) is for exact type equality with no differences.
+        a.params.len() == b.params.len()
+            && a.results.len() == b.results.len()
+            && a.params
+                .iter()
+                .zip(b.params.iter())
+                .all(|((an, a), (bn, b))| {
+                    an == bn && ComponentValType::internal_is_subtype_of(a, at, b, bt)
+                })
+            && a.results
+                .iter()
+                .zip(b.results.iter())
+                .all(|((an, a), (bn, b))| {
+                    an == bn && ComponentValType::internal_is_subtype_of(a, at, b, bt)
+                })
     }
 
     /// Lowers the component function type to core parameter and result types for the
@@ -839,32 +1039,32 @@ pub struct VariantCase {
     /// The variant case type.
     pub ty: Option<ComponentValType>,
     /// The name of the variant case refined by this one.
-    pub refines: Option<String>,
+    pub refines: Option<KebabString>,
 }
 
 /// Represents a record type.
 #[derive(Debug, Clone)]
 pub struct RecordType {
     /// The effective type size for the record type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The map of record fields.
-    pub fields: IndexMap<String, ComponentValType>,
+    pub fields: IndexMap<KebabString, ComponentValType>,
 }
 
 /// Represents a variant type.
 #[derive(Debug, Clone)]
 pub struct VariantType {
     /// The effective type size for the variant type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The map of variant cases.
-    pub cases: IndexMap<String, VariantCase>,
+    pub cases: IndexMap<KebabString, VariantCase>,
 }
 
 /// Represents a tuple type.
 #[derive(Debug, Clone)]
 pub struct TupleType {
     /// The effective type size for the tuple type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The types of the tuple.
     pub types: Box<[ComponentValType]>,
 }
@@ -873,7 +1073,7 @@ pub struct TupleType {
 #[derive(Debug, Clone)]
 pub struct UnionType {
     /// The inclusive type count for the union type.
-    pub(crate) type_size: usize,
+    pub(crate) type_size: u32,
     /// The types of the union.
     pub types: Box<[ComponentValType]>,
 }
@@ -892,9 +1092,9 @@ pub enum ComponentDefinedType {
     /// The type is a tuple.
     Tuple(TupleType),
     /// The type is a set of flags.
-    Flags(IndexSet<String>),
+    Flags(IndexSet<KebabString>),
     /// The type is an enumeration.
-    Enum(IndexSet<String>),
+    Enum(IndexSet<KebabString>),
     /// The type is a union.
     Union(UnionType),
     /// The type is an `option`.
@@ -936,47 +1136,35 @@ impl ComponentDefinedType {
     }
 
     pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // Subtyping rules according to
-        // https://github.com/WebAssembly/component-model/blob/main/design/mvp/Subtyping.md
+        // Note that the implementation of subtyping here diverges from the
+        // upstream specification intentionally, see the documentation on
+        // function subtyping for more information.
         match (a, b) {
             (Self::Primitive(a), Self::Primitive(b)) => PrimitiveValType::is_subtype_of(*a, *b),
             (Self::Record(a), Self::Record(b)) => {
-                for (name, a) in a.fields.iter() {
-                    if let Some(b) = b.fields.get(name) {
-                        if !ComponentValType::internal_is_subtype_of(a, at, b, bt) {
-                            return false;
-                        }
-                    } else {
-                        // Superfluous fields can be ignored in the subtype
-                    }
-                }
-                // Check for missing required fields in the supertype
-                for (name, b) in b.fields.iter() {
-                    if !b.is_optional(bt) && !a.fields.contains_key(name) {
-                        return false;
-                    }
-                }
-                true
+                a.fields.len() == b.fields.len()
+                    && a.fields
+                        .iter()
+                        .zip(b.fields.iter())
+                        .all(|((aname, a), (bname, b))| {
+                            aname == bname && ComponentValType::internal_is_subtype_of(a, at, b, bt)
+                        })
             }
             (Self::Variant(a), Self::Variant(b)) => {
-                for (name, a) in a.cases.iter() {
-                    if let Some(b) = b.cases.get(name) {
-                        // Covariant subtype on the case type
-                        if !Self::is_optional_subtype_of(a.ty, at, b.ty, bt) {
-                            return false;
-                        }
-                    } else if let Some(refines) = &a.refines {
-                        if !b.cases.contains_key(refines) {
-                            // The refinement case is not in the supertype
-                            return false;
-                        }
-                    } else {
-                        // This case is not in the supertype and there is no
-                        // default
-                        return false;
-                    }
-                }
-                true
+                a.cases.len() == b.cases.len()
+                    && a.cases
+                        .iter()
+                        .zip(b.cases.iter())
+                        .all(|((aname, a), (bname, b))| {
+                            aname == bname
+                                && match (&a.ty, &b.ty) {
+                                    (Some(a), Some(b)) => {
+                                        ComponentValType::internal_is_subtype_of(a, at, b, bt)
+                                    }
+                                    (None, None) => true,
+                                    _ => false,
+                                }
+                        })
             }
             (Self::List(a), Self::List(b)) | (Self::Option(a), Self::Option(b)) => {
                 ComponentValType::internal_is_subtype_of(a, at, b, bt)
@@ -999,7 +1187,9 @@ impl ComponentDefinedType {
                     .zip(b.types.iter())
                     .all(|(a, b)| ComponentValType::internal_is_subtype_of(a, at, b, bt))
             }
-            (Self::Flags(a), Self::Flags(b)) | (Self::Enum(a), Self::Enum(b)) => a.is_subset(b),
+            (Self::Flags(a), Self::Flags(b)) | (Self::Enum(a), Self::Enum(b)) => {
+                a.len() == b.len() && a.iter().eq(b.iter())
+            }
             (Self::Result { ok: ao, err: ae }, Self::Result { ok: bo, err: be }) => {
                 Self::is_optional_subtype_of(*ao, at, *bo, bt)
                     && Self::is_optional_subtype_of(*ae, at, *be, bt)
@@ -1008,7 +1198,7 @@ impl ComponentDefinedType {
         }
     }
 
-    pub(crate) fn type_size(&self) -> usize {
+    pub(crate) fn type_size(&self) -> u32 {
         match self {
             Self::Primitive(_) => 1,
             Self::Flags(_) | Self::Enum(_) => 1,
@@ -1030,9 +1220,9 @@ impl ComponentDefinedType {
         bt: &TypeList,
     ) -> bool {
         match (a, b) {
-            (None, None) | (Some(_), None) => true,
-            (None, Some(_)) => false,
+            (None, None) => true,
             (Some(a), Some(b)) => ComponentValType::internal_is_subtype_of(&a, at, &b, bt),
+            _ => false,
         }
     }
     fn push_wasm_types(&self, types: &TypeList, lowered_types: &mut LoweredTypes) -> bool {
@@ -1431,29 +1621,10 @@ impl<'a> TypesRef<'a> {
     ) -> Option<ComponentEntityType> {
         match &self.kind {
             TypesRefKind::Module(_) => None,
-            TypesRefKind::Component(component) => Some(match import.ty {
-                ComponentTypeRef::Module(idx) => {
-                    ComponentEntityType::Module(*component.core_types.get(idx as usize)?)
-                }
-                ComponentTypeRef::Func(idx) => {
-                    ComponentEntityType::Func(*component.types.get(idx as usize)?)
-                }
-                ComponentTypeRef::Value(ty) => ComponentEntityType::Value(match ty {
-                    crate::ComponentValType::Primitive(ty) => ComponentValType::Primitive(ty),
-                    crate::ComponentValType::Type(idx) => {
-                        ComponentValType::Type(*component.types.get(idx as usize)?)
-                    }
-                }),
-                ComponentTypeRef::Type(_, idx) => {
-                    ComponentEntityType::Type(*component.types.get(idx as usize)?)
-                }
-                ComponentTypeRef::Instance(idx) => {
-                    ComponentEntityType::Instance(*component.types.get(idx as usize)?)
-                }
-                ComponentTypeRef::Component(idx) => {
-                    ComponentEntityType::Component(*component.types.get(idx as usize)?)
-                }
-            }),
+            TypesRefKind::Component(component) => {
+                let key = KebabStr::new(import.name)?;
+                Some(component.imports.get(key)?.1)
+            }
         }
     }
 
@@ -1464,29 +1635,10 @@ impl<'a> TypesRef<'a> {
     ) -> Option<ComponentEntityType> {
         match &self.kind {
             TypesRefKind::Module(_) => None,
-            TypesRefKind::Component(component) => Some(match export.kind {
-                ComponentExternalKind::Module => {
-                    ComponentEntityType::Module(*component.core_modules.get(export.index as usize)?)
-                }
-                ComponentExternalKind::Func => {
-                    ComponentEntityType::Func(*component.funcs.get(export.index as usize)?)
-                }
-                ComponentExternalKind::Value => ComponentEntityType::Value(
-                    component
-                        .values
-                        .get(export.index as usize)
-                        .map(|(r, _)| *r)?,
-                ),
-                ComponentExternalKind::Type => {
-                    ComponentEntityType::Type(*component.types.get(export.index as usize)?)
-                }
-                ComponentExternalKind::Instance => {
-                    ComponentEntityType::Instance(*component.instances.get(export.index as usize)?)
-                }
-                ComponentExternalKind::Component => ComponentEntityType::Component(
-                    *component.components.get(export.index as usize)?,
-                ),
-            }),
+            TypesRefKind::Component(component) => {
+                let key = KebabStr::new(export.name)?;
+                Some(component.exports.get(key)?.1)
+            }
         }
     }
 }
@@ -1760,6 +1912,13 @@ impl Types {
     ) -> Option<ComponentEntityType> {
         self.as_ref().component_entity_type_from_export(export)
     }
+
+    /// Attempts to lookup the type id that `ty` is an alias of.
+    ///
+    /// Returns `None` if `ty` wasn't listed as aliasing a prior type.
+    pub fn peel_alias(&self, ty: TypeId) -> Option<TypeId> {
+        self.list.peel_alias(ty)
+    }
 }
 
 /// This is a type which mirrors a subset of the `Vec<T>` API, but is intended
@@ -1783,13 +1942,23 @@ pub(crate) struct SnapshotList<T> {
     //
     // Note that this list is sorted least-to-greatest in order of the index for
     // binary searching.
-    snapshots: Vec<(usize, Arc<Vec<T>>)>,
+    snapshots: Vec<Arc<Snapshot<T>>>,
 
     // This is the total length of all lists in the `snapshots` array.
     snapshots_total: usize,
 
     // The current list of types for the current snapshot that are being built.
     cur: Vec<T>,
+
+    unique_mappings: HashMap<u32, u32>,
+    unique_counter: u32,
+}
+
+struct Snapshot<T> {
+    prior_types: usize,
+    unique_counter: u32,
+    unique_mappings: HashMap<u32, u32>,
+    items: Vec<T>,
 }
 
 impl<T> SnapshotList<T> {
@@ -1802,12 +1971,15 @@ impl<T> SnapshotList<T> {
         // ... and failing that we do a binary search to figure out which bucket
         // it's in. Note the `i-1` in the `Err` case because if we don't find an
         // exact match the type is located in the previous bucket.
-        let i = match self.snapshots.binary_search_by_key(&index, |(i, _)| *i) {
+        let i = match self
+            .snapshots
+            .binary_search_by_key(&index, |snapshot| snapshot.prior_types)
+        {
             Ok(i) => i,
             Err(i) => i - 1,
         };
-        let (len, list) = &self.snapshots[i];
-        Some(&list[index - len])
+        let snapshot = &self.snapshots[i];
+        Some(&snapshot.items[index - snapshot.prior_types])
     }
 
     /// Same as `<&mut [T]>::get_mut`, except only works for indexes into the
@@ -1851,19 +2023,70 @@ impl<T> SnapshotList<T> {
         // If the current chunk has new elements, commit them in to an
         // `Arc`-wrapped vector in the snapshots list. Note the `shrink_to_fit`
         // ahead of time to hopefully keep memory usage lower than it would
-        // otherwise be.
+        // otherwise be. Additionally note that the `unique_counter` is bumped
+        // here to ensure that the previous value of the unique counter is
+        // never used for an actual type so it's suitable for lookup via a
+        // binary search.
         let len = self.cur.len();
         if len > 0 {
+            self.unique_counter += 1;
             self.cur.shrink_to_fit();
-            self.snapshots
-                .push((self.snapshots_total, Arc::new(mem::take(&mut self.cur))));
+            self.snapshots.push(Arc::new(Snapshot {
+                prior_types: self.snapshots_total,
+                unique_counter: self.unique_counter - 1,
+                unique_mappings: mem::take(&mut self.unique_mappings),
+                items: mem::take(&mut self.cur),
+            }));
             self.snapshots_total += len;
         }
         SnapshotList {
             snapshots: self.snapshots.clone(),
             snapshots_total: self.snapshots_total,
+            unique_mappings: HashMap::new(),
+            unique_counter: self.unique_counter,
             cur: Vec::new(),
         }
+    }
+
+    /// Modifies a `TypeId` to have the same contents but a fresh new unique id.
+    ///
+    /// This is used during aliasing with components to assign types a unique
+    /// identifier that isn't equivalent to anything else but still
+    /// points to the same underlying type.
+    pub fn with_unique(&mut self, mut ty: TypeId) -> TypeId {
+        self.unique_mappings
+            .insert(self.unique_counter, ty.unique_id);
+        ty.unique_id = self.unique_counter;
+        self.unique_counter += 1;
+        ty
+    }
+
+    /// Attempts to lookup the type id that `ty` is an alias of.
+    ///
+    /// Returns `None` if `ty` wasn't listed as aliasing a prior type.
+    pub fn peel_alias(&self, ty: TypeId) -> Option<TypeId> {
+        // The unique counter in each snapshot is the unique counter at the
+        // time of the snapshot so it's guaranteed to never be used, meaning
+        // that `Ok` should never show up here. With an `Err` it's where the
+        // index would be placed meaning that the index in question is the
+        // smallest value over the unique id's value, meaning that slot has the
+        // mapping we're interested in.
+        let i = match self
+            .snapshots
+            .binary_search_by_key(&ty.unique_id, |snapshot| snapshot.unique_counter)
+        {
+            Ok(_) => unreachable!(),
+            Err(i) => i,
+        };
+
+        // If the `i` index is beyond the snapshot array then lookup in the
+        // current mappings instead since it may refer to a type not snapshot
+        // yet.
+        let unique_id = match self.snapshots.get(i) {
+            Some(snapshot) => *snapshot.unique_mappings.get(&ty.unique_id)?,
+            None => *self.unique_mappings.get(&ty.unique_id)?,
+        };
+        Some(TypeId { unique_id, ..ty })
     }
 }
 
@@ -1905,9 +2128,63 @@ impl<T> Default for SnapshotList<T> {
             snapshots: Vec::new(),
             snapshots_total: 0,
             cur: Vec::new(),
+            unique_counter: 1,
+            unique_mappings: HashMap::new(),
         }
     }
 }
 
 /// A snapshot list of types.
 pub(crate) type TypeList = SnapshotList<Type>;
+
+/// Thin wrapper around `TypeList` which provides an allocator of unique ids for
+/// types contained within this list.
+pub(crate) struct TypeAlloc {
+    list: TypeList,
+}
+
+impl Deref for TypeAlloc {
+    type Target = TypeList;
+    fn deref(&self) -> &TypeList {
+        &self.list
+    }
+}
+
+impl DerefMut for TypeAlloc {
+    fn deref_mut(&mut self) -> &mut TypeList {
+        &mut self.list
+    }
+}
+
+impl TypeAlloc {
+    /// Pushes a new anonymous type into this list which will have its
+    /// `unique_id` field cleared.
+    pub fn push_anon(&mut self, ty: Type) -> TypeId {
+        let index = self.list.len();
+        let type_size = ty.type_size();
+        self.list.push(ty);
+        TypeId {
+            index,
+            type_size,
+            unique_id: 0,
+        }
+    }
+
+    /// Pushes a new defined type which has an index in core wasm onto this
+    /// list.
+    ///
+    /// The returned `TypeId` is guaranteed to be unique and not hash-equivalent
+    /// to any other prior ID in this list.
+    pub fn push_defined(&mut self, ty: Type) -> TypeId {
+        let id = self.push_anon(ty);
+        self.with_unique(id)
+    }
+}
+
+impl Default for TypeAlloc {
+    fn default() -> TypeAlloc {
+        TypeAlloc {
+            list: Default::default(),
+        }
+    }
+}

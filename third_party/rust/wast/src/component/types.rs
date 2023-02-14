@@ -97,7 +97,7 @@ impl<'a> Parse<'a> for ModuleTypeDecl<'a> {
         if l.peek::<kw::r#type>() {
             Ok(Self::Type(parser.parse()?))
         } else if l.peek::<kw::alias>() {
-            Ok(Self::Alias(Alias::parse_outer_type_alias(parser, true)?))
+            Ok(Self::Alias(Alias::parse_outer_core_type_alias(parser)?))
         } else if l.peek::<kw::import>() {
             Ok(Self::Import(parser.parse()?))
         } else if l.peek::<kw::export>() {
@@ -133,7 +133,7 @@ pub struct Type<'a> {
     pub name: Option<NameAnnotation<'a>>,
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
-    pub exports: core::InlineExport<'a>,
+    pub exports: InlineExport<'a>,
     /// The type definition.
     pub def: TypeDef<'a>,
 }
@@ -740,6 +740,8 @@ pub struct ComponentExportType<'a> {
     pub span: Span,
     /// The name of this export.
     pub name: &'a str,
+    /// The optional URL of this export.
+    pub url: Option<&'a str>,
     /// The signature of the item.
     pub item: ItemSig<'a>,
 }
@@ -747,9 +749,22 @@ pub struct ComponentExportType<'a> {
 impl<'a> Parse<'a> for ComponentExportType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::export>()?.0;
+        let id = parser.parse()?;
+        let debug_name = parser.parse()?;
         let name = parser.parse()?;
-        let item = parser.parens(|p| p.parse())?;
-        Ok(Self { span, name, item })
+        let url = parser.parse()?;
+        let item = parser.parens(|p| {
+            let mut item = p.parse::<ItemSigNoName<'_>>()?.0;
+            item.id = id;
+            item.name = debug_name;
+            Ok(item)
+        })?;
+        Ok(Self {
+            span,
+            name,
+            url,
+            item,
+        })
     }
 }
 
@@ -792,7 +807,7 @@ impl<'a> Parse<'a> for ComponentTypeDecl<'a> {
         } else if l.peek::<kw::r#type>() {
             Ok(Self::Type(parser.parse()?))
         } else if l.peek::<kw::alias>() {
-            Ok(Self::Alias(Alias::parse_outer_type_alias(parser, false)?))
+            Ok(Self::Alias(parser.parse()?))
         } else if l.peek::<kw::import>() {
             Ok(Self::Import(parser.parse()?))
         } else if l.peek::<kw::export>() {
@@ -850,7 +865,7 @@ impl<'a> Parse<'a> for InstanceTypeDecl<'a> {
         } else if l.peek::<kw::r#type>() {
             Ok(Self::Type(parser.parse()?))
         } else if l.peek::<kw::alias>() {
-            Ok(Self::Alias(Alias::parse_outer_type_alias(parser, false)?))
+            Ok(Self::Alias(parser.parse()?))
         } else if l.peek::<kw::export>() {
             Ok(Self::Export(parser.parse()?))
         } else {

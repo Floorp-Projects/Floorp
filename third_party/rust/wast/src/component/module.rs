@@ -18,7 +18,7 @@ pub struct CoreModule<'a> {
     pub name: Option<NameAnnotation<'a>>,
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
-    pub exports: core::InlineExport<'a>,
+    pub exports: InlineExport<'a>,
     /// What kind of module this is, be it an inline-defined or imported one.
     pub kind: CoreModuleKind<'a>,
 }
