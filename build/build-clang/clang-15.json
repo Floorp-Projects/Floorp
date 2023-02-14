@@ -4,7 +4,6 @@
         "android-mangling-error_clang_12.patch",
         "unpoison-thread-stacks_clang_10.patch",
         "downgrade-mangling-error_clang_12.patch",
-        "bug47258-extract-symbols-mbcs.patch",
         "fuzzing_ccov_build_clang_12.patch",
         "win64-no-symlink_clang_16.patch",
         "revert-llvmorg-15-init-17171-g8bb4451a651a.patch",
