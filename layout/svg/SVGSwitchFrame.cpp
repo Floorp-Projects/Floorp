@@ -205,7 +205,7 @@ void SVGSwitchFrame::ReflowSVG() {
   // need to remove it _after_ recursing over our children so that they know
   // the initial reflow is currently underway.
 
-  bool isFirstReflow = (mState & NS_FRAME_FIRST_REFLOW);
+  bool isFirstReflow = HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   bool outerSVGHasHadFirstReflow =
       !GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);

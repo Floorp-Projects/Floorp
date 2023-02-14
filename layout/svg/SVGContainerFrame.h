@@ -35,7 +35,7 @@ namespace mozilla {
  * display their contents directly (such as the frames for <marker> or
  * <pattern>) just inherit this class. Frame sub-classes that do or can
  * display their contents directly (such as the frames for inner-<svg> or
- * <g>) inherit our nsDisplayContainerFrame sub-class.
+ * <g>) inherit our SVGDisplayContainerFrame sub-class.
  *
  *                               *** WARNING ***
  *

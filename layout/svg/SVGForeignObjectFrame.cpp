@@ -44,7 +44,8 @@ SVGForeignObjectFrame::SVGForeignObjectFrame(ComputedStyle* aStyle,
                                              nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID), mInReflow(false) {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED |
-               NS_FRAME_SVG_LAYOUT);
+               NS_FRAME_SVG_LAYOUT | NS_FRAME_FONT_INFLATION_CONTAINER |
+               NS_FRAME_FONT_INFLATION_FLOW_ROOT);
 }
 
 //----------------------------------------------------------------------
@@ -62,9 +63,6 @@ void SVGForeignObjectFrame::Init(nsIContent* aContent,
 
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
-  AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
-               NS_FRAME_FONT_INFLATION_FLOW_ROOT);
-  AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
 }
 
 nsresult SVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -310,7 +308,7 @@ void SVGForeignObjectFrame::ReflowSVG() {
 
   DoReflow();
 
-  if (mState & NS_FRAME_FIRST_REFLOW) {
+  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off
     // nsChangeHint_UpdateEffects):
