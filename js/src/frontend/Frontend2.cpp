@@ -481,8 +481,7 @@ bool ConvertScriptStencil(JSContext* cx, FrontendContext* fc,
       return false;
     }
 
-    if (!compilationState.sharedData.addAndShare(cx, fc, scriptIndex,
-                                                 sharedData)) {
+    if (!compilationState.sharedData.addAndShare(fc, scriptIndex, sharedData)) {
       return false;
     }
 
