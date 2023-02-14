@@ -689,6 +689,12 @@ class gfxTextRun : public gfxShapedText {
     }
   }
 
+  uint32_t GlyphRunCount() const {
+    return mHasGlyphRunArray       ? mGlyphRunArray.Length()
+           : mSingleGlyphRun.mFont ? 1
+                                   : 0;
+  }
+
   const GlyphRun* TrailingGlyphRun() const {
     uint32_t count;
     const GlyphRun* runs = GetGlyphRuns(&count);
