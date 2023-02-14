@@ -3284,154 +3284,39 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
     return Err(NS_ERROR_FAILURE);
   }
 
-  AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-
-  if (Element* parentListElement =
-          aSelectAllOfCurrentList == SelectAllOfCurrentList::Yes
-              ? aRanges.GetClosestAncestorAnyListElementOfRange()
-              : nullptr) {
-    arrayOfContents.AppendElement(
-        OwningNonNull<nsIContent>(*parentListElement));
-  } else {
-    AutoRangeArray extendedRanges(aRanges);
-
-    // TODO: We don't need AutoTransactionsConserveSelection here in the
-    //       normal cases, but removing this may cause the behavior with the
-    //       legacy mutation event listeners.  We should try to delete this in
-    //       a bug.
-    AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-
-    extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrChangeList, aEditingHost);
-    Result<EditorDOMPoint, nsresult> splitResult =
-        extendedRanges
-            .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
-                aHTMLEditor, aEditingHost);
-    if (MOZ_UNLIKELY(splitResult.isErr())) {
-      NS_WARNING(
-          "AutoRangeArray::"
-          "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() "
-          "failed");
-      return splitResult.propagateErr();
-    }
-    nsresult rv = extendedRanges.CollectEditTargetNodes(
-        aHTMLEditor, arrayOfContents, EditSubAction::eCreateOrChangeList,
-        AutoRangeArray::CollectNonEditableNodes::No);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-          "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
-      return Err(rv);
-    }
-
-    Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
-        aHTMLEditor.MaybeSplitElementsAtEveryBRElement(
-            arrayOfContents, EditSubAction::eCreateOrChangeList);
-    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
-          "eCreateOrChangeList) failed");
-      return splitAtBRElementsResult.propagateErr();
-    }
+  AutoContentNodeArray arrayOfContents;
+  nsresult rv = SplitAtRangeEdgesAndCollectContentNodesToMoveIntoList(
+      aHTMLEditor, aRanges, aSelectAllOfCurrentList, aEditingHost,
+      arrayOfContents);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "AutoListElementCreator::"
+        "SplitAtRangeEdgesAndCollectContentNodesToMoveIntoList() failed");
+    return Err(rv);
   }
 
   // check if all our nodes are <br>s, or empty inlines
-  auto IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements =
-      [](const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
-        for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
-          // if content is not a Break or empty inline, we're done
-          if (!content->IsHTMLElement(nsGkAtoms::br) &&
-              !HTMLEditUtils::IsEmptyInlineContainer(
-                  content, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
-            return false;
-          }
-        }
-        return true;
-      };
-
   // if no nodes, we make empty list.  Ditto if the user tried to make a list
   // of some # of breaks.
-  if (IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements(arrayOfContents)) {
-    // if only breaks, delete them
-    for (auto& content : arrayOfContents) {
-      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
-      // keep it alive.
-      nsresult rv =
-          aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-        return Err(rv);
-      }
+  if (AutoListElementCreator::
+          IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements(
+              arrayOfContents)) {
+    Result<RefPtr<Element>, nsresult> newListItemElementOrError =
+        ReplaceContentNodesWithEmptyNewList(aHTMLEditor, aRanges,
+                                            arrayOfContents, aEditingHost);
+    if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
+      NS_WARNING(
+          "AutoListElementCreator::ReplaceContentNodesWithEmptyNewList() "
+          "failed");
+      return newListItemElementOrError.propagateErr();
     }
-
-    const auto firstRangeStartPoint =
-        aRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-    if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
-      return Err(NS_ERROR_FAILURE);
-    }
-
-    // Make sure we can put a list here.
-    if (!HTMLEditUtils::CanNodeContain(*firstRangeStartPoint.GetContainer(),
-                                       mListTagName)) {
+    if (MOZ_UNLIKELY(!newListItemElementOrError.inspect())) {
       aRanges.RestoreFromSavedRanges();
       return EditActionResult::CanceledResult();
     }
-
-    RefPtr<Element> newListItemElement;
-    Result<CreateElementResult, nsresult> createNewListElementResult =
-        aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
-            mListTagName, firstRangeStartPoint, BRElementNextToSplitPoint::Keep,
-            aEditingHost,
-            // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-            [&](HTMLEditor& aHTMLEditor, Element& aListElement,
-                const EditorDOMPoint& aPointToInsert)
-                MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                  const auto withTransaction = aListElement.IsInComposedDoc()
-                                                   ? WithTransaction::Yes
-                                                   : WithTransaction::No;
-                  Result<CreateElementResult, nsresult>
-                      createNewListItemElementResult =
-                          aHTMLEditor.CreateAndInsertElement(
-                              withTransaction, mListItemTagName,
-                              EditorDOMPoint(&aListElement, 0u));
-                  if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
-                    NS_WARNING(
-                        nsPrintfCString(
-                            "HTMLEditor::CreateAndInsertElement(%s) failed",
-                            ToString(withTransaction).c_str())
-                            .get());
-                    return createNewListItemElementResult.unwrapErr();
-                  }
-                  CreateElementResult unwrappedCreateNewListItemElementResult =
-                      createNewListItemElementResult.unwrap();
-                  // There is AutoSelectionRestorer in this method so that it'll
-                  // be restored or updated with making it abort.  Therefore,
-                  // we don't need to update selection here.
-                  // XXX I'd like to check aRanges.HasSavedRanges() here, but it
-                  //     requires ifdefs to avoid bustage of opt builds caused
-                  //     by unused warning...
-                  unwrappedCreateNewListItemElementResult
-                      .IgnoreCaretPointSuggestion();
-                  newListItemElement =
-                      unwrappedCreateNewListItemElementResult.UnwrapNewNode();
-                  MOZ_ASSERT(newListItemElement);
-                  return NS_OK;
-                });
-    if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
-      NS_WARNING(
-          nsPrintfCString(
-              "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
-              "%s) failed",
-              nsAtomCString(&mListTagName).get())
-              .get());
-      return createNewListElementResult.propagateErr();
-    }
-    MOZ_ASSERT(createNewListElementResult.inspect().GetNewNode());
-
-    // Put selection in new list item and don't restore the Selection.
-    createNewListElementResult.inspect().IgnoreCaretPointSuggestion();
     aRanges.ClearSavedRanges();
-    nsresult rv = aRanges.Collapse(EditorRawDOMPoint(newListItemElement, 0u));
+    nsresult rv = aRanges.Collapse(
+        EditorRawDOMPoint(newListItemElementOrError.inspect(), 0u));
     if (NS_FAILED(rv)) {
       NS_WARNING("AutoRangeArray::Collapse() failed");
       return Err(rv);
@@ -3439,21 +3324,210 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
     return EditActionResult::IgnoredResult();
   }
 
+  Result<RefPtr<Element>, nsresult> listItemOrListToPutCaretOrError =
+      WrapContentNodesIntoNewListElements(aHTMLEditor, aRanges, arrayOfContents,
+                                          aEditingHost);
+  if (MOZ_UNLIKELY(listItemOrListToPutCaretOrError.isErr())) {
+    NS_WARNING(
+        "AutoListElementCreator::WrapContentNodesIntoNewListElements() failed");
+    return listItemOrListToPutCaretOrError.propagateErr();
+  }
+
+  MOZ_ASSERT(aRanges.HasSavedRanges());
+  aRanges.RestoreFromSavedRanges();
+
+  // If selection will be collapsed but not in listItemOrListToPutCaret, we need
+  // to adjust the caret position into it.
+  if (listItemOrListToPutCaretOrError.inspect()) {
+    DebugOnly<nsresult> rvIgnored =
+        EnsureCollapsedRangeIsInListItemOrListElement(
+            *listItemOrListToPutCaretOrError.inspect(), aRanges);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "AutoListElementCreator::"
+        "EnsureCollapsedRangeIsInListItemOrListElement() failed, but ignored");
+  }
+
+  return EditActionResult::HandledResult();
+}
+
+nsresult HTMLEditor::AutoListElementCreator::
+    SplitAtRangeEdgesAndCollectContentNodesToMoveIntoList(
+        HTMLEditor& aHTMLEditor, AutoRangeArray& aRanges,
+        SelectAllOfCurrentList aSelectAllOfCurrentList,
+        const Element& aEditingHost,
+        ContentNodeArray& aOutArrayOfContents) const {
+  MOZ_ASSERT(aOutArrayOfContents.IsEmpty());
+
+  if (aSelectAllOfCurrentList == SelectAllOfCurrentList::Yes) {
+    if (Element* parentListElementOfRanges =
+            aRanges.GetClosestAncestorAnyListElementOfRange()) {
+      aOutArrayOfContents.AppendElement(
+          OwningNonNull<nsIContent>(*parentListElementOfRanges));
+      return NS_OK;
+    }
+  }
+
+  AutoRangeArray extendedRanges(aRanges);
+
+  // TODO: We don't need AutoTransactionsConserveSelection here in the
+  //       normal cases, but removing this may cause the behavior with the
+  //       legacy mutation event listeners.  We should try to delete this in
+  //       a bug.
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+
+  extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction::eCreateOrChangeList, aEditingHost);
+  Result<EditorDOMPoint, nsresult> splitResult =
+      extendedRanges.SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
+          aHTMLEditor, aEditingHost);
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
+    NS_WARNING(
+        "AutoRangeArray::"
+        "SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries() failed");
+    return splitResult.unwrapErr();
+  }
+  nsresult rv = extendedRanges.CollectEditTargetNodes(
+      aHTMLEditor, aOutArrayOfContents, EditSubAction::eCreateOrChangeList,
+      AutoRangeArray::CollectNonEditableNodes::No);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
+        "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
+    return rv;
+  }
+
+  Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+      aHTMLEditor.MaybeSplitElementsAtEveryBRElement(
+          aOutArrayOfContents, EditSubAction::eCreateOrChangeList);
+  if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+    NS_WARNING(
+        "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+        "eCreateOrChangeList) failed");
+    return splitAtBRElementsResult.unwrapErr();
+  }
+  return NS_OK;
+}
+
+// static
+bool HTMLEditor::AutoListElementCreator::
+    IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements(
+        const ContentNodeArray& aArrayOfContents) {
+  for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
+    // if content is not a <br> or empty inline, we're done
+    // XXX Should we handle line breaks in preformatted text node?
+    if (!content->IsHTMLElement(nsGkAtoms::br) &&
+        !HTMLEditUtils::IsEmptyInlineContainer(
+            content, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+      return false;
+    }
+  }
+  return true;
+}
+
+Result<RefPtr<Element>, nsresult>
+HTMLEditor::AutoListElementCreator::ReplaceContentNodesWithEmptyNewList(
+    HTMLEditor& aHTMLEditor, const AutoRangeArray& aRanges,
+    const AutoContentNodeArray& aArrayOfContents,
+    const Element& aEditingHost) const {
+  // if only breaks, delete them
+  for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
+    // MOZ_KnownLive because of bug 1620312
+    nsresult rv =
+        aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(*content));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+      return Err(rv);
+    }
+  }
+
+  const auto firstRangeStartPoint =
+      aRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
+  if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  // Make sure we can put a list here.
+  if (!HTMLEditUtils::CanNodeContain(*firstRangeStartPoint.GetContainer(),
+                                     mListTagName)) {
+    return RefPtr<Element>();
+  }
+
+  RefPtr<Element> newListItemElement;
+  Result<CreateElementResult, nsresult> createNewListElementResult =
+      aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
+          mListTagName, firstRangeStartPoint, BRElementNextToSplitPoint::Keep,
+          aEditingHost,
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          [&](HTMLEditor& aHTMLEditor, Element& aListElement,
+              const EditorDOMPoint& aPointToInsert)
+              MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                const auto withTransaction = aListElement.IsInComposedDoc()
+                                                 ? WithTransaction::Yes
+                                                 : WithTransaction::No;
+                Result<CreateElementResult, nsresult>
+                    createNewListItemElementResult =
+                        aHTMLEditor.CreateAndInsertElement(
+                            withTransaction, mListItemTagName,
+                            EditorDOMPoint(&aListElement, 0u));
+                if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
+                  NS_WARNING(
+                      nsPrintfCString(
+                          "HTMLEditor::CreateAndInsertElement(%s) failed",
+                          ToString(withTransaction).c_str())
+                          .get());
+                  return createNewListItemElementResult.unwrapErr();
+                }
+                CreateElementResult unwrappedCreateNewListItemElementResult =
+                    createNewListItemElementResult.unwrap();
+                // There is AutoSelectionRestorer in this method so that it'll
+                // be restored or updated with making it abort.  Therefore,
+                // we don't need to update selection here.
+                // XXX I'd like to check aRanges.HasSavedRanges() here, but it
+                //     requires ifdefs to avoid bustage of opt builds caused
+                //     by unused warning...
+                unwrappedCreateNewListItemElementResult
+                    .IgnoreCaretPointSuggestion();
+                newListItemElement =
+                    unwrappedCreateNewListItemElementResult.UnwrapNewNode();
+                MOZ_ASSERT(newListItemElement);
+                return NS_OK;
+              });
+  if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
+    NS_WARNING(
+        nsPrintfCString(
+            "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+            "%s) failed",
+            nsAtomCString(&mListTagName).get())
+            .get());
+    return createNewListElementResult.propagateErr();
+  }
+  MOZ_ASSERT(createNewListElementResult.inspect().GetNewNode());
+
+  // Put selection in new list item and don't restore the Selection.
+  createNewListElementResult.inspect().IgnoreCaretPointSuggestion();
+  return newListItemElement;
+}
+
+Result<RefPtr<Element>, nsresult>
+HTMLEditor::AutoListElementCreator::WrapContentNodesIntoNewListElements(
+    HTMLEditor& aHTMLEditor, AutoRangeArray& aRanges,
+    AutoContentNodeArray& aArrayOfContents, const Element& aEditingHost) const {
   // if there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
-  if (arrayOfContents.Length() == 1) {
+  if (aArrayOfContents.Length() == 1) {
     if (Element* deepestDivBlockquoteOrListElement =
             HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
-                arrayOfContents[0], {WalkTreeOption::IgnoreNonEditableNode},
+                aArrayOfContents[0], {WalkTreeOption::IgnoreNonEditableNode},
                 nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
                 nsGkAtoms::ol, nsGkAtoms::dl)) {
       if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
               nsGkAtoms::div, nsGkAtoms::blockquote)) {
-        arrayOfContents.Clear();
+        aArrayOfContents.Clear();
         HTMLEditUtils::CollectChildren(*deepestDivBlockquoteOrListElement,
-                                       arrayOfContents, 0, {});
+                                       aArrayOfContents, 0, {});
       } else {
-        arrayOfContents.ReplaceElementAt(
+        aArrayOfContents.ReplaceElementAt(
             0, OwningNonNull<nsIContent>(*deepestDivBlockquoteOrListElement));
       }
     }
@@ -3462,12 +3536,12 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
   // Ok, now go through all the nodes and put then in the list,
   // or whatever is appropriate.  Wohoo!
 
-  uint32_t countOfCollectedContents = arrayOfContents.Length();
+  uint32_t countOfCollectedContents = aArrayOfContents.Length();
   RefPtr<Element> curList, prevListItem, listItemOrListToPutCaret;
 
   for (uint32_t i = 0; i < countOfCollectedContents; i++) {
     // here's where we actually figure out what to do
-    const OwningNonNull<nsIContent> content = arrayOfContents[i];
+    const OwningNonNull<nsIContent> content = aArrayOfContents[i];
 
     // make sure we don't assemble content that is in different table cells
     // into the same list.  respect table cell boundaries when listifying.
@@ -3704,7 +3778,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
     if (content->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
       HTMLEditUtils::CollectChildren(
-          *content, arrayOfContents, i + 1,
+          *content, aArrayOfContents, i + 1,
           {CollectChildrenOption::CollectListChildren,
            CollectChildrenOption::CollectTableChildren});
       Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
@@ -3717,7 +3791,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
       MOZ_ASSERT(aRanges.HasSavedRanges());  // So, ignore the suggested point
 
       // Extend the loop length to handle all children collected here.
-      countOfCollectedContents = arrayOfContents.Length();
+      countOfCollectedContents = aArrayOfContents.Length();
       continue;
     }
 
@@ -3840,35 +3914,36 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoListElementCreator::Run(
     // XXX Why don't we set `type` attribute here??
   }
 
-  MOZ_ASSERT(aRanges.HasSavedRanges());
-  aRanges.RestoreFromSavedRanges();
+  return listItemOrListToPutCaret;
+}
 
-  // If selection will be collapsed but not in listItemOrListToPutCaret, we need
-  // to adjust the caret position into it.
-  if (listItemOrListToPutCaret && aRanges.IsCollapsed() &&
-      aRanges.Ranges().Length()) {
-    const auto firstRangeStartPoint =
-        aRanges.GetFirstRangeStartPoint<EditorRawDOMPoint>();
-    if (MOZ_LIKELY(firstRangeStartPoint.IsSet())) {
-      const Result<EditorRawDOMPoint, nsresult> pointToPutCaretOrError =
-          HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
-              EditorRawDOMPoint>(*listItemOrListToPutCaret,
-                                 firstRangeStartPoint);
-      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-        NS_WARNING(
-            "HTMLEditUtils::ComputePointToPutCaretInElementIfOutside() "
-            "failed, but ignored");
-      } else if (pointToPutCaretOrError.inspect().IsSet()) {
-        DebugOnly<nsresult> rvIgnored =
-            aRanges.Collapse(pointToPutCaretOrError.inspect());
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "EditorBase::CollapseSelectionTo() failed, but ignored");
-      }
-    }
+nsresult HTMLEditor::AutoListElementCreator::
+    EnsureCollapsedRangeIsInListItemOrListElement(
+        Element& aListItemOrListToPutCaret, AutoRangeArray& aRanges) const {
+  if (!aRanges.IsCollapsed() || aRanges.Ranges().IsEmpty()) {
+    return NS_OK;
   }
 
-  return EditActionResult::HandledResult();
+  const auto firstRangeStartPoint =
+      aRanges.GetFirstRangeStartPoint<EditorRawDOMPoint>();
+  if (MOZ_UNLIKELY(!firstRangeStartPoint.IsSet())) {
+    return NS_OK;
+  }
+  Result<EditorRawDOMPoint, nsresult> pointToPutCaretOrError =
+      HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
+          EditorRawDOMPoint>(aListItemOrListToPutCaret, firstRangeStartPoint);
+  if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+    NS_WARNING("HTMLEditUtils::ComputePointToPutCaretInElementIfOutside()");
+    return pointToPutCaretOrError.unwrapErr();
+  }
+  if (pointToPutCaretOrError.inspect().IsSet()) {
+    nsresult rv = aRanges.Collapse(pointToPutCaretOrError.inspect());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoRangeArray::Collapse() failed");
+      return rv;
+    }
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(

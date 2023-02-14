@@ -12,6 +12,7 @@
 #include "HTMLEditHelpers.h"  // for EditorInlineStyleAndValue
 
 #include "mozilla/Attributes.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/Result.h"
 
 namespace mozilla {
@@ -395,6 +396,63 @@ class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
       const Element& aEditingHost) const;
 
  private:
+  using ContentNodeArray = nsTArray<OwningNonNull<nsIContent>>;
+  using AutoContentNodeArray = AutoTArray<OwningNonNull<nsIContent>, 64>;
+
+  /**
+   * If aSelectAllOfCurrentList is "Yes" and aRanges is in a list element,
+   * returns the list element.
+   * Otherwise, extend aRanges to select start and end lines selected by it and
+   * correct all topmost content nodes in the extended ranges with splitting
+   * ancestors at range edges.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SplitAtRangeEdgesAndCollectContentNodesToMoveIntoList(
+      HTMLEditor& aHTMLEditor, AutoRangeArray& aRanges,
+      SelectAllOfCurrentList aSelectAllOfCurrentList,
+      const Element& aEditingHost, ContentNodeArray& aOutArrayOfContents) const;
+
+  /**
+   * Return true if aArrayOfContents has only <br> elements or empty inline
+   * container elements.  I.e., it means that aArrayOfContents represents
+   * only empty line(s) if this returns true.
+   */
+  [[nodiscard]] static bool
+  IsEmptyOrContainsOnlyBRElementsOrEmptyInlineElements(
+      const ContentNodeArray& aArrayOfContents);
+
+  /**
+   * Delete all content nodes ina ArrayOfContents, and if we can put new list
+   * element at start of the first range of aRanges, insert new list element
+   * there.
+   *
+   * @return            The empty list item element in new list element.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  ReplaceContentNodesWithEmptyNewList(
+      HTMLEditor& aHTMLEditor, const AutoRangeArray& aRanges,
+      const AutoContentNodeArray& aArrayOfContents,
+      const Element& aEditingHost) const;
+
+  /**
+   * Creat new list elements or use existing list elements and move
+   * aArrayOfContents into list item elements.
+   *
+   * @return            A list or list item element which should have caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  WrapContentNodesIntoNewListElements(HTMLEditor& aHTMLEditor,
+                                      AutoRangeArray& aRanges,
+                                      AutoContentNodeArray& aArrayOfContents,
+                                      const Element& aEditingHost) const;
+
+  /**
+   * If aRanges is collapsed outside aListItemOrListToPutCaret, this collapse
+   * aRanges in aListItemOrListToPutCaret again.
+   */
+  nsresult EnsureCollapsedRangeIsInListItemOrListElement(
+      Element& aListItemOrListToPutCaret, AutoRangeArray& aRanges) const;
+
   MOZ_KNOWN_LIVE nsStaticAtom& mListTagName;
   MOZ_KNOWN_LIVE nsStaticAtom& mListItemTagName;
   const nsAutoString mBulletType;
