@@ -143,6 +143,7 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
+import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
@@ -1134,6 +1135,8 @@ abstract class BaseBrowserFragment :
         if (!this.isRemoving) {
             updateThemeForSession(selectedTab)
         }
+
+        binding.engineView.asView().contentDescription = selectedTab.toDisplayTitle()
 
         if (browserInitialized) {
             view?.let {
