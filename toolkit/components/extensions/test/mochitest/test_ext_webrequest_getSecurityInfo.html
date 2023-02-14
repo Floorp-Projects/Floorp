@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>browser.webRequest.getSecurityInfo()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(async function test_getSecurityInfo() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>"
+      ],
+    },
+    async background() {
+      const url = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+
+      let tab;
+      browser.webRequest.onHeadersReceived.addListener(async details => {
+        const securityInfo = await browser.webRequest.getSecurityInfo(
+          details.requestId,
+          {}
+        );
+
+        // Some properties have dynamic values so let's take them out of the
+        // `securityInfo` object before asserting all the other props with deep
+        // equality.
+        const {
+          cipherSuite,
+          secretKeyLength,
+          keaGroupName,
+          signatureSchemeName,
+          protocolVersion,
+          certificates,
+          ...otherProps
+        } = securityInfo;
+
+        browser.test.assertTrue(cipherSuite.length, "expected cipher suite");
+        browser.test.assertTrue(
+          Number.isInteger(secretKeyLength),
+          "expected secret key length"
+        );
+        browser.test.assertTrue(
+          keaGroupName.length,
+          "expected kea group name"
+        );
+        browser.test.assertTrue(
+          signatureSchemeName.length,
+          "expected signature scheme name"
+        );
+        browser.test.assertTrue(
+          protocolVersion.length,
+          "expected protocol version"
+        );
+        browser.test.assertTrue(
+          Array.isArray(certificates),
+          "expected an array of certificates"
+        );
+
+        browser.test.assertDeepEq({
+          state: "secure",
+          isExtendedValidation: false,
+          certificateTransparencyStatus: "not_applicable",
+          hsts: false,
+          hpkp: false,
+          usedEch: false,
+          usedDelegatedCredentials: false,
+          usedOcsp: false,
+          usedPrivateDns: false,
+        }, otherProps, "expected security info");
+
+        await browser.tabs.remove(tab.id);
+        browser.test.notifyPass("success");
+      }, { urls: [url] } , ["blocking"]);
+
+      tab = await browser.tabs.create({ url });
+    },
+  });
+  await extension.startup();
+
+  await extension.awaitFinish("success");
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
