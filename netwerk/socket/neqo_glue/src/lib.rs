@@ -147,7 +147,8 @@ impl NeqoHttp3Conn {
             .max_blocked_streams(max_blocked_streams)
             .max_concurrent_push_streams(0)
             .connection_parameters(params)
-            .webtransport(webtransport);
+            .webtransport(webtransport)
+            .http3_datagram(webtransport);
 
         let mut conn = match Http3Client::new(
             origin_conv,
