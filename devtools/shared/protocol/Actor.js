@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { extend } = require("resource://devtools/shared/extend.js");
 var { Pool } = require("resource://devtools/shared/protocol/Pool.js");
 
 /**
@@ -28,40 +27,18 @@ exports.actorSpecs = actorSpecs;
 
 class Actor extends Pool {
   constructor(conn, spec) {
-    super();
+    super(conn);
 
-    // Actors migrated to ES Classes, passed the specification via the constructor
-    if (spec) {
-      this.typeName = spec.typeName;
-      this.requestTypes = generateRequestTypes(spec);
-      this._actorSpec = spec;
-    }
-    this.initialize(conn);
-  }
-
-  // Existing Actors extending this class expect initialize to contain constructor logic.
-  // Bug 1813648: This method can be folded into constructor once all Actor are migrated to ES Classes.
-  initialize(conn) {
-    // Repeat Pool.constructor here as we can't call it from initialize
-    // This is to be removed once actors switch to es classes and are able to call
-    // Actor's contructor.
-    if (conn) {
-      this.conn = conn;
-    }
+    this.typeName = spec.typeName;
 
     // Will contain the actor's ID
     this.actorID = null;
 
-    // When the subclass is still using ActorClassWithSpec (i.e. not ES Classses)
-    // The spec is only registered in actorSpecs.
-    // This codepath can be removed once all actors are using ES Classes.
-    if (!this._actorSpec) {
-      this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
-    }
+    this.requestTypes = generateRequestTypes(spec);
 
     // Forward events to the connection.
-    if (this._actorSpec && this._actorSpec.events) {
-      for (const [name, request] of this._actorSpec.events.entries()) {
+    if (spec.events) {
+      for (const [name, request] of spec.events.entries()) {
         this.on(name, (...args) => {
           this._sendEvent(name, request, ...args);
         });
@@ -278,44 +255,3 @@ var generateRequestTypes = function(actorSpec) {
   return requestTypes;
 };
 exports.generateRequestTypes = generateRequestTypes;
-
-var generateRequestHandlers = function(actorSpec, actorProto) {
-  actorProto.typeName = actorSpec.typeName;
-
-  // Generate request handlers for each method definition
-  actorProto.requestTypes = generateRequestTypes(actorSpec);
-
-  return actorProto;
-};
-
-/**
- * Create an actor class for the given actor specification and prototype.
- *
- * @param object actorSpec
- *    The actor specification. Must have a 'typeName' property.
- * @param object actorProto
- *    The actor prototype. Should have method definitions, can have event
- *    definitions.
- */
-// bug 1813648: We can remove this codepath, generateRequestHandlers and actorSpecs WeakMap once all Actors use ES Classes
-var ActorClassWithSpec = function(actorSpec, actorProto) {
-  if (!actorSpec.typeName) {
-    throw Error("Actor specification must have a typeName member.");
-  }
-
-  // Existing Actors are relying on the initialize instead of constructor methods.
-  const cls = function() {
-    const instance = Object.create(cls.prototype);
-    instance.initialize.apply(instance, arguments);
-    return instance;
-  };
-  cls.prototype = extend(
-    Actor.prototype,
-    generateRequestHandlers(actorSpec, actorProto)
-  );
-
-  actorSpecs.set(cls.prototype, actorSpec);
-
-  return cls;
-};
-exports.ActorClassWithSpec = ActorClassWithSpec;

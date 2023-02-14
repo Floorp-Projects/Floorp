@@ -7,9 +7,8 @@ const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 
 class PreInitGlobalActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "preInitGlobal", methods: [] });
 
-    this.typeName = "preInitGlobal";
     this.requestTypes = {
       ping: this.onPing,
     };

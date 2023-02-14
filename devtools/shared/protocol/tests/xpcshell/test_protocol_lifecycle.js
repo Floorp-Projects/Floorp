@@ -17,7 +17,7 @@ add_task(async function() {
   front.destroy();
   ok(front.isDestroyed(), "Front is destroyed");
 
-  const actor = new Actor();
+  const actor = new Actor(null, { typeName: "actor", methods: [] });
   ok(
     !actor.isDestroyed(),
     "Blank actor with no actor ID is not considered as destroyed"

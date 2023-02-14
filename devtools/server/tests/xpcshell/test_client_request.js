@@ -11,9 +11,8 @@ const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 
 class TestActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "test", methods: [] });
 
-    this.typeName = "test";
     this.requestTypes = {
       hello: this.hello,
       error: this.error,

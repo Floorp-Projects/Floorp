@@ -11,9 +11,8 @@ const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
  */
 class ErrorActor extends Actor {
   constructor(conn, tab) {
-    super(conn);
+    super(conn, { typeName: "error", methods: [] });
     this.tab = tab;
-    this.typeName = "error";
     this.requestTypes = {
       error: this.onError,
     };

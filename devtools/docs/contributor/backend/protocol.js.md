@@ -35,18 +35,18 @@ It has two parts: a spec and an implementation. The spec would go somewhere like
 The actor implementation would go somewhere like
 `devtools/server/actors/hello-world.js` and would look like:
 
-    const protocol = require("devtools/shared/protocol");
+    const { Actor } = require("devtools/shared/protocol");
     const {helloWorldSpec} = require("devtools/shared/specs/hello-world");
 
-    const HelloActor = protocol.ActorClassWithSpec(helloWorldSpec, {
-      initialize: function (conn) {
-        protocol.Actor.prototype.initialize.call(this, conn); // This is the worst part of heritage.
-      },
+    class HelloActor extends Actor {
+      constructor(conn) {
+        super(conn, helloWorldSpec);
+      }
 
-      sayHello: function () {
+      sayHello() {
        return "hello";
-      },
-    });
+      }
+    }
 
     // You also need to export the actor class in your module for discovery.
     exports.HelloActor = HelloActor;
@@ -310,15 +310,17 @@ Probably the most common objects that need custom martialing are actors themselv
     });
 
     // implementation:
-    const ChildActor = protocol.ActorClassWithSpec(childActorSpec, {
-      initialize: function (conn, id) {
-        protocol.Actor.prototype.initialize.call(this, conn);
+    class ChildActor extends Actor {
+      constructor(conn, id) {
+        super(conn, childActorSpec);
+
         this.greeting = "hello from " + id;
-      },
-      getGreeting: function () {
+      }
+
+      getGreeting() {
         return this.greeting;
-      },
-    });
+      }
+    }
 
     exports.ChildActor = ChildActor;
 
@@ -464,8 +466,8 @@ Here's how the implementation would look:
 
     const EventEmitter = require("devtools/shared/event-emitter");
 
-    // In your protocol.ActorClassWithSpec definition:
-    giveGoodNews: function (news) {
+    // In your Actor class:
+    giveGoodNews(news) {
       EventEmitter.emit(this, "good-news", news);
     }
 

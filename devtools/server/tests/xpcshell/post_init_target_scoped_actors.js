@@ -7,9 +7,8 @@ const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 
 class PostInitTargetScopedActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "postInitTargetScoped", methods: [] });
 
-    this.typeName = "postInitTargetScoped";
     this.requestTypes = {
       ping: this.onPing,
     };
