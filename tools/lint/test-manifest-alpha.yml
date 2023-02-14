@@ -15,3 +15,5 @@ test-manifest-alpha:
     extensions: ['ini']
     type: external
     payload: test-manifest-alpha:lint
+    support-files:
+        - 'tools/lint/test-manifest-alpha/error-level-manifests.yml'
