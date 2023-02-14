@@ -32,7 +32,6 @@
 #include "mozilla/Unused.h"
 #include "nsAppRunner.h"  // for IsWaylandEnabled on IsX11EGLEnabled
 #include "stdint.h"
-#include "nsExceptionHandler.h"
 
 #ifdef __SUNPRO_CC
 #  include <stdio.h>
@@ -239,14 +238,6 @@ static void record_warning(const char* str) {
 
 static void record_flush() {
   mozilla::Unused << write(write_end_of_the_pipe, glxtest_buf, glxtest_length);
-  if (auto* debugFile = getenv("MOZ_GFX_DEBUG_FILE")) {
-    auto fd = open(debugFile, O_CREAT | O_WRONLY | O_TRUNC,
-                   S_IRUSR | S_IRGRP | S_IROTH);
-    if (fd != -1) {
-      mozilla::Unused << write(fd, glxtest_buf, glxtest_length);
-      close(fd);
-    }
-  }
 }
 
 #ifdef MOZ_X11
@@ -1287,12 +1278,6 @@ bool fire_glxtest_process() {
     close(pfd[0]);
     write_end_of_the_pipe = pfd[1];
     close_logging();
-    // This process is expected to be crashy, and we
-    // don't want the user to see its crashes. That's the whole reason for
-    // doing this in a separate process.
-    if (CrashReporter::GetEnabled()) {
-      CrashReporter::UnsetExceptionHandler();
-    }
 #if defined(MOZ_ASAN) || defined(FUZZING)
     // If handle_segv=1 (default), then glxtest crash will print a sanitizer
     // report which can confuse the harness in fuzzing automation.
