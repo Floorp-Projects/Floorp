@@ -312,13 +312,23 @@ async function withWindowOverflowed(
   }
 }
 
-async function verifyExtensionWidget(win, widget) {
+async function verifyExtensionWidget(widget, win = window) {
   Assert.ok(widget, "expected widget");
 
-  let actionButton = widget.firstElementChild;
+  let actionButton = widget.querySelector(
+    ".unified-extensions-item-action-button"
+  );
   Assert.ok(
     actionButton.classList.contains("unified-extensions-item-action-button"),
     "expected action class on the button"
+  );
+  ok(
+    actionButton.classList.contains("subviewbutton"),
+    "expected the .subviewbutton CSS class on the action button in the panel"
+  );
+  ok(
+    !actionButton.classList.contains("toolbarbutton-1"),
+    "expected no .toolbarbutton-1 CSS class on the action button in the panel"
   );
 
   let menuButton = widget.lastElementChild;
@@ -429,7 +439,7 @@ add_task(async function test_overflowable_toolbar() {
           extensionIDs.includes(child.dataset.extensionid),
           `Unified Extensions overflow list should have ${child.dataset.extensionid}`
         );
-        await verifyExtensionWidget(win, child, true);
+        await verifyExtensionWidget(child, win);
       }
 
       let extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
@@ -741,8 +751,10 @@ add_task(async function test_message_deck() {
  */
 add_task(async function test_pinning_to_toolbar_when_overflowed() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
+
   let movedNode;
   let extensionWidgetID;
+  let actionButton;
 
   await withWindowOverflowed(win, {
     beforeOverflowed: async extensionIDs => {
@@ -755,12 +767,42 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
       movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
         .node;
 
+      actionButton = movedNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the navbar"
+      );
+      ok(
+        !actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the navbar"
+      );
+
       CustomizableUI.addWidgetToArea(
         extensionWidgetID,
         CustomizableUI.AREA_ADDONS
       );
+
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
+      );
     },
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
+      );
+
       // Now that the window is overflowed, let's move the widget in the addons
       // panel back to the navbar. This should cause the widget to overflow back
       // into the addons panel.
@@ -776,6 +818,15 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         unifiedExtensionList,
         "Should have overflowed the extension button to the right list."
       );
+
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the panel"
+      );
     },
   });
 
@@ -789,7 +840,7 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
  * extension into the dedicated addons area of the panel, and that the item
  * then does not underflow.
  */
-add_task(async function test_() {
+add_task(async function test_unpin_overflowed_widget() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let extensionID;
 
@@ -810,6 +861,17 @@ add_task(async function test_() {
       Assert.ok(
         movedNode.hasAttribute("overflowedItem"),
         "expected extension widget to be overflowed"
+      );
+      let actionButton = movedNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected the .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
       );
 
       // Open the panel, then the context menu of the extension widget, verify
@@ -870,10 +932,160 @@ add_task(async function test_() {
         item,
         "expected extension widget to be listed in the unified extensions panel"
       );
+      let actionButton = item.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected the .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
+      );
 
       await closeExtensionsPanel(win);
     },
   });
 
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_overflow_with_a_second_window() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  // Open a second window that will stay maximized. We want to be sure that
+  // overflowing a widget in one window isn't going to affect the other window
+  // since we have an instance (of a CUI widget) per window.
+  let secondWin = await BrowserTestUtils.openNewBrowserWindow();
+  await ensureMaximizedWindow(secondWin);
+
+  let extensionWidgetID;
+  let aNode;
+  let aNodeInSecondWindow;
+
+  await withWindowOverflowed(win, {
+    beforeOverflowed: async extensionIDs => {
+      extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+        extensionIDs.at(-1)
+      );
+
+      // This is the DOM node for the current window that is overflowed.
+      aNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win).node;
+      Assert.ok(
+        !aNode.hasAttribute("overflowedItem"),
+        "expected extension widget to NOT be overflowed"
+      );
+
+      let actionButton = aNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button"
+      );
+      ok(
+        !actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button"
+      );
+
+      // This is the DOM node of the same CUI widget but in the maximized
+      // window opened before.
+      aNodeInSecondWindow = CustomizableUI.getWidget(
+        extensionWidgetID
+      ).forWindow(secondWin).node;
+
+      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the second window"
+      );
+      ok(
+        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the second window"
+      );
+    },
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      // The DOM node should have been overflowed.
+      Assert.ok(
+        aNode.hasAttribute("overflowedItem"),
+        "expected extension widget to be overflowed"
+      );
+      Assert.equal(
+        aNode.getAttribute("widget-id"),
+        extensionWidgetID,
+        "expected the CUI widget ID to be set on the DOM node"
+      );
+
+      // When the node is overflowed, we swap the CSS class on the action
+      // button since the node is now placed in the extensions panel.
+      let actionButton = aNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected the .subviewbutton CSS class on the action button"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button"
+      );
+
+      // The DOM node in the other window should not have been overflowed.
+      Assert.ok(
+        !aNodeInSecondWindow.hasAttribute("overflowedItem"),
+        "expected extension widget to NOT be overflowed in the other window"
+      );
+      Assert.equal(
+        aNodeInSecondWindow.getAttribute("widget-id"),
+        extensionWidgetID,
+        "expected the CUI widget ID to be set on the DOM node"
+      );
+
+      // We expect no CSS class changes for the node in the other window.
+      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the second window"
+      );
+      ok(
+        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the second window"
+      );
+    },
+    afterUnderflowed: async () => {
+      // After underflow, we expect the CSS class on the action button of the
+      // DOM node of the current window to be updated.
+      let actionButton = aNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the panel"
+      );
+
+      // The DOM node of the other window should not be changed.
+      let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButtonInSecondWindow.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the second window"
+      );
+      ok(
+        !actionButtonInSecondWindow.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the second window"
+      );
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(secondWin);
 });
