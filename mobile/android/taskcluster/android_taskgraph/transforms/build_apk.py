@@ -50,7 +50,6 @@ def add_shippable_secrets(config, tasks):
             task.pop("include-shippable-secrets", False)
             and config.params["level"] == "3"
         ):
-            gradle_build_type = task["run"]["gradle-build-type"]
             secrets.extend(
                 [
                     {
@@ -58,20 +57,7 @@ def add_shippable_secrets(config, tasks):
                         "name": _get_secret_index(task["name"]),
                         "path": target_file,
                     }
-                    for key, target_file in (
-                        ("adjust", ".adjust_token"),
-                        (
-                            "firebase",
-                            "app/src/{}/res/values/firebase.xml".format(
-                                gradle_build_type
-                            ),
-                        ),
-                        ("sentry_dsn", ".sentry_token"),
-                        ("mls", ".mls_token"),
-                        ("nimbus_url", ".nimbus"),
-                        ("wallpaper_url", ".wallpaper_url"),
-                        ("pocket_consumer_key", ".pocket_consumer_key"),
-                    )
+                    for key, target_file in _get_secrets_keys_and_target_files(task)
                 ]
             )
         else:
@@ -90,6 +76,30 @@ def add_shippable_secrets(config, tasks):
             )
 
         yield task
+
+
+def _get_secrets_keys_and_target_files(task):
+    secrets = [
+        ('adjust', '.adjust_token'),
+        ('sentry_dsn', '.sentry_token'),
+        ('mls', '.mls_token'),
+        ('nimbus_url', '.nimbus'),
+    ]
+
+    if task["name"].startswith("fenix-"):
+        gradle_build_type = task["run"]["gradle-build-type"]
+        secrets.extend([
+            (
+                "firebase",
+                "app/src/{}/res/values/firebase.xml".format(
+                    gradle_build_type
+                ),
+            ),
+            ("wallpaper_url", ".wallpaper_url"),
+            ("pocket_consumer_key", ".pocket_consumer_key"),
+        ])
+
+    return secrets
 
 
 def _get_secret_index(task_name):
