@@ -109,7 +109,7 @@ void MenuBarListener::ToggleMenuActiveState(ByKeyboard aByKeyboard) {
     if (aByKeyboard == ByKeyboard::Yes) {
       menuBar->SetActiveByKeyboard();
     }
-    menuBar->SetActive(true);
+    // This will activate the menubar if needed.
     menuBar->SelectFirstItem();
   }
 }
@@ -226,9 +226,10 @@ nsresult MenuBarListener::KeyPress(Event* aKeyEvent) {
 
       if (mMenuBar && mMenuBar->IsActive()) {
 #  ifdef MOZ_WIDGET_GTK
-        RefPtr child = mMenuBar->GetActiveMenuChild();
-        // In GTK, this also opens the first menu.
-        child->OpenMenuPopup(false);
+        if (RefPtr child = mMenuBar->GetActiveMenuChild()) {
+          // In GTK, this also opens the first menu.
+          child->OpenMenuPopup(false);
+        }
 #  endif
         aKeyEvent->StopPropagation();
         aKeyEvent->PreventDefault();
@@ -270,7 +271,7 @@ nsresult MenuBarListener::KeyPress(Event* aKeyEvent) {
 
   RefPtr menuBar = mMenuBar;
   menuBar->SetActiveByKeyboard();
-  menuBar->SetActive(true);
+  // This will activate the menubar as needed.
   menuForKey->OpenMenuPopup(true);
 
   // The opened menu will listen next keyup event.
