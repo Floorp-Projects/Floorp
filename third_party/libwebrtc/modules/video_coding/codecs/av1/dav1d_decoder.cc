@@ -18,11 +18,7 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/logging.h"
-#if defined(WEBRTC_MOZILLA_BUILD)
-#include "dav1d/dav1d.h"
-#else
 #include "third_party/dav1d/libdav1d/include/dav1d/dav1d.h"
-#endif
 #include "third_party/libyuv/include/libyuv/convert.h"
 #include "third_party/libyuv/include/libyuv/planar_functions.h"
 
