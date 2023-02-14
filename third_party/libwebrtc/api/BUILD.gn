@@ -196,8 +196,8 @@ rtc_library("dtls_transport_interface") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("libjingle_peerconnection_api") {
+if (!build_with_mozilla) {
   visibility = [ "*" ]
   cflags = []
   sources = [
