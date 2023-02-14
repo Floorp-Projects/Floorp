@@ -1854,7 +1854,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     float inflation =
         GetInflationForBlockDirAlignment(spanFrame, mInflationMinFontSize);
     nscoord logicalBSize = ReflowInput::CalcLineHeight(
-        spanFrame->GetContent(), spanFrame->Style(), spanFrame->PresContext(),
+        *spanFrame->Style(), spanFrame->PresContext(), spanFrame->GetContent(),
         mLineContainerRI.ComputedHeight(), inflation);
     nscoord contentBSize = spanFramePFD->mBounds.BSize(lineWM) -
                            spanFramePFD->mBorderPadding.BStartEnd(lineWM);
@@ -2140,7 +2140,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
         float inflation =
             GetInflationForBlockDirAlignment(frame, mInflationMinFontSize);
         return ReflowInput::CalcLineHeight(
-            frame->GetContent(), frame->Style(), frame->PresContext(),
+            *frame->Style(), frame->PresContext(), frame->GetContent(),
             mLineContainerRI.ComputedBSize(), inflation);
       });
 

@@ -658,7 +658,7 @@ nscoord nsBlockFrame::GetCaretBaseline() const {
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
   nscoord lineHeight = ReflowInput::CalcLineHeight(
-      GetContent(), Style(), PresContext(), contentRect.height, inflation);
+      *Style(), PresContext(), GetContent(), contentRect.height, inflation);
   const WritingMode wm = GetWritingMode();
   return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight,
                                                 wm.IsLineInverted()) +

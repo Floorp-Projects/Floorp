@@ -362,6 +362,11 @@ uint32_t Gecko_CalcStyleDifference(const mozilla::ComputedStyle* old_style,
                                    bool* any_style_struct_changed,
                                    bool* reset_only_changed);
 
+nscoord Gecko_CalcLineHeight(const mozilla::StyleLineHeight*,
+                             const nsPresContext*, bool aVertical,
+                             const nsStyleFont* aAgainstFont,
+                             const mozilla::dom::Element* aElement);
+
 // Get an element snapshot for a given element from the table.
 const mozilla::ServoElementSnapshot* Gecko_GetElementSnapshot(
     const mozilla::ServoElementSnapshotTable* table,

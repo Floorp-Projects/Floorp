@@ -331,6 +331,17 @@ uint32_t Gecko_CalcStyleDifference(const ComputedStyle* aOldStyle,
   return result;
 }
 
+nscoord Gecko_CalcLineHeight(const StyleLineHeight* aLh,
+                             const nsPresContext* aPc, bool aVertical,
+                             const nsStyleFont* aAgainstFont,
+                             const mozilla::dom::Element* aElement) {
+  // Normal line-height depends on font metrics.
+  AutoWriteLock guard(*sServoFFILock);
+  return ReflowInput::CalcLineHeight(*aLh, *aAgainstFont,
+                                     const_cast<nsPresContext*>(aPc), aVertical,
+                                     aElement, NS_UNCONSTRAINEDSIZE, 1.0f);
+}
+
 const ServoElementSnapshot* Gecko_GetElementSnapshot(
     const ServoElementSnapshotTable* aTable, const Element* aElement) {
   MOZ_ASSERT(aTable);

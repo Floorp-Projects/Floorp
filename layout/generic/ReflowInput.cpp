@@ -40,16 +40,6 @@ using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-enum eNormalLineHeightControl {
-  eUninitialized = -1,
-  eNoExternalLeading = 0,   // does not include external leading
-  eIncludeExternalLeading,  // use whatever value font vendor provides
-  eCompensateLeading  // compensate leading if leading provided by font vendor
-                      // is not enough
-};
-
-static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
-
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
@@ -2123,17 +2113,6 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
   return cbSize.ConvertTo(GetWritingMode(), wm);
 }
 
-static eNormalLineHeightControl GetNormalLineHeightCalcControl(void) {
-  if (sNormalLineHeightControl == eUninitialized) {
-    // browser.display.normal_lineheight_calc_control is not user
-    // changeable, so no need to register callback for it.
-    int32_t val = Preferences::GetInt(
-        "browser.display.normal_lineheight_calc_control", eNoExternalLeading);
-    sNormalLineHeightControl = static_cast<eNormalLineHeightControl>(val);
-  }
-  return sNormalLineHeightControl;
-}
-
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -2719,70 +2698,62 @@ void ReflowInput::CalculateBlockSideMargins() {
   }
 }
 
-#define NORMAL_LINE_HEIGHT_FACTOR 1.2f  // in term of emHeight
 // For "normal" we use the font's normal line height (em height + leading).
-// If both internal leading and  external leading specified by font itself
-// are zeros, we should compensate this by creating extra (external) leading
-// in eCompensateLeading mode. This is necessary because without this
-// compensation, normal line height might looks too tight.
-
-// For risk management, we use preference to control the behavior, and
-// eNoExternalLeading is the old behavior.
+// If both internal leading and  external leading specified by font itself are
+// zeros, we should compensate this by creating extra (external) leading.
+// This is necessary because without this compensation, normal line height might
+// look too tight.
+constexpr float kNormalLineHeightFactor = 1.2f;
 static nscoord GetNormalLineHeight(nsFontMetrics* aFontMetrics) {
-  MOZ_ASSERT(nullptr != aFontMetrics, "no font metrics");
-
-  nscoord normalLineHeight;
-
+  MOZ_ASSERT(aFontMetrics, "no font metrics");
   nscoord externalLeading = aFontMetrics->ExternalLeading();
   nscoord internalLeading = aFontMetrics->InternalLeading();
   nscoord emHeight = aFontMetrics->EmHeight();
-  switch (GetNormalLineHeightCalcControl()) {
-    case eIncludeExternalLeading:
-      normalLineHeight = emHeight + internalLeading + externalLeading;
-      break;
-    case eCompensateLeading:
-      if (!internalLeading && !externalLeading)
-        normalLineHeight = NSToCoordRound(emHeight * NORMAL_LINE_HEIGHT_FACTOR);
-      else
-        normalLineHeight = emHeight + internalLeading + externalLeading;
-      break;
-    default:
-      // case eNoExternalLeading:
-      normalLineHeight = emHeight + internalLeading;
+  if (!internalLeading && !externalLeading) {
+    return NSToCoordRound(emHeight * kNormalLineHeightFactor);
   }
-  return normalLineHeight;
+  return emHeight + internalLeading + externalLeading;
 }
 
-static inline nscoord ComputeLineHeight(const ComputedStyle* aComputedStyle,
+static inline nscoord ComputeLineHeight(const StyleLineHeight& aLh,
+                                        const nsStyleFont& aRelativeToFont,
                                         nsPresContext* aPresContext,
-                                        nscoord aBlockBSize,
+                                        bool aIsVertical, nscoord aBlockBSize,
                                         float aFontSizeInflation) {
-  const StyleLineHeight& lineHeight = aComputedStyle->StyleText()->mLineHeight;
-  if (lineHeight.IsLength()) {
-    nscoord result = lineHeight.length._0.ToAppUnits();
+  if (aLh.IsLength()) {
+    nscoord result = aLh.AsLength().ToAppUnits();
     if (aFontSizeInflation != 1.0f) {
       result = NSToCoordRound(result * aFontSizeInflation);
     }
     return result;
   }
 
-  if (lineHeight.IsNumber()) {
+  if (aLh.IsNumber()) {
     // For factor units the computed value of the line-height property
     // is found by multiplying the factor by the font's computed size
     // (adjusted for min-size prefs and text zoom).
-    return aComputedStyle->StyleFont()
-        ->mFont.size.ScaledBy(lineHeight.AsNumber() * aFontSizeInflation)
+    return aRelativeToFont.mFont.size
+        .ScaledBy(aLh.AsNumber() * aFontSizeInflation)
         .ToAppUnits();
   }
 
-  MOZ_ASSERT(lineHeight.IsNormal() || lineHeight.IsMozBlockHeight());
-  if (lineHeight.IsMozBlockHeight() && aBlockBSize != NS_UNCONSTRAINEDSIZE) {
+  MOZ_ASSERT(aLh.IsNormal() || aLh.IsMozBlockHeight());
+  if (aLh.IsMozBlockHeight() && aBlockBSize != NS_UNCONSTRAINEDSIZE) {
     return aBlockBSize;
   }
 
-  RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
-      aComputedStyle, aPresContext, aFontSizeInflation);
-  return GetNormalLineHeight(fm);
+  auto size = aRelativeToFont.mFont.size;
+  size.ScaleBy(aFontSizeInflation);
+
+  if (aPresContext) {
+    RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
+        aPresContext, aIsVertical, &aRelativeToFont, size,
+        /* aUseUserFontSet = */ true);
+    return GetNormalLineHeight(fm);
+  }
+  // If we don't have a pres context, use a 1.2em fallback.
+  size.ScaleBy(kNormalLineHeightFactor);
+  return size.ToAppUnits();
 }
 
 nscoord ReflowInput::GetLineHeight() const {
@@ -2794,8 +2765,8 @@ nscoord ReflowInput::GetLineHeight() const {
                            ? ComputedBSize()
                            : (mCBReflowInput ? mCBReflowInput->ComputedBSize()
                                              : NS_UNCONSTRAINEDSIZE);
-  mLineHeight = CalcLineHeight(mFrame->GetContent(), mFrame->Style(),
-                               mFrame->PresContext(), blockBSize,
+  mLineHeight = CalcLineHeight(*mFrame->Style(), mFrame->PresContext(),
+                               mFrame->GetContent(), blockBSize,
                                nsLayoutUtils::FontSizeInflationFor(mFrame));
   return mLineHeight;
 }
@@ -2812,27 +2783,36 @@ void ReflowInput::SetLineHeight(nscoord aLineHeight) {
 }
 
 /* static */
-nscoord ReflowInput::CalcLineHeight(nsIContent* aContent,
-                                    const ComputedStyle* aComputedStyle,
+nscoord ReflowInput::CalcLineHeight(const ComputedStyle& aStyle,
                                     nsPresContext* aPresContext,
+                                    const nsIContent* aContent,
                                     nscoord aBlockBSize,
                                     float aFontSizeInflation) {
-  MOZ_ASSERT(aComputedStyle, "Must have a ComputedStyle");
+  const StyleLineHeight& lh = aStyle.StyleText()->mLineHeight;
+  WritingMode wm(&aStyle);
+  const bool vertical = wm.IsVertical() && !wm.IsSideways();
+  return CalcLineHeight(lh, *aStyle.StyleFont(), aPresContext, vertical,
+                        aContent, aBlockBSize, aFontSizeInflation);
+}
 
-  nscoord lineHeight = ComputeLineHeight(aComputedStyle, aPresContext,
-                                         aBlockBSize, aFontSizeInflation);
+nscoord ReflowInput::CalcLineHeight(
+    const StyleLineHeight& aLh, const nsStyleFont& aRelativeToFont,
+    nsPresContext* aPresContext, bool aIsVertical, const nsIContent* aContent,
+    nscoord aBlockBSize, float aFontSizeInflation) {
+  nscoord lineHeight =
+      ComputeLineHeight(aLh, aRelativeToFont, aPresContext, aIsVertical,
+                        aBlockBSize, aFontSizeInflation);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
 
-  HTMLInputElement* input = HTMLInputElement::FromNodeOrNull(aContent);
+  const auto* input = HTMLInputElement::FromNodeOrNull(aContent);
   if (input && input->IsSingleLineTextControl()) {
     // For Web-compatibility, single-line text input elements cannot
     // have a line-height smaller than 'normal'.
-    const StyleLineHeight& lh = aComputedStyle->StyleText()->mLineHeight;
-    if (!lh.IsNormal()) {
-      RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
-          aComputedStyle, aPresContext, aFontSizeInflation);
-      nscoord normal = GetNormalLineHeight(fm);
+    if (!aLh.IsNormal()) {
+      nscoord normal = ComputeLineHeight(
+          StyleLineHeight::Normal(), aRelativeToFont, aPresContext, aIsVertical,
+          aBlockBSize, aFontSizeInflation);
       if (lineHeight < normal) {
         lineHeight = normal;
       }

@@ -197,7 +197,7 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(
       nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
 
   lineHeight =
-      ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
+      ReflowInput::CalcLineHeight(*Style(), PresContext(), GetContent(),
                                   NS_UNCONSTRAINEDSIZE, aFontSizeInflation);
   charWidth = fontMet->AveCharWidth();
   charMaxAdvance = fontMet->MaxAdvance();
@@ -655,7 +655,7 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
   float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
   if (!aForSingleLineControl || lineHeight == NS_UNCONSTRAINEDSIZE) {
     lineHeight = ReflowInput::CalcLineHeight(
-        aFrame->GetContent(), aFrame->Style(), aFrame->PresContext(),
+        *aFrame->Style(), aFrame->PresContext(), aFrame->GetContent(),
         NS_UNCONSTRAINEDSIZE, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =

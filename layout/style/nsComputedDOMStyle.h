@@ -262,9 +262,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetMarginLeft();
   already_AddRefed<CSSValue> DoGetMarginRight();
 
-  /* Text Properties */
-  already_AddRefed<CSSValue> DoGetLineHeight();
-
   /* Display properties */
   already_AddRefed<CSSValue> DoGetTransform();
   already_AddRefed<CSSValue> DoGetTransformOrigin();

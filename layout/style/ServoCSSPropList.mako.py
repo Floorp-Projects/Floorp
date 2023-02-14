@@ -70,7 +70,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     # Layout dependent.
     "width",
     "height",
-    "line-height",
     "grid-template-rows",
     "grid-template-columns",
     "perspective-origin",

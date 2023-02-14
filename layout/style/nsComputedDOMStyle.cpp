@@ -501,7 +501,8 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
   }
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
-  mComputedStyle->GetComputedPropertyValue(aPropID, aReturn);
+  Servo_GetResolvedValue(mComputedStyle, aPropID,
+                         mPresShell->StyleSet()->RawSet(), mElement, &aReturn);
   return NS_OK;
 }
 
@@ -1840,28 +1841,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRight() {
   return GetMarginFor(eSideRight);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  nscoord lineHeight;
-  if (GetLineHeightCoord(lineHeight)) {
-    val->SetAppUnits(lineHeight);
-    return val.forget();
-  }
-
-  const auto& lh = StyleText()->mLineHeight;
-
-  // Types Length or Number will have been handled by GetLineHeightCoord,
-  // leaving only MozBlockHeight and Normal to consider here.
-  if (lh.IsMozBlockHeight()) {
-    val->SetString("-moz-block-height");
-  } else {
-    MOZ_ASSERT(lh.IsNormal());
-    val->SetString("normal");
-  }
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
@@ -2137,50 +2116,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
   }
 
   return val.forget();
-}
-
-bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
-  nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
-  const auto& lh = StyleText()->mLineHeight;
-  if (lh.IsNormal()) {
-    return false;
-  }
-
-  if (lh.IsMozBlockHeight()) {
-    if (!mInnerFrame) {
-      return false;
-    }
-
-    AssertFlushedPendingReflows();
-
-    if (nsLayoutUtils::IsNonWrapperBlock(mInnerFrame)) {
-      blockHeight = mInnerFrame->GetContentRect().height;
-    } else {
-      GetCBContentHeight(blockHeight);
-    }
-  }
-
-  nsPresContext* presContext = mPresShell->GetPresContext();
-
-  // lie about font size inflation since we lie about font size (since
-  // the inflation only applies to text)
-  aCoord = ReflowInput::CalcLineHeight(mElement, mComputedStyle, presContext,
-                                       blockHeight, 1.0f);
-
-  // CalcLineHeight uses font->mFont.size, but we want to use
-  // font->mSize as the font size.  Adjust for that.  Also adjust for
-  // the text zoom, if any.
-  const nsStyleFont* font = StyleFont();
-  float fCoord = float(aCoord);
-  if (font->mAllowZoomAndMinSize) {
-    fCoord /= presContext->EffectiveTextZoom();
-  }
-  if (font->mFont.size != font->mSize) {
-    fCoord *= font->mSize.ToCSSPixels() / font->mFont.size.ToCSSPixels();
-  }
-  aCoord = NSToCoordRound(fCoord);
-
-  return true;
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetBorderWidthFor(

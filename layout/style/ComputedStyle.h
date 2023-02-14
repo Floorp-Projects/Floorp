@@ -66,7 +66,7 @@ class ComputedStyle {
 
   // Returns the computed (not resolved) value of the given property.
   void GetComputedPropertyValue(nsCSSPropertyID aId, nsACString& aOut) const {
-    Servo_GetPropertyValue(this, aId, &aOut);
+    Servo_GetComputedValue(this, aId, &aOut);
   }
 
   // Return the ComputedStyle whose style data should be used for the R,
