@@ -590,7 +590,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #urlbar,
 #searchbar {
   /* Setting a width and min-width to let the location & search bars maintain
-     a constant width in case they haven't be resized manually. (bug 965772) */
+     a constant width in case they haven't been resized manually. (bug 965772) */
   width: 1px;
   min-width: 1px;
 }
