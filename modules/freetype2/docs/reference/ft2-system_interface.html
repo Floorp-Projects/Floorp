@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.13.0">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>System Interface - FreeType-2.12.1 API Reference</title>
+        <title>System Interface - FreeType-2.13.0 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.12.1 API Reference
+            FreeType-2.13.0 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.12.1 API Reference
+    FreeType-2.13.0 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1464,7 +1464,7 @@
 <p>A handle to the source stream.</p>
 </td></tr>
 <tr><td class="val" id="offset">offset</td><td class="desc">
-<p>The offset of read in stream (always from start).</p>
+<p>The offset from the start of the stream to seek to if this is a seek operation (see note).</p>
 </td></tr>
 <tr><td class="val" id="buffer">buffer</td><td class="desc">
 <p>The address of the read buffer.</p>
@@ -1479,7 +1479,8 @@
 <p>The number of bytes effectively read by the stream.</p>
 <h4>note</h4>
 
-<p>This function might be called to perform a seek or skip operation with a <code>count</code> of&nbsp;0. A non-zero return value then indicates an error.</p>
+<p>This function performs a seek <em>or</em> a read operation depending on the argument values. If <code>count</code> is zero, the operation is a seek to <code>offset</code> bytes. If <code>count</code> is &gt;&nbsp;0, the operation is a read of <code>count</code> bytes from the current position in the stream, and the <code>offset</code> value should be ignored.</p>
+<p>For seek operations, a non-zero return value indicates an error.</p>
 <hr>
 
 <h2 id="ft_stream_closefunc">FT_Stream_CloseFunc<a class="headerlink" href="#ft_stream_closefunc" title="Permanent link">&para;</a></h2>
@@ -1611,7 +1612,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2023 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

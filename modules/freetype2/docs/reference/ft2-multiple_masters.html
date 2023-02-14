@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.13.0">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Multiple Masters - FreeType-2.12.1 API Reference</title>
+        <title>Multiple Masters - FreeType-2.13.0 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.12.1 API Reference
+            FreeType-2.13.0 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.12.1 API Reference
+    FreeType-2.13.0 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1760,6 +1760,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
+<p>The design coordinates are 16.16 fractional values for TrueType GX and OpenType variation fonts. For Adobe MM fonts, the values are integers.</p>
 <p>[Since 2.8.1] To reset all axes to the default values, call the function with <code>num_coords</code> set to zero and <code>coords</code> set to <code>NULL</code>. [Since 2.9] &lsquo;Default values&rsquo; means the currently selected named instance (or the base font if no named instance is selected).</p>
 <p>[Since 2.9] If <code>num_coords</code> is larger than zero, this function sets the <code><a href="ft2-base_interface.html#ft_face_flag_xxx">FT_FACE_FLAG_VARIATION</a></code> bit in <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code>'s <code>face_flags</code> field (i.e., <code><a href="ft2-base_interface.html#ft_is_variation">FT_IS_VARIATION</a></code> will return true). If <code>num_coords</code> is zero, this bit flag gets unset.</p>
 <hr>
@@ -1794,6 +1795,9 @@
 <h4>return</h4>
 
 <p>FreeType error code. 0&nbsp;means success.</p>
+<h4>note</h4>
+
+<p>The design coordinates are 16.16 fractional values for TrueType GX and OpenType variation fonts. For Adobe MM fonts, the values are integers.</p>
 <h4>since</h4>
 
 <p>2.7.1</p>
@@ -1822,7 +1826,7 @@
 <p>The number of available design coordinates. If it is larger than the number of axes, ignore the excess values. If it is smaller than the number of axes, use default values for the remaining axes.</p>
 </td></tr>
 <tr><td class="val" id="coords">coords</td><td class="desc">
-<p>The design coordinates array (each element must be between 0 and 1.0 for Adobe MM fonts, and between -1.0 and 1.0 for TrueType GX and OpenType variation fonts).</p>
+<p>The design coordinates array. Each element is a 16.16 fractional value and must be between 0 and 1.0 for Adobe MM fonts, and between -1.0 and 1.0 for TrueType GX and OpenType variation fonts.</p>
 </td></tr>
 </table>
 
@@ -1858,7 +1862,7 @@
 <h4>output</h4>
 <table class="fields">
 <tr><td class="val" id="coords">coords</td><td class="desc">
-<p>The normalized blend coordinates array.</p>
+<p>The normalized blend coordinates array (as 16.16 fractional values).</p>
 </td></tr>
 </table>
 
@@ -2111,7 +2115,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2023 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

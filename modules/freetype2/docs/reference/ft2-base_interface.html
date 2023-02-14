@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.13.0">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Base Interface - FreeType-2.12.1 API Reference</title>
+        <title>Base Interface - FreeType-2.13.0 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.12.1 API Reference
+            FreeType-2.13.0 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.12.1 API Reference
+    FreeType-2.13.0 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -754,13 +754,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_get_name_index" class="md-nav__link">
-    FT_Get_Name_Index
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#ft_load_char" class="md-nav__link">
     FT_Load_Char
   </a>
@@ -810,20 +803,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_get_glyph_name" class="md-nav__link">
-    FT_Get_Glyph_Name
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ft_get_postscript_name" class="md-nav__link">
-    FT_Get_Postscript_Name
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#ft_charmaprec" class="md-nav__link">
     FT_CharMapRec
   </a>
@@ -847,6 +826,27 @@
         <li class="md-nav__item">
   <a href="#ft_get_charmap_index" class="md-nav__link">
     FT_Get_Charmap_Index
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_name_index" class="md-nav__link">
+    FT_Get_Name_Index
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_glyph_name" class="md-nav__link">
+    FT_Get_Glyph_Name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_postscript_name" class="md-nav__link">
+    FT_Get_Postscript_Name
   </a>
   
 </li>
@@ -2125,13 +2125,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_get_name_index" class="md-nav__link">
-    FT_Get_Name_Index
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#ft_load_char" class="md-nav__link">
     FT_Load_Char
   </a>
@@ -2181,20 +2174,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_get_glyph_name" class="md-nav__link">
-    FT_Get_Glyph_Name
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ft_get_postscript_name" class="md-nav__link">
-    FT_Get_Postscript_Name
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#ft_charmaprec" class="md-nav__link">
     FT_CharMapRec
   </a>
@@ -2218,6 +2197,27 @@
         <li class="md-nav__item">
   <a href="#ft_get_charmap_index" class="md-nav__link">
     FT_Get_Charmap_Index
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_name_index" class="md-nav__link">
+    FT_Get_Name_Index
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_glyph_name" class="md-nav__link">
+    FT_Get_Glyph_Name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_get_postscript_name" class="md-nav__link">
+    FT_Get_Postscript_Name
   </a>
   
 </li>
@@ -2463,7 +2463,7 @@
 <p>An enumeration to specify character sets supported by charmaps. Used in the <code><a href="ft2-base_interface.html#ft_select_charmap">FT_Select_Charmap</a></code> API function.</p>
 <h4>note</h4>
 
-<p>Despite the name, this enumeration lists specific character repertories (i.e., charsets), and not text encoding methods (e.g., UTF-8, UTF-16, etc.).</p>
+<p>Despite the name, this enumeration lists specific character repertoires (i.e., charsets), and not text encoding methods (e.g., UTF-8, UTF-16, etc.).</p>
 <p>Other encodings might be defined in the future.</p>
 <h4>values</h4>
 <table class="fields long">
@@ -2537,7 +2537,7 @@
 <p><code>FT_ENCODING_NONE</code> is set if <code>platform_id</code> is <code><a href="ft2-truetype_tables.html#tt_platform_xxx">TT_PLATFORM_MACINTOSH</a></code> and <code>encoding_id</code> is not <code>TT_MAC_ID_ROMAN</code> (otherwise it is set to <code>FT_ENCODING_APPLE_ROMAN</code>).</p>
 <p>If <code>platform_id</code> is <code><a href="ft2-truetype_tables.html#tt_platform_xxx">TT_PLATFORM_MACINTOSH</a></code>, use the function <code><a href="ft2-truetype_tables.html#ft_get_cmap_language_id">FT_Get_CMap_Language_ID</a></code> to query the Mac language ID that may be needed to be able to distinguish Apple encoding variants. See</p>
 <p><a href="https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/Readme.txt">https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/Readme.txt</a></p>
-<p>to get an idea how to do that. Basically, if the language ID is&nbsp;0, don't use it, otherwise subtract 1 from the language ID. Then examine <code>encoding_id</code>. If, for example, <code>encoding_id</code> is <code>TT_MAC_ID_ROMAN</code> and the language ID (minus&nbsp;1) is <code>TT_MAC_LANGID_GREEK</code>, it is the Greek encoding, not Roman. <code>TT_MAC_ID_ARABIC</code> with <code>TT_MAC_LANGID_FARSI</code> means the Farsi variant the Arabic encoding.</p>
+<p>to get an idea how to do that. Basically, if the language ID is&nbsp;0, don't use it, otherwise subtract 1 from the language ID. Then examine <code>encoding_id</code>. If, for example, <code>encoding_id</code> is <code>TT_MAC_ID_ROMAN</code> and the language ID (minus&nbsp;1) is <code>TT_MAC_LANGID_GREEK</code>, it is the Greek encoding, not Roman. <code>TT_MAC_ID_ARABIC</code> with <code>TT_MAC_LANGID_FARSI</code> means the Farsi variant of the Arabic encoding.</p>
 <hr>
 
 <h2 id="ft_enc_tag">FT_ENC_TAG<a class="headerlink" href="#ft_enc_tag" title="Permanent link">&para;</a></h2>
@@ -3116,10 +3116,10 @@
 <p>Note that even when the glyph image is transformed, the metrics are not.</p>
 </td></tr>
 <tr><td class="val" id="linearhoriadvance">linearHoriAdvance</td><td class="desc">
-<p>The advance width of the unhinted glyph. Its value is expressed in 16.16 fractional pixels, unless <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_LINEAR_DESIGN</a></code> is set when loading the glyph. This field can be important to perform correct WYSIWYG layout. Only relevant for outline glyphs.</p>
+<p>The advance width of the unhinted glyph. Its value is expressed in 16.16 fractional pixels, unless <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_LINEAR_DESIGN</a></code> is set when loading the glyph. This field can be important to perform correct WYSIWYG layout. Only relevant for scalable glyphs.</p>
 </td></tr>
 <tr><td class="val" id="linearvertadvance">linearVertAdvance</td><td class="desc">
-<p>The advance height of the unhinted glyph. Its value is expressed in 16.16 fractional pixels, unless <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_LINEAR_DESIGN</a></code> is set when loading the glyph. This field can be important to perform correct WYSIWYG layout. Only relevant for outline glyphs.</p>
+<p>The advance height of the unhinted glyph. Its value is expressed in 16.16 fractional pixels, unless <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_LINEAR_DESIGN</a></code> is set when loading the glyph. This field can be important to perform correct WYSIWYG layout. Only relevant for scalable glyphs.</p>
 </td></tr>
 <tr><td class="val" id="advance">advance</td><td class="desc">
 <p>This shorthand is, depending on <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_IGNORE_TRANSFORM</a></code>, the transformed (hinted) advance width for the glyph, in 26.6 fractional pixel format. As specified with <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_VERTICAL_LAYOUT</a></code>, it uses either the <code>horiAdvance</code> or the <code>vertAdvance</code> value of <code>metrics</code> field.</p>
@@ -3801,8 +3801,8 @@
 <h2 id="ft_attach_stream">FT_Attach_Stream<a class="headerlink" href="#ft_attach_stream" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_error">FT_Error</a> )
-  <b>FT_Attach_Stream</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>        face,
-                    <a href="ft2-base_interface.html#ft_open_args">FT_Open_Args</a>*  parameters );
+  <b>FT_Attach_Stream</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>              face,
+                    <span class="keyword">const</span> <a href="ft2-base_interface.html#ft_open_args">FT_Open_Args</a>*  parameters );
 </code></pre></div>
 
 <p>&lsquo;Attach&rsquo; data to a face object. Normally, this is used to read additional information for the face object. For example, you can attach an AFM file that comes with a Type&nbsp;1 font to get the kerning values and other metrics.</p>
@@ -4119,7 +4119,7 @@
 <p>A pointer to a transformation's 2x2 matrix. Set this to NULL if you are not interested in the value.</p>
 </td></tr>
 <tr><td class="val" id="delta">delta</td><td class="desc">
-<p>A pointer a translation vector. Set this to NULL if you are not interested in the value.</p>
+<p>A pointer to a translation vector. Set this to NULL if you are not interested in the value.</p>
 </td></tr>
 </table>
 
@@ -4267,29 +4267,6 @@
 
 <p>You should use this function with <code><a href="ft2-base_interface.html#ft_get_first_char">FT_Get_First_Char</a></code> to walk over all character codes available in a given charmap. See the note for that function for a simple code example.</p>
 <p>Note that <code>*agindex</code> is set to&nbsp;0 when there are no more codes in the charmap.</p>
-<hr>
-
-<h2 id="ft_get_name_index">FT_Get_Name_Index<a class="headerlink" href="#ft_get_name_index" title="Permanent link">&para;</a></h2>
-<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_uint">FT_UInt</a> )
-  <b>FT_Get_Name_Index</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>           face,
-                     <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_string">FT_String</a>*  glyph_name );
-</code></pre></div>
-
-<p>Return the glyph index of a given glyph name.</p>
-<h4>input</h4>
-<table class="fields">
-<tr><td class="val" id="face">face</td><td class="desc">
-<p>A handle to the source face object.</p>
-</td></tr>
-<tr><td class="val" id="glyph_name">glyph_name</td><td class="desc">
-<p>The glyph name.</p>
-</td></tr>
-</table>
-
-<h4>return</h4>
-
-<p>The glyph index. 0&nbsp;means &lsquo;undefined character code&rsquo;.</p>
 <hr>
 
 <h2 id="ft_load_char">FT_Load_Char<a class="headerlink" href="#ft_load_char" title="Permanent link">&para;</a></h2>
@@ -4478,7 +4455,7 @@ for pixel in buffer
 <p>The <code>sdf</code> rasterizer is sensitive to really small features (e.g., sharp turns that are less than 1&nbsp;pixel) and imperfections in the glyph's outline, causing artifacts in the final output.</p>
 </li>
 <li>
-<p>The <code>sdf</code> rasterizer has limited support for handling intersecting contours and <em>cannot</em> handle self-intersecting contours whatsoever. Self-intersection happens when a single connected contour intersect itself at some point; having these in your font definitely pose a problem to the rasterizer and cause artifacts, too.</p>
+<p>The <code>sdf</code> rasterizer has limited support for handling intersecting contours and <em>cannot</em> handle self-intersecting contours whatsoever. Self-intersection happens when a single connected contour intersects itself at some point; having these in your font definitely poses a problem to the rasterizer and cause artifacts, too.</p>
 </li>
 <li>
 <p>Generating SDF for really small glyphs may result in undesirable output; the pixel grid (which stores distance information) becomes too coarse.</p>
@@ -4610,72 +4587,6 @@ for pixel in buffer
 <p>Only very few AFM files come with track kerning data; please refer to Adobe's AFM specification for more details.</p>
 <hr>
 
-<h2 id="ft_get_glyph_name">FT_Get_Glyph_Name<a class="headerlink" href="#ft_get_glyph_name" title="Permanent link">&para;</a></h2>
-<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_error">FT_Error</a> )
-  <b>FT_Get_Glyph_Name</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>     face,
-                     <a href="ft2-basic_types.html#ft_uint">FT_UInt</a>     glyph_index,
-                     <a href="ft2-basic_types.html#ft_pointer">FT_Pointer</a>  buffer,
-                     <a href="ft2-basic_types.html#ft_uint">FT_UInt</a>     buffer_max );
-</code></pre></div>
-
-<p>Retrieve the ASCII name of a given glyph in a face. This only works for those faces where <code><a href="ft2-base_interface.html#ft_has_glyph_names">FT_HAS_GLYPH_NAMES</a></code>(face) returns&nbsp;1.</p>
-<h4>input</h4>
-<table class="fields">
-<tr><td class="val" id="face">face</td><td class="desc">
-<p>A handle to a source face object.</p>
-</td></tr>
-<tr><td class="val" id="glyph_index">glyph_index</td><td class="desc">
-<p>The glyph index.</p>
-</td></tr>
-<tr><td class="val" id="buffer_max">buffer_max</td><td class="desc">
-<p>The maximum number of bytes available in the buffer.</p>
-</td></tr>
-</table>
-
-<h4>output</h4>
-<table class="fields">
-<tr><td class="val" id="buffer">buffer</td><td class="desc">
-<p>A pointer to a target buffer where the name is copied to.</p>
-</td></tr>
-</table>
-
-<h4>return</h4>
-
-<p>FreeType error code. 0&nbsp;means success.</p>
-<h4>note</h4>
-
-<p>An error is returned if the face doesn't provide glyph names or if the glyph index is invalid. In all cases of failure, the first byte of <code>buffer</code> is set to&nbsp;0 to indicate an empty name.</p>
-<p>The glyph name is truncated to fit within the buffer if it is too long. The returned string is always zero-terminated.</p>
-<p>Be aware that FreeType reorders glyph indices internally so that glyph index&nbsp;0 always corresponds to the &lsquo;missing glyph&rsquo; (called &lsquo;.notdef&rsquo;).</p>
-<p>This function always returns an error if the config macro <code>FT_CONFIG_OPTION_NO_GLYPH_NAMES</code> is not defined in <code>ftoption.h</code>.</p>
-<hr>
-
-<h2 id="ft_get_postscript_name">FT_Get_Postscript_Name<a class="headerlink" href="#ft_get_postscript_name" title="Permanent link">&para;</a></h2>
-<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>  FT_EXPORT( <span class="keyword">const</span> <span class="keyword">char</span>* )
-  <b>FT_Get_Postscript_Name</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>  face );
-</code></pre></div>
-
-<p>Retrieve the ASCII PostScript name of a given face, if available. This only works with PostScript, TrueType, and OpenType fonts.</p>
-<h4>input</h4>
-<table class="fields">
-<tr><td class="val" id="face">face</td><td class="desc">
-<p>A handle to the source face object.</p>
-</td></tr>
-</table>
-
-<h4>return</h4>
-
-<p>A pointer to the face's PostScript name. <code>NULL</code> if unavailable.</p>
-<h4>note</h4>
-
-<p>The returned pointer is owned by the face and is destroyed with it.</p>
-<p>For variation fonts, this string changes if you select a different instance, and you have to call <code>FT_Get_PostScript_Name</code> again to retrieve it. FreeType follows Adobe TechNote #5902, &lsquo;Generating PostScript Names for Fonts Using OpenType Font Variations&rsquo;.</p>
-<p><a href="https://download.macromedia.com/pub/developer/opentype/tech-notes/5902.AdobePSNameGeneration.html">https://download.macromedia.com/pub/developer/opentype/tech-notes/5902.AdobePSNameGeneration.html</a></p>
-<p>[Since 2.9] Special PostScript names for named instances are only returned if the named instance is set with <code><a href="ft2-multiple_masters.html#ft_set_named_instance">FT_Set_Named_Instance</a></code> (and the font has corresponding entries in its &lsquo;fvar&rsquo; table). If <code><a href="ft2-base_interface.html#ft_is_variation">FT_IS_VARIATION</a></code> returns true, the algorithmically derived PostScript name is provided, not looking up special entries for named instances.</p>
-<hr>
-
 <h2 id="ft_charmaprec">FT_CharMapRec<a class="headerlink" href="#ft_charmaprec" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_CharMapRec_
@@ -4786,6 +4697,99 @@ for pixel in buffer
 <h4>return</h4>
 
 <p>The index into the array of character maps within the face to which <code>charmap</code> belongs. If an error occurs, -1 is returned.</p>
+<hr>
+
+<h2 id="ft_get_name_index">FT_Get_Name_Index<a class="headerlink" href="#ft_get_name_index" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_uint">FT_UInt</a> )
+  <b>FT_Get_Name_Index</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>           face,
+                     <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_string">FT_String</a>*  glyph_name );
+</code></pre></div>
+
+<p>Return the glyph index of a given glyph name. This only works for those faces where <code><a href="ft2-base_interface.html#ft_has_glyph_names">FT_HAS_GLYPH_NAMES</a></code> returns true.</p>
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to the source face object.</p>
+</td></tr>
+<tr><td class="val" id="glyph_name">glyph_name</td><td class="desc">
+<p>The glyph name.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+
+<p>The glyph index. 0&nbsp;means &lsquo;undefined character code&rsquo;.</p>
+<h4>note</h4>
+
+<p>Acceptable glyph names might come from the <a href="https://github.com/adobe-type-tools/agl-aglfn">Adobe Glyph List</a>. See <code><a href="ft2-base_interface.html#ft_get_glyph_name">FT_Get_Glyph_Name</a></code> for the inverse functionality.</p>
+<p>This function has limited capabilities if the config macro <code>FT_CONFIG_OPTION_POSTSCRIPT_NAMES</code> is not defined in <code>ftoption.h</code>: It then works only for fonts that actually embed glyph names (which many recent OpenType fonts do not).</p>
+<hr>
+
+<h2 id="ft_get_glyph_name">FT_Get_Glyph_Name<a class="headerlink" href="#ft_get_glyph_name" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_error">FT_Error</a> )
+  <b>FT_Get_Glyph_Name</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>     face,
+                     <a href="ft2-basic_types.html#ft_uint">FT_UInt</a>     glyph_index,
+                     <a href="ft2-basic_types.html#ft_pointer">FT_Pointer</a>  buffer,
+                     <a href="ft2-basic_types.html#ft_uint">FT_UInt</a>     buffer_max );
+</code></pre></div>
+
+<p>Retrieve the ASCII name of a given glyph in a face. This only works for those faces where <code><a href="ft2-base_interface.html#ft_has_glyph_names">FT_HAS_GLYPH_NAMES</a></code> returns true.</p>
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to a source face object.</p>
+</td></tr>
+<tr><td class="val" id="glyph_index">glyph_index</td><td class="desc">
+<p>The glyph index.</p>
+</td></tr>
+<tr><td class="val" id="buffer_max">buffer_max</td><td class="desc">
+<p>The maximum number of bytes available in the buffer.</p>
+</td></tr>
+</table>
+
+<h4>output</h4>
+<table class="fields">
+<tr><td class="val" id="buffer">buffer</td><td class="desc">
+<p>A pointer to a target buffer where the name is copied to.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+
+<p>FreeType error code. 0&nbsp;means success.</p>
+<h4>note</h4>
+
+<p>An error is returned if the face doesn't provide glyph names or if the glyph index is invalid. In all cases of failure, the first byte of <code>buffer</code> is set to&nbsp;0 to indicate an empty name.</p>
+<p>The glyph name is truncated to fit within the buffer if it is too long. The returned string is always zero-terminated.</p>
+<p>Be aware that FreeType reorders glyph indices internally so that glyph index&nbsp;0 always corresponds to the &lsquo;missing glyph&rsquo; (called &lsquo;.notdef&rsquo;).</p>
+<p>This function has limited capabilities if the config macro <code>FT_CONFIG_OPTION_POSTSCRIPT_NAMES</code> is not defined in <code>ftoption.h</code>: It then works only for fonts that actually embed glyph names (which many recent OpenType fonts do not).</p>
+<hr>
+
+<h2 id="ft_get_postscript_name">FT_Get_Postscript_Name<a class="headerlink" href="#ft_get_postscript_name" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  FT_EXPORT( <span class="keyword">const</span> <span class="keyword">char</span>* )
+  <b>FT_Get_Postscript_Name</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>  face );
+</code></pre></div>
+
+<p>Retrieve the ASCII PostScript name of a given face, if available. This only works with PostScript, TrueType, and OpenType fonts.</p>
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to the source face object.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+
+<p>A pointer to the face's PostScript name. <code>NULL</code> if unavailable.</p>
+<h4>note</h4>
+
+<p>The returned pointer is owned by the face and is destroyed with it.</p>
+<p>For variation fonts, this string changes if you select a different instance, and you have to call <code>FT_Get_PostScript_Name</code> again to retrieve it. FreeType follows Adobe TechNote #5902, &lsquo;Generating PostScript Names for Fonts Using OpenType Font Variations&rsquo;.</p>
+<p><a href="https://download.macromedia.com/pub/developer/opentype/tech-notes/5902.AdobePSNameGeneration.html">https://download.macromedia.com/pub/developer/opentype/tech-notes/5902.AdobePSNameGeneration.html</a></p>
+<p>[Since 2.9] Special PostScript names for named instances are only returned if the named instance is set with <code><a href="ft2-multiple_masters.html#ft_set_named_instance">FT_Set_Named_Instance</a></code> (and the font has corresponding entries in its &lsquo;fvar&rsquo; table). If <code><a href="ft2-base_interface.html#ft_is_variation">FT_IS_VARIATION</a></code> returns true, the algorithmically derived PostScript name is provided, not looking up special entries for named instances.</p>
 <hr>
 
 <h2 id="ft_get_fstype_flags">FT_Get_FSType_Flags<a class="headerlink" href="#ft_get_fstype_flags" title="Permanent link">&para;</a></h2>
@@ -4934,7 +4938,7 @@ for pixel in buffer
 <p>The face contains vertical glyph metrics. This is only available in some formats, not all of them.</p>
 </td></tr>
 <tr><td class="val" id="ft_face_flag_kerning">FT_FACE_FLAG_KERNING</td><td class="desc">
-<p>The face contains kerning information. If set, the kerning distance can be retrieved using the function <code><a href="ft2-base_interface.html#ft_get_kerning">FT_Get_Kerning</a></code>. Otherwise the function always return the vector (0,0). Note that FreeType doesn't handle kerning data from the SFNT &lsquo;GPOS&rsquo; table (as present in many OpenType fonts).</p>
+<p>The face contains kerning information. If set, the kerning distance can be retrieved using the function <code><a href="ft2-base_interface.html#ft_get_kerning">FT_Get_Kerning</a></code>. Otherwise the function always returns the vector (0,0). Note that FreeType doesn't handle kerning data from the SFNT &lsquo;GPOS&rsquo; table (as present in many OpenType fonts).</p>
 </td></tr>
 <tr><td class="val" id="ft_face_flag_fast_glyphs">FT_FACE_FLAG_FAST_GLYPHS</td><td class="desc">
 <p>THIS FLAG IS DEPRECATED. DO NOT USE OR TEST IT.</p>
@@ -5088,7 +5092,7 @@ for pixel in buffer
 <p>If the font is &lsquo;tricky&rsquo; (see <code><a href="ft2-base_interface.html#ft_face_flag_xxx">FT_FACE_FLAG_TRICKY</a></code> for more), using <code>FT_LOAD_NO_SCALE</code> usually yields meaningless outlines because the subglyphs must be scaled and positioned with hinting instructions. This can be solved by loading the font without <code>FT_LOAD_NO_SCALE</code> and setting the character size to <code>font-&gt;units_per_EM</code>.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_no_hinting">FT_LOAD_NO_HINTING</td><td class="desc">
-<p>Disable hinting. This generally generates &lsquo;blurrier&rsquo; bitmap glyphs when the glyph are rendered in any of the anti-aliased modes. See also the note below.</p>
+<p>Disable hinting. This generally generates &lsquo;blurrier&rsquo; bitmap glyphs when the glyphs are rendered in any of the anti-aliased modes. See also the note below.</p>
 <p>This flag is implied by <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code>.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_render">FT_LOAD_RENDER</td><td class="desc">
@@ -5353,7 +5357,7 @@ for pixel in buffer
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2023 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

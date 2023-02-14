@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2022 by
+# Copyright (C) 1996-2023 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -139,12 +139,12 @@ ifdef check_platform
   ifneq ($(is_unix),)
 
     distclean:
-	  $(RM) builds/unix/config.cache
-	  $(RM) builds/unix/config.log
-	  $(RM) builds/unix/config.status
-	  $(RM) builds/unix/unix-def.mk
-	  $(RM) builds/unix/unix-cc.mk
-	  $(RM) builds/unix/freetype2.pc
+	  $(RM) $(TOP_DIR)/builds/unix/config.cache
+	  $(RM) $(TOP_DIR)/builds/unix/config.log
+	  $(RM) $(TOP_DIR)/builds/unix/config.status
+	  $(RM) $(TOP_DIR)/builds/unix/unix-def.mk
+	  $(RM) $(TOP_DIR)/builds/unix/unix-cc.mk
+	  $(RM) $(TOP_DIR)/builds/unix/freetype2.pc
 	  $(RM) nul
 
   endif # test is_unix
@@ -170,17 +170,17 @@ endif # test check_platform
 
 check_out_submodule:
 	$(info Checking out submodule in `subprojects/dlg')
-	git submodule init
-	git submodule update
+	git --git-dir=$(TOP_DIR) submodule init
+	git --git-dir=$(TOP_DIR) submodule update
 
 copy_submodule:
 	$(info Copying files from `subprojects/dlg' to `src/dlg' and `include/dlg')
-  ifeq ($(wildcard include/dlg),)
-	mkdir $(subst /,$(SEP),include/dlg)
+  ifeq ($(wildcard $(TOP_DIR)/include/dlg),)
+	mkdir $(subst /,$(SEP),$(TOP_DIR)/include/dlg)
   endif
-	$(COPY) $(subst /,$(SEP),subprojects/dlg/include/dlg/output.h include/dlg)
-	$(COPY) $(subst /,$(SEP),subprojects/dlg/include/dlg/dlg.h include/dlg)
-	$(COPY) $(subst /,$(SEP),subprojects/dlg/src/dlg/dlg.c src/dlg)
+	$(COPY) $(subst /,$(SEP),$(TOP_DIR)/subprojects/dlg/include/dlg/output.h $(TOP_DIR)/include/dlg)
+	$(COPY) $(subst /,$(SEP),$(TOP_DIR)/subprojects/dlg/include/dlg/dlg.h $(TOP_DIR)/include/dlg)
+	$(COPY) $(subst /,$(SEP),$(TOP_DIR)/subprojects/dlg/src/dlg/dlg.c $(TOP_DIR)/src/dlg)
 
 
 # We always need the list of modules in ftmodule.h.
@@ -294,15 +294,15 @@ CHANGELOG_SCRIPT = ~/git/config/gitlog-to-changelog
 
 do-dist: distclean refdoc
 	@# Without removing the files, `autoconf' and friends follow links.
-	rm -f builds/unix/aclocal.m4
-	rm -f builds/unix/configure.ac
-	rm -f builds/unix/configure
+	rm -f $(TOP_DIR)/builds/unix/aclocal.m4
+	rm -f $(TOP_DIR)/builds/unix/configure.ac
+	rm -f $(TOP_DIR)/builds/unix/configure
 
 	sh autogen.sh
-	rm -rf builds/unix/autom4te.cache
+	rm -rf $(TOP_DIR)/builds/unix/autom4te.cache
 
-	cp $(CONFIG_GUESS) builds/unix
-	cp $(CONFIG_SUB) builds/unix
+	cp $(CONFIG_GUESS) $(TOP_DIR)/builds/unix
+	cp $(CONFIG_SUB) $(TOP_DIR)/builds/unix
 
 	@# Generate `ChangeLog' file with commits since release 2.11.0
 	@# (when we stopped creating this file manually).
@@ -313,10 +313,10 @@ do-dist: distclean refdoc
 	> ChangeLog
 
 	@# Remove intermediate files created by the `refdoc' target.
-	rm -rf docs/markdown
-	rm -f docs/mkdocs.yml
+	rm -rf $(TOP_DIR)/docs/markdown
+	rm -f $(TOP_DIR)/docs/mkdocs.yml
 
 	@# Remove more stuff related to git.
-	rm -rf subprojects
+	rm -rf $(TOP_DIR)/subprojects/dlg
 
 # EOF

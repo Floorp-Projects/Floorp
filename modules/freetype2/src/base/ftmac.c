@@ -8,7 +8,7 @@
  * This file is for Mac OS X only; see builds/mac/ftoldmac.c for
  * classic platforms built by MPW.
  *
- * Copyright (C) 1996-2022 by
+ * Copyright (C) 1996-2023 by
  * Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -67,6 +67,7 @@
 
 #include <freetype/freetype.h>
 #include <freetype/tttags.h>
+#include <freetype/internal/ftdebug.h>
 #include <freetype/internal/ftstream.h>
 #include "ftbase.h"
 
@@ -84,10 +85,14 @@
   /* `configure' checks the availability of `ResourceIndex' strictly */
   /* and sets HAVE_TYPE_RESOURCE_INDEX 1 or 0 always.  If it is      */
   /* not set (e.g., a build without `configure'), the availability   */
-  /* is guessed from the SDK version. Starting with the 10.6 SDK,    */
-  /* `ResourceIndex` is always 1.                                    */
+  /* is guessed from the SDK version.                                */
 #ifndef HAVE_TYPE_RESOURCE_INDEX
+#if !defined( MAC_OS_X_VERSION_10_5 ) || \
+    ( MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_5 )
+#define HAVE_TYPE_RESOURCE_INDEX 0
+#else
 #define HAVE_TYPE_RESOURCE_INDEX 1
+#endif
 #endif /* !HAVE_TYPE_RESOURCE_INDEX */
 
 #if ( HAVE_TYPE_RESOURCE_INDEX == 0 )
