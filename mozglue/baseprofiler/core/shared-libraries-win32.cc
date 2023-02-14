@@ -15,22 +15,29 @@
 #include <cctype>
 #include <string>
 
-static constexpr char digits[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                                    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+static constexpr char uppercaseDigits[16] = {'0', '1', '2', '3', '4', '5',
+                                             '6', '7', '8', '9', 'A', 'B',
+                                             'C', 'D', 'E', 'F'};
+static constexpr char lowercaseDigits[16] = {'0', '1', '2', '3', '4', '5',
+                                             '6', '7', '8', '9', 'a', 'b',
+                                             'c', 'd', 'e', 'f'};
 
 static void AppendHex(const unsigned char* aBegin, const unsigned char* aEnd,
                       std::string& aOut) {
   for (const unsigned char* p = aBegin; p < aEnd; ++p) {
     unsigned char c = *p;
-    aOut += digits[c >> 4];
-    aOut += digits[c & 0xFu];
+    aOut += uppercaseDigits[c >> 4];
+    aOut += uppercaseDigits[c & 0xFu];
   }
 }
 
 static constexpr bool WITH_PADDING = true;
 static constexpr bool WITHOUT_PADDING = false;
+static constexpr bool LOWERCASE = true;
+static constexpr bool UPPERCASE = false;
 template <typename T>
-static void AppendHex(T aValue, std::string& aOut, bool aWithPadding) {
+static void AppendHex(T aValue, std::string& aOut, bool aWithPadding,
+                      bool aLowercase = UPPERCASE) {
   for (int i = sizeof(T) * 2 - 1; i >= 0; --i) {
     unsigned nibble = (aValue >> (i * 4)) & 0xFu;
     // If no-padding requested, skip starting zeroes -- unless we're on the very
@@ -44,7 +51,7 @@ static void AppendHex(T aValue, std::string& aOut, bool aWithPadding) {
       // so we don't skip zeroes anymore.
       aWithPadding = true;
     }
-    aOut += digits[nibble];
+    aOut += aLowercase ? lowercaseDigits[nibble] : uppercaseDigits[nibble];
   }
 }
 
@@ -167,6 +174,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
           (pos != std::string::npos) ? pdbPathStr.substr(pos + 1) : pdbPathStr;
     }
 
+    std::string codeId;
+    DWORD timestamp;
+    DWORD imageSize;
+    if (headers.GetTimeStamp(timestamp) && headers.GetImageSize(imageSize)) {
+      AppendHex(timestamp, codeId, WITH_PADDING);
+      AppendHex(imageSize, codeId, WITHOUT_PADDING, LOWERCASE);
+    }
+
     std::string versionStr;
     uint64_t version;
     if (headers.GetVersionInfo(version)) {
@@ -181,7 +196,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
     SharedLibrary shlib(modStart, modEnd,
                         0,  // DLLs are always mapped at offset 0 on Windows
-                        breakpadId, std::string{}, moduleNameStr, modulePathStr,
+                        breakpadId, codeId, moduleNameStr, modulePathStr,
                         pdbNameStr, pdbPathStr, versionStr, "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
   };
