@@ -152,7 +152,7 @@ declare_args() {
   rtc_use_pipewire = is_linux && use_sysroot
 
   # Set this to link PipeWire and required libraries directly instead of using the dlopen.
-  rtc_link_pipewire = !build_with_mozilla
+  rtc_link_pipewire = false
 
   # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
   # and NDK r16 or above.
