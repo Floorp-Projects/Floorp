@@ -577,42 +577,6 @@ pub(crate) mod __glean_metric_maps {
         }
     }
 
-    /// Wrapper to record an event based on its metric ID.
-    ///
-    /// # Arguments
-    ///
-    /// * `metric_id` - The metric's ID to look up
-    /// * `extra`     - An map of (string, string) pairs.
-    ///                 The map will be decoded into the appropriate `ExtraKeys` types.
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
-    /// or an `EventRecordingError::InvalidId` if no event by that ID exists
-    /// or an `EventRecordingError::InvalidExtraKey` if the `extra` map could not be deserialized.
-    pub(crate) fn record_event_by_id_with_strings(metric_id: u32, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
-        match metric_id {
-          17 => {
-              assert!(
-                  extra_keys_len(&super::test_nested::event_metric) != 0 || extra.is_empty(),
-                  "No extra keys allowed, but some were passed"
-              );
-
-              super::test_nested::event_metric.record_raw(extra);
-              Ok(())
-          }
-          18 => {
-              assert!(
-                  extra_keys_len(&super::test_nested::event_metric_with_extra) != 0 || extra.is_empty(),
-                  "No extra keys allowed, but some were passed"
-              );
-
-              super::test_nested::event_metric_with_extra.record_raw(extra);
-              Ok(())
-          }
-           _ => Err(EventRecordingError::InvalidId),
-        }
-    }
-
     /// Wrapper to get the currently stored events for event metric.
     ///
     /// # Arguments
