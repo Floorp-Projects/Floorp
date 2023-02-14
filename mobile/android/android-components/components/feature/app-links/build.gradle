@@ -23,7 +23,9 @@ android {
     }
 
     packagingOptions {
-        exclude 'META-INF/proguard/androidx-annotations.pro'
+        resources {
+            excludes += ['META-INF/proguard/androidx-annotations.pro']
+        }
     }
 
     namespace 'mozilla.components.feature.app.links'

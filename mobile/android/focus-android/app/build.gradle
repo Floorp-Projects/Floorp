@@ -158,11 +158,13 @@ android {
         focusNightly.root = 'src/focusNightly'
         klarNightly.root = 'src/klarNightly'
     }
-
     packagingOptions {
-        pickFirst 'META-INF/atomicfu.kotlin_module'
-        pickFirst 'META-INF/proguard/coroutines.pro'
+        resources {
+            pickFirsts += ['META-INF/atomicfu.kotlin_module', 'META-INF/proguard/coroutines.pro']
+        }
     }
+
+
     namespace 'org.mozilla.focus'
 }
 

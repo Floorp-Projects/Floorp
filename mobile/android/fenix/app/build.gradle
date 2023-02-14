@@ -207,12 +207,12 @@ android {
         lintConfig file("lint.xml")
         baseline file("lint-baseline.xml")
     }
-
     packagingOptions {
-        exclude 'META-INF/atomicfu.kotlin_module'
-        exclude 'META-INF/AL2.0'
-        exclude 'META-INF/LGPL2.1'
+        resources {
+            excludes += ['META-INF/atomicfu.kotlin_module', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+        }
     }
+
 
     testOptions {
         unitTests.returnDefaultValues = true
