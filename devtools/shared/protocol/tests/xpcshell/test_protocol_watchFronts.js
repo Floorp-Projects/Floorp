@@ -20,13 +20,13 @@ const childSpec = protocol.generateActorSpec({
   },
 });
 
-const ChildActor = protocol.ActorClassWithSpec(childSpec, {
-  initialize(conn, id) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class ChildActor extends protocol.Actor {
+  constructor(conn, id) {
+    super(conn, childSpec);
     this.childID = id;
-  },
+  }
 
-  release() {},
+  release() {}
 
   form() {
     return {
@@ -34,8 +34,8 @@ const ChildActor = protocol.ActorClassWithSpec(childSpec, {
       childID: this.childID,
       foo: "bar",
     };
-  },
-});
+  }
+}
 
 const rootSpec = protocol.generateActorSpec({
   typeName: "root",
@@ -48,11 +48,9 @@ const rootSpec = protocol.generateActorSpec({
   },
 });
 
-const RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  typeName: "root",
-
-  initialize(conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
+class RootActor extends protocol.Actor {
+  constructor(conn) {
+    super(conn, rootSpec);
 
     this.actorID = "root";
 
@@ -60,7 +58,7 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this.manage(this);
 
     this.sequence = 0;
-  },
+  }
 
   sayHello() {
     return {
@@ -68,12 +66,12 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
       applicationType: "xpcshell-tests",
       traits: [],
     };
-  },
+  }
 
   createChild() {
     return new ChildActor(this.conn, this.sequence++);
-  },
-});
+  }
+}
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
   form(form) {
@@ -94,7 +92,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 protocol.registerFront(RootFront);
 
 add_task(async function run_test() {
-  DevToolsServer.createRootActor = RootActor;
+  DevToolsServer.createRootActor = conn => new RootActor(conn);
   DevToolsServer.init();
 
   const trace = connectPipeTracing();

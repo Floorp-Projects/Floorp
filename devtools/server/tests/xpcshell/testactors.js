@@ -116,21 +116,20 @@ exports.createRootActor = function createRootActor(connection) {
   return root;
 };
 
-const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
-  initialize(conn, targetActor) {
-    protocol.Actor.prototype.initialize.call(this, conn);
-    this.conn = conn;
+class TestDescriptorActor extends protocol.Actor {
+  constructor(conn, targetActor) {
+    super(conn, tabDescriptorSpec);
     this._targetActor = targetActor;
-  },
+  }
 
   // We don't exercise the selected tab in xpcshell tests.
   get selected() {
     return false;
-  },
+  }
 
   get title() {
     return this._targetActor.title;
-  },
+  }
 
   form() {
     const form = {
@@ -142,21 +141,20 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
     };
 
     return form;
-  },
+  }
 
   getFavicon() {
     return "";
-  },
+  }
 
   getTarget() {
     return this._targetActor.form();
-  },
-});
+  }
+}
 
-const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
-  initialize(conn, global) {
-    protocol.Actor.prototype.initialize.call(this, conn);
-    this.conn = conn;
+class TestTargetActor extends protocol.Actor {
+  constructor(conn, global) {
+    super(conn, windowGlobalTargetSpec);
 
     this.sessionContext = createContentProcessSessionContext();
     this._global = global;
@@ -172,29 +170,29 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     });
     this.dbg = this.makeDebugger();
     this.notifyResources = this.notifyResources.bind(this);
-  },
+  }
 
-  targetType: Targets.TYPES.FRAME,
+  targetType = Targets.TYPES.FRAME;
 
   get window() {
     return this._global;
-  },
+  }
 
   // Both title and url point to this._global.__name
   get title() {
     return this._global.__name;
-  },
+  }
 
   get url() {
     return this._global.__name;
-  },
+  }
 
   get sourcesManager() {
     if (!this._sourcesManager) {
       this._sourcesManager = new SourcesManager(this.threadActor);
     }
     return this._sourcesManager;
-  },
+  }
 
   form() {
     const response = {
@@ -216,19 +214,19 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     }
 
     return { ...response, ...actors };
-  },
+  }
 
   detach(request) {
     this.threadActor.destroy();
     return { type: "detached" };
-  },
+  }
 
   reload(request) {
     this.sourcesManager.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};
-  },
+  }
 
   removeActorByName(name) {
     const actor = this._extraActors[name];
@@ -236,9 +234,9 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
       this._descriptorActorPool.removeActor(actor);
     }
     delete this._extraActors[name];
-  },
+  }
 
   notifyResources(updateType, resources) {
     this.emit(`resource-${updateType}-form`, resources);
-  },
-});
+  }
+}

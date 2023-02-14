@@ -21,9 +21,8 @@ function run_test() {
 const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 class EchoTestActor extends Actor {
   constructor(conn) {
-    super(conn);
+    super(conn, { typeName: "EchoTestActor", methods: [] });
 
-    this.typeName = "EchoTestActor";
     this.requestTypes = {
       echo: EchoTestActor.prototype.onEcho,
     };
