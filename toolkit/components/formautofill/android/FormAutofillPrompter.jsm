@@ -48,15 +48,16 @@ let FormAutofillPrompter = {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  async promptToSaveCreditCard(browser, creditCard, storage) {
+  async promptToSaveCreditCard(browser, storage, record, flowId) {
     const prompt = new lazy.GeckoViewPrompter(browser.ownerGlobal);
 
+    const duplicateRecord = (await storage.getDuplicateRecords(record).next())
+      .value;
     let newCreditCard;
-    if (creditCard.guid) {
-      let originalCCData = await storage.creditCards.get(creditCard.guid);
-      newCreditCard = { ...originalCCData, ...creditCard.record };
+    if (duplicateRecord) {
+      newCreditCard = { ...duplicateRecord, ...record };
     } else {
-      newCreditCard = creditCard.record;
+      newCreditCard = record;
     }
 
     prompt.asyncShowPrompt(

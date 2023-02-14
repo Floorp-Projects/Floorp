@@ -217,7 +217,7 @@ class CreditCards extends CreditCardsBase {
    * @returns {object}
    *          Return the first duplicated record found in storage, null otherwise.
    */
-  async *getDuplicateRecord(record) {
+  async *getDuplicateRecords(record) {
     if (!record["cc-number"]) {
       return null;
     }
