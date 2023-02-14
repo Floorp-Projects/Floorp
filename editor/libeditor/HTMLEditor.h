@@ -30,6 +30,8 @@
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
 
+#include <functional>
+
 class nsDocumentFragment;
 class nsFrameSelection;
 class nsHTMLDocument;
@@ -1288,6 +1290,40 @@ class HTMLEditor final : public EditorBase,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
+   * Callback of CopyAttributes().
+   *
+   * @param aHTMLEditor   The HTML editor.
+   * @param aSrcElement   The element which have the attribute.
+   * @param aDestElement  The element which will have the attribute.
+   * @param aAttr         [in] The attribute which will be copied.
+   * @param aValue        [in/out] The attribute value which will be copied.
+   *                      Once updated, the new value is used.
+   * @return              true if the attribute should be copied, otherwise,
+   *                      false.
+   */
+  using AttributeFilter = std::function<bool(
+      HTMLEditor& aHTMLEditor, Element& aSrcElement, Element& aDestElement,
+      const dom::Attr& aAttr, nsString& aValue)>;
+  static AttributeFilter CopyAllAttributes;
+  static AttributeFilter CopyAllAttributesExceptId;
+  static AttributeFilter CopyAllAttributesExceptDir;
+  static AttributeFilter CopyAllAttributesExceptIdAndDir;
+
+  /**
+   * Copy all attributes of aSrcElement to aDestElement as-is.  Different from
+   * EditorBase::CloneAttributesWithTransaction(), this does not use
+   * SetAttributeOrEquivalent() nor does not clear existing attributes of
+   * aDestElement.
+   *
+   * @param aWithTransaction    Whether recoding with transactions or not.
+   * @param aDestElement        The element will have attributes.
+   * @param aSrcElement         The element whose attributes will be copied.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CopyAttributes(
+      WithTransaction aWithTransaction, Element& aDestElement,
+      Element& aSrcElement, const AttributeFilter& = CopyAllAttributes);
+
+  /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
    * aStartOfDeepestRightNode can have an element whose tag name is aTag.
    * Otherwise, looks for an ancestor node which is or is in active editing
@@ -1752,33 +1788,13 @@ class HTMLEditor final : public EditorBase,
    * @param aWrapperTagName     Element name of new element which will wrap
    *                            aContent and be inserted into where aContent
    *                            was.
+   * @param aInitializer        A callback to initialize new element before
+   *                            inserting to the DOM tree.
    */
-  [[nodiscard]] inline MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
-  InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
-                                 const nsAtom& aWrapperTagName);
-
-  /**
-   * InsertContainerWithTransaction() creates new element whose name is
-   * aWrapperTagName, sets its aAttribute to aAttributeValue, moves
-   * aContentToBeWrapped into the new element, then, inserts the new element
-   * into where aContentToBeWrapped was.
-   * NOTE: This method does not check if aContentToBeWrapped is valid child
-   * of the new element.  So, callers need to guarantee it.
-   *
-   * @param aContentToBeWrapped The content which will be wrapped with new
-   *                            element.
-   * @param aWrapperTagName     Element name of new element which will wrap
-   *                            aContent and be inserted into where aContent
-   *                            was.
-   * @param aAttribute          Attribute which should be set to the new
-   *                            element.
-   * @param aAttributeValue     Value to be set to aAttribute.
-   */
-  [[nodiscard]] inline MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
-  InsertContainerWithTransaction(nsIContent& aContentToBeWrapped,
-                                 const nsAtom& aWrapperTagName,
-                                 const nsAtom& aAttribute,
-                                 const nsAString& aAttributeValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
+  InsertContainerWithTransaction(
+      nsIContent& aContentToBeWrapped, const nsAtom& aWrapperTagName,
+      const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
    * MoveNodeWithTransaction() moves aContentToMove to aPointToInsert.
@@ -3122,30 +3138,6 @@ class HTMLEditor final : public EditorBase,
                                           const nsAtom& aAttribute,
                                           const nsAString& aAttributeValue,
                                           bool aCloneAllAttributes);
-
-  /**
-   * InsertContainerWithTransactionInternal() creates new element whose name is
-   * aWrapperTagName, moves aContentToBeWrapped into the new element, then,
-   * inserts the new element into where aContent was.  If aAttribute is not
-   * nsGkAtoms::_empty, aAttribute of the new element will be set to
-   * aAttributeValue.
-   *
-   * @param aContentToBeWrapped The content which will be wrapped with new
-   *                            element.
-   * @param aWrapperTagName     Element name of new element which will wrap
-   *                            aContent and be inserted into where aContent
-   *                            was.
-   * @param aAttribute          Attribute which should be set to the new
-   *                            element.  If this is nsGkAtoms::_empty,
-   *                            this does not set any attributes to the new
-   *                            element.
-   * @param aAttributeValue     Value to be set to aAttribute.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
-  InsertContainerWithTransactionInternal(nsIContent& aContentToBeWrapped,
-                                         const nsAtom& aWrapperTagName,
-                                         const nsAtom& aAttribute,
-                                         const nsAString& aAttributeValue);
 
   /**
    * DeleteSelectionAndCreateElement() creates a element whose name is aTag.

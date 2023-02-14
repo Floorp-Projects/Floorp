@@ -21,12 +21,13 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorForwards.h"
-#include "mozilla/SelectionState.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 
@@ -1259,7 +1260,17 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
   Result<CreateElementResult, nsresult> wrapWithNewElementToFormatResult =
       aHTMLEditor.InsertContainerWithTransaction(
           aContent, MOZ_KnownLive(HTMLPropertyRef()),
-          mAttribute ? *mAttribute : *nsGkAtoms::_empty, attributeValue);
+          !mAttribute ? HTMLEditor::DoNothingForNewElement
+                      // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+                      : [&](HTMLEditor& aHTMLEditor, Element& aNewElement,
+                            const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                          nsresult rv =
+                              aNewElement.SetAttr(kNameSpaceID_None, mAttribute,
+                                                  attributeValue, false);
+                          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                               "Element::SetAttr() failed");
+                          return rv;
+                        });
   if (MOZ_UNLIKELY(wrapWithNewElementToFormatResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
     return wrapWithNewElementToFormatResult.propagateErr();
