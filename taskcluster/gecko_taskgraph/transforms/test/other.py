@@ -1057,3 +1057,12 @@ def enable_parallel_marking_in_tsan_tests(config, tasks):
                 )
 
         yield task
+
+
+@transforms.add
+def apply_windows7_optimization(config, tasks):
+    for task in tasks:
+        if task["test-platform"].startswith("windows7"):
+            task["optimization"] = {"skip-unless-backstop": None}
+
+        yield task
