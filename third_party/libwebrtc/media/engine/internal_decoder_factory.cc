@@ -50,12 +50,14 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
     formats.push_back(h264_format);
 
-//  if (kDav1dIsIncluded && !field_trial::IsDisabled(kDav1dFieldTrial)) {
-//    formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
-//    formats.push_back(SdpVideoFormat(
-//        cricket::kAv1CodecName,
-//        {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
-//  }
+#if !defined(WEBRTC_MOZILLA_BUILD)
+  if (kDav1dIsIncluded && !field_trial::IsDisabled(kDav1dFieldTrial)) {
+    formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+    formats.push_back(SdpVideoFormat(
+        cricket::kAv1CodecName,
+        {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+  }
+#endif
 
   return formats;
 }
