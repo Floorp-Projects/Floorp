@@ -229,6 +229,7 @@ mochitest-browser-chrome:
             windows10-64-2004-ccov.*/.*: 14
             windows10.*-asan-qr/opt: 12
             windows10-32-qr/debug: 12
+            windows7-32.*: 20
             default: 7
     max-run-time:
         by-variant:
