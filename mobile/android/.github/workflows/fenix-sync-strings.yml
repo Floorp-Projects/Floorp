@@ -2,50 +2,50 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-name: "Fenix - Sync Strings"
+name: Fenix - Uplift Strings
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 jobs:
   main:
-    name: "Sync Strings"
-    runs-on: ubuntu-20.04
+    name: Uplift strings
+    runs-on: ubuntu-latest
     steps:
-      - name: "Discover Fenix Beta Version"
-        id: fenix-beta-version
+      - name: Discover Fenix beta version
+        id: discover-beta-version
         uses: mozilla-mobile/fenix-beta-version@4.2.2
-      - name: "Skip non-beta versions"
+      - name: Skip non-beta versions
         uses: andymckay/cancel-action@0.2
-        if: ${{ steps.fenix-beta-version.outputs.beta_version == '' }}
+        if: ${{ steps.discover-beta-version.outputs.beta_version == '' }}
       - name: Store ENV variables
         id: env-variables
         run: |
-          echo "beta_branch=releases_v${{ steps.fenix-beta-version.outputs.beta_version }}" >> $GITHUB_OUTPUT
-      - name: "Checkout Main Branch"
-        uses: actions/checkout@v2
+          echo "beta_branch=releases_v${{ steps.discover-beta-version.outputs.beta_version }}" >> $GITHUB_OUTPUT
+      - name: Checkout main branch
+        uses: actions/checkout@v3
         with:
           path: main
           ref: main
-      - name: "Checkout Beta Branch"
-        uses: actions/checkout@v2
+      - name: Checkout beta branch
+        uses: actions/checkout@v3
         with:
           path: beta
           ref: ${{ steps.env-variables.outputs.beta_branch }}
-      - name: "Sync Strings"
+      - name: Sync strings
         uses: mozilla-mobile/sync-strings-action@3.0.1
         with:
           toml_path: fenix/l10n.toml
           src: main
           dest: beta
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
-          branch: automation/uplift-fenix-strings-${{ steps.fenix-beta-version.outputs.beta_version }}
+          branch: automation/uplift-fenix-strings-${{ steps.discover-beta-version.outputs.beta_version }}
           commit-message: "Uplift Fenix strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           title: "Uplift Fenix strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           body: "This (automated) PR uplifts strings from `${{ github.ref_name }}` to `${{ steps.env-variables.outputs.beta_branch }}`"
