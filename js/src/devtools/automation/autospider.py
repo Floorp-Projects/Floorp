@@ -8,15 +8,12 @@ import argparse
 import json
 import logging
 import multiprocessing
-import re
 import os
 import platform
-import posixpath
 import shlex
 import shutil
 import subprocess
 import sys
-
 from collections import Counter, namedtuple
 from logging import info
 from os import environ as env
@@ -52,9 +49,6 @@ def quote(s):
 # paths. So for direct subprocess.* invocation, use normal paths from
 # DIR, but when running under the shell, use POSIX style paths.
 DIR = directories(os.path, os.getcwd())
-PDIR = directories(
-    posixpath, os.environ["PWD"], fixup=lambda s: re.sub(r"^(\w):", r"/\1", s)
-)
 
 AUTOMATION = env.get("AUTOMATION", False)
 
@@ -95,8 +89,8 @@ parser.add_argument(
     "--objdir",
     type=str,
     metavar="DIR",
-    # The real default must be set later so that OBJDIR and POBJDIR can be
-    # platform-dependent strings.
+    # The real default must be set later so that OBJDIR can be
+    # relative to the srcdir.
     default=env.get("OBJDIR"),
     help="object directory",
 )
@@ -185,8 +179,6 @@ if AUTOMATION and platform.system() == "Windows":
 OBJDIR = args.objdir or os.path.join(DIR.source, "obj-spider")
 OBJDIR = os.path.abspath(OBJDIR)
 OUTDIR = os.path.join(OBJDIR, "out")
-POBJDIR = args.objdir or posixpath.join(PDIR.source, "obj-spider")
-POBJDIR = posixpath.abspath(POBJDIR)
 MAKE = env.get("MAKE", "make")
 PYTHON = sys.executable
 
@@ -466,7 +458,7 @@ with open(mozconfig, "wt") as fh:
 
 env["MOZCONFIG"] = mozconfig
 
-mach = posixpath.join(PDIR.source, "mach")
+mach = os.path.join(DIR.source, "mach")
 
 if not args.nobuild:
     # Do the build
