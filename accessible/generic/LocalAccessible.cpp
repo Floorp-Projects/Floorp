@@ -3454,48 +3454,24 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         nsTArray<int32_t> charData;
 
         if (nsTextFrame* currTextFrame = do_QueryFrame(frame)) {
-          nsTextFrame* prevTextFrame = currTextFrame;
-          nsRect frameRect = currTextFrame->GetRect();
-          nsIFrame* nearestAccAncestorFrame =
-              LocalParent() ? LocalParent()->GetFrame() : nullptr;
           while (currTextFrame) {
-            nsRect contRect = currTextFrame->GetRect();
-            if (prevTextFrame->GetParent() != currTextFrame->GetParent() &&
-                nearestAccAncestorFrame) {
-              // Continuations can span multiple frame tree subtrees,
-              // particularly when multiline text is nested within both block
-              // and inline elements. In addition to using the position of this
-              // continuation to offset our char rects, we'll need to offset
-              // this continuation from the continuations that occurred before
-              // it. We don't know how many there are or what subtrees they're
-              // in, so we use a transform here. This also ensures our offset is
-              // accurate even if the intervening inline elements are not
-              // present in the a11y tree.
-              contRect = frameRect;
-              nsLayoutUtils::TransformRect(currTextFrame,
-                                           nearestAccAncestorFrame, contRect);
-            }
+            nsPoint contOffset = currTextFrame->GetOffsetTo(frame);
             nsTArray<nsRect> charBounds;
             currTextFrame->GetCharacterRectsInRange(
                 currTextFrame->GetContentOffset(),
                 currTextFrame->GetContentEnd(), charBounds);
-            for (const nsRect& charRect : charBounds) {
+            for (nsRect& charRect : charBounds) {
               // We expect each char rect to be relative to the text leaf
               // acc this text lives in. Unfortunately, GetCharacterRectsInRange
               // returns rects relative to their continuation. Add the
               // continuation's relative position here to make our final
-              // rect relative to the text leaf acc. Continuation rects include
-              // the padding of their parent text frame, so we compute the
-              // relative offset here instead of using `contRect`'s coordinates
-              // outright.
-              int computedX = charRect.x + (contRect.x - frameRect.x);
-              int computedY = charRect.y + (contRect.y - frameRect.y);
-              charData.AppendElement(computedX);
-              charData.AppendElement(computedY);
+              // rect relative to the text leaf acc.
+              charRect.MoveBy(contOffset);
+              charData.AppendElement(charRect.x);
+              charData.AppendElement(charRect.y);
               charData.AppendElement(charRect.width);
               charData.AppendElement(charRect.height);
             }
-            prevTextFrame = currTextFrame;
             currTextFrame = currTextFrame->GetNextContinuation();
           }
         }
