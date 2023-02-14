@@ -3128,7 +3128,6 @@ exports.CSS_PROPERTIES = {
       "text-underline-position",
       "text-decoration-skip-ink",
       "hyphenate-character",
-      "forced-color-adjust",
       "cursor",
       "pointer-events",
       "-moz-user-input",

@@ -629,7 +629,6 @@ cbindgen-types = [
     { gecko = "StyleDProperty", servo = "crate::values::specified::svg::DProperty" },
     { gecko = "StyleImageRendering", servo = "crate::values::computed::ImageRendering" },
     { gecko = "StylePrintColorAdjust", servo = "crate::values::computed::PrintColorAdjust" },
-    { gecko = "StyleForcedColorAdjust", servo = "crate::values::computed::ForcedColorAdjust" },
     { gecko = "StyleScrollbarGutter", servo = "crate::values::computed::ScrollbarGutter" },
     { gecko = "StyleHyphenateCharacter", servo = "crate::values::computed::HyphenateCharacter" },
     { gecko = "StyleContentVisibility", servo = "crate::values::computed::ContentVisibility" },
