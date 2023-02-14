@@ -227,7 +227,7 @@ subprojects {
                     pickFirst "win32-x86/attach_hotspot_windows.dll"
                 }
 
-                aaptOptions {
+                androidResources {
                     ignoreAssetsPattern "manifest.template.json"
                 }
 
