@@ -16,7 +16,6 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/checks.h"
 #include "third_party/libyuv/include/libyuv.h"
-#include "third_party/libyuv/include/libyuv/planar_functions.h"
 
 namespace webrtc {
 
