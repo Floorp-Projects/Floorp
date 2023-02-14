@@ -48,6 +48,7 @@ DIRS += [
     "/third_party/libwebrtc/api/frame_transformer_interface_gn",
     "/third_party/libwebrtc/api/function_view_gn",
     "/third_party/libwebrtc/api/libjingle_logging_api_gn",
+    "/third_party/libwebrtc/api/libjingle_peerconnection_api_gn",
     "/third_party/libwebrtc/api/make_ref_counted_gn",
     "/third_party/libwebrtc/api/media_stream_interface_gn",
     "/third_party/libwebrtc/api/metronome/metronome_gn",
