@@ -364,9 +364,6 @@ rtc_library("rtc_audio_video") {
     "../system_wrappers",
     "../system_wrappers:metrics",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../api:libjingle_peerconnection_api" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",
