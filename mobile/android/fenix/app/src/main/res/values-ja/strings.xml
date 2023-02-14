@@ -740,10 +740,17 @@
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d サイト</string>
+    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d サイト</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d ページ</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d サイト</string>
+    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d サイト</string>
+
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d ページ</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">最近閉じたタブ</string>
@@ -783,7 +790,7 @@
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
-    <string name="preferences_opening_screen">最初の画面</string>
+    <string name="preferences_opening_screen">起動画面</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">ホームページ</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
@@ -800,11 +807,11 @@
     <string name="close_tabs_after_one_month_summary">1 か月後に閉じる</string>
 
     <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
-    <string name="opening_screen_homepage_summary">ホームページ上に開く</string>
+    <string name="opening_screen_homepage_summary">ホームページを開きます</string>
     <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
-    <string name="opening_screen_last_tab_summary">最後のタブ上に開く</string>
+    <string name="opening_screen_last_tab_summary">最後のタブを開きます</string>
     <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
-    <string name="opening_screen_after_four_hours_of_inactivity_summary">4 時間後、ホームページ上に開きます</string>
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">4 時間経過後、ホームページを開きます</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
