@@ -364,6 +364,42 @@ def stlport_cppflags(value, ndk):
 add_old_configure_assignment("stlport_cppflags", stlport_cppflags)
 
 
+option(
+    env="STLPORT_LIBS",
+    nargs=1,
+    help="Options linker should pass for standard C++ library",
+)
+
+
+@depends("STLPORT_LIBS", ndk, android_cpu_arch)
+@imports(_from="os.path", _import="isfile")
+def stlport_libs(value, ndk, android_cpu_arch):
+    if value and len(value):
+        return value.split()
+    if not ndk:
+        return
+
+    cxx_libs = os.path.join(
+        ndk, "sources", "cxx-stl", "llvm-libc++", "libs", android_cpu_arch
+    )
+    if not isfile(os.path.join(cxx_libs, "libc++_static.a")):
+        die("Couldn't find path to llvm-libc++ in the android ndk")
+
+    libs = [
+        "-L%s" % cxx_libs,
+        "-lc++_static",
+    ]
+
+    for lib in ("c++abi", "unwind", "android_support"):
+        if isfile(os.path.join(cxx_libs, "lib%s.a" % lib)):
+            libs.append("-l%s" % lib)
+
+    return libs
+
+
+set_config("STLPORT_LIBS", stlport_libs)
+
+
 @depends(android_system, android_sysroot, android_toolchain, android_version)
 def extra_toolchain_flags(
     android_system, android_sysroot, toolchain_dir, android_version

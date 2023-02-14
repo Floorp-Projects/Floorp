@@ -190,14 +190,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ARCH_OPTS
 fi # COMPILE_ENVIRONMENT
 
-dnl ========================================================
-dnl Android libstdc++
-dnl ========================================================
-
-if test "$COMPILE_ENVIRONMENT"; then
-    MOZ_ANDROID_STLPORT
-fi # COMPILE_ENVIRONMENT
-
 if test -n "$COMPILE_ENVIRONMENT"; then
    MOZ_CONFIG_SANITIZE
 fi
