@@ -1240,6 +1240,20 @@ class HTMLEditor final : public EditorBase,
       std::function<nsresult(HTMLEditor& aHTMLEditor, Element& aNewElement,
                              const EditorDOMPoint& aPointToInsert)>;
   static InitializeInsertingElement DoNothingForNewElement;
+  static InitializeInsertingElement InsertNewBRElement;
+
+  /**
+   * Helper methods to implement InitializeInsertingElement.
+   */
+  MOZ_CAN_RUN_SCRIPT static Result<CreateElementResult, nsresult>
+  AppendNewElementToInsertingElement(
+      HTMLEditor& aHTMLEditor, const nsStaticAtom& aTagName,
+      Element& aNewElement,
+      const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
+  MOZ_CAN_RUN_SCRIPT static Result<CreateElementResult, nsresult>
+  AppendNewElementWithBRToInsertingElement(HTMLEditor& aHTMLEditor,
+                                           const nsStaticAtom& aTagName,
+                                           Element& aNewElement);
 
   /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
