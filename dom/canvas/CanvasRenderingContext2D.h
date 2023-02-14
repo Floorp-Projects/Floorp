@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/MruCache.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/ThreadLocal.h"
@@ -1004,23 +1003,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   inline const ContextState& CurrentState() const {
     return mStyleStack[mStyleStack.Length() - 1];
   }
-
-  struct FontStyleData {
-    nsCString mKey;
-    nsCString mUsedFont;
-    RefPtr<const ComputedStyle> mStyle;
-  };
-
-  class FontStyleCache
-      : public MruCache<nsACString, FontStyleData, FontStyleCache> {
-   public:
-    static HashNumber Hash(const nsACString& aKey) { return HashString(aKey); }
-    static bool Match(const nsACString& aKey, const FontStyleData& aVal) {
-      return aVal.mKey == aKey;
-    }
-  };
-
-  FontStyleCache mFontStyleCache;
 
   friend class CanvasGeneralPattern;
   friend class AdjustedTarget;

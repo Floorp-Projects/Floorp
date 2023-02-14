@@ -3315,21 +3315,14 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
     return SetFontInternalDisconnected(aFont, aError);
   }
 
-  auto entry = mFontStyleCache.Lookup(aFont);
-  if (!entry) {
-    FontStyleData newData;
-    newData.mKey = aFont;
-    newData.mStyle = GetFontStyleForServo(mCanvasElement, aFont, presShell,
-                                          newData.mUsedFont, aError);
-    entry.Set(newData);
-  }
-
-  const auto& data = entry.Data();
-  if (!data.mStyle) {
+  nsCString usedFont;
+  RefPtr<const ComputedStyle> sc =
+      GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
+  if (!sc) {
     return false;
   }
 
-  const nsStyleFont* fontStyle = data.mStyle->StyleFont();
+  const nsStyleFont* fontStyle = sc->StyleFont();
   nsPresContext* c = presShell->GetPresContext();
 
   // Purposely ignore the font size that respects the user's minimum
@@ -3365,7 +3358,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
   CurrentState().fontGroup = newFontGroup;
   NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
-  CurrentState().font = data.mUsedFont;
+  CurrentState().font = usedFont;
   CurrentState().fontFont = fontStyle->mFont;
   CurrentState().fontFont.size = fontStyle->mSize;
   CurrentState().fontLanguage = fontStyle->mLanguage;
