@@ -1,0 +1,177 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "IdentityCredentialPromptService",
+  "@mozilla.org/browser/identitycredentialpromptservice;1",
+  "nsIIdentityCredentialPromptService"
+);
+
+const TEST_URL = "https://example.com/";
+
+// Test that a policy dialog does not appear when no policies are given
+add_task(async function test_policy_dialog_empty() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  let prompt = IdentityCredentialPromptService.showPolicyPrompt(
+    tab.linkedBrowser.browsingContext,
+    {
+      configURL: "https://idp.example/",
+      clientId: "123",
+    },
+    {
+      accounts_endpoint: "",
+      client_metadata_endpoint: "",
+      id_assertion_endpoint: "",
+    },
+    {} // No policies!
+  );
+
+  // Make sure we resolve with true without interaction
+  let value = await prompt;
+  is(value, true, "Automatically accept the missing policies");
+
+  // Close tab
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Make sure that a policy dialog shows up when we have policies to show.
+// Also test the accept path.
+add_task(async function test_policy_dialog() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  let popupShown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
+  // Show a prompt- the operative argument is the last one
+  let prompt = IdentityCredentialPromptService.showPolicyPrompt(
+    tab.linkedBrowser.browsingContext,
+    {
+      configURL: "https://idp.example/",
+      clientId: "123",
+    },
+    {
+      accounts_endpoint: "",
+      client_metadata_endpoint: "",
+      id_assertion_endpoint: "",
+    },
+    {
+      privacy_policy_url: "https://idp.example/privacy-policy.html",
+      terms_of_service_url: "https://idp.example/terms-of-service.html",
+    }
+  );
+
+  // Make sure the popup shows up
+  await popupShown;
+
+  let popupHiding = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphiding"
+  );
+
+  // Validate the contents of the popup
+  let document = tab.linkedBrowser.browsingContext.topChromeWindow.document;
+
+  let description = document.getElementById(
+    "identity-credential-policy-explanation"
+  );
+
+  ok(
+    description.textContent.includes("idp.example"),
+    "IDP domain in the policy prompt text"
+  );
+  ok(
+    description.textContent.includes("example.com"),
+    "RP domain in the policy prompt text"
+  );
+  ok(
+    description.textContent.includes("Privacy Policy"),
+    "Link to the privacy policy in the policy prompt text"
+  );
+  ok(
+    description.textContent.includes("Terms of Service"),
+    "Link to the ToS in the policy prompt text"
+  );
+
+  let title = document.querySelector(
+    'description[popupid="identity-credential"]'
+  );
+  ok(
+    title.textContent.includes("idp.example"),
+    "IDP domain in the policy prompt header"
+  );
+
+  // Accept the policies
+  document
+    .getElementsByClassName("popup-notification-primary-button")[0]
+    .click();
+
+  // Make sure the call to the propmt resolves with true
+  let value = await prompt;
+  is(value, true, "User clicking accept resolves with true");
+
+  // Wait for the prompt to go away
+  await popupHiding;
+
+  // Close tab
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Test that rejecting the policies works
+add_task(async function test_policy_reject() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  let popupShown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
+  // Show the same prompt with policies
+  let prompt = IdentityCredentialPromptService.showPolicyPrompt(
+    tab.linkedBrowser.browsingContext,
+    {
+      configURL: "https://idp.example/",
+      clientId: "123",
+    },
+    {
+      accounts_endpoint: "",
+      client_metadata_endpoint: "",
+      id_assertion_endpoint: "",
+    },
+    {
+      privacy_policy_url: "https://idp.example/privacy-policy.html",
+      terms_of_service_url: "https://idp.example/terms-of-service.html",
+    }
+  );
+
+  // Wait for the prompt to show up
+  await popupShown;
+
+  let popupHiding = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphiding"
+  );
+
+  let document = tab.linkedBrowser.browsingContext.topChromeWindow.document;
+
+  // Click reject.
+  document
+    .getElementsByClassName("popup-notification-secondary-button")[0]
+    .click();
+
+  // Make sure the prompt call accepts with an indication of the user's reject choice.
+  let value = await prompt;
+  is(value, false, "User clicking reject causes the promise to resolve(false)");
+
+  // Wait for the popup to go away.
+  await popupHiding;
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+});
