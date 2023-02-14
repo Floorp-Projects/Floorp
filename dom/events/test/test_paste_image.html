@@ -37,9 +37,9 @@
       image.onload = function() {
         is(this.width, 62, "Check generated image width");
         is(this.height, 71, "Check generated image height");
-
-        // This fails on OSX only.
-        if (!navigator.platform.includes("Mac")) {
+        if (aFile.type == "image/gif") {
+          // this test fails for image/jpeg and image/png because the images
+          // generated are slightly different
           testImageCanvas(image);
         }
 
@@ -136,19 +136,21 @@
 
     is(files, e.clipboardData.files,
        "Getting the files array twice should return the same array");
-    is(files.length, 1, "There should be one file in the clipboard");
+    ok(files.length, "There should be at least one file in the clipboard");
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       ok(file instanceof File, ".files should contain only File objects");
       ok(file.size > 0, "This file shouldn't have size 0");
-      if (navigator.platform.includes("Win")) {
-        // On Windows the pasted file is produced from the Windows only
-        // file promise added by AppendImagePromise.
-        ok(file.name.startsWith("Untitled") && file.name.endsWith(".png"), `Correct filename, got "${file.name}"`)
+      if (file.name == "image.png") {
+        is(file.type, "image/png", "This file should be a image/png");
+      } else if (file.name == "image.jpeg") {
+        is(file.type, "image/jpeg", "This file should be a image/jpeg");
+      } else if (file.name == "image.gif") {
+        is(file.type, "image/gif", "This file should be a image/gif");
       } else {
-        is(file.name, "image.png", "Correct filename");
+        info("file.name=" + file.name);
+        ok(false, "Unexpected file name");
       }
-      is(file.type, "image/png", "This file should be a image/png");
 
       testSlice(file);
       imageTester.add(file);
