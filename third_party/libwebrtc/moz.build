@@ -78,6 +78,7 @@ DIRS += [
     "/third_party/libwebrtc/api/transport/network_control_gn",
     "/third_party/libwebrtc/api/transport/rtp/dependency_descriptor_gn",
     "/third_party/libwebrtc/api/transport/rtp/rtp_source_gn",
+    "/third_party/libwebrtc/api/transport/stun_types_gn",
     "/third_party/libwebrtc/api/transport_api_gn",
     "/third_party/libwebrtc/api/units/data_rate_gn",
     "/third_party/libwebrtc/api/units/data_size_gn",
