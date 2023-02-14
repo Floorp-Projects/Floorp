@@ -250,7 +250,7 @@ android.applicationVariants.all { variant ->
 
     println("----------------------------------------------")
     println("Variant name:      " + variant.name)
-    println("Application ID:    " + [variant.mergedFlavor.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Application ID:    " + [variant.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
     println("Build type:        " + variant.buildType.name)
     println("Flavor:            " + variant.flavorName)
     println("Telemetry enabled: " + !isDebug)
