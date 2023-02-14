@@ -7,7 +7,7 @@
 <script>
 function check(next) {
   var is_range = function(aTest, aValue, aRange, aMsg) {
-    window.opener.ok(aTest < aValue + aRange && aTest > aValue - aRange, aMsg);
+    window.opener.ok(aTest < aValue + aRange && aTest > aValue - aRange, aMsg + `: ${aTest} vs. ${aValue}`);
   };
   is_range(window.innerWidth, 170, 5, 'parameter width should be taken into account');
   is_range(window.innerHeight, 170, 5, 'parameter height should be taken into account');
