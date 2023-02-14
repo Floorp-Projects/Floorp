@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const BEST_ICON_SIZE = 32;
 
+// Used in plain mochitests to enable automation
 function fulfilledPromiseFromFirstListElement(list) {
   if (list.length) {
     return Promise.resolve(0);
@@ -31,6 +32,7 @@ function fulfilledPromiseFromFirstListElement(list) {
   return Promise.reject();
 }
 
+// Converts a "blob" to a data URL
 function blobToDataUrl(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -44,6 +46,7 @@ function blobToDataUrl(blob) {
   });
 }
 
+// Converts a URL into a data:// url, suitable for inclusion in Chrome UI
 async function fetchToDataUrl(url) {
   let result = await fetch(url);
   if (!result.ok) {
@@ -88,8 +91,11 @@ export class IdentityCredentialPromptService {
       throw new Error("Mismatch argument array length");
     }
 
+    // Map each identity manifest to a promise that would resolve to its icon
     let promises = identityManifests.map(providerManifest => {
       if (providerManifest?.branding?.icons?.length) {
+        // Prefer a vector icon, then an exactly sized icon,
+        // the the largest icon available.
         let iconsArray = providerManifest.branding.icons;
         let vectorIcon = iconsArray.find(icon => !icon.size);
         if (vectorIcon) {
@@ -106,9 +112,12 @@ export class IdentityCredentialPromptService {
           return fetchToDataUrl(biggestIcon.url);
         }
       }
+      // If we didn't have a manifest with an icon, push a rejection.
+      // This will be replaced with the default icon.
       return Promise.reject();
     });
 
+    // Sanity check that we made one promise per IDP.
     if (promises.length != identityManifests.length) {
       throw new Error("Mismatch promise array length");
     }
@@ -151,6 +160,9 @@ export class IdentityCredentialPromptService {
         {}
       );
       let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
+
+      // Create the radio button,
+      // including the check callback and the initial state
       let newRadio = newItem.getElementsByClassName(
         "identity-credential-list-item-radio"
       )[0];
@@ -167,6 +179,8 @@ export class IdentityCredentialPromptService {
         newRadio.checked = true;
         newItem.classList.add("checked");
       }
+
+      // Set the icon to the data url if we have one
       let iconResult = iconResults[providerIndex];
       if (iconResult.status == "fulfilled") {
         let newIcon = newItem.getElementsByClassName(
@@ -174,12 +188,17 @@ export class IdentityCredentialPromptService {
         )[0];
         newIcon.setAttribute("src", iconResult.value);
       }
+
+      // Set the words that the user sees in the selection
       newItem.getElementsByClassName(
         "identity-credential-list-item-label"
       )[0].textContent = displayDomain;
+
+      // Add the new item to the DOM!
       listBox.append(newItem);
     }
 
+    // Create a new promise to wrap the callbacks of the popup buttons
     return new Promise((resolve, reject) => {
       // Construct the necessary arguments for notification behavior
       let options = {
@@ -394,12 +413,19 @@ export class IdentityCredentialPromptService {
       throw new Error("Null browser provided");
     }
 
+    // Map to an array of promises that resolve to a data URL,
+    // encoding the corresponding account's picture
     let promises = accountList.accounts.map(async account => {
       if (!account?.picture) {
         throw new Error("Missing picture");
       }
       return fetchToDataUrl(account.picture);
     });
+
+    // Sanity check that we made one promise per account.
+    if (promises.length != accountList.accounts.length) {
+      throw new Error("Incorrect number of promises obtained");
+    }
 
     let pictureResults = await Promise.allSettled(promises);
 
@@ -442,6 +468,8 @@ export class IdentityCredentialPromptService {
     );
     for (const [accountIndex, account] of accountList.accounts.entries()) {
       let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
+
+      // Add the new radio button, including pre-selection and the callback
       let newRadio = newItem.getElementsByClassName(
         "identity-credential-list-item-radio"
       )[0];
@@ -458,6 +486,8 @@ export class IdentityCredentialPromptService {
         newRadio.checked = true;
         newItem.classList.add("checked");
       }
+
+      // Change the default picture if one exists
       let pictureResult = pictureResults[accountIndex];
       if (pictureResult.status == "fulfilled") {
         let newPicture = newItem.getElementsByClassName(
@@ -465,15 +495,20 @@ export class IdentityCredentialPromptService {
         )[0];
         newPicture.setAttribute("src", pictureResult.value);
       }
+
+      // Add information to the label
       newItem.getElementsByClassName(
         "identity-credential-list-item-label-name"
       )[0].textContent = account.name;
       newItem.getElementsByClassName(
         "identity-credential-list-item-label-email"
       )[0].textContent = account.email;
+
+      // Add the item to the DOM!
       listBox.append(newItem);
     }
 
+    // Create a new promise to wrap the callbacks of the popup buttons
     return new Promise(function(resolve, reject) {
       // Construct the necessary arguments for notification behavior
       let options = {
