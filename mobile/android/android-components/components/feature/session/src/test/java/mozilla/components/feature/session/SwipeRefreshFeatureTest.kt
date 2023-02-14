@@ -123,6 +123,7 @@ class SwipeRefreshFeatureTest {
     private open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun setDynamicToolbarMaxHeight(height: Int) {}
+        override fun setActivityContext(context: Context?) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun clearSelection() {}
         override fun render(session: EngineSession) {}

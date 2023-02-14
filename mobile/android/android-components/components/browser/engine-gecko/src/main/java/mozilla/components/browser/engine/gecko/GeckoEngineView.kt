@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
+import mozilla.components.browser.engine.gecko.activity.GeckoViewActivityContextDelegate
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
@@ -20,6 +21,7 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import java.lang.ref.WeakReference
 
 /**
  * Gecko-based EngineView implementation.
@@ -176,6 +178,10 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override fun setDynamicToolbarMaxHeight(height: Int) {
         geckoView.setDynamicToolbarMaxHeight(height)
+    }
+
+    override fun setActivityContext(context: Context?) {
+        geckoView.activityContextDelegate = GeckoViewActivityContextDelegate(WeakReference(context))
     }
 
     @Suppress("TooGenericExceptionCaught")

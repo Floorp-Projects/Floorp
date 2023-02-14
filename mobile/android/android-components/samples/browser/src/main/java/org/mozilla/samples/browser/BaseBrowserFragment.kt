@@ -74,6 +74,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
         binding.toolbar.display.menuBuilder = components.menuBuilder
+        binding.engineView.setActivityContext(requireActivity())
 
         sessionFeature.set(
             feature = SessionFeature(
@@ -296,6 +297,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     }
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.engineView.setActivityContext(null)
         _binding = null
     }
 }

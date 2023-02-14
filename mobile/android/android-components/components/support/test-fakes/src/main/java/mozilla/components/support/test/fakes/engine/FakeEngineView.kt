@@ -25,6 +25,8 @@ class FakeEngineView(context: Context) : View(context), EngineView {
 
     override fun setDynamicToolbarMaxHeight(height: Int) = Unit
 
+    override fun setActivityContext(context: Context?) = Unit
+
     override fun release() = Unit
 
     override var selectionActionDelegate: SelectionActionDelegate? = null

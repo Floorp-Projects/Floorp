@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.view.View
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -129,6 +130,13 @@ interface EngineView {
      * @param height The maximum possible height of the toolbar.
      */
     fun setDynamicToolbarMaxHeight(height: Int)
+
+    /**
+     * Sets the Activity context for GeckoView.
+     *
+     * @param context The Activity context.
+     */
+    fun setActivityContext(context: Context?)
 
     /**
      * A delegate that will handle interactions with text selection context menus.
