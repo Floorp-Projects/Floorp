@@ -1230,12 +1230,6 @@ projects:
     publish: false
     upstream_dependencies:
     - concept-fetch
-  tooling-glean-gradle:
-    artifact-type: jar
-    description: A Gradle plugin to generate code for Glean metrics.
-    path: components/tooling/glean-gradle-plugin
-    publish: true
-    upstream_dependencies: []
   tooling-lint:
     description: Custom Lint checks for using and writing components.
     path: components/tooling/lint

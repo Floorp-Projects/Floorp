@@ -125,7 +125,6 @@
 
 /components/tooling/detekt/
 /components/tooling/fetch-tests/            @csadilek
-/components/tooling/glean-gradle-plugin/    @mozilla-mobile/telemetry
 /components/tooling/lint/                   @mozilla-mobile/act
 
 /components/ui/autocomplete/                @mozilla-mobile/act

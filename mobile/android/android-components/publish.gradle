@@ -8,7 +8,6 @@ def libVcsUrl = properties.libVcsUrl
 def libLicense = properties.libLicense
 def libLicenseUrl = properties.libLicenseUrl
 
-// Must match the implementation in components/tooling/glean-gradle-plugin/build.gradle
 static def getLocalPublicationTimestamp() {
     def date = new Date()
     return date.format('yyyyMMddHHmmss')
