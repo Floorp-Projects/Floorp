@@ -4,10 +4,14 @@
 
 package mozilla.components.browser.menu2
 
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
-import mozilla.components.browser.menu2.ext.displayPopup
+import androidx.annotation.VisibleForTesting
+import androidx.core.widget.PopupWindowCompat
+import mozilla.components.browser.menu2.ext.MenuPositioningData
+import mozilla.components.browser.menu2.ext.inferMenuPositioningData
 import mozilla.components.browser.menu2.view.MenuView
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.MenuStyle
@@ -64,7 +68,14 @@ class BrowserMenuController(
             view.onDismiss = ::dismiss
             view.onReopenMenu = ::reopenMenu
             setOnDismissListener(menuDismissListener)
-            displayPopup(view, anchor, orientation, style)
+            inferMenuPositioningData(
+                containerView = view,
+                anchor = anchor,
+                style = style,
+                orientation = orientation,
+            )?.let {
+                displayPopup(it)
+            }
         }.also {
             currentPopupInfo = PopupMenuInfo(
                 window = it,
@@ -91,8 +102,15 @@ class BrowserMenuController(
             view.submitList(null)
             // Display the new nested list
             view.submitList(nested?.subMenuItems ?: menuCandidates)
-            // Reopen the menu
-            displayPopup(view, info.anchor, info.orientation, style)
+            // Attempt tp reopen the menu
+            inferMenuPositioningData(
+                containerView = view,
+                anchor = info.anchor,
+                style = style,
+                orientation = info.orientation,
+            )?.let {
+                displayPopup(it)
+            }
         }
         currentPopupInfo = info.copy(nested = nested)
     }
@@ -142,4 +160,18 @@ class BrowserMenuController(
         val orientation: Orientation?,
         val nested: NestedMenuCandidate? = null,
     )
+}
+
+/**
+ * Show a [PopupWindow] given the positioning data.
+ */
+@VisibleForTesting
+internal fun PopupWindow.displayPopup(positioningData: MenuPositioningData) {
+    inputMethodMode = PopupWindow.INPUT_METHOD_NOT_NEEDED
+
+    animationStyle = positioningData.animation
+    height = positioningData.containerHeight
+
+    PopupWindowCompat.setOverlapAnchor(this, true)
+    showAtLocation(positioningData.anchor, Gravity.NO_GRAVITY, positioningData.x, positioningData.y)
 }

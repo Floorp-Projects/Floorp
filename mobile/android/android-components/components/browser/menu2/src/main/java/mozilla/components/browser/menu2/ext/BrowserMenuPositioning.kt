@@ -100,6 +100,7 @@ internal fun inferMenuPositioningData(
     }
 
     return MenuPositioningData(
+        anchor = anchor,
         x = anchorX + horizontalOffset,
         y = anchorY + verticalOffset,
         containerHeight = containerViewHeight,
@@ -233,6 +234,11 @@ private fun getCroppedMenuContainerHeight(
  * Data needed for menu positioning.
  */
 data class MenuPositioningData(
+    /**
+     * Android View that the PopupWindow should be anchored to.
+     */
+    val anchor: View,
+
     /**
      * [WindowManager#LayoutParams#x] of params the menu will be added with.
      */
