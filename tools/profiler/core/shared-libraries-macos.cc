@@ -128,6 +128,7 @@ static void addSharedLibrary(const platform_mach_header* header,
   }
 
   nsAutoCString uuid;
+  nsAutoCString breakpadId;
   if (uuid_bytes != nullptr) {
     uuid.AppendPrintf(
         "%02X"
@@ -145,12 +146,18 @@ static void addSharedLibrary(const platform_mach_header* header,
         "%02X"
         "%02X"
         "%02X"
-        "%02X"
-        "0" /* breakpad id age */,
+        "%02X",
         uuid_bytes[0], uuid_bytes[1], uuid_bytes[2], uuid_bytes[3],
         uuid_bytes[4], uuid_bytes[5], uuid_bytes[6], uuid_bytes[7],
         uuid_bytes[8], uuid_bytes[9], uuid_bytes[10], uuid_bytes[11],
         uuid_bytes[12], uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
+
+    // Breakpad id is the same as the uuid but with the additional trailing 0
+    // for the breakpad id age.
+    breakpadId.AppendPrintf(
+        "%s"
+        "0" /* breakpad id age */,
+        uuid.get());
   }
 
   nsAutoString pathStr;
@@ -166,7 +173,7 @@ static void addSharedLibrary(const platform_mach_header* header,
   const NXArchInfo* archInfo =
       NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
 
-  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid, nsCString(),
+  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, breakpadId, uuid,
                                       nameStr, pathStr, nameStr, pathStr, ""_ns,
                                       archInfo ? archInfo->name : ""));
 }
