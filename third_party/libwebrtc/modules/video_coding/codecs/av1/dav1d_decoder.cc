@@ -20,12 +20,11 @@
 #include "rtc_base/logging.h"
 #if defined(WEBRTC_MOZILLA_BUILD)
 #include "dav1d/dav1d.h"
-#include "libyuv/include/libyuv/convert.h"
 #else
 #include "third_party/dav1d/libdav1d/include/dav1d/dav1d.h"
+#endif
 #include "third_party/libyuv/include/libyuv/convert.h"
 #include "third_party/libyuv/include/libyuv/planar_functions.h"
-#endif
 
 namespace webrtc {
 namespace {

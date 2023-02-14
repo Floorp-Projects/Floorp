@@ -541,9 +541,6 @@ rtc_library("webrtc_h264") {
     "svc:scalable_video_controller",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/strings",
@@ -558,12 +555,6 @@ rtc_library("webrtc_h264") {
     if (!build_with_mozilla) {
       deps += [ "../../media:rtc_media_base" ]
     }
-  }
-  if (build_with_mozilla) {
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
   }
 }
 
@@ -664,9 +655,6 @@ rtc_library("webrtc_vp8") {
     "svc:scalability_mode_util",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -674,12 +662,6 @@ rtc_library("webrtc_vp8") {
   ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
-  }
-  if (build_with_mozilla) {
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
   }
 }
 
@@ -798,13 +780,6 @@ rtc_library("webrtc_vp9") {
     "svc:svc_rate_allocator",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
@@ -947,16 +922,7 @@ if (rtc_include_tests) {
       "../rtp_rtcp:rtp_rtcp_format",
       "//third_party/libyuv",
     ]
-    if (build_with_mozilla) {
-      deps -= [ "//third_party/libyuv" ]
-    }
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-    if (build_with_mozilla) {
-      include_dirs = [
-        "/media/libyuv",
-        "/media/libyuv/libyuv/include",
-      ]
-    }
   }
 
   video_coding_modules_tests_resources = []
@@ -1130,13 +1096,6 @@ if (rtc_include_tests) {
       "codecs/av1:dav1d_decoder",
       "//third_party/libyuv",
     ]
-    if (build_with_mozilla) {
-      deps -= [ "//third_party/libyuv" ]
-      include_dirs = [
-        "/media/libyuv",
-        "/media/libyuv/libyuv/include",
-      ]
-    }
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/types:optional",

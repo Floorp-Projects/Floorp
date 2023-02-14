@@ -72,13 +72,6 @@ rtc_library("common_video") {
     "../system_wrappers:metrics",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/numeric:bits",
     "//third_party/abseil-cpp/absl/types:optional",

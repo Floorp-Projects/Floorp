@@ -9,14 +9,14 @@
  */
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "libyuv/planar_functions.h"
 
 #include <cstdint>
 
 #include "api/video/i420_buffer.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/checks.h"
-#include "libyuv/include/libyuv.h"
+#include "third_party/libyuv/include/libyuv.h"
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
 
 namespace webrtc {
 
