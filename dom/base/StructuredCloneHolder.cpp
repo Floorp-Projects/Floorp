@@ -1282,6 +1282,13 @@ StructuredCloneHolder::CustomReadTransferHandler(
       aTag == SCTAG_DOM_VIDEOFRAME &&
       CloneScope() == StructuredCloneScope::SameProcess) {
     MOZ_ASSERT(aContent);
+
+    JS::Rooted<JSObject*> globalObj(aCx, mGlobal->GetGlobalJSObject());
+    // aContent will be released in CustomFreeTransferHandler.
+    if (!VideoFrame_Binding::ConstructorEnabled(aCx, globalObj)) {
+      return false;
+    }
+
     VideoFrame::TransferredData* data =
         static_cast<VideoFrame::TransferredData*>(aContent);
     nsCOMPtr<nsIGlobalObject> global = mGlobal;
