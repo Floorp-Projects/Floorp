@@ -489,9 +489,7 @@ class PermissionPrompt {
                 this.permissionKey,
                 promptAction.action,
                 lazy.SitePermissions.SCOPE_TEMPORARY,
-                this.browser,
-                undefined,
-                this.temporaryPermissionURI
+                this.browser
               );
             }
 
@@ -512,9 +510,7 @@ class PermissionPrompt {
                 this.permissionKey,
                 promptAction.action,
                 lazy.SitePermissions.SCOPE_TEMPORARY,
-                this.browser,
-                undefined,
-                this.temporaryPermissionURI
+                this.browser
               );
             }
           }
