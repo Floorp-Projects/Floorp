@@ -22,11 +22,36 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+const BEST_ICON_SIZE = 32;
+
 function fulfilledPromiseFromFirstListElement(list) {
   if (list.length) {
     return Promise.resolve(0);
   }
   return Promise.reject();
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("loadend", function() {
+      if (reader.error) {
+        reject(reader.error);
+      }
+      resolve(reader.result);
+    });
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function fetchToDataUrl(url) {
+  let result = await fetch(url);
+  if (!result.ok) {
+    throw result.status;
+  }
+  let blob = await result.blob();
+  let data = blobToDataUrl(blob);
+  return data;
 }
 
 /**
@@ -45,80 +70,117 @@ export class IdentityCredentialPromptService {
    * @param {IdentityInternalManifest[]} identityManifests - The manifests corresponding 1-to-1 with identityProviders
    * @returns {Promise<number>} The user-selected identity provider
    */
-  showProviderPrompt(browsingContext, identityProviders, identityManifests) {
+  async showProviderPrompt(
+    browsingContext,
+    identityProviders,
+    identityManifests
+  ) {
     // For testing only.
     if (lazy.SELECT_FIRST_IN_UI_LISTS) {
       return fulfilledPromiseFromFirstListElement(identityProviders);
     }
-    return new Promise(function(resolve, reject) {
-      let browser = browsingContext.top.embedderElement;
-      if (!browser) {
-        reject();
-        return;
-      }
+    let browser = browsingContext.top.embedderElement;
+    if (!browser) {
+      throw new Error("Null browser provided");
+    }
 
-      if (identityProviders.length != identityManifests.length) {
-        reject();
-      }
+    if (identityProviders.length != identityManifests.length) {
+      throw new Error("Mismatch argument array length");
+    }
 
-      // Localize all strings to be used
-      // Bug 1797154 - Convert localization calls to use the async formatValues.
-      let localization = new Localization(
-        ["preview/identityCredentialNotification.ftl"],
-        true
-      );
-      let headerMessage = localization.formatValueSync(
-        "identity-credential-header-providers"
-      );
-      let [accept, cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-accept-button" },
-        { id: "identity-credential-cancel-button" },
-      ]);
-
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
-      let acceptLabel = accept.attributes.find(x => x.name == "label").value;
-      let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
-
-      // Build the choices into the panel
-      let listBox = browser.ownerDocument.getElementById(
-        "identity-credential-provider-selector-container"
-      );
-      while (listBox.firstChild) {
-        listBox.removeChild(listBox.lastChild);
-      }
-      let itemTemplate = browser.ownerDocument.getElementById(
-        "template-credential-provider-list-item"
-      );
-      for (const [providerIndex, provider] of identityProviders.entries()) {
-        let providerURL = new URL(provider.configURL);
-        let displayDomain = lazy.IDNService.convertToDisplayIDN(
-          providerURL.host,
-          {}
-        );
-        let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
-        let newRadio = newItem.getElementsByClassName(
-          "identity-credential-list-item-radio"
-        )[0];
-        newRadio.value = providerIndex;
-        newRadio.addEventListener("change", function(event) {
-          for (let item of listBox.children) {
-            item.classList.remove("checked");
-          }
-          if (event.target.checked) {
-            event.target.parentElement.classList.add("checked");
-          }
-        });
-        if (providerIndex == 0) {
-          newRadio.checked = true;
-          newItem.classList.add("checked");
+    let promises = identityManifests.map(providerManifest => {
+      if (providerManifest?.branding?.icons?.length) {
+        let iconsArray = providerManifest.branding.icons;
+        let vectorIcon = iconsArray.find(icon => !icon.size);
+        if (vectorIcon) {
+          return fetchToDataUrl(vectorIcon.url);
         }
-        newItem.getElementsByClassName(
-          "identity-credential-list-item-label"
-        )[0].textContent = displayDomain;
-        listBox.append(newItem);
+        let exactIcon = iconsArray.find(icon => icon.size == BEST_ICON_SIZE);
+        if (exactIcon) {
+          return fetchToDataUrl(exactIcon.url);
+        }
+        let biggestIcon = iconsArray.sort(
+          (iconA, iconB) => iconB.size - iconA.size
+        )[0];
+        if (biggestIcon) {
+          return fetchToDataUrl(biggestIcon.url);
+        }
       }
+      return Promise.reject();
+    });
 
+    if (promises.length != identityManifests.length) {
+      throw new Error("Mismatch promise array length");
+    }
+
+    let iconResults = await Promise.allSettled(promises);
+
+    // Localize all strings to be used
+    // Bug 1797154 - Convert localization calls to use the async formatValues.
+    let localization = new Localization(
+      ["preview/identityCredentialNotification.ftl"],
+      true
+    );
+    let headerMessage = localization.formatValueSync(
+      "identity-credential-header-providers"
+    );
+    let [accept, cancel] = localization.formatMessagesSync([
+      { id: "identity-credential-accept-button" },
+      { id: "identity-credential-cancel-button" },
+    ]);
+
+    let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
+    let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
+    let acceptLabel = accept.attributes.find(x => x.name == "label").value;
+    let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
+
+    // Build the choices into the panel
+    let listBox = browser.ownerDocument.getElementById(
+      "identity-credential-provider-selector-container"
+    );
+    while (listBox.firstChild) {
+      listBox.removeChild(listBox.lastChild);
+    }
+    let itemTemplate = browser.ownerDocument.getElementById(
+      "template-credential-provider-list-item"
+    );
+    for (const [providerIndex, provider] of identityProviders.entries()) {
+      let providerURL = new URL(provider.configURL);
+      let displayDomain = lazy.IDNService.convertToDisplayIDN(
+        providerURL.host,
+        {}
+      );
+      let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
+      let newRadio = newItem.getElementsByClassName(
+        "identity-credential-list-item-radio"
+      )[0];
+      newRadio.value = providerIndex;
+      newRadio.addEventListener("change", function(event) {
+        for (let item of listBox.children) {
+          item.classList.remove("checked");
+        }
+        if (event.target.checked) {
+          event.target.parentElement.classList.add("checked");
+        }
+      });
+      if (providerIndex == 0) {
+        newRadio.checked = true;
+        newItem.classList.add("checked");
+      }
+      let iconResult = iconResults[providerIndex];
+      if (iconResult.status == "fulfilled") {
+        let newIcon = newItem.getElementsByClassName(
+          "identity-credential-list-item-icon"
+        )[0];
+        newIcon.setAttribute("src", iconResult.value);
+      }
+      newItem.getElementsByClassName(
+        "identity-credential-list-item-label"
+      )[0].textContent = displayDomain;
+      listBox.append(newItem);
+    }
+
+    return new Promise((resolve, reject) => {
       // Construct the necessary arguments for notification behavior
       let options = {
         hideClose: true,
@@ -316,7 +378,7 @@ export class IdentityCredentialPromptService {
    * @param {IdentityInternalManifest} providerManifest - The manifest of the selected identity provider
    * @returns {Promise<IdentityAccount>} The user-selected account
    */
-  showAccountListPrompt(
+  async showAccountListPrompt(
     browsingContext,
     accountList,
     provider,
@@ -326,77 +388,93 @@ export class IdentityCredentialPromptService {
     if (lazy.SELECT_FIRST_IN_UI_LISTS) {
       return fulfilledPromiseFromFirstListElement(accountList.accounts);
     }
-    return new Promise(function(resolve, reject) {
-      let browser = browsingContext.top.embedderElement;
-      if (!browser) {
-        reject();
-        return;
-      }
 
-      // Localize all strings to be used
-      // Bug 1797154 - Convert localization calls to use the async formatValues.
-      let localization = new Localization(
-        ["preview/identityCredentialNotification.ftl"],
-        true
-      );
-      let providerURL = new URL(provider.configURL);
-      let displayDomain = lazy.IDNService.convertToDisplayIDN(
-        providerURL.host,
-        {}
-      );
-      let headerMessage = localization.formatValueSync(
-        "identity-credential-header-accounts",
-        {
-          provider: displayDomain,
+    let browser = browsingContext.top.embedderElement;
+    if (!browser) {
+      throw new Error("Null browser provided");
+    }
+
+    let promises = accountList.accounts.map(async account => {
+      if (!account?.picture) {
+        throw new Error("Missing picture");
+      }
+      return fetchToDataUrl(account.picture);
+    });
+
+    let pictureResults = await Promise.allSettled(promises);
+
+    // Localize all strings to be used
+    // Bug 1797154 - Convert localization calls to use the async formatValues.
+    let localization = new Localization(
+      ["preview/identityCredentialNotification.ftl"],
+      true
+    );
+    let providerURL = new URL(provider.configURL);
+    let displayDomain = lazy.IDNService.convertToDisplayIDN(
+      providerURL.host,
+      {}
+    );
+    let headerMessage = localization.formatValueSync(
+      "identity-credential-header-accounts",
+      {
+        provider: displayDomain,
+      }
+    );
+    let [accept, cancel] = localization.formatMessagesSync([
+      { id: "identity-credential-accept-button" },
+      { id: "identity-credential-cancel-button" },
+    ]);
+
+    let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
+    let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
+    let acceptLabel = accept.attributes.find(x => x.name == "label").value;
+    let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
+
+    // Build the choices into the panel
+    let listBox = browser.ownerDocument.getElementById(
+      "identity-credential-account-selector-container"
+    );
+    while (listBox.firstChild) {
+      listBox.removeChild(listBox.lastChild);
+    }
+    let itemTemplate = browser.ownerDocument.getElementById(
+      "template-credential-account-list-item"
+    );
+    for (const [accountIndex, account] of accountList.accounts.entries()) {
+      let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
+      let newRadio = newItem.getElementsByClassName(
+        "identity-credential-list-item-radio"
+      )[0];
+      newRadio.value = accountIndex;
+      newRadio.addEventListener("change", function(event) {
+        for (let item of listBox.children) {
+          item.classList.remove("checked");
         }
-      );
-      let [accept, cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-accept-button" },
-        { id: "identity-credential-cancel-button" },
-      ]);
-
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
-      let acceptLabel = accept.attributes.find(x => x.name == "label").value;
-      let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
-
-      // Build the choices into the panel
-      let listBox = browser.ownerDocument.getElementById(
-        "identity-credential-account-selector-container"
-      );
-      while (listBox.firstChild) {
-        listBox.removeChild(listBox.lastChild);
+        if (event.target.checked) {
+          event.target.parentElement.classList.add("checked");
+        }
+      });
+      if (accountIndex == 0) {
+        newRadio.checked = true;
+        newItem.classList.add("checked");
       }
-      let itemTemplate = browser.ownerDocument.getElementById(
-        "template-credential-account-list-item"
-      );
-      for (const [accountIndex, account] of accountList.accounts.entries()) {
-        let newItem = itemTemplate.content.firstElementChild.cloneNode(true);
-        let newRadio = newItem.getElementsByClassName(
-          "identity-credential-list-item-radio"
+      let pictureResult = pictureResults[accountIndex];
+      if (pictureResult.status == "fulfilled") {
+        let newPicture = newItem.getElementsByClassName(
+          "identity-credential-list-item-icon"
         )[0];
-        newRadio.value = accountIndex;
-        newRadio.addEventListener("change", function(event) {
-          for (let item of listBox.children) {
-            item.classList.remove("checked");
-          }
-          if (event.target.checked) {
-            event.target.parentElement.classList.add("checked");
-          }
-        });
-        if (accountIndex == 0) {
-          newRadio.checked = true;
-          newItem.classList.add("checked");
-        }
-        newItem.getElementsByClassName(
-          "identity-credential-list-item-label-name"
-        )[0].textContent = account.name;
-        newItem.getElementsByClassName(
-          "identity-credential-list-item-label-email"
-        )[0].textContent = account.email;
-        listBox.append(newItem);
+        newPicture.setAttribute("src", pictureResult.value);
       }
+      newItem.getElementsByClassName(
+        "identity-credential-list-item-label-name"
+      )[0].textContent = account.name;
+      newItem.getElementsByClassName(
+        "identity-credential-list-item-label-email"
+      )[0].textContent = account.email;
+      listBox.append(newItem);
+    }
 
+    return new Promise(function(resolve, reject) {
       // Construct the necessary arguments for notification behavior
       let options = {
         hideClose: true,
