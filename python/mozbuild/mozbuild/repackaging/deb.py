@@ -12,6 +12,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from string import Template
 
+import mozfile
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 
@@ -49,8 +50,7 @@ def repackage_deb(infile, output, template_dir, arch):
 
     extract_dir = os.path.join(tmpdir, "source")
     try:
-        with tarfile.open(infile) as tar:
-            tar.extractall(path=extract_dir)
+        mozfile.extract_tarball(infile, extract_dir)
         finder = FileFinder(extract_dir)
         values = get_application_ini_values(
             finder,
