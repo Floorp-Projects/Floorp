@@ -2604,6 +2604,7 @@ static void AddSharedLibraryInfoToStream(JSONWriter& aWriter,
   aWriter.StringProperty("debugPath",
                          NS_ConvertUTF16toUTF8(aLib.GetDebugPath()));
   aWriter.StringProperty("breakpadId", aLib.GetBreakpadId());
+  aWriter.StringProperty("codeId", aLib.GetCodeId());
   aWriter.StringProperty("arch", aLib.GetArch());
   aWriter.EndObject();
 }

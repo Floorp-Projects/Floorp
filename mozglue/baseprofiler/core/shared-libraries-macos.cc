@@ -163,9 +163,9 @@ static void addSharedLibrary(const platform_mach_header* header,
   const NXArchInfo* archInfo =
       NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
 
-  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid, nameStr,
-                                      pathStr, nameStr, pathStr, std::string{},
-                                      archInfo ? archInfo->name : ""));
+  info.AddSharedLibrary(SharedLibrary(
+      start, start + size, 0, uuid, std::string{}, nameStr, pathStr, nameStr,
+      pathStr, std::string{}, archInfo ? archInfo->name : ""));
 }
 
 // Translate the statically stored sSharedLibrariesList information into a

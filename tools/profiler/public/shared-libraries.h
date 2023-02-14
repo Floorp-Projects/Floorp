@@ -24,14 +24,15 @@
 class SharedLibrary {
  public:
   SharedLibrary(uintptr_t aStart, uintptr_t aEnd, uintptr_t aOffset,
-                const nsCString& aBreakpadId, const nsString& aModuleName,
-                const nsString& aModulePath, const nsString& aDebugName,
-                const nsString& aDebugPath, const nsCString& aVersion,
-                const char* aArch)
+                const nsCString& aBreakpadId, const nsCString& aCodeId,
+                const nsString& aModuleName, const nsString& aModulePath,
+                const nsString& aDebugName, const nsString& aDebugPath,
+                const nsCString& aVersion, const char* aArch)
       : mStart(aStart),
         mEnd(aEnd),
         mOffset(aOffset),
         mBreakpadId(aBreakpadId),
+        mCodeId(aCodeId),
         mModuleName(aModuleName),
         mModulePath(aModulePath),
         mDebugName(aDebugName),
@@ -44,6 +45,7 @@ class SharedLibrary {
         mEnd(aEntry.mEnd),
         mOffset(aEntry.mOffset),
         mBreakpadId(aEntry.mBreakpadId),
+        mCodeId(aEntry.mCodeId),
         mModuleName(aEntry.mModuleName),
         mModulePath(aEntry.mModulePath),
         mDebugName(aEntry.mDebugName),
@@ -59,6 +61,7 @@ class SharedLibrary {
     mEnd = aEntry.mEnd;
     mOffset = aEntry.mOffset;
     mBreakpadId = aEntry.mBreakpadId;
+    mCodeId = aEntry.mCodeId;
     mModuleName = aEntry.mModuleName;
     mModulePath = aEntry.mModulePath;
     mDebugName = aEntry.mDebugName;
@@ -74,14 +77,15 @@ class SharedLibrary {
            (mModulePath == other.mModulePath) &&
            (mDebugName == other.mDebugName) &&
            (mDebugPath == other.mDebugPath) &&
-           (mBreakpadId == other.mBreakpadId) && (mVersion == other.mVersion) &&
-           (mArch == other.mArch);
+           (mBreakpadId == other.mBreakpadId) && (mCodeId == other.mCodeId) &&
+           (mVersion == other.mVersion) && (mArch == other.mArch);
   }
 
   uintptr_t GetStart() const { return mStart; }
   uintptr_t GetEnd() const { return mEnd; }
   uintptr_t GetOffset() const { return mOffset; }
   const nsCString& GetBreakpadId() const { return mBreakpadId; }
+  const nsCString& GetCodeId() const { return mCodeId; }
   const nsString& GetModuleName() const { return mModuleName; }
   const nsString& GetModulePath() const { return mModulePath; }
   const std::string GetNativeDebugPath() const {
@@ -103,6 +107,17 @@ class SharedLibrary {
   uintptr_t mEnd;
   uintptr_t mOffset;
   nsCString mBreakpadId;
+  // A string carrying an identifier for a binary.
+  //
+  // All platforms have different formats:
+  // - Windows: The code ID for a Windows PE file.
+  //  It's the PE timestamp and PE image size.
+  // - macOS: The code ID for a macOS / iOS binary (mach-O).
+  //  It's the mach-O UUID without dashes and without the trailing 0 for the
+  //  breakpad ID.
+  // - Linux/Android: The code ID for a Linux ELF file.
+  //  It's the complete build ID, as hex string.
+  nsCString mCodeId;
   nsString mModuleName;
   nsString mModulePath;
   nsString mDebugName;

@@ -99,8 +99,8 @@ static SharedLibrary SharedLibraryAtPath(const char* path,
     nameStr.Cut(0, pos + 1);
   }
 
-  return SharedLibrary(libStart, libEnd, offset, getId(path), nameStr, pathStr,
-                       nameStr, pathStr, ""_ns, "");
+  return SharedLibrary(libStart, libEnd, offset, getId(path), nsCString(),
+                       nameStr, pathStr, nameStr, pathStr, ""_ns, "");
 }
 
 static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,
