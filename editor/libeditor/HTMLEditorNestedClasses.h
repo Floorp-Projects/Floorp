@@ -340,6 +340,66 @@ class MOZ_STACK_CLASS HTMLEditor::AutoMoveOneLineHandler final {
   bool mMovingToParentBlock = false;
 };
 
+/**
+ * Convert contents around aRanges of Run() to specified list element.  If there
+ * are some different type of list elements, this method converts them to
+ * specified list items too.  Basically, each line will be wrapped in a list
+ * item element.  However, only when <p> element is selected, its child <br>
+ * elements won't be treated as line separators.  Perhaps, this is a bug.
+ */
+class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
+ public:
+  /**
+   * @param aListElementTagName         The new list element tag name.
+   * @param aListItemElementTagName     The new list item element tag name.
+   * @param aBulletType                 If this is not empty string, it's set
+   *                                    to `type` attribute of new list item
+   *                                    elements.  Otherwise, existing `type`
+   *                                    attributes will be removed.
+   */
+  AutoListElementCreator(const nsStaticAtom& aListElementTagName,
+                         const nsStaticAtom& aListItemElementTagName,
+                         const nsAString& aBulletType)
+      // Needs const_cast hack here because the struct users may want
+      // non-const nsStaticAtom pointer due to bug 1794954
+      : mListTagName(const_cast<nsStaticAtom&>(aListElementTagName)),
+        mListItemTagName(const_cast<nsStaticAtom&>(aListItemElementTagName)),
+        mBulletType(aBulletType) {
+    MOZ_ASSERT(&mListTagName == nsGkAtoms::ul ||
+               &mListTagName == nsGkAtoms::ol ||
+               &mListTagName == nsGkAtoms::dl);
+    MOZ_ASSERT_IF(
+        &mListTagName == nsGkAtoms::ul || &mListTagName == nsGkAtoms::ol,
+        &mListItemTagName == nsGkAtoms::li);
+    MOZ_ASSERT_IF(&mListTagName == nsGkAtoms::dl,
+                  &mListItemTagName == nsGkAtoms::dt ||
+                      &mListItemTagName == nsGkAtoms::dd);
+  }
+
+  /**
+   * @param aHTMLEditor The HTML editor.
+   * @param aRanges     [in/out] The ranges which will be converted to list.
+   *                    The instance must not have saved ranges because it'll
+   *                    be used in this method.
+   *                    If succeeded, this will have selection ranges which
+   *                    should be applied to `Selection`.
+   *                    If failed, this keeps storing original selection
+   *                    ranges.
+   * @param aSelectAllOfCurrentList     Yes if this should treat all of
+   *                                    ancestor list element at selection.
+   * @param aEditingHost                The editing host.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult> Run(
+      HTMLEditor& aHTMLEditor, AutoRangeArray& aRanges,
+      HTMLEditor::SelectAllOfCurrentList aSelectAllOfCurrentList,
+      const Element& aEditingHost) const;
+
+ private:
+  MOZ_KNOWN_LIVE nsStaticAtom& mListTagName;
+  MOZ_KNOWN_LIVE nsStaticAtom& mListItemTagName;
+  const nsAutoString mBulletType;
+};
+
 }  // namespace mozilla
 
 #endif  // #ifndef HTMLEditorNestedClasses_h

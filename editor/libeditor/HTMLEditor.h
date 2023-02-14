@@ -319,7 +319,7 @@ class HTMLEditor final : public EditorBase,
    */
   enum class SelectAllOfCurrentList { Yes, No };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MakeOrChangeListAsAction(
-      nsAtom& aListElementTagName, const nsAString& aBulletType,
+      const nsStaticAtom& aListElementTagName, const nsAString& aBulletType,
       SelectAllOfCurrentList aSelectAllOfCurrentList,
       nsIPrincipal* aPrincipal = nullptr);
 
@@ -1584,37 +1584,7 @@ class HTMLEditor final : public EditorBase,
   ChangeListElementType(Element& aListElement, nsAtom& aListType,
                         nsAtom& aItemType);
 
-  /**
-   * ConvertContentAroundRangesToList() converts contents around aRanges to
-   * specified list element.  If there is different type of list elements, this
-   * method converts them to specified list items too.  Basically, each hard
-   * line will be wrapped with a list item element.  However, only when `<p>`
-   * element is selected, its child `<br>` elements won't be treated as
-   * hard line separators.  Perhaps, this is a bug.
-   *
-   * @param aRanges     [in/out] The ranges which will be converted to list.
-   *                    The instance must not have saved ranges because it'll
-   *                    be used in this method.
-   *                    If succeeded, this will have selection ranges which
-   *                    should be applied to `Selection`.
-   *                    If failed, this keeps storing original selection
-   *                    ranges.
-   * @param aListElementTagName         The new list element tag name.
-   * @param aListItemElementTagName     The new list item element tag name.
-   * @param aBulletType                 If this is not empty string, it's set
-   *                                    to `type` attribute of new list item
-   *                                    elements.  Otherwise, existing `type`
-   *                                    attributes will be removed.
-   * @param aSelectAllOfCurrentList     Yes if this should treat all of
-   *                                    ancestor list element at selection.
-   * @param aEditingHost                The editing host.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
-  ConvertContentAroundRangesToList(
-      AutoRangeArray& aRanges, nsAtom& aListElementTagName,
-      nsAtom& aListItemElementTagName, const nsAString& aBulletType,
-      SelectAllOfCurrentList aSelectAllOfCurrentList,
-      const Element& aEditingHost);
+  class AutoListElementCreator;
 
   /**
    * MakeOrChangeListAndListItemAsSubAction() handles create list commands with
@@ -1635,7 +1605,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
   MakeOrChangeListAndListItemAsSubAction(
-      nsAtom& aListElementOrListItemElementTagName,
+      const nsStaticAtom& aListElementOrListItemElementTagName,
       const nsAString& aBulletType,
       SelectAllOfCurrentList aSelectAllOfCurrentList);
 
