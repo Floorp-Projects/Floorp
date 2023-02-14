@@ -110,6 +110,8 @@ async function browseraction_popup_contextmenu_helper() {
   is(item.length, 1, "contextMenu item for page was found");
   await closeContextMenu(contentAreaContextMenu);
 
+  await closeBrowserAction(extension);
+
   await extension.unload();
 }
 
@@ -141,6 +143,8 @@ async function browseraction_popup_contextmenu_hidden_items_helper() {
 
   await closeContextMenu(contentAreaContextMenu);
 
+  await closeBrowserAction(extension);
+
   await extension.unload();
 }
 
@@ -160,6 +164,8 @@ async function browseraction_popup_image_contextmenu_helper() {
   ok(!item.disabled);
 
   await closeContextMenu(contentAreaContextMenu);
+
+  await closeBrowserAction(extension);
 
   await extension.unload();
 }
