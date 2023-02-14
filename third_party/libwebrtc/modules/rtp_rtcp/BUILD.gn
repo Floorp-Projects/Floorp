@@ -325,9 +325,6 @@ rtc_library("rtp_rtcp") {
     "../remote_bitrate_estimator",
     "../video_coding:codec_globals_headers",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../../api:libjingle_peerconnection_api" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",

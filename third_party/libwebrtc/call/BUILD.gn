@@ -249,9 +249,6 @@ rtc_library("bitrate_configurator") {
     "../api/units:data_rate",
     "../rtc_base:checks",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../api:libjingle_peerconnection_api" ]
-  }
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 

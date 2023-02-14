@@ -503,7 +503,6 @@ if (!build_with_chromium) {
     if (build_with_mozilla) {
       deps -= [
         "api:create_peerconnection_factory",
-        "api:libjingle_peerconnection_api",
         "api:rtc_error",
         "api:transport_api",
         "api/crypto",
