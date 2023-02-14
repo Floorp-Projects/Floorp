@@ -7,6 +7,7 @@
 #include "OffscreenCanvas.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
@@ -67,7 +68,25 @@ JSObject* OffscreenCanvas::WrapObject(JSContext* aCx,
 
 /* static */
 already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
-    const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight) {
+    const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight,
+    ErrorResult& aRv) {
+  // CanvasRenderingContextHelper::GetWidthHeight wants us to return
+  // an nsIntSize, so make sure that that will work.
+  if (!CheckedInt<int32_t>(aWidth).isValid()) {
+    aRv.ThrowRangeError(
+        nsPrintfCString("OffscreenCanvas width %u is out of range: must be no "
+                        "greater than 2147483647.",
+                        aWidth));
+    return nullptr;
+  }
+  if (!CheckedInt<int32_t>(aHeight).isValid()) {
+    aRv.ThrowRangeError(
+        nsPrintfCString("OffscreenCanvas height %u is out of range: must be no "
+                        "greater than 2147483647.",
+                        aHeight));
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<OffscreenCanvas> offscreenCanvas = new OffscreenCanvas(
       global, aWidth, aHeight, layers::LayersBackend::LAYERS_NONE,
@@ -82,6 +101,16 @@ void OffscreenCanvas::SetWidth(uint32_t aWidth, ErrorResult& aRv) {
     return;
   }
 
+  // CanvasRenderingContextHelper::GetWidthHeight wants us to return
+  // an nsIntSize, so make sure that that will work.
+  if (!CheckedInt<int32_t>(aWidth).isValid()) {
+    aRv.ThrowRangeError(
+        nsPrintfCString("OffscreenCanvas width %u is out of range: must be no "
+                        "greater than 2147483647.",
+                        aWidth));
+    return;
+  }
+
   mWidth = aWidth;
   CanvasAttrChanged();
 }
@@ -90,6 +119,16 @@ void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
   if (mNeutered) {
     aRv.ThrowInvalidStateError(
         "Cannot set height of placeholder canvas transferred to worker.");
+    return;
+  }
+
+  // CanvasRenderingContextHelper::GetWidthHeight wants us to return
+  // an nsIntSize, so make sure that that will work.
+  if (!CheckedInt<int32_t>(aHeight).isValid()) {
+    aRv.ThrowRangeError(
+        nsPrintfCString("OffscreenCanvas height %u is out of range: must be no "
+                        "greater than 2147483647.",
+                        aHeight));
     return;
   }
 
