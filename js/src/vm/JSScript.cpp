@@ -2172,8 +2172,6 @@ bool SharedImmutableScriptData::shareScriptData(
 
   SharedImmutableScriptData* data = sisd.get();
 
-  // Calculate the hash before taking the lock. Because the data is reference
-  // counted, it also will be freed after releasing the lock if necessary.
   SharedImmutableScriptData::Hasher::Lookup lookup(data);
 
   Maybe<AutoLockGlobalScriptData> lock;

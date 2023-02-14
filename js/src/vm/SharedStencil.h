@@ -644,6 +644,7 @@ class SharedImmutableScriptData {
 
  private:
   ImmutableScriptData* isd_ = nullptr;
+  mozilla::HashNumber hash_;
 
   // End of fields.
 
@@ -661,6 +662,11 @@ class SharedImmutableScriptData {
       js_delete(isd_);
     }
     isd_ = nullptr;
+  }
+
+  mozilla::HashNumber calculateHash() const {
+    mozilla::Span<const uint8_t> immutableData = isd_->immutableData();
+    return mozilla::HashBytes(immutableData.data(), immutableData.size());
   }
 
  public:
@@ -707,17 +713,41 @@ class SharedImmutableScriptData {
   uint32_t nfixed() const { return isd_->nfixed; }
 
   ImmutableScriptData* get() { return isd_; }
+  mozilla::HashNumber hash() const { return hash_; }
 
   void setOwn(js::UniquePtr<ImmutableScriptData>&& isd) {
     MOZ_ASSERT(!isd_);
     isd_ = isd.release();
     isExternal = false;
+
+    hash_ = calculateHash();
+  }
+
+  void setOwn(js::UniquePtr<ImmutableScriptData>&& isd,
+              mozilla::HashNumber hash) {
+    MOZ_ASSERT(!isd_);
+    isd_ = isd.release();
+    isExternal = false;
+
+    MOZ_ASSERT(hash == calculateHash());
+    hash_ = hash;
   }
 
   void setExternal(ImmutableScriptData* isd) {
     MOZ_ASSERT(!isd_);
     isd_ = isd;
     isExternal = true;
+
+    hash_ = calculateHash();
+  }
+
+  void setExternal(ImmutableScriptData* isd, mozilla::HashNumber hash) {
+    MOZ_ASSERT(!isd_);
+    isd_ = isd;
+    isExternal = true;
+
+    MOZ_ASSERT(hash == calculateHash());
+    hash_ = hash;
   }
 };
 
@@ -726,10 +756,7 @@ class SharedImmutableScriptData {
 struct SharedImmutableScriptData::Hasher {
   using Lookup = RefPtr<SharedImmutableScriptData>;
 
-  static mozilla::HashNumber hash(const Lookup& l) {
-    mozilla::Span<const uint8_t> immutableData = l->isd_->immutableData();
-    return mozilla::HashBytes(immutableData.data(), immutableData.size());
-  }
+  static mozilla::HashNumber hash(const Lookup& l) { return l->hash(); }
 
   static bool match(SharedImmutableScriptData* entry, const Lookup& lookup) {
     return (entry->isd_->immutableData() == lookup->isd_->immutableData());
