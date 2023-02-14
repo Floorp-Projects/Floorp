@@ -47,6 +47,8 @@ task-defaults:
 tasks:
     nightly-arm:
         run:
+            pre-commands:
+                - ["cd", "fenix"]
             commands:
                 - [wget, {artifact-reference: '<signing/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signing-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
