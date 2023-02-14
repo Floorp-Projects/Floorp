@@ -61,8 +61,8 @@
   MACRO(4, "fileioall", FileIOAll,                                         \
         "Add file I/O from all threads, implies fileio")                   \
                                                                            \
-  MACRO(5, "nomarkerstacks", NoMarkerStacks,                               \
-        "Markers do not capture stacks, to reduce overhead")               \
+  MACRO(5, "noiostacks", NoIOStacks,                                       \
+        "File I/O markers do not capture stacks, to reduce overhead")      \
                                                                            \
   MACRO(6, "screenshots", Screenshots,                                     \
         "Take a snapshot of the window on every composition")              \
@@ -266,11 +266,6 @@ class RacyFeatures {
     return (af & Active) && (af & aFeature);
   }
 
-  [[nodiscard]] static bool IsActiveWithoutFeature(uint32_t aFeature) {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && !(af & aFeature);
-  }
-
   // True if profiler is active, and not fully paused.
   // Note that periodic sampling *could* be paused!
   // This implementation must be kept in sync with
@@ -371,11 +366,6 @@ profiler_features_if_active_and_unpaused() {
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
 [[nodiscard]] bool profiler_feature_active(uint32_t aFeature);
-
-// Check if the profiler is active without a feature (specified via the
-// ProfilerFeature type). Note: the return value can become immediately
-// out-of-date, much like the return value of profiler_is_active().
-[[nodiscard]] bool profiler_active_without_feature(uint32_t aFeature);
 
 // Returns true if any of the profiler mutexes are currently locked *on the
 // current thread*. This may be used by re-entrant code that may call profiler

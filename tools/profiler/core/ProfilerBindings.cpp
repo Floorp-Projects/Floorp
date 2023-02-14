@@ -346,9 +346,7 @@ void gecko_profiler_add_marker(
 
   mozilla::StackCaptureOptions captureOptions =
       markerOptions.Stack().CaptureOptions();
-  if (captureOptions != mozilla::StackCaptureOptions::NoStack &&
-      // Do not capture a stack if the NoMarkerStacks feature is set.
-      profiler_active_without_feature(ProfilerFeature::NoMarkerStacks)) {
+  if (captureOptions != mozilla::StackCaptureOptions::NoStack) {
     // A capture was requested, let's attempt to do it here&now. This avoids a
     // lot of allocations that would be necessary if capturing a backtrace
     // separately.
