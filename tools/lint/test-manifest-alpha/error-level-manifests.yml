@@ -3,3 +3,5 @@
 # have been put into alphabetical order already. Items in this list will
 # cause the test-manifest-alpha linter to use the Error level rather than
 # the Warning level.
+
+- browser/base/content/test/about/browser.ini
