@@ -477,17 +477,16 @@ class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildListItemInSameTypeList(
       HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
       AutoHandlingState& aState) const;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildDivElement(
-      HTMLEditor& aHTMLEditor, Element& aHandlingDivElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildDivOrParagraphElement(
+      HTMLEditor& aHTMLEditor, Element& aHandlingDivOrParagraphElement,
       AutoHandlingState& aState, const Element& aEditingHost) const;
+  enum class EmptyListItem { NotCreate, Create };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CreateAndUpdateCurrentListElement(
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
-      AutoHandlingState& aState, const Element& aEditingHost) const;
+      EmptyListItem aEmptyListItem, AutoHandlingState& aState,
+      const Element& aEditingHost) const;
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildInlineContent(
       HTMLEditor& aHTMLEditor, nsIContent& aHandlingInlineContent,
-      AutoHandlingState& aState) const;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildParagraphElement(
-      HTMLEditor& aHTMLEditor, Element& aHandlingParagraphElement,
       AutoHandlingState& aState) const;
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult WrapContentIntoNewListItemElement(
       HTMLEditor& aHTMLEditor, nsIContent& aHandlingContent,

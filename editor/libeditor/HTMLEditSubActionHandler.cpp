@@ -23,6 +23,7 @@
 #include "WSRunObject.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/IntegerRange.h"
@@ -3460,39 +3461,29 @@ HTMLEditor::AutoListElementCreator::ReplaceContentNodesWithEmptyNewList(
           aEditingHost,
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
           [&](HTMLEditor& aHTMLEditor, Element& aListElement,
-              const EditorDOMPoint& aPointToInsert)
-              MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                const auto withTransaction = aListElement.IsInComposedDoc()
-                                                 ? WithTransaction::Yes
-                                                 : WithTransaction::No;
-                Result<CreateElementResult, nsresult>
-                    createNewListItemElementResult =
-                        aHTMLEditor.CreateAndInsertElement(
-                            withTransaction, mListItemTagName,
-                            EditorDOMPoint(&aListElement, 0u));
-                if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
-                  NS_WARNING(
-                      nsPrintfCString(
-                          "HTMLEditor::CreateAndInsertElement(%s) failed",
-                          ToString(withTransaction).c_str())
-                          .get());
-                  return createNewListItemElementResult.unwrapErr();
-                }
-                CreateElementResult unwrappedCreateNewListItemElementResult =
-                    createNewListItemElementResult.unwrap();
-                // There is AutoSelectionRestorer in this method so that it'll
-                // be restored or updated with making it abort.  Therefore,
-                // we don't need to update selection here.
-                // XXX I'd like to check aRanges.HasSavedRanges() here, but it
-                //     requires ifdefs to avoid bustage of opt builds caused
-                //     by unused warning...
-                unwrappedCreateNewListItemElementResult
-                    .IgnoreCaretPointSuggestion();
-                newListItemElement =
-                    unwrappedCreateNewListItemElementResult.UnwrapNewNode();
-                MOZ_ASSERT(newListItemElement);
-                return NS_OK;
-              });
+              const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            Result<CreateElementResult, nsresult>
+                createNewListItemElementResult =
+                    HTMLEditor::AppendNewElementToInsertingElement(
+                        aHTMLEditor, mListItemTagName, aListElement);
+            if (MOZ_UNLIKELY(createNewListItemElementResult.isErr())) {
+              NS_WARNING(
+                  "HTMLEditor::AppendNewElementToInsertingElement() failed");
+              return createNewListItemElementResult.unwrapErr();
+            }
+            CreateElementResult unwrappedResult =
+                createNewListItemElementResult.unwrap();
+            // There is AutoSelectionRestorer in this method so that it'll
+            // be restored or updated with making it abort.  Therefore,
+            // we don't need to update selection here.
+            // XXX I'd like to check aRanges.HasSavedRanges() here, but it
+            //     requires ifdefs to avoid bustage of opt builds caused
+            //     by unused warning...
+            unwrappedResult.IgnoreCaretPointSuggestion();
+            newListItemElement = unwrappedResult.UnwrapNewNode();
+            MOZ_ASSERT(newListItemElement);
+            return NS_OK;
+          });
   if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
     NS_WARNING(
         nsPrintfCString(
@@ -3607,15 +3598,15 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildContent(
     return rv;
   }
 
-  // If we meet a <div>, we want only its children to wrapping into list
-  // element.  Therefore, this call will call this recursively.
-  if (aHandlingContent.IsHTMLElement(nsGkAtoms::div)) {
-    nsresult rv = HandleChildDivElement(
+  // If we meet a <div> or a <p>, we want only its children to wrapping into
+  // list element.  Therefore, this call will call this recursively.
+  if (aHandlingContent.IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::p)) {
+    nsresult rv = HandleChildDivOrParagraphElement(
         aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState,
         aEditingHost);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "AutoListElementCreator::HandleChildDivElement() failed");
+        "AutoListElementCreator::HandleChildDivOrParagraphElement() failed");
     return rv;
   }
 
@@ -3623,7 +3614,8 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildContent(
   // current list element.
   if (!aState.mCurrentListElement) {
     nsresult rv = CreateAndUpdateCurrentListElement(
-        aHTMLEditor, EditorDOMPoint(&aHandlingContent), aState, aEditingHost);
+        aHTMLEditor, EditorDOMPoint(&aHandlingContent),
+        EmptyListItem::NotCreate, aState, aEditingHost);
     if (NS_FAILED(rv)) {
       NS_WARNING("AutoListElementCreator::HandleChildInlineElement() failed");
       return rv;
@@ -3640,16 +3632,6 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildContent(
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "AutoListElementCreator::HandleChildInlineElement() failed");
-    return rv;
-  }
-
-  // If we meet a <p>, we want to move its children to new list item element.
-  if (aHandlingContent.IsHTMLElement(nsGkAtoms::p)) {
-    nsresult rv = HandleChildParagraphElement(
-        aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "AutoListElementCreator::HandleChildParagraphElement() failed");
     return rv;
   }
 
@@ -3894,20 +3876,70 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildListItemInSameTypeList(
   return NS_OK;
 }
 
-nsresult HTMLEditor::AutoListElementCreator::HandleChildDivElement(
-    HTMLEditor& aHTMLEditor, Element& aHandlingDivElement,
+nsresult HTMLEditor::AutoListElementCreator::HandleChildDivOrParagraphElement(
+    HTMLEditor& aHTMLEditor, Element& aHandlingDivOrParagraphElement,
     AutoHandlingState& aState, const Element& aEditingHost) const {
-  MOZ_ASSERT(aHandlingDivElement.IsHTMLElement(nsGkAtoms::div));
+  MOZ_ASSERT(aHandlingDivOrParagraphElement.IsAnyOfHTMLElements(nsGkAtoms::div,
+                                                                nsGkAtoms::p));
+
+  // If the <div> or <p> is empty, we should replace it with a list element
+  // and/or a list item element.
+  if (HTMLEditUtils::IsEmptyNode(aHandlingDivOrParagraphElement,
+                                 {EmptyCheckOption::IgnoreEditableState,
+                                  EmptyCheckOption::TreatListItemAsVisible,
+                                  EmptyCheckOption::TreatTableCellAsVisible})) {
+    if (!aState.mCurrentListElement) {
+      nsresult rv = CreateAndUpdateCurrentListElement(
+          aHTMLEditor, EditorDOMPoint(&aHandlingDivOrParagraphElement),
+          EmptyListItem::Create, aState, aEditingHost);
+      if (NS_FAILED(rv)) {
+        NS_WARNING(
+            "AutoListElementCreator::CreateAndUpdateCurrentListElement("
+            "EmptyListItem::Create) failed");
+        return rv;
+      }
+    } else {
+      Result<CreateElementResult, nsresult> createListItemElementResult =
+          aHTMLEditor.CreateAndInsertElement(
+              WithTransaction::Yes, mListItemTagName,
+              EditorDOMPoint::AtEndOf(*aState.mCurrentListElement),
+              HTMLEditor::InsertNewBRElement);
+      if (MOZ_UNLIKELY(createListItemElementResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
+        return createListItemElementResult.unwrapErr();
+      }
+      CreateElementResult unwrappedResult =
+          createListItemElementResult.unwrap();
+      unwrappedResult.IgnoreCaretPointSuggestion();
+      aState.mListOrListItemElementToPutCaret = unwrappedResult.UnwrapNewNode();
+    }
+    nsresult rv =
+        aHTMLEditor.DeleteNodeWithTransaction(aHandlingDivOrParagraphElement);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+      return rv;
+    }
+
+    // We don't want new inline contents inserted into the new list item element
+    // because we want to keep the line break at end of
+    // aHandlingDivOrParagraphElement.
+    aState.mPreviousListItemElement = nullptr;
+
+    return NS_OK;
+  }
 
   // If current node is a <div> element, replace it with its children and handle
   // them as same as topmost children in the range.
   AutoContentNodeArray arrayOfContentsInDiv;
-  HTMLEditUtils::CollectChildren(aHandlingDivElement, arrayOfContentsInDiv, 0,
+  HTMLEditUtils::CollectChildren(aHandlingDivOrParagraphElement,
+                                 arrayOfContentsInDiv, 0,
                                  {CollectChildrenOption::CollectListChildren,
                                   CollectChildrenOption::CollectTableChildren});
 
   Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
-      aHTMLEditor.RemoveContainerWithTransaction(aHandlingDivElement);
+      aHTMLEditor.RemoveContainerWithTransaction(
+          aHandlingDivOrParagraphElement);
   if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
     NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
     return unwrapDivElementResult.unwrapErr();
@@ -3922,19 +3954,48 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildDivElement(
       return rv;
     }
   }
+
+  // We don't want new inline contents inserted into the new list item element
+  // because we want to keep the line break at end of
+  // aHandlingDivOrParagraphElement.
+  aState.mPreviousListItemElement = nullptr;
+
   return NS_OK;
 }
 
 nsresult HTMLEditor::AutoListElementCreator::CreateAndUpdateCurrentListElement(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
-    AutoHandlingState& aState, const Element& aEditingHost) const {
+    EmptyListItem aEmptyListItem, AutoHandlingState& aState,
+    const Element& aEditingHost) const {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   aState.mPreviousListItemElement = nullptr;
+  RefPtr<Element> newListItemElement;
+  auto initializer =
+      aEmptyListItem == EmptyListItem::NotCreate
+          ? DoNothingForNewElement
+          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
+          : [&](HTMLEditor& aHTMLEditor, Element& aListElement,
+                const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+              Result<CreateElementResult, nsresult> createNewListItemResult =
+                  HTMLEditor::AppendNewElementToInsertingElement(
+                      aHTMLEditor, mListItemTagName, aListElement);
+              if (MOZ_UNLIKELY(createNewListItemResult.isErr())) {
+                NS_WARNING(
+                    "HTMLEditor::AppendNewElementToInsertingElement()"
+                    " failed");
+                return createNewListItemResult.unwrapErr();
+              }
+              CreateElementResult unwrappedResult =
+                  createNewListItemResult.unwrap();
+              unwrappedResult.IgnoreCaretPointSuggestion();
+              newListItemElement = unwrappedResult.UnwrapNewNode();
+              return NS_OK;
+            };
   Result<CreateElementResult, nsresult> createNewListElementResult =
       aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
           mListTagName, aPointToInsert, BRElementNextToSplitPoint::Keep,
-          aEditingHost);
+          aEditingHost, initializer);
   if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
     NS_WARNING(
         nsPrintfCString(
@@ -3950,9 +4011,11 @@ nsresult HTMLEditor::AutoListElementCreator::CreateAndUpdateCurrentListElement(
 
   MOZ_ASSERT(unwrappedCreateNewListElementResult.GetNewNode());
   aState.mListOrListItemElementToPutCaret =
-      unwrappedCreateNewListElementResult.GetNewNode();
+      newListItemElement ? newListItemElement.get()
+                         : unwrappedCreateNewListElementResult.GetNewNode();
   aState.mCurrentListElement =
       unwrappedCreateNewListElementResult.UnwrapNewNode();
+  aState.mPreviousListItemElement = std::move(newListItemElement);
   return NS_OK;
 }
 
@@ -3981,41 +4044,6 @@ nsresult HTMLEditor::AutoListElementCreator::HandleChildInlineContent(
     return moveInlineElementResult.propagateErr();
   }
   moveInlineElementResult.inspect().IgnoreCaretPointSuggestion();
-  return NS_OK;
-}
-
-nsresult HTMLEditor::AutoListElementCreator::HandleChildParagraphElement(
-    HTMLEditor& aHTMLEditor, Element& aHandlingParagraphElement,
-    AutoHandlingState& aState) const {
-  MOZ_ASSERT(aHandlingParagraphElement.IsHTMLElement(nsGkAtoms::p));
-
-  // If current node is a paragraph, that means that it does not contain
-  // block children so that we can just replace it with new list item
-  // element and move it into current list element.
-  // XXX This is too rough handling.  If web apps modifies DOM tree directly,
-  //     any elements can have block elements as children.
-  Result<CreateElementResult, nsresult> newListItemElementOrError =
-      aHTMLEditor.ReplaceContainerWithTransaction(aHandlingParagraphElement,
-                                                  mListItemTagName);
-  if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
-    NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
-    return newListItemElementOrError.unwrapErr();
-  }
-  newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
-  MOZ_ASSERT(newListItemElementOrError.inspect().GetNewNode());
-
-  Result<MoveNodeResult, nsresult> moveListItemElementResult =
-      aHTMLEditor.MoveNodeToEndWithTransaction(
-          MOZ_KnownLive(*newListItemElementOrError.inspect().GetNewNode()),
-          MOZ_KnownLive(*aState.mCurrentListElement));
-  if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
-    NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-    return moveListItemElementResult.propagateErr();
-  }
-  moveListItemElementResult.inspect().IgnoreCaretPointSuggestion();
-
-  aState.mPreviousListItemElement = nullptr;
-  // XXX Why don't we set `type` attribute here??
   return NS_OK;
 }
 
@@ -7739,33 +7767,10 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   // We want a wrapper element even if we separate with a <br>.
   // MOZ_KnownLive(newParagraphTagName) because it's available until shutdown.
   Result<CreateElementResult, nsresult> createNewParagraphElementResult =
-      CreateAndInsertElement(
-          WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
-          EditorDOMPoint::After(*leftHeadingElement),
-          // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-          [](HTMLEditor& aHTMLEditor, Element& aDivOrParagraphElement,
-             const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-            // We don't make inserting new <br> element undoable because
-            // removing the new element from the DOM tree gets same result for
-            // the user if aDivOrParagraphElement has not been connected yet.
-            const auto withTransaction =
-                aDivOrParagraphElement.IsInComposedDoc() ? WithTransaction::Yes
-                                                         : WithTransaction::No;
-            Result<CreateElementResult, nsresult> insertBRElementResult =
-                aHTMLEditor.InsertBRElement(
-                    withTransaction,
-                    EditorDOMPoint(&aDivOrParagraphElement, 0u));
-            if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
-              NS_WARNING(
-                  nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
-                                  ToString(withTransaction).c_str())
-                      .get());
-              return insertBRElementResult.unwrapErr();
-            }
-            // We'll update selection after inserting the new paragraph.
-            insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
-            return NS_OK;
-          });
+      CreateAndInsertElement(WithTransaction::Yes,
+                             MOZ_KnownLive(newParagraphTagName),
+                             EditorDOMPoint::After(*leftHeadingElement),
+                             HTMLEditor::InsertNewBRElement);
   if (MOZ_UNLIKELY(createNewParagraphElementResult.isErr())) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
@@ -8349,33 +8354,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
     Result<CreateElementResult, nsresult> createNewParagraphElementResult =
         CreateAndInsertElement(
             WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
-            afterLeftListElement,
-            // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
-            [](HTMLEditor& aHTMLEditor, Element& aDivOrParagraphElement,
-               const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-              // We don't make inserting new <br> element undoable because
-              // removing the new element from the DOM tree gets same result
-              // for the user if aDivOrParagraphElement has not been
-              // connected yet.
-              const auto withTransaction =
-                  aDivOrParagraphElement.IsInComposedDoc()
-                      ? WithTransaction::Yes
-                      : WithTransaction::No;
-              Result<CreateElementResult, nsresult> insertBRElementResult =
-                  aHTMLEditor.InsertBRElement(
-                      withTransaction,
-                      EditorDOMPoint(&aDivOrParagraphElement, 0u));
-              if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
-                NS_WARNING(
-                    nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
-                                    ToString(withTransaction).c_str())
-                        .get());
-                return insertBRElementResult.unwrapErr();
-              }
-              // We'll update selection after inserting the paragraph.
-              insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
-              return NS_OK;
-            });
+            afterLeftListElement, HTMLEditor::InsertNewBRElement);
     if (MOZ_UNLIKELY(createNewParagraphElementResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");

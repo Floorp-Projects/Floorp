@@ -160,6 +160,61 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
 HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
     [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
 
+HTMLEditor::InitializeInsertingElement HTMLEditor::InsertNewBRElement =
+    [](HTMLEditor& aHTMLEditor, Element& aNewElement, const EditorDOMPoint&)
+        MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+          const auto withTransaction = aNewElement.IsInComposedDoc()
+                                           ? WithTransaction::Yes
+                                           : WithTransaction::No;
+          Result<CreateElementResult, nsresult> createBRElementResult =
+              aHTMLEditor.InsertBRElement(withTransaction,
+                                          EditorDOMPoint(&aNewElement, 0u));
+          if (MOZ_UNLIKELY(createBRElementResult.isErr())) {
+            NS_WARNING_ASSERTION(
+                createBRElementResult.isOk(),
+                nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
+                                ToString(withTransaction).c_str())
+                    .get());
+            return createBRElementResult.unwrapErr();
+          }
+          createBRElementResult.unwrap().IgnoreCaretPointSuggestion();
+          return NS_OK;
+        };
+
+// static
+Result<CreateElementResult, nsresult>
+HTMLEditor::AppendNewElementToInsertingElement(
+    HTMLEditor& aHTMLEditor, const nsStaticAtom& aTagName, Element& aNewElement,
+    const InitializeInsertingElement& aInitializer) {
+  const auto withTransaction = aNewElement.IsInComposedDoc()
+                                   ? WithTransaction::Yes
+                                   : WithTransaction::No;
+  Result<CreateElementResult, nsresult> createNewElementResult =
+      aHTMLEditor.CreateAndInsertElement(
+          withTransaction, const_cast<nsStaticAtom&>(aTagName),
+          EditorDOMPoint(&aNewElement, 0u), aInitializer);
+  NS_WARNING_ASSERTION(
+      createNewElementResult.isOk(),
+      nsPrintfCString("HTMLEditor::CreateAndInsertElement(%s) failed",
+                      ToString(withTransaction).c_str())
+          .get());
+  return createNewElementResult;
+}
+
+// static
+Result<CreateElementResult, nsresult>
+HTMLEditor::AppendNewElementWithBRToInsertingElement(
+    HTMLEditor& aHTMLEditor, const nsStaticAtom& aTagName,
+    Element& aNewElement) {
+  Result<CreateElementResult, nsresult> createNewElementWithBRResult =
+      HTMLEditor::AppendNewElementToInsertingElement(
+          aHTMLEditor, aTagName, aNewElement, HTMLEditor::InsertNewBRElement);
+  NS_WARNING_ASSERTION(
+      createNewElementWithBRResult.isOk(),
+      "HTMLEditor::AppendNewElementToInsertingElement() failed");
+  return createNewElementWithBRResult;
+}
+
 static bool ShouldUseTraditionalJoinSplitDirection(const Document& aDocument) {
   if (nsIPrincipal* principal = aDocument.GetPrincipalForPrefBasedHacks()) {
     if (principal->IsURIInPrefList("editor.join_split_direction."
