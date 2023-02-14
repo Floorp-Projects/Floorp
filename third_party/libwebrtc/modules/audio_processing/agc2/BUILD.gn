@@ -244,7 +244,6 @@ rtc_library("cpu_features") {
   ]
 }
 
-if (rtc_include_tests) {
 rtc_library("adaptive_digital_unittests") {
   testonly = true
   configs += [ "..:apm_debug_dump" ]
@@ -381,5 +380,4 @@ rtc_library("test_utils") {
     "../../../rtc_base:checks",
     "../../../rtc_base:random",
   ]
-}
 }

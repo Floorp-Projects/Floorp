@@ -450,7 +450,6 @@ rtc_library("fec_test_helper") {
   ]
 }
 
-if (rtc_include_tests) {
 rtc_library("mock_rtp_rtcp") {
   testonly = true
   public = [
@@ -470,7 +469,6 @@ rtc_library("mock_rtp_rtcp") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-}
 }
 
 rtc_library("rtp_packetizer_av1_test_helper") {

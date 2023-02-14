@@ -1224,7 +1224,6 @@ if (rtc_enable_protobuf) {
 }
 
 # Allow to re-use some test classes from chromium.
-if (rtc_include_tests) {
 rtc_library("audio_coding_modules_tests_shared") {
   testonly = true
   visibility = []
@@ -1275,7 +1274,6 @@ rtc_library("audio_coding_modules_tests_shared") {
     defines += [ "WEBRTC_NETEQ_UNITTEST_BITEXACT" ]
     deps += [ ":neteq_unittest_proto" ]
   }
-}
 }
 
 if (rtc_include_tests) {

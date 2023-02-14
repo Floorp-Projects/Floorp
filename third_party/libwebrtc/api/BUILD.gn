@@ -388,7 +388,6 @@ rtc_source_set("make_ref_counted") {
   deps = [ "../rtc_base:refcount" ]
 }
 
-if (!build_with_mozilla) {
 rtc_source_set("video_quality_test_fixture_api") {
   visibility = [ "*" ]
   testonly = true
@@ -427,7 +426,6 @@ rtc_source_set("video_quality_analyzer_api") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-}
 }
 
 rtc_source_set("track_id_stream_info_map") {
@@ -508,8 +506,8 @@ rtc_source_set("peer_network_dependencies") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_source_set("peer_connection_quality_test_fixture_api") {
+if (!build_with_mozilla) {
   visibility = [ "*" ]
   testonly = true
   sources = [
@@ -574,7 +572,6 @@ rtc_source_set("frame_generator_api") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("test_dependency_factory") {
   visibility = [ "*" ]
   testonly = true
@@ -587,7 +584,6 @@ rtc_library("test_dependency_factory") {
     "../rtc_base:checks",
     "../rtc_base:platform_thread_types",
   ]
-}
 }
 
 if (rtc_include_tests) {
@@ -658,7 +654,6 @@ rtc_library("create_frame_generator") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("create_peer_connection_quality_test_frame_generator") {
   visibility = [ "*" ]
   testonly = true
@@ -674,7 +669,6 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
     "../test:fileutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
 }
 
 rtc_source_set("libjingle_logging_api") {
