@@ -355,32 +355,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
       }
 
       //
-      // Third step: Try to find a content listener that has not yet had
-      // the chance to register, as it is contained in a not-yet-loaded
-      // module, but which has registered a contract ID.
-      //
-      nsCOMPtr<nsICategoryManager> catman =
-          do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-      if (catman) {
-        nsCString contractidString;
-        rv = catman->GetCategoryEntry(NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
-                                      mContentType, contractidString);
-        if (NS_SUCCEEDED(rv) && !contractidString.IsEmpty()) {
-          LOG(("  Listener contractid for '%s' is '%s'", mContentType.get(),
-               contractidString.get()));
-
-          listener = do_CreateInstance(contractidString.get());
-          LOG(("  Listener from category manager: 0x%p", listener.get()));
-
-          if (listener && TryContentListener(listener, aChannel)) {
-            LOG(("  Listener from category manager likes this type"));
-            return NS_OK;
-          }
-        }
-      }
-
-      //
-      // Fourth step: try to find an nsIContentHandler for our type.
+      // Third step: Try to find an nsIContentHandler for our type.
       //
       nsAutoCString handlerContractID(NS_CONTENT_HANDLER_CONTRACTID_PREFIX);
       handlerContractID += mContentType;
@@ -418,7 +393,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     }
 
     //
-    // Fifth step:  If no listener prefers this type, see if any stream
+    // Fourth step: If no listener prefers this type, see if any stream
     //              converters exist to transform this content type into
     //              some other.
     //
@@ -459,7 +434,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     }
   }
 
-  // Sixth step:
+  // Fifth step:
   //
   // All attempts to dispatch this content have failed.  Just pass it off to
   // the helper app service.
