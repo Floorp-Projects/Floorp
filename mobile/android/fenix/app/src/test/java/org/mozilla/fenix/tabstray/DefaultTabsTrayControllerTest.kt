@@ -34,6 +34,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -606,7 +607,10 @@ class DefaultTabsTrayControllerTest {
 
     @Test
     fun `GIVEN at least a tab is selected and the user is in multi select mode WHEN the user taps a tab THEN that tab will become selected`() {
-        trayStore = spyk(TabsTrayStore())
+        val middleware = CaptureActionsMiddleware<TabsTrayState, TabsTrayAction>()
+        trayStore = TabsTrayStore(middlewares = listOf(middleware))
+        trayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        trayStore.waitUntilIdle()
         val controller = spyk(createController())
         val tab1 = TabSessionState(
             id = "1",
@@ -627,7 +631,9 @@ class DefaultTabsTrayControllerTest {
 
         controller.handleMultiSelectClicked(tab2, "Tabs tray")
 
-        verify(exactly = 1) { trayStore.dispatch(TabsTrayAction.AddSelectTab(tab2)) }
+        middleware.assertLastAction(TabsTrayAction.AddSelectTab::class) {
+            assertEquals(tab2, it.tab)
+        }
     }
 
     @Test
