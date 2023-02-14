@@ -1867,7 +1867,17 @@ Element* HTMLEditUtils::GetClosestAncestorAnyListElement(
       return element;
     }
   }
+  return nullptr;
+}
 
+// static
+Element* HTMLEditUtils::GetClosestInclusiveAncestorAnyListElement(
+    const nsIContent& aContent) {
+  for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
+    if (HTMLEditUtils::IsAnyListElement(element)) {
+      return element;
+    }
+  }
   return nullptr;
 }
 

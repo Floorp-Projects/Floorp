@@ -330,7 +330,7 @@ class HTMLEditUtils final {
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
    * only white-spaces and they are collapsed, returns false.
    */
-  static bool IsVisibleTextNode(const Text& aText);
+  [[nodiscard]] static bool IsVisibleTextNode(const Text& aText);
 
   /**
    * IsInVisibleTextFrames() returns true if any text in aText is in visible
@@ -486,6 +486,77 @@ class HTMLEditUtils final {
                                   const EmptyCheckOptions& aOptions) {
     return HTMLEditUtils::IsBlockElement(aElement) &&
            HTMLEditUtils::IsEmptyNode(aElement, aOptions);
+  }
+
+  /**
+   * Return true if aListElement is completely empty or it has only one list
+   * item element which is empty.
+   */
+  [[nodiscard]] static bool IsEmptyAnyListElement(const Element& aListElement) {
+    MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
+    bool foundListItem = false;
+    for (nsIContent* child = aListElement.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (HTMLEditUtils::IsListItem(child)) {
+        if (foundListItem) {
+          return false;  // 2 list items found.
+        }
+        if (!IsEmptyNode(*child, {EmptyCheckOption::IgnoreEditableState})) {
+          return false;  // found non-empty list item.
+        }
+        foundListItem = true;
+        continue;
+      }
+      if (child->IsElement()) {
+        return false;  // found sublist or illegal child.
+      }
+      if (child->IsText() &&
+          HTMLEditUtils::IsVisibleTextNode(*child->AsText())) {
+        return false;  // found illegal visible text node.
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Return true if aListElement does not have invalid child.
+   */
+  enum class TreatSubListElementAs { Invalid, Valid };
+  [[nodiscard]] static bool IsValidListElement(
+      const Element& aListElement,
+      TreatSubListElementAs aTreatSubListElementAs) {
+    MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
+    for (nsIContent* child = aListElement.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (HTMLEditUtils::IsAnyListElement(child)) {
+        if (aTreatSubListElementAs == TreatSubListElementAs::Invalid) {
+          return false;
+        }
+        continue;
+      }
+      if (child->IsHTMLElement(nsGkAtoms::li)) {
+        if (MOZ_UNLIKELY(!aListElement.IsAnyOfHTMLElements(nsGkAtoms::ol,
+                                                           nsGkAtoms::ul))) {
+          return false;
+        }
+        continue;
+      }
+      if (child->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd)) {
+        if (MOZ_UNLIKELY(!aListElement.IsAnyOfHTMLElements(nsGkAtoms::dl))) {
+          return false;
+        }
+        continue;
+      }
+      if (MOZ_UNLIKELY(child->IsElement())) {
+        return false;
+      }
+      if (MOZ_LIKELY(child->IsText())) {
+        if (MOZ_UNLIKELY(HTMLEditUtils::IsVisibleTextNode(*child->AsText()))) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -1321,7 +1392,10 @@ class HTMLEditUtils final {
     return nullptr;
   }
 
-  static Element* GetClosestAncestorAnyListElement(const nsIContent& aContent);
+  [[nodiscard]] static Element* GetClosestAncestorAnyListElement(
+      const nsIContent& aContent);
+  [[nodiscard]] static Element* GetClosestInclusiveAncestorAnyListElement(
+      const nsIContent& aContent);
 
   /**
    * GetClosestAncestorListItemElement() returns a list item element if
@@ -2120,9 +2194,11 @@ class HTMLEditUtils final {
    * aNode.  If a node is a container node and first/last child is editable,
    * returns the child's start or last point recursively.
    */
+  enum class InvisibleText { Recognize, Skip };
   template <typename EditorDOMPointType>
   [[nodiscard]] static EditorDOMPointType GetDeepestEditableStartPointOf(
-      const nsIContent& aContent) {
+      const nsIContent& aContent,
+      InvisibleText aInvisibleText = InvisibleText::Recognize) {
     if (NS_WARN_IF(!EditorUtils::IsEditableContent(
             aContent, EditorBase::EditorType::HTML))) {
       return EditorDOMPointType();
@@ -2130,11 +2206,39 @@ class HTMLEditUtils final {
     EditorDOMPointType result(&aContent, 0u);
     while (true) {
       nsIContent* firstChild = result.GetContainer()->GetFirstChild();
-      if (!firstChild ||
-          (!firstChild->IsText() &&
+      if (!firstChild) {
+        break;
+      }
+      // If the caller wants to skip invisible white-spaces, we should skip
+      // invisible text nodes.
+      if (aInvisibleText == InvisibleText::Skip && firstChild->IsText() &&
+          EditorUtils::IsEditableContent(*firstChild,
+                                         EditorBase::EditorType::HTML) &&
+          !HTMLEditUtils::IsVisibleTextNode(*firstChild->AsText())) {
+        for (nsIContent* nextSibling = firstChild->GetNextSibling();
+             nextSibling; nextSibling = nextSibling->GetNextSibling()) {
+          if (!nextSibling->IsText() ||
+              // We know its previous sibling is very start of a block.
+              // Therefore, we only need to scan the text here.
+              HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
+                  *firstChild->AsText(), 0u)
+                  .isSome()) {
+            firstChild = nextSibling;
+            break;
+          }
+        }
+      }
+      if ((!firstChild->IsText() &&
            !HTMLEditUtils::IsContainerNode(*firstChild)) ||
           !EditorUtils::IsEditableContent(*firstChild,
                                           EditorBase::EditorType::HTML)) {
+        break;
+      }
+      if (aInvisibleText == InvisibleText::Skip && firstChild->IsText()) {
+        result.Set(firstChild,
+                   HTMLEditUtils::GetInclusiveNextNonCollapsibleCharOffset(
+                       *firstChild->AsText(), 0u)
+                       .valueOr(0u));
         break;
       }
       result.Set(firstChild, 0u);
@@ -2143,7 +2247,8 @@ class HTMLEditUtils final {
   }
   template <typename EditorDOMPointType>
   [[nodiscard]] static EditorDOMPointType GetDeepestEditableEndPointOf(
-      const nsIContent& aContent) {
+      const nsIContent& aContent,
+      InvisibleText aInvisibleText = InvisibleText::Recognize) {
     if (NS_WARN_IF(!EditorUtils::IsEditableContent(
             aContent, EditorBase::EditorType::HTML))) {
       return EditorDOMPointType();
@@ -2151,11 +2256,43 @@ class HTMLEditUtils final {
     auto result = EditorDOMPointType::AtEndOf(aContent);
     while (true) {
       nsIContent* lastChild = result.GetContainer()->GetLastChild();
-      if (!lastChild ||
-          (!lastChild->IsText() &&
+      if (!lastChild) {
+        break;
+      }
+      // If the caller wants to skip invisible white-spaces, we should skip
+      // invisible text nodes.
+      if (aInvisibleText == InvisibleText::Skip && lastChild->IsText() &&
+          EditorUtils::IsEditableContent(*lastChild,
+                                         EditorBase::EditorType::HTML) &&
+          !HTMLEditUtils::IsVisibleTextNode(*lastChild->AsText())) {
+        for (nsIContent* nextSibling = lastChild->GetPreviousSibling();
+             nextSibling; nextSibling = nextSibling->GetPreviousSibling()) {
+          if (!nextSibling->IsText() ||
+              // We know its previous sibling is very start of a block.
+              // Therefore, we only need to scan the text here.
+              HTMLEditUtils::GetPreviousNonCollapsibleCharOffset(
+                  *lastChild->AsText(), lastChild->AsText()->TextDataLength())
+                  .isSome()) {
+            lastChild = nextSibling;
+            break;
+          }
+        }
+      }
+      if ((!lastChild->IsText() &&
            !HTMLEditUtils::IsContainerNode(*lastChild)) ||
           !EditorUtils::IsEditableContent(*lastChild,
                                           EditorBase::EditorType::HTML)) {
+        break;
+      }
+      if (aInvisibleText == InvisibleText::Skip && lastChild->IsText()) {
+        Maybe<uint32_t> visibleCharOffset =
+            HTMLEditUtils::GetPreviousNonCollapsibleCharOffset(
+                *lastChild->AsText(), lastChild->AsText()->TextDataLength());
+        if (visibleCharOffset.isNothing()) {
+          result = EditorDOMPointType::AtEndOf(*lastChild);
+          break;
+        }
+        result.Set(lastChild, visibleCharOffset.value() + 1u);
         break;
       }
       result = EditorDOMPointType::AtEndOf(*lastChild);
