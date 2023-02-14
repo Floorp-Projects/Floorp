@@ -10243,8 +10243,14 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
           case uint32_t(MiscOp::MemoryFill):
             CHECK_NEXT(emitMemFill());
-          case uint32_t(MiscOp::MemoryDiscard):
+#ifdef ENABLE_WASM_MEMORY_CONTROL
+          case uint32_t(MiscOp::MemoryDiscard): {
+            if (!moduleEnv_.memoryControlEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
             CHECK_NEXT(emitMemDiscard());
+          }
+#endif
           case uint32_t(MiscOp::MemoryInit):
             CHECK_NEXT(emitMemInit());
           case uint32_t(MiscOp::TableCopy):

@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-memory64; test-also=--no-wasm-memory64
+// |jit-test| skip-if: !wasmMemoryControlEnabled(); test-also=--wasm-memory64; test-also=--no-wasm-memory64
 
 // This tests memory.discard and WebAssembly.Memory.discard() by placing data
 // (the alphabet) halfway across a page boundary, then discarding the first

@@ -1148,8 +1148,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readTableFill(&unusedTableIndex, &nothing, &nothing,
                                      &nothing));
           }
-          case uint32_t(MiscOp::MemoryDiscard):
+#ifdef ENABLE_WASM_MEMORY_CONTROL
+          case uint32_t(MiscOp::MemoryDiscard): {
+            if (!env.memoryControlEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
             CHECK(iter.readMemDiscard(&nothing, &nothing));
+          }
+#endif
           case uint32_t(MiscOp::TableGrow): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));

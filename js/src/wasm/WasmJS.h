@@ -390,6 +390,7 @@ class WasmMemoryObject : public NativeObject {
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
+  static const JSFunctionSpec memoryControlMethods[];
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
