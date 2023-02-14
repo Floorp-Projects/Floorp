@@ -38,6 +38,9 @@ namespace mozilla {
 namespace dom {
 enum class ScreenColorGamut : uint8_t;
 }  // namespace dom
+namespace hal {
+enum class ScreenOrientation : uint32_t;
+}  // namespace hal
 namespace widget {
 class Screen;
 }  // namespace widget
@@ -131,6 +134,18 @@ class nsDeviceContext final {
    * Return the color gamut of the device.
    */
   mozilla::dom::ScreenColorGamut GetColorGamut();
+
+  /**
+   * Return the orientation type of the device.
+   * If not screen device, return primary screen's value
+   */
+  mozilla::hal::ScreenOrientation GetScreenOrientationType();
+
+  /**
+   * Return the orientation angle of the device.
+   * If not screen device, return primary screen's value
+   */
+  uint16_t GetScreenOrientationAngle();
 
   /**
    * Get the size of the displayable area of the output device

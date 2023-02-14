@@ -74,7 +74,7 @@ nsPIDOMWindowOuter* nsScreen::GetOuter() const {
   return nullptr;
 }
 
-nsDeviceContext* nsScreen::GetDeviceContext() {
+nsDeviceContext* nsScreen::GetDeviceContext() const {
   return nsLayoutUtils::GetDeviceContextForScreenInfo(GetOuter());
 }
 
@@ -142,18 +142,20 @@ nsresult nsScreen::GetAvailRect(CSSIntRect& aRect) {
 }
 
 uint16_t nsScreen::GetOrientationAngle() const {
-  // NOTE(emilio): This could be made screen-dependent with some minor effort /
-  // plumbing, but this will only ever differ on Android (where there's just one
-  // screen anyways).
+  nsDeviceContext* context = GetDeviceContext();
+  if (context) {
+    return context->GetScreenOrientationAngle();
+  }
   RefPtr<widget::Screen> s =
       widget::ScreenManager::GetSingleton().GetPrimaryScreen();
   return s->GetOrientationAngle();
 }
 
 hal::ScreenOrientation nsScreen::GetOrientationType() const {
-  // NOTE(emilio): This could be made screen-dependent with some minor effort /
-  // plumbing, but this will only ever differ on android where there's just one
-  // screen anyways.
+  nsDeviceContext* context = GetDeviceContext();
+  if (context) {
+    return context->GetScreenOrientationType();
+  }
   RefPtr<widget::Screen> s =
       widget::ScreenManager::GetSingleton().GetPrimaryScreen();
   return s->GetOrientationType();
