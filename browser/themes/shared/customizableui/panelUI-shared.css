@@ -705,10 +705,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   display: none;
 }
 
-/* Hide the FxA toolbar button when its in the nav-bar, until in use */
-:root[fxastatus="not_configured"] #widget-overflow-list > #fxa-toolbar-menu-button,
-:root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
-  display: none;
+@supports not -moz-bool-pref("identity.fxaccounts.toolbar.defaultVisible") {
+  /* Hide the FxA toolbar button when its in the nav-bar, until in use */
+  :root[fxastatus="not_configured"] #widget-overflow-list > #fxa-toolbar-menu-button,
+  :root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
+    display: none;
+  }
 }
 
 #fxa-avatar-image,
