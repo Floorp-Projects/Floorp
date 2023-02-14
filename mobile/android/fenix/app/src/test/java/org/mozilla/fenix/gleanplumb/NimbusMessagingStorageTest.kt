@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.gleanplumb
 
+import io.mockk.Called
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +38,6 @@ class NimbusMessagingStorageTest {
     private lateinit var metadataStorage: MessageMetadataStorage
     private lateinit var gleanPlumb: GleanPlumbInterface
     private lateinit var messagingFeature: FeatureHolder<Messaging>
-    private lateinit var messaging: Messaging
     private var malformedWasReported = false
     private val reportMalformedMessage: (String) -> Unit = {
         malformedWasReported = true
@@ -579,6 +579,20 @@ class NimbusMessagingStorageTest {
         assertEquals(message.id, result!!.id)
     }
 
+    @Test
+    fun `WHEN a storage instance is created THEN do not invoke the feature`() = runTest {
+        storage = NimbusMessagingStorage(
+            testContext,
+            metadataStorage,
+            reportMalformedMessage,
+            gleanPlumb,
+            messagingFeature,
+        )
+
+        // We should not be using the feature holder until getMessages is called.
+        verify { messagingFeature wasNot Called }
+    }
+
     private fun createMessageData(
         action: String = "action-1",
         style: String = "style-1",
@@ -603,16 +617,18 @@ class NimbusMessagingStorageTest {
             "malformed" to createMessageData(action = "malformed-action"),
         ),
     ): FeatureHolder<Messaging> {
-        val messagingFeature: FeatureHolder<Messaging> = mockk(relaxed = true)
-        messaging = Messaging(
+        val messaging = Messaging(
             actions = actions,
             triggers = triggers,
             messages = messages,
             styles = styles,
         )
-        every { messagingFeature.value() } returns messaging
+        val messagingFeature = FeatureHolder({ mockk(relaxed = true) }, "messaging") {
+            messaging
+        }
+        messagingFeature.withCachedValue(messaging)
 
-        return messagingFeature
+        return spyk(messagingFeature)
     }
 
     private fun createStyle(priority: Int = 1, maxDisplayCount: Int = 5): StyleData {

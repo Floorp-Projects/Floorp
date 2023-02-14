@@ -48,7 +48,7 @@ class NimbusMessagingStorage(
     @VisibleForTesting
     internal val malFormedMap = mutableMapOf<String, String>()
     private val logger = Logger("MessagingStorage")
-    private val nimbusFeature = messagingFeature.value()
+    private val nimbusFeature = messagingFeature
     private val customAttributes: JSONObject
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
@@ -56,11 +56,12 @@ class NimbusMessagingStorage(
      * Returns a list of available messages descending sorted by their priority.
      */
     suspend fun getMessages(): List<Message> {
-        val nimbusTriggers = nimbusFeature.triggers
-        val nimbusStyles = nimbusFeature.styles
-        val nimbusActions = nimbusFeature.actions
+        val featureValue = messagingFeature.value()
+        val nimbusTriggers = featureValue.triggers
+        val nimbusStyles = featureValue.styles
+        val nimbusActions = featureValue.actions
 
-        val nimbusMessages = nimbusFeature.messages
+        val nimbusMessages = featureValue.messages
         val defaultStyle = StyleData()
         val storageMetadata = metadataStorage.getMetadata()
 
@@ -96,7 +97,7 @@ class NimbusMessagingStorage(
         } ?: return null
 
         // Check this isn't an experimental message. If not, we can go ahead and return it.
-        if (!isMessageUnderExperiment(message, nimbusFeature.messageUnderExperiment)) {
+        if (!isMessageUnderExperiment(message, nimbusFeature.value().messageUnderExperiment)) {
             return message
         }
         // If the message is under experiment, then we need to record the exposure
@@ -232,7 +233,7 @@ class NimbusMessagingStorage(
     }
 
     @VisibleForTesting
-    internal fun getOnControlBehavior(): ControlMessageBehavior = nimbusFeature.onControl
+    internal fun getOnControlBehavior(): ControlMessageBehavior = nimbusFeature.value().onControl
 
     private suspend fun addMetadata(id: String): Message.Metadata {
         return metadataStorage.addMetadata(
