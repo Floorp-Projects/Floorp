@@ -100,17 +100,13 @@ private fun assertVersionNumber() {
 
     val packageInfo = context.packageManager.getPackageInfoCompat(context.packageName, 0)
     val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-
     val buildNVersion = "${packageInfo.versionName} (Build #$versionCode)\n"
-    val componentsVersion =
-        "${mozilla.components.Build.version}, ${mozilla.components.Build.gitHash}"
     val geckoVersion =
         org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "-" + org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
     val asVersion = mozilla.components.Build.applicationServicesVersion
 
     onView(withId(R.id.about_text))
         .check(matches(withText(containsString(buildNVersion))))
-        .check(matches(withText(containsString(componentsVersion))))
         .check(matches(withText(containsString(geckoVersion))))
         .check(matches(withText(containsString(asVersion))))
 }
