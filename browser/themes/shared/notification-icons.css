@@ -199,7 +199,7 @@
 }
 
 #identity-credential-notification-icon {
-  list-style-image: url(chrome://browser/skin/fingerprint.svg);
+  list-style-image: url(chrome://browser/skin/login.svg);
 }
 
 #permission-popup-menulist {

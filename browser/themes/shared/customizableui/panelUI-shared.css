@@ -1106,7 +1106,6 @@ panelview .toolbarbutton-1,
 }
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound)::after,
-#identity-credential-notification .subviewbutton-nav::after,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill, fill-opacity;
@@ -1117,7 +1116,6 @@ panelview .toolbarbutton-1,
 }
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound):-moz-locale-dir(rtl)::after,
-#identity-credential-notification .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
   content: url(chrome://global/skin/icons/arrow-left.svg);
