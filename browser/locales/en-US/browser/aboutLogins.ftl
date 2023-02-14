@@ -5,8 +5,9 @@
 
 about-logins-page-title = Logins & Passwords
 
-login-filter =
+about-logins-login-filter =
   .placeholder = Search Logins
+  .key = F
 
 create-new-login-button =
   .title = Create new login
