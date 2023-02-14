@@ -1,0 +1,5 @@
+import("//third_party/libaom/options.gni")
+import("../../webrtc.gni")
+
+rtc_library("gtest") {
+}
