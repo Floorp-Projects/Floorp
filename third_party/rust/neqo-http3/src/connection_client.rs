@@ -182,7 +182,8 @@ fn alpn_from_quic_version(version: Version) -> &'static str {
 ///         match event {
 ///             Http3ClientEvent::WebTransport(WebTransportEvent::Session{
 ///                 stream_id,
-///                 status
+///                 status,
+///                 ..
 ///             }) => {
 ///                 println!("The response from the server: WebTransport session ID {:?} status={:?}",
 ///                     stream_id,

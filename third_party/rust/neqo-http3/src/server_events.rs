@@ -378,6 +378,7 @@ pub enum WebTransportServerEvent {
     SessionClosed {
         session: WebTransportRequest,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     },
     NewStream(Http3OrWebTransportStream),
     Datagram {
@@ -541,9 +542,14 @@ impl Http3ServerEvents {
         &self,
         session: WebTransportRequest,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     ) {
         self.insert(Http3ServerEvent::WebTransport(
-            WebTransportServerEvent::SessionClosed { session, reason },
+            WebTransportServerEvent::SessionClosed {
+                session,
+                reason,
+                headers,
+            },
         ));
     }
 

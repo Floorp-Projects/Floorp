@@ -718,13 +718,21 @@ impl WebTransportEventExternal {
     fn new(event: WebTransportEvent, data: &mut ThinVec<u8>) -> WebTransportEventExternal {
         match event {
             WebTransportEvent::Negotiated(n) => WebTransportEventExternal::Negotiated(n),
-            WebTransportEvent::Session { stream_id, status } => {
+            WebTransportEvent::Session {
+                stream_id,
+                status,
+                headers: _,
+            } => {
                 data.extend_from_slice(b"HTTP/3 ");
                 data.extend_from_slice(&status.to_string().as_bytes());
                 data.extend_from_slice(b"\r\n\r\n");
                 WebTransportEventExternal::Session(stream_id.as_u64())
             }
-            WebTransportEvent::SessionClosed { stream_id, reason } => match reason {
+            WebTransportEvent::SessionClosed {
+                stream_id,
+                reason,
+                headers: _,
+            } => match reason {
                 SessionCloseReason::Status(status) => {
                     data.extend_from_slice(b"HTTP/3 ");
                     data.extend_from_slice(&status.to_string().as_bytes());

@@ -35,7 +35,10 @@ fn test_idle_timeout(client: &mut Connection, server: &mut Connection, timeout: 
     assert_eq!(res, Output::Callback(timeout));
 
     // Still connected after timeout-1 seconds. Idle timer not reset
-    mem::drop(client.process(None, now + timeout - Duration::from_secs(1)));
+    mem::drop(client.process(
+        None,
+        now + timeout.checked_sub(Duration::from_secs(1)).unwrap(),
+    ));
     assert!(matches!(client.state(), State::Confirmed));
 
     mem::drop(client.process(None, now + timeout));

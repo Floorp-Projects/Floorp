@@ -1,6 +1,6 @@
 [package]
 name = "neqo-transport"
-version = "0.6.3"
+version = "0.6.4"
 authors = ["EKR <ekr@rtfm.com>", "Andy Grover <agrover@mozilla.com>"]
 edition = "2018"
 rust-version = "1.57.0"

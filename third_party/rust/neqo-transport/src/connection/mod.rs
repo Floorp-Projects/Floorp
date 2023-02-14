@@ -2994,7 +2994,7 @@ impl Connection {
         let stream = self.streams.get_recv_stream_mut(stream_id)?;
 
         let rb = stream.read(data)?;
-        Ok((rb.0 as usize, rb.1))
+        Ok(rb)
     }
 
     /// Application is no longer interested in this stream.

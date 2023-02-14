@@ -26,10 +26,12 @@ pub enum WebTransportEvent {
     Session {
         stream_id: StreamId,
         status: u16,
+        headers: Vec<Header>,
     },
     SessionClosed {
         stream_id: StreamId,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     },
     NewStream {
         stream_id: StreamId,
@@ -181,11 +183,18 @@ impl SendStreamEvents for Http3ClientEvents {
 }
 
 impl ExtendedConnectEvents for Http3ClientEvents {
-    fn session_start(&self, connect_type: ExtendedConnectType, stream_id: StreamId, status: u16) {
+    fn session_start(
+        &self,
+        connect_type: ExtendedConnectType,
+        stream_id: StreamId,
+        status: u16,
+        headers: Vec<Header>,
+    ) {
         if connect_type == ExtendedConnectType::WebTransport {
             self.insert(Http3ClientEvent::WebTransport(WebTransportEvent::Session {
                 stream_id,
                 status,
+                headers,
             }));
         } else {
             unreachable!("There is only ExtendedConnectType::WebTransport.");
@@ -197,10 +206,15 @@ impl ExtendedConnectEvents for Http3ClientEvents {
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     ) {
         if connect_type == ExtendedConnectType::WebTransport {
             self.insert(Http3ClientEvent::WebTransport(
-                WebTransportEvent::SessionClosed { stream_id, reason },
+                WebTransportEvent::SessionClosed {
+                    stream_id,
+                    reason,
+                    headers,
+                },
             ));
         } else {
             unreachable!("There are no other types.");

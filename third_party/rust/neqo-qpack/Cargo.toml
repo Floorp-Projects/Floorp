@@ -1,6 +1,6 @@
 [package]
 name = "neqo-qpack"
-version = "0.6.3"
+version = "0.6.4"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
 rust-version = "1.57.0"

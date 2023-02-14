@@ -10,7 +10,7 @@
 #[macro_use]
 mod sim;
 
-use neqo_transport::{ConnectionError, Error, State};
+use neqo_transport::{ConnectionError, ConnectionParameters, Error, State};
 use sim::{
     connection::{ConnectionNode, ReachState, ReceiveData, SendData},
     network::{Delay, Drop, TailDrop},
@@ -26,24 +26,28 @@ const DELAY: Duration = Duration::from_millis(50);
 const DELAY_RANGE: Range<Duration> = DELAY..Duration::from_millis(55);
 const JITTER: Duration = Duration::from_millis(10);
 
+const fn weeks(m: u32) -> Duration {
+    Duration::from_secs((m as u64) * 60 * 60 * 24 * 7)
+}
+
 simulate!(
     connect_direct,
     [
-        ConnectionNode::new_client(boxed![ReachState::new(State::Confirmed)]),
-        ConnectionNode::new_server(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_client(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_server(boxed![ReachState::new(State::Confirmed)]),
     ]
 );
 
 simulate!(
     idle_timeout,
     [
-        ConnectionNode::new_client(boxed![
+        ConnectionNode::default_client(boxed![
             ReachState::new(State::Confirmed),
             ReachState::new(State::Closed(ConnectionError::Transport(
                 Error::IdleTimeout
             )))
         ]),
-        ConnectionNode::new_server(boxed![
+        ConnectionNode::default_server(boxed![
             ReachState::new(State::Confirmed),
             ReachState::new(State::Closed(ConnectionError::Transport(
                 Error::IdleTimeout
@@ -55,21 +59,27 @@ simulate!(
 simulate!(
     idle_timeout_crazy_rtt,
     [
-        ConnectionNode::new_client(boxed![
-            ReachState::new(State::Confirmed),
-            ReachState::new(State::Closed(ConnectionError::Transport(
-                Error::IdleTimeout
-            )))
-        ]),
-        Delay::new(Duration::from_secs(15)..Duration::from_secs(15)),
+        ConnectionNode::new_client(
+            ConnectionParameters::default().idle_timeout(weeks(1000)),
+            boxed![
+                ReachState::new(State::Confirmed),
+                ReachState::new(State::Closed(ConnectionError::Transport(
+                    Error::IdleTimeout
+                )))
+            ]
+        ),
+        Delay::new(weeks(150)..weeks(150)),
         Drop::percentage(10),
-        ConnectionNode::new_server(boxed![
-            ReachState::new(State::Confirmed),
-            ReachState::new(State::Closed(ConnectionError::Transport(
-                Error::IdleTimeout
-            )))
-        ]),
-        Delay::new(Duration::from_secs(10)..Duration::from_secs(10)),
+        ConnectionNode::new_server(
+            ConnectionParameters::default().idle_timeout(weeks(1000)),
+            boxed![
+                ReachState::new(State::Confirmed),
+                ReachState::new(State::Closed(ConnectionError::Transport(
+                    Error::IdleTimeout
+                )))
+            ]
+        ),
+        Delay::new(weeks(100)..weeks(100)),
         Drop::percentage(10),
     ],
 );
@@ -77,17 +87,17 @@ simulate!(
 simulate!(
     transfer,
     [
-        ConnectionNode::new_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
-        ConnectionNode::new_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
     ]
 );
 
 simulate!(
     connect_fixed_rtt,
     [
-        ConnectionNode::new_client(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_client(boxed![ReachState::new(State::Confirmed)]),
         Delay::new(DELAY..DELAY),
-        ConnectionNode::new_server(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_server(boxed![ReachState::new(State::Confirmed)]),
         Delay::new(DELAY..DELAY),
     ],
 );
@@ -95,10 +105,10 @@ simulate!(
 simulate!(
     connect_taildrop_jitter,
     [
-        ConnectionNode::new_client(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_client(boxed![ReachState::new(State::Confirmed)]),
         TailDrop::dsl_uplink(),
         Delay::new(ZERO..JITTER),
-        ConnectionNode::new_server(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_server(boxed![ReachState::new(State::Confirmed)]),
         TailDrop::dsl_downlink(),
         Delay::new(ZERO..JITTER),
     ],
@@ -107,9 +117,9 @@ simulate!(
 simulate!(
     connect_taildrop,
     [
-        ConnectionNode::new_client(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_client(boxed![ReachState::new(State::Confirmed)]),
         TailDrop::dsl_uplink(),
-        ConnectionNode::new_server(boxed![ReachState::new(State::Confirmed)]),
+        ConnectionNode::default_server(boxed![ReachState::new(State::Confirmed)]),
         TailDrop::dsl_downlink(),
     ],
 );
@@ -117,10 +127,10 @@ simulate!(
 simulate!(
     transfer_delay_drop,
     [
-        ConnectionNode::new_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
         Delay::new(DELAY_RANGE),
         Drop::percentage(1),
-        ConnectionNode::new_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
         Delay::new(DELAY_RANGE),
         Drop::percentage(1),
     ],
@@ -129,9 +139,9 @@ simulate!(
 simulate!(
     transfer_taildrop,
     [
-        ConnectionNode::new_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
         TailDrop::dsl_uplink(),
-        ConnectionNode::new_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
         TailDrop::dsl_downlink(),
     ],
 );
@@ -139,10 +149,10 @@ simulate!(
 simulate!(
     transfer_taildrop_jitter,
     [
-        ConnectionNode::new_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
         TailDrop::dsl_uplink(),
         Delay::new(ZERO..JITTER),
-        ConnectionNode::new_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
+        ConnectionNode::default_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
         TailDrop::dsl_downlink(),
         Delay::new(ZERO..JITTER),
     ],
@@ -155,10 +165,10 @@ fn transfer_fixed_seed() {
     let mut sim = Simulator::new(
         "transfer_fixed_seed",
         boxed![
-            ConnectionNode::new_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
+            ConnectionNode::default_client(boxed![SendData::new(TRANSFER_AMOUNT)]),
             Delay::new(ZERO..DELAY),
             Drop::percentage(1),
-            ConnectionNode::new_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
+            ConnectionNode::default_server(boxed![ReceiveData::new(TRANSFER_AMOUNT)]),
             Delay::new(ZERO..DELAY),
             Drop::percentage(1),
         ],

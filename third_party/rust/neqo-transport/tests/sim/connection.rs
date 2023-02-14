@@ -9,7 +9,9 @@
 use super::{Node, Rng};
 use neqo_common::{event::Provider, qdebug, qtrace, Datagram};
 use neqo_crypto::AuthenticationStatus;
-use neqo_transport::{Connection, ConnectionEvent, Output, State, StreamId, StreamType};
+use neqo_transport::{
+    Connection, ConnectionEvent, ConnectionParameters, Output, State, StreamId, StreamType,
+};
 use std::cmp::min;
 use std::fmt::{self, Debug};
 use std::time::Instant;
@@ -45,18 +47,32 @@ pub struct ConnectionNode {
 }
 
 impl ConnectionNode {
-    pub fn new_client(goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>) -> Self {
+    pub fn new_client(
+        params: ConnectionParameters,
+        goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>,
+    ) -> Self {
         Self {
-            c: test_fixture::default_client(),
+            c: test_fixture::new_client(params),
             goals: goals.into_iter().collect(),
         }
     }
 
-    pub fn new_server(goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>) -> Self {
+    pub fn new_server(
+        params: ConnectionParameters,
+        goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>,
+    ) -> Self {
         Self {
-            c: test_fixture::default_server(),
+            c: test_fixture::new_server(test_fixture::DEFAULT_ALPN, params),
             goals: goals.into_iter().collect(),
         }
+    }
+
+    pub fn default_client(goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>) -> Self {
+        Self::new_client(ConnectionParameters::default(), goals)
+    }
+
+    pub fn default_server(goals: impl IntoIterator<Item = Box<dyn ConnectionGoal>>) -> Self {
+        Self::new_server(ConnectionParameters::default(), goals)
     }
 
     #[allow(dead_code)]

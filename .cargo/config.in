@@ -107,7 +107,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
-tag = "v0.6.3"
+tag = "v0.6.4"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/uniffi-rs.git"]

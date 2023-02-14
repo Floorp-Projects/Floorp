@@ -320,5 +320,5 @@ fn congestion_event_congestion_avoidance_test_no_overflow() {
     assert_eq!(cubic.cwnd(), CWND_INITIAL);
 
     // Now ack packet that was send earlier.
-    ack_packet(&mut cubic, 0, now() - PTO);
+    ack_packet(&mut cubic, 0, now().checked_sub(PTO).unwrap());
 }

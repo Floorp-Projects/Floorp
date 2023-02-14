@@ -120,7 +120,7 @@ impl<T> Timer<T> {
             for i in &self.items {
                 debug_assert!(i.is_empty());
             }
-            self.now = time - short_span;
+            self.now = time.checked_sub(short_span).unwrap();
             self.cursor = 0;
         }
 
@@ -287,7 +287,8 @@ mod test {
         t.add(near_future, v);
         assert_eq!(near_future, t.next_time().expect("should return a value"));
         assert_eq!(
-            t.take_until(near_future - Duration::from_millis(1)).count(),
+            t.take_until(near_future.checked_sub(Duration::from_millis(1)).unwrap())
+                .count(),
             0
         );
         assert!(t

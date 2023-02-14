@@ -53,6 +53,7 @@ pub(crate) enum Http3ServerConnEvent {
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     },
     ExtendedConnectNewStream(Http3StreamInfo),
     ExtendedConnectDatagram {
@@ -125,6 +126,7 @@ impl ExtendedConnectEvents for Http3ServerConnEvents {
         _connect_type: ExtendedConnectType,
         _stream_id: StreamId,
         _status: u16,
+        _headers: Vec<Header>,
     ) {
     }
 
@@ -133,11 +135,13 @@ impl ExtendedConnectEvents for Http3ServerConnEvents {
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
         reason: SessionCloseReason,
+        headers: Option<Vec<Header>>,
     ) {
         self.insert(Http3ServerConnEvent::ExtendedConnectClosed {
             connect_type,
             stream_id,
             reason,
+            headers,
         });
     }
 
