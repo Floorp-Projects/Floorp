@@ -8,14 +8,18 @@
 
 // static
 bool Mutex::SpinInKernelSpace() {
+#  ifdef __aarch64__
+  return true;
+#  else
   if (__builtin_available(macOS 10.15, *)) {
     return true;
   }
 
   return false;
+#  endif
 }
 
 // static
-bool Mutex::gSpinInKernelSpace = SpinInKernelSpace();
+const bool Mutex::gSpinInKernelSpace = SpinInKernelSpace();
 
 #endif  // defined(XP_DARWIN)
