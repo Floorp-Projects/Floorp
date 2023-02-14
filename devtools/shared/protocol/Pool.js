@@ -213,6 +213,7 @@ class Pool extends EventEmitter {
       }
     }
     this.conn.removeActorPool(this);
+    this.conn = null;
   }
 }
 

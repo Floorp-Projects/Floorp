@@ -85,7 +85,6 @@ class Actor extends Pool {
     super.destroy();
     this.actorID = null;
     this._isDestroyed = true;
-    this.conn = null;
   }
 
   /**
