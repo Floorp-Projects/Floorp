@@ -185,10 +185,6 @@ pref("dom.text-recognition.enabled", true);
 pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
-// 0 = no external leading,
-// 1 = use external leading only when font provides,
-// 2 = add extra leading both internal leading and external leading are zero
-pref("browser.display.normal_lineheight_calc_control", 2);
 // enable showing image placeholders while image is loading or when image is broken
 pref("browser.display.show_image_placeholders", true);
 // if browser.display.show_image_placeholders is true then this controls whether the loading image placeholder and border is shown or not

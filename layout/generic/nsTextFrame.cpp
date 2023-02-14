@@ -5898,7 +5898,7 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 }
 
 nscoord nsTextFrame::ComputeLineHeight() const {
-  return ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
+  return ReflowInput::CalcLineHeight(*Style(), PresContext(), GetContent(),
                                      NS_UNCONSTRAINEDSIZE,
                                      GetFontSizeInflation());
 }

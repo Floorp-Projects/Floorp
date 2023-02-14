@@ -4323,7 +4323,7 @@ fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
     println_stderr!("  Properties:");
     for p in properties.iter() {
         let mut v = nsCString::new();
-        cv.get_resolved_value(p, &mut v).unwrap();
+        cv.computed_or_resolved_value(p, None, &mut v).unwrap();
         println_stderr!("    {:?}: {}", p, v);
     }
     dump_rules(cv);
@@ -6794,24 +6794,56 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
     data.stylist.has_document_state_dependency(state)
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn Servo_GetPropertyValue(
+
+fn computed_or_resolved_value(
     style: &ComputedValues,
     prop: nsCSSPropertyID,
+    context: Option<&style::values::resolved::Context>,
     value: &mut nsACString,
 ) {
     if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        style.get_resolved_value(longhand, value).unwrap();
-        return;
+        return style.computed_or_resolved_value(longhand, context, value).unwrap();
     }
 
     let shorthand =
         ShorthandId::from_nscsspropertyid(prop).expect("Not a shorthand nor a longhand?");
     let mut block = PropertyDeclarationBlock::new();
     for longhand in shorthand.longhands() {
-        block.push(style.resolved_declaration(longhand), Importance::Normal);
+        block.push(style.computed_or_resolved_declaration(longhand, context), Importance::Normal);
     }
     block.shorthand_to_css(shorthand, value).unwrap();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_GetComputedValue(
+    style: &ComputedValues,
+    prop: nsCSSPropertyID,
+    value: &mut nsACString,
+) {
+    computed_or_resolved_value(style, prop, None, value)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_GetResolvedValue(
+    style: &ComputedValues,
+    prop: nsCSSPropertyID,
+    raw_data: &RawServoStyleSet,
+    element: &RawGeckoElement,
+    value: &mut nsACString,
+) {
+    use style::values::resolved;
+
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    let device = data.stylist.device();
+    let context = resolved::Context {
+        style,
+        device,
+        element_info: resolved::ResolvedElementInfo {
+            element: GeckoElement(element),
+        },
+    };
+
+    computed_or_resolved_value(style, prop, Some(&context), value)
 }
 
 #[no_mangle]
