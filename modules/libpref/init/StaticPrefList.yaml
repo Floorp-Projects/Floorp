@@ -2563,7 +2563,7 @@
 # the content process.
 - name: dom.events.dataTransfer.mozFile.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.events.dataTransfer.imageAsFile.enabled
