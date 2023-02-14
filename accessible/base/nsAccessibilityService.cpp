@@ -75,7 +75,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_accessibility.h"
-#include "mozilla/SVGGeometryFrame.h"
 
 #include "XULAlertAccessible.h"
 #include "XULComboboxAccessible.h"
@@ -1236,12 +1235,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
   if (!newAcc) {
     if (content->IsSVGElement()) {
-      SVGGeometryFrame* geometryFrame = do_QueryFrame(frame);
-      if (geometryFrame && MustSVGElementBeAccessible(content)) {
-        // A graphic elements: rect, circle, ellipse, line, path, polygon,
-        // polyline and image. A 'use' and 'text' graphic elements require
+      if (content->IsNodeOfType(nsINode::eSHAPE) ||
+          content->IsSVGElement(nsGkAtoms::image)) {
+        // Shape elements: rect, circle, ellipse, line, path, polygon,
+        // and polyline. 'use' and 'text' graphic elements require
         // special support.
-        newAcc = new EnumRoleAccessible<roles::GRAPHIC>(content, document);
+        if (MustSVGElementBeAccessible(content)) {
+          newAcc = new EnumRoleAccessible<roles::GRAPHIC>(content, document);
+        }
       } else if (content->IsSVGElement(nsGkAtoms::text)) {
         newAcc = new HyperTextAccessibleWrap(content->AsElement(), document);
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
