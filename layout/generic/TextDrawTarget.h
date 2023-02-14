@@ -345,11 +345,12 @@ class TextDrawTarget : public DrawTarget {
                        false, aFilter, aKey, true, aColor);
   }
 
+  LayoutDeviceRect GeckoClipRect() { return mClipStack.LastElement(); }
+
  private:
   wr::LayoutRect ClipRect() {
     return wr::ToLayoutRect(mClipStack.LastElement());
   }
-  LayoutDeviceRect GeckoClipRect() { return mClipStack.LastElement(); }
   // Whether anything unsupported was encountered. This will result in this
   // text being emitted as a blob, which means subpixel-AA can't be used and
   // that performance will probably be a bit worse. At this point, we've
