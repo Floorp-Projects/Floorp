@@ -55,19 +55,6 @@ aab:
     replace:
         target: "geckoview-test_runner.aab"
 
-geckoview-e10s-single:
-    description: "{description} with single-process e10s"
-    component: "Core::DOM: Content Processes"
-    expiration: "2023-03-01"
-    when:
-        <<: *gv_e10s_filter
-    suffix: "e10s-single"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=dom.ipc.processCount=1"
-                - "--disable-fission"
-
 geckoview-no-fission:
     description: "{description} without fission enabled"
     component: "Core::DOM: Content Processes"
@@ -93,16 +80,6 @@ fission:
     component: "Testing::General"
     expiration: "2023-03-01"
     suffix: "fis"
-
-fission-no-isolate:
-    description: "{description} with fission and webContentIsolationStrategy=0"
-    component: "Core::DOM: Content Processes"
-    expiration: "2023-03-01"
-    suffix: "fis-0"
-    merge:
-        mozharness:
-            extra-options:
-                - "--web-content-isolation-strategy=0"
 
 no-fission:
     description: "{description} without fission enabled"
