@@ -487,6 +487,60 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
 });
 
 add_task(
+  async function test_button_opens_extlist_when_no_extension_and_pane_disabled() {
+    // If extensions.getAddons.showPane is set to false, there is no "Recommended" tab,
+    // so we need to make sure we don't navigate to it.
+
+    // The test harness registers regular extensions so we need to mock the
+    // `getActivePolicies` extension to simulate zero extensions installed.
+    const origGetActivePolicies = gUnifiedExtensions.getActivePolicies;
+    gUnifiedExtensions.getActivePolicies = () => [];
+
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        // Set this to another value to make sure not to "accidentally" land on the right page
+        ["extensions.ui.lastCategory", "addons://list/theme"],
+        ["extensions.getAddons.showPane", false],
+      ],
+    });
+
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "about:robots" },
+      async () => {
+        const { button } = gUnifiedExtensions;
+        ok(button, "expected button");
+
+        // Primary click should open about:addons.
+        const tabPromise = BrowserTestUtils.waitForNewTab(
+          gBrowser,
+          "about:addons",
+          true
+        );
+
+        button.click();
+
+        const tab = await tabPromise;
+        is(
+          gBrowser.currentURI.spec,
+          "about:addons",
+          "expected about:addons to be open"
+        );
+        is(
+          gBrowser.selectedBrowser.contentWindow.gViewController.currentViewId,
+          "addons://list/extension",
+          "expected about:addons to show the extension list"
+        );
+        BrowserTestUtils.removeTab(tab);
+      }
+    );
+
+    await SpecialPowers.popPrefEnv();
+
+    gUnifiedExtensions.getActivePolicies = origGetActivePolicies;
+  }
+);
+
+add_task(
   async function test_unified_extensions_panel_not_open_in_customization_mode() {
     const listView = getListView();
     ok(listView, "expected list view");
