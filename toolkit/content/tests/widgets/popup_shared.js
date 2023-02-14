@@ -52,6 +52,9 @@ function startPopupTests(tests) {
   document.addEventListener("DOMMenuBarActive", eventOccurred);
   document.addEventListener("DOMMenuBarInactive", eventOccurred);
 
+  // This is useful to explicitly finish a test that shouldn't trigger events.
+  document.addEventListener("TestDone", eventOccurred);
+
   gPopupTests = tests;
   gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 

@@ -930,6 +930,30 @@ var popupTests = [
   },
 },
 
+{
+  testname: "Trying to activate menubar without activatable items shouldn't crash",
+  events: [ "TestDone menubar" ],
+  test() {
+    const items = document.querySelectorAll("menubar > menu");
+    let wasDisabled = {};
+    for (let item of items) {
+      wasDisabled[item] = item.disabled;
+      item.disabled = true;
+    }
+
+    synthesizeKey("KEY_F10");
+    setTimeout(function() {
+      synthesizeKey("KEY_F10");
+
+      for (let item of items) {
+        item.disabled = wasDisabled[item];
+      }
+
+      document.getElementById("menubar").dispatchEvent(new CustomEvent("TestDone", { bubbles: true }));
+    }, 0);
+  }
+},
+
 // bug 625151
 {
   testname: "Alt key state before deactivating the window shouldn't prevent " +
