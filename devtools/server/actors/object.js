@@ -4,11 +4,11 @@
 
 "use strict";
 
+const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
+const { objectSpec } = require("resource://devtools/shared/specs/object.js");
+
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const { assert } = DevToolsUtils;
-
-const protocol = require("resource://devtools/shared/protocol.js");
-const { objectSpec } = require("resource://devtools/shared/specs/object.js");
 
 loader.lazyRequireGetter(
   this,
@@ -68,7 +68,7 @@ const {
   isTypedArray,
 } = require("resource://devtools/server/actors/object/utils.js");
 
-const proto = {
+class ObjectActor extends Actor {
   /**
    * Creates an actor for the specified object.
    *
@@ -88,8 +88,9 @@ const proto = {
    *              Increment the actor's grip depth
    *          - decrementGripDepth
    *              Decrement the actor's grip depth
+   * @param DevToolsServerConnection conn
    */
-  initialize(
+  constructor(
     obj,
     {
       thread,
@@ -103,13 +104,13 @@ const proto = {
     },
     conn
   ) {
+    super(conn, objectSpec);
+
     assert(
       !obj.optimizedOut,
       "Should not create object actors for optimized out values!"
     );
-    protocol.Actor.prototype.initialize.call(this, conn);
 
-    this.conn = conn;
     this.obj = obj;
     this.thread = thread;
     this.hooks = {
@@ -121,23 +122,23 @@ const proto = {
       customFormatterObjectTagDepth,
       customFormatterConfigDbgObj,
     };
-  },
+  }
 
   rawValue() {
     return this.obj.unsafeDereference();
-  },
+  }
 
   addWatchpoint(property, label, watchpointType) {
     this.thread.addWatchpoint(this, { property, label, watchpointType });
-  },
+  }
 
   removeWatchpoint(property) {
     this.thread.removeWatchpoint(this, property);
-  },
+  }
 
   removeWatchpoints() {
     this.thread.removeWatchpoint(this);
-  },
+  }
 
   /**
    * Returns a grip for this actor for returning in a protocol message.
@@ -218,11 +219,11 @@ const proto = {
     }
 
     return g;
-  },
+  }
 
   customFormatterBody() {
     return customFormatterBody(this, this._customFormatterItem);
-  },
+  }
 
   _getOwnPropertyLength() {
     if (isTypedArray(this.obj)) {
@@ -242,7 +243,7 @@ const proto = {
     }
 
     return null;
-  },
+  }
 
   getRawObject() {
     let raw = this.obj.unsafeDereference();
@@ -258,7 +259,7 @@ const proto = {
     }
 
     return raw;
-  },
+  }
 
   /**
    * Populate the `preview` property on `grip` given its type.
@@ -279,7 +280,7 @@ const proto = {
         DevToolsUtils.reportException(msg, e);
       }
     }
-  },
+  }
 
   /**
    * Returns an object exposing the internal Promise state.
@@ -302,7 +303,7 @@ const proto = {
     }
 
     return { promiseState };
-  },
+  }
 
   /**
    * Creates an actor to iterate over an object property names and values.
@@ -312,28 +313,28 @@ const proto = {
    */
   enumProperties(options) {
     return new PropertyIteratorActor(this, options, this.conn);
-  },
+  }
 
   /**
    * Creates an actor to iterate over entries of a Map/Set-like object.
    */
   enumEntries() {
     return new PropertyIteratorActor(this, { enumEntries: true }, this.conn);
-  },
+  }
 
   /**
    * Creates an actor to iterate over an object symbols properties.
    */
   enumSymbols() {
     return new SymbolIteratorActor(this, this.conn);
-  },
+  }
 
   /**
    * Creates an actor to iterate over an object private properties.
    */
   enumPrivateProperties() {
     return new PrivatePropertiesIteratorActor(this, this.conn);
-  },
+  }
 
   /**
    * Handle a protocol request to provide the prototype and own properties of
@@ -386,7 +387,7 @@ const proto = {
       ownSymbols,
       safeGetterValues: this._findSafeGetterValues(names),
     };
-  },
+  }
 
   /**
    * Find the safe getter values for the current Debugger.Object, |this.obj|.
@@ -482,7 +483,7 @@ const proto = {
     }
 
     return safeGetterValues;
-  },
+  }
 
   /**
    * Evaluate the getter function |desc.get|.
@@ -502,7 +503,7 @@ const proto = {
     }
 
     return getterValue;
-  },
+  }
 
   /**
    * Find the safe getters for a given Debugger.Object. Safe getters are native
@@ -554,7 +555,7 @@ const proto = {
 
     object._safeGetters = getters;
     return getters;
-  },
+  }
 
   /**
    * Handle a protocol request to provide the prototype of the object.
@@ -565,7 +566,7 @@ const proto = {
       objProto = this.obj.proto;
     }
     return { prototype: this.hooks.createValueGrip(objProto) };
-  },
+  }
 
   /**
    * Handle a protocol request to provide the property descriptor of the
@@ -583,7 +584,7 @@ const proto = {
     }
 
     return { descriptor: this._propertyDescriptor(name) };
-  },
+  }
 
   /**
    * Handle a protocol request to provide the value of the object's
@@ -621,7 +622,7 @@ const proto = {
       : this.obj.getProperty(name);
 
     return { value: this._buildCompletion(value) };
-  },
+  }
 
   /**
    * Handle a protocol request to evaluate a function and provide the value of
@@ -648,7 +649,7 @@ const proto = {
     const value = this.obj.apply(debugeeContext, debugeeArgs);
 
     return { value: this._buildCompletion(value) };
-  },
+  }
 
   _getValueFromGrip(grip) {
     if (typeof grip !== "object" || !grip) {
@@ -672,7 +673,7 @@ const proto = {
     }
 
     return actor.obj;
-  },
+  }
 
   /**
    * Converts a Debugger API completion value record into an equivalent
@@ -697,7 +698,7 @@ const proto = {
     }
 
     return completionGrip;
-  },
+  }
 
   /**
    * A helper method that creates a property descriptor for the provided object,
@@ -767,7 +768,7 @@ const proto = {
       }
     }
     return retval;
-  },
+  }
 
   /**
    * Handle a protocol request to get the target and handler internal slots of a proxy.
@@ -787,7 +788,7 @@ const proto = {
       proxyTarget: this.hooks.createValueGrip(this.obj.proxyTarget),
       proxyHandler: this.hooks.createValueGrip(this.obj.proxyHandler),
     };
-  },
+  }
 
   /**
    * Release the actor, when it isn't needed anymore.
@@ -798,11 +799,10 @@ const proto = {
       this.hooks.customFormatterConfigDbgObj = null;
     }
     this._customFormatterItem = null;
-  },
-};
+  }
+}
 
-exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);
-exports.ObjectActorProto = proto;
+exports.ObjectActor = ObjectActor;
 
 function safeGetOwnPropertyDescriptor(obj, name) {
   let desc = null;

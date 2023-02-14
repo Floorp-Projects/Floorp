@@ -4,35 +4,47 @@
 
 "use strict";
 
-const { extend } = require("resource://devtools/shared/extend.js");
-const {
-  ObjectActorProto,
-} = require("resource://devtools/server/actors/object.js");
-const protocol = require("resource://devtools/shared/protocol.js");
-const { ActorClassWithSpec } = protocol;
-const { objectSpec } = require("resource://devtools/shared/specs/object.js");
+const { ObjectActor } = require("resource://devtools/server/actors/object.js");
 
-/**
- * Protocol.js expects only the prototype object, and does not maintain the prototype
- * chain when it constructs the ActorClass. For this reason we are using extend to
- * maintain the properties of ObjectActorProto.
- **/
-const proto = extend({}, ObjectActorProto);
-
-Object.assign(proto, {
+class PauseScopedObjectActor extends ObjectActor {
   /**
    * Creates a pause-scoped actor for the specified object.
    * @see ObjectActor
    */
-  initialize(obj, hooks, conn) {
-    ObjectActorProto.initialize.call(this, obj, hooks, conn);
+  constructor(obj, hooks, conn) {
+    super(obj, hooks, conn);
+
     this.hooks.promote = hooks.promote;
     this.hooks.isThreadLifetimePool = hooks.isThreadLifetimePool;
-  },
+
+    const guardWithPaused = [
+      "decompile",
+      "displayString",
+      "ownPropertyNames",
+      "parameterNames",
+      "property",
+      "prototype",
+      "prototypeAndProperties",
+      "scope",
+    ];
+
+    for (const methodName of guardWithPaused) {
+      this[methodName] = this.withPaused(this[methodName]);
+    }
+
+    /**
+     * Handle a protocol request to promote a pause-lifetime grip to a
+     * thread-lifetime grip.
+     */
+    this.threadGrip = this.withPaused(function() {
+      this.hooks.promote();
+      return {};
+    });
+  }
 
   isPaused() {
     return this.threadActor ? this.threadActor.state === "paused" : true;
-  },
+  }
 
   withPaused(method) {
     return function() {
@@ -47,44 +59,12 @@ Object.assign(proto, {
           " actors can only be accessed while the thread is paused.",
       };
     };
-  },
-});
-
-const guardWithPaused = [
-  "decompile",
-  "displayString",
-  "ownPropertyNames",
-  "parameterNames",
-  "property",
-  "prototype",
-  "prototypeAndProperties",
-  "scope",
-];
-
-guardWithPaused.forEach(f => {
-  proto[f] = proto.withPaused(ObjectActorProto[f]);
-});
-
-Object.assign(proto, {
-  /**
-   * Handle a protocol request to promote a pause-lifetime grip to a
-   * thread-lifetime grip.
-   *
-   * @param request object
-   *        The protocol request object.
-   */
-  threadGrip: proto.withPaused(function(request) {
-    this.hooks.promote();
-    return {};
-  }),
+  }
 
   /**
    * Handle a protocol request to release a thread-lifetime grip.
-   *
-   * @param request object
-   *        The protocol request object.
    */
-  destroy: proto.withPaused(function(request) {
+  destroy() {
     if (this.hooks.isThreadLifetimePool()) {
       return {
         error: "notReleasable",
@@ -92,9 +72,9 @@ Object.assign(proto, {
       };
     }
 
-    return protocol.Actor.prototype.destroy.call(this);
-  }),
-});
+    super.destroy();
+    return null;
+  }
+}
 
-exports.PauseScopedObjectActor = ActorClassWithSpec(objectSpec, proto);
-// ActorClassWithSpec(objectSpec, {...ObjectActorProto, ...proto});
+exports.PauseScopedObjectActor = PauseScopedObjectActor;
