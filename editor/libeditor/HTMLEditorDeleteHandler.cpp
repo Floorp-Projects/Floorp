@@ -26,6 +26,7 @@
 #include "mozilla/ComputedStyle.h"  // for ComputedStyle
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
@@ -360,6 +361,15 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
   Result<EditorRawDOMRange, nsresult> ExtendOrShrinkRangeToDelete(
       const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
       const EditorDOMRangeType& aRangeToDelete) const;
+
+  /**
+   * A helper method for ExtendOrShrinkRangeToDelete().  This returns shrunken
+   * range if aRangeToDelete selects all over list elements which have some list
+   * item elements to avoid to delete all list items from the list element.
+   */
+  MOZ_NEVER_INLINE_DEBUG static EditorRawDOMRange
+  GetRangeToAvoidDeletingAllListItemsIfSelectingAllOverListElements(
+      const EditorRawDOMRange& aRangeToDelete);
 
   /**
    * ShouldDeleteHRElement() checks whether aHRElement should be deleted
@@ -6494,7 +6504,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
   if (const Element* maybeListElement =
           HTMLEditUtils::GetElementIfOnlyOneSelected(aRangeToDelete)) {
     if (HTMLEditUtils::IsAnyListElement(maybeListElement) &&
-        !HTMLEditUtils::IsEmptyNode(*maybeListElement)) {
+        !HTMLEditUtils::IsEmptyAnyListElement(*maybeListElement)) {
       EditorRawDOMRange range =
           HTMLEditUtils::GetRangeSelectingAllContentInAllListItems<
               EditorRawDOMRange>(*maybeListElement);
@@ -6536,6 +6546,14 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
           backwardScanFromStartResult.GetContent() ==
               maybeNonEditableBlockElement ||
           backwardScanFromStartResult.GetContent() == editingHost) {
+        break;
+      }
+      // Don't cross list element boundary because we don't want to delete list
+      // element at start position unless it's empty.
+      if (HTMLEditUtils::IsAnyListElement(
+              backwardScanFromStartResult.GetContent()) &&
+          !HTMLEditUtils::IsEmptyAnyListElement(
+              *backwardScanFromStartResult.ElementPtr())) {
         break;
       }
       rangeToDelete.SetStart(
@@ -6610,35 +6628,16 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
     }
   }
 
-  // If now, we select only the closest common ancestor list element or selects
-  // all list items in it and it's not empty, we should make it have only one
-  // list item which is empty.
-  Element* selectedListElement =
-      HTMLEditUtils::GetElementIfOnlyOneSelected(rangeToDelete);
-  if (!selectedListElement ||
-      !HTMLEditUtils::IsAnyListElement(selectedListElement)) {
-    if (rangeToDelete.IsInContentNodes() && rangeToDelete.InSameContainer() &&
-        HTMLEditUtils::IsAnyListElement(
-            rangeToDelete.StartRef().ContainerAs<nsIContent>()) &&
-        rangeToDelete.StartRef().IsStartOfContainer() &&
-        rangeToDelete.EndRef().IsEndOfContainer()) {
-      selectedListElement = rangeToDelete.StartRef().ContainerAs<Element>();
-    } else {
-      selectedListElement = nullptr;
-    }
-  }
-  if (selectedListElement &&
-      !HTMLEditUtils::IsEmptyNode(*selectedListElement)) {
-    EditorRawDOMRange range =
-        HTMLEditUtils::GetRangeSelectingAllContentInAllListItems<
-            EditorRawDOMRange>(*selectedListElement);
-    if (range.IsPositioned()) {
-      if (EditorUtils::IsEditableContent(
-              *range.StartRef().ContainerAs<nsIContent>(), EditorType::HTML) &&
-          EditorUtils::IsEditableContent(
-              *range.EndRef().ContainerAs<nsIContent>(), EditorType::HTML)) {
-        return range;
-      }
+  // If range boundaries are in list element, and the positions are very
+  // start/end of first/last list item, we may need to shrink the ranges for
+  // preventing to remove only all list item elements.
+  {
+    EditorRawDOMRange rangeToDeleteListOrLeaveOneEmptyListItem =
+        AutoDeleteRangesHandler::
+            GetRangeToAvoidDeletingAllListItemsIfSelectingAllOverListElements(
+                rangeToDelete);
+    if (rangeToDeleteListOrLeaveOneEmptyListItem.IsPositioned()) {
+      rangeToDelete = std::move(rangeToDeleteListOrLeaveOneEmptyListItem);
     }
   }
 
@@ -6665,6 +6664,193 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
   }
 
   return rangeToDelete;
+}
+
+// static
+EditorRawDOMRange HTMLEditor::AutoDeleteRangesHandler::
+    GetRangeToAvoidDeletingAllListItemsIfSelectingAllOverListElements(
+        const EditorRawDOMRange& aRangeToDelete) {
+  MOZ_ASSERT(aRangeToDelete.IsPositionedAndValid());
+
+  auto GetDeepestEditableStartPointOfList = [](Element& aListElement) {
+    Element* const firstListItemElement =
+        HTMLEditUtils::GetFirstListItemElement(aListElement);
+    if (MOZ_UNLIKELY(!firstListItemElement)) {
+      return EditorRawDOMPoint();
+    }
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(*firstListItemElement,
+                                                     EditorType::HTML))) {
+      return EditorRawDOMPoint(firstListItemElement);
+    }
+    return HTMLEditUtils::GetDeepestEditableStartPointOf<EditorRawDOMPoint>(
+        *firstListItemElement);
+  };
+
+  auto GetDeepestEditableEndPointOfList = [](Element& aListElement) {
+    Element* const lastListItemElement =
+        HTMLEditUtils::GetLastListItemElement(aListElement);
+    if (MOZ_UNLIKELY(!lastListItemElement)) {
+      return EditorRawDOMPoint();
+    }
+    if (MOZ_UNLIKELY(!EditorUtils::IsEditableContent(*lastListItemElement,
+                                                     EditorType::HTML))) {
+      return EditorRawDOMPoint::After(*lastListItemElement);
+    }
+    return HTMLEditUtils::GetDeepestEditableEndPointOf<EditorRawDOMPoint>(
+        *lastListItemElement);
+  };
+
+  Element* const startListElement =
+      aRangeToDelete.StartRef().IsInContentNode()
+          ? HTMLEditUtils::GetClosestInclusiveAncestorAnyListElement(
+                *aRangeToDelete.StartRef().ContainerAs<nsIContent>())
+          : nullptr;
+  Element* const endListElement =
+      aRangeToDelete.EndRef().IsInContentNode()
+          ? HTMLEditUtils::GetClosestInclusiveAncestorAnyListElement(
+                *aRangeToDelete.EndRef().ContainerAs<nsIContent>())
+          : nullptr;
+  if (!startListElement && !endListElement) {
+    return EditorRawDOMRange();
+  }
+
+  // FIXME: If there are invalid children, we cannot handle first/last list item
+  // elements properly.  In that case, we should treat list elements and list
+  // item elements as normal block elements.
+  if (startListElement &&
+      NS_WARN_IF(!HTMLEditUtils::IsValidListElement(
+          *startListElement, HTMLEditUtils::TreatSubListElementAs::Valid))) {
+    return EditorRawDOMRange();
+  }
+  if (endListElement && startListElement != endListElement &&
+      NS_WARN_IF(!HTMLEditUtils::IsValidListElement(
+          *endListElement, HTMLEditUtils::TreatSubListElementAs::Valid))) {
+    return EditorRawDOMRange();
+  }
+
+  const bool startListElementIsEmpty =
+      startListElement &&
+      HTMLEditUtils::IsEmptyAnyListElement(*startListElement);
+  const bool endListElementIsEmpty =
+      startListElement == endListElement
+          ? startListElementIsEmpty
+          : endListElement &&
+                HTMLEditUtils::IsEmptyAnyListElement(*endListElement);
+  // If both list elements are empty, we should not shrink the range since
+  // we want to delete the list.
+  if (startListElementIsEmpty && endListElementIsEmpty) {
+    return EditorRawDOMRange();
+  }
+
+  // There may be invisible white-spaces and there are elements in the
+  // list items.  Therefore, we need to compare the deepest positions
+  // and range boundaries.
+  EditorRawDOMPoint deepestStartPointOfStartList =
+      startListElement ? GetDeepestEditableStartPointOfList(*startListElement)
+                       : EditorRawDOMPoint();
+  EditorRawDOMPoint deepestEndPointOfEndList =
+      endListElement ? GetDeepestEditableEndPointOfList(*endListElement)
+                     : EditorRawDOMPoint();
+  if (MOZ_UNLIKELY(!deepestStartPointOfStartList.IsSet() &&
+                   !deepestEndPointOfEndList.IsSet())) {
+    // FIXME: This does not work well if there is non-list-item contents in the
+    // list elements.  Perhaps, for fixing this invalid cases, we need to wrap
+    // the content into new list item like Chrome.
+    return EditorRawDOMRange();
+  }
+
+  // We don't want to shrink the range into empty sublist.
+  if (deepestStartPointOfStartList.IsSet()) {
+    for (nsIContent* const maybeList :
+         deepestStartPointOfStartList.GetContainer()
+             ->InclusiveAncestorsOfType<nsIContent>()) {
+      if (aRangeToDelete.StartRef().GetContainer() == maybeList) {
+        break;
+      }
+      if (HTMLEditUtils::IsAnyListElement(maybeList) &&
+          HTMLEditUtils::IsEmptyAnyListElement(*maybeList->AsElement())) {
+        deepestStartPointOfStartList.Set(maybeList);
+      }
+    }
+  }
+  if (deepestEndPointOfEndList.IsSet()) {
+    for (nsIContent* const maybeList :
+         deepestEndPointOfEndList.GetContainer()
+             ->InclusiveAncestorsOfType<nsIContent>()) {
+      if (aRangeToDelete.EndRef().GetContainer() == maybeList) {
+        break;
+      }
+      if (HTMLEditUtils::IsAnyListElement(maybeList) &&
+          HTMLEditUtils::IsEmptyAnyListElement(*maybeList->AsElement())) {
+        deepestEndPointOfEndList.SetAfter(maybeList);
+      }
+    }
+  }
+
+  const EditorRawDOMPoint deepestEndPointOfStartList =
+      startListElement ? GetDeepestEditableEndPointOfList(*startListElement)
+                       : EditorRawDOMPoint();
+  MOZ_ASSERT_IF(deepestStartPointOfStartList.IsSet(),
+                deepestEndPointOfStartList.IsSet());
+  MOZ_ASSERT_IF(!deepestStartPointOfStartList.IsSet(),
+                !deepestEndPointOfStartList.IsSet());
+
+  const bool rangeStartsFromBeginningOfStartList =
+      deepestStartPointOfStartList.IsSet() &&
+      aRangeToDelete.StartRef().EqualsOrIsBefore(deepestStartPointOfStartList);
+  const bool rangeEndsByEndingOfStartListOrLater =
+      !deepestEndPointOfStartList.IsSet() ||
+      deepestEndPointOfStartList.EqualsOrIsBefore(aRangeToDelete.EndRef());
+  const bool rangeEndsByEndingOfEndList =
+      deepestEndPointOfEndList.IsSet() &&
+      deepestEndPointOfEndList.EqualsOrIsBefore(aRangeToDelete.EndRef());
+
+  EditorRawDOMRange newRangeToDelete;
+  // If all over the list element at start boundary is selected, we should
+  // shrink the range to start from the first list item to avoid to delete
+  // all list items.
+  if (!startListElementIsEmpty && rangeStartsFromBeginningOfStartList &&
+      rangeEndsByEndingOfStartListOrLater) {
+    newRangeToDelete.SetStart(EditorRawDOMPoint(
+        deepestStartPointOfStartList.ContainerAs<nsIContent>(), 0u));
+  }
+  // If all over the list element at end boundary is selected, and...
+  if (!endListElementIsEmpty && rangeEndsByEndingOfEndList) {
+    // If the range starts before the range at end boundary of the range,
+    // we want to delete the list completely, thus, we should extend the
+    // range to contain the list element.
+    if (aRangeToDelete.StartRef().IsBefore(
+            EditorRawDOMPoint(endListElement, 0u))) {
+      newRangeToDelete.SetEnd(EditorRawDOMPoint::After(*endListElement));
+      MOZ_ASSERT_IF(newRangeToDelete.StartRef().IsSet(),
+                    newRangeToDelete.IsPositionedAndValid());
+    }
+    // Otherwise, if the range starts in the end list element, we shouldn't
+    // delete the list.  Therefore, we should shrink the range to end by end
+    // of the last list item element to avoid to delete all list items.
+    else {
+      newRangeToDelete.SetEnd(EditorRawDOMPoint::AtEndOf(
+          *deepestEndPointOfEndList.ContainerAs<nsIContent>()));
+      MOZ_ASSERT_IF(newRangeToDelete.StartRef().IsSet(),
+                    newRangeToDelete.IsPositionedAndValid());
+    }
+  }
+
+  if (!newRangeToDelete.StartRef().IsSet() &&
+      !newRangeToDelete.EndRef().IsSet()) {
+    return EditorRawDOMRange();
+  }
+
+  if (!newRangeToDelete.StartRef().IsSet()) {
+    newRangeToDelete.SetStart(aRangeToDelete.StartRef());
+    MOZ_ASSERT(newRangeToDelete.IsPositionedAndValid());
+  }
+  if (!newRangeToDelete.EndRef().IsSet()) {
+    newRangeToDelete.SetEnd(aRangeToDelete.EndRef());
+    MOZ_ASSERT(newRangeToDelete.IsPositionedAndValid());
+  }
+
+  return newRangeToDelete;
 }
 
 }  // namespace mozilla
