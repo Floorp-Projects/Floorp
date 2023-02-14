@@ -28,7 +28,7 @@
           "mainthreadio",
           "fileio",
           "fileioall",
-          "nomarkerstacks",
+          "noiostacks",
           "screenshots",
           "seqstyle",
           "stackwalk",

@@ -6286,15 +6286,6 @@ bool profiler_feature_active(uint32_t aFeature) {
   return RacyFeatures::IsActiveWithFeature(aFeature);
 }
 
-bool profiler_active_without_feature(uint32_t aFeature) {
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // This function is hot enough that we use RacyFeatures, not ActivePS.
-  return RacyFeatures::IsActiveWithoutFeature(aFeature);
-}
-
 void profiler_write_active_configuration(JSONWriter& aWriter) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   PSAutoLock lock;
@@ -6795,9 +6786,8 @@ UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   AUTO_PROFILER_LABEL("profiler_capture_backtrace", PROFILER);
 
-  // Quick is-active and feature check before allocating a buffer.
-  // If NoMarkerStacks is set, we don't want to capture a backtrace.
-  if (!profiler_active_without_feature(ProfilerFeature::NoMarkerStacks)) {
+  // Quick is-active check before allocating a buffer.
+  if (!profiler_is_active()) {
     return nullptr;
   }
 
