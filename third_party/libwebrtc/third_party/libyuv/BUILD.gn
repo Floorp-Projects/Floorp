@@ -1,0 +1,13 @@
+import("//third_party/libaom/options.gni")
+import("../../webrtc.gni")
+
+config("libyuv_include_config") {
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
+}
+
+rtc_library("libyuv") {
+  public_configs = [ ":libyuv_include_config" ]
+}
