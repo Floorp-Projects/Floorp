@@ -603,7 +603,6 @@ rtc_library("webrtc_libvpx_interface") {
   }
 }
 
-if (!build_with_mozilla) {
 rtc_library("mock_libvpx_interface") {
   testonly = true
   sources = [ "codecs/interface/mock_libvpx_interface.h" ]
@@ -611,7 +610,6 @@ rtc_library("mock_libvpx_interface") {
     ":webrtc_libvpx_interface",
     "../../test:test_support",
   ]
-}
 }
 
 # This target includes the internal SW codec.
