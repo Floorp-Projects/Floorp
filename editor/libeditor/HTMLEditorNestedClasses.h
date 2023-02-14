@@ -446,6 +446,53 @@ class MOZ_STACK_CLASS HTMLEditor::AutoListElementCreator final {
                                       AutoContentNodeArray& aArrayOfContents,
                                       const Element& aEditingHost) const;
 
+  struct MOZ_STACK_CLASS AutoHandlingState final {
+    // Current list element which is a good container to create new list item
+    // element.
+    RefPtr<Element> mCurrentListElement;
+    // Previously handled list item element.
+    RefPtr<Element> mPreviousListItemElement;
+    // List or list item element which should have caret after handling all
+    // contents.
+    RefPtr<Element> mListOrListItemElementToPutCaret;
+  };
+
+  /**
+   * Helper methods of WrapContentNodesIntoNewListElements.  They are called for
+   * handling one content node of aArrayOfContents.  It's set to aHandling*.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildContent(
+      HTMLEditor& aHTMLEditor, nsIContent& aHandlingContent,
+      AutoHandlingState& aState, const Element& aEditingHost) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  HandleChildListElement(HTMLEditor& aHTMLEditor, Element& aHandlingListElement,
+                         AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildListItemElement(
+      HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
+      AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  HandleChildListItemInDifferentTypeList(HTMLEditor& aHTMLEditor,
+                                         Element& aHandlingListItemElement,
+                                         AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildListItemInSameTypeList(
+      HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
+      AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildDivElement(
+      HTMLEditor& aHTMLEditor, Element& aHandlingDivElement,
+      AutoHandlingState& aState, const Element& aEditingHost) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CreateAndUpdateCurrentListElement(
+      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
+      AutoHandlingState& aState, const Element& aEditingHost) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildInlineContent(
+      HTMLEditor& aHTMLEditor, nsIContent& aHandlingInlineContent,
+      AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleChildParagraphElement(
+      HTMLEditor& aHTMLEditor, Element& aHandlingParagraphElement,
+      AutoHandlingState& aState) const;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult WrapContentIntoNewListItemElement(
+      HTMLEditor& aHTMLEditor, nsIContent& aHandlingContent,
+      AutoHandlingState& aState) const;
+
   /**
    * If aRanges is collapsed outside aListItemOrListToPutCaret, this collapse
    * aRanges in aListItemOrListToPutCaret again.

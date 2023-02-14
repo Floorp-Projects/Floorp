@@ -3535,386 +3535,531 @@ HTMLEditor::AutoListElementCreator::WrapContentNodesIntoNewListElements(
 
   // Ok, now go through all the nodes and put then in the list,
   // or whatever is appropriate.  Wohoo!
-
-  uint32_t countOfCollectedContents = aArrayOfContents.Length();
-  RefPtr<Element> curList, prevListItem, listItemOrListToPutCaret;
-
-  for (uint32_t i = 0; i < countOfCollectedContents; i++) {
-    // here's where we actually figure out what to do
-    const OwningNonNull<nsIContent> content = aArrayOfContents[i];
-
-    // make sure we don't assemble content that is in different table cells
-    // into the same list.  respect table cell boundaries when listifying.
-    if (curList &&
-        HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*curList) !=
-            HTMLEditUtils::GetInclusiveAncestorAnyTableElement(content)) {
-      curList = nullptr;
+  AutoHandlingState handlingState;
+  for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
+    // MOZ_KnownLive because of bug 1620312
+    nsresult rv = HandleChildContent(aHTMLEditor, MOZ_KnownLive(content),
+                                     handlingState, aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoListElementCreator::HandleChildContent() failed");
+      return Err(rv);
     }
-
-    // If current node is a `<br>` element, delete it and forget previous
-    // list item element.
-    // If current node is an empty inline node, just delete it.
-    if (EditorUtils::IsEditableContent(content, EditorType::HTML) &&
-        (content->IsHTMLElement(nsGkAtoms::br) ||
-         HTMLEditUtils::IsEmptyInlineContainer(
-             content, {EmptyCheckOption::TreatSingleBRElementAsVisible}))) {
-      nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(*content);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-        return Err(rv);
-      }
-      if (content->IsHTMLElement(nsGkAtoms::br)) {
-        prevListItem = nullptr;
-      }
-      continue;
-    }
-
-    if (HTMLEditUtils::IsAnyListElement(content)) {
-      // If we met a list element and current list element is not a descendant
-      // of the list, append current node to end of the current list element.
-      // Then, wrap it with list item element and delete the old container.
-      if (curList && !EditorUtils::IsDescendantOf(*content, *curList)) {
-        Result<MoveNodeResult, nsresult> moveNodeResult =
-            aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
-        if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-          NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-          return moveNodeResult.propagateErr();
-        }
-        MOZ_ASSERT(aRanges.HasSavedRanges());
-        moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-
-        Result<CreateElementResult, nsresult> convertListTypeResult =
-            aHTMLEditor.ChangeListElementType(
-                MOZ_KnownLive(*content->AsElement()), mListTagName,
-                mListItemTagName);
-        if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
-          NS_WARNING("HTMLEditor::ChangeListElementType() failed");
-          return convertListTypeResult.propagateErr();
-        }
-        MOZ_ASSERT(aRanges.HasSavedRanges());
-        convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
-
-        Result<EditorDOMPoint, nsresult> unwrapNewListElementResult =
-            aHTMLEditor.RemoveBlockContainerWithTransaction(
-                MOZ_KnownLive(*convertListTypeResult.inspect().GetNewNode()));
-        if (MOZ_UNLIKELY(unwrapNewListElementResult.isErr())) {
-          NS_WARNING(
-              "HTMLEditor::RemoveBlockContainerWithTransaction() failed");
-          return unwrapNewListElementResult.propagateErr();
-        }
-        MOZ_ASSERT(aRanges.HasSavedRanges());  // So, ignore the suggested point
-
-        prevListItem = nullptr;
-        continue;
-      }
-
-      // If current list element is in found list element or we've not met a
-      // list element, convert current list element to proper type.
-      Result<CreateElementResult, nsresult> convertListTypeResult =
-          aHTMLEditor.ChangeListElementType(
-              MOZ_KnownLive(*content->AsElement()), mListTagName,
-              mListItemTagName);
-      if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
-        NS_WARNING("HTMLEditor::ChangeListElementType() failed");
-        return convertListTypeResult.propagateErr();
-      }
-      CreateElementResult unwrappedConvertListTypeResult =
-          convertListTypeResult.unwrap();
-      MOZ_ASSERT(aRanges.HasSavedRanges());
-      unwrappedConvertListTypeResult.IgnoreCaretPointSuggestion();
-      MOZ_ASSERT(unwrappedConvertListTypeResult.GetNewNode());
-      curList = unwrappedConvertListTypeResult.UnwrapNewNode();
-      prevListItem = nullptr;
-      continue;
-    }
-
-    EditorDOMPoint atContent(content);
-    if (NS_WARN_IF(!atContent.IsSet())) {
-      return Err(NS_ERROR_FAILURE);
-    }
-    MOZ_ASSERT(atContent.IsSetAndValid());
-    if (HTMLEditUtils::IsListItem(content)) {
-      // If current list item element is not in proper list element, we need
-      // to convert the list element.
-      if (!atContent.IsContainerHTMLElement(&mListTagName)) {
-        // If we've not met a list element or current node is not in current
-        // list element, insert a list element at current node and set
-        // current list element to the new one.
-        if (!curList || EditorUtils::IsDescendantOf(*content, *curList)) {
-          if (NS_WARN_IF(!atContent.IsInContentNode())) {
-            return Err(NS_ERROR_FAILURE);
-          }
-          Result<SplitNodeResult, nsresult> splitListItemParentResult =
-              aHTMLEditor.SplitNodeWithTransaction(atContent);
-          if (MOZ_UNLIKELY(splitListItemParentResult.isErr())) {
-            NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-            return splitListItemParentResult.propagateErr();
-          }
-          SplitNodeResult unwrappedSplitListItemParentResult =
-              splitListItemParentResult.unwrap();
-          MOZ_ASSERT(unwrappedSplitListItemParentResult.DidSplit());
-          MOZ_ASSERT(aRanges.HasSavedRanges());
-          unwrappedSplitListItemParentResult.IgnoreCaretPointSuggestion();
-
-          Result<CreateElementResult, nsresult> createNewListElementResult =
-              aHTMLEditor.CreateAndInsertElement(
-                  WithTransaction::Yes, mListTagName,
-                  unwrappedSplitListItemParentResult
-                      .AtNextContent<EditorDOMPoint>());
-          if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
-            NS_WARNING(
-                "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
-                "failed");
-            return createNewListElementResult.propagateErr();
-          }
-          CreateElementResult unwrapCreateNewListElementResult =
-              createNewListElementResult.unwrap();
-          MOZ_ASSERT(aRanges.HasSavedRanges());
-          unwrapCreateNewListElementResult.IgnoreCaretPointSuggestion();
-          MOZ_ASSERT(unwrapCreateNewListElementResult.GetNewNode());
-          curList = unwrapCreateNewListElementResult.UnwrapNewNode();
-        }
-        // Then, move current node into current list element.
-        Result<MoveNodeResult, nsresult> moveNodeResult =
-            aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
-        if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-          NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-          return moveNodeResult.propagateErr();
-        }
-        MOZ_ASSERT(aRanges.HasSavedRanges());
-        moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-
-        // Convert list item type if current node is different list item type.
-        if (!content->IsHTMLElement(&mListItemTagName)) {
-          Result<CreateElementResult, nsresult> newListItemElementOrError =
-              aHTMLEditor.ReplaceContainerWithTransaction(
-                  MOZ_KnownLive(*content->AsElement()), mListItemTagName);
-          if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
-            NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
-            return newListItemElementOrError.propagateErr();
-          }
-          MOZ_ASSERT(aRanges.HasSavedRanges());
-          newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
-        }
-      } else {
-        // If we've not met a list element, set current list element to the
-        // parent of current list item element.
-        if (!curList) {
-          curList = atContent.GetContainerAs<Element>();
-          NS_WARNING_ASSERTION(
-              HTMLEditUtils::IsAnyListElement(curList),
-              "Current list item parent is not a list element");
-        }
-        // If current list item element is not a child of current list element,
-        // move it into current list item.
-        else if (atContent.GetContainer() != curList) {
-          Result<MoveNodeResult, nsresult> moveNodeResult =
-              aHTMLEditor.MoveNodeToEndWithTransaction(*content, *curList);
-          if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
-            NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-            return moveNodeResult.propagateErr();
-          }
-          MOZ_ASSERT(aRanges.HasSavedRanges());
-          moveNodeResult.inspect().IgnoreCaretPointSuggestion();
-        }
-        // Then, if current list item element is not proper type for current
-        // list element, convert list item element to proper element.
-        if (!content->IsHTMLElement(&mListItemTagName)) {
-          Result<CreateElementResult, nsresult> newListItemElementOrError =
-              aHTMLEditor.ReplaceContainerWithTransaction(
-                  MOZ_KnownLive(*content->AsElement()), mListItemTagName);
-          if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
-            NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
-            return newListItemElementOrError.propagateErr();
-          }
-          MOZ_ASSERT(aRanges.HasSavedRanges());
-          newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
-        }
-      }
-      Element* element = Element::FromNode(content);
-      if (NS_WARN_IF(!element)) {
-        return Err(NS_ERROR_FAILURE);
-      }
-      // If bullet type is specified, set list type attribute.
-      // XXX Cannot we set type attribute before inserting the list item
-      //     element into the DOM tree?
-      if (!mBulletType.IsEmpty()) {
-        nsresult rv = aHTMLEditor.SetAttributeWithTransaction(
-            MOZ_KnownLive(*element), *nsGkAtoms::type, mBulletType);
-        if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-          return Err(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "EditorBase::SetAttributeWithTransaction(nsGkAtoms::type) "
-              "failed");
-          return Err(rv);
-        }
-        continue;
-      }
-
-      // Otherwise, remove list type attribute if there is.
-      if (!element->HasAttr(nsGkAtoms::type)) {
-        continue;
-      }
-      nsresult rv = aHTMLEditor.RemoveAttributeWithTransaction(
-          MOZ_KnownLive(*element), *nsGkAtoms::type);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::type) "
-            "failed");
-        return Err(rv);
-      }
-      continue;
-    }
-
-    MOZ_ASSERT(!HTMLEditUtils::IsAnyListElement(content) &&
-               !HTMLEditUtils::IsListItem(content));
-
-    // If current node is a `<div>` element, replace it in the array with
-    // its children.
-    // XXX I think that this should be done when we collect the nodes above.
-    //     Then, we can change this `for` loop to ranged-for loop.
-    if (content->IsHTMLElement(nsGkAtoms::div)) {
-      prevListItem = nullptr;
-      HTMLEditUtils::CollectChildren(
-          *content, aArrayOfContents, i + 1,
-          {CollectChildrenOption::CollectListChildren,
-           CollectChildrenOption::CollectTableChildren});
-      Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
-          aHTMLEditor.RemoveContainerWithTransaction(
-              MOZ_KnownLive(*content->AsElement()));
-      if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return unwrapDivElementResult.propagateErr();
-      }
-      MOZ_ASSERT(aRanges.HasSavedRanges());  // So, ignore the suggested point
-
-      // Extend the loop length to handle all children collected here.
-      countOfCollectedContents = aArrayOfContents.Length();
-      continue;
-    }
-
-    // If we've not met a list element, create a list element and make it
-    // current list element.
-    if (!curList) {
-      prevListItem = nullptr;
-      Result<CreateElementResult, nsresult> createNewListElementResult =
-          aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
-              mListTagName, atContent, BRElementNextToSplitPoint::Keep,
-              aEditingHost);
-      if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
-        NS_WARNING(
-            nsPrintfCString(
-                "HTMLEditor::"
-                "InsertElementWithSplittingAncestorsWithTransaction(%s) failed",
-                nsAtomCString(&mListTagName).get())
-                .get());
-        return createNewListElementResult.propagateErr();
-      }
-      CreateElementResult unwrappedCreateNewListElementResult =
-          createNewListElementResult.unwrap();
-      MOZ_ASSERT(aRanges.HasSavedRanges());
-      unwrappedCreateNewListElementResult.IgnoreCaretPointSuggestion();
-
-      MOZ_ASSERT(unwrappedCreateNewListElementResult.GetNewNode());
-      listItemOrListToPutCaret =
-          unwrappedCreateNewListElementResult.GetNewNode();
-      curList = unwrappedCreateNewListElementResult.UnwrapNewNode();
-
-      // atContent is now referring the right node with mOffset but
-      // referring the left node with mRef.  So, invalidate it now.
-      atContent.Clear();
-    }
-
-    // If we're currently handling contents of a list item and current node
-    // is not a block element, move current node into the list item.
-    if (HTMLEditUtils::IsInlineElement(content) && prevListItem) {
-      Result<MoveNodeResult, nsresult> moveInlineElementResult =
-          aHTMLEditor.MoveNodeToEndWithTransaction(*content, *prevListItem);
-      if (MOZ_UNLIKELY(moveInlineElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-        return moveInlineElementResult.propagateErr();
-      }
-      MOZ_ASSERT(aRanges.HasSavedRanges());
-      moveInlineElementResult.inspect().IgnoreCaretPointSuggestion();
-      continue;
-    }
-
-    // If current node is a paragraph, that means that it does not contain
-    // block children so that we can just replace it with new list item
-    // element and move it into current list element.
-    // XXX This is too rough handling.  If web apps modifies DOM tree directly,
-    //     any elements can have block elements as children.
-    if (content->IsHTMLElement(nsGkAtoms::p)) {
-      Result<CreateElementResult, nsresult> newListItemElementOrError =
-          aHTMLEditor.ReplaceContainerWithTransaction(
-              MOZ_KnownLive(*content->AsElement()), mListItemTagName);
-      if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
-        NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
-        return newListItemElementOrError.propagateErr();
-      }
-      MOZ_ASSERT(aRanges.HasSavedRanges());
-      newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
-      MOZ_ASSERT(newListItemElementOrError.inspect().GetNewNode());
-
-      Result<MoveNodeResult, nsresult> moveListItemElementResult =
-          aHTMLEditor.MoveNodeToEndWithTransaction(
-              MOZ_KnownLive(*newListItemElementOrError.inspect().GetNewNode()),
-              *curList);
-      if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-        return moveListItemElementResult.propagateErr();
-      }
-      MOZ_ASSERT(aRanges.HasSavedRanges());
-      moveListItemElementResult.inspect().IgnoreCaretPointSuggestion();
-
-      prevListItem = nullptr;
-      // XXX Why don't we set `type` attribute here??
-      continue;
-    }
-
-    // If current node is not a paragraph, wrap current node with new list
-    // item element and move it into current list element.
-    Result<CreateElementResult, nsresult> wrapContentInListItemElementResult =
-        aHTMLEditor.InsertContainerWithTransaction(*content, mListItemTagName);
-    if (MOZ_UNLIKELY(wrapContentInListItemElementResult.isErr())) {
-      NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-      return wrapContentInListItemElementResult.propagateErr();
-    }
-    CreateElementResult unwrappedWrapContentInListItemElementResult =
-        wrapContentInListItemElementResult.unwrap();
-    MOZ_ASSERT(aRanges.HasSavedRanges());
-    unwrappedWrapContentInListItemElementResult.IgnoreCaretPointSuggestion();
-    MOZ_ASSERT(unwrappedWrapContentInListItemElementResult.GetNewNode());
-
-    // MOZ_KnownLive(unwrappedWrapContentInListItemElementResult.GetNewNode()):
-    // The result is grabbed by unwrappedWrapContentInListItemElementResult.
-    Result<MoveNodeResult, nsresult> moveListItemElementResult =
-        aHTMLEditor.MoveNodeToEndWithTransaction(
-            MOZ_KnownLive(
-                *unwrappedWrapContentInListItemElementResult.GetNewNode()),
-            *curList);
-    if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
-      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-      return moveListItemElementResult.propagateErr();
-    }
-    MOZ_ASSERT(aRanges.HasSavedRanges());
-    moveListItemElementResult.inspect().IgnoreCaretPointSuggestion();
-
-    // If current node is not a block element, new list item should have
-    // following inline nodes too.
-    if (HTMLEditUtils::IsInlineElement(content)) {
-      prevListItem =
-          unwrappedWrapContentInListItemElementResult.UnwrapNewNode();
-    } else {
-      prevListItem = nullptr;
-    }
-
-    // XXX Why don't we set `type` attribute here??
   }
 
-  return listItemOrListToPutCaret;
+  return std::move(handlingState.mListOrListItemElementToPutCaret);
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildContent(
+    HTMLEditor& aHTMLEditor, nsIContent& aHandlingContent,
+    AutoHandlingState& aState, const Element& aEditingHost) const {
+  // make sure we don't assemble content that is in different table cells
+  // into the same list.  respect table cell boundaries when listifying.
+  if (aState.mCurrentListElement &&
+      HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+          *aState.mCurrentListElement) !=
+          HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
+              aHandlingContent)) {
+    aState.mCurrentListElement = nullptr;
+  }
+
+  // If current node is a `<br>` element, delete it and forget previous
+  // list item element.
+  // If current node is an empty inline node, just delete it.
+  if (EditorUtils::IsEditableContent(aHandlingContent, EditorType::HTML) &&
+      (aHandlingContent.IsHTMLElement(nsGkAtoms::br) ||
+       HTMLEditUtils::IsEmptyInlineContainer(
+           aHandlingContent,
+           {EmptyCheckOption::TreatSingleBRElementAsVisible}))) {
+    nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(aHandlingContent);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+      return rv;
+    }
+    if (aHandlingContent.IsHTMLElement(nsGkAtoms::br)) {
+      aState.mPreviousListItemElement = nullptr;
+    }
+    return NS_OK;
+  }
+
+  // If we meet a list, we can reuse it or convert it to the expected type list.
+  if (HTMLEditUtils::IsAnyListElement(&aHandlingContent)) {
+    nsresult rv = HandleChildListElement(
+        aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::HandleChildListElement() failed");
+    return rv;
+  }
+
+  // We cannot handle nodes if not in element node.
+  if (NS_WARN_IF(!aHandlingContent.GetParentElement())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we meet a list item, we can just move it to current list element or new
+  // list element.
+  if (HTMLEditUtils::IsListItem(&aHandlingContent)) {
+    nsresult rv = HandleChildListItemElement(
+        aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::HandleChildListItemElement() failed");
+    return rv;
+  }
+
+  // If we meet a <div>, we want only its children to wrapping into list
+  // element.  Therefore, this call will call this recursively.
+  if (aHandlingContent.IsHTMLElement(nsGkAtoms::div)) {
+    nsresult rv = HandleChildDivElement(
+        aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState,
+        aEditingHost);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::HandleChildDivElement() failed");
+    return rv;
+  }
+
+  // If we've not met a list element, create a list element and make it
+  // current list element.
+  if (!aState.mCurrentListElement) {
+    nsresult rv = CreateAndUpdateCurrentListElement(
+        aHTMLEditor, EditorDOMPoint(&aHandlingContent), aState, aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoListElementCreator::HandleChildInlineElement() failed");
+      return rv;
+    }
+  }
+
+  // If we meet an inline content, we want to move it to previously used list
+  // item element or new list item element.
+  // XXX Despite the name, HTMLEditUtils::IsInlineElement() returns true for
+  // non-element content nodes too.
+  if (HTMLEditUtils::IsInlineElement(aHandlingContent)) {
+    nsresult rv =
+        HandleChildInlineContent(aHTMLEditor, aHandlingContent, aState);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::HandleChildInlineElement() failed");
+    return rv;
+  }
+
+  // If we meet a <p>, we want to move its children to new list item element.
+  if (aHandlingContent.IsHTMLElement(nsGkAtoms::p)) {
+    nsresult rv = HandleChildParagraphElement(
+        aHTMLEditor, MOZ_KnownLive(*aHandlingContent.AsElement()), aState);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::HandleChildParagraphElement() failed");
+    return rv;
+  }
+
+  // Otherwise, we should wrap it into new list item element.
+  nsresult rv =
+      WrapContentIntoNewListItemElement(aHTMLEditor, aHandlingContent, aState);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "AutoListElementCreator::WrapContentIntoNewListItemElement() failed");
+  return rv;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildListElement(
+    HTMLEditor& aHTMLEditor, Element& aHandlingListElement,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aHandlingListElement));
+
+  // If we met a list element and current list element is not a descendant
+  // of the list, append current node to end of the current list element.
+  // Then, wrap it with list item element and delete the old container.
+  if (aState.mCurrentListElement &&
+      !EditorUtils::IsDescendantOf(aHandlingListElement,
+                                   *aState.mCurrentListElement)) {
+    Result<MoveNodeResult, nsresult> moveNodeResult =
+        aHTMLEditor.MoveNodeToEndWithTransaction(
+            aHandlingListElement, MOZ_KnownLive(*aState.mCurrentListElement));
+    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      return moveNodeResult.propagateErr();
+    }
+    moveNodeResult.inspect().IgnoreCaretPointSuggestion();
+
+    Result<CreateElementResult, nsresult> convertListTypeResult =
+        aHTMLEditor.ChangeListElementType(aHandlingListElement, mListTagName,
+                                          mListItemTagName);
+    if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
+      NS_WARNING("HTMLEditor::ChangeListElementType() failed");
+      return convertListTypeResult.propagateErr();
+    }
+    convertListTypeResult.inspect().IgnoreCaretPointSuggestion();
+
+    Result<EditorDOMPoint, nsresult> unwrapNewListElementResult =
+        aHTMLEditor.RemoveBlockContainerWithTransaction(
+            MOZ_KnownLive(*convertListTypeResult.inspect().GetNewNode()));
+    if (MOZ_UNLIKELY(unwrapNewListElementResult.isErr())) {
+      NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
+      return unwrapNewListElementResult.propagateErr();
+    }
+    aState.mPreviousListItemElement = nullptr;
+    return NS_OK;
+  }
+
+  // If current list element is in found list element or we've not met a
+  // list element, convert current list element to proper type.
+  Result<CreateElementResult, nsresult> convertListTypeResult =
+      aHTMLEditor.ChangeListElementType(aHandlingListElement, mListTagName,
+                                        mListItemTagName);
+  if (MOZ_UNLIKELY(convertListTypeResult.isErr())) {
+    NS_WARNING("HTMLEditor::ChangeListElementType() failed");
+    return convertListTypeResult.propagateErr();
+  }
+  CreateElementResult unwrappedConvertListTypeResult =
+      convertListTypeResult.unwrap();
+  unwrappedConvertListTypeResult.IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(unwrappedConvertListTypeResult.GetNewNode());
+  aState.mCurrentListElement = unwrappedConvertListTypeResult.UnwrapNewNode();
+  aState.mPreviousListItemElement = nullptr;
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::AutoListElementCreator::HandleChildListItemInDifferentTypeList(
+    HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(&aHandlingListItemElement));
+  MOZ_ASSERT(
+      !aHandlingListItemElement.GetParent()->IsHTMLElement(&mListTagName));
+
+  // If we've not met a list element or current node is not in current list
+  // element, insert a list element at current node and set current list element
+  // to the new one.
+  if (!aState.mCurrentListElement ||
+      aHandlingListItemElement.IsInclusiveDescendantOf(
+          aState.mCurrentListElement)) {
+    EditorDOMPoint atListItem(&aHandlingListItemElement);
+    MOZ_ASSERT(atListItem.IsInContentNode());
+
+    Result<SplitNodeResult, nsresult> splitListItemParentResult =
+        aHTMLEditor.SplitNodeWithTransaction(atListItem);
+    if (MOZ_UNLIKELY(splitListItemParentResult.isErr())) {
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+      return splitListItemParentResult.propagateErr();
+    }
+    SplitNodeResult unwrappedSplitListItemParentResult =
+        splitListItemParentResult.unwrap();
+    MOZ_ASSERT(unwrappedSplitListItemParentResult.DidSplit());
+    unwrappedSplitListItemParentResult.IgnoreCaretPointSuggestion();
+
+    Result<CreateElementResult, nsresult> createNewListElementResult =
+        aHTMLEditor.CreateAndInsertElement(
+            WithTransaction::Yes, mListTagName,
+            unwrappedSplitListItemParentResult.AtNextContent<EditorDOMPoint>());
+    if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
+          "failed");
+      return createNewListElementResult.propagateErr();
+    }
+    CreateElementResult unwrapCreateNewListElementResult =
+        createNewListElementResult.unwrap();
+    unwrapCreateNewListElementResult.IgnoreCaretPointSuggestion();
+    MOZ_ASSERT(unwrapCreateNewListElementResult.GetNewNode());
+    aState.mCurrentListElement =
+        unwrapCreateNewListElementResult.UnwrapNewNode();
+  }
+
+  // Then, move current node into current list element.
+  Result<MoveNodeResult, nsresult> moveNodeResult =
+      aHTMLEditor.MoveNodeToEndWithTransaction(
+          aHandlingListItemElement, MOZ_KnownLive(*aState.mCurrentListElement));
+  if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
+    NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+    return moveNodeResult.propagateErr();
+  }
+  moveNodeResult.inspect().IgnoreCaretPointSuggestion();
+
+  // Convert list item type if current node is different list item type.
+  if (aHandlingListItemElement.IsHTMLElement(&mListItemTagName)) {
+    return NS_OK;
+  }
+  Result<CreateElementResult, nsresult> newListItemElementOrError =
+      aHTMLEditor.ReplaceContainerWithTransaction(aHandlingListItemElement,
+                                                  mListItemTagName);
+  if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
+    NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
+    return newListItemElementOrError.propagateErr();
+  }
+  newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildListItemElement(
+    HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(aHandlingListItemElement.GetParentNode());
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(&aHandlingListItemElement));
+
+  // If current list item element is not in proper list element, we need
+  // to convert the list element.
+  // XXX This check is not enough,
+  if (!aHandlingListItemElement.GetParentNode()->IsHTMLElement(&mListTagName)) {
+    nsresult rv = HandleChildListItemInDifferentTypeList(
+        aHTMLEditor, aHandlingListItemElement, aState);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "AutoListElementCreator::HandleChildListItemInDifferentTypeList() "
+          "failed");
+      return rv;
+    }
+  } else {
+    nsresult rv = HandleChildListItemInSameTypeList(
+        aHTMLEditor, aHandlingListItemElement, aState);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "AutoListElementCreator::HandleChildListItemInSameTypeList() failed");
+      return rv;
+    }
+  }
+
+  // If bullet type is specified, set list type attribute.
+  // XXX Cannot we set type attribute before inserting the list item
+  //     element into the DOM tree?
+  if (!mBulletType.IsEmpty()) {
+    nsresult rv = aHTMLEditor.SetAttributeWithTransaction(
+        aHandlingListItemElement, *nsGkAtoms::type, mBulletType);
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::SetAttributeWithTransaction(nsGkAtoms::type) failed");
+    return rv;
+  }
+
+  // Otherwise, remove list type attribute if there is.
+  if (!aHandlingListItemElement.HasAttr(nsGkAtoms::type)) {
+    return NS_OK;
+  }
+  nsresult rv = aHTMLEditor.RemoveAttributeWithTransaction(
+      aHandlingListItemElement, *nsGkAtoms::type);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::type) failed");
+  return rv;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildListItemInSameTypeList(
+    HTMLEditor& aHTMLEditor, Element& aHandlingListItemElement,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(HTMLEditUtils::IsListItem(&aHandlingListItemElement));
+  MOZ_ASSERT(
+      aHandlingListItemElement.GetParent()->IsHTMLElement(&mListTagName));
+
+  EditorDOMPoint atListItem(&aHandlingListItemElement);
+  MOZ_ASSERT(atListItem.IsInContentNode());
+
+  // If we've not met a list element, set current list element to the
+  // parent of current list item element.
+  if (!aState.mCurrentListElement) {
+    aState.mCurrentListElement = atListItem.GetContainerAs<Element>();
+    NS_WARNING_ASSERTION(
+        HTMLEditUtils::IsAnyListElement(aState.mCurrentListElement),
+        "Current list item parent is not a list element");
+  }
+  // If current list item element is not a child of current list element,
+  // move it into current list item.
+  else if (atListItem.GetContainer() != aState.mCurrentListElement) {
+    Result<MoveNodeResult, nsresult> moveNodeResult =
+        aHTMLEditor.MoveNodeToEndWithTransaction(
+            aHandlingListItemElement,
+            MOZ_KnownLive(*aState.mCurrentListElement));
+    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+      return moveNodeResult.propagateErr();
+    }
+    moveNodeResult.inspect().IgnoreCaretPointSuggestion();
+  }
+
+  // Then, if current list item element is not proper type for current
+  // list element, convert list item element to proper element.
+  if (aHandlingListItemElement.IsHTMLElement(&mListItemTagName)) {
+    return NS_OK;
+  }
+  Result<CreateElementResult, nsresult> newListItemElementOrError =
+      aHTMLEditor.ReplaceContainerWithTransaction(aHandlingListItemElement,
+                                                  mListItemTagName);
+  if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
+    NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
+    return newListItemElementOrError.propagateErr();
+  }
+  newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildDivElement(
+    HTMLEditor& aHTMLEditor, Element& aHandlingDivElement,
+    AutoHandlingState& aState, const Element& aEditingHost) const {
+  MOZ_ASSERT(aHandlingDivElement.IsHTMLElement(nsGkAtoms::div));
+
+  // If current node is a <div> element, replace it with its children and handle
+  // them as same as topmost children in the range.
+  AutoContentNodeArray arrayOfContentsInDiv;
+  HTMLEditUtils::CollectChildren(aHandlingDivElement, arrayOfContentsInDiv, 0,
+                                 {CollectChildrenOption::CollectListChildren,
+                                  CollectChildrenOption::CollectTableChildren});
+
+  Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
+      aHTMLEditor.RemoveContainerWithTransaction(aHandlingDivElement);
+  if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+    return unwrapDivElementResult.unwrapErr();
+  }
+
+  for (const OwningNonNull<nsIContent>& content : arrayOfContentsInDiv) {
+    // MOZ_KnownLive because of bug 1620312
+    nsresult rv = HandleChildContent(aHTMLEditor, MOZ_KnownLive(content),
+                                     aState, aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoListElementCreator::HandleChildContent() failed");
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::CreateAndUpdateCurrentListElement(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
+    AutoHandlingState& aState, const Element& aEditingHost) const {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
+  aState.mPreviousListItemElement = nullptr;
+  Result<CreateElementResult, nsresult> createNewListElementResult =
+      aHTMLEditor.InsertElementWithSplittingAncestorsWithTransaction(
+          mListTagName, aPointToInsert, BRElementNextToSplitPoint::Keep,
+          aEditingHost);
+  if (MOZ_UNLIKELY(createNewListElementResult.isErr())) {
+    NS_WARNING(
+        nsPrintfCString(
+            "HTMLEditor::"
+            "InsertElementWithSplittingAncestorsWithTransaction(%s) failed",
+            nsAtomCString(&mListTagName).get())
+            .get());
+    return createNewListElementResult.propagateErr();
+  }
+  CreateElementResult unwrappedCreateNewListElementResult =
+      createNewListElementResult.unwrap();
+  unwrappedCreateNewListElementResult.IgnoreCaretPointSuggestion();
+
+  MOZ_ASSERT(unwrappedCreateNewListElementResult.GetNewNode());
+  aState.mListOrListItemElementToPutCaret =
+      unwrappedCreateNewListElementResult.GetNewNode();
+  aState.mCurrentListElement =
+      unwrappedCreateNewListElementResult.UnwrapNewNode();
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildInlineContent(
+    HTMLEditor& aHTMLEditor, nsIContent& aHandlingInlineContent,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(HTMLEditUtils::IsInlineElement(aHandlingInlineContent));
+
+  // If we're currently handling contents of a list item and current node
+  // is not a block element, move current node into the list item.
+  if (!aState.mPreviousListItemElement) {
+    nsresult rv = WrapContentIntoNewListItemElement(
+        aHTMLEditor, aHandlingInlineContent, aState);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoListElementCreator::WrapContentIntoNewListItemElement() failed");
+    return rv;
+  }
+
+  Result<MoveNodeResult, nsresult> moveInlineElementResult =
+      aHTMLEditor.MoveNodeToEndWithTransaction(
+          aHandlingInlineContent,
+          MOZ_KnownLive(*aState.mPreviousListItemElement));
+  if (MOZ_UNLIKELY(moveInlineElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+    return moveInlineElementResult.propagateErr();
+  }
+  moveInlineElementResult.inspect().IgnoreCaretPointSuggestion();
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::HandleChildParagraphElement(
+    HTMLEditor& aHTMLEditor, Element& aHandlingParagraphElement,
+    AutoHandlingState& aState) const {
+  MOZ_ASSERT(aHandlingParagraphElement.IsHTMLElement(nsGkAtoms::p));
+
+  // If current node is a paragraph, that means that it does not contain
+  // block children so that we can just replace it with new list item
+  // element and move it into current list element.
+  // XXX This is too rough handling.  If web apps modifies DOM tree directly,
+  //     any elements can have block elements as children.
+  Result<CreateElementResult, nsresult> newListItemElementOrError =
+      aHTMLEditor.ReplaceContainerWithTransaction(aHandlingParagraphElement,
+                                                  mListItemTagName);
+  if (MOZ_UNLIKELY(newListItemElementOrError.isErr())) {
+    NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
+    return newListItemElementOrError.unwrapErr();
+  }
+  newListItemElementOrError.inspect().IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(newListItemElementOrError.inspect().GetNewNode());
+
+  Result<MoveNodeResult, nsresult> moveListItemElementResult =
+      aHTMLEditor.MoveNodeToEndWithTransaction(
+          MOZ_KnownLive(*newListItemElementOrError.inspect().GetNewNode()),
+          MOZ_KnownLive(*aState.mCurrentListElement));
+  if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+    return moveListItemElementResult.propagateErr();
+  }
+  moveListItemElementResult.inspect().IgnoreCaretPointSuggestion();
+
+  aState.mPreviousListItemElement = nullptr;
+  // XXX Why don't we set `type` attribute here??
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoListElementCreator::WrapContentIntoNewListItemElement(
+    HTMLEditor& aHTMLEditor, nsIContent& aHandlingContent,
+    AutoHandlingState& aState) const {
+  // If current node is not a paragraph, wrap current node with new list
+  // item element and move it into current list element.
+  Result<CreateElementResult, nsresult> wrapContentInListItemElementResult =
+      aHTMLEditor.InsertContainerWithTransaction(aHandlingContent,
+                                                 mListItemTagName);
+  if (MOZ_UNLIKELY(wrapContentInListItemElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
+    return wrapContentInListItemElementResult.unwrapErr();
+  }
+  CreateElementResult unwrappedWrapContentInListItemElementResult =
+      wrapContentInListItemElementResult.unwrap();
+  unwrappedWrapContentInListItemElementResult.IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(unwrappedWrapContentInListItemElementResult.GetNewNode());
+
+  // MOZ_KnownLive(unwrappedWrapContentInListItemElementResult.GetNewNode()):
+  // The result is grabbed by unwrappedWrapContentInListItemElementResult.
+  Result<MoveNodeResult, nsresult> moveListItemElementResult =
+      aHTMLEditor.MoveNodeToEndWithTransaction(
+          MOZ_KnownLive(
+              *unwrappedWrapContentInListItemElementResult.GetNewNode()),
+          MOZ_KnownLive(*aState.mCurrentListElement));
+  if (MOZ_UNLIKELY(moveListItemElementResult.isErr())) {
+    NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
+    return moveListItemElementResult.unwrapErr();
+  }
+  moveListItemElementResult.inspect().IgnoreCaretPointSuggestion();
+
+  // If current node is not a block element, new list item should have
+  // following inline nodes too.
+  if (HTMLEditUtils::IsInlineElement(aHandlingContent)) {
+    aState.mPreviousListItemElement =
+        unwrappedWrapContentInListItemElementResult.UnwrapNewNode();
+  } else {
+    aState.mPreviousListItemElement = nullptr;
+  }
+
+  // XXX Why don't we set `type` attribute here??
+  return NS_OK;
 }
 
 nsresult HTMLEditor::AutoListElementCreator::
