@@ -1584,24 +1584,11 @@ SVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(
   MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
   PaintingPropertyDescriptor propDesc =
       (aPaint == &nsStyleSVG::mFill) ? FillProperty() : StrokeProperty();
-  SVGPaintingProperty* property =
-      GetPaintingProperty(paintServerURL, paintedFrame, propDesc);
-  if (!property) {
-    return nullptr;
+  if (auto* property =
+          GetPaintingProperty(paintServerURL, paintedFrame, propDesc)) {
+    return do_QueryFrame(property->GetAndObserveReferencedFrame());
   }
-  nsIFrame* result = property->GetAndObserveReferencedFrame();
-  if (!result) {
-    return nullptr;
-  }
-
-  LayoutFrameType type = result->Type();
-  if (type != LayoutFrameType::SVGLinearGradient &&
-      type != LayoutFrameType::SVGRadialGradient &&
-      type != LayoutFrameType::SVGPattern) {
-    return nullptr;
-  }
-
-  return static_cast<SVGPaintServerFrame*>(result);
+  return nullptr;
 }
 
 void SVGObserverUtils::UpdateEffects(nsIFrame* aFrame) {

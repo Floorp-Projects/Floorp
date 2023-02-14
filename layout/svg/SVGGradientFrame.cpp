@@ -344,15 +344,11 @@ SVGGradientFrame* SVGGradientFrame::GetReferencedGradient() {
     this->mNoHRefURI = aHref.IsEmpty();
   };
 
-  nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
-  if (tframe) {
-    return static_cast<SVGGradientFrame*>(do_QueryFrame(tframe));
-  }
   // We don't call SVGObserverUtils::RemoveTemplateObserver and set
-  // `mNoHRefURI = false` here since we want to be invalidated if the ID
+  // `mNoHRefURI = false` on failure since we want to be invalidated if the ID
   // specified by our href starts resolving to a different/valid element.
 
-  return nullptr;
+  return do_QueryFrame(SVGObserverUtils::GetAndObserveTemplate(this, GetHref));
 }
 
 void SVGGradientFrame::GetStopFrames(nsTArray<nsIFrame*>* aStopFrames) {

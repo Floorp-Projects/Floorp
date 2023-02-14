@@ -568,18 +568,11 @@ SVGPatternFrame* SVGPatternFrame::GetReferencedPattern() {
     this->mNoHRefURI = aHref.IsEmpty();
   };
 
-  nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
-  if (tframe) {
-    LayoutFrameType frameType = tframe->Type();
-    if (frameType == LayoutFrameType::SVGPattern) {
-      return static_cast<SVGPatternFrame*>(tframe);
-    }
-    // We don't call SVGObserverUtils::RemoveTemplateObserver and set
-    // `mNoHRefURI = false` here since we want to be invalidated if the ID
-    // specified by our href starts resolving to a different/valid element.
-  }
+  // We don't call SVGObserverUtils::RemoveTemplateObserver and set
+  // `mNoHRefURI = false` on failure since we want to be invalidated if the ID
+  // specified by our href starts resolving to a different/valid element.
 
-  return nullptr;
+  return do_QueryFrame(SVGObserverUtils::GetAndObserveTemplate(this, GetHref));
 }
 
 gfxRect SVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
