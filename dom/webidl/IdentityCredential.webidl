@@ -62,6 +62,7 @@ dictionary IdentityAccount {
   required USVString name;
   required USVString email;
   USVString given_name;
+  USVString picture;
   sequence<USVString> approved_clients;
 };
 
