@@ -660,7 +660,10 @@ class JS::Realm : public JS::shadow::Realm {
   void setIsDebuggee();
   void unsetIsDebuggee();
 
-  DebuggerVector& getDebuggers() { return debuggers_; };
+  DebuggerVector& getDebuggers(const JS::AutoRequireNoGC& nogc) {
+    return debuggers_;
+  };
+  bool hasDebuggers() const { return !debuggers_.empty(); }
 
   // True if this compartment's global is a debuggee of some Debugger
   // object with a live hook that observes all execution; e.g.,

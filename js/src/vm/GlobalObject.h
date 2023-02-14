@@ -986,9 +986,11 @@ class GlobalObject : public NativeObject {
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
 
-  Realm::DebuggerVector& getDebuggers() const {
-    return realm()->getDebuggers();
+  // Disallow GC as it may mutate the vector.
+  Realm::DebuggerVector& getDebuggers(const JS::AutoRequireNoGC& nogc) const {
+    return realm()->getDebuggers(nogc);
   }
+  bool hasDebuggers() const { return realm()->hasDebuggers(); }
 
   inline NativeObject* getForOfPICObject() { return data().forOfPICChain; }
   static NativeObject* getOrCreateForOfPICObject(JSContext* cx,

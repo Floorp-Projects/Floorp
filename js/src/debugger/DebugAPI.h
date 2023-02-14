@@ -21,6 +21,10 @@ class AbstractGeneratorObject;
 class DebugScriptMap;
 class PromiseObject;
 
+namespace gc {
+class AutoSuppressGC;
+}  // namespace gc
+
 /**
  * DebugAPI::onNativeCall allows the debugger to call callbacks just before
  * some native functions are to be executed. It also allows the hooks
@@ -352,10 +356,12 @@ class DebugAPI {
   static void slowPathOnNewGlobalObject(JSContext* cx,
                                         Handle<GlobalObject*> global);
   static void slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,
-                                             JS::Realm::DebuggerVector& dbgs);
+                                             JS::Realm::DebuggerVector& dbgs,
+                                             const JS::AutoRequireNoGC& nogc);
   [[nodiscard]] static bool slowPathOnLogAllocationSite(
       JSContext* cx, HandleObject obj, Handle<SavedFrame*> frame,
-      mozilla::TimeStamp when, JS::Realm::DebuggerVector& dbgs);
+      mozilla::TimeStamp when, JS::Realm::DebuggerVector& dbgs,
+      const gc::AutoSuppressGC& nogc);
   [[nodiscard]] static bool slowPathOnLeaveFrame(JSContext* cx,
                                                  AbstractFramePtr frame,
                                                  const jsbytecode* pc, bool ok);
