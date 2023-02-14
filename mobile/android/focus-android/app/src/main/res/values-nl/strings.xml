@@ -1008,12 +1008,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">De door u opgevraagde website ondersteunt geen HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">De door u opgevraagde website ondersteunt geen HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Deze website ondersteunt geen HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Standaard probeert %1$s verbinding te maken via HTTPS voor een betere beveiliging. Ga naar Instellingen &gt; Privacy &amp; Beveiliging &gt; Beveiliging om deze instelling te wijzigen of voor meer info.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Standaard probeert %1$s verbinding te maken via HTTPS voor een betere beveiliging. Ga naar Instellingen &gt; Privacy &amp; Beveiliging &gt; Beveiliging om deze instelling te wijzigen of voor meer info.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s probeert waar mogelijk een HTTPS-verbinding te gebruiken voor meer veiligheid.
+<a href="%2$s">Meer info</a> <br/><br/>
+Wijzig deze instelling in Instellingen > Privacy en beveiliging > Beveiliging.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Verbinding niet beveiligd</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+Dit kan een probleem zijn met de configuratie van de server, of het kan iemand zijn die probeert zich voor te doen als de server. <br/><br/>
+ Als u in het verleden met succes verbinding hebt gemaakt met deze server, is de fout mogelijk tijdelijk.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Iemand kan proberen de website na te doen en verdergaan kan risicovol zijn.</label>
+        <br><br>
+        <label>%1$s vertrouwt <b>%2$s</b> niet, omdat de certificaatuitgever onbekend is, het certificaat zelfondertekend is, of de server niet de juiste intermediaire certificaten verzendt.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tabblad sluiten</string>
 

@@ -1008,12 +1008,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">A kért webhely nem támogatja a HTTPS-t</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">A kért webhely nem támogatja a HTTPS-t</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Ez a webhely nem támogatja a HTTPS-t</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Alapértelmezés szerint a %1$s HTTPS használatával próbál csatlakozni a nagyobb biztonság érdekében. A beállítás módosításához vagy további információért ugorjon a Beállítások &gt; Adatvédelem és biztonság &gt; Biztonság menüponthoz.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Alapértelmezés szerint a %1$s HTTPS használatával próbál csatlakozni a nagyobb biztonság érdekében. A beállítás módosításához vagy további információért ugorjon a Beállítások &gt; Adatvédelem és biztonság &gt; Biztonság menüponthoz.</string>
 
-    <!-- Sessions List -->
+     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[A %1$s a nagyobb biztonság érdekében megpróbál HTTPS kapcsolatot használni, amikor az lehetséges.
+     <a href="%2$s">További tudnivalók</a> <br/><br/>
+     Ezt a beállítást itt módosíthatja: Beállítások > Adatvédelem és biztonság > Biztonság.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">A kapcsolat nem biztonságos</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Ezt okozhatja a kiszolgáló nem megfelelő beállítása, de az is lehet, hogy valaki megpróbál a kiszolgáló nevében fellépni.<br/><br/>
+    Ha korábban már sikeresen kapcsolódott ehhez a kiszolgálóhoz, akkor lehet, hogy a hiba csak ideiglenes.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Lehet, hogy valaki megpróbálja megszemélyesíteni az oldalt, és a folytatás kockázatos lehet.</label>
+        <br><br>
+        <label>A %1$s nem bízik a(z) <b>%2$s</b> oldalban, mert a tanúsítvány kibocsátója ismeretlen, a tanúsítvány önaláírt, vagy a kiszolgáló nem küldi el a helyes közbülső tanúsítványokat.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Lap bezárása</string>
 

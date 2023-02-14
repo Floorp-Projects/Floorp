@@ -1014,11 +1014,31 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">您要開啟的網站不支援 HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">預設情況下，為了增加安全性，%1$s 會嘗試使用 HTTPS 通訊協定進行連線。可到「設定 &gt; 隱私權與安全性 &gt; 安全性」來了解更多資訊或更改此設定。</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">您要開啟的網站不支援 HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">此網站不支援 HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">預設情況下，為了增加安全性，%1$s 會嘗試使用 HTTPS 通訊協定進行連線。可到「設定 &gt; 隱私權與安全性 &gt; 安全性」來了解更多資訊或更改此設定。</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s 為了加強安全性，會盡可能使用 HTTPS 進行連線。<a href="%2$s">了解更多</a><br/><br/>可到「設定 > 隱私權與安全性 > 安全性」調整此設定。]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">不安全連線</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[可能是伺服器設定問題造成，或是有人嘗試偽裝成該伺服器。<br/><br/>
+若您以前可以與該伺服器正常連線，那麼這個錯誤可能只是暫時的，請稍候再試試看。]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>有心人士可能正在嘗試將別的網站偽裝成您想造訪的網站，若繼續開啟網站可能會有風險。</label>
+<br><br>
+<label>因為憑證簽發者未知、憑證是自簽憑證，或伺服器並未送出正確的中介憑證的關係，%1$s 無法信任 <b>%2$s</b>。</label>]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">關閉分頁</string>
 

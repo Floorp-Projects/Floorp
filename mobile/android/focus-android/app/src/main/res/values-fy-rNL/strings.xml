@@ -1008,11 +1008,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">De troch jo opfrege website stipet gjin HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Standert probearret %1$s ferbining te meitsjen fia HTTPS foar in bettere befeiliging. Gean nei Ynstellingen &gt; Privacy &amp; Befeiliging &gt; Befeiliging om dizze ynstelling te wizigjen of foar mear ynformaasje.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">De troch jo opfrege website stipet gjin HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Dizze website stipet gjin HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Standert probearret %1$s ferbining te meitsjen fia HTTPS foar in bettere befeiliging. Gean nei Ynstellingen &gt; Privacy &amp; Befeiliging &gt; Befeiliging om dizze ynstelling te wizigjen of foar mear ynformaasje.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s probearret wêr mooglik in HTTPS-ferbining te brûken foar mear feilichheid.
+<a href="%2$s">Mear ynfo</a> <br/><br/>
+Wizigje dizze ynstelling yn Ynstellingen > Privacy en befeiliging > Befeiliging.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Ferbining net befeilige</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+Dit kin in probleem wêze mei de konfiguraasje fan de server, of it kin ien wêze dy’t probearret harren foar te dwaan as de server.<br/><br/>
+As jo earder al mei súkses ferbining hân hawwe mei dizze server, kin de flater mooglik tydlik wêze.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Ien kin probearje de website nei te dwaan en trochgean kin risikofol wêze.</label>
+        <br><br>
+        <label>%1$s fertrout <b>%2$s</b> net, omdat de sertifikaatútjouwer ûnbekend is, it sertifikaat selsûndertekene is, of de server net de krekte yntermediêre sertifikaten ferstjoert.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Ljepblêd slute</string>
 

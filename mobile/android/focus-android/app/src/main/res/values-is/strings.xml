@@ -980,12 +980,36 @@
     <string name="preference_follow_device_theme">Fylgja þema tækisins</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Vefsvæðið sem þú baðst um styður ekki HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Vefsvæðið sem þú baðst um styður ekki HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Þetta vefsvæði styður ekki HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Sjálfgefið er að %1$s reynir að tengjast með HTTPS til að auka öryggi. Til að breyta þessari stillingu eða til að læra meira, farðu í Stillingar &gt; Friðhelgi og öryggi &gt; Öryggi.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Sjálfgefið er að %1$s reynir að tengjast með HTTPS til að auka öryggi. Til að breyta þessari stillingu eða til að læra meira, farðu í Stillingar &gt; Friðhelgi og öryggi &gt; Öryggi.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s reynir að nota HTTPS tengingu þegar mögulegt er til að auka öryggi.
+     <a href="%2$s">Frekari upplýsingar</a> <br/><br/>
+     Breyttu þessari stillingu í Stillingar > Persónuvernd og öryggi > Öryggi.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tenging er ekki örugg</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+Þetta gæti verið vegna vandamála í stillingum netþjóns, eða einhver gæti verið að reyna að þykjast vera þessi netþjónn.<br/><br/>
+Ef þú hefur getað tengst þessum netþjóni án vandamála áður, gæti verið að vandamálið sé aðeins tímabundið, þannig að þú gætir reynt aftur seinna.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
+        <label>Einhver gæti verið að reyna að þykjast vera þetta vefsvæði og þú ættir ekki að halda áfram.</label>¶
+        <br><br>¶
+        <label>%1$s treystir ekki <b>%2$s</b> vegna þess að útgefandi skilríkisins er óþekktur, skilríkið er gefið út af sjálfu sér eða þjóninn er ekki að senda rétt milliskilríki.</label>¶]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Loka flipa</string>
 
