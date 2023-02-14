@@ -499,6 +499,7 @@ class Longhand(Property):
                 "PageOrientation",
                 "Percentage",
                 "PrintColorAdjust",
+                "ForcedColorAdjust",
                 "Resize",
                 "RubyPosition",
                 "SVGOpacity",
