@@ -145,11 +145,15 @@ server_knobs:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1811561
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811561
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811561#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1815815
     data_sensitivity:
       - interaction
     notification_emails:
       - tlong@mozilla.com
       - glean-team@mozilla.com
-    expires: 112
+    expires: 114
     disabled: true
+    send_in_pings:
+      - events
+      - newtab
