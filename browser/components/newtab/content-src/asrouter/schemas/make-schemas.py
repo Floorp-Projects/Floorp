@@ -394,15 +394,15 @@ def validate_corpus(schema_def: SchemaDefinition, schema: Dict[str, Any]):
             if not provider_path.parent.exists():
                 new_exc = Exception(
                     f"Could not find {provider_path}: Did you run "
-                    "`mach xpcshell extract-test-corpus` ?"
+                    "`mach xpcshell extract-test-corpus.js` ?"
                 )
                 raise new_exc from e
 
             raise e
 
-        for message in messages:
-            template = message["template"]
-            msg_id = message["id"]
+        for i, message in enumerate(messages):
+            template = message.get("template", "(no template)")
+            msg_id = message.get("id", f"index {i}")
 
             print(
                 f"      Validating {msg_id} {template} message with {schema_def.schema_path}..."
