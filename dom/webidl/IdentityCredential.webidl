@@ -17,47 +17,47 @@ interface IdentityCredential : Credential {
 };
 
 dictionary IdentityCredentialRequestOptions {
- sequence<IdentityProvider> providers;
+ sequence<IdentityProviderConfig> providers;
 };
 
 [GenerateConversionToJS]
-dictionary IdentityProvider {
- required USVString configURL;
+dictionary IdentityProviderConfig {
+ required UTF8String configURL;
  required USVString clientId;
  USVString nonce;
 };
 
-// https://fedidcg.github.io/FedCM/#check-the-root-manifest
+// https://fedidcg.github.io/FedCM/#dictdef-identityproviderwellknown
 [GenerateInit]
-dictionary IdentityRootManifest {
-  required sequence<USVString> provider_urls;
+dictionary IdentityProviderWellKnown {
+  required sequence<UTF8String> provider_urls;
 };
 
-// https://fedidcg.github.io/FedCM/#icon-json
-dictionary IdentityIcon {
+// https://fedidcg.github.io/FedCM/#dictdef-identityprovidericon
+dictionary IdentityProviderIcon {
   required USVString url;
   unsigned long size;
 };
 
-// https://fedidcg.github.io/FedCM/#branding-json
-dictionary IdentityBranding {
+// https://fedidcg.github.io/FedCM/#dictdef-identityproviderbranding
+dictionary IdentityProviderBranding {
   USVString background_color;
   USVString color;
-  sequence<IdentityIcon> icons;
+  sequence<IdentityProviderIcon> icons;
 };
 
-// https://fedidcg.github.io/FedCM/#manifest
+// https://fedidcg.github.io/FedCM/#dictdef-identityproviderapiconfig
 [GenerateInit, GenerateConversionToJS]
-dictionary IdentityInternalManifest {
-  required USVString accounts_endpoint;
-  required USVString client_metadata_endpoint;
-  required USVString id_assertion_endpoint;
-  IdentityBranding branding;
+dictionary IdentityProviderAPIConfig {
+  required UTF8String accounts_endpoint;
+  required UTF8String client_metadata_endpoint;
+  required UTF8String id_assertion_endpoint;
+  IdentityProviderBranding branding;
 };
 
 
-// https://fedidcg.github.io/FedCM/#account-json
-dictionary IdentityAccount {
+// https://fedidcg.github.io/FedCM/#dictdef-identityprovideraccount
+dictionary IdentityProviderAccount {
   required USVString id;
   required USVString name;
   required USVString email;
@@ -66,15 +66,15 @@ dictionary IdentityAccount {
   sequence<USVString> approved_clients;
 };
 
-// https://fedidcg.github.io/FedCM/#idp-api-accounts-endpoint
+// https://fedidcg.github.io/FedCM/#dictdef-identityprovideraccountlist
 [GenerateInit, GenerateConversionToJS]
-dictionary IdentityAccountList {
-  sequence<IdentityAccount> accounts;
+dictionary IdentityProviderAccountList {
+  sequence<IdentityProviderAccount> accounts;
 };
 
-// https://fedidcg.github.io/FedCM/#idp-api-client-id-metadata-endpoint
+// https://fedidcg.github.io/FedCM/#dictdef-identityproviderclientmetadata
 [GenerateInit, GenerateConversionToJS]
-dictionary IdentityClientMetadata {
+dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
 };
@@ -85,7 +85,7 @@ dictionary IdentityProviderToken {
   required USVString token;
 };
 
-// https://fedidcg.github.io/FedCM/#browser-api-idp-sign-out
+// https://fedidcg.github.io/FedCM/#dictdef-identitycredentiallogoutrpsrequest
 dictionary IdentityCredentialLogoutRPsRequest {
   required UTF8String url;
   required UTF8String accountId;

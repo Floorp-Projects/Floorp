@@ -69,8 +69,8 @@ export class IdentityCredentialPromptService {
   /**
    * Ask the user, using a PopupNotification, to select an Identity Provider from a provided list.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
-   * @param {IdentityProvider[]} identityProviders - The list of identity providers the user selects from
-   * @param {IdentityInternalManifest[]} identityManifests - The manifests corresponding 1-to-1 with identityProviders
+   * @param {IdentityProviderConfig[]} identityProviders - The list of identity providers the user selects from
+   * @param {IdentityProviderAPIConfig[]} identityManifests - The manifests corresponding 1-to-1 with identityProviders
    * @returns {Promise<number>} The user-selected identity provider
    */
   async showProviderPrompt(
@@ -254,8 +254,8 @@ export class IdentityCredentialPromptService {
   /**
    * Ask the user, using a PopupNotification, to approve or disapprove of the policies of the Identity Provider.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
-   * @param {IdentityProvider} identityProvider - The Identity Provider that the user has selected to use
-   * @param {IdentityInternalManifest} identityManifest - The Identity Provider that the user has selected to use's manifest
+   * @param {IdentityProviderConfig} identityProvider - The Identity Provider that the user has selected to use
+   * @param {IdentityProviderAPIConfig} identityManifest - The Identity Provider that the user has selected to use's manifest
    * @param {IdentityCredentialMetadata} identityCredentialMetadata - The metadata displayed to the user
    * @returns {Promise<bool>} A boolean representing the user's acceptance of the metadata.
    */
@@ -392,10 +392,10 @@ export class IdentityCredentialPromptService {
   /**
    * Ask the user, using a PopupNotification, to select an account from a provided list.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
-   * @param {IdentityAccountList} accountList - The list of accounts the user selects from
-   * @param {IdentityProvider} provider - The selected identity provider
-   * @param {IdentityInternalManifest} providerManifest - The manifest of the selected identity provider
-   * @returns {Promise<IdentityAccount>} The user-selected account
+   * @param {IdentityProviderAccountList} accountList - The list of accounts the user selects from
+   * @param {IdentityProviderConfig} provider - The selected identity provider
+   * @param {IdentityProviderAPIConfig} providerManifest - The manifest of the selected identity provider
+   * @returns {Promise<IdentityProviderAccount>} The user-selected account
    */
   async showAccountListPrompt(
     browsingContext,
