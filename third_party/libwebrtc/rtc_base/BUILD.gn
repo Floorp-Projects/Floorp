@@ -1349,7 +1349,6 @@ rtc_source_set("gtest_prod") {
   sources = [ "gtest_prod_util.h" ]
 }
 
-if (rtc_include_tests) {
 rtc_library("gunit_helpers") {
   testonly = true
   sources = [
@@ -1491,7 +1490,6 @@ rtc_library("task_queue_for_test") {
     "//third_party/abseil-cpp/absl/cleanup",
     "//third_party/abseil-cpp/absl/strings",
   ]
-}
 }
 
 if (rtc_include_tests) {
