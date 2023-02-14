@@ -148,3 +148,13 @@ def get_gecko_kt_path(repo, revision):
         return "android-components/plugins/dependencies/src/main/java/Gecko.kt"
     except CalledProcessError:
         return "android-components/buildSrc/src/main/java/Gecko.kt"
+
+
+@_target_task("screenshots")
+def target_tasks_screnshots(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to generate screenshots on a real device."""
+
+    def filter(task, parameters):
+        return task.attributes.get("screenshots", False)
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
