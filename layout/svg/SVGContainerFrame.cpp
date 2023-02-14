@@ -200,31 +200,7 @@ void SVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
 
 bool SVGDisplayContainerFrame::IsSVGTransformed(
     gfx::Matrix* aOwnTransform, gfx::Matrix* aFromParentTransform) const {
-  bool foundTransform = false;
-
-  // Check if our parent has children-only transforms:
-  nsIFrame* parent = GetParent();
-  if (parent &&
-      parent->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
-    foundTransform =
-        static_cast<SVGContainerFrame*>(parent)->HasChildrenOnlyTransform(
-            aFromParentTransform);
-  }
-
-  // content could be a XUL element so check for an SVG element
-  if (auto* content = SVGElement::FromNode(GetContent())) {
-    SVGAnimatedTransformList* transformList =
-        content->GetAnimatedTransformList();
-    if ((transformList && transformList->HasTransform()) ||
-        content->GetAnimateMotionTransform()) {
-      if (aOwnTransform) {
-        *aOwnTransform = gfx::ToMatrix(
-            content->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent));
-      }
-      foundTransform = true;
-    }
-  }
-  return foundTransform;
+  return SVGUtils::IsSVGTransformed(this, aOwnTransform, aFromParentTransform);
 }
 
 //----------------------------------------------------------------------

@@ -268,6 +268,13 @@ class SVGUtils final {
    */
   static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
+  /*
+   * Returns whether the frame is transformed and what those transforms are.
+   */
+  static bool IsSVGTransformed(const nsIFrame* aFrame,
+                               gfx::Matrix* aOwnTransform,
+                               gfx::Matrix* aFromParentTransform);
+
   /**
    * Notify the descendants of aFrame of a change to one of their ancestors
    * that might affect them.
