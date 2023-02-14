@@ -361,6 +361,33 @@ gfxMatrix SVGUtils::GetCanvasTM(nsIFrame* aFrame) {
   return static_cast<SVGGeometryFrame*>(aFrame)->GetCanvasTM();
 }
 
+bool SVGUtils::IsSVGTransformed(const nsIFrame* aFrame,
+                                gfx::Matrix* aOwnTransform,
+                                gfx::Matrix* aFromParentTransform) {
+  MOZ_ASSERT(aFrame->HasAllStateBits(NS_FRAME_SVG_LAYOUT |
+                                     NS_FRAME_MAY_BE_TRANSFORMED),
+             "Expecting an SVG frame that can be transformed");
+  bool foundTransform = false;
+
+  // Check if our parent has children-only transforms:
+  if (SVGContainerFrame* parent = do_QueryFrame(aFrame->GetParent())) {
+    foundTransform = parent->HasChildrenOnlyTransform(aFromParentTransform);
+  }
+
+  if (auto* content = SVGElement::FromNode(aFrame->GetContent())) {
+    auto* transformList = content->GetAnimatedTransformList();
+    if ((transformList && transformList->HasTransform()) ||
+        content->GetAnimateMotionTransform()) {
+      if (aOwnTransform) {
+        *aOwnTransform = gfx::ToMatrix(
+            content->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent));
+      }
+      foundTransform = true;
+    }
+  }
+  return foundTransform;
+}
+
 void SVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
