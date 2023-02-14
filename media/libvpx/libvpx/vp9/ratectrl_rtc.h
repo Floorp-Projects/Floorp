@@ -19,14 +19,14 @@
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/vp9_iface_common.h"
 #include "vp9/encoder/vp9_aq_cyclicrefresh.h"
-#include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_firstpass.h"
 #include "vp9/vp9_cx_iface.h"
 #include "vpx/internal/vpx_ratectrl_rtc.h"
 #include "vpx_mem/vpx_mem.h"
 
-namespace libvpx {
+struct VP9_COMP;
 
+namespace libvpx {
 struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
  public:
   VP9RateControlRtcConfig() {
@@ -53,7 +53,7 @@ struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
 };
 
 struct VP9FrameParamsQpRTC {
-  FRAME_TYPE frame_type;
+  RcFrameType frame_type;
   int spatial_layer_id;
   int temporal_layer_id;
 };
@@ -90,28 +90,7 @@ class VP9RateControlRTC {
  public:
   static std::unique_ptr<VP9RateControlRTC> Create(
       const VP9RateControlRtcConfig &cfg);
-  ~VP9RateControlRTC() {
-    if (cpi_) {
-      if (cpi_->svc.number_spatial_layers > 1 ||
-          cpi_->svc.number_temporal_layers > 1) {
-        for (int sl = 0; sl < cpi_->svc.number_spatial_layers; sl++) {
-          for (int tl = 0; tl < cpi_->svc.number_temporal_layers; tl++) {
-            int layer = LAYER_IDS_TO_IDX(sl, tl, cpi_->oxcf.ts_number_layers);
-            LAYER_CONTEXT *const lc = &cpi_->svc.layer_context[layer];
-            vpx_free(lc->map);
-            vpx_free(lc->last_coded_q_map);
-            vpx_free(lc->consec_zero_mv);
-          }
-        }
-      }
-      if (cpi_->oxcf.aq_mode == CYCLIC_REFRESH_AQ) {
-        vpx_free(cpi_->segmentation_map);
-        cpi_->segmentation_map = NULL;
-        vp9_cyclic_refresh_free(cpi_->cyclic_refresh);
-      }
-      vpx_free(cpi_);
-    }
-  }
+  ~VP9RateControlRTC();
 
   void UpdateRateControl(const VP9RateControlRtcConfig &rc_cfg);
   // GetQP() needs to be called after ComputeQP() to get the latest QP
@@ -125,7 +104,7 @@ class VP9RateControlRTC {
  private:
   VP9RateControlRTC() {}
   void InitRateControl(const VP9RateControlRtcConfig &cfg);
-  VP9_COMP *cpi_;
+  struct VP9_COMP *cpi_;
 };
 
 }  // namespace libvpx

@@ -104,6 +104,8 @@ VP9_CX_SRCS-$(CONFIG_INTERNAL_STATS) += common/vp9_postproc.c
 endif
 VP9_CX_SRCS-yes += encoder/vp9_temporal_filter.c
 VP9_CX_SRCS-yes += encoder/vp9_temporal_filter.h
+VP9_CX_SRCS-yes += encoder/vp9_tpl_model.c
+VP9_CX_SRCS-yes += encoder/vp9_tpl_model.h
 VP9_CX_SRCS-yes += encoder/vp9_mbgraph.c
 VP9_CX_SRCS-yes += encoder/vp9_mbgraph.h
 

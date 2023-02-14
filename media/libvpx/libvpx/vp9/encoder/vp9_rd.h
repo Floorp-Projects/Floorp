@@ -121,11 +121,9 @@ typedef struct RD_OPT {
   int64_t prediction_type_threshes[MAX_REF_FRAMES][REFERENCE_MODES];
 
   int64_t filter_threshes[MAX_REF_FRAMES][SWITCHABLE_FILTER_CONTEXTS];
-#if CONFIG_CONSISTENT_RECODE || CONFIG_RATE_CTRL
   int64_t prediction_type_threshes_prev[MAX_REF_FRAMES][REFERENCE_MODES];
 
   int64_t filter_threshes_prev[MAX_REF_FRAMES][SWITCHABLE_FILTER_CONTEXTS];
-#endif  // CONFIG_CONSISTENT_RECODE || CONFIG_RATE_CTRL
   int RDMULT;
   int RDDIV;
   double r0;

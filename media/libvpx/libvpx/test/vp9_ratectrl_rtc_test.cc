@@ -57,9 +57,11 @@ class RcInterfaceTest
       encoder->Control(VP8E_SET_MAX_INTRA_BITRATE_PCT, 1000);
       encoder->Control(VP9E_SET_RTC_EXTERNAL_RATECTRL, 1);
     }
-    frame_params_.frame_type =
-        video->frame() % key_interval_ == 0 ? KEY_FRAME : INTER_FRAME;
-    if (rc_cfg_.rc_mode == VPX_CBR && frame_params_.frame_type == INTER_FRAME) {
+    frame_params_.frame_type = video->frame() % key_interval_ == 0
+                                   ? libvpx::RcFrameType::kKeyFrame
+                                   : libvpx::RcFrameType::kInterFrame;
+    if (rc_cfg_.rc_mode == VPX_CBR &&
+        frame_params_.frame_type == libvpx::RcFrameType::kInterFrame) {
       // Disable golden frame update.
       frame_flags_ |= VP8_EFLAG_NO_UPD_GF;
       frame_flags_ |= VP8_EFLAG_NO_UPD_ARF;
@@ -183,8 +185,9 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
       encoder->Control(VP9E_SET_SVC, 1);
       encoder->Control(VP9E_SET_SVC_PARAMETERS, &svc_params_);
     }
-    frame_params_.frame_type =
-        video->frame() % key_interval_ == 0 ? KEY_FRAME : INTER_FRAME;
+    frame_params_.frame_type = video->frame() % key_interval_ == 0
+                                   ? libvpx::RcFrameType::kKeyFrame
+                                   : libvpx::RcFrameType::kInterFrame;
     encoder_exit_ = video->frame() == kNumFrames;
     current_superframe_ = video->frame();
     if (dynamic_spatial_layers_ == 1) {
@@ -247,7 +250,7 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
           else
             frame_params_.temporal_layer_id = 0;
           rc_api_->ComputeQP(frame_params_);
-          frame_params_.frame_type = INTER_FRAME;
+          frame_params_.frame_type = libvpx::RcFrameType::kInterFrame;
           rc_api_->PostEncodeUpdate(sizes_[sl]);
         }
       }

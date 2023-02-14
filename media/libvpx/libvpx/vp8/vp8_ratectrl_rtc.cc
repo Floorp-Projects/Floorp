@@ -10,7 +10,9 @@
 
 #include <math.h>
 #include <new>
+#include "vp8/common/common.h"
 #include "vp8/vp8_ratectrl_rtc.h"
+#include "vp8/encoder/onyx_int.h"
 #include "vp8/encoder/ratectrl.h"
 #include "vpx_ports/system_state.h"
 
@@ -63,6 +65,13 @@ std::unique_ptr<VP8RateControlRTC> VP8RateControlRTC::Create(
   rc_api->InitRateControl(cfg);
 
   return rc_api;
+}
+
+VP8RateControlRTC::~VP8RateControlRTC() {
+  if (cpi_) {
+    vpx_free(cpi_->gf_active_flags);
+    vpx_free(cpi_);
+  }
 }
 
 void VP8RateControlRTC::InitRateControl(const VP8RateControlRtcConfig &rc_cfg) {
@@ -203,7 +212,7 @@ void VP8RateControlRTC::ComputeQP(const VP8FrameParamsQpRTC &frame_params) {
     vp8_restore_layer_context(cpi_, layer);
     vp8_new_framerate(cpi_, cpi_->layer_context[layer].framerate);
   }
-  cm->frame_type = frame_params.frame_type;
+  cm->frame_type = static_cast<FRAME_TYPE>(frame_params.frame_type);
   cm->refresh_golden_frame = (cm->frame_type == KEY_FRAME) ? 1 : 0;
   cm->refresh_alt_ref_frame = (cm->frame_type == KEY_FRAME) ? 1 : 0;
   if (cm->frame_type == KEY_FRAME && cpi_->common.current_video_frame > 0) {

@@ -392,6 +392,7 @@ DSP_SRCS-$(HAVE_LSX)    += loongarch/subtract_lsx.c
 ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
 DSP_SRCS-$(HAVE_SSE2) += x86/highbd_sad4d_sse2.asm
 DSP_SRCS-$(HAVE_SSE2) += x86/highbd_sad_sse2.asm
+DSP_SRCS-$(HAVE_NEON) += arm/highbd_sad4d_neon.c
 DSP_SRCS-$(HAVE_NEON) += arm/highbd_sad_neon.c
 DSP_SRCS-$(HAVE_AVX2) += x86/highbd_sad4d_avx2.c
 DSP_SRCS-$(HAVE_AVX2) += x86/highbd_sad_avx2.c
@@ -432,7 +433,9 @@ ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_variance_sse2.c
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_variance_impl_sse2.asm
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_subpel_variance_impl_sse2.asm
+DSP_SRCS-$(HAVE_NEON)   += arm/highbd_avg_pred_neon.c
 DSP_SRCS-$(HAVE_NEON)   += arm/highbd_variance_neon.c
+DSP_SRCS-$(HAVE_NEON)   += arm/highbd_subpel_variance_neon.c
 endif  # CONFIG_VP9_HIGHBITDEPTH
 endif  # CONFIG_ENCODERS || CONFIG_POSTPROC || CONFIG_VP9_POSTPROC
 

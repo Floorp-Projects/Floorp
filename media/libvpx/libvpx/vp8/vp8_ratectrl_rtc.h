@@ -12,23 +12,24 @@
 #define VPX_VP8_RATECTRL_RTC_H_
 
 #include <cstdint>
+#include <cstring>
 #include <memory>
 
-#include "vp8/encoder/onyx_int.h"
-#include "vp8/common/common.h"
 #include "vpx/internal/vpx_ratectrl_rtc.h"
+
+struct VP8_COMP;
 
 namespace libvpx {
 struct VP8RateControlRtcConfig : public VpxRateControlRtcConfig {
  public:
   VP8RateControlRtcConfig() {
-    vp8_zero(layer_target_bitrate);
-    vp8_zero(ts_rate_decimator);
+    memset(&layer_target_bitrate, 0, sizeof(layer_target_bitrate));
+    memset(&ts_rate_decimator, 0, sizeof(ts_rate_decimator));
   }
 };
 
 struct VP8FrameParamsQpRTC {
-  FRAME_TYPE frame_type;
+  RcFrameType frame_type;
   int temporal_layer_id;
 };
 
@@ -36,12 +37,7 @@ class VP8RateControlRTC {
  public:
   static std::unique_ptr<VP8RateControlRTC> Create(
       const VP8RateControlRtcConfig &cfg);
-  ~VP8RateControlRTC() {
-    if (cpi_) {
-      vpx_free(cpi_->gf_active_flags);
-      vpx_free(cpi_);
-    }
-  }
+  ~VP8RateControlRTC();
 
   void UpdateRateControl(const VP8RateControlRtcConfig &rc_cfg);
   // GetQP() needs to be called after ComputeQP() to get the latest QP
@@ -54,7 +50,7 @@ class VP8RateControlRTC {
  private:
   VP8RateControlRTC() {}
   void InitRateControl(const VP8RateControlRtcConfig &cfg);
-  VP8_COMP *cpi_;
+  struct VP8_COMP *cpi_;
   int q_;
 };
 

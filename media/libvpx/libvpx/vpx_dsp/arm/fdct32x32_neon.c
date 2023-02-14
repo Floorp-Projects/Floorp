@@ -60,10 +60,10 @@ void vpx_fdct32x32_neon(const int16_t *input, tran_low_t *output, int stride) {
   dct_body_first_pass(temp5, temp4);
 
   // Generate the top row by munging the first set of 8 from each one together.
-  transpose_s16_8x8_new(&temp1[0], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[0], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[0], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[0], &temp0[24]);
+  transpose_s16_8x8q(&temp1[0], &temp0[0]);
+  transpose_s16_8x8q(&temp2[0], &temp0[8]);
+  transpose_s16_8x8q(&temp3[0], &temp0[16]);
+  transpose_s16_8x8q(&temp4[0], &temp0[24]);
 
   dct_body_second_pass(temp0, temp5);
 
@@ -78,10 +78,10 @@ void vpx_fdct32x32_neon(const int16_t *input, tran_low_t *output, int stride) {
   store(output, temp5);
 
   // Second row of 8x32.
-  transpose_s16_8x8_new(&temp1[8], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[8], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[8], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[8], &temp0[24]);
+  transpose_s16_8x8q(&temp1[8], &temp0[0]);
+  transpose_s16_8x8q(&temp2[8], &temp0[8]);
+  transpose_s16_8x8q(&temp3[8], &temp0[16]);
+  transpose_s16_8x8q(&temp4[8], &temp0[24]);
 
   dct_body_second_pass(temp0, temp5);
 
@@ -96,10 +96,10 @@ void vpx_fdct32x32_neon(const int16_t *input, tran_low_t *output, int stride) {
   store(output + 8 * 32, temp5);
 
   // Third row of 8x32
-  transpose_s16_8x8_new(&temp1[16], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[16], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[16], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[16], &temp0[24]);
+  transpose_s16_8x8q(&temp1[16], &temp0[0]);
+  transpose_s16_8x8q(&temp2[16], &temp0[8]);
+  transpose_s16_8x8q(&temp3[16], &temp0[16]);
+  transpose_s16_8x8q(&temp4[16], &temp0[24]);
 
   dct_body_second_pass(temp0, temp5);
 
@@ -114,10 +114,10 @@ void vpx_fdct32x32_neon(const int16_t *input, tran_low_t *output, int stride) {
   store(output + 16 * 32, temp5);
 
   // Final row of 8x32.
-  transpose_s16_8x8_new(&temp1[24], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[24], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[24], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[24], &temp0[24]);
+  transpose_s16_8x8q(&temp1[24], &temp0[0]);
+  transpose_s16_8x8q(&temp2[24], &temp0[8]);
+  transpose_s16_8x8q(&temp3[24], &temp0[16]);
+  transpose_s16_8x8q(&temp4[24], &temp0[24]);
 
   dct_body_second_pass(temp0, temp5);
 
@@ -159,10 +159,10 @@ void vpx_fdct32x32_rd_neon(const int16_t *input, tran_low_t *output,
   dct_body_first_pass(temp5, temp4);
 
   // Generate the top row by munging the first set of 8 from each one together.
-  transpose_s16_8x8_new(&temp1[0], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[0], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[0], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[0], &temp0[24]);
+  transpose_s16_8x8q(&temp1[0], &temp0[0]);
+  transpose_s16_8x8q(&temp2[0], &temp0[8]);
+  transpose_s16_8x8q(&temp3[0], &temp0[16]);
+  transpose_s16_8x8q(&temp4[0], &temp0[24]);
 
   dct_body_second_pass_rd(temp0, temp5);
 
@@ -177,10 +177,10 @@ void vpx_fdct32x32_rd_neon(const int16_t *input, tran_low_t *output,
   store(output, temp5);
 
   // Second row of 8x32.
-  transpose_s16_8x8_new(&temp1[8], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[8], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[8], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[8], &temp0[24]);
+  transpose_s16_8x8q(&temp1[8], &temp0[0]);
+  transpose_s16_8x8q(&temp2[8], &temp0[8]);
+  transpose_s16_8x8q(&temp3[8], &temp0[16]);
+  transpose_s16_8x8q(&temp4[8], &temp0[24]);
 
   dct_body_second_pass_rd(temp0, temp5);
 
@@ -195,10 +195,10 @@ void vpx_fdct32x32_rd_neon(const int16_t *input, tran_low_t *output,
   store(output + 8 * 32, temp5);
 
   // Third row of 8x32
-  transpose_s16_8x8_new(&temp1[16], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[16], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[16], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[16], &temp0[24]);
+  transpose_s16_8x8q(&temp1[16], &temp0[0]);
+  transpose_s16_8x8q(&temp2[16], &temp0[8]);
+  transpose_s16_8x8q(&temp3[16], &temp0[16]);
+  transpose_s16_8x8q(&temp4[16], &temp0[24]);
 
   dct_body_second_pass_rd(temp0, temp5);
 
@@ -213,10 +213,10 @@ void vpx_fdct32x32_rd_neon(const int16_t *input, tran_low_t *output,
   store(output + 16 * 32, temp5);
 
   // Final row of 8x32.
-  transpose_s16_8x8_new(&temp1[24], &temp0[0]);
-  transpose_s16_8x8_new(&temp2[24], &temp0[8]);
-  transpose_s16_8x8_new(&temp3[24], &temp0[16]);
-  transpose_s16_8x8_new(&temp4[24], &temp0[24]);
+  transpose_s16_8x8q(&temp1[24], &temp0[0]);
+  transpose_s16_8x8q(&temp2[24], &temp0[8]);
+  transpose_s16_8x8q(&temp3[24], &temp0[16]);
+  transpose_s16_8x8q(&temp4[24], &temp0[24]);
 
   dct_body_second_pass_rd(temp0, temp5);
 

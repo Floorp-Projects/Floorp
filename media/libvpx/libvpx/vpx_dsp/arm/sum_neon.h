@@ -40,6 +40,23 @@ static INLINE uint32_t horizontal_add_uint16x8(const uint16x8_t a) {
 #endif
 }
 
+static INLINE uint32_t horizontal_long_add_uint16x8(const uint16x8_t vec_lo,
+                                                    const uint16x8_t vec_hi) {
+#if defined(__aarch64__)
+  return vaddlvq_u16(vec_lo) + vaddlvq_u16(vec_hi);
+#else
+  const uint32x4_t vec_l_lo =
+      vaddl_u16(vget_low_u16(vec_lo), vget_high_u16(vec_lo));
+  const uint32x4_t vec_l_hi =
+      vaddl_u16(vget_low_u16(vec_hi), vget_high_u16(vec_hi));
+  const uint32x4_t a = vaddq_u32(vec_l_lo, vec_l_hi);
+  const uint64x2_t b = vpaddlq_u32(a);
+  const uint32x2_t c = vadd_u32(vreinterpret_u32_u64(vget_low_u64(b)),
+                                vreinterpret_u32_u64(vget_high_u64(b)));
+  return vget_lane_u32(c, 0);
+#endif
+}
+
 static INLINE int32_t horizontal_add_int32x2(const int32x2_t a) {
 #if defined(__aarch64__)
   return vaddv_s32(a);
@@ -77,4 +94,20 @@ static INLINE uint32_t horizontal_add_uint32x4(const uint32x4_t a) {
   return vget_lane_u32(c, 0);
 #endif
 }
+
+static INLINE uint32x4_t horizontal_add_4d_uint32x4(const uint32x4_t sum[4]) {
+#if defined(__aarch64__)
+  uint32x4_t res01 = vpaddq_u32(sum[0], sum[1]);
+  uint32x4_t res23 = vpaddq_u32(sum[2], sum[3]);
+  return vpaddq_u32(res01, res23);
+#else
+  uint32x4_t res = vdupq_n_u32(0);
+  res = vsetq_lane_u32(horizontal_add_uint32x4(sum[0]), res, 0);
+  res = vsetq_lane_u32(horizontal_add_uint32x4(sum[1]), res, 1);
+  res = vsetq_lane_u32(horizontal_add_uint32x4(sum[2]), res, 2);
+  res = vsetq_lane_u32(horizontal_add_uint32x4(sum[3]), res, 3);
+  return res;
+#endif
+}
+
 #endif  // VPX_VPX_DSP_ARM_SUM_NEON_H_
