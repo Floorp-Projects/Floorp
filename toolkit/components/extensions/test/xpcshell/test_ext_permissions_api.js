@@ -49,6 +49,7 @@ add_task(async function setup() {
     "activeTab",
     "clipboardRead",
     "clipboardWrite",
+    "declarativeNetRequestFeedback",
     "devtools",
     "downloads.open",
     "geolocation",
