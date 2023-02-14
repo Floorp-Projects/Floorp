@@ -172,7 +172,7 @@ def make_job_description(config, jobs):
             "skip-artifacts": True,
         }
 
-        worker_type = "b-linux"
+        worker_type = "b-linux-gcp"
         worker["docker-image"] = {"in-tree": "debian11-amd64-build"}
 
         worker["artifacts"] = _generate_task_output_files(
