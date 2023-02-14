@@ -18,6 +18,7 @@ enum OffscreenRenderingContextId { "2d", "bitmaprenderer", "webgl", "webgl2", "w
 
 [Exposed=(Window,Worker), Pref="gfx.offscreencanvas.enabled"]
 interface OffscreenCanvas : EventTarget {
+  [Throws]
   constructor([EnforceRange] unsigned long width, [EnforceRange] unsigned long height);
 
   [Pure, SetterThrows]

@@ -80,7 +80,8 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<OffscreenCanvas> Constructor(
-      const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight);
+      const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight,
+      ErrorResult& aRv);
 
   void ClearResources();
 
