@@ -1660,16 +1660,15 @@ void SVGObserverUtils::InvalidateRenderingObservers(nsIFrame* aFrame) {
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "aFrame must be first continuation");
 
-  nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsElement()) {
+  auto* element = Element::FromNodeOrNull(aFrame->GetContent());
+  if (!element) {
     return;
   }
 
   // If the rendering has changed, the bounds may well have changed too:
   aFrame->RemoveProperty(SVGUtils::ObjectBoundingBoxProperty());
 
-  SVGRenderingObserverSet* observers = GetObserverSet(content->AsElement());
-  if (observers) {
+  if (auto* observers = GetObserverSet(element)) {
     observers->InvalidateAll();
     return;
   }
@@ -1678,9 +1677,8 @@ void SVGObserverUtils::InvalidateRenderingObservers(nsIFrame* aFrame) {
   // eSVGContainer so we don't have to check f for null here.
   for (nsIFrame* f = aFrame->GetParent();
        f->IsFrameOfType(nsIFrame::eSVGContainer); f = f->GetParent()) {
-    if (f->GetContent()->IsElement()) {
-      observers = GetObserverSet(f->GetContent()->AsElement());
-      if (observers) {
+    if (auto* element = Element::FromNode(f->GetContent())) {
+      if (auto* observers = GetObserverSet(element)) {
         observers->InvalidateAll();
         return;
       }
@@ -1709,9 +1707,8 @@ void SVGObserverUtils::InvalidateDirectRenderingObservers(
 
 void SVGObserverUtils::InvalidateDirectRenderingObservers(
     nsIFrame* aFrame, uint32_t aFlags /* = 0 */) {
-  nsIContent* content = aFrame->GetContent();
-  if (content && content->IsElement()) {
-    InvalidateDirectRenderingObservers(content->AsElement(), aFlags);
+  if (auto* element = Element::FromNodeOrNull(aFrame->GetContent())) {
+    InvalidateDirectRenderingObservers(element, aFlags);
   }
 }
 
