@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "gtest/gtest.h"
+#include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
@@ -127,10 +128,9 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
   nsAutoCString JSON;
   rv = BasePrincipal::Cast(result)->ToJSON(JSON);
   ASSERT_EQ(rv, NS_OK);
-  ASSERT_STREQ(
-      JSON.get(),
-      "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
-      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\"}}");
+  ASSERT_STREQ(JSON.get(),
+               "{\"2\":{\"0\":[{\"1\":{\"0\":\"https://mozilla.com/"
+               "\"}},{\"1\":{\"0\":\"https://mozilla.org/\"}}]}}");
 
   nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
   auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);
@@ -190,11 +190,10 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
   nsAutoCString JSON;
   rv = BasePrincipal::Cast(result)->ToJSON(JSON);
   ASSERT_EQ(rv, NS_OK);
-  ASSERT_STREQ(
-      JSON.get(),
-      "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
-      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\",\"1\":\"^"
-      "userContextId=1\"}}");
+  ASSERT_STREQ(JSON.get(),
+               "{\"2\":{\"0\":[{\"1\":{\"0\":\"https://mozilla.com/"
+               "\"}},{\"1\":{\"0\":\"https://mozilla.org/"
+               "\"}}],\"1\":\"^userContextId=1\"}}");
 
   nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
   auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);

@@ -188,7 +188,10 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetPrecursorPrincipal(nsIPrincipal** aPrecursor) override;
 
   nsresult ToJSON(nsACString& aJSON);
+  nsresult ToJSON(Json::Value& aObject);
+
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
+  static already_AddRefed<BasePrincipal> FromJSON(const Json::Value& aJSON);
   // Method populates a passed Json::Value with serializable fields
   // which represent all of the fields to deserialize the principal
   virtual nsresult PopulateJSONObject(Json::Value& aObject);

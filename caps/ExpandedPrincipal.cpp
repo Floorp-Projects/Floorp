@@ -291,23 +291,16 @@ nsresult ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
 }
 
 nsresult ExpandedPrincipal::PopulateJSONObject(Json::Value& aObject) {
-  nsAutoCString principalList;
-  // First item through we have a blank separator and append the next result
-  nsAutoCString sep;
-  for (auto& principal : mPrincipals) {
-    nsAutoCString JSON;
-    BasePrincipal::Cast(principal)->ToJSON(JSON);
-    // This is blank for the first run through so the last in the list doesn't
-    // add a separator
-    principalList.Append(sep);
-    sep = ',';
-    // Values currently only copes with strings so encode into base64 to allow a
-    // CSV safely.
-    nsresult rv;
-    rv = Base64EncodeAppend(JSON, principalList);
+  Json::Value principalList = Json::arrayValue;
+
+  for (const auto& principal : mPrincipals) {
+    Json::Value object = Json::objectValue;
+    nsresult rv = BasePrincipal::Cast(principal)->ToJSON(object);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    principalList.append(object);
   }
-  aObject[std::to_string(eSpecs)] = principalList.get();
+  aObject[std::to_string(eSpecs)] = principalList;
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
@@ -325,6 +318,7 @@ already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
   OriginAttributes attrs;
   // The odd structure here is to make the code to not compile
   // if all the switch enum cases haven't been codified
+
   for (const auto& field : aFields) {
     switch (field.key) {
       case ExpandedPrincipal::eSpecs:
@@ -357,6 +351,54 @@ already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
 
   if (allowList.Length() == 0) {
     return nullptr;
+  }
+
+  RefPtr<ExpandedPrincipal> expandedPrincipal =
+      ExpandedPrincipal::Create(allowList, attrs);
+
+  return expandedPrincipal.forget();
+}
+
+/* static */
+already_AddRefed<BasePrincipal> ExpandedPrincipal::FromProperties(
+    const Json::Value& aJSON) {
+  MOZ_ASSERT(aJSON.size() <= eMax + 1, "Must have at most, all the properties");
+  const std::string specs = std::to_string(eSpecs);
+  const std::string suffix = std::to_string(eSuffix);
+  MOZ_ASSERT(aJSON.isMember(specs), "The eSpecs member is required");
+  MOZ_ASSERT(aJSON.size() == 1 || aJSON.isMember(suffix),
+             "eSuffix is optional");
+
+  const auto* specsValue =
+      aJSON.find(specs.c_str(), specs.c_str() + specs.length());
+  if (!specsValue) {
+    MOZ_ASSERT(false, "Expanded principals require specs in serialized JSON");
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIPrincipal>> allowList;
+  for (const auto& principalJSON : *specsValue) {
+    if (nsCOMPtr<nsIPrincipal> principal =
+            BasePrincipal::FromJSON(principalJSON)) {
+      allowList.AppendElement(principal);
+    }
+  }
+
+  if (allowList.Length() == 0) {
+    return nullptr;
+  }
+
+  OriginAttributes attrs;
+  if (aJSON.isMember(suffix)) {
+    const auto& value = aJSON[suffix];
+    if (!value.isString()) {
+      return nullptr;
+    }
+
+    bool ok = attrs.PopulateFromSuffix(nsDependentCString(value.asCString()));
+    if (!ok) {
+      return nullptr;
+    }
   }
 
   RefPtr<ExpandedPrincipal> expandedPrincipal =

@@ -62,8 +62,15 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
   enum SerializableKeys : uint8_t { eSpecs = 0, eSuffix, eMax = eSuffix };
   typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
 
+  // This is the legacy serializer for expanded principals. See note for
+  // `IsLegacyFormat` in BasePrincipal.cpp.
   static already_AddRefed<BasePrincipal> FromProperties(
       nsTArray<ExpandedPrincipal::KeyVal>& aFields);
+
+  // This is the new serializer for expanded principals. See note for
+  // `IsLegacyFormat` in BasePrincipal.cpp.
+  static already_AddRefed<BasePrincipal> FromProperties(
+      const Json::Value& aJSON);
 
   class Deserializer : public BasePrincipal::Deserializer {
    public:

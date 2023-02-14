@@ -745,15 +745,15 @@ export var E10SUtils = {
    * Serialize principal data.
    *
    * @param {nsIPrincipal} principal The principal to serialize.
-   * @return {String} The base64 encoded principal data.
+   * @return {String} The serialized principal data.
    */
   serializePrincipal(principal) {
     let serializedPrincipal = null;
 
     try {
       if (principal) {
-        serializedPrincipal = btoa(
-          Services.scriptSecurityManager.principalToJSON(principal)
+        serializedPrincipal = Services.scriptSecurityManager.principalToJSON(
+          principal
         );
       }
     } catch (e) {
@@ -764,14 +764,13 @@ export var E10SUtils = {
   },
 
   /**
-   * Deserialize a base64 encoded principal (serialized with
-   * serializePrincipal).
+   * Deserialize a principal (serialized with serializePrincipal).
    *
-   * @param {String} principal_b64 A base64 encoded serialized principal.
+   * @param {String} serializedPincipal A serialized principal.
    * @return {nsIPrincipal} A deserialized principal.
    */
-  deserializePrincipal(principal_b64, fallbackPrincipalCallback = null) {
-    if (!principal_b64) {
+  deserializePrincipal(serializedPincipal, fallbackPrincipalCallback = null) {
+    if (!serializedPincipal) {
       if (!fallbackPrincipalCallback) {
         this.log().warn(
           "No principal passed to deserializePrincipal and no fallbackPrincipalCallback"
@@ -784,21 +783,32 @@ export var E10SUtils = {
 
     try {
       let principal;
-      let tmpa = atob(principal_b64);
-      // Both the legacy and new JSON representation of principals are stored as base64
-      // The new kind are the only ones that will start with "{" when decoded.
-      // We check here for the new JSON serialized, if it doesn't start with that continue using nsISerializable.
-      // JSONToPrincipal accepts a *non* base64 encoded string and returns a principal or a null.
-      if (tmpa.startsWith("{")) {
-        principal = Services.scriptSecurityManager.JSONToPrincipal(tmpa);
+      // The current JSON representation of principal is not stored as base64. We start by checking
+      // if the serialized data starts with '{' to determine if we're using the new JSON representation.
+      // If it doesn't we try the two legacy formats, old JSON and nsISerializable.
+      if (serializedPincipal.startsWith("{")) {
+        principal = Services.scriptSecurityManager.JSONToPrincipal(
+          serializedPincipal
+        );
       } else {
-        principal = lazy.serializationHelper.deserializeObject(principal_b64);
+        // Both the legacy and legacy  JSON representation of principals are stored as base64
+        // The legacy JSON kind are the only ones that will start with "{" when decoded.
+        // We check here for the legacy JSON serialized, if it doesn't start with that continue using nsISerializable.
+        // JSONToPrincipal accepts a *non* base64 encoded string and returns a principal or a null.
+        let tmpa = atob(serializedPincipal);
+        if (tmpa.startsWith("{")) {
+          principal = Services.scriptSecurityManager.JSONToPrincipal(tmpa);
+        } else {
+          principal = lazy.serializationHelper.deserializeObject(
+            serializedPincipal
+          );
+        }
       }
       principal.QueryInterface(Ci.nsIPrincipal);
       return principal;
     } catch (e) {
       this.log().error(
-        `Failed to deserialize principal_b64 '${principal_b64}' ${e}`
+        `Failed to deserialize serializedPincipal '${serializedPincipal}' ${e}`
       );
     }
     if (!fallbackPrincipalCallback) {
@@ -987,8 +997,10 @@ XPCOMUtils.defineLazyGetter(
   E10SUtils,
   "SERIALIZED_SYSTEMPRINCIPAL",
   function() {
-    return E10SUtils.serializePrincipal(
-      Services.scriptSecurityManager.getSystemPrincipal()
+    return btoa(
+      E10SUtils.serializePrincipal(
+        Services.scriptSecurityManager.getSystemPrincipal()
+      )
     );
   }
 );
