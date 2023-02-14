@@ -127,11 +127,11 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
     const nsString& pdbNameStr =
         PromiseFlatString(mozilla::nt::GetLeafName(pdbPathStr));
-    SharedLibrary shlib(modStart, modEnd,
-                        0,  // DLLs are always mapped at offset 0 on Windows
-                        breakpadId, PromiseFlatString(moduleNameStr),
-                        nsDependentString(aModulePath), pdbNameStr, pdbPathStr,
-                        versionStr, "");
+    SharedLibrary shlib(
+        modStart, modEnd,
+        0,  // DLLs are always mapped at offset 0 on Windows
+        breakpadId, nsCString(), PromiseFlatString(moduleNameStr),
+        nsDependentString(aModulePath), pdbNameStr, pdbPathStr, versionStr, "");
     sharedLibraryInfo.AddSharedLibrary(shlib);
   };
 

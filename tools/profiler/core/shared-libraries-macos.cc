@@ -166,8 +166,8 @@ static void addSharedLibrary(const platform_mach_header* header,
   const NXArchInfo* archInfo =
       NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
 
-  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid, nameStr,
-                                      pathStr, nameStr, pathStr, ""_ns,
+  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid, nsCString(),
+                                      nameStr, pathStr, nameStr, pathStr, ""_ns,
                                       archInfo ? archInfo->name : ""));
 }
 

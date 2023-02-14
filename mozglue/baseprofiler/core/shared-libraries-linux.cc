@@ -678,8 +678,8 @@ static SharedLibrary SharedLibraryAtPath(const char* path,
   std::string nameStr =
       (pos != std::string::npos) ? pathStr.substr(pos + 1) : pathStr;
 
-  return SharedLibrary(libStart, libEnd, offset, getId(path), nameStr, pathStr,
-                       nameStr, pathStr, std::string{}, "");
+  return SharedLibrary(libStart, libEnd, offset, getId(path), std::string{},
+                       nameStr, pathStr, nameStr, pathStr, std::string{}, "");
 }
 
 static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,
