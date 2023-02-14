@@ -127,7 +127,7 @@ def create_suite(
     if "DMD" in os.environ and os.environ["DMD"]:
         opts.append("dmd")
 
-    if extra_opts:
+    if len(opts) > 0:
         suite["extraOptions"] = opts
 
     update_checkpoint_paths(
