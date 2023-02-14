@@ -949,3 +949,14 @@ cookieBannerHandling:
         - 0
         - 1
         - 2
+
+fxaButtonVisibility:
+  description: Prefs to control the visibility of the Firefox Accounts toolbar button when not signed in.
+  owner: mconley@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    boolean:
+      description: True if the Firefox Accounts toolbar button should be visible when not signed in.
+      type: boolean
+      setPref: identity.fxaccounts.toolbar.defaultVisible
