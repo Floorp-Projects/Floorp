@@ -58,6 +58,7 @@ import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
@@ -323,6 +324,7 @@ class PromptFeatureTest {
                 mock<Activity>(),
                 store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 isSaveLoginEnabled = { true },
                 loginValidationDelegate = mock(),
             ) { },
@@ -709,7 +711,12 @@ class PromptFeatureTest {
     @Test
     fun `Selecting an item in a single choice dialog will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         feature.start()
 
         val singleChoiceRequest = SingleChoice(arrayOf(), {}, {})
@@ -727,7 +734,12 @@ class PromptFeatureTest {
     @Test
     fun `Selecting an item in a menu choice dialog will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         feature.start()
 
         val menuChoiceRequest = MenuChoice(arrayOf(), {}, {})
@@ -745,7 +757,12 @@ class PromptFeatureTest {
     @Test
     fun `Selecting items on multiple choice dialog will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         feature.start()
 
         val multipleChoiceRequest = MultipleChoice(arrayOf(), {}, {})
@@ -763,7 +780,12 @@ class PromptFeatureTest {
     @Test
     fun `onNoMoreDialogsChecked will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
 
         var onShowNoMoreAlertsWasCalled = false
         var onDismissWasCalled = false
@@ -793,7 +815,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel with an alert request will consume promptRequest and call onDismiss`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onDismissWasCalled = false
         val promptRequest = Alert("title", "message", false, {}, { onDismissWasCalled = true })
 
@@ -809,7 +836,12 @@ class PromptFeatureTest {
     @Test
     fun `onConfirmTextPrompt will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onConfirmWasCalled = false
         var onDismissWasCalled = false
 
@@ -840,7 +872,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel with an TextPrompt request will consume promptRequest and call onDismiss`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onDismissWasCalled = false
 
         val promptRequest = TextPrompt(
@@ -876,6 +913,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
             ) { }
             var onClearWasCalled = false
             var selectedDate: Date? = null
@@ -1169,7 +1207,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onConfirmAuthentication will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
 
         var onConfirmWasCalled = false
         var onDismissWasCalled = false
@@ -1220,7 +1263,12 @@ class PromptFeatureTest {
         )
 
         val feature =
-            PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = fragment,
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
 
         var onLeaveWasCalled = false
 
@@ -1243,7 +1291,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel on a authentication request will consume promptRequest and call onDismiss`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onDismissWasCalled = false
 
         val promptRequest = Authentication(
@@ -1274,7 +1327,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onConfirm on a color request will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
 
         var onConfirmWasCalled = false
         var onDismissWasCalled = false
@@ -1313,7 +1371,12 @@ class PromptFeatureTest {
         whenever(fragment.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
 
         val feature =
-            PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = fragment,
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onConfirmWasCalled = false
 
         val promptRequest = PromptRequest.Popup(
@@ -1340,7 +1403,12 @@ class PromptFeatureTest {
         whenever(fragment.getString(R.string.mozac_feature_prompts_deny)).thenReturn("")
 
         val feature =
-            PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = fragment,
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onCancelWasCalled = false
 
         val promptRequest = PromptRequest.Popup(
@@ -1376,7 +1444,12 @@ class PromptFeatureTest {
         )
 
         val feature =
-            PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = fragment,
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onCancelWasCalled = false
 
         val promptRequest = PromptRequest.BeforeUnload("http://www.test.com/", { }) {
@@ -1396,7 +1469,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onConfirm on a confirm request will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onPositiveButtonWasCalled = false
         var onNegativeButtonWasCalled = false
         var onNeutralButtonWasCalled = false
@@ -1451,7 +1529,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel on a confirm request will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onCancelWasCalled = false
 
         val onConfirm: (Boolean) -> Unit = { }
@@ -1486,7 +1569,12 @@ class PromptFeatureTest {
     @Test
     fun `When dialogs are being abused prompts are not allowed`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onDismissWasCalled: Boolean
         val onDismiss = { onDismissWasCalled = true }
         val alertRequest = Alert("", "", false, {}, onDismiss)
@@ -1510,7 +1598,12 @@ class PromptFeatureTest {
     @Test
     fun `When dialogs are being abused but the page is refreshed prompts are allowed`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+            ) { }
         var onDismissWasCalled = false
         val onDismiss = { onDismissWasCalled = true }
         val alertRequest = Alert("", "", false, {}, onDismiss)
@@ -1538,6 +1631,7 @@ class PromptFeatureTest {
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
         ) { }
 
         var onDenyCalled = false
@@ -1568,6 +1662,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 loginDelegate = object : LoginDelegate {
                     override val loginPickerView = loginPickerView
                     override val onManageLogins = {}
@@ -1604,6 +1699,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
                     override val onSelectCreditCard = {}
@@ -1735,6 +1831,68 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `GIVEN a custom tab WHEN a new prompt is requested THEN exit fullscreen`() {
+        val exitFullScreenUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        val feature = PromptFeature(
+            fragment = mock(),
+            store = store,
+            customTabId = "custom-tab",
+            fragmentManager = fragmentManager,
+            exitFullscreenUsecase = exitFullScreenUseCase,
+        ) { }
+        val promptRequest = SingleChoice(arrayOf(), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", promptRequest)).joinBlocking()
+        feature.start()
+
+        verify(exitFullScreenUseCase).invoke("custom-tab")
+    }
+
+    @Test
+    fun `GIVEN a normal tab WHEN a new prompt is requested THEN exit fullscreen`() {
+        val exitFullScreenUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        val feature = PromptFeature(
+            fragment = mock(),
+            store = store,
+            fragmentManager = fragmentManager,
+            exitFullscreenUsecase = exitFullScreenUseCase,
+        ) { }
+        val promptRequest = SingleChoice(arrayOf(), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+        feature.start()
+
+        verify(exitFullScreenUseCase).invoke(tabId)
+    }
+
+    @Test
+    fun `GIVEN a private tab WHEN a new prompt is requested THEN exit fullscreen`() {
+        val privateTabId = "private-tab"
+        val exitFullScreenUseCase: SessionUseCases.ExitFullScreenUseCase = mock()
+        store = BrowserStore(
+            initialState = store.state.copy(
+                tabs = store.state.tabs + TabSessionState(
+                    id = privateTabId,
+                    content = ContentState(url = "", private = true),
+                ),
+                selectedTabId = privateTabId,
+            ),
+        )
+        val feature = PromptFeature(
+            fragment = mock(),
+            store = store,
+            fragmentManager = fragmentManager,
+            exitFullscreenUsecase = exitFullScreenUseCase,
+        ) { }
+        val promptRequest = SingleChoice(arrayOf(), {}, {})
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(privateTabId, promptRequest)).joinBlocking()
+        feature.start()
+
+        verify(exitFullScreenUseCase).invoke(privateTabId)
+    }
+
+    @Test
     fun `GIVEN isCreditCardAutofillEnabled is false WHEN SaveCreditCard request is handled THEN dismiss SaveCreditCard`() {
         val creditCardEntry = CreditCardEntry(
             guid = "1",
@@ -1809,6 +1967,7 @@ class PromptFeatureTest {
             activity = mock(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
             shareDelegate = delegate,
         ) { }
         feature.start()
@@ -1839,6 +1998,7 @@ class PromptFeatureTest {
             activity = mock(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
             shareDelegate = delegate,
         ) { }
         feature.start()
@@ -1869,6 +2029,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
             ) { },
         )
@@ -1908,6 +2069,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
             ) { },
         )
@@ -1940,6 +2102,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
             ) { },
         )
@@ -2107,6 +2270,7 @@ class PromptFeatureTest {
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
         ) { }
         feature.start()
 
@@ -2134,6 +2298,7 @@ class PromptFeatureTest {
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
         ) { }
         feature.start()
 
@@ -2161,6 +2326,7 @@ class PromptFeatureTest {
             activity = mock(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
             isCreditCardAutofillEnabled = { true },
             creditCardValidationDelegate = mock(),
         ) { }
@@ -2307,6 +2473,7 @@ class PromptFeatureTest {
             activity = mock(),
             store = store,
             fragmentManager = fragmentManager,
+            exitFullscreenUsecase = mock(),
             isCreditCardAutofillEnabled = { true },
             creditCardValidationDelegate = mock(),
         ) { }
@@ -2371,6 +2538,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
             ) { },
         )
@@ -2399,6 +2567,7 @@ class PromptFeatureTest {
                 activity = mock(),
                 store = store,
                 fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
             ) { },
         )

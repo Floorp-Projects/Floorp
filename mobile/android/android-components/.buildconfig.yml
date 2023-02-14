@@ -492,6 +492,7 @@ projects:
     upstream_dependencies:
     - browser-state
     - concept-engine
+    - feature-session
     - lib-state
     - support-ktx
     - support-test

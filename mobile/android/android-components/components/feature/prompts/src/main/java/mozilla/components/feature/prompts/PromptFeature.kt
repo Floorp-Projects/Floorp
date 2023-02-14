@@ -75,6 +75,8 @@ import mozilla.components.feature.prompts.login.LoginExceptions
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.SessionUseCases.ExitFullScreenUseCase
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -115,6 +117,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * @property fragmentManager The [FragmentManager] to be used when displaying
  * a dialog (fragment).
  * @property shareDelegate Delegate used to display share sheet.
+ * @property exitFullscreenUsecase Usecase allowing to exit browser tabs' fullscreen mode.
  * @property loginStorageDelegate Delegate used to access login storage. If null,
  * 'save login'prompts will not be shown.
  * @property isSaveLoginEnabled A callback invoked when a login prompt is triggered. If false,
@@ -141,6 +144,7 @@ class PromptFeature private constructor(
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
+    private val exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
     override val creditCardValidationDelegate: CreditCardValidationDelegate? = null,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
@@ -180,6 +184,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
@@ -196,6 +201,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
@@ -214,6 +220,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
@@ -230,6 +237,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
@@ -453,6 +461,10 @@ class PromptFeature private constructor(
     internal fun onPromptRequested(session: SessionState) {
         // Some requests are handle with intents
         session.content.promptRequests.lastOrNull()?.let { promptRequest ->
+            store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.let {
+                exitFullscreenUsecase(it.id)
+            }
+
             when (promptRequest) {
                 is File -> filePicker.handleFileRequest(promptRequest)
                 is Share -> handleShareRequest(promptRequest, session)

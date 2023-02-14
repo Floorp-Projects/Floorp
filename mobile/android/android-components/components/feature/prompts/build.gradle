@@ -31,6 +31,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 dependencies {
     implementation project(':browser-state')
     implementation project(':concept-engine')
+    implementation project(':feature-session')
     implementation project(':lib-state')
     implementation project(':support-ktx')
     implementation project(':support-utils')
@@ -46,6 +47,7 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation project(':feature-session')
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
 
