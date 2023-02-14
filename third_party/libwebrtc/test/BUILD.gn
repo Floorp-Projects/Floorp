@@ -406,16 +406,6 @@ rtc_source_set("test_support") {
     "//testing/gmock",
     "//testing/gtest",
   ]
-  if (build_with_mozilla) {
-    all_dependent_configs -= [
-      "//third_party/googletest:gmock_config",
-      "//third_party/googletest:gtest_config",
-    ]
-    deps -= [
-      "//testing/gmock",
-      "//testing/gtest"
-    ]
-  }
 }
 
 rtc_library("fixed_fps_video_frame_writer_adapter") {
