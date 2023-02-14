@@ -12,6 +12,22 @@ ChromeUtils.defineESModuleGetters(this, {
 
 var { ExtensionError } = ExtensionUtils;
 
+const PREF_DNR_FEEDBACK = "extensions.dnr.feedback";
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "dnrFeedbackEnabled",
+  PREF_DNR_FEEDBACK,
+  false
+);
+
+function ensureDNRFeedbackEnabled(apiName) {
+  if (!dnrFeedbackEnabled) {
+    throw new ExtensionError(
+      `${apiName} is only available when the "${PREF_DNR_FEEDBACK}" preference is set to true.`
+    );
+  }
+}
+
 this.declarativeNetRequest = class extends ExtensionAPI {
   onManifestEntry(entryName) {
     if (entryName === "declarative_net_request") {
@@ -87,6 +103,7 @@ this.declarativeNetRequest = class extends ExtensionAPI {
         },
 
         async testMatchOutcome(request, options) {
+          ensureDNRFeedbackEnabled("declarativeNetRequest.testMatchOutcome");
           let { url, initiator, ...req } = request;
           req.requestURI = Services.io.newURI(url);
           if (initiator) {

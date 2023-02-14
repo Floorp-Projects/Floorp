@@ -626,7 +626,6 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "contextMenus",
   "contextualIdentities",
   "cookies",
-  "declarativeNetRequestFeedback",
   "declarativeNetRequestWithHostAccess",
   "dns",
   "geckoProfiler",

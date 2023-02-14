@@ -219,7 +219,6 @@ if (
 }
 
 const PREF_DNR_ENABLED = "extensions.dnr.enabled";
-const PREF_DNR_FEEDBACK = "extensions.dnr.feedback";
 
 // Message included in warnings and errors related to privileged permissions and
 // privileged manifest properties. Provides a link to the firefox-source-docs.mozilla.org
@@ -283,14 +282,6 @@ function isDNRPermissionAllowed(perm) {
     return false;
   }
 
-  // APIs tied to declarativeNetRequestFeedback are for debugging purposes and
-  // are only supposed to be available when the (add-on dev) user opts in.
-  if (
-    perm === "declarativeNetRequestFeedback" &&
-    !Services.prefs.getBoolPref(PREF_DNR_FEEDBACK, false)
-  ) {
-    return false;
-  }
   return true;
 }
 

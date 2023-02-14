@@ -475,7 +475,7 @@ add_task(async function declarativeNetRequest_unavailable_by_default() {
   let manifestPermissions = await getManifestPermissions({
     manifest: {
       manifest_version: 3,
-      permissions: ["declarativeNetRequest"],
+      permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
     },
   });
   deepEqual(
@@ -491,13 +491,16 @@ add_task(
     let manifestPermissions = await getManifestPermissions({
       manifest: {
         manifest_version: 3,
-        permissions: ["declarativeNetRequest"],
+        permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
       },
     });
 
     deepEqual(
       manifestPermissions,
-      { origins: [], permissions: ["declarativeNetRequest"] },
+      {
+        origins: [],
+        permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
+      },
       "Expected origins and permissions"
     );
 
@@ -506,6 +509,9 @@ add_task(
       [
         bundle.GetStringFromName(
           "webextPerms.description.declarativeNetRequest"
+        ),
+        bundle.GetStringFromName(
+          "webextPerms.description.declarativeNetRequestFeedback"
         ),
       ],
       "Expected warnings"
