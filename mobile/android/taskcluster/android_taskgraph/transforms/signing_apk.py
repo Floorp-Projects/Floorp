@@ -18,7 +18,7 @@ PRODUCTION_SIGNING_BUILD_TYPES = [
     "focus-release",
     "klar-release",
     "android-test-nightly",
-    "android-test-beta"
+    "android-test-beta",
     "fenix-nightly",
     "fenix-beta",
     "fenix-release",
