@@ -92,6 +92,10 @@ types.addDictType("netevent.secinfo", {
   hsts: "boolean",
   hpkp: "boolean",
   errorMessage: "nullable:string",
+  usedEch: "boolean",
+  usedDelegatedCredentials: "boolean",
+  usedOcsp: "boolean",
+  usedPrivateDns: "boolean",
 });
 
 const networkEventSpec = generateActorSpec({

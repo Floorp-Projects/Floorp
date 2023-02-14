@@ -214,6 +214,21 @@ const SecurityInfo = {
       info.hpkp = false;
     }
 
+    // These values can be unset in rare cases, e.g. when stashed connection
+    // data is deseralized from an older version of Firefox.
+    try {
+      info.usedEch = securityInfo.isAcceptedEch;
+    } catch {
+      info.usedEch = false;
+    }
+    try {
+      info.usedDelegatedCredentials = securityInfo.isDelegatedCredential;
+    } catch {
+      info.usedDelegatedCredentials = false;
+    }
+    info.usedOcsp = securityInfo.madeOCSPRequests;
+    info.usedPrivateDns = securityInfo.usedPrivateDNS;
+
     return info;
   },
 
