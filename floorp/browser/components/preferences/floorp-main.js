@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Preferences.addAll([
-  { id: "floorp.optimized.msbutton.ope", type: "bool" },
   { id: "floorp.hide.tabbrowser-tab.enable", type: "bool" },
   { id: "floorp.optimized.verticaltab", type: "bool" },
   { id: "floorp.horizontal.tab.position.shift", type: "bool" },

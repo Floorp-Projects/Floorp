@@ -34,7 +34,6 @@ pref("floorp.chrome.theme.mode", -1);
 
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
-pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("floorp.optimized.verticaltab", false); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
 pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブのフォーカスした際の挙動を変更
@@ -126,7 +125,6 @@ pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //た�
 // 同期を有効にする
 pref("services.sync.prefs.sync.floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.data", true);// サイドバーのデータ
-pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
 pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブの設定
