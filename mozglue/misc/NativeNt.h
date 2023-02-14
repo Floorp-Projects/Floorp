@@ -726,6 +726,15 @@ class MOZ_RAII PEHeaders final {
     return true;
   }
 
+  bool GetImageSize(DWORD& aResult) const {
+    if (!(*this)) {
+      return false;
+    }
+
+    aResult = mPeHeader->OptionalHeader.SizeOfImage;
+    return true;
+  }
+
   PIMAGE_IMPORT_DESCRIPTOR
   GetImportDescriptor(const char* aModuleNameASCII) const {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
