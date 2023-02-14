@@ -47,6 +47,7 @@
   list-style-image: url(chrome://formautofill/content/icon-credit-card-generic.svg);
 }
 #autofill-address-notification popupnotificationcontent > .desc-message-box > description,
+#autofill-address-notification popupnotificationcontent > .desc-message-box > additional-description,
 #autofill-credit-card-notification popupnotificationcontent > .desc-message-box > description {
   font-style: italic;
   margin-inline-start: 4px;

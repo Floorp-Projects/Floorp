@@ -88,10 +88,43 @@ const CONTENT = {
       hideClose: true,
     },
   },
+  addAddress: {
+    notificationId: "autofill-address",
+    message: formatStringFromName("saveAddressesMessage", [brandShortName]),
+    descriptionLabel: GetStringFromName("saveAddressDescriptionLabel"),
+    descriptionIcon: true,
+    linkMessage: GetStringFromName(autofillOptsKey),
+    spotlightURL: "about:preferences#privacy-address-autofill",
+    anchor: {
+      id: "autofill-address-notification-icon",
+      URL: "chrome://formautofill/content/formfill-anchor.svg",
+      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+    },
+    mainAction: {
+      label: GetStringFromName("saveAddressLabel"),
+      accessKey: GetStringFromName("saveAddressAccessKey"),
+      callbackState: "create",
+    },
+    secondaryActions: [
+      {
+        label: GetStringFromName("cancelAddressLabel"),
+        accessKey: GetStringFromName("cancelAddressAccessKey"),
+        callbackState: "cancel",
+      },
+    ],
+    options: {
+      persistWhileVisible: true,
+      popupIconURL: "chrome://formautofill/content/icon-address-update.svg",
+      hideClose: true,
+    },
+  },
   updateAddress: {
     notificationId: "autofill-address",
     message: GetStringFromName("updateAddressMessage"),
-    descriptionLabel: GetStringFromName("updateAddressDescriptionLabel"),
+    descriptionLabel: GetStringFromName("updateAddressNewDescriptionLabel"),
+    additionalDescriptionLabel: GetStringFromName(
+      "updateAddressOldDescriptionLabel"
+    ),
     descriptionIcon: false,
     linkMessage: GetStringFromName(autofillOptsKey),
     spotlightURL: "about:preferences#privacy-address-autofill",
@@ -294,8 +327,15 @@ let FormAutofillPrompter = {
    *         The label showing above description.
    * @param  {string} descriptionIcon
    *         The src of description icon.
+   * @param  {string} descriptionId
+   *         The id of description
    */
-  _appendDescription(content, descriptionLabel, descriptionIcon) {
+  _appendDescription(
+    content,
+    descriptionLabel,
+    descriptionIcon,
+    descriptionId
+  ) {
     let chromeDoc = content.ownerDocument;
     let docFragment = chromeDoc.createDocumentFragment();
 
@@ -318,15 +358,16 @@ let FormAutofillPrompter = {
       descriptionWrapper.appendChild(descriptionIconElement);
     }
 
-    let descriptionElement = chromeDoc.createXULElement("description");
+    let descriptionElement = chromeDoc.createXULElement(descriptionId);
     descriptionWrapper.appendChild(descriptionElement);
     docFragment.appendChild(descriptionWrapper);
 
     content.appendChild(docFragment);
   },
 
-  _updateDescription(content, description) {
-    content.querySelector("description").textContent = description;
+  _updateDescription(content, descriptionId, description) {
+    let element = content.querySelector(descriptionId);
+    element.textContent = description;
   },
 
   /**
@@ -407,11 +448,16 @@ let FormAutofillPrompter = {
     }
 
     const description = FormAutofillUtils.getAddressLabel(record);
+    const additionalDescription = duplicateRecord
+      ? FormAutofillUtils.getAddressLabel(duplicateRecord)
+      : null;
+
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
       doorhangerType,
       description,
-      { flowId }
+      flowId,
+      { additionalDescription }
     );
 
     if (state == "cancel") {
@@ -430,12 +476,6 @@ let FormAutofillPrompter = {
   },
 
   async promptToSaveCreditCard(browser, storage, record, flowId) {
-    let number = record["cc-number"] || record["cc-number-decrypted"];
-    let name = record["cc-name"];
-    let network = lazy.CreditCard.getType(number);
-    let maskedNumber = lazy.CreditCard.getMaskedNumber(number);
-    let description = `${maskedNumber}` + (name ? `, ${name}` : ``);
-
     // Overwrite the guid if there is a duplicate
     let doorhangerType;
     const duplicateRecord = (await storage.getDuplicateRecords(record).next())
@@ -446,11 +486,19 @@ let FormAutofillPrompter = {
       doorhangerType = "addCreditCard";
     }
 
+    const number = record["cc-number"] || record["cc-number-decrypted"];
+    const name = record["cc-name"];
+    const network = lazy.CreditCard.getType(number);
+    const maskedNumber = lazy.CreditCard.getMaskedNumber(number);
+    const description = `${maskedNumber}` + (name ? `, ${name}` : ``);
+    const descriptionIcon = lazy.CreditCard.getCreditCardLogo(network);
+
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
       doorhangerType,
       description,
-      { network, flowId }
+      flowId,
+      { descriptionIcon }
     );
 
     if (state == "cancel") {
@@ -499,16 +547,18 @@ let FormAutofillPrompter = {
    * @param {XULElement} browser Target browser element for showing doorhanger.
    * @param {string} type The type of the doorhanger. There will have first time use/update/credit card.
    * @param {string} description The message that provides more information on doorhanger.
+   * @param {string} flowId guid used to correlate events relating to the same form
    * @param {object} [options = {}] a list of options for this method
-   * @param {string} options.network The network type for credit card doorhangers.
-   * @param {string} options.flowId guid used to correlate events relating to the same form
+   * @param {string} options.descriptionIcon The icon for descriotion
+   * @param {string} options.additionalDescription The message that provides more information on doorhanger.
    * @returns {Promise} Resolved with action type when action callback is triggered.
    */
   async _showCCorAddressCaptureDoorhanger(
     browser,
     type,
     description,
-    { network, flowId }
+    flowId,
+    { descriptionIcon = null, additionalDescription = null }
   ) {
     const telemetryType = type.endsWith("CreditCard")
       ? AutofillTelemetry.CREDIT_CARD
@@ -523,7 +573,7 @@ let FormAutofillPrompter = {
         notificationId,
         message,
         descriptionLabel,
-        descriptionIcon,
+        additionalDescriptionLabel,
         linkMessage,
         spotlightURL,
         anchor,
@@ -531,10 +581,7 @@ let FormAutofillPrompter = {
         secondaryActions,
         options,
       } = CONTENT[type];
-      // Follow up in Bug 1737329 to make doorhanger types more explicit
-      if (type == "updateCreditCard" || type == "addCreditCard") {
-        descriptionIcon = lazy.CreditCard.getCreditCardLogo(network);
-      }
+      descriptionIcon = descriptionIcon ?? CONTENT[type].descriptionIcon;
 
       const { ownerGlobal: chromeWin, ownerDocument: chromeDoc } = browser;
       options.eventCallback = topic => {
@@ -556,26 +603,52 @@ let FormAutofillPrompter = {
           return;
         }
 
-        const notificationElementId = notificationId + "-notification";
-        const notification = chromeDoc.getElementById(notificationElementId);
+        const DESCRIPTION_ID = "description";
+        const ADDITIONAL_DESCRIPTION_ID = "additional-description";
+        const NOTIFICATION_ID = notificationId + "-notification";
+
+        const notification = chromeDoc.getElementById(NOTIFICATION_ID);
         const notificationContent =
           notification.querySelector("popupnotificationcontent") ||
           chromeDoc.createXULElement("popupnotificationcontent");
         if (!notification.contains(notificationContent)) {
           notificationContent.setAttribute("orient", "vertical");
+
           this._appendDescription(
             notificationContent,
             descriptionLabel,
-            descriptionIcon
+            descriptionIcon,
+            DESCRIPTION_ID
           );
+
+          if (additionalDescription) {
+            this._appendDescription(
+              notificationContent,
+              additionalDescriptionLabel,
+              descriptionIcon,
+              ADDITIONAL_DESCRIPTION_ID
+            );
+          }
+
           this._appendPrivacyPanelLink(
             notificationContent,
             linkMessage,
             spotlightURL
           );
+
           notification.appendNotificationContent(notificationContent);
         }
-        this._updateDescription(notificationContent, description);
+
+        this._updateDescription(
+          notificationContent,
+          DESCRIPTION_ID,
+          description
+        );
+        this._updateDescription(
+          notificationContent,
+          ADDITIONAL_DESCRIPTION_ID,
+          additionalDescription
+        );
       };
       this._setAnchor(browser, anchor);
       chromeWin.PopupNotifications.show(
