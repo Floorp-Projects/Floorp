@@ -29,6 +29,7 @@ pref("update.id.floorp", "linux");
 
 // userAgent
 pref("floorp.browser.UserAgent", 0);
+pref("floorp.general.useragent.override", "");
 
 pref("floorp.chrome.theme.mode", -1);
 

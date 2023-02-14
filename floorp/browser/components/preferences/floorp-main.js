@@ -122,6 +122,30 @@ window.addEventListener("pageshow", async function() {
     });
   }
 
+  {
+    function setOverrideUA(){
+      if (document.getElementById("floorpUAs").value == 5) {
+        document.getElementById("customUsergent").disabled = false;} else { document.getElementById("customUsergent").disabled = true;
+      }
+    }
+
+    setOverrideUA();
+    let prefName = "floorp.general.useragent.override";
+    let elem = document.getElementById("customUsergent");
+    elem.value = Services.prefs.getStringPref(prefName, undefined);
+
+    elem.addEventListener('change', function () {
+      Services.prefs.setStringPref(prefName, elem.value);
+      Services.prefs.setStringPref("general.useragent.override", Services.prefs.getCharPref("floorp.general.useragent.override"));
+    });
+    Services.prefs.addObserver(prefName, function () {
+      elem.value = Services.prefs.getStringPref(prefName, undefined);
+    });
+  }
+    document.getElementById("floorpUAs").addEventListener("click", function () {
+      setOverrideUA();
+  });
+
   document.getElementById("leptonButton").addEventListener("click", function () {
     window.location.href = "about:preferences#lepton";
   });

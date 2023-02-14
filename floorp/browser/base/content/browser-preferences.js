@@ -63,7 +63,8 @@ const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
       case 4:
         Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/108.0.5359.52 Mobile/15E148 Safari/604.1");
         break;
-    // case 5 is blank value. because 5 is custom UA.
+      case 5:
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, Services.prefs.getCharPref("floorp.general.useragent.override"));
     }
   }
 
