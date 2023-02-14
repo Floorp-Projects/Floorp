@@ -51,7 +51,7 @@ dictionary IdentityBranding {
 dictionary IdentityInternalManifest {
   required USVString accounts_endpoint;
   required USVString client_metadata_endpoint;
-  required USVString id_token_endpoint;
+  required USVString id_assertion_endpoint;
   IdentityBranding branding;
 };
 
@@ -78,9 +78,9 @@ dictionary IdentityClientMetadata {
   USVString terms_of_service_url;
 };
 
-// https://fedidcg.github.io/FedCM/#dom-id_token_endpoint_response-token
+// https://fedidcg.github.io/FedCM/#dictdef-identityprovidertoken
 [GenerateInit]
-dictionary IdentityToken {
+dictionary IdentityProviderToken {
   required USVString token;
 };
 

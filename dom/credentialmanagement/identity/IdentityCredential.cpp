@@ -289,9 +289,9 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aProvider](
-              const Tuple<IdentityToken, IdentityAccount>& promiseResult) {
-            IdentityToken token;
+          [aProvider](const Tuple<IdentityProviderToken, IdentityAccount>&
+                          promiseResult) {
+            IdentityProviderToken token;
             IdentityAccount account;
             Tie(token, account) = promiseResult;
             IPCIdentityCredential credential;
@@ -546,7 +546,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
     return IdentityCredential::GetTokenPromise::CreateAndReject(rv, __func__);
   }
   nsCOMPtr<nsIURI> idpURI;
-  nsCString tokenSpec = NS_ConvertUTF16toUTF8(aManifest.mId_token_endpoint);
+  nsCString tokenSpec = NS_ConvertUTF16toUTF8(aManifest.mId_assertion_endpoint);
   rv = NS_NewURI(getter_AddRefs(idpURI), tokenSpec.get(), baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IdentityCredential::GetTokenPromise::CreateAndReject(rv, __func__);
@@ -618,9 +618,9 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
       nsContentPolicyType::TYPE_WEB_IDENTITY);
   RefPtr<Request> request =
       new Request(global, std::move(internalRequest), nullptr);
-  return FetchJSONStructure<IdentityToken>(request)->Then(
+  return FetchJSONStructure<IdentityProviderToken>(request)->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [aAccount](const IdentityToken& token) {
+      [aAccount](const IdentityProviderToken& token) {
         return IdentityCredential::GetTokenPromise::CreateAndResolve(
             MakeTuple(token, aAccount), __func__);
       },
