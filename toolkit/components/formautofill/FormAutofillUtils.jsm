@@ -327,10 +327,9 @@ FormAutofillUtils = {
    * by a comma.
    *
    * @param  {object} address
-   * @param  {string?} addressFields Override the fields which can be displayed, but not the order.
    * @returns {string}
    */
-  getAddressLabel(address, addressFields = null) {
+  getAddressLabel(address) {
     // TODO: Implement a smarter way for deciding what to display
     //       as option text. Possibly improve the algorithm in
     //       ProfileAutoCompleteResult.jsm and reuse it here.
@@ -349,10 +348,6 @@ FormAutofillUtils = {
 
     address = { ...address };
     let parts = [];
-    if (addressFields) {
-      let requiredFields = addressFields.trim().split(/\s+/);
-      fieldOrder = fieldOrder.filter(name => requiredFields.includes(name));
-    }
     if (address["street-address"]) {
       address["-moz-street-address-one-line"] = this.toOneLineAddress(
         address["street-address"]
@@ -362,9 +357,6 @@ FormAutofillUtils = {
       let string = address[fieldName];
       if (string) {
         parts.push(string);
-      }
-      if (parts.length == 2 && !addressFields) {
-        break;
       }
     }
     return parts.join(", ");
