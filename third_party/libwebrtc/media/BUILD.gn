@@ -100,9 +100,6 @@ rtc_library("rtc_media_base") {
     "../system_wrappers:field_trial",
     "../video/config:encoder_config",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../api/transport:stun_types" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
