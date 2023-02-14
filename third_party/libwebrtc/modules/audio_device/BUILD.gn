@@ -230,19 +230,13 @@ rtc_library("audio_device_impl") {
     "include/test_audio_device.cc",
     "include/test_audio_device.h",
   ]
+
   if (build_with_mozilla) {
     sources -= [
       "include/test_audio_device.cc",
       "include/test_audio_device.h",
     ]
   }
-
-  #if (build_with_mozilla) {
-  #  sources += [
-  #    "opensl/single_rw_fifo.cc",
-  #    "opensl/single_rw_fifo.h",
-  #  ]
-  #}
 
   defines = []
   cflags = []
