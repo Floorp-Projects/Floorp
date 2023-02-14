@@ -293,6 +293,7 @@ EXPERIMENT_LIST="
     emulate_hardware
     non_greedy_mv
     rate_ctrl
+    collect_component_timing
 "
 CONFIG_LIST="
     dependency_tracking
@@ -342,7 +343,6 @@ CONFIG_LIST="
     multi_res_encoding
     temporal_denoising
     vp9_temporal_denoising
-    consistent_recode
     coefficient_range_checking
     vp9_highbitdepth
     better_hw_compatibility
@@ -406,7 +406,6 @@ CMDLINE_SELECT="
     multi_res_encoding
     temporal_denoising
     vp9_temporal_denoising
-    consistent_recode
     coefficient_range_checking
     better_hw_compatibility
     vp9_highbitdepth

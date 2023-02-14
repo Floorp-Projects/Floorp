@@ -2832,8 +2832,14 @@ static int64_t handle_inter_mode(
       frame_mv[refs[1]].as_int = single_newmv[refs[1]].as_int;
 
       if (cpi->sf.comp_inter_joint_search_thresh <= bsize) {
+#if CONFIG_COLLECT_COMPONENT_TIMING
+        start_timing(cpi, joint_motion_search_time);
+#endif
         joint_motion_search(cpi, x, bsize, frame_mv, mi_row, mi_col,
                             single_newmv, &rate_mv);
+#if CONFIG_COLLECT_COMPONENT_TIMING
+        end_timing(cpi, joint_motion_search_time);
+#endif
       } else {
         rate_mv = vp9_mv_bit_cost(&frame_mv[refs[0]].as_mv,
                                   &x->mbmi_ext->ref_mvs[refs[0]][0].as_mv,
@@ -2845,7 +2851,13 @@ static int64_t handle_inter_mode(
       *rate2 += rate_mv;
     } else {
       int_mv tmp_mv;
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      start_timing(cpi, single_motion_search_time);
+#endif
       single_motion_search(cpi, x, bsize, mi_row, mi_col, &tmp_mv, &rate_mv);
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      end_timing(cpi, single_motion_search_time);
+#endif
       if (tmp_mv.as_int == INVALID_MV) return INT64_MAX;
 
       frame_mv[refs[0]].as_int = xd->mi[0]->bmi[0].as_mv[0].as_int =
@@ -2908,6 +2920,9 @@ static int64_t handle_inter_mode(
   intpel_mv = !mv_has_subpel(&mi->mv[0].as_mv);
   if (is_comp_pred) intpel_mv &= !mv_has_subpel(&mi->mv[1].as_mv);
 
+#if CONFIG_COLLECT_COMPONENT_TIMING
+  start_timing(cpi, interp_filter_time);
+#endif
   // Search for best switchable filter by checking the variance of
   // pred error irrespective of whether the filter will be used
   for (i = 0; i < SWITCHABLE_FILTER_CONTEXTS; ++i) filter_cache[i] = INT64_MAX;
@@ -3005,6 +3020,9 @@ static int64_t handle_inter_mode(
       restore_dst_buf(xd, orig_dst, orig_dst_stride);
     }
   }
+#if CONFIG_COLLECT_COMPONENT_TIMING
+  end_timing(cpi, interp_filter_time);
+#endif
   // Set the appropriate filter
   mi->interp_filter =
       cm->interp_filter != SWITCHABLE ? cm->interp_filter : best_filter;
@@ -3707,19 +3725,30 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
     if (ref_frame == INTRA_FRAME) {
       TX_SIZE uv_tx;
       struct macroblockd_plane *const pd = &xd->plane[1];
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      start_timing(cpi, intra_mode_search_time);
+#endif
       memset(x->skip_txfm, 0, sizeof(x->skip_txfm));
       super_block_yrd(cpi, x, &rate_y, &distortion_y, &skippable, NULL, bsize,
                       best_rd, recon);
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      end_timing(cpi, intra_mode_search_time);
+#endif
       if (rate_y == INT_MAX) continue;
 
       uv_tx = uv_txsize_lookup[bsize][mi->tx_size][pd->subsampling_x]
                               [pd->subsampling_y];
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      start_timing(cpi, intra_mode_search_time);
+#endif
       if (rate_uv_intra[uv_tx] == INT_MAX) {
         choose_intra_uv_mode(cpi, x, ctx, bsize, uv_tx, &rate_uv_intra[uv_tx],
                              &rate_uv_tokenonly[uv_tx], &dist_uv[uv_tx],
                              &skip_uv[uv_tx], &mode_uv[uv_tx]);
       }
-
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      end_timing(cpi, intra_mode_search_time);
+#endif
       rate_uv = rate_uv_tokenonly[uv_tx];
       distortion_uv = dist_uv[uv_tx];
       skippable = skippable && skip_uv[uv_tx];
@@ -3730,11 +3759,17 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
         rate2 += intra_cost_penalty;
       distortion2 = distortion_y + distortion_uv;
     } else {
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      start_timing(cpi, handle_inter_mode_time);
+#endif
       this_rd = handle_inter_mode(
           cpi, x, bsize, &rate2, &distortion2, &skippable, &rate_y, &rate_uv,
           recon, &disable_skip, frame_mv, mi_row, mi_col, single_newmv,
           single_inter_filter, single_skippable, &total_sse, best_rd,
           &mask_filter, filter_cache);
+#if CONFIG_COLLECT_COMPONENT_TIMING
+      end_timing(cpi, handle_inter_mode_time);
+#endif
       if (this_rd == INT64_MAX) continue;
 
       compmode_cost = vp9_cost_bit(comp_mode_p, comp_pred);
@@ -3970,13 +4005,9 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
   }
 
   if (best_mode_index < 0 || best_rd >= best_rd_so_far) {
-// If adaptive interp filter is enabled, then the current leaf node of 8x8
-// data is needed for sub8x8. Hence preserve the context.
-#if CONFIG_CONSISTENT_RECODE
+    // If adaptive interp filter is enabled, then the current leaf node of 8x8
+    // data is needed for sub8x8. Hence preserve the context.
     if (bsize == BLOCK_8X8) ctx->mic = *xd->mi[0];
-#else
-    if (cpi->row_mt && bsize == BLOCK_8X8) ctx->mic = *xd->mi[0];
-#endif
     rd_cost->rate = INT_MAX;
     rd_cost->rdcost = INT64_MAX;
     return;

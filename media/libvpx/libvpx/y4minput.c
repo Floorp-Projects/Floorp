@@ -1148,6 +1148,7 @@ int y4m_input_fetch_frame(y4m_input *_y4m, FILE *_fin, vpx_image_t *_img) {
   _img->fmt = _y4m->vpx_fmt;
   _img->w = _img->d_w = _y4m->pic_w;
   _img->h = _img->d_h = _y4m->pic_h;
+  _img->bit_depth = _y4m->bit_depth;
   _img->x_chroma_shift = _y4m->dst_c_dec_h >> 1;
   _img->y_chroma_shift = _y4m->dst_c_dec_v >> 1;
   _img->bps = _y4m->bps;

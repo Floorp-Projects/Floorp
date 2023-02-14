@@ -14,6 +14,9 @@
 #include "vpx/vpx_encoder.h"
 
 namespace libvpx {
+
+enum class RcFrameType { kKeyFrame = 0, kInterFrame = 1 };
+
 struct VpxRateControlRtcConfig {
  public:
   VpxRateControlRtcConfig() {

@@ -41,7 +41,7 @@ constexpr int kDefaultMaxGfInterval = 16;
 constexpr int kReadMinGfInterval = 5;
 constexpr int kReadMaxGfInterval = 13;
 const char kTestFileName[] = "bus_352x288_420_f20_b8.yuv";
-const double kPsnrThreshold = 30.50;
+const double kPsnrThreshold = 30.4;
 
 struct ToyRateCtrl {
   int magic_number;

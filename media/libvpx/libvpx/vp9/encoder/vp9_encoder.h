@@ -91,13 +91,6 @@ typedef enum {
 } ENCODE_BREAKOUT_TYPE;
 
 typedef enum {
-  NORMAL = 0,
-  FOURFIVE = 1,
-  THREEFIVE = 2,
-  ONETWO = 3
-} VPX_SCALING;
-
-typedef enum {
   // Good Quality Fast Encoding. The encoder balances quality with the amount of
   // time it takes to encode the output. Speed setting controls how fast.
   GOOD,
@@ -336,9 +329,7 @@ typedef struct TplDepFrame {
 typedef struct TileDataEnc {
   TileInfo tile_info;
   int thresh_freq_fact[BLOCK_SIZES][MAX_MODES];
-#if CONFIG_CONSISTENT_RECODE || CONFIG_RATE_CTRL
   int thresh_freq_fact_prev[BLOCK_SIZES][MAX_MODES];
-#endif  // CONFIG_CONSISTENT_RECODE || CONFIG_RATE_CTRL
   int8_t mode_map[BLOCK_SIZES][MAX_MODES];
   FIRSTPASS_DATA fp_data;
   VP9RowMTSync row_mt_sync;
@@ -659,6 +650,72 @@ static INLINE int get_num_unit_4x4(int size) { return (size + 3) >> 2; }
 static INLINE int get_num_unit_16x16(int size) { return (size + 15) >> 4; }
 #endif  // CONFIG_RATE_CTRL
 
+#if CONFIG_COLLECT_COMPONENT_TIMING
+#include "vpx_ports/vpx_timer.h"
+// Adjust the following to add new components.
+typedef enum {
+  vp9_get_compressed_data_time,
+  vp9_temporal_filter_time,
+  vp9_rc_get_second_pass_params_time,
+  setup_tpl_stats_time,
+  Pass2Encode_time,
+
+  encode_with_recode_loop_time,
+  loopfilter_frame_time,
+  vp9_pack_bitstream_time,
+
+  encode_frame_internal_time,
+  rd_pick_partition_time,
+  rd_pick_sb_modes_time,
+  encode_sb_time,
+
+  vp9_rd_pick_inter_mode_sb_time,
+  vp9_rd_pick_inter_mode_sub8x8_time,
+
+  intra_mode_search_time,
+  handle_inter_mode_time,
+  single_motion_search_time,
+  joint_motion_search_time,
+  interp_filter_time,
+
+  kTimingComponents,
+} TIMING_COMPONENT;
+
+static INLINE char const *get_component_name(int index) {
+  switch (index) {
+    case vp9_get_compressed_data_time: return "vp9_get_compressed_data_time";
+    case vp9_temporal_filter_time: return "vp9_temporal_filter_time";
+    case vp9_rc_get_second_pass_params_time:
+      return "vp9_rc_get_second_pass_params_time";
+    case setup_tpl_stats_time: return "setup_tpl_stats_time";
+    case Pass2Encode_time: return "Pass2Encode_time";
+
+    case encode_with_recode_loop_time: return "encode_with_recode_loop_time";
+    case loopfilter_frame_time: return "loopfilter_frame_time";
+    case vp9_pack_bitstream_time: return "vp9_pack_bitstream_time";
+
+    case encode_frame_internal_time: return "encode_frame_internal_time";
+    case rd_pick_partition_time: return "rd_pick_partition_time";
+    case rd_pick_sb_modes_time: return "rd_pick_sb_modes_time";
+    case encode_sb_time: return "encode_sb_time";
+
+    case vp9_rd_pick_inter_mode_sb_time:
+      return "vp9_rd_pick_inter_mode_sb_time";
+    case vp9_rd_pick_inter_mode_sub8x8_time:
+      return "vp9_rd_pick_inter_mode_sub8x8_time";
+
+    case intra_mode_search_time: return "intra_mode_search_time";
+    case handle_inter_mode_time: return "handle_inter_mode_time";
+    case single_motion_search_time: return "single_motion_search_time";
+    case joint_motion_search_time: return "joint_motion_search_time";
+    case interp_filter_time: return "interp_filter_time";
+
+    default: assert(0);
+  }
+  return "error";
+}
+#endif
+
 typedef struct VP9_COMP {
   FRAME_INFO frame_info;
   QUANTS quants;
@@ -973,6 +1030,22 @@ typedef struct VP9_COMP {
   EXT_RATECTRL ext_ratectrl;
 
   int fixed_qp_onepass;
+
+#if CONFIG_COLLECT_COMPONENT_TIMING
+  /*!
+   * component_time[] are initialized to zero while encoder starts.
+   */
+  uint64_t component_time[kTimingComponents];
+  /*!
+   * Stores timing for individual components between calls of start_timing()
+   * and end_timing().
+   */
+  struct vpx_usec_timer component_timer[kTimingComponents];
+  /*!
+   * frame_component_time[] are initialized to zero at beginning of each frame.
+   */
+  uint64_t frame_component_time[kTimingComponents];
+#endif
 } VP9_COMP;
 
 #if CONFIG_RATE_CTRL
@@ -1154,8 +1227,8 @@ int vp9_set_active_map(VP9_COMP *cpi, unsigned char *new_map_16x16, int rows,
 int vp9_get_active_map(VP9_COMP *cpi, unsigned char *new_map_16x16, int rows,
                        int cols);
 
-int vp9_set_internal_size(VP9_COMP *cpi, VPX_SCALING horiz_mode,
-                          VPX_SCALING vert_mode);
+int vp9_set_internal_size(VP9_COMP *cpi, VPX_SCALING_MODE horiz_mode,
+                          VPX_SCALING_MODE vert_mode);
 
 int vp9_set_size_literal(VP9_COMP *cpi, unsigned int width,
                          unsigned int height);
@@ -1391,6 +1464,38 @@ void vp9_set_row_mt(VP9_COMP *cpi);
 int vp9_get_psnr(const VP9_COMP *cpi, PSNR_STATS *psnr);
 
 #define LAYER_IDS_TO_IDX(sl, tl, num_tl) ((sl) * (num_tl) + (tl))
+
+static INLINE void alloc_frame_mvs(VP9_COMMON *const cm, int buffer_idx) {
+  RefCntBuffer *const new_fb_ptr = &cm->buffer_pool->frame_bufs[buffer_idx];
+  if (new_fb_ptr->mvs == NULL || new_fb_ptr->mi_rows < cm->mi_rows ||
+      new_fb_ptr->mi_cols < cm->mi_cols) {
+    vpx_free(new_fb_ptr->mvs);
+    CHECK_MEM_ERROR(cm, new_fb_ptr->mvs,
+                    (MV_REF *)vpx_calloc(cm->mi_rows * cm->mi_cols,
+                                         sizeof(*new_fb_ptr->mvs)));
+    new_fb_ptr->mi_rows = cm->mi_rows;
+    new_fb_ptr->mi_cols = cm->mi_cols;
+  }
+}
+
+#if CONFIG_COLLECT_COMPONENT_TIMING
+static INLINE void start_timing(VP9_COMP *cpi, int component) {
+  vpx_usec_timer_start(&cpi->component_timer[component]);
+}
+static INLINE void end_timing(VP9_COMP *cpi, int component) {
+  vpx_usec_timer_mark(&cpi->component_timer[component]);
+  cpi->frame_component_time[component] +=
+      vpx_usec_timer_elapsed(&cpi->component_timer[component]);
+}
+static INLINE char const *get_frame_type_enum(int type) {
+  switch (type) {
+    case 0: return "KEY_FRAME";
+    case 1: return "INTER_FRAME";
+    default: assert(0);
+  }
+  return "error";
+}
+#endif
 
 #ifdef __cplusplus
 }  // extern "C"

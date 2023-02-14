@@ -1667,7 +1667,7 @@ void vp8_change_config(VP8_COMP *cpi, VP8_CONFIG *oxcf) {
 
   cm->sharpness_level = cpi->oxcf.Sharpness;
 
-  if (cm->horiz_scale != NORMAL || cm->vert_scale != NORMAL) {
+  if (cm->horiz_scale != VP8E_NORMAL || cm->vert_scale != VP8E_NORMAL) {
     int hr, hs, vr, vs;
 
     Scale2Ratio(cm->horiz_scale, &hr, &hs);
@@ -2504,15 +2504,17 @@ static int resize_key_frame(VP8_COMP *cpi) {
     if (cpi->buffer_level < (cpi->oxcf.resample_down_water_mark *
                              cpi->oxcf.optimal_buffer_level / 100)) {
       cm->horiz_scale =
-          (cm->horiz_scale < ONETWO) ? cm->horiz_scale + 1 : ONETWO;
-      cm->vert_scale = (cm->vert_scale < ONETWO) ? cm->vert_scale + 1 : ONETWO;
+          (cm->horiz_scale < VP8E_ONETWO) ? cm->horiz_scale + 1 : VP8E_ONETWO;
+      cm->vert_scale =
+          (cm->vert_scale < VP8E_ONETWO) ? cm->vert_scale + 1 : VP8E_ONETWO;
     }
     /* Should we now start scaling back up */
     else if (cpi->buffer_level > (cpi->oxcf.resample_up_water_mark *
                                   cpi->oxcf.optimal_buffer_level / 100)) {
       cm->horiz_scale =
-          (cm->horiz_scale > NORMAL) ? cm->horiz_scale - 1 : NORMAL;
-      cm->vert_scale = (cm->vert_scale > NORMAL) ? cm->vert_scale - 1 : NORMAL;
+          (cm->horiz_scale > VP8E_NORMAL) ? cm->horiz_scale - 1 : VP8E_NORMAL;
+      cm->vert_scale =
+          (cm->vert_scale > VP8E_NORMAL) ? cm->vert_scale - 1 : VP8E_NORMAL;
     }
 
     /* Get the new height and width */
@@ -5380,15 +5382,15 @@ int vp8_set_active_map(VP8_COMP *cpi, unsigned char *map, unsigned int rows,
   }
 }
 
-int vp8_set_internal_size(VP8_COMP *cpi, VPX_SCALING horiz_mode,
-                          VPX_SCALING vert_mode) {
-  if (horiz_mode <= ONETWO) {
+int vp8_set_internal_size(VP8_COMP *cpi, VPX_SCALING_MODE horiz_mode,
+                          VPX_SCALING_MODE vert_mode) {
+  if (horiz_mode <= VP8E_ONETWO) {
     cpi->common.horiz_scale = horiz_mode;
   } else {
     return -1;
   }
 
-  if (vert_mode <= ONETWO) {
+  if (vert_mode <= VP8E_ONETWO) {
     cpi->common.vert_scale = vert_mode;
   } else {
     return -1;

@@ -260,5 +260,11 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(&highbd_wrapper<vpx_highbd_comp_avg_pred_sse2>));
 #endif  // HAVE_SSE2
 
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(
+    NEON, AvgPredTestHBD,
+    ::testing::Values(&highbd_wrapper<vpx_highbd_comp_avg_pred_neon>));
+#endif  // HAVE_NEON
+
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 }  // namespace
