@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright (C) 2001-2022 by
+# Copyright (C) 2001-2023 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -17,7 +17,7 @@ AC_CONFIG_SRCDIR([ftconfig.h.in])
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='24:3:18'
+version_info='25:0:19'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -50,7 +50,7 @@ if test ${cross_compiling} = yes; then
 
   AC_MSG_CHECKING([for suffix of native executables])
   rm -f a.* b.* a_out.exe conftest.*
-  echo > conftest.c "int main() { return 0;}"
+  echo > conftest.c "int main(void) { return 0;}"
   ${CC_BUILD} conftest.c || AC_MSG_ERROR([native C compiler is not working])
   rm -f conftest.c
   if test -x a.out -o -x b.out -o -x conftest; then
@@ -161,9 +161,6 @@ if test -z "$FTSYS_SRC"; then
   FTSYS_SRC='$(BASE_DIR)/ftsystem.c'
 fi
 AC_SUBST([FTSYS_SRC])
-
-
-AC_CHECK_FUNCS([memcpy memmove])
 
 
 # get compiler flags right
@@ -406,16 +403,12 @@ if test x"$with_png" = xyes -o x"$with_png" = xauto; then
       have_libpng="yes (LIBPNG_CFLAGS and LIBPNG_LIBS)"
     else
       # fall back to config script
-      AC_MSG_CHECKING([for libpng-config])
-      if which libpng-config > /dev/null 2>&1; then
+      AC_CHECK_PROG(have_libpng, [libpng-config], [yes (libpng-config)], [no])
+      if test "$have_libpng" != no; then
         LIBPNG_CFLAGS=`libpng-config --cflags`
         LIBPNG_LIBS=`libpng-config --ldflags`
         libpng_libspriv=`libpng-config --static --ldflags`
         libpng_libsstaticconf="$libpng_libspriv"
-        have_libpng="yes (libpng-config)"
-        AC_MSG_RESULT([yes])
-      else
-        AC_MSG_RESULT([no])
       fi
     fi
   fi

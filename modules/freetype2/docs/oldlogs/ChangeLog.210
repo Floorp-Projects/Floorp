@@ -64,7 +64,7 @@
 	[smooth] Minor fixes.
 
 	* src/smooth/ftgrays.c (gray_render_conic): Move variable and
-	structure declarations to beginning of function.  Inspite of C99
+	structure declarations to beginning of function.  In spite of C99
 	compliance we still do this for the sake of backward compatibility.
 	This also avoids a shadowing declaration of `count`.
 	(gray_convert_glyph_inner): Fix typo.
@@ -134,7 +134,7 @@
 	  Before: 17.988 us/op
 	  After:  17.389 us/op
 
-	* src/smooth/ftgrays.c (grat_TWorker): Replace `num_cells` field with
+	* src/smooth/ftgrays.c (gray_TWorker): Replace `num_cells` field with
 	`cell_free` and `cell_limit`.
 	(NULL_CELL_PTR, CELL_MAX_X_VALUE, CELL_IS_NULL): New macros.
 	(gray_dump_cells, gray_set_cell, gray_sweep, gray_sweep_direct,
@@ -352,7 +352,7 @@
 
 	It is undefined behavior to pass `NULL` to `memcpy`.  `coords' is
 	passed to `memcpy` but `TT_Get_MM_Blend` and `TT_Get_Var_Design`
-	explictly call `tt_set_mm_blend` with `coords` as `NULL`.  In
+	explicitly call `tt_set_mm_blend` with `coords` as `NULL`.  In
 	addition, `TT_Set_MM_Blend` has a similar possible issue.
 
 2021-06-30  Dominik Röttsches  <drott@chromium.org>
@@ -534,7 +534,7 @@
 
 	Move 'COLR' API to `ftcolor.h`.
 
-	* include/freetype/freetype.h: Cut section layer managament
+	* include/freetype/freetype.h: Cut section layer management
 	containing 'COLR' v0 and v1 API and move it to `ftcolor.h` as
 	requested by Werner on freetype-devel.
 	* include/freetype/ftcolor.h: Paste that section.
@@ -1005,23 +1005,23 @@
 
 2021-05-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
-	* src/cid/cidload.c (cid_read_subrs): Tweak allocaton macro.
+	* src/cid/cidload.c (cid_read_subrs): Tweak allocation macro.
 
 2021-05-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
 	[sfnt] Avoid some memory zeroing.
 
 	* src/sfnt/sfobjs.c (sfnt_open_font, sfnt_init_face,
-	tt_name_ascii_from_{utf16,other}): Tweak allocaton macros.
+	tt_name_ascii_from_{utf16,other}): Tweak allocation macros.
 	* src/sfnt/ttload.c (tt_face_load_name): Ditto.
 
 2021-05-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
-	* src/sfnt/ttpost.c (load_format_{20,25}): Tweak allocaton macros.
+	* src/sfnt/ttpost.c (load_format_{20,25}): Tweak allocation macros.
 
 2021-05-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
-	* src/sfnt/pngshim.c (Load_SBit_Png): Tweak allocaton macro.
+	* src/sfnt/pngshim.c (Load_SBit_Png): Tweak allocation macro.
 
 2021-05-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
@@ -2343,7 +2343,7 @@
 	* src/sdf/ftbsdf.c, src/sdf/ftbsdf.h: The rasterizer for the 'bsdf'
 	renderer.
 
-	* src/sdf/ftsdfcommon.h: Commmon properties and functions for both
+	* src/sdf/ftsdfcommon.h: Common properties and functions for both
 	rasterizers.
 	* src/sdf/ftsdferrs.h: Common error defines.
 
@@ -2411,9 +2411,9 @@
 	units per em (e.g. Inter). This patch fixes it.
 
 	The return value of af_loader_compute_darkening was also changed to
-	use 16.16 fixed point to get rid of a redundant truncation operation.
+	use 16.16 fixed-point to get rid of a redundant truncation operation.
 	This should slightly improve the precision, although it's still
-	bottlenecked by the emboldening function, which uses 26.6 fixed point.
+	bottlenecked by the emboldening function, which uses 26.6 fixed-point.
 
 	* src/autofit/afloader.[ch]
 	(af_loader_compute_darkening): Return FT_Fixed.
@@ -3565,7 +3565,7 @@
 
 	[builds] Clean up Windows CE project files.
 
-	Remove version from filenames that caused a lot of polution in the
+	Remove version from filenames that caused a lot of pollution in the
 	release process. Use VERSIONINFO resource instead.
 
 	* builds/wince/vc2005-ce/freetype.vcproj,
@@ -4453,7 +4453,7 @@
 	(reconstruct_font): Change `FT_Byte* sfnt' to `FT_Byte**
 	sfnt_bytes'.  This has been done because we reallocate memory to
 	`sfnt' multiple times, which may change the pointer value of `sfnt'.
-	This new pointer must be propogated back to the caller.  Same reason
+	This new pointer must be propagated back to the caller.  Same reason
 	for using a double pointer in `write_buf'.
 
 	* src/sfnt/woff2tags.h (WOFF2_DEFAULT_MAX_SIZE): New macro used for
@@ -4954,7 +4954,7 @@
 
 	[truetype] Doh.  Fix last commit to make it work.
 
-	Very embarassing :-)
+	Very embarrassing :-)
 
 	Reported as
 
@@ -5307,7 +5307,7 @@
 	(dist): Remove remnants of `docmaker' tool.
 	(do-dist): Remove unused intermediate files.
 
-	* src/cff/cffparse.c (destrict_c2s_item): Guard function with
+	* src/cff/cffparse.c (destruct_c2s_item): Guard function with
 	CFF_CONFIG_OPTION_OLD_ENGINE macro.
 
 2019-03-07  Andrei Alexeyev  <0x416b617269@gmail.com>
@@ -5491,7 +5491,7 @@
 	members.
 	(FT_DEFINE_SERVICE_MULTIMASTERSREC): Updated.
 
-	* src/cffcffdrivr.c (cff_set_mm_weightvector,
+	* src/cff/cffdrivr.c (cff_set_mm_weightvector,
 	cff_get_mm_weightvector): New functions.
 	(cff_service_multi_masters): Register them.
 
@@ -5521,7 +5521,7 @@
 	[builds] Belated DLL support with vc2002-vc2008.
 
 	The solution and project files should be automatically upgraded for
-	the approriate Visual C++ version.
+	the appropriate Visual C++ version.
 
 	* builds/windows/visualc/freetype.{sln,vcproj}: Major upgrades.
 	* builds/windows/visualc/index.html: Document the change.
@@ -5900,7 +5900,7 @@
 	Remove unused fields.
 
 	* src/pcf.h (PCF_FaceRec): Remove `charmap' and `charmap_handle'.
-	* src/bdfdrvr.h (BDF_FaceRec): Ditto.
+	* src/bdfdrivr.h (BDF_FaceRec): Ditto.
 	* src/winfonts/winfnt.h (FNT_FaceRec): Ditto.
 
 2018-09-17  Werner Lemberg  <wl@gnu.org>
@@ -7799,7 +7799,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright (C) 2018-2022 by
+Copyright (C) 2018-2023 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

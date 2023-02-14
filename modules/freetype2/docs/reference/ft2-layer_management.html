@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.13.0">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Glyph Layer Management - FreeType-2.12.1 API Reference</title>
+        <title>Glyph Layer Management - FreeType-2.13.0 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.12.1 API Reference
+            FreeType-2.13.0 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.12.1 API Reference
+    FreeType-2.13.0 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1736,6 +1736,9 @@
                                         &amp;iterator ) );
   }
 </code></pre></div>
+<h4>since</h4>
+
+<p>2.10</p>
 <hr>
 
 <h2 id="ft_paintformat">FT_PaintFormat<a class="headerlink" href="#ft_paintformat" title="Permanent link">&para;</a></h2>
@@ -1762,10 +1765,10 @@
 </code></pre></div>
 
 <p>Enumeration describing the different paint format types of the v1 extensions to the &lsquo;COLR&rsquo; table, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;.</p>
-<p>The enumeration values losely correspond with the format numbers of the specification: FreeType always returns a fully specified &lsquo;Paint&rsquo; structure for the &lsquo;Transform&rsquo;, &lsquo;Translate&rsquo;, &lsquo;Scale&rsquo;, &lsquo;Rotate&rsquo;, and &lsquo;Skew&rsquo; table types even though the specification has different formats depending on whether or not a center is specified, whether the scale is uniform in x and y&nbsp;direction or not, etc. Also, only non-variable format identifiers are listed in this enumeration; as soon as support for variable &lsquo;COLR&rsquo; v1 fonts is implemented, interpolation is performed dependent on axis coordinates, which are configured on the <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code> through <code><a href="ft2-multiple_masters.html#ft_set_var_design_coordinates">FT_Set_Var_Design_Coordinates</a></code>. This implies that always static, readily interpolated values are returned in the &lsquo;Paint&rsquo; structures.</p>
+<p>The enumeration values loosely correspond with the format numbers of the specification: FreeType always returns a fully specified &lsquo;Paint&rsquo; structure for the &lsquo;Transform&rsquo;, &lsquo;Translate&rsquo;, &lsquo;Scale&rsquo;, &lsquo;Rotate&rsquo;, and &lsquo;Skew&rsquo; table types even though the specification has different formats depending on whether or not a center is specified, whether the scale is uniform in x and y&nbsp;direction or not, etc. Also, only non-variable format identifiers are listed in this enumeration; as soon as support for variable &lsquo;COLR&rsquo; v1 fonts is implemented, interpolation is performed dependent on axis coordinates, which are configured on the <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code> through <code><a href="ft2-multiple_masters.html#ft_set_var_design_coordinates">FT_Set_Var_Design_Coordinates</a></code>. This implies that always static, readily interpolated values are returned in the &lsquo;Paint&rsquo; structures.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_colorstopiterator">FT_ColorStopIterator<a class="headerlink" href="#ft_colorstopiterator" title="Permanent link">&para;</a></h2>
@@ -1777,10 +1780,12 @@
 
     <a href="ft2-basic_types.html#ft_byte">FT_Byte</a>*  p;
 
+    <a href="ft2-basic_types.html#ft_bool">FT_Bool</a>  read_variable;
+
   } <b>FT_ColorStopIterator</b>;
 </code></pre></div>
 
-<p>This iterator object is needed for <code><a href="ft2-layer_management.html#ft_get_colorline_stops">FT_Get_Colorline_Stops</a></code>. It keeps state while iterating over the stops of an <code><a href="ft2-layer_management.html#ft_colorline">FT_ColorLine</a></code>, representing the <code>ColorLine</code> struct of the v1 extensions to &lsquo;COLR&rsquo;, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;.</p>
+<p>This iterator object is needed for <code><a href="ft2-layer_management.html#ft_get_colorline_stops">FT_Get_Colorline_Stops</a></code>. It keeps state while iterating over the stops of an <code><a href="ft2-layer_management.html#ft_colorline">FT_ColorLine</a></code>, representing the <code>ColorLine</code> struct of the v1 extensions to &lsquo;COLR&rsquo;, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;. Do not manually modify fields of this iterator.</p>
 <h4>fields</h4>
 <table class="fields">
 <tr><td class="val" id="num_color_stops">num_color_stops</td><td class="desc">
@@ -1792,11 +1797,14 @@
 <tr><td class="val" id="p">p</td><td class="desc">
 <p>An opaque pointer into &lsquo;COLR&rsquo; table data. Set by <code><a href="ft2-layer_management.html#ft_get_paint">FT_Get_Paint</a></code>. Updated by <code><a href="ft2-layer_management.html#ft_get_colorline_stops">FT_Get_Colorline_Stops</a></code>.</p>
 </td></tr>
+<tr><td class="val" id="read_variable">read_variable</td><td class="desc">
+<p>A boolean keeping track of whether variable color lines are to be read. Set by <code><a href="ft2-layer_management.html#ft_get_paint">FT_Get_Paint</a></code>.</p>
+</td></tr>
 </table>
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_colorindex">FT_ColorIndex<a class="headerlink" href="#ft_colorindex" title="Permanent link">&para;</a></h2>
@@ -1822,14 +1830,14 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_colorstop">FT_ColorStop<a class="headerlink" href="#ft_colorstop" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_COLOR_H (freetype/ftcolor.h).</p>
 <div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_ColorStop_
   {
-    <a href="ft2-basic_types.html#ft_f2dot14">FT_F2Dot14</a>     stop_offset;
+    <a href="ft2-basic_types.html#ft_fixed">FT_Fixed</a>       stop_offset;
     <a href="ft2-layer_management.html#ft_colorindex">FT_ColorIndex</a>  color;
 
   } <b>FT_ColorStop</b>;
@@ -1839,7 +1847,7 @@
 <h4>fields</h4>
 <table class="fields">
 <tr><td class="val" id="stop_offset">stop_offset</td><td class="desc">
-<p>The stop offset between 0 and 1 along the gradient.</p>
+<p>The stop offset along the gradient, expressed as a 16.16 fixed-point coordinate.</p>
 </td></tr>
 <tr><td class="val" id="color">color</td><td class="desc">
 <p>The color information for this stop, see <code><a href="ft2-layer_management.html#ft_colorindex">FT_ColorIndex</a></code>.</p>
@@ -1848,7 +1856,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintextend">FT_PaintExtend<a class="headerlink" href="#ft_paintextend" title="Permanent link">&para;</a></h2>
@@ -1865,7 +1873,7 @@
 <p>An enumeration representing the &lsquo;Extend&rsquo; mode of the &lsquo;COLR&rsquo; v1 extensions, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;. It describes how the gradient fill continues at the other boundaries.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_colorline">FT_ColorLine<a class="headerlink" href="#ft_colorline" title="Permanent link">&para;</a></h2>
@@ -1891,7 +1899,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_affine23">FT_Affine23<a class="headerlink" href="#ft_affine23" title="Permanent link">&para;</a></h2>
@@ -1932,7 +1940,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_composite_mode">FT_Composite_Mode<a class="headerlink" href="#ft_composite_mode" title="Permanent link">&para;</a></h2>
@@ -1975,7 +1983,7 @@
 <p>An enumeration listing the &lsquo;COLR&rsquo; v1 composite modes used in <code><a href="ft2-layer_management.html#ft_paintcomposite">FT_PaintComposite</a></code>. For more details on each paint mode, see &lsquo;<a href="https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators">https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators</a>&rsquo;.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_opaquepaint">FT_OpaquePaint<a class="headerlink" href="#ft_opaquepaint" title="Permanent link">&para;</a></h2>
@@ -2000,7 +2008,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintcolrlayers">FT_PaintColrLayers<a class="headerlink" href="#ft_paintcolrlayers" title="Permanent link">&para;</a></h2>
@@ -2022,7 +2030,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintsolid">FT_PaintSolid<a class="headerlink" href="#ft_paintsolid" title="Permanent link">&para;</a></h2>
@@ -2044,7 +2052,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintlineargradient">FT_PaintLinearGradient<a class="headerlink" href="#ft_paintlineargradient" title="Permanent link">&para;</a></h2>
@@ -2080,7 +2088,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintradialgradient">FT_PaintRadialGradient<a class="headerlink" href="#ft_paintradialgradient" title="Permanent link">&para;</a></h2>
@@ -2097,7 +2105,7 @@
   } <b>FT_PaintRadialGradient</b>;
 </code></pre></div>
 
-<p>A structure representing a <code>PaintRadialGradient</code> value of the &lsquo;COLR&rsquo; v1 extensions, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;. The glyph layer filled with this paint is drawn filled filled with a radial gradient.</p>
+<p>A structure representing a <code>PaintRadialGradient</code> value of the &lsquo;COLR&rsquo; v1 extensions, see &lsquo;<a href="https://github.com/googlefonts/colr-gradients-spec">https://github.com/googlefonts/colr-gradients-spec</a>&rsquo;. The glyph layer filled with this paint is drawn filled with a radial gradient.</p>
 <h4>fields</h4>
 <table class="fields">
 <tr><td class="val" id="colorline">colorline</td><td class="desc">
@@ -2119,7 +2127,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintsweepgradient">FT_PaintSweepGradient<a class="headerlink" href="#ft_paintsweepgradient" title="Permanent link">&para;</a></h2>
@@ -2154,7 +2162,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintglyph">FT_PaintGlyph<a class="headerlink" href="#ft_paintglyph" title="Permanent link">&para;</a></h2>
@@ -2180,7 +2188,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintcolrglyph">FT_PaintColrGlyph<a class="headerlink" href="#ft_paintcolrglyph" title="Permanent link">&para;</a></h2>
@@ -2202,7 +2210,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_painttransform">FT_PaintTransform<a class="headerlink" href="#ft_painttransform" title="Permanent link">&para;</a></h2>
@@ -2228,7 +2236,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_painttranslate">FT_PaintTranslate<a class="headerlink" href="#ft_painttranslate" title="Permanent link">&para;</a></h2>
@@ -2259,7 +2267,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintscale">FT_PaintScale<a class="headerlink" href="#ft_paintscale" title="Permanent link">&para;</a></h2>
@@ -2299,7 +2307,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward-compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintrotate">FT_PaintRotate<a class="headerlink" href="#ft_paintrotate" title="Permanent link">&para;</a></h2>
@@ -2326,7 +2334,7 @@
 <p>The rotation angle that is to be applied in degrees divided by 180.0 (as in the spec) represented as a 16.16 fixed-point value. Multiply by 180.0f to receive degrees value.</p>
 </td></tr>
 <tr><td class="val" id="center_x">center_x</td><td class="desc">
-<p>The x&nbsp;coordinate of the pivot point of the rotation in font units) represented as a 16.16 fixed-point value.</p>
+<p>The x&nbsp;coordinate of the pivot point of the rotation in font units represented as a 16.16 fixed-point value.</p>
 </td></tr>
 <tr><td class="val" id="center_y">center_y</td><td class="desc">
 <p>The y&nbsp;coordinate of the pivot point of the rotation in font units represented as a 16.16 fixed-point value.</p>
@@ -2335,7 +2343,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintskew">FT_PaintSkew<a class="headerlink" href="#ft_paintskew" title="Permanent link">&para;</a></h2>
@@ -2375,7 +2383,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_paintcomposite">FT_PaintComposite<a class="headerlink" href="#ft_paintcomposite" title="Permanent link">&para;</a></h2>
@@ -2389,7 +2397,7 @@
   } <b>FT_PaintComposite</b>;
 </code></pre></div>
 
-<p>A structure representing a &lsquo;COLR'v1 <code>PaintComposite</code> paint table. Used for compositing two paints in a 'COLR&rsquo; v1 directed acycling graph.</p>
+<p>A structure representing a &lsquo;COLR&rsquo; v1 <code>PaintComposite</code> paint table. Used for compositing two paints in a &lsquo;COLR&rsquo; v1 directed acyclic graph.</p>
 <h4>fields</h4>
 <table class="fields">
 <tr><td class="val" id="source_paint">source_paint</td><td class="desc">
@@ -2405,7 +2413,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_colr_paint">FT_COLR_Paint<a class="headerlink" href="#ft_colr_paint" title="Permanent link">&para;</a></h2>
@@ -2451,7 +2459,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_color_root_transform">FT_Color_Root_Transform<a class="headerlink" href="#ft_color_root_transform" title="Permanent link">&para;</a></h2>
@@ -2479,7 +2487,7 @@
 
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_clipbox">FT_ClipBox<a class="headerlink" href="#ft_clipbox" title="Permanent link">&para;</a></h2>
@@ -2513,7 +2521,7 @@
 
 <h4>since</h4>
 
-<p>2.12 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_get_color_glyph_paint">FT_Get_Color_Glyph_Paint<a class="headerlink" href="#ft_get_color_glyph_paint" title="Permanent link">&para;</a></h2>
@@ -2557,7 +2565,7 @@
 <p>Value&nbsp;1 if everything is OK. If no color glyph is found, or the root paint could not be retrieved, value&nbsp;0 gets returned. In case of an error, value&nbsp;0 is returned also.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_get_color_glyph_clipbox">FT_Get_Color_Glyph_ClipBox<a class="headerlink" href="#ft_get_color_glyph_clipbox" title="Permanent link">&para;</a></h2>
@@ -2594,7 +2602,7 @@
 <p>To retrieve the clip box in font units, reset scale to units-per-em and remove transforms configured using <code><a href="ft2-base_interface.html#ft_set_transform">FT_Set_Transform</a></code>.</p>
 <h4>since</h4>
 
-<p>2.12 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_get_paint_layers">FT_Get_Paint_Layers<a class="headerlink" href="#ft_get_paint_layers" title="Permanent link">&para;</a></h2>
@@ -2634,7 +2642,7 @@
 <p>Value&nbsp;1 if everything is OK. Value&nbsp;0 gets returned when the paint object can not be retrieved or any other error occurs.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_get_colorline_stops">FT_Get_Colorline_Stops<a class="headerlink" href="#ft_get_colorline_stops" title="Permanent link">&para;</a></h2>
@@ -2673,7 +2681,7 @@
 <p>Value&nbsp;1 if everything is OK. If there are no more color stops, value&nbsp;0 gets returned. In case of an error, value&nbsp;0 is returned also.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
 
 <h2 id="ft_get_paint">FT_Get_Paint<a class="headerlink" href="#ft_get_paint" title="Permanent link">&para;</a></h2>
@@ -2707,7 +2715,7 @@
 <p>Value&nbsp;1 if everything is OK. Value&nbsp;0 if no details can be found for this paint or any other error occured.</p>
 <h4>since</h4>
 
-<p>2.11 &ndash; <strong>currently experimental only!</strong> There might be changes without retaining backward compatibility of both the API and ABI.</p>
+<p>2.13</p>
 <hr>
                 
               
@@ -2765,7 +2773,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2023 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with
